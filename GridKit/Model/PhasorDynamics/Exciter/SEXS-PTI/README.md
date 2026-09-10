@@ -32,7 +32,8 @@ Invalid SEXS-PTI parameter sets are rejected by the following checks:
 ```math
 \begin{aligned}
   T_A &\ge 0 \\
-  T_B, T_E, K &> 0 \\
+  T_B, T_E &\ge 0 \\
+  K &> 0 \\
   E_{fd}^{\min} &< E_{fd}^{\max}
 \end{aligned}
 ```
@@ -88,6 +89,14 @@ $V_{UEL}$       | [p.u.] | Under-excitation limiter signal              | Signal
 
 ## Model Equations
 
+Zero $T_B$ or $T_E$ makes the corresponding state algebraic. For positive
+$T_E$, limiter smoothing uses the pre-limit rate $f/T_E$. At $T_E=0$,
+$E_{fd}$ equals $K(V_{tr}+\dot V_R)$ clamped to its field limits.
+For positive $T_B$, the implementation substitutes the first equation for
+$\dot V_R$ in this command. Setting $T_A=T_B=0$ bypasses the lead-lag block;
+$T_B=0$ with positive $T_A$ instead gives an ideal differentiator and requires
+a differentiable input.
+
 Define the compensated terminal voltage magnitude for readability:
 
 ```math
@@ -98,18 +107,18 @@ E_C = \sqrt{V_r^2+V_i^2}.
 
 #### Differential
 
-The SEXS-PTI differential equations, as derived from the model diagram. Define the pre-limit derivative of $E_{fd}$
+The SEXS-PTI differential equations, as derived from the model diagram. Define the pre-limit drive of $E_{fd}$
 
 ```math
-f = \dfrac{1}{T_E}\left[-E_{fd} + \dfrac{K}{T_B}(-V_R + T_A V_{tr})\right]
+f = -E_{fd} + K(V_{tr}+\dot V_R)
 ```
 
-so that $\dot E_{fd}$ can be written in piecewise form compactly.
+so that $T_E\dot E_{fd}$ can be written in piecewise form compactly.
 
 ```math
 \begin{aligned}
-  \dot V_R      &= -V_{tr} + \dfrac{1}{T_B}(-V_R + T_A V_{tr}) \\
-  \dot E_{fd}   &=
+  T_B\dot V_R      &= -V_R + (T_A-T_B)V_{tr} \\
+  T_E\dot E_{fd}   &=
   \begin{cases}
      f
         &  \text{if } (E_{fd}^{\min} < E_{fd} < E_{fd}^{\max}) & \lor \\

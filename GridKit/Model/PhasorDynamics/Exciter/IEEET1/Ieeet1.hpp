@@ -129,9 +129,6 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
-
         // Signal pointers
         BusT* bus_;
 
@@ -153,6 +150,7 @@ namespace GridKit
 
         // Model Derived parameters
         RealT Ke_eff_{Ke_};
+        RealT zero_Ta_{0.0}; ///< Selects the algebraic voltage regulator
 
         // Saturation coefficients derived from E1, E2, Se1, and Se2.
         RealT SA_{0};

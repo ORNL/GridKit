@@ -15,5 +15,7 @@ int main()
   result += test.jacobian();
 #endif
 
+  result += test.timeConstants();
+
   return result.summary();
 }

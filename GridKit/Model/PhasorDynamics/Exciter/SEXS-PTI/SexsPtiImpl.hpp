@@ -107,14 +107,14 @@ namespace GridKit
           Log::error() << "SexsPti: Ta must be non-negative\n";
           ret += 1;
         }
-        if (Tb_ <= 0.0)
+        if (Tb_ < 0.0)
         {
-          Log::error() << "SexsPti: Tb must be positive\n";
+          Log::error() << "SexsPti: Tb must be non-negative\n";
           ret += 1;
         }
-        if (Te_ <= 0.0)
+        if (Te_ < 0.0)
         {
-          Log::error() << "SexsPti: Te must be positive\n";
+          Log::error() << "SexsPti: Te must be non-negative\n";
           ret += 1;
         }
         if (K_ <= 0.0)
@@ -226,8 +226,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::tagDifferentiable()
       {
-        tag_[0] = true;
-        tag_[1] = true;
+        tag_[0] = (Tb_ != ZERO<RealT>);
+        tag_[1] = (Te_ != ZERO<RealT>);
         tag_[2] = false;
 
         return 0;
@@ -277,10 +277,15 @@ namespace GridKit
         ScalarT vuel = ws[VUEL];
         ScalarT voel = ws[VOEL];
 
-        ScalarT func = (-efd + (K_ / Tb_) * (-vr + Ta_ * vtr)) / Te_;
+        ScalarT lead = (ONE<RealT> - zero_Tb_) * (-vr + (Ta_ - Tb_) * vtr) / (Tb_ + zero_Tb_)
+                       + zero_Tb_ * vr_dot;
+        ScalarT target = K_ * (vtr + lead);
+        ScalarT func   = (-efd + target) / (Te_ + zero_Te_);
 
-        f[0] = -vr_dot + (-vr + Ta_ * vtr) / Tb_ - vtr;
-        f[1] = -efd_dot + Math::antiwindup(efd, func, Efdmin_, Efdmax_);
+        f[0] = -Tb_ * vr_dot - vr + (Ta_ - Tb_) * vtr;
+        f[1] = -Te_ * efd_dot
+               + (ONE<RealT> - zero_Te_) * Math::indicator(efd, func, Efdmin_, Efdmax_) * (-efd + target)
+               + zero_Te_ * (-efd + Math::clamp(target, Efdmin_, Efdmax_));
         f[2] = -vtr - Ec + vref + vs + uel_on_ * vuel + oel_on_ * voel;
 
         return 0;
@@ -349,6 +354,8 @@ namespace GridKit
         load(Params::K, K_, "K");
         load(Params::Efdmax, Efdmax_, "Efdmax");
         load(Params::Efdmin, Efdmin_, "Efdmin");
+        zero_Tb_ = static_cast<RealT>(Tb_ == ZERO<RealT>);
+        zero_Te_ = static_cast<RealT>(Te_ == ZERO<RealT>);
       }
 
       template <typename scalar_type, typename index_type>

@@ -150,9 +150,6 @@ namespace GridKit
         /// Solve the dam head that reproduces mechanical power at Gv5.
         RealT solveInitialDamHead(RealT pmech) const;
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
-
         /// Accepted seed distance beyond the achievable-power range edge.
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
@@ -176,8 +173,6 @@ namespace GridKit
         RealT                Hdam_{ONE<RealT>};
         std::array<RealT, 6> Gv_{};
         std::array<RealT, 6> Pgv_{};
-
-        RealT leadlag_gain_{ZERO<RealT>};
 
         IdxT    parameter_error_count_{0};
         RealT   Gmin_response_{Gmin_};

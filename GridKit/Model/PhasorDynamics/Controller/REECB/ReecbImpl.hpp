@@ -10,7 +10,6 @@
 #include <array>
 #include <cassert>
 #include <limits>
-#include <mutex>
 #include <numbers>
 #include <variant>
 
@@ -176,6 +175,10 @@ namespace GridKit
           }
         };
 
+        check(Trv_ >= ZERO<RealT>, "Trv must be non-negative");
+        check(Tp_ >= ZERO<RealT>, "Tp must be non-negative");
+        check(Tiq_ >= ZERO<RealT>, "Tiq must be non-negative");
+        check(Tpord_ >= ZERO<RealT>, "Tpord must be non-negative");
         check(bus_ != nullptr, "terminal bus is required");
 
         const bool valid_component_base = std::isfinite(va_component_base_)
@@ -766,12 +769,12 @@ namespace GridKit
         const auto PORD  = static_cast<size_t>(ReecbInternalVariables::PORD);
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[VMEAS] = true;
-        tag_[PMEAS] = true;
+        tag_[VMEAS] = (Trv_ != ZERO<RealT>);
+        tag_[PMEAS] = (Tp_ != ZERO<RealT>);
         tag_[XPIQ]  = true;
         tag_[XPIV]  = true;
-        tag_[QV]    = true;
-        tag_[PORD]  = true;
+        tag_[QV]    = (Tiq_ != ZERO<RealT>);
+        tag_[PORD]  = (Tpord_ != ZERO<RealT>);
         return 0;
       }
 
@@ -974,12 +977,12 @@ namespace GridKit
         const ScalarT verr        = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
         const ScalarT q_pi_state  = Kqp_ * eq + xpiq;
         const ScalarT v_pi_state  = Kvp_ * epiv + xpiv;
-        const ScalarT fpord       = (pref - pord) / Tpord_;
+        const ScalarT fpord       = (pref - pord) / (Tpord_ + zero_Tpord_);
         // Select before the factored square to avoid 0 * inf on the inactive path.
         const ScalarT high        = pq_on_ * ipcmd + pq_off_ * iqcmd;
         const ScalarT q_pi_rate   = q_pi_on_ * sdip * Math::antiwindup(q_pi_state, Kqi_ * eq, Vmin_, Vmax_);
         const ScalarT v_pi_rate   = q_on_ * sdip * awband(v_pi_state, Kvi_ * epiv, iqmax);
-        const ScalarT qv_rate     = q_off_ * sdip * (qref / vsafe - qv) / Tiq_;
+        const ScalarT qv_drive    = q_off_ * sdip * (qref / vsafe - qv);
         const ScalarT pord_rate   = sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
         const ScalarT iqv_target  = Math::clamp(kqv_ * verr, Iql1_, Iqh1_);
         // The Volt/VAr channel is a system-base reactive power unless
@@ -987,12 +990,13 @@ namespace GridKit
         // which takes no power-base conversion.
         const ScalarT qref_target = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * this->toComponentBase(extref));
 
-        f[VMEAS]  = -vmeas_dot + (vt - vmeas) / Trv_;
-        f[PMEAS]  = -pmeas_dot + (pe - pmeas) / Tp_;
-        f[XPIQ]   = -xpiq_dot + q_pi_rate;
-        f[XPIV]   = -xpiv_dot + v_pi_rate;
-        f[QV]     = -qv_dot + qv_rate;
-        f[PORD]   = -pord_dot + pord_rate;
+        f[VMEAS] = -Trv_ * vmeas_dot + vt - vmeas;
+        f[PMEAS] = -Tp_ * pmeas_dot + pe - pmeas;
+        f[XPIQ]  = -xpiq_dot + q_pi_rate;
+        f[XPIV]  = -xpiv_dot + v_pi_rate;
+        f[QV]    = -Tiq_ * qv_dot + (ONE<RealT> - zero_Tiq_) * qv_drive + zero_Tiq_ * (-qv + q_off_ * qref / vsafe);
+        f[PORD]  = -Tpord_ * pord_dot
+                  + Tpord_ * pord_rate + zero_Tpord_ * (-pord + Math::clamp(pref, Pmin_, Pmax_));
         f[VT]     = -vt * vt + vr * vr + vi * vi;
         f[VSAFE]  = -vsafe + Math::max(vmeas, VMEAS_MINIMUM);
         f[SDIP]   = -sdip + Math::inside(vt, Vdip_, Vup_);
@@ -1276,42 +1280,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Validate and floor one explicit controller lag
-       *
-       * Nonfinite and negative values record errors before replacement so
-       * verify() retains the evidence. A valid value below 1 ms is raised and
-       * reported through the return value, preserving an explicit Hessenberg
-       * residual and avoiding division by zero.
-       *
-       * @param[in,out] value Time constant to validate and floor.
-       * @param[in] name Parameter name for diagnostics.
-       * @return true only when a valid nonnegative value was raised.
-       */
-      template <typename scalar_type, typename index_type>
-      bool Reecb<scalar_type, index_type>::floorTimeConstant(
-          RealT& value, const char* name)
-      {
-        if (!std::isfinite(value))
-        {
-          Log::error() << "Reecb: " << name << " must be finite\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
-        }
-        if (value < ZERO<RealT>)
-        {
-          Log::error() << "Reecb: " << name << " must be non-negative\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
-        }
-
-        const bool raised = value < TIME_CONSTANT_MINIMUM;
-        value             = std::max(value, TIME_CONSTANT_MINIMUM);
-        return raised;
-      }
-
-      /**
        * @brief Read parameters from model data
        *
        * Omitted optional parameters retain their documented defaults. Loading
@@ -1394,42 +1362,15 @@ namespace GridKit
       }
 
       /**
-       * @brief Static method to log time constant warnings
-       *
-       * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed.
-       */
-      template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::logTimeConstantWarning()
-      {
-        Log::warning() << "Reecb: any of Trv, Tp, Tiq, or Tpord below "
-                       << TIME_CONSTANT_MINIMUM
-                       << " s is raised to that floor to keep the controller lags well posed\n";
-      }
-
-      /**
        * @brief Resolve parameter-derived constants and selector masks
        *
-       * Raises explicit controller lags in place and resolves selector masks.
-       * Invalid lag inputs are recorded before replacement so verify() retains
-       * each error.
+       * Resolves the controller selector masks.
        */
       template <typename scalar_type, typename index_type>
       void Reecb<scalar_type, index_type>::setDerivedParameters()
       {
-        bool floor_warning = false;
-
-        floor_warning |= floorTimeConstant(Trv_, "Trv");
-        floor_warning |= floorTimeConstant(Tp_, "Tp");
-        floor_warning |= floorTimeConstant(Tiq_, "Tiq");
-        floor_warning |= floorTimeConstant(Tpord_, "Tpord");
-
-        if (floor_warning)
-        {
-          static std::once_flag time_constant_warning_flag_;
-          std::call_once(time_constant_warning_flag_,
-                         &logTimeConstantWarning);
-        }
+        zero_Tiq_   = static_cast<RealT>(Tiq_ == ZERO<RealT>);
+        zero_Tpord_ = static_cast<RealT>(Tpord_ == ZERO<RealT>);
 
         if (PfFlag_ && QFlag_)
         {

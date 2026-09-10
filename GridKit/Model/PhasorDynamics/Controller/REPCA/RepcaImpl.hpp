@@ -7,7 +7,6 @@
 #pragma once
 
 #include <algorithm>
-#include <mutex>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -564,13 +563,13 @@ namespace GridKit
         const auto PREF  = static_cast<size_t>(RepcaInternalVariables::PREF);
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[VMEAS] = true;
-        tag_[QMEAS] = true;
+        tag_[VMEAS] = (Tfltr_ != ZERO<RealT>);
+        tag_[QMEAS] = (Tfltr_ != ZERO<RealT>);
         tag_[XQPI]  = true;
-        tag_[XQLAG] = true;
-        tag_[PMEAS] = true;
+        tag_[XQLAG] = (Tfv_ != ZERO<RealT>);
+        tag_[PMEAS] = (Tp_ != ZERO<RealT>);
         tag_[XPPI]  = true;
-        tag_[PREF]  = true;
+        tag_[PREF]  = (Tlag_ != ZERO<RealT>);
         return 0;
       }
 
@@ -817,13 +816,13 @@ namespace GridKit
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
         const ScalarT pfreq  = droop(ef, Ddn_, Dup_);
 
-        f[VMEAS]      = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
-        f[QMEAS]      = -qmeas_dot + (q - qmeas) / Tfltr_;
+        f[VMEAS]      = -Tfltr_ * vmeas_dot + vctrl - vmeas;
+        f[QMEAS]      = -Tfltr_ * qmeas_dot + q - qmeas;
         f[XQPI]       = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
-        f[XQLAG]      = -xqlag_dot + (qpi - xqlag) / Tfv_;
-        f[PMEAS]      = -pmeas_dot + (p - pmeas) / Tp_;
+        f[XQLAG]      = -Tfv_ * xqlag_dot + qpi - xqlag;
+        f[PMEAS]      = -Tp_ * pmeas_dot + p - pmeas;
         f[XPPI]       = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
-        f[PREF_STATE] = -pref_dot + (ppi - pref) / Tlag_;
+        f[PREF_STATE] = -Tlag_ * pref_dot + ppi - pref;
 
         f[V]      = -v * v + vr * vr + vi * vi;
         f[VLDC]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
@@ -834,7 +833,7 @@ namespace GridKit
         f[ERQDB]  = -erqdb + Math::deadband2(erq, dbdlow_, dbdupper_);
         f[ERQLIM] = -erqlim + Math::clamp(erqdb, emin_, emax_);
         f[QPI]    = -qpi + Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
-        f[QEXT]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
+        f[QEXT]   = -qext + xqlag + Tft_ * xqlag_dot;
 
         f[EF]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
         f[EP]    = -ep + pref_in - pmeas + pfreq;
@@ -990,30 +989,14 @@ namespace GridKit
       }
 
       /**
-       * @brief Static method to log time constant warnings
-       *
-       * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed.
-       */
-      template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::logTimeConstantWarning()
-      {
-        Log::warning() << "Repca: Tfltr, Tfv, Tp, and Tlag below "
-                       << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor to keep the controller lags well posed\n";
-      }
-
-      /**
        * @brief Resolve parameter-derived constants
        *
-       * Raises the explicit controller lags in place, computes the component
-       * power base, and resolves selector masks.
+       * Validates the controller lags, computes the component power base,
+       * and resolves selector masks.
        */
       template <typename scalar_type, typename index_type>
       void Repca<scalar_type, index_type>::setDerivedParameters()
       {
-        // The lags are raised to the floor below, so negative values must be
-        // rejected here while the value as read is still available.
         auto check_non_negative = [&](RealT value, const char* name)
         {
           if (value < ZERO<RealT>)
@@ -1028,19 +1011,6 @@ namespace GridKit
         check_non_negative(Tfv_, "Tfv");
         check_non_negative(Tp_, "Tp");
         check_non_negative(Tlag_, "Tlag");
-
-        if (Tfltr_ < TIME_CONSTANT_MINIMUM || Tfv_ < TIME_CONSTANT_MINIMUM
-            || Tp_ < TIME_CONSTANT_MINIMUM || Tlag_ < TIME_CONSTANT_MINIMUM)
-        {
-          static std::once_flag time_constant_warning_flag_;
-          std::call_once(time_constant_warning_flag_,
-                         &logTimeConstantWarning);
-        }
-
-        Tfltr_ = std::max(Tfltr_, TIME_CONSTANT_MINIMUM);
-        Tfv_   = std::max(Tfv_, TIME_CONSTANT_MINIMUM);
-        Tp_    = std::max(Tp_, TIME_CONSTANT_MINIMUM);
-        Tlag_  = std::max(Tlag_, TIME_CONSTANT_MINIMUM);
 
         this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
 

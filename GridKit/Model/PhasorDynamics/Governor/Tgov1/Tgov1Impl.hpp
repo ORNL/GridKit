@@ -10,7 +10,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <mutex>
 
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
@@ -129,32 +128,10 @@ namespace GridKit
         }
       }
 
-      /**
-       * @brief Static method to log time constant warnings
-       *
-       * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed.
-       */
-      template <typename scalar_type, typename index_type>
-      void Tgov1<scalar_type, index_type>::logTimeConstantWarning()
-      {
-        Log::warning() << "Tgov1: T1 and T3 below " << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor\n";
-      }
-
       template <typename scalar_type, typename index_type>
       void Tgov1<scalar_type, index_type>::setDerivedParams()
       {
-        if (T1_ < TIME_CONSTANT_MINIMUM || T3_ < TIME_CONSTANT_MINIMUM)
-        {
-          static std::once_flag time_constant_warning_flag_;
-          std::call_once(time_constant_warning_flag_,
-                         &logTimeConstantWarning);
-        }
-
-        T1_ = std::max(T1_, TIME_CONSTANT_MINIMUM);
-        T3_ = std::max(T3_, TIME_CONSTANT_MINIMUM);
-
+        zero_T1_ = static_cast<RealT>(T1_ == ZERO<RealT>);
         this->setComponentBase(Trate_ * static_cast<RealT>(1.0e6));
       }
 
@@ -235,6 +212,8 @@ namespace GridKit
         check(Trate_ > ZERO<RealT>, "Trate must be positive");
         check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
         check(R_ != ZERO<RealT>, "R must be nonzero");
+        check(T1_ >= ZERO<RealT>, "T1 must be non-negative");
+        check(T3_ >= ZERO<RealT>, "T3 must be non-negative");
         check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
         check(signals_.template isAssigned<Tgov1InternalVariables::PM>(),
               "pmech output signal must be assigned");
@@ -321,9 +300,9 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::tagDifferentiable()
       {
-        tag_[0] = true;  // Ptx
-        tag_[1] = true;  // Pv
-        tag_[2] = false; // Pmech
+        tag_[0] = (T3_ != ZERO<RealT>); // Ptx
+        tag_[1] = (T1_ != ZERO<RealT>); // Pv
+        tag_[2] = false;                // Pmech
 
         return 0;
       }
@@ -376,9 +355,11 @@ namespace GridKit
         const ScalarT omega = ws[DELTAOMEGA];
         const ScalarT pref  = ws[PREF];
 
-        f[PTX] = -pturb_dot - (pturb - pv - T2_ * pv_dot) / T3_;
-        f[PV]  = -pv_dot + Math::antiwindup(pv, -pv + (pref - omega) / R_, Pvmin_, Pvmax_) / T1_;
-        f[PM]  = -this->toComponentBase(pmech) + pturb - Dt_ * omega;
+        f[PTX] = -T3_ * pturb_dot - pturb + pv + T2_ * pv_dot;
+        f[PV]  = -T1_ * pv_dot
+                + (ONE<RealT> - zero_T1_) * Math::antiwindup(pv, -pv + (pref - omega) / R_, Pvmin_, Pvmax_)
+                + zero_T1_ * (-pv + Math::clamp((pref - omega) / R_, Pvmin_, Pvmax_));
+        f[PM] = -this->toComponentBase(pmech) + pturb - Dt_ * omega;
 
         return 0;
       }

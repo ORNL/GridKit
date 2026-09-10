@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <mutex>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -63,38 +62,16 @@ namespace GridKit
       }
 
       /**
-       * @brief Static method to log time constant warnings
-       *
-       * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed.
-       */
-      template <typename scalar_type, typename index_type>
-      void Regca<scalar_type, index_type>::logTimeConstantWarning()
-      {
-        Log::warning() << "Regca: Tg and TM below " << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor to keep the current-control "
-                       << "and voltage-sensor lags well posed\n";
-      }
-
-      /**
        * @brief Resolve parameter-derived constants and limiter selections.
        *
-       * The time constants are raised to the well-posedness floor. Complementary
-       * LVPL masks keep the residual branchless, while the sign of the initial
+       * Complementary LVPL masks select the limiter, while the sign of the initial
        * reactive-power injection selects the applicable recovery-rate limit.
        */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setDerivedParameters()
       {
-        if (Tg_ < TIME_CONSTANT_MINIMUM || TM_ < TIME_CONSTANT_MINIMUM)
-        {
-          static std::once_flag time_constant_warning_flag_;
-          std::call_once(time_constant_warning_flag_,
-                         &logTimeConstantWarning);
-        }
-
-        Tg_          = std::max(Tg_, TIME_CONSTANT_MINIMUM);
-        TM_          = std::max(TM_, TIME_CONSTANT_MINIMUM);
+        zero_Tg_     = static_cast<RealT>(Tg_ == ZERO<RealT>);
+        zero_TM_     = static_cast<RealT>(TM_ == ZERO<RealT>);
         use_lvpl_    = ZERO<RealT>;
         bypass_lvpl_ = ONE<RealT>;
         if (sL_)
@@ -391,6 +368,8 @@ namespace GridKit
         }
 
         check(mva_base_ > ZERO<RealT>, "mva must be positive");
+        check(Tg_ >= ZERO<RealT>, "Tg must be non-negative");
+        check(TM_ >= ZERO<RealT>, "TM must be non-negative");
         check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
         check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
         check(std::isfinite(Khv_) && Khv_ >= ZERO<RealT>,
@@ -525,9 +504,9 @@ namespace GridKit
       int Regca<scalar_type, index_type>::tagDifferentiable()
       {
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[static_cast<size_t>(RegcaInternalVariables::VM)] = true;
-        tag_[static_cast<size_t>(RegcaInternalVariables::IQ)] = true;
-        tag_[static_cast<size_t>(RegcaInternalVariables::IP)] = true;
+        tag_[static_cast<size_t>(RegcaInternalVariables::VM)] = (TM_ != ZERO<RealT>);
+        tag_[static_cast<size_t>(RegcaInternalVariables::IQ)] = (Tg_ != ZERO<RealT>);
+        tag_[static_cast<size_t>(RegcaInternalVariables::IP)] = (Tg_ != ZERO<RealT>);
         return 0;
       }
 
@@ -602,8 +581,9 @@ namespace GridKit
 
         // Form the unconstrained current derivatives, then apply the REGCA
         // recovery rate limits in p.u./s.
-        const ScalarT fq = (iqcmd - iq) / Tg_;
-        const ScalarT fp = (ipcmd - ip) / Tg_;
+        const RealT   current_scale = Tg_ + zero_Tg_;
+        const ScalarT fq            = (iqcmd - iq) / current_scale;
+        const ScalarT fp            = (ipcmd - ip) / current_scale;
 
         // At Q0 = 0 both corrections vanish, leaving fq unrestricted.
         const ScalarT iq_rate = fq + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
@@ -613,17 +593,18 @@ namespace GridKit
         // The LVPL ceiling moves with sensed voltage. Its rate is the exact
         // chain rule (inside() is the linseg slope mask and ramp' = sigmoid);
         // a pinned Ip tracks the moving ceiling.
-        const ScalarT vm_rate = (vt - vm) / TM_;
+        const ScalarT vm_rate = (ONE<RealT> - zero_TM_) * (vt - vm) / (TM_ + zero_TM_) + zero_TM_ * vm_dot;
         const ScalarT il_rate = (IL1_ / (VL1_ - VL0_) * Math::inside(vm, VL0_, VL1_)
                                  + KL_ * Math::sigmoid(vm - VL1_))
                                 * vm_rate;
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT qnet  = iq - iqextra;
 
-        f[VM] = -vm_dot + vm_rate;
-        f[IQ] = -iq_dot + iq_rate;
-        f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
-                + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
+        f[VM] = -TM_ * vm_dot + vt - vm;
+        f[IQ] = -Tg_ * iq_dot + Tg_ * iq_rate + zero_Tg_ * (iqcmd - iq);
+        f[IP] = -Tg_ * ip_dot
+                + Tg_ * (bypass_lvpl_ * fp_limited + use_lvpl_ * awmax(ip, fp_limited, il, il_rate))
+                + zero_Tg_ * (-ip + bypass_lvpl_ * ipcmd + use_lvpl_ * Math::min(ipcmd, il));
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;

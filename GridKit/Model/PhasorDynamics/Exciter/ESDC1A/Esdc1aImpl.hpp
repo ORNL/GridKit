@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <mutex>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -414,11 +413,11 @@ namespace GridKit
         const auto XLL  = static_cast<size_t>(Esdc1aInternalVariables::XLL);
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[EFDP] = true;
-        tag_[VC]   = true;
-        tag_[VR]   = true;
-        tag_[VF]   = true;
-        tag_[XLL]  = true;
+        tag_[EFDP] = (Te_ != ZERO<RealT>);
+        tag_[VC]   = (Tr_ != ZERO<RealT>);
+        tag_[VR]   = (Ta_ != ZERO<RealT>);
+        tag_[VF]   = (Tf1_ != ZERO<RealT>);
+        tag_[XLL]  = (Tb_ != ZERO<RealT>);
         return 0;
       }
 
@@ -583,17 +582,20 @@ namespace GridKit
         const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
         const ScalarT vfe_target        = Ke_eff_ * efdp + se;
-        const ScalarT efdp_rate         = (vr - vfe) / Te_;
+        const ScalarT efdp_rate         = (vr - vfe) / (Te_ + zero_Te_);
         const ScalarT limited_efdp_rate = awmin(efdp, efdp_rate, ZERO<RealT>);
 
-        f[EFDP] = -efdp_dot + (ONE<RealT> - lim_on_) * efdp_rate
-                  + lim_on_ * limited_efdp_rate;
-        f[VC]  = -vc_dot + (ec - vc) / Tr_;
-        f[VR]  = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
-        f[VF]  = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
-        f[XLL] = -xll_dot + (ev - xll) / Tb_;
+        // At zero lag, retain the lower-bound constraint when anti-windup blocks the drive.
+        f[EFDP] = -Te_ * efdp_dot + (ONE<RealT> - lim_on_) * (vr - vfe)
+                  + lim_on_ * ((Te_ + zero_Te_) * limited_efdp_rate + zero_Te_ * Math::ramp(-efdp));
+        f[VC] = -Tr_ * vc_dot + ec - vc;
+        f[VR] = -Ta_ * vr_dot
+                + (ONE<RealT> - zero_Ta_) * Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_)
+                + zero_Ta_ * (-vr + Math::clamp(Ka_ * vhv, Vrmin_, Vrmax_));
+        f[VF]  = -Tf1_ * vf_dot - vf + Kf_ * ((ONE<RealT> - zero_Te_) * efdp_rate + zero_Te_ * efdp_dot);
+        f[XLL] = -Tb_ * xll_dot + ev - xll;
         f[EV]  = -ev + ev_target;
-        f[VLL] = -vll + xll + (Tc_ / Tb_) * (ev - xll);
+        f[VLL] = -vll + xll + Tc_ * xll_dot;
         f[VHV] = -vhv + uel_on_ * vll
                  + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
         f[SE]  = -se + SB_ * Math::qramp(efdp - SA_);
@@ -768,24 +770,9 @@ namespace GridKit
       }
 
       /**
-       * @brief Static method to log time constant warnings
-       *
-       * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed.
-       */
-      template <typename scalar_type, typename index_type>
-      void Esdc1a<scalar_type, index_type>::logTimeConstantWarning()
-      {
-        Log::warning() << "Esdc1a: Tr, Ta, Tb, Te, and Tf1 below "
-                       << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor to keep the exciter lags well posed\n";
-      }
-
-      /**
        * @brief Resolve the parameter-derived constants and selector masks
        *
-       * Raises the transducer, regulator, lead-lag, exciter, and feedback
-       * lags to the well-posedness floor, fits the scaled-quadratic saturation
+       * Validates the time constants, fits the scaled-quadratic saturation
        * curve, and turns the three selectors into multiplicative masks. The
        * masks let the residual select signal routing without
        * parameter-dependent control flow, which keeps its structure fixed for
@@ -794,9 +781,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Esdc1a<scalar_type, index_type>::setDerivedParameters()
       {
-        // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
         auto check_non_negative = [&](RealT value, const char* name)
         {
           if (value < ZERO<RealT>)
@@ -812,20 +796,8 @@ namespace GridKit
         check_non_negative(Te_, "Te");
         check_non_negative(Tf1_, "Tf1");
 
-        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
-            || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM
-            || Tf1_ < TIME_CONSTANT_MINIMUM)
-        {
-          static std::once_flag time_constant_warning_flag_;
-          std::call_once(time_constant_warning_flag_,
-                         &logTimeConstantWarning);
-        }
-
-        Tr_  = std::max(Tr_, TIME_CONSTANT_MINIMUM);
-        Ta_  = std::max(Ta_, TIME_CONSTANT_MINIMUM);
-        Tb_  = std::max(Tb_, TIME_CONSTANT_MINIMUM);
-        Te_  = std::max(Te_, TIME_CONSTANT_MINIMUM);
-        Tf1_ = std::max(Tf1_, TIME_CONSTANT_MINIMUM);
+        zero_Te_ = static_cast<RealT>(Te_ == ZERO<RealT>);
+        zero_Ta_ = static_cast<RealT>(Ta_ == ZERO<RealT>);
 
         spd_on_ = ZERO<RealT>;
         if (Spdmlt_)

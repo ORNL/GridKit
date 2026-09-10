@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <mutex>
 #include <numeric>
 #include <variant>
 
@@ -371,7 +370,7 @@ namespace GridKit
         const ScalarT q0       = std::sqrt(Hdam0) * pgv0;
         const ScalarT omegadb0 = Math::deadband1(omega0, -db1_, db1_);
         const ScalarT xn0      = omegadb0;
-        const ScalarT yomega0  = xn0 + leadlag_gain_ * (omegadb0 - xn0);
+        const ScalarT yomega0  = xn0;
         const ScalarT pref0    = this->toSystemBase(yomega0 + Rperm_ * gate0 - paux0);
 
         ret = is_finite(h0)
@@ -444,11 +443,11 @@ namespace GridKit
         const auto Q  = static_cast<size_t>(HygovInternalVariables::Q);
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[XN] = true;
-        tag_[XF] = true;
-        tag_[C]  = true;
-        tag_[G]  = true;
-        tag_[Q]  = true;
+        tag_[XN] = (Tnp_ != ZERO<RealT>);
+        tag_[XF] = (Tf_ != ZERO<RealT> && Tr_ != ZERO<RealT>);
+        tag_[C]  = (Tr_ != ZERO<RealT>);
+        tag_[G]  = (Tg_ != ZERO<RealT>);
+        tag_[Q]  = (Tw_ != ZERO<RealT>);
         return 0;
       }
 
@@ -599,16 +598,16 @@ namespace GridKit
         const ScalarT pref  = ws[PREF];
         const ScalarT paux  = ws[PAUX];
 
-        const ScalarT yomega = xn + leadlag_gain_ * (omegadb - xn);
+        const ScalarT yomega = xn + Tn_ * xn_dot;
 
-        f[XN]      = -xn_dot + (omegadb - xn) / Tnp_;
-        f[XF]      = -xf_dot + (ef - xf) / Tf_;
+        f[XN]      = -Tnp_ * xn_dot + omegadb - xn;
+        f[XF]      = -Tf_ * xf_dot + ef - xf;
         f[C]       = -c_dot + Math::antiwindup(c, rc, Gmin_response_, Gmax_response_);
-        f[G]       = -g_dot + (c - g) / Tg_;
-        f[Q]       = -q_dot + (Hdam_eff_ - head) / Tw_;
+        f[G]       = -Tg_ * g_dot + c - g;
+        f[Q]       = -Tw_ * q_dot + Hdam_eff_ - head;
         f[OMEGADB] = -omegadb + Math::deadband1(omega, -db1_, db1_);
         f[EF]      = -ef + this->toComponentBase(pref + paux) - yomega - Rperm_ * c;
-        f[FC]      = -Rtemp_ * fc + xf / Tr_ + (ef - xf) / Tf_;
+        f[FC]      = -Tr_ * Rtemp_ * fc + xf + Tr_ * xf_dot;
         f[RC]      = -rc + Math::clamp(fc, -Velm_, Velm_);
         f[PGV]     = -pgv + gatePower(g);
         f[H]       = -q * q + head * pgv * pgv;
@@ -750,25 +749,10 @@ namespace GridKit
       }
 
       /**
-       * @brief Static method to log time constant warnings
-       *
-       * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed.
-       */
-      template <typename scalar_type, typename index_type>
-      void Hygov<scalar_type, index_type>::logTimeConstantWarning()
-      {
-        Log::warning() << "Hygov: Tr, Tf, Tg, Tw, and Tnp below "
-                       << TIME_CONSTANT_MINIMUM
-                       << " s are raised to preserve Hessenberg form\n";
-      }
-
-      /**
        * @brief Resolve the parameter-derived constants
        *
-       * Resolves the default gate curve, floors each governor time constant,
-       * derives the speed lead-lag gain, and initializes the effective
-       * response limits and head.
+       * Resolves the default gate curve, validates the governor time constants,
+       * and initializes the effective response limits and head.
        */
       template <typename scalar_type, typename index_type>
       void Hygov<scalar_type, index_type>::setDerivedParameters()
@@ -793,9 +777,6 @@ namespace GridKit
           Pgv_ = Gv_;
         }
 
-        // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
         auto check_non_negative = [&](RealT value, const char* name)
         {
           if (value < ZERO<RealT>)
@@ -811,25 +792,6 @@ namespace GridKit
         check_non_negative(Tw_, "Tw");
         check_non_negative(Tnp_, "Tnp");
 
-        if (Tr_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM
-            || Tg_ < TIME_CONSTANT_MINIMUM || Tw_ < TIME_CONSTANT_MINIMUM
-            || Tnp_ < TIME_CONSTANT_MINIMUM)
-        {
-          static std::once_flag time_constant_warning_flag_;
-          std::call_once(time_constant_warning_flag_,
-                         &logTimeConstantWarning);
-        }
-
-        // HYGOV residuals solve explicitly for the state derivatives to preserve
-        // Hessenberg form. A zero time constant would instead require an implicit
-        // residual formulation, so enforce a strictly positive lower bound.
-        Tr_  = std::max(Tr_, TIME_CONSTANT_MINIMUM);
-        Tf_  = std::max(Tf_, TIME_CONSTANT_MINIMUM);
-        Tg_  = std::max(Tg_, TIME_CONSTANT_MINIMUM);
-        Tw_  = std::max(Tw_, TIME_CONSTANT_MINIMUM);
-        Tnp_ = std::max(Tnp_, TIME_CONSTANT_MINIMUM);
-
-        leadlag_gain_  = Tn_ / Tnp_;
         Gmin_response_ = Gmin_;
         Gmax_response_ = Gmax_;
         Hdam_eff_      = Hdam_;

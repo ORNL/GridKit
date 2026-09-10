@@ -19,6 +19,8 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -40,6 +42,26 @@ namespace GridKit
           static_cast<ScalarT>(100.0) * std::numeric_limits<ScalarT>::epsilon();
       static constexpr RealT kSmoothTol =
           std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                      = makeData();
+          using Parameter                = typename decltype(data)::Parameters;
+          data.parameters[Parameter::TM] = time_constant;
+          data.parameters[Parameter::Tg] = time_constant;
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
+          PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
+          success *= implicitTimeConstant(model, 0, time_constant);
+          success *= implicitTimeConstant(model, 1, time_constant);
+          success *= implicitTimeConstant(model, 2, time_constant);
+        }
+        return success.report(__func__);
+      }
 
       /// Construction, the monitor, and every verify() error class: missing
       /// and invalid parameters, a null bus, and an unlinked command port.
@@ -102,8 +124,7 @@ namespace GridKit
         unlinked.getSignals().template attachSignalNode<Ext::IPCMD>(&unlinked_node);
         success *= (unlinked.verify() > 0);
 
-        // Zero time constants are raised to the well-posedness floor with a
-        // warning, and the raised model still initializes to zero residuals.
+        // Zero time constants select algebraic states with zero initial residuals.
         auto zero_time                   = makeData();
         zero_time.parameters[Params::Tg] = 0.0;
         zero_time.parameters[Params::TM] = 0.0;
@@ -187,8 +208,8 @@ namespace GridKit
         // The latched commands restore both displaced states at their ideal
         // interior first-order rates.
         const auto* f  = latched.regca.getResidual().getData();
-        success       *= scalarMatches(f[index(Vars::IP)], 0.5, "latched active-current rate", kSmoothTol);
-        success       *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate", kSmoothTol);
+        success       *= scalarMatches(f[index(Vars::IP)] / 0.2, 0.5, "latched active-current rate", kSmoothTol);
+        success       *= scalarMatches(f[index(Vars::IQ)] / 0.2, 0.3, "latched reactive-current rate", kSmoothTol);
 
         return success.report(__func__);
       }
@@ -360,9 +381,9 @@ namespace GridKit
         // The LVACM and LVPL states use the midpoint of their breakpoint
         // interval, where linseg is exactly one half for every MU.
         const std::array<ExpectedResidual, 10> expected{{
-            {Vars::VM, "VM", -0.01},
-            {Vars::IQ, "IQ", 1.52},
-            {Vars::IP, "IP", -0.03},
+            {Vars::VM, "VM", -0.004},
+            {Vars::IQ, "IQ", 0.304},
+            {Vars::IP, "IP", -0.006},
             {Vars::VT, "VT", 0.5425},
             {Vars::IR, "IR", -0.2875},
             {Vars::II, "II", 0.1265},
@@ -429,7 +450,7 @@ namespace GridKit
             success *= (fixture.evaluate() == 0);
 
             const auto* f  = fixture.regca.getResidual().getData();
-            success       *= scalarMatches(f[index(Vars::IP)],
+            success       *= scalarMatches(f[index(Vars::IP)] / 0.2,
                                      test_case.expected_rate,
                                      test_case.label);
           }
@@ -472,7 +493,7 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IP)],
+          success       *= scalarMatches(f[index(Vars::IP)] / 0.2,
                                    test_case.expected_rate,
                                    test_case.label);
         }
@@ -497,7 +518,7 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IP)],
+          success       *= scalarMatches(f[index(Vars::IP)] / 0.2,
                                    -1.925,
                                    "falling ceiling drags Ip");
         }
@@ -518,7 +539,7 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IP)],
+          success       *= scalarMatches(f[index(Vars::IP)] / 0.2,
                                    0.7,
                                    "released ceiling above the breakpoint");
         }
@@ -563,7 +584,7 @@ namespace GridKit
           success       *= (fixture.evaluate() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IQ)], test_case.expected_rate, test_case.label);
+          success       *= scalarMatches(f[index(Vars::IQ)] / 0.2, test_case.expected_rate, test_case.label);
         }
 
         return success.report(__func__);

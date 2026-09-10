@@ -13,6 +13,8 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -30,6 +32,29 @@ namespace GridKit
 
       static constexpr RealT kTol =
           static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                      = makeTestData();
+          using Parameter                = typename decltype(data)::Parameters;
+          data.parameters[Parameter::Tr] = time_constant;
+          data.parameters[Parameter::Ta] = time_constant;
+          data.parameters[Parameter::Te] = time_constant;
+          data.parameters[Parameter::Tf] = time_constant;
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
+          PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> model(&bus, data);
+          success *= implicitTimeConstant(model, 0, time_constant);
+          success *= implicitTimeConstant(model, 1, time_constant);
+          success *= implicitTimeConstant(model, 2, time_constant);
+          success *= implicitTimeConstant(model, 3, time_constant);
+        }
+        return success.report(__func__);
+      }
 
       TestOutcome constructor()
       {
@@ -115,10 +140,10 @@ namespace GridKit
         success *= (exciter.initialize() == 0);
         exciter.tagDifferentiable();
 
-        success *= (exciter.tag()[0]);
-        success *= (exciter.tag()[1]);
-        success *= (exciter.tag()[2]);
-        success *= (exciter.tag()[3]);
+        success *= (!exciter.tag()[0]);
+        success *= (!exciter.tag()[1]);
+        success *= (!exciter.tag()[2]);
+        success *= (!exciter.tag()[3]);
 
         auto*       y  = exciter.y().getData();
         auto*       yp = exciter.yp().getData();
@@ -151,32 +176,34 @@ namespace GridKit
         exciter.y().setDataUpdated();
         exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[0], static_cast<ScalarT>(-123.0));
+        success *= isEqual(f[0], static_cast<ScalarT>(0.0));
         yp[0]    = 0.0;
 
         y[0] = 4.0;
         exciter.y().setDataUpdated();
         exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[0], static_cast<ScalarT>(1.0e3));
+        success *= isEqual(f[0], static_cast<ScalarT>(1.0));
 
         y[0] = 5.0;
-        y[4] = 0.02;
+        // The algebraic regulator clamps the command of 2 to Vrmax = 1.
+        y[4] = 0.04;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[1], static_cast<ScalarT>(900.0));
+        success *= isEqual(f[1], static_cast<ScalarT>(0.9));
 
         y[4] = 0.0;
         y[1] = 1.0;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[2], static_cast<ScalarT>(900.0));
+        success *= isEqual(f[2], static_cast<ScalarT>(0.9));
 
         y[1] = 0.0;
         y[5] = 1.0;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[3], static_cast<ScalarT>(1.0e3));
+        success *= isEqual(f[3], static_cast<ScalarT>(0.0));
+        success *= isEqual(f[5], static_cast<ScalarT>(-1.0));
 
         return success.report(__func__);
       }

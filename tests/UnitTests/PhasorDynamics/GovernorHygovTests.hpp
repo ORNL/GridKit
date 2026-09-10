@@ -22,6 +22,8 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -41,6 +43,26 @@ namespace GridKit
 
       static constexpr RealT kTol =
           static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                       = makeData();
+          using Parameter                 = typename decltype(data)::Parameters;
+          data.parameters[Parameter::Tnp] = time_constant;
+          data.parameters[Parameter::Tf]  = time_constant;
+          data.parameters[Parameter::Tg]  = time_constant;
+          data.parameters[Parameter::Tw]  = time_constant;
+          PhasorDynamics::Governor::Hygov<ScalarT, IdxT> model(data);
+          success *= implicitTimeConstant(model, 0, time_constant);
+          success *= implicitTimeConstant(model, 1, time_constant);
+          success *= implicitTimeConstant(model, 3, time_constant);
+          success *= implicitTimeConstant(model, 4, time_constant);
+        }
+        return success.report(__func__);
+      }
 
       /// Construction and every verify() error class, including parameter
       /// types and finiteness, parameter relationships, power bases, curve
@@ -222,17 +244,16 @@ namespace GridKit
         success *= unlinkedSignalRejected<External::PREF>();
         success *= unlinkedSignalRejected<External::PAUX>();
 
-        // All five zero time constants use the documented numerical floor and
-        // still admit a consistent steady-state initialization.
-        Fixture<ScalarT> floors(makeData(),
-                                {{Params::Tr, 0.0},
-                                 {Params::Tf, 0.0},
-                                 {Params::Tg, 0.0},
-                                 {Params::Tw, 0.0},
-                                 {Params::Tnp, 0.0}});
-        success *= floors.initialize(0.4);
-        success *= (floors.evaluate() == 0);
-        success *= allResidualsZero(floors.hygov);
+        // All five zero time constants admit a consistent initialization.
+        Fixture<ScalarT> algebraic(makeData(),
+                                   {{Params::Tr, 0.0},
+                                    {Params::Tf, 0.0},
+                                    {Params::Tg, 0.0},
+                                    {Params::Tw, 0.0},
+                                    {Params::Tnp, 0.0}});
+        success *= algebraic.initialize(0.4);
+        success *= (algebraic.evaluate() == 0);
+        success *= allResidualsZero(algebraic.hygov);
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -664,14 +685,14 @@ namespace GridKit
         success *= (fixture.evaluate() == 0);
 
         const std::array<InternalRow, static_cast<size_t>(Internal::MAXIMUM)> expected{{
-            {Internal::XN, -0.07785714285714286},
-            {Internal::XF, -0.7300000000000001},
+            {Internal::XN, -0.109},
+            {Internal::XF, -0.146},
             {Internal::C, 0.06},
-            {Internal::G, 0.1233333333333334},
-            {Internal::Q, 0.011538461538461414},
+            {Internal::G, 0.074},
+            {Internal::Q, 0.015},
             {Internal::OMEGADB, 0.0033514666467982894},
-            {Internal::EF, 0.5863},
-            {Internal::FC, -0.7405000000000002},
+            {Internal::EF, 0.5318},
+            {Internal::FC, -0.042},
             {Internal::RC, 0.029996890386450745},
             {Internal::PGV, -0.04600000003160343},
             {Internal::H, -0.033299999999999885},
@@ -822,7 +843,7 @@ namespace GridKit
              {},
              {{Internal::Q, 0.61}, {Internal::H, 0.9}, {Internal::PGV, 0.55}},
              {{Internal::Q, 0.05}},
-             {{Internal::Q, 0.18076923076923068}, {Internal::H, -0.09984999999999994}}},
+             {{Internal::Q, 0.235}, {Internal::H, -0.09984999999999994}}},
             {"turbine damping",
              {{External::OMEGA, 0.05}},
              {{Internal::G, 0.6},
@@ -1109,8 +1130,7 @@ namespace GridKit
 
       Data makeData() const
       {
-        // The documented typical values with the floored time constants
-        // raised above the floor, so routine fixtures log no warnings.
+        // Positive time constants for the dynamic test fixtures.
         return withParameters(makeMinimalData(),
                               {{Params::Trate, 100.0},
                                {Params::Rperm, 0.05},

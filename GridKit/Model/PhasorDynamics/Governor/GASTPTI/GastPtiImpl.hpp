@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <mutex>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
@@ -124,7 +123,7 @@ namespace GridKit
       /**
        * @brief Validate the GASTPTI configuration
        *
-       * Checks parameter-loading and time-floor errors, finiteness and static
+       * Checks parameter-loading errors, finiteness, non-negative time constants, and static
        * parameter relationships, system/component bases, the required
        * mechanical-power output assignment, attached external signals, and
        * distinct indexed ports.
@@ -147,6 +146,9 @@ namespace GridKit
           }
         };
 
+        check(std::isfinite(T1_) && T1_ >= ZERO<RealT>, "T1 must be finite and non-negative");
+        check(std::isfinite(T2_) && T2_ >= ZERO<RealT>, "T2 must be finite and non-negative");
+        check(std::isfinite(T3_) && T3_ >= ZERO<RealT>, "T3 must be finite and non-negative");
         check(std::isfinite(R_) && R_ > ZERO<RealT>, "R must be finite and positive");
         check(std::isfinite(At_) && At_ >= ZERO<RealT>,
               "At must be finite and non-negative");
@@ -407,9 +409,9 @@ namespace GridKit
         const auto XTEMP  = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[XVALVE] = true;
-        tag_[XFLOW]  = true;
-        tag_[XTEMP]  = true;
+        tag_[XVALVE] = (T1_ != ZERO<RealT>);
+        tag_[XFLOW]  = (T2_ != ZERO<RealT>);
+        tag_[XTEMP]  = (T3_ != ZERO<RealT>);
         return 0;
       }
 
@@ -557,13 +559,14 @@ namespace GridKit
         const ScalarT valve_target =
             Math::antiwindup(xvalve, vlv - xvalve, Vmin_response_, Vmax_response_);
 
-        f[XVALVE] = -xvalve_dot + s_valve_ * valve_target / T1_;
-        f[XFLOW]  = -xflow_dot + (-xflow + xvalve) / T2_;
-        f[XTEMP]  = -xtemp_dot + (-xtemp + xflow) / T3_;
-        f[VLOAD]  = -omega + R_ * (pref - vload);
-        f[VTEMP]  = -vtemp + At_ + Kt_ * (At_ - xtemp);
-        f[VLV]    = -vlv + Math::min(vload, vtemp);
-        f[PMECH]  = -this->toComponentBase(pmech) + xflow - Dturb_ * omega;
+        f[XVALVE] = -T1_ * xvalve_dot + (ONE<RealT> - zero_T1_) * s_valve_ * valve_target
+                    + zero_T1_ * (-xvalve + Math::clamp(vlv, Vmin_response_, Vmax_response_));
+        f[XFLOW] = -T2_ * xflow_dot - xflow + xvalve;
+        f[XTEMP] = -T3_ * xtemp_dot - xtemp + xflow;
+        f[VLOAD] = -omega + R_ * (pref - vload);
+        f[VTEMP] = -vtemp + At_ + Kt_ * (At_ - xtemp);
+        f[VLV]   = -vlv + Math::min(vload, vtemp);
+        f[PMECH] = -this->toComponentBase(pmech) + xflow - Dturb_ * omega;
 
         return 0;
       }
@@ -609,35 +612,6 @@ namespace GridKit
           Log::error() << "GastPti: parameter '" << name << "' must be numeric\n";
           ++parameter_error_count_;
         }
-      }
-
-      /**
-       * @brief Validate and floor one turbine time constant
-       *
-       * Invalid or nonfinite values record a parameter error and are replaced
-       * by the floor so later calculations remain well posed. A valid value
-       * below the floor is raised and reported through the return value.
-       *
-       * @param[in,out] value Time constant to validate and floor.
-       * @param[in] name Parameter name for diagnostics.
-       * @return true when a valid value was raised to the floor.
-       */
-      template <typename scalar_type, typename index_type>
-      bool GastPti<scalar_type, index_type>::floorTimeConstant(
-          RealT& value, const char* name)
-      {
-        if (!std::isfinite(value) || value < ZERO<RealT>)
-        {
-          Log::error() << "GastPti: " << name
-                       << " must be finite and non-negative\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
-        }
-
-        const bool raised = value < TIME_CONSTANT_MINIMUM;
-        value             = std::max(value, TIME_CONSTANT_MINIMUM);
-        return raised;
       }
 
       /**
@@ -706,45 +680,15 @@ namespace GridKit
       }
 
       /**
-       * @brief Static method to log time constant warnings
-       *
-       * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed.
-       */
-      template <typename scalar_type, typename index_type>
-      void GastPti<scalar_type, index_type>::logTimeConstantWarning()
-      {
-        Log::warning() << "GastPti: T1, T2, and T3 below "
-                       << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor to keep the turbine lags well posed\n";
-      }
-
-      /**
        * @brief Resolve the parameter-derived constants
        *
-       * Validates and raises each turbine lag in place so every explicit
-       * differential row retains a nonzero denominator and resets the
-       * parameter-only response defaults. initialize() transactionally
-       * finalizes the operating-point-dependent response bounds and valve mask.
-       * Recording invalid lag inputs before the in-place floor preserves the
-       * loading error for verify().
+       * Resets the parameter-only response defaults. initialize() finalizes
+       * the operating-point-dependent response bounds and valve mask.
        */
       template <typename scalar_type, typename index_type>
       void GastPti<scalar_type, index_type>::setDerivedParameters()
       {
-        bool floor_warning = false;
-
-        floor_warning |= floorTimeConstant(T1_, "T1");
-        floor_warning |= floorTimeConstant(T2_, "T2");
-        floor_warning |= floorTimeConstant(T3_, "T3");
-
-        if (floor_warning)
-        {
-          static std::once_flag time_constant_warning_flag_;
-          std::call_once(time_constant_warning_flag_,
-                         &logTimeConstantWarning);
-        }
-
+        zero_T1_       = static_cast<RealT>(T1_ == ZERO<RealT>);
         Vmin_response_ = Vmin_;
         Vmax_response_ = Vmax_;
 

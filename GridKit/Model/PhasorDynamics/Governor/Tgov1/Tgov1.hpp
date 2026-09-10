@@ -124,6 +124,7 @@ namespace GridKit
         RealT Pvmin_{ZERO<RealT>};
         RealT Pvmax_{ONE<RealT>};
         RealT T1_{static_cast<RealT>(0.5)};
+        RealT zero_T1_{ZERO<RealT>};
         RealT T2_{static_cast<RealT>(2.5)};
         RealT T3_{static_cast<RealT>(7.5)};
         RealT Dt_{ZERO<RealT>};
@@ -137,9 +138,6 @@ namespace GridKit
         // Parameter initialization function
         void initializeParameters(const ModelDataT& data);
         void setDerivedParams();
-
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
       };
 
     } // namespace Governor

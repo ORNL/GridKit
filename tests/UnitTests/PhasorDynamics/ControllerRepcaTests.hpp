@@ -22,6 +22,8 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -42,7 +44,32 @@ namespace GridKit
       static constexpr RealT kTol =
           static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
-      /// Validate construction, defaults, parameters, signals, and time floors.
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                         = makeData();
+          using Parameter                   = typename decltype(data)::Parameters;
+          data.parameters[Parameter::Tfltr] = time_constant;
+          data.parameters[Parameter::Tfv]   = time_constant;
+          data.parameters[Parameter::Tp]    = time_constant;
+          data.parameters[Parameter::Tlag]  = time_constant;
+          Fixture<ScalarT> fixture(data);
+          fixture.attachAllInputs();
+          fixture.bus.allocate();
+          fixture.bus.initialize();
+          auto& model  = fixture.repca;
+          success     *= implicitTimeConstant(model, 0, time_constant);
+          success     *= implicitTimeConstant(model, 1, time_constant);
+          success     *= implicitTimeConstant(model, 3, time_constant);
+          success     *= implicitTimeConstant(model, 4, time_constant);
+          success     *= implicitTimeConstant(model, 6, time_constant);
+        }
+        return success.report(__func__);
+      }
+
+      /// Validate construction, defaults, parameters, signals, and zero time constants.
       TestOutcome validation()
       {
         TestStatus success = true;
@@ -209,35 +236,35 @@ namespace GridKit
         success *= unlinkedSignalRejected<Ext::QREF>();
         success *= unlinkedSignalRejected<Ext::FREQREF>();
 
-        auto floor_data                      = makeInitializationData();
-        floor_data.parameters[Params::Tfltr] = 0.0;
-        floor_data.parameters[Params::Tfv]   = 0.0;
-        floor_data.parameters[Params::Tp]    = 0.0;
-        floor_data.parameters[Params::Tlag]  = 0.0;
+        auto zero_time_data                      = makeInitializationData();
+        zero_time_data.parameters[Params::Tfltr] = 0.0;
+        zero_time_data.parameters[Params::Tfv]   = 0.0;
+        zero_time_data.parameters[Params::Tp]    = 0.0;
+        zero_time_data.parameters[Params::Tlag]  = 0.0;
 
-        Fixture<ScalarT> floored(floor_data);
-        floored.attachAllInputs();
-        setInitializationInputs(floored);
-        success *= floored.initialize(0.25, 0.45);
-        success *= (floored.repca.evaluateResidual() == 0);
-        success *= allResidualsWithinInitTolerance(floored.repca);
+        Fixture<ScalarT> algebraic(zero_time_data);
+        algebraic.attachAllInputs();
+        setInitializationInputs(algebraic);
+        success *= algebraic.initialize(0.25, 0.45);
+        success *= (algebraic.repca.evaluateResidual() == 0);
+        success *= allResidualsWithinInitTolerance(algebraic.repca);
 
-        auto* y                = floored.repca.y().getData();
+        auto* y                = algebraic.repca.y().getData();
         y[index(Vars::VMEAS)] -= 0.001;
         y[index(Vars::QMEAS)] -= 0.002;
         y[index(Vars::PMEAS)] -= 0.003;
         y[index(Vars::PREF)]  -= 0.004;
-        floored.repca.y().setDataUpdated();
-        success *= (floored.repca.evaluateResidual() == 0);
-        const std::array<VariableValue, 4> floored_residuals{{
-            {Vars::VMEAS, 1.0},
-            {Vars::QMEAS, 2.0},
-            {Vars::PMEAS, 3.0},
-            {Vars::PREF, 4.0},
+        algebraic.repca.y().setDataUpdated();
+        success *= (algebraic.repca.evaluateResidual() == 0);
+        const std::array<VariableValue, 4> algebraic_residuals{{
+            {Vars::VMEAS, 0.001},
+            {Vars::QMEAS, 0.002},
+            {Vars::PMEAS, 0.003},
+            {Vars::PREF, 0.004},
         }};
-        success *= residualsMatch(floored.repca,
-                                  floored_residuals,
-                                  "floored time constants");
+        success *= residualsMatch(algebraic.repca,
+                                  algebraic_residuals,
+                                  "algebraic time constants");
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -794,13 +821,13 @@ namespace GridKit
         success *= (fixture.repca.evaluateResidual() == 0);
 
         const std::array<VariableValue, index(Vars::MAXIMUM)> expected_residuals{{
-            {Vars::VMEAS, 0.4},
-            {Vars::QMEAS, 0.45},
+            {Vars::VMEAS, 0.08},
+            {Vars::QMEAS, 0.09},
             {Vars::XQPI, 0.3},
-            {Vars::XQLAG, 0.46},
-            {Vars::PMEAS, 0.5},
+            {Vars::XQLAG, 1.15},
+            {Vars::PMEAS, 0.2},
             {Vars::XPPI, -0.3},
-            {Vars::PREF, 0.4},
+            {Vars::PREF, 0.2},
             {Vars::V, -1.28},
             {Vars::VLDC, 0.028},
             {Vars::VDROOP, 0.1},
@@ -810,7 +837,7 @@ namespace GridKit
             {Vars::ERQDB, 0.75},
             {Vars::ERQLIM, -0.35},
             {Vars::QPI, -0.05},
-            {Vars::QEXT, -1.345},
+            {Vars::QEXT, -0.63},
             {Vars::EF, -0.015},
             {Vars::EP, -0.4},
             {Vars::EPLIM, 1.1},
@@ -996,8 +1023,8 @@ namespace GridKit
         setDerivative(fixture.repca, {{Vars::XQLAG, -0.04}});
         success *= (fixture.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 2> lead_lag_residuals{{
-            {Vars::XQLAG, 0.092},
-            {Vars::QEXT, -0.624},
+            {Vars::XQLAG, 0.23},
+            {Vars::QEXT, -0.268},
         }};
         success *= residualsMatch(fixture.repca,
                                   lead_lag_residuals,
@@ -1163,7 +1190,7 @@ namespace GridKit
         setDerivative(fixture.repca, {{Vars::PREF, 0.05}});
         success *= (fixture.repca.evaluateResidual() == 0);
         success *= residualsMatch(fixture.repca,
-                                  {{Vars::PREF, 0.07}},
+                                  {{Vars::PREF, 0.035}},
                                   "active-power command lag");
 
         return success.report(__func__);
@@ -1189,13 +1216,13 @@ namespace GridKit
                        {Vars::PREF, 0.8}});
         success *= (fixture.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 7> expected_residuals{{
-            {Vars::VMEAS, 0.3},
-            {Vars::QMEAS, 0.35},
+            {Vars::VMEAS, 0.06},
+            {Vars::QMEAS, 0.07},
             {Vars::XQPI, 0.2},
-            {Vars::XQLAG, 0.36},
-            {Vars::PMEAS, 0.4},
+            {Vars::XQLAG, 0.9},
+            {Vars::PMEAS, 0.16},
             {Vars::XPPI, -0.4},
-            {Vars::PREF, 0.3},
+            {Vars::PREF, 0.15},
         }};
         success *= residualsMatch(fixture.repca,
                                   expected_residuals,
@@ -2160,18 +2187,18 @@ namespace GridKit
       std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobian() const
       {
         return {
-            {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
-            {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::Q)), 10.0}},
+            {{index(Vars::VMEAS), -1.2}, {index(Vars::VCTRL), 1.0}},
+            {{index(Vars::QMEAS), -1.2}, {externalColumn(index(Ext::Q)), 2.0}},
             {{index(Vars::XQPI), -1.0},
              {index(Vars::SFRZ), 1.2},
              {index(Vars::ERQLIM), 1.5},
              {index(Vars::QPI), 0.0}},
-            {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
-            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::P)), 5.0}},
+            {{index(Vars::XQLAG), -3.5}, {index(Vars::QPI), 1.0}},
+            {{index(Vars::PMEAS), -1.4}, {externalColumn(index(Ext::P)), 2.0}},
             {{index(Vars::XPPI), -1.0},
              {index(Vars::EPLIM), 1.8},
              {index(Vars::PPI), 0.0}},
-            {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
+            {{index(Vars::PREF), -1.5}, {index(Vars::PPI), 1.0}},
             {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
             {{index(Vars::VLDC), -2.0},
              {kBusVrColumn, 1.96},
@@ -2191,7 +2218,7 @@ namespace GridKit
             {{index(Vars::ERQ), 1.0}, {index(Vars::ERQDB), -1.0}},
             {{index(Vars::ERQDB), 1.0}, {index(Vars::ERQLIM), -1.0}},
             {{index(Vars::XQPI), 1.0}, {index(Vars::ERQLIM), 2.0}, {index(Vars::QPI), -1.0}},
-            {{index(Vars::XQLAG), 2.3}, {index(Vars::QPI), 0.2}, {index(Vars::QEXT), -5.0}},
+            {{index(Vars::XQLAG), 1.2}, {index(Vars::QEXT), -2.0}},
             {{index(Vars::EF), -1.0},
              {externalColumn(index(Ext::FREQ)), -1.0},
              {externalColumn(index(Ext::FREQREF)), 1.0}},
@@ -2230,13 +2257,14 @@ namespace GridKit
       std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobianNonunitAlpha() const
       {
         auto expected                                    = expectedJacobian();
-        expected[index(Vars::VMEAS)][index(Vars::VMEAS)] = -7.5;
-        expected[index(Vars::QMEAS)][index(Vars::QMEAS)] = -7.5;
+        expected[index(Vars::VMEAS)][index(Vars::VMEAS)] = -1.5;
+        expected[index(Vars::QMEAS)][index(Vars::QMEAS)] = -1.5;
         expected[index(Vars::XQPI)][index(Vars::XQPI)]   = -2.5;
-        expected[index(Vars::XQLAG)][index(Vars::XQLAG)] = -2.9;
-        expected[index(Vars::PMEAS)][index(Vars::PMEAS)] = -5.0;
+        expected[index(Vars::XQLAG)][index(Vars::XQLAG)] = -7.25;
+        expected[index(Vars::PMEAS)][index(Vars::PMEAS)] = -2.0;
         expected[index(Vars::XPPI)][index(Vars::XPPI)]   = -2.5;
-        expected[index(Vars::PREF)][index(Vars::PREF)]   = -4.5;
+        expected[index(Vars::PREF)][index(Vars::PREF)]   = -2.25;
+        expected[index(Vars::QEXT)][index(Vars::XQLAG)]  = 1.5;
         return expected;
       }
 

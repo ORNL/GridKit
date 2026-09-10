@@ -183,7 +183,6 @@ namespace GridKit
                                   ReecbParameters   parameter,
                                   bool&             target,
                                   const char*       name);
-        bool floorTimeConstant(RealT& value, const char* name);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
@@ -193,9 +192,6 @@ namespace GridKit
 
         ScalarT& Vr();
         ScalarT& Vi();
-
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
 
         static constexpr RealT VMEAS_MINIMUM = static_cast<RealT>(0.01);
 
@@ -236,6 +232,8 @@ namespace GridKit
         IdxT parameter_error_count_{0};
 
         // Derived parameters
+        RealT zero_Tiq_{0};
+        RealT zero_Tpord_{0};
         RealT pf_on_{0};
         RealT pf_off_{1};
         RealT q_on_{0};

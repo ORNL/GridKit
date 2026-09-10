@@ -21,6 +21,8 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -42,6 +44,31 @@ namespace GridKit
       // worst here is VR, which recovers Ka*(Vr/Ka) through 1/Ta at 31 eps.
       static constexpr RealT kTol =
           static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                       = makeData();
+          using Parameter                 = typename decltype(data)::Parameters;
+          data.parameters[Parameter::Te]  = time_constant;
+          data.parameters[Parameter::Tr]  = time_constant;
+          data.parameters[Parameter::Ta]  = time_constant;
+          data.parameters[Parameter::Tf1] = time_constant;
+          data.parameters[Parameter::Tb]  = time_constant;
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
+          PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> model(&bus, data);
+          success *= implicitTimeConstant(model, 0, time_constant);
+          success *= implicitTimeConstant(model, 1, time_constant);
+          success *= implicitTimeConstant(model, 2, time_constant);
+          success *= implicitTimeConstant(model, 3, time_constant);
+          success *= implicitTimeConstant(model, 4, time_constant);
+        }
+        return success.report(__func__);
+      }
 
       /// Construction and every verify() error class, including parameter
       /// types, parameter relationships, bus ownership, and signal linkage.
@@ -176,9 +203,8 @@ namespace GridKit
         success *= unlinkedSignalRejected<External::VS>();
         success *= unlinkedSignalRejected<External::VUEL>();
 
-        // All five floored time constants at zero use the documented
-        // numerical floor and still admit a consistent steady-state
-        // initialization.
+        // All five zero time constants admit a consistent algebraic
+        // steady-state initialization.
         auto zero_time                    = makeData();
         zero_time.parameters[Params::Tr]  = 0.0;
         zero_time.parameters[Params::Ta]  = 0.0;
@@ -186,10 +212,10 @@ namespace GridKit
         zero_time.parameters[Params::Te]  = 0.0;
         zero_time.parameters[Params::Tf1] = 0.0;
 
-        Fixture<ScalarT> floored(zero_time);
-        success *= floored.initialize(1.2);
-        success *= (floored.evaluate() == 0);
-        success *= allResidualsZero(floored.esdc1a);
+        Fixture<ScalarT> algebraic(zero_time);
+        success *= algebraic.initialize(1.2);
+        success *= (algebraic.evaluate() == 0);
+        success *= allResidualsZero(algebraic.esdc1a);
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -513,13 +539,13 @@ namespace GridKit
         success *= (fixture.evaluate() == 0);
 
         const std::array<InternalRow, static_cast<size_t>(Internal::MAXIMUM)> expected{{
-            {Internal::EFDP, 0.04},
-            {Internal::VC, 0.27},
-            {Internal::VR, 0.97},
-            {Internal::VF, -0.02},
-            {Internal::XLL, 0.025},
+            {Internal::EFDP, 0.024},
+            {Internal::VC, 0.054},
+            {Internal::VR, 0.291},
+            {Internal::VF, -0.018},
+            {Internal::XLL, 0.020},
             {Internal::EV, -0.26},
-            {Internal::VLL, -0.0075},
+            {Internal::VLL, -0.015},
             {Internal::VHV, 0.3},
             {Internal::SE, 0.16},
             {Internal::VFE, 0.14},
@@ -547,7 +573,7 @@ namespace GridKit
         setState(fixture.esdc1a, {{Internal::VC, 1.1}});
         setDerivative(fixture.esdc1a, {{Internal::VC, 0.2}});
         success *= (fixture.evaluate() == 0);
-        success *= residualsMatch(fixture.esdc1a, {{Internal::VC, -5.2}}, "voltage transducer");
+        success *= residualsMatch(fixture.esdc1a, {{Internal::VC, -0.104}}, "voltage transducer");
 
         // The field-voltage state and the stabilizing feedback share the
         // (VR - VFE) drive.
@@ -555,7 +581,7 @@ namespace GridKit
         setDerivative(fixture.esdc1a, {{Internal::EFDP, 0.1}, {Internal::VF, 0.05}});
         success *= (fixture.evaluate() == 0);
         success *= residualsMatch(fixture.esdc1a,
-                                  {{Internal::EFDP, 0.7}, {Internal::VF, -19.0 / 140.0}},
+                                  {{Internal::EFDP, 0.35}, {Internal::VF, -0.095}},
                                   "field-voltage and feedback drive");
 
         // Summing junction: UEL < 2 excludes the UEL input from the error.
@@ -600,7 +626,7 @@ namespace GridKit
         setDerivative(lead_lag.esdc1a, {{Internal::XLL, 0.0}});
         success *= (lead_lag.evaluate() == 0);
         success *= residualsMatch(lead_lag.esdc1a,
-                                  {{Internal::XLL, 0.6}, {Internal::VLL, 0.02}},
+                                  {{Internal::XLL, 0.3}, {Internal::VLL, -0.1}},
                                   "lead-lag");
 
         // The regulator anti-windup blocks outward rates at both limits and
@@ -626,7 +652,7 @@ namespace GridKit
           setDerivative(fixture.esdc1a, {{Internal::VR, 0.0}});
           success *= (fixture.evaluate() == 0);
           success *= residualsMatch(fixture.esdc1a,
-                                    {{Internal::VR, test_case.expected}},
+                                    {{Internal::VR, 0.1 * test_case.expected}},
                                     test_case.label);
         }
 
@@ -760,7 +786,7 @@ namespace GridKit
           setDerivative(limit.esdc1a, {{Internal::EFDP, 0.0}});
           success *= (limit.evaluate() == 0);
           success *= residualsMatch(limit.esdc1a,
-                                    {{Internal::EFDP, test_case.expected}},
+                                    {{Internal::EFDP, 0.5 * test_case.expected}},
                                     test_case.label);
         }
 
@@ -804,9 +830,9 @@ namespace GridKit
           const auto& dependencies =
               transition.esdc1a.getResidual().getData()[static_cast<size_t>(Internal::EFDP)].getDependencies();
           const DepVar::DependencyMap expected{{
-              {static_cast<size_t>(Internal::EFDP), -13.0},
-              {static_cast<size_t>(Internal::VR), 1.0},
-              {static_cast<size_t>(Internal::VFE), -1.0},
+              {static_cast<size_t>(Internal::EFDP), -6.5},
+              {static_cast<size_t>(Internal::VR), 0.5},
+              {static_cast<size_t>(Internal::VFE), -0.5},
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -1038,8 +1064,7 @@ namespace GridKit
       {
         auto data = makeMinimalData();
 
-        // The documented typical values with the floored time constants
-        // raised above the floor, so routine fixtures log no warnings.
+        // Positive time constants for the dynamic test fixtures.
         data.parameters[Params::Tr]     = 0.02;
         data.parameters[Params::Ka]     = 40.0;
         data.parameters[Params::Ta]     = 0.1;

@@ -197,9 +197,7 @@ namespace GridKit
         ScalarT& Ir();
         ScalarT& Ii();
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static constexpr RealT KL_                   = static_cast<RealT>(100.0);
-        static void            logTimeConstantWarning();
+        static constexpr RealT KL_ = static_cast<RealT>(100.0);
 
         BusT* bus_{nullptr};
 
@@ -224,6 +222,8 @@ namespace GridKit
         IdxT parameter_error_count_{0};
 
         // Derived parameters
+        RealT zero_Tg_{0};
+        RealT zero_TM_{0};
         RealT use_lvpl_{0};
         RealT bypass_lvpl_{1};
         RealT use_rqmax_{0};

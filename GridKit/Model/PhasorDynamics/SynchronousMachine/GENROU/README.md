@@ -105,19 +105,22 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Owned by 
 
 ### Differential Equations
 
+The winding time constants multiply their state derivatives. A zero value
+makes the corresponding winding state algebraic.
+
 ``` math
 \begin{aligned}
   \dot\delta      &= \omega \cdot 2\pi f_\mathrm{base} \\
   \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{m}-D\omega}{1+\omega}
                    - T_{elec}\right)\\
-  \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
-  \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
-  \dot{E}'_{d}    &= \dfrac{1}{T'_{q0}}
+  T''_{d0} \dot{\psi}'_{d} &= (E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
+  T''_{q0} \dot{\psi}'_{q} &= (E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
+  T'_{q0} \dot{E}'_{d}    &=
     \left( -E'_{d}+X_{q1}
       (I_{q}-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_{q}))
       + X_{qd}\psi''_{q}k_{sat}
     \right) \\
-  \dot{E}'_{q} &= \dfrac{1}{T'_{d0}}
+  T'_{d0} \dot{E}'_{q} &=
     \left(
       E_{fd}-E'_{q}-X_{d1}
       (I_{d}+X_{d3}(E'_{q}-\psi'_{d}-X_{d2}I_{d}))

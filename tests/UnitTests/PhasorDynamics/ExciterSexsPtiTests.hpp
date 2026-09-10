@@ -15,6 +15,8 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -33,6 +35,39 @@ namespace GridKit
       // Init and saturated-limiter checks are exact algebraic identities
       // (no iteration, sigmoid underflowed to 0/1 at the depths tested here).
       static constexpr ScalarT kTol = static_cast<ScalarT>(1.0e-14);
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                      = makeTestData();
+          using Parameter                = typename decltype(data)::Parameters;
+          data.parameters[Parameter::Tb] = time_constant;
+          data.parameters[Parameter::Te] = time_constant;
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
+          PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> model(&bus, data);
+          success *= implicitTimeConstant(model, 0, time_constant);
+          success *= implicitTimeConstant(model, 1, time_constant);
+          if (time_constant == 0.0)
+          {
+            // Zero exciter lag must still constrain the field at either limit.
+            auto* y = model.y().getData();
+            model.yp().setToZero();
+            for (const RealT direction : {-1.0, 1.0})
+            {
+              y[1] = 10.0 * direction;
+              y[2] = 10.0 * direction;
+              model.y().setDataUpdated();
+              model.evaluateResidual();
+              success *= isEqual(model.getResidual().getData()[1], -5.0 * direction, kTol);
+            }
+          }
+        }
+        return success.report(__func__);
+      }
 
       TestOutcome constructor()
       {
@@ -220,13 +255,13 @@ namespace GridKit
         success       *= isEqual(f[1], static_cast<ScalarT>(0.0), kTol);
 
         // Release: same over-limit Efd, but f = -37.5 < 0 restores toward
-        // the interior. The indicator saturates to 1, so residual[1] = f.
+        // the interior. The indicator saturates to 1, so residual[1] = T_E f.
         y[0] = 1.0;
         y[1] = 10.0;
         y[2] = 0.0;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[1], static_cast<ScalarT>(-37.5), kTol);
+        success *= isEqual(f[1], static_cast<ScalarT>(-30.0), kTol);
 
         // Mirror (windup below Efdmin): Efd = -10 with f = -15 drives further
         // past the lower limit. Indicator saturates to 0, residual[1] = 0.
@@ -238,13 +273,13 @@ namespace GridKit
         success *= isEqual(f[1], static_cast<ScalarT>(0.0), kTol);
 
         // Mirror (release above Efdmin): Efd = -10 with f = +37.5 pulls back
-        // toward the interior. Indicator saturates to 1, residual[1] = f.
+        // toward the interior. Indicator saturates to 1, residual[1] = T_E f.
         y[0] = -1.0;
         y[1] = -10.0;
         y[2] = 0.0;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[1], static_cast<ScalarT>(37.5), kTol);
+        success *= isEqual(f[1], static_cast<ScalarT>(30.0), kTol);
 
         // Regression guard: Efd barely above Efdmax with a small positive f.
         // Here the sigmoid is not fully saturated, so the residual is small

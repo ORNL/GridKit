@@ -335,6 +335,9 @@ namespace GridKit
       {
         tag_[static_cast<size_t>(i)] = i < 5;
       }
+      tag_[2] = (Tdop_ != ZERO<RealT>);
+      tag_[3] = (Tdopp_ != ZERO<RealT>);
+      tag_[4] = (Tqopp_ != ZERO<RealT>);
       return 0;
     }
 
@@ -402,12 +405,12 @@ namespace GridKit
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
-      /* 5 Gensal differential equations */
+      /* Gensal differential and zero-time-constant algebraic equations */
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
-      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat));
-      f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f[4] = psiqpp_dot - (ONE<RealT> / Tqopp_) * (-psiqpp - Xq2_ * iq);
+      f[2] = Tdop_ * Eqp_dot - (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat));
+      f[3] = Tdopp_ * psidp_dot - (Eqp - psidp - Xd2_ * id);
+      f[4] = Tqopp_ * psiqpp_dot - (-psiqpp - Xq2_ * iq);
 
       /* 9 Gensal algebraic equations */
       f[5]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);

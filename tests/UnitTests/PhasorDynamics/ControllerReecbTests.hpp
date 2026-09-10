@@ -24,6 +24,8 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -44,8 +46,31 @@ namespace GridKit
       static constexpr RealT kTol =
           static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                         = makeData();
+          using Parameter                   = typename decltype(data)::Parameters;
+          data.parameters[Parameter::Trv]   = time_constant;
+          data.parameters[Parameter::Tp]    = time_constant;
+          data.parameters[Parameter::Tiq]   = time_constant;
+          data.parameters[Parameter::Tpord] = time_constant;
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
+          PhasorDynamics::Controller::Reecb<ScalarT, IdxT> model(&bus, data);
+          success *= implicitTimeConstant(model, 0, time_constant);
+          success *= implicitTimeConstant(model, 1, time_constant);
+          success *= implicitTimeConstant(model, 4, time_constant);
+          success *= implicitTimeConstant(model, 5, time_constant);
+        }
+        return success.report(__func__);
+      }
+
       /// Validate construction, row layout, defaults, parameters, buses,
-      /// signal links, and the time-constant floor.
+      /// signal links, and zero time constants.
       TestOutcome validation()
       {
         TestStatus success = true;
@@ -239,43 +264,42 @@ namespace GridKit
         success *= unlinkedSignalRejected<Ext::PFAREF>();
         success *= unlinkedSignalRejected<Ext::PREF>();
 
-        auto floor_data                      = makeData();
-        floor_data.parameters[Params::Trv]   = 0.0;
-        floor_data.parameters[Params::Tp]    = 0.0;
-        floor_data.parameters[Params::Tiq]   = 0.0;
-        floor_data.parameters[Params::Tpord] = 0.0;
+        auto zero_time_data                      = makeData();
+        zero_time_data.parameters[Params::Trv]   = 0.0;
+        zero_time_data.parameters[Params::Tp]    = 0.0;
+        zero_time_data.parameters[Params::Tiq]   = 0.0;
+        zero_time_data.parameters[Params::Tpord] = 0.0;
 
-        Fixture<ScalarT> floored(floor_data);
-        success *= floored.initialize(kInitialIqcmd, kInitialIpcmd);
-        success *= (floored.evaluate() == 0);
-        success *= allResidualsWithinInitTolerance(floored.reecb);
+        Fixture<ScalarT> algebraic(zero_time_data);
+        success *= algebraic.initialize(kInitialIqcmd, kInitialIpcmd);
+        success *= (algebraic.evaluate() == 0);
+        success *= allResidualsWithinInitTolerance(algebraic.reecb);
 
-        // Each floored lag turns a half-unit state offset into a rate of 500,
-        // and saturates the active-power ramp limiter.
-        setState(floored.reecb, {{Vars::VMEAS, 0.5}});
-        success *= (floored.evaluate() == 0);
-        success *= residualsMatch(floored.reecb,
-                                  {{Vars::VMEAS, 500.0}},
-                                  "floored voltage filter");
+        // Algebraic lag residuals retain the unscaled state offset.
+        setState(algebraic.reecb, {{Vars::VMEAS, 0.5}});
+        success *= (algebraic.evaluate() == 0);
+        success *= residualsMatch(algebraic.reecb,
+                                  {{Vars::VMEAS, 0.5}},
+                                  "algebraic voltage filter");
 
-        setState(floored.reecb,
+        setState(algebraic.reecb,
                  {{Vars::VMEAS, 1.0},
                   {Vars::PMEAS, 1.0},
                   {Vars::QV, 1.0},
                   {Vars::PORD, 1.0}});
-        success *= (floored.evaluate() == 0);
-        success *= residualsMatch(floored.reecb,
-                                  {{Vars::PMEAS, 500.0},
-                                   {Vars::QV, 500.0},
-                                   {Vars::RPORD, 1.0}},
-                                  "floored time constants");
+        success *= (algebraic.evaluate() == 0);
+        success *= residualsMatch(algebraic.reecb,
+                                  {{Vars::PMEAS, 0.5},
+                                   {Vars::QV, 0.5},
+                                   {Vars::RPORD, 0.5}},
+                                  "algebraic time constants");
 
-        // The algebraic slew row supplies the differential order row.
-        setState(floored.reecb, {{Vars::RPORD, 1.0}});
-        success *= (floored.evaluate() == 0);
-        success *= residualsMatch(floored.reecb,
-                                  {{Vars::PORD, 1.0}, {Vars::RPORD, 0.0}},
-                                  "floored active-power order rate");
+        // With zero Tpord, the algebraic order is independent of the slew row.
+        setState(algebraic.reecb, {{Vars::RPORD, 1.0}});
+        success *= (algebraic.evaluate() == 0);
+        success *= residualsMatch(algebraic.reecb,
+                                  {{Vars::PORD, 0.5}, {Vars::RPORD, -0.5}},
+                                  "algebraic active-power order rate");
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -399,7 +423,7 @@ namespace GridKit
         success *= allResidualsWithinInitTolerance(adjusted_pmax.reecb);
         setState(adjusted_pmax.reecb, {{Vars::PORD, 1.25}, {Vars::RPORD, 1.0}});
         success *= (adjusted_pmax.evaluate() == 0);
-        success *= residualsMatch(adjusted_pmax.reecb, {{Vars::PORD, 1.0}}, "adjusted Pmax");
+        success *= residualsMatch(adjusted_pmax.reecb, {{Vars::PORD, 0.02}}, "adjusted Pmax");
 
         auto pord_below                     = data;
         pord_below.parameters[Params::Pmin] = 2.0;
@@ -410,7 +434,7 @@ namespace GridKit
         success *= allResidualsWithinInitTolerance(adjusted_pmin.reecb);
         setState(adjusted_pmin.reecb, {{Vars::PORD, 1.75}, {Vars::RPORD, -1.0}});
         success *= (adjusted_pmin.evaluate() == 0);
-        success *= residualsMatch(adjusted_pmin.reecb, {{Vars::PORD, -1.0}}, "adjusted Pmin");
+        success *= residualsMatch(adjusted_pmin.reecb, {{Vars::PORD, -0.02}}, "adjusted Pmin");
 
         auto expanded_current                     = data;
         expanded_current.parameters[Params::Imax] = 1.0;
@@ -791,12 +815,12 @@ namespace GridKit
 
         const RealT                                           ideal_circle_leg = circleLeg(1.76);
         const std::array<VariableValue, index(Vars::MAXIMUM)> expected_residuals{{
-            {Vars::VMEAS, 0.99},
-            {Vars::PMEAS, 0.145},
+            {Vars::VMEAS, 0.198},
+            {Vars::PMEAS, 0.058},
             {Vars::XPIQ, 0.21},
             {Vars::XPIV, 0.13},
-            {Vars::QV, -0.05},
-            {Vars::PORD, 0.26},
+            {Vars::QV, -0.025},
+            {Vars::PORD, 0.065},
             {Vars::VT, -0.03},
             {Vars::VSAFE, 0.0},
             {Vars::SDIP, 0.0},
@@ -1005,7 +1029,7 @@ namespace GridKit
           setState(fixture.reecb, {{Vars::QREF, 1.7}});
           success *= (fixture.evaluate() == 0);
           success *= residualsMatch(fixture.reecb,
-                                    {{Vars::QV, 10.0}},
+                                    {{Vars::QV, 0.2}},
                                     "converted reactive-reference rate");
         }
 
@@ -1036,7 +1060,7 @@ namespace GridKit
 
           setState(fixture.reecb, {{Vars::QREF, 0.8}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb, {{Vars::QV, 1.4}}, "constant-reactive lag");
+          success *= residualsMatch(fixture.reecb, {{Vars::QV, 0.7}}, "constant-reactive lag");
 
           setState(fixture.reecb, {{Vars::VT, 0.0}});
           success *= (fixture.evaluate() == 0);
@@ -1308,7 +1332,7 @@ namespace GridKit
           setState(fixture.reecb, {{Vars::QREF, 0.3}});
           success *= (fixture.evaluate() == 0);
           success *= residualsMatch(fixture.reecb,
-                                    {{Vars::QV, 0.4}},
+                                    {{Vars::QV, 0.2}},
                                     "power-factor reference");
         }
 
@@ -1343,7 +1367,7 @@ namespace GridKit
             setState(fixture.reecb, {{Vars::RPORD, test_case.expected}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::PORD, test_case.expected}},
+                                      {{Vars::PORD, 0.25 * test_case.expected}},
                                       "active-power order rate");
           }
         }
@@ -1385,7 +1409,7 @@ namespace GridKit
             setState(fixture.reecb, {{Vars::RPORD, test_case.expected}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::PORD, test_case.expected}},
+                                      {{Vars::PORD, 0.25 * test_case.expected}},
                                       "asymmetric active-power order rate");
           }
         }
@@ -1414,7 +1438,7 @@ namespace GridKit
             setState(fixture.reecb, {{Vars::SDIP, gate}, {Vars::RPORD, 0.2}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::PORD, test_case.expected}},
+                                      {{Vars::PORD, 0.25 * test_case.expected}},
                                       "gated active-power order rate");
           }
         }
@@ -1445,7 +1469,7 @@ namespace GridKit
                      {{Vars::PORD, test_case.state}, {Vars::RPORD, limited_rate}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::PORD, test_case.expected}},
+                                      {{Vars::PORD, 0.25 * test_case.expected}},
                                       "active-power antiwindup");
           }
         }

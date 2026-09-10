@@ -128,6 +128,8 @@ namespace GridKit
         // Runtime connection masks keep the summing junction Enzyme sparse-solvable
         RealT uel_on_{0};
         RealT oel_on_{0};
+        RealT zero_Tb_{1};
+        RealT zero_Te_{1};
 
         ScalarT vref_set_{0};
         ScalarT vs_set_{0};

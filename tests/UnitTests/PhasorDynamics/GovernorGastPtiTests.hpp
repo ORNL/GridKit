@@ -21,6 +21,8 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -42,6 +44,24 @@ namespace GridKit
       // few floating-point operations beyond one machine epsilon.
       static constexpr RealT kTol =
           static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                      = makeData();
+          using Parameter                = typename decltype(data)::Parameters;
+          data.parameters[Parameter::T1] = time_constant;
+          data.parameters[Parameter::T2] = time_constant;
+          data.parameters[Parameter::T3] = time_constant;
+          PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(data);
+          success *= implicitTimeConstant(model, 0, time_constant);
+          success *= implicitTimeConstant(model, 1, time_constant);
+          success *= implicitTimeConstant(model, 2, time_constant);
+        }
+        return success.report(__func__);
+      }
 
       /// Construction, parameter types and domains, lifecycle, and signal linkage.
       TestOutcome validation()
@@ -182,10 +202,10 @@ namespace GridKit
         };
 
         const std::array<TimeConstantCase, 4> time_constant_cases{{
-            {0.0, 1.0},
-            {0.0005, 1.0},
-            {0.001, 1.0},
-            {0.002, 0.5},
+            {0.0, 0.001},
+            {0.0005, 0.001},
+            {0.001, 0.001},
+            {0.002, 0.001},
         }};
         for (const auto& test_case : time_constant_cases)
         {
@@ -207,7 +227,7 @@ namespace GridKit
               {{Internal::XVALVE, test_case.expected_residual},
                {Internal::XFLOW, test_case.expected_residual},
                {Internal::XTEMP, test_case.expected_residual}},
-              "in-place time-constant floor boundary");
+              "implicit time-constant boundary");
         }
 
         Log::setVerbosity(previous_verbosity);
@@ -504,7 +524,7 @@ namespace GridKit
         setDerivative(reinitialize.gastpti, {{Internal::XVALVE, 0.0}});
         success *= (reinitialize.evaluate() == 0);
         const RealT expected_boundary_response =
-            boundary_weight * boundary_command / valve_time_constant;
+            boundary_weight * boundary_command;
         success *= residualsMatch(reinitialize.gastpti,
                                   {{Internal::XVALVE, expected_boundary_response}},
                                   "failed reinitialization preserves effective limits");
@@ -651,9 +671,9 @@ namespace GridKit
 
         // The state is chosen so every documented equation has a readable answer.
         const std::array<VariableValue, index(Internal::MAXIMUM)> expected{{
-            {Internal::XVALVE, 0.19},
-            {Internal::XFLOW, 0.22},
-            {Internal::XTEMP, 0.07},
+            {Internal::XVALVE, 0.0665},
+            {Internal::XFLOW, 0.099},
+            {Internal::XTEMP, 0.154},
             {Internal::VLOAD, -0.0326},
             {Internal::VTEMP, 1.0},
             {Internal::VLV, 0.15},
@@ -696,7 +716,7 @@ namespace GridKit
           setDerivative(antiwindup.gastpti, {{Internal::XVALVE, 0.0}});
           success *= (antiwindup.evaluate() == 0);
           success *= residualsMatch(antiwindup.gastpti,
-                                    {{Internal::XVALVE, test_case.expected}},
+                                    {{Internal::XVALVE, 0.35 * test_case.expected}},
                                     test_case.label);
         }
 
@@ -752,7 +772,7 @@ namespace GridKit
           success *= (response.evaluate() == 0);
 
           const RealT expected =
-              boundary_weight * test_case.command / valve_time_constant;
+              boundary_weight * test_case.command;
           success *= residualsMatch(response.gastpti,
                                     {{Internal::XVALVE, expected}},
                                     test_case.label);
