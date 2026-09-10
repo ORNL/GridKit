@@ -5,10 +5,12 @@
 #include <filesystem>
 #include <iomanip>
 #include <limits>
+#include <map>
 #include <string>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
@@ -23,22 +25,25 @@ namespace GridKit
     using Log = ::GridKit::Utilities::Logger;
 
     /**
-     * @brief Compares and times system Jacobians from Enzyme and DependencyTracking.
+     * @brief Compares and times system Jacobians from Enzyme and
+     *        DependencyTracking.
      */
     template <class ScalarT, typename IdxT>
     class SystemJacobianTests
     {
     private:
-      using RealT      = ScalarT;
-      using ClockT     = std::chrono::steady_clock;
-      using DurationT  = std::chrono::duration<double, std::micro>;
-      using JacobianT  = std::vector<DependencyTracking::Variable::DependencyMap>;
+      using RealT     = ScalarT;
+      using ClockT    = std::chrono::steady_clock;
+      using DurationT = std::chrono::duration<double, std::micro>;
+      using JacobianT =
+        std::vector<DependencyTracking::Variable::DependencyMap>;
       using ModelDataT = PhasorDynamics::SystemModelData<RealT, IdxT>;
 
       /// Number of timed evaluations after setup and warm-up
       static constexpr int num_evaluations_ = 100;
 
-      // Timing table, one entry per case (times in microseconds per call, setup once)
+      // Timing table, one entry per case (times in microseconds per call, setup
+      // once)
       std::vector<std::string> case_names_;
       std::vector<IdxT>        sizes_;
       std::vector<IdxT>        enzyme_nnz_;
@@ -58,12 +63,14 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // Looser than the component tests' 10 * eps, for the Math::antiwindup terms
+        // Looser than the component tests' 10 * eps, for the Math::antiwindup
+        // terms
         auto tol = 10000 * std::numeric_limits<RealT>::epsilon();
 
         const std::string case_name = case_file.stem().stem().string();
 
-        // Timing table entry, filled by EnzymeJacobian() and DependencyTrackingJacobian()
+        // Timing table entry, filled by EnzymeJacobian() and
+        // DependencyTrackingJacobian()
         case_names_.push_back(case_name);
         sizes_.push_back(0);
         enzyme_nnz_.push_back(0);
@@ -86,13 +93,19 @@ namespace GridKit
           JacobianT enzyme_jacobian = EnzymeJacobian(data);
 
           // Jacobian via DependencyTracking
-          JacobianT dependency_tracking_jacobian = DependencyTrackingJacobian(data);
+          JacobianT dependency_tracking_jacobian =
+            DependencyTrackingJacobian(data);
 
           // Compare DependencyTracking dependencies to Enzyme's
-          success *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
-          for (IdxT i = 0; i < dependency_tracking_jacobian.size() && i < enzyme_jacobian.size(); ++i)
+          success *=
+            (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
+          for (IdxT i = 0; i < dependency_tracking_jacobian.size()
+                           && i < enzyme_jacobian.size();
+               ++i)
           {
-            success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+            success *= (GridKit::Testing::isEqual(
+              dependency_tracking_jacobian[i], enzyme_jacobian[i], tol
+            ));
           }
         }
         catch (const std::exception& error)
@@ -105,7 +118,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Prints the timings of all checked cases, sorted by number of non-zeros.
+       * @brief Prints the timings of all checked cases, sorted by number of
+       *        non-zeros.
        */
       void printTimings() const
       {
@@ -126,14 +140,15 @@ namespace GridKit
         const auto flags     = output_stream.flags();
         const auto precision = output_stream.precision();
 
-        output_stream << "Times in us per call (setup once); ratio = DependencyTracking / Enzyme.\n";
-        output_stream << std::left << std::setw(static_cast<int>(case_width)) << "case"
-                      << std::setw(20) << "method" << std::right
-                      << std::setw(7) << "size"
-                      << std::setw(8) << "nnz"
+        output_stream << "Times in us per call (setup once); ratio = "
+                         "DependencyTracking / Enzyme.\n";
+        output_stream << std::left << std::setw(static_cast<int>(case_width))
+                      << "case" << std::setw(20) << "method" << std::right
+                      << std::setw(7) << "size" << std::setw(8) << "nnz"
                       << std::setw(11) << "setup" << std::setw(8) << "ratio"
                       << std::setw(10) << "residual" << std::setw(8) << "ratio"
-                      << std::setw(10) << "Jacobian" << std::setw(8) << "ratio" << '\n';
+                      << std::setw(10) << "Jacobian" << std::setw(8) << "ratio"
+                      << '\n';
 
         output_stream << std::fixed << std::setprecision(1);
 
@@ -144,31 +159,33 @@ namespace GridKit
           IdxT i = case_names_.size();
           for (IdxT j = 0; j < case_names_.size(); ++j)
           {
-            if (!printed[j] && (i == case_names_.size() || enzyme_nnz_[j] < enzyme_nnz_[i]))
+            if (!printed[j]
+                && (i == case_names_.size() || enzyme_nnz_[j] < enzyme_nnz_[i]))
             {
               i = j;
             }
           }
           printed[i] = true;
 
-          output_stream << std::left << std::setw(static_cast<int>(case_width)) << case_names_[i]
-                        << std::setw(20) << "Enzyme" << std::right
-                        << std::setw(7) << sizes_[i]
-                        << std::setw(8) << enzyme_nnz_[i]
-                        << std::setw(11) << enzyme_setup_[i] << std::setw(8) << ""
-                        << std::setw(10) << enzyme_residual_[i] << std::setw(8) << ""
-                        << std::setw(10) << enzyme_jacobian_[i] << '\n';
+          output_stream << std::left << std::setw(static_cast<int>(case_width))
+                        << case_names_[i] << std::setw(20) << "Enzyme"
+                        << std::right << std::setw(7) << sizes_[i]
+                        << std::setw(8) << enzyme_nnz_[i] << std::setw(11)
+                        << enzyme_setup_[i] << std::setw(8) << ""
+                        << std::setw(10) << enzyme_residual_[i] << std::setw(8)
+                        << "" << std::setw(10) << enzyme_jacobian_[i] << '\n';
 
-          output_stream << std::left << std::setw(static_cast<int>(case_width)) << case_names_[i]
-                        << std::setw(20) << "DependencyTracking" << std::right
-                        << std::setw(7) << sizes_[i]
-                        << std::setw(8) << dependency_tracking_nnz_[i]
-                        << std::setw(11) << dependency_tracking_setup_[i]
-                        << std::setw(8) << dependency_tracking_setup_[i] / enzyme_setup_[i]
-                        << std::setw(10) << dependency_tracking_residual_[i]
-                        << std::setw(8) << dependency_tracking_residual_[i] / enzyme_residual_[i]
-                        << std::setw(10) << dependency_tracking_jacobian_[i]
-                        << std::setw(8) << dependency_tracking_jacobian_[i] / enzyme_jacobian_[i] << '\n';
+          output_stream
+            << std::left << std::setw(static_cast<int>(case_width))
+            << case_names_[i] << std::setw(20) << "DependencyTracking"
+            << std::right << std::setw(7) << sizes_[i] << std::setw(8)
+            << dependency_tracking_nnz_[i] << std::setw(11)
+            << dependency_tracking_setup_[i] << std::setw(8)
+            << dependency_tracking_setup_[i] / enzyme_setup_[i] << std::setw(10)
+            << dependency_tracking_residual_[i] << std::setw(8)
+            << dependency_tracking_residual_[i] / enzyme_residual_[i]
+            << std::setw(10) << dependency_tracking_jacobian_[i] << std::setw(8)
+            << dependency_tracking_jacobian_[i] / enzyme_jacobian_[i] << '\n';
         }
 
         output_stream.flags(flags);
@@ -176,12 +193,59 @@ namespace GridKit
       }
 
     private:
+      /// Keep co-simulation ports alive for the Jacobian integration tests.
+      template <typename SystemScalar>
+      struct ExternalInputs
+      {
+        using BusInput = PhasorDynamics::BusSignalInputs;
+
+        std::map<IdxT, SystemScalar> values;
+        IdxT                         index{INVALID_INDEX<IdxT>};
+
+        void bind(
+          PhasorDynamics::SystemModel<SystemScalar, IdxT>& system,
+          const ModelDataT&                                data
+        )
+        {
+          for (const auto& bus : data.bus)
+          {
+            for (const auto& [port, id] : bus.signal_inputs)
+            {
+              auto* signal = system.getSignalNode(id);
+              if (signal->assigned())
+              {
+                continue;
+              }
+
+              auto initial = 0.0;
+              if (port == BusInput::vr)
+              {
+                initial = bus.Vr0;
+              }
+              if (port == BusInput::vi)
+              {
+                initial = bus.Vi0;
+              }
+              values.emplace(id, SystemScalar{initial});
+
+              signal->setAssigned();
+              signal->link(&values.at(id), &index);
+            }
+          }
+        }
+      };
+
       JacobianT DependencyTrackingJacobian(const ModelDataT& data)
       {
-        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
+        ExternalInputs<DependencyTracking::Variable>                    inputs;
+        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(
+          data
+        );
+        inputs.bind(system, data);
         system.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' terms
 
-        // Setup: the residual tracks the dependencies the Jacobian is built from
+        // Setup: the residual tracks the dependencies the Jacobian is built
+        // from
         auto start = ClockT::now();
         system.allocate();
         system.initialize();
@@ -222,7 +286,8 @@ namespace GridKit
         dependency_tracking_jacobian_.back() = jacobian.count();
 
         auto& output_stream = Log::misc();
-        output_stream << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
+        output_stream
+          << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
         system_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(system_jacobian);
@@ -230,10 +295,13 @@ namespace GridKit
 
       JacobianT EnzymeJacobian(const ModelDataT& data)
       {
+        ExternalInputs<ScalarT>                    inputs;
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+        inputs.bind(system, data);
         system.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' terms
 
-        // Setup: allocate() also initializes and evaluates the residual and the first Jacobian
+        // Setup: allocate() also initializes and evaluates the residual and the
+        // first Jacobian
         auto start = ClockT::now();
         system.allocate();
         auto stop = ClockT::now();

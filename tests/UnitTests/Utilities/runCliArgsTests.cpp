@@ -7,6 +7,8 @@ int main()
 
   result += test.construction();
   result += test.simpleParse();
+  result += test.positionalAndRepeatable();
+  result += test.positionalAndRepeatableErrors();
   result += test.parsingErrors();
 
   return result.summary();

@@ -23,15 +23,15 @@ namespace GridKit
      * - publishes _Vr_ and _Vi_ on signal outlets `vr` and `vi`, and
      * - sets its residuals f[0] and f[1] to the current injections read from
      *   signal inlets `ir` and `ii`, respectively. Both inlets are
-     *   mandatory: verify() reports an error if either is not connected to a linked
-     *   signal, and no default value is ever used.
+     *   mandatory: verify() reports an error if either is not connected to a
+     * linked signal, and no default value is ever used.
      *
      * Components attached to the bus directly (without signals) keep adding
      * their currents to the residuals after the bus residual is evaluated,
      * exactly as they do for @ref Bus.
      *
-     * @note Signal ports have to be connected before allocate() is called, since
-     *       the output signals are linked to the bus variables there.
+     * @note Signal ports have to be connected before allocate() is called,
+     *       since the output signals are linked to the bus variables there.
      */
     template <typename scalar_type, typename index_type>
     class BusSignalVoltageOut : public BusBase<scalar_type, index_type>
@@ -67,6 +67,7 @@ namespace GridKit
       virtual ~BusSignalVoltageOut();
 
       virtual int setBusID(IdxT) override final;
+      virtual int setFault(bool status, RealT R, RealT X) override final;
       virtual int allocate() override final;
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
@@ -150,7 +151,9 @@ namespace GridKit
             }
           }
           coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
-          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
+          coo_jac_->setDataPointers(
+            J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST
+          );
         }
 
         return 0;
@@ -192,6 +195,8 @@ namespace GridKit
     private:
       ScalarT Vr0_{0.0};
       ScalarT Vi0_{0.0};
+      RealT   fault_g_{0.0};
+      RealT   fault_b_{0.0};
 
       /// Signal ports
       SignalPortsT ports_;

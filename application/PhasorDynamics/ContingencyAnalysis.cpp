@@ -14,7 +14,7 @@
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
-#include "AnalysisUtilities.hpp"
+#include "CoSimulation.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 using Dur   = std::chrono::duration<double>;
@@ -31,68 +31,7 @@ using index_type  = size_t;
 
 TestStatus runStudy(StudyData study_data)
 {
-  // Instantiate system
-  SystemModel<scalar_type, index_type> sys(study_data.model_data);
-  sys.allocate();
-
-  // Set up simulation
-  Ida<scalar_type, index_type> ida(&sys);
-  ida.setTolerance(study_data.rel_tol, study_data.abs_tol);
-  ida.setFixedStep(study_data.dt_fixed);
-  ida.setMaxSteps(study_data.max_steps);
-  ida.setMaxOrder(study_data.max_order);
-  ida.setConsistentICType(study_data.consistent_ic_type);
-  ida.configureSimulation();
-
-  using EventType = SystemEvent::Type;
-
-  // Initialize simulation for first run
-  real_type dt_monitor = study_data.dt_monitor;
-  real_type final_time = study_data.tmax;
-  ida.initializeSimulation(0.0, false);
-
-  for (const auto& event : study_data.events)
-  {
-    // Run to event time
-    ida.runSimulation(event.time, dt_monitor);
-
-    // Set up run for event (to start at event time)
-    int ret = 0;
-
-    switch (event.type)
-    {
-    case EventType::FAULT_ON:
-      ret = sys.getBus(event.bus)->setFault(true, event.R, event.X);
-      break;
-    case EventType::FAULT_OFF:
-      ret = sys.getBus(event.bus)->clearFault();
-      break;
-    case EventType::IN_SERVICE:
-      sys.getBranch(event.device)->setInService(true);
-      break;
-    case EventType::OUT_OF_SERVICE:
-      sys.getBranch(event.device)->setInService(false);
-      break;
-    }
-
-    if (ret != 0)
-    {
-      Log::error() << "Fault event failed for bus " << event.bus
-                   << " at time " << event.time << '\n';
-      return {false};
-    }
-
-    // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time, true);
-  }
-
-  // Run to final time
-  ida.runSimulation(final_time, dt_monitor);
-
-  // Stop the variable monitor
-  sys.stopMonitor();
-
-  return checkErrors(study_data, false);
+  return runStandaloneStudy(study_data, false, false);
 }
 
 TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
@@ -100,20 +39,15 @@ TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
   // Retarget fault events while preserving branch-switching events
   for (auto& event : study_data.events)
   {
-    if (event.type == SystemEvent::Type::FAULT_ON || event.type == SystemEvent::Type::FAULT_OFF)
+    if (event.type == SystemEvent::Type::FAULT_ON
+        || event.type == SystemEvent::Type::FAULT_OFF)
     {
       event.bus = study_data.model_data.bus[fault_id].bus_id;
     }
   }
 
   // Make distinct output files
-  for (auto& sink : study_data.model_data.monitor_sink)
-  {
-    auto path      = std::filesystem::path(sink.file_name);
-    auto ext       = path.extension().string();
-    auto name      = path.stem().string();
-    sink.file_name = name + "_" + std::to_string(fault_id) + ext;
-  }
+  suffixOutputs(study_data, "_" + std::to_string(fault_id));
 
   try
   {
@@ -126,7 +60,9 @@ TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
   }
 }
 
-void runStudySerial(const StudyData& study_data, std::vector<TestStatus>& stat_vec)
+void runStudySerial(
+  const StudyData& study_data, std::vector<TestStatus>& stat_vec
+)
 {
   for (std::size_t i = 0; i < study_data.model_data.bus.size(); ++i)
   {
@@ -136,7 +72,9 @@ void runStudySerial(const StudyData& study_data, std::vector<TestStatus>& stat_v
 }
 
 #ifdef GRIDKIT_ENABLE_THREADS
-void runStudyAsync(const StudyData& study_data, std::vector<TestStatus>& stat_vec)
+void runStudyAsync(
+  const StudyData& study_data, std::vector<TestStatus>& stat_vec
+)
 {
   auto n_faults = study_data.model_data.bus.size();
 
@@ -145,7 +83,8 @@ void runStudyAsync(const StudyData& study_data, std::vector<TestStatus>& stat_ve
   for (std::size_t i = 0; i < n_faults; ++i)
   {
     futures.emplace_back(
-        std::async(std::launch::async, singleFaultStudy, i, study_data));
+      std::async(std::launch::async, singleFaultStudy, i, study_data)
+    );
   }
 
   for (std::size_t i = 0; i < n_faults; ++i)
@@ -157,7 +96,9 @@ void runStudyAsync(const StudyData& study_data, std::vector<TestStatus>& stat_ve
 #endif
 
 #ifdef _OPENMP
-void runStudyOpenMP(const StudyData& study_data, std::vector<TestStatus>& stat_vec)
+void runStudyOpenMP(
+  const StudyData& study_data, std::vector<TestStatus>& stat_vec
+)
 {
   auto n_faults = study_data.model_data.bus.size();
 #pragma omp parallel for
@@ -175,24 +116,66 @@ int runApplication(int argc, const char* argv[])
   Log::raiseVerbosity(Log::SUMMARY);
 
   // Study file
-  checkCommandLine(argc, "ContingencyAnalysis");
-  auto study_data = parseStudyData(argv[1]);
+  const auto options    = parseSimulationOptions(argc, argv, true);
+  auto       study_data = parseStudyData(options.study_file);
 
   const auto start = Clock::now();
 
   auto faults   = study_data.model_data.bus;
   auto stat_vec = std::vector<TestStatus>(faults.size(), true);
 
-  // Use std::async if threads are available (so far, std::async has out-performed OpenMP)
-  // Otherwise, use OpenMP if available
-  // Fall back to serial if neither threads or OpenMP are available
-#if defined(GRIDKIT_ENABLE_THREADS)
-  runStudyAsync(study_data, stat_vec);
-#elif defined(_OPENMP)
-  runStudyOpenMP(study_data, stat_vec);
-#else
-  runStudySerial(study_data, stat_vec);
+#ifdef GRIDKIT_ENABLE_ZMQ
+  if (options.coSimulated())
+  {
+    std::size_t next_fault = 0;
+    std::size_t completed  = 0;
+    const auto  next       = [&]() -> std::optional<StudyData>
+    {
+      if (next_fault == faults.size())
+      {
+        return std::nullopt;
+      }
+
+      const auto i    = next_fault++;
+      auto       data = study_data;
+      for (auto& event : data.events)
+      {
+        if (event.type == SystemEvent::Type::FAULT_ON
+            || event.type == SystemEvent::Type::FAULT_OFF)
+        {
+          event.bus = faults[i].bus_id;
+        }
+      }
+
+      suffixOutputs(data, "_" + std::to_string(i));
+      return data;
+    };
+    if (runCoupledClientStudies(
+          options,
+          next,
+          [&](TestStatus result)
+          { stat_vec[completed++] = result; },
+          true
+        )
+        == GridKit::CoSim::RunResult::STOPPED)
+    {
+      return 1;
+    }
+  }
+  else
 #endif
+  {
+    // Use std::async if threads are available
+    // Otherwise, use OpenMP if available
+    // Fall back to serial if neither threads or OpenMP are available
+#if defined(GRIDKIT_ENABLE_THREADS)
+    runStudyAsync(study_data, stat_vec);
+#elif defined(_OPENMP)
+    runStudyOpenMP(study_data, stat_vec);
+#else
+    runStudySerial(study_data, stat_vec);
+#endif
+  }
 
   const auto stop = Clock::now();
   const auto dur  = std::chrono::duration<double>(stop - start);
@@ -204,8 +187,7 @@ int runApplication(int argc, const char* argv[])
     status *= stat_vec[i];
     if (!stat_vec[i])
     {
-      Log::error() << "Study failed for fault: "
-                   << faults[i].name << '\n';
+      Log::error() << "Study failed for fault: " << faults[i].name << '\n';
     }
   }
 

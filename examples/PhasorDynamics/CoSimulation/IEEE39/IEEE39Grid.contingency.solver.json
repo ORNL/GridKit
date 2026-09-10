@@ -1,0 +1,17 @@
+{
+  "system_model_file": "IEEE39Grid.case.json",
+  "dt_monitor": 0.01,
+  "tmax": 0.12,
+  "events": [
+    {
+      "time": 0.04,
+      "type": "fault_on",
+      "R": 0.0,
+      "X": 0.1
+    },
+    {
+      "time": 0.06,
+      "type": "fault_off"
+    }
+  ]
+}

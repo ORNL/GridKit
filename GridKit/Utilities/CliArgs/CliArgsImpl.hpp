@@ -1,3 +1,5 @@
+#include <format>
+
 #include <GridKit/Utilities/Stream.hpp>
 #include <GridKit/Utilities/String.hpp>
 
@@ -7,34 +9,27 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    /**
-     * @brief Associate an Option with its parsed arguments
-     */
+    /// Associate an @ref Option with its parsed arguments.
     struct OptionArgumentPair
     {
-      /**
-       * @brief Construct with an Option spec and an empty set of values
-       */
-      explicit OptionArgumentPair(Option opt)
-        : option(std::move(opt))
+      /// Construct an @ref OptionArgumentPair with a specification and an empty
+      /// set of values.
+      explicit OptionArgumentPair(Option opt) : option(std::move(opt))
       {
       }
 
-      // OptionArgumentPair(OptionArgumentPair
+      /// Reference to an existing option.
+      Option option;
 
-      /// Reference to existing option
-      Option    option;
-      /// Parsed values
+      /// Parsed values.
       ArgVector values{};
     };
 
-    /**
-     * @brief Implementation of CliArgs
-     */
+    /// Implementation of @ref CliArgs.
     struct CliArgsImpl
     {
       ///@{
-      /// @brief Implementation of CliArgs
+      /// Implementation of CliArgs
       CliArgsImpl(std::initializer_list<Option> args);
 
       void parseArgs(int argc, const char* argv[]);
@@ -56,7 +51,8 @@ namespace GridKit
       OptionArgumentPair* findByName(const std::string& name)
       {
         return const_cast<OptionArgumentPair*>(
-            const_cast<const CliArgsImpl*>(this)->findByName(name));
+          const_cast<const CliArgsImpl*>(this)->findByName(name)
+        );
       }
 
       /// Option lookup via raw (hyphened) name
@@ -68,6 +64,8 @@ namespace GridKit
       std::vector<OptionArgumentPair>                      table_;
       /// Map of names to options
       std::unordered_map<std::string, OptionArgumentPair*> name_map_;
+      /// Positional arguments in declaration order
+      std::vector<OptionArgumentPair*>                     positionals_;
     };
 
     /**
@@ -101,19 +99,18 @@ namespace GridKit
      */
     inline const std::string& typeString(const Option& opt)
     {
-      static const std::string labels[] =
-          {"STRING", "REAL", "INT", "BOOL", "UNSPECIFIED"};
+      static const std::string labels[] = {
+        "STRING", "REAL", "INT", "BOOL", "UNSPECIFIED"
+      };
       return labels[static_cast<int>(opt.type)];
     }
 
     /**
-     * @brief Stream insertion operator to print an Option specification and
-     * parsed argument(s)
+     * @brief Print an @ref Option specification and parsed argument(s).
      *
-     * @note This is useful mainly for debugging purposes
+     * @note Primarily useful for debugging purposes.
      */
-    std::ostream& operator<<(std::ostream&             os,
-                             const OptionArgumentPair& arg)
+    std::ostream& operator<<(std::ostream& os, const OptionArgumentPair& arg)
     {
       os << "  name     : " << arg.option.name[0];
       if (!arg.option.name[1].empty())
@@ -131,7 +128,7 @@ namespace GridKit
       return os;
     }
 
-    /// Implementation of CliArgs
+    /// Print the implementation of @ref CliArgs.
     std::ostream& operator<<(std::ostream& os, const CliArgsImpl& args)
     {
       for (auto&& arg : args.table_)
@@ -150,8 +147,9 @@ namespace GridKit
     {
       if (!name_map_.try_emplace(name, arg).second)
       {
-        auto msg = "CliArgs: attempt to add duplicate option name: \""
-                   + name + "\".";
+        auto msg = std::format(
+          "CliArgs: attempted to add duplicate option name: \"{}\"", name
+        );
         Log::error() << msg << std::endl;
         throw std::runtime_error(msg);
       }
@@ -166,6 +164,21 @@ namespace GridKit
     void CliArgsImpl::setupArg(OptionArgumentPair& arg)
     {
       const auto& name = arg.option.name;
+      if (arg.option.positional)
+      {
+        if (name[0].empty() || name[0].starts_with("-") || !name[1].empty()
+            || arg.option.flag || arg.option.repeatable
+            || arg.option.nargs == 0)
+        {
+          throw std::invalid_argument(
+            "CliArgs: positional arguments require a bare name and a positive "
+            "nargs"
+          );
+        }
+        mapName(name[0], &arg);
+        positionals_.push_back(&arg);
+        return;
+      }
       assert(name[0].starts_with("--"));
       mapName(name[0].substr(2), &arg);
       if (!name[1].empty())
@@ -174,8 +187,9 @@ namespace GridKit
         assert(!name[1].starts_with("--"));
         if (!notANumber(name[1]))
         {
-          auto msg = "CliArgs: Cannot use number as option name: \""
-                     + name[1] + "\".";
+          auto msg = std::format(
+            "CliArgs: Cannot use number as option name: \"{}\"", name[1]
+          );
           Log::error() << msg << std::endl;
           throw std::runtime_error(msg);
         }
@@ -203,15 +217,19 @@ namespace GridKit
       if (!name_map_.count("help") && !name_map_.count("h"))
       {
         auto& help = table_.emplace_back(
-            Option{.name = {"--help", "-h"},
-                   .help = "Print this help message",
-                   .flag = true});
+          Option{
+            .name = {"--help", "-h"},
+            .help = "Print this help message",
+            .flag = true
+          }
+        );
         setupArg(help);
       }
     }
 
-    const OptionArgumentPair* CliArgsImpl::findByName(const std::string& name)
-        const
+    const OptionArgumentPair* CliArgsImpl::findByName(
+      const std::string& name
+    ) const
     {
       auto ret = name_map_.find(name);
       if (ret == name_map_.end())
@@ -241,91 +259,117 @@ namespace GridKit
 
     void CliArgsImpl::parseArgs(int argc, const char* argv[])
     {
-      app_name_   = std::filesystem::path(argv[0]).filename();
-      bool status = true;
+      app_name_                 = std::filesystem::path(argv[0]).filename();
+      bool        status        = true;
+      bool        named_options = true;
+      std::size_t positional    = 0;
+      for (auto& arg : table_)
+      {
+        arg.values = ArgVector{};
+      }
 
-      // Current argument (may involve multiple tokens)
-      OptionArgumentPair* arg{nullptr};
       for (int i = 1; i < argc; ++i)
       {
-        auto token = std::string(argv[i]);
-        if (looksLikeAnOption(token))
+        const auto token = std::string(argv[i]);
+        if (named_options && token == "--")
         {
-          auto* new_arg = findByRawName(token);
-          if (!new_arg)
+          named_options = false;
+          continue;
+        }
+        if (named_options && looksLikeAnOption(token))
+        {
+          auto* arg = findByRawName(token);
+          if (!arg || arg->option.positional)
           {
-            Log::error() << "CliArgs: unrecognized option \"" << token
-                         << "\"\n";
+            Log::error() << std::format(
+              "CliArgs: unrecognized option \"{}\"\n", token
+            );
             status = false;
-            arg    = nullptr;
             continue;
           }
-          if (arg && arg->values.size() != arg->option.nargs)
+          if (!arg->option.repeatable && !arg->values.empty())
           {
-            // option not given correct number of values
-            Log::error() << "CliArgs: option \"" << arg->option.name[0]
-                         << "\" requires " << arg->option.nargs
-                         << " arguments; " << arg->values.size()
-                         << " given.\n";
+            Log::error() << std::format(
+              "CliArgs: option \"{}\" cannot be repeated\n", arg->option.name[0]
+            );
             status = false;
           }
-          arg = new_arg;
           if (arg->option.flag)
           {
-            // handle current arg as flag and move on
             arg->values = true;
+            continue;
           }
-        }
-        else if (arg)
-        {
-          if (arg->option.flag)
+
+          std::size_t count = 0;
+          while (count < arg->option.nargs && i + 1 < argc)
           {
-            Log::error() << "CliArgs: flag option \"" << arg->option.name[0]
-                         << "\" was given an argument (\"" << token << "\")\n";
+            const auto value = std::string(argv[i + 1]);
+            if (value == "--" || looksLikeAnOption(value))
+            {
+              break;
+            }
+            arg->values.vec_.emplace_back(value);
+            ++i;
+            ++count;
+          }
+          if (count != arg->option.nargs)
+          {
+            Log::error() << std::format(
+              "CliArgs: option \"{}\" requires {} arguments. {} were given\n",
+              arg->option.name[0],
+              arg->option.nargs,
+              count
+            );
             status = false;
           }
-          // set value from current token
-          arg->values.vec_.emplace_back(token);
+          continue;
+        }
+
+        while (positional < positionals_.size()
+               && positionals_[positional]->values.size()
+                    == positionals_[positional]->option.nargs)
+        {
+          ++positional;
+        }
+        if (positional == positionals_.size())
+        {
+          Log::error() << std::format(
+            "CliArgs: unexpected argument \"{}\"\n", token
+          );
+          status = false;
         }
         else
         {
-          // TODO: positional arguments
-          Log::error() << "CliArgs: unrecognized option \"" << token
-                       << "\"\n";
-          status = false;
-          arg    = nullptr;
+          positionals_[positional]->values.vec_.emplace_back(token);
         }
       }
 
-      // Check for final flag argument
-      if (arg)
-      {
-        // If we still have an active arg, it's either a flag (which is OK) or
-        // an option which expects a value that hasn't been given
-        if (!arg->option.flag && arg->values.size() != arg->option.nargs)
-        {
-          // option not given correct number of values
-          Log::error() << "CliArgs: option \"" << arg->option.name[0]
-                       << "\" requires " << arg->option.nargs << " arguments; "
-                       << arg->values.size() << " given.\n";
-          status = false;
-        }
-      }
-
-      // check for help request
+      // check if a help message was requested
       if ((*this)["help"].as<bool>())
       {
         printHelp();
         exit(EXIT_SUCCESS);
       }
 
-      // check that all required options have values
       for (const auto& arg : table_)
       {
-        if (arg.option.required && arg.values.size() != arg.option.nargs)
+        if (arg.option.required && arg.values.empty())
         {
-          Log::error() << "CliArgs: no input given for required option \""
-                       << arg.option.name[0] << "\"\n";
+          Log::error() << std::format(
+            "CliArgs: no input was given for the required option \"{}\"\n",
+            arg.option.name[0]
+          );
+          status = false;
+        }
+        else if (arg.option.positional && !arg.values.empty()
+                 && arg.values.size() != arg.option.nargs)
+        {
+          Log::error() << std::format(
+            "CliArgs: argument \"{}\" requires {} values. {} were given\n",
+            arg.option.name[0],
+            arg.option.nargs,
+            arg.values.size()
+          );
           status = false;
         }
       }
@@ -334,7 +378,10 @@ namespace GridKit
       if (!status)
       {
         printHelp();
-        throw std::runtime_error("CliArgs: requirements not met");
+
+        // TODO: should create an exception type here. this is not a friendly
+        //       error
+        throw std::runtime_error("CliArgs: error occurred");
       }
     }
 
@@ -356,7 +403,7 @@ namespace GridKit
       {
         std::stringstream ss;
         ss << "  ";
-        if (!opt.name[1].empty())
+        if (!opt.positional && !opt.name[1].empty())
         {
           ss << opt.name[1] << ", ";
         }
@@ -401,10 +448,12 @@ namespace GridKit
        *
        * This function attempts to take care of line breaks well
        */
-      void printParagraph(std::ostream&    os,
-                          std::string_view par,
-                          unsigned         indent,
-                          unsigned         lineLength)
+      void printParagraph(
+        std::ostream&    os,
+        std::string_view par,
+        unsigned         indent,
+        unsigned         lineLength
+      )
       {
         // Through remainder of this function, 'lineLength' will be the length
         // available for characters, not including indent.
@@ -424,19 +473,21 @@ namespace GridKit
             // is not space, remove the leading space.
             // We don't remove double spaces because those
             // might be intentional.
-            if ((*lineBegin == ' ') && ((lineBegin + 1 < parEnd) && (*(lineBegin + 1) != ' ')))
+            if ((*lineBegin == ' ')
+                && ((lineBegin + 1 < parEnd) && (*(lineBegin + 1) != ' ')))
             {
               ++lineBegin;
             }
 
             unsigned remaining =
-                static_cast<unsigned>(std::distance(lineBegin, parEnd));
+              static_cast<unsigned>(std::distance(lineBegin, parEnd));
             auto lineEnd =
-                lineBegin + ((remaining < lineLength) ? remaining : lineLength);
+              lineBegin + ((remaining < lineLength) ? remaining : lineLength);
 
             // prevent chopped words
             // Is lineEnd between two non-space characters?
-            if ((*(lineEnd - 1) != ' ') && ((lineEnd < parEnd) && (*lineEnd != ' ')))
+            if ((*(lineEnd - 1) != ' ')
+                && ((lineEnd < parEnd) && (*lineEnd != ' ')))
             {
               // find last ' ' in the second half of the current paragraph
               // line
@@ -471,10 +522,12 @@ namespace GridKit
       /**
        * @brief Print the help description of an option as a paragraph
        */
-      void printOptionHelp(std::ostream&      os,
-                           const std::string& desc,
-                           unsigned           firstColWidth,
-                           unsigned           lineLength)
+      void printOptionHelp(
+        std::ostream&      os,
+        const std::string& desc,
+        unsigned           firstColWidth,
+        unsigned           lineLength
+      )
       {
         // we need to use one char less per line to work correctly if actual
         // console has longer lines
@@ -503,9 +556,9 @@ namespace GridKit
        * @brief Print the option name(s) [and type] followed by the help
        * description [and defaults]
        */
-      void printOption(std::ostream& os,
-                       const Option& opt,
-                       unsigned      firstColWidth)
+      void printOption(
+        std::ostream& os, const Option& opt, unsigned firstColWidth
+      )
       {
         auto c1 = formatFirstColumn(opt);
         os << c1;
@@ -540,24 +593,42 @@ namespace GridKit
       {
         ss << "[";
       }
-      if (!opt.name[1].empty())
+      if (opt.positional)
       {
-        ss << opt.name[1];
+        for (std::size_t i = 0; i < opt.nargs; ++i)
+        {
+          if (i > 0)
+          {
+            ss << " ";
+          }
+          ss << toUpper(opt.name[0]);
+        }
       }
       else
       {
-        ss << opt.name[0];
-      }
+        if (!opt.name[1].empty())
+        {
+          ss << opt.name[1];
+        }
+        else
+        {
+          ss << opt.name[0];
+        }
 
-      auto placeholder = toUpper(opt.name[0].substr(2));
-      for (std::size_t i = 0; i < opt.nargs; ++i)
-      {
-        ss << " " << placeholder;
+        auto placeholder = toUpper(opt.name[0].substr(2));
+        for (std::size_t i = 0; i < opt.nargs; ++i)
+        {
+          ss << " " << placeholder;
+        }
       }
 
       if (!opt.required)
       {
         ss << "]";
+      }
+      if (opt.repeatable)
+      {
+        ss << "...";
       }
       return ss.str();
     }
@@ -590,7 +661,8 @@ namespace GridKit
       auto arg = findByName(name);
       if (!arg)
       {
-        auto msg = "CliArgs: unrecognized option requested: \"" + name + "\"";
+        auto msg =
+          std::format("CliArgs: unrecognized option requested: \"{}\"", name);
         Log::error() << msg << '\n';
         throw std::runtime_error(msg);
       }

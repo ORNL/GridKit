@@ -1,10 +1,11 @@
 #pragma once
 
+#include <cmath>
 #include <cstddef>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,8 @@ namespace GridKit
      * @brief Describes an event that is used to modify the simulation at the
      * given time point
      *
-     * ContingencyAnalysis repeats fault events at each bus with the same R and X.
+     * ContingencyAnalysis repeats fault events at each bus with the same R and
+     * X.
      */
     struct SystemEvent
     {
@@ -71,6 +73,12 @@ namespace GridKit
       double                                         rel_tol;
       /// absolute tolerance for the solver
       double                                         abs_tol;
+      /// relative residual tolerance for the co-simulation interface
+      double                                         cosim_rel_tol;
+      /// scaled step tolerance for the co-simulation interface solver
+      double                                         cosim_step_tol;
+      /// estimated relative error of co-simulation residual evaluations
+      double                                         cosim_function_error;
       /// fixed solver time step size, or 0 for adaptive stepping
       double                                         dt_fixed;
       /// maximum number of solver time steps, or 0 for the IDA default
@@ -98,9 +106,12 @@ namespace GridKit
     using json = ::nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
-    inline constexpr double DEFAULT_SOLVER_REL_TOL   = 1.0e-7;
-    inline constexpr double DEFAULT_SOLVER_ABS_TOL   = 1.0e-9;
-    inline constexpr double DEFAULT_VERIFICATION_TOL = 1.0e-4;
+    inline constexpr double DEFAULT_SOLVER_REL_TOL       = 1.0e-7;
+    inline constexpr double DEFAULT_SOLVER_ABS_TOL       = 1.0e-9;
+    inline constexpr double DEFAULT_VERIFICATION_TOL     = 1.0e-4;
+    inline constexpr double DEFAULT_COSIM_REL_TOL        = 1.0e-8;
+    inline constexpr double DEFAULT_COSIM_STEP_TOL       = 1.0e-12;
+    inline constexpr double DEFAULT_COSIM_FUNCTION_ERROR = 1.0e-10;
 
     /**
      * @brief JSON parser implementation for `StudyData`
@@ -114,20 +125,39 @@ namespace GridKit
       j.at("tmax").get_to(c.tmax);
       c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
       c.abs_tol            = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
-      c.dt_fixed           = j.value("dt_fixed", 0.0);
-      c.max_steps          = j.value("max_steps", std::size_t{0});
-      c.max_order          = j.value("max_order", 5);
-      c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
+      const auto tolerance = [&](const char* name, double fallback)
+      {
+        const double value = j.value(name, fallback);
+        if (!std::isfinite(value) || value <= 0.0)
+        {
+          throw std::invalid_argument(
+            std::string(name) + " must be positive and finite"
+          );
+        }
+        return value;
+      };
+      c.cosim_rel_tol  = tolerance("cosim_rel_tol", DEFAULT_COSIM_REL_TOL);
+      c.cosim_step_tol = tolerance("cosim_step_tol", DEFAULT_COSIM_STEP_TOL);
+      c.cosim_function_error =
+        tolerance("cosim_function_error", DEFAULT_COSIM_FUNCTION_ERROR);
+      c.dt_fixed  = j.value("dt_fixed", 0.0);
+      c.max_steps = j.value("max_steps", std::size_t{0});
+      c.max_order = j.value("max_order", 5);
+      c.consistent_ic_type =
+        AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
       if (j.contains("consistent_ic_type"))
       {
-        const auto consistent_ic_type_str = j.at("consistent_ic_type").get<std::string>();
+        const auto consistent_ic_type_str =
+          j.at("consistent_ic_type").get<std::string>();
         if (consistent_ic_type_str == "y")
         {
-          c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::Y;
+          c.consistent_ic_type =
+            AnalysisManager::Sundials::IdaConsistentICType::Y;
         }
         else if (consistent_ic_type_str == "ya_ydp")
         {
-          c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
+          c.consistent_ic_type =
+            AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
         }
         else
         {
@@ -203,7 +233,8 @@ namespace GridKit
         c.error_type = ErrorType::RELATIVE;
       }
 
-      c.abs_err_threshold = j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
+      c.abs_err_threshold =
+        j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
     }
 
     /**
@@ -276,7 +307,8 @@ namespace GridKit
           // output file must be a symlink to the model output file
           if (exists(data.output_file))
           {
-            if ((!is_symlink(data.output_file)) || (read_symlink(data.output_file) != model_output_file))
+            if ((!is_symlink(data.output_file))
+                || (read_symlink(data.output_file) != model_output_file))
             {
               Log::error() << "Study output file not usable" << std::endl;
             }
@@ -291,28 +323,12 @@ namespace GridKit
       return data;
     }
 
-    void checkCommandLine(int argc, const std::string& appName)
-    {
-      if (argc < 2)
-      {
-        Log::error() << "No input file provided\n"
-                     << std::format(
-                            "\n"
-                            "Usage:\n"
-                            "       {} <json-input-file>\n"
-                            "\n"
-                            "Please provide a json input file for the study to run.\n"
-                            "\n",
-                            appName);
-        exit(1);
-      }
-    }
-
     Testing::TestStatus checkErrors(
-        const StudyData& study_data,
-        bool             print_results = true)
+      const StudyData& study_data, bool print_results = true
+    )
     {
-      // Generate aggregate errors comparing variable output to reference solution
+      // Generate aggregate errors comparing variable output to reference
+      // solution
       auto func   = std::string{"monitor file vs reference file"};
       auto status = Testing::TestStatus{func.c_str()};
 
@@ -320,10 +336,12 @@ namespace GridKit
       const auto& ref_file = study_data.reference_file;
       if (!out_file.empty() && !ref_file.empty())
       {
-        auto errorSet = Testing::compareCSV(out_file,
-                                            ref_file,
-                                            study_data.error_type,
-                                            study_data.abs_err_threshold);
+        auto errorSet = Testing::compareCSV(
+          out_file,
+          ref_file,
+          study_data.error_type,
+          study_data.abs_err_threshold
+        );
 
         // Print the errors
         if (print_results)
@@ -337,7 +355,8 @@ namespace GridKit
           status *= study_data.error_tol.size() == errorSet->var_errors.size();
           for (std::size_t i = 0; i < study_data.error_tol.size(); ++i)
           {
-            status *= errorSet->var_errors[i].max_value < study_data.error_tol[i];
+            status *=
+              errorSet->var_errors[i].max_value < study_data.error_tol[i];
           }
         }
         else

@@ -7,6 +7,7 @@
 
 DynamicSimulation <DynamicSimulation/README>
 ContingencyAnalysis <ContingencyAnalysis/README>
+CoSimulation <CoSimulation/README>
 Validation <Validation/README>
 ```
 

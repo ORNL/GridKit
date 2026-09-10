@@ -5,9 +5,15 @@ use the reusable models in `cases/PhasorDynamics/`.
 
 | Examples | Purpose |
 | --- | --- |
-| [DynamicSimulation](DynamicSimulation/README.md) | Individual simulation studies. |
-| [ContingencyAnalysis](ContingencyAnalysis/README.md) | Bus-fault contingency studies. |
-| [Validation](Validation/README.md) | System studies compared against PowerWorld reference results. |
+| [DynamicSimulation][dynamic] | Individual simulation studies. |
+| [ContingencyAnalysis][contingency] | Bus-fault contingency studies. |
+| [CoSimulation][cosim] | Co-simulation examples. |
+| [Validation][validation] | Studies compared with PowerWorld results. |
+
+[dynamic]: DynamicSimulation/README.md
+[contingency]: ContingencyAnalysis/README.md
+[cosim]: CoSimulation/README.md
+[validation]: Validation/README.md
 
 ## Running a Study
 

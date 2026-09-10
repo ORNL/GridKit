@@ -9,4 +9,10 @@ gridkit_add_library(
   solvers_steady
   SOURCES Kinsol.cpp
   HEADERS Kinsol.hpp SteadyStateSolver.hpp
-  LINK_LIBRARIES PUBLIC SUNDIALS::kinsol GridKit::dense_vector)
+  LINK_LIBRARIES
+  PUBLIC
+  SUNDIALS::kinsol
+  PRIVATE
+  GridKit::dense_vector
+  PRIVATE
+  GridKit::utilities_logger)

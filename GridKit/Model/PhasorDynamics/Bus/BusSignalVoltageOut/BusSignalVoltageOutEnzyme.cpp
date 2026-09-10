@@ -12,9 +12,8 @@ namespace GridKit
     /**
      * @brief Jacobian evaluation for the Enzyme build.
      *
-     * The first four entries are zero placeholders for the bus voltage
-     * columns, as in Bus. They provide the indices for entries that other
-     * components contribute to and that are later deduplicated.
+     * This sets the fault admittance terms of the bus which are zero when
+     * cleared.
      *
      * One additional entry per connected signal inlet holds the derivative of
      * the residual with respect to the signal variable, which is one. When
@@ -58,10 +57,10 @@ namespace GridKit
       J_cols_buffer_[1] = variable_indices_.at(1);
       J_cols_buffer_[2] = variable_indices_.at(0);
       J_cols_buffer_[3] = variable_indices_.at(1);
-      J_vals_buffer_[0] = 0.0;
-      J_vals_buffer_[1] = 0.0;
-      J_vals_buffer_[2] = 0.0;
-      J_vals_buffer_[3] = 0.0;
+      J_vals_buffer_[0] = -fault_g_;
+      J_vals_buffer_[1] = fault_b_;
+      J_vals_buffer_[2] = -fault_b_;
+      J_vals_buffer_[3] = -fault_g_;
 
       IdxT k = num_bus_entries;
 
@@ -71,8 +70,9 @@ namespace GridKit
         {
           return;
         }
-        const IdxT signal_index = port.linked() ? port.signalVariableIndex() : INVALID_INDEX<IdxT>;
-        J_rows_buffer_[k]       = residual_indices_.at(residual);
+        const IdxT signal_index =
+          port.linked() ? port.signalVariableIndex() : INVALID_INDEX<IdxT>;
+        J_rows_buffer_[k] = residual_indices_.at(residual);
         if (signal_index != INVALID_INDEX<IdxT>)
         {
           J_cols_buffer_[k] = signal_index;

@@ -1,115 +1,31 @@
+#include <chrono>
 #include <exception>
-#include <filesystem>
-#include <fstream>
 
-#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
-#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
-#include <GridKit/Solver/Dynamic/Ida.hpp>
-#include <GridKit/Testing/TestHelpers.hpp>
-#include <GridKit/Testing/Testing.hpp>
+#include "CoSimulation.hpp"
 
-#include "AnalysisUtilities.hpp"
-
-using namespace AnalysisManager::Sundials;
 using namespace GridKit::PhasorDynamics;
-using namespace GridKit::Testing;
-
-using scalar_type = double;
-using real_type   = double;
-using index_type  = size_t;
 
 int runApplication(int argc, const char* argv[])
 {
-  // Print summaries, such as the run time, without lowering a higher verbosity
   Log::raiseVerbosity(Log::SUMMARY);
-
-  // Study file
-  checkCommandLine(argc, "DynamicSimulation");
-  auto study = parseStudyData(argv[1]);
-
-  using EventType = SystemEvent::Type;
-
-  for (const auto& event : study.events)
+  const auto                   options = parseSimulationOptions(argc, argv);
+  const auto                   study   = parseStudyData(options.study_file);
+  const auto                   start   = std::chrono::steady_clock::now();
+  GridKit::Testing::TestStatus status;
+#ifdef GRIDKIT_ENABLE_ZMQ
+  if (options.coSimulated())
   {
-    if ((event.type == EventType::FAULT_ON || event.type == EventType::FAULT_OFF)
-        && event.bus == GridKit::INVALID_INDEX<index_type>)
-    {
-      Log::error() << "Fault event at time " << event.time
-                   << " requires a bus number\n";
-      return 1;
-    }
+    status = runCoupledStudy(study, options);
+  }
+  else
+#endif
+  {
+    status = runStandaloneStudy(study);
   }
 
-  // Instantiate system
-  SystemModel<scalar_type, index_type> sys(study.model_data);
-  sys.allocate();
-
-  // Set up simulation
-  Ida<scalar_type, index_type> ida(&sys);
-  ida.setTolerance(study.rel_tol, study.abs_tol);
-  ida.setFixedStep(study.dt_fixed);
-  ida.setMaxSteps(study.max_steps);
-  ida.setMaxOrder(study.max_order);
-  ida.setConsistentICType(study.consistent_ic_type);
-  ida.configureSimulation();
-
-  // Start timer
-  real_type start = static_cast<real_type>(clock());
-
-  // Initialize simulation for first run
-  auto      dt_monitor = study.dt_monitor;
-  real_type final_time = study.tmax;
-  ida.initializeSimulation(0.0);
-  for (const auto& event : study.events)
-  {
-    // Run to event time
-    ida.runSimulation(event.time, dt_monitor);
-
-    // Set up run for event (to start at event time)
-    int ret = 0;
-
-    switch (event.type)
-    {
-    case EventType::FAULT_ON:
-      ret = sys.getBus(event.bus)->setFault(true, event.R, event.X);
-      break;
-    case EventType::FAULT_OFF:
-      ret = sys.getBus(event.bus)->clearFault();
-      break;
-    case EventType::IN_SERVICE:
-      sys.getBranch(event.device)->setInService(true);
-      break;
-    case EventType::OUT_OF_SERVICE:
-      sys.getBranch(event.device)->setInService(false);
-      break;
-    }
-
-    if (ret != 0)
-    {
-      Log::error() << "Fault event failed for bus " << event.bus
-                   << " at time " << event.time << '\n';
-      return 1;
-    }
-
-    // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time);
-  }
-
-  // Run to final time
-  ida.runSimulation(final_time, dt_monitor);
-
-  real_type stop = static_cast<real_type>(clock());
-
-  // Stop the variable monitor
-  sys.stopMonitor();
-
-  // Generate aggregate errors comparing variable output to reference solution
-  TestStatus status = checkErrors(study);
-
-  // Report run time
-  Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
-
+  const auto elapsed =
+    std::chrono::duration<double>(std::chrono::steady_clock::now() - start);
+  Log::summary() << "Complete in " << elapsed.count() << " seconds\n";
   return status.get();
 }
 
@@ -123,6 +39,5 @@ int main(int argc, const char* argv[])
   {
     Log::error() << "DynamicSimulation failed: " << error.what() << '\n';
   }
-
   return 1;
 }
