@@ -33,14 +33,13 @@ $I_{\mathrm{spdlim}}$ | [binary] | Speed limit flag indicator       | 0       |
 
 ### Parameter Validation
 
-Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
-Time constants below $\epsilon_T$ are raised to $\epsilon_T$ and logged as a warning;
-every other condition is a configuration error.
+Invalid IEEET1 parameter sets are rejected by the following checks.
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
 
 ```math
 \begin{aligned}
-  T &\leftarrow \max\!\left(T, \epsilon_T\right)
-    \quad T \in \{T_R, T_A, T_E, T_F\} \\
+  T &\ge 0 \quad T \in \{T_R, T_A, T_E, T_F\} \\
   K_A
     &> 0 \\
   V_R^{\min}
@@ -160,7 +159,7 @@ Symbol    | Units  | Description                        | Note
 $V_{ts}$  | [p.u.] | Sensed terminal voltage            |
 $V_R$     | [p.u.] | Voltage regulator                  |
 $E_{fd}'$ | [p.u.] | Field voltage before the speed multiplier |
-$V_{fx}$  | [p.u.] | Exciter feedback internal state    |
+$V_{fx}$  | [p.u. s] | Scaled exciter feedback internal state    |
 
 
 #### Algebraic
@@ -208,16 +207,19 @@ E_C &:= \sqrt{V_r^2 + V_i^2}
 \end{aligned}
 ```
 
+At $T_A=0$, the regulator equation becomes
+$V_R=\operatorname{clamp}(K_A V_{tr}, V_R^{\min}, V_R^{\max})$.
+
 The IEEET1 differential equations, as derived from the model diagram, are:
 
 ```math
 \begin{aligned}
-   0 &= -\dot V_{ts} + \dfrac{1}{T_R}\left(E_C - V_{ts}\right) \\
-   0 &= -\dot V_R
-      + \text{antiwindup}
-        \left(V_R, f_R; V_R^{\min}, V_R^{\max}\right) \\
-   0 &= -\dot E_{fd}' + \dfrac{1}{T_E}\left(V_R - V_E - K_E^{\mathrm{eff}} E_{fd}'\right) \\
-   0 &= -\dot V_{fx} + \dfrac{1}{T_F}\left(V_f\right)
+   0 &= -T_R \dot V_{ts} + \left(E_C - V_{ts}\right) \\
+   0 &= -T_A\dot V_R
+      + \text{indicator}
+        \left(V_R, f_R; V_R^{\min}, V_R^{\max}\right)(-V_R+K_A V_{tr}) \\
+   0 &= -T_E \dot E_{fd}' + \left(V_R - V_E - K_E^{\mathrm{eff}} E_{fd}'\right) \\
+   0 &= -T_F\dot V_{fx} - V_{fx} + K_F E_{fd}'
 \end{aligned}
 ```
 
@@ -229,7 +231,7 @@ The algebraic equations of the exciter.
 ```math
 \begin{aligned}
    0 &= -V_{ts} + V_\text{ref} + V_{UEL} + V_{OEL} + V_S - V_{tr} - V_f \\
-   0 &= -T_F(V_f + V_{fx}) + K_F E_{fd}' \\
+   0 &= -V_f + \dot V_{fx} \\
    0 &= -V_E + k_\text{sat} \\
    0 &= -E_{fd} + (1 + \omega I_{\mathrm{spdlim}})E_{fd}' \\
    0 &= -k_\text{sat} + S_B\, q(E_{fd}' - S_A)
@@ -260,7 +262,7 @@ with the current input values.
    V_E      &= k_\text{sat} \\
    V_R      &= K_E^{\mathrm{eff}} E_{fd}' + V_E \\
    V_{tr}   &= \dfrac{V_R}{K_A} \\
-   V_{fx}   &= \dfrac{K_F}{T_F}\, E_{fd}' \\
+   V_{fx}   &= K_F E_{fd}' \\
    V_{ts}   &= E_C \\
    V_f      &= 0 \\
    V_\text{ref}  &= E_C + V_{tr} - V_{UEL} - V_{OEL} - V_S

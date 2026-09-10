@@ -31,16 +31,10 @@ component power base is not supported.
 
 ### Model Derived Parameters
 
-Let $\epsilon_T=10^{-3}\ \mathrm{s}$. A time constant below $\epsilon_T$ is
-raised to that floor in place, so every equation below uses the raised value:
-
-```math
-\begin{aligned}
-  T_x
-    &\leftarrow \max\!\left(T_x,\epsilon_T\right),
-       \quad x\in\{1,3\}
-\end{aligned}
-```
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
+At $T_1=0$, the valve position equals $(P_{\mathrm{ref}}-\omega)/R$
+clamped to its valve limits.
 
 ## Model Ports
 
@@ -95,10 +89,10 @@ The TGOV1 differential equations, as derived from the model diagram, are
 
 ```math
 \begin{aligned}
-  0 &= -\dot P_v
-       + \dfrac{1}{T_1}\text{antiwindup}
+  0 &= -T_1\dot P_v
+       + \text{antiwindup}
          \left(P_v,g_v;P_v^{\min},P_v^{\max}\right) \\
-  0 &= -\dot P_t-\dfrac{P_t-P_v-T_2\dot P_v}{T_3}.
+  0 &= -T_3\dot P_t-P_t+P_v+T_2\dot P_v.
 \end{aligned}
 ```
 

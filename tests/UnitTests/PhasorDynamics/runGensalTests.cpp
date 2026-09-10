@@ -16,5 +16,7 @@ int main()
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
+  result += test.timeConstants();
+
   return result.summary();
 }

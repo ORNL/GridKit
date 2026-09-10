@@ -84,14 +84,11 @@ or define a valid two-point scaled-quadratic fit:
 
 ### Model Derived Parameters
 
-Let $\epsilon_T = 10^{-3}\ \mathrm{s}$. A time constant below $\epsilon_T$ is
-raised to that floor in place, so every equation below uses the raised value:
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
 
 ```math
 \begin{aligned}
-  T_x
-    &\leftarrow \max\!\left(T_x,\epsilon_T\right),
-       \quad x\in\{R,A,B,E,F1\} \\
   s_{\mathrm{UEL}}
     &=
       \begin{cases}
@@ -225,7 +222,8 @@ $V_{\mathrm{UEL}}$                  | [p.u.] | Known   | Under-excitation limite
 Define the pre-limit exciter field-voltage rate:
 
 ```math
-f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
+f_E = \dfrac{V_R-V_{\mathrm{FE}}}{\widehat T_E},\qquad
+\widehat T_E = \begin{cases}T_E & T_E>0\\1\ \mathrm{s} & T_E=0.\end{cases}
 ```
 
 ### Differential Equations
@@ -233,43 +231,37 @@ f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
 ```math
 \begin{aligned}
   0 &=
-    -\dot{E}_{\mathrm{fd}}'
-    + \left(1-s_{\mathrm{lim}}\right)f_E
-    + s_{\mathrm{lim}}\,
+    -T_E\dot{E}_{\mathrm{fd}}'
+    + \left(1-s_{\mathrm{lim}}\right)(V_R-V_{\mathrm{FE}})
+    + s_{\mathrm{lim}}\widehat T_E\,
       \text{awmin}\left(E_{\mathrm{fd}}',f_E;0\right) \\
   0 &=
-    -\dot{V}_C
-    + \dfrac{1}{T_R}
-      \left(
+    -T_R \dot{V}_C
+    + \left(
         \sqrt{V_{\mathrm{r}}^2+V_{\mathrm{i}}^2}
         - V_C
       \right) \\
   0 &=
-    -\dot{V}_R
-    + \dfrac{1}{T_A}
-      \text{antiwindup}
+    -T_A \dot{V}_R
+    + \text{antiwindup}
       \left(
         V_R,\,
         -V_R + K_A V_{\mathrm{HV}};\,
         V_R^{\min}, V_R^{\max}
       \right) \\
   0 &=
-    -\dot{V}_F
-    + \dfrac{1}{T_{F1}}
-      \left[
-        -V_F
-        + \dfrac{K_F}{T_E}
-          \left(V_R - V_{\mathrm{FE}}\right)
-      \right] \\
+    -T_{F1}\dot{V}_F -V_F + K_F\begin{cases}f_E & T_E>0\\\dot{E}_{\mathrm{fd}}' & T_E=0\end{cases} \\
   0 &=
-    -\dot{x}_{\mathrm{LL}}
-    + \dfrac{1}{T_B}
-      \left(e_V - x_{\mathrm{LL}}\right)
+    -T_B \dot{x}_{\mathrm{LL}}
+    + \left(e_V - x_{\mathrm{LL}}\right)
 \end{aligned}
 ```
 
 The field-voltage-state limiter uses the fixed-lower-bound anti-windup rule
-of [Appendix A](#appendix-a-awmin).
+of [Appendix A](#appendix-a-awmin). At $T_E=0$, the field equation also includes
+$s_{\mathrm{lim}}\rho(-E_{\mathrm{fd}}')$ to retain the lower-bound constraint
+when anti-windup blocks the drive. At $T_A=0$, the regulator equation becomes
+$V_R=\operatorname{clamp}(K_A V_{\mathrm{HV}},V_R^{\min},V_R^{\max})$.
 
 ### Algebraic Equations
 
@@ -285,8 +277,7 @@ of [Appendix A](#appendix-a-awmin).
   0 &=
     -V_{\mathrm{LL}}
     + x_{\mathrm{LL}}
-    + \dfrac{T_C}{T_B}
-      \left(e_V - x_{\mathrm{LL}}\right) \\
+    + T_C\dot{x}_{\mathrm{LL}} \\
   0 &=
     -V_{\mathrm{HV}}
     + \begin{cases}

@@ -159,9 +159,6 @@ namespace GridKit
         ScalarT& Vr();
         ScalarT& Vi();
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
-
         static constexpr RealT INITIALIZATION_LIMIT_OFFSET = static_cast<RealT>(0.1);
 
         BusT* bus_{nullptr};

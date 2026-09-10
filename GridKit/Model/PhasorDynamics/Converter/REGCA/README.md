@@ -41,14 +41,13 @@ All listed JSON parameters are required unless marked optional.
 
 ### Parameter Validation
 
-Invalid REGCA parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
-Time constants below $\epsilon_T$ are raised to $\epsilon_T$ and logged as a warning,
-every other condition is a configuration error.
+Invalid REGCA parameter sets are rejected by the following checks.
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
 
 ```math
 \begin{aligned}
-  T &\leftarrow \max(T, \epsilon_T)
-    \quad T\in\{T_\mathrm{g},T_M\} \\
+  T &\ge 0 \quad T\in\{T_\mathrm{g},T_M\} \\
   S^\mathrm{base}
     &> 0 \\
   R_p^{\max}
@@ -134,7 +133,7 @@ $I_q^\mathrm{cmd}$              | [p.u.] | Unknown | Reactive-current command in
 
 ## Model Equations
 
-Define the pre-limit current derivatives:
+For $T_\mathrm{g}>0$, define the pre-limit current derivatives:
 
 ```math
 \begin{aligned}
@@ -158,13 +157,19 @@ f_\mathrm{p}^{\lim}
 
 ### Differential Equations
 
+For $T_\mathrm{g}>0$, the current equations retain their recovery-rate limits.
+At $T_\mathrm{g}=0$, $I_q=k_\mathrm{base}I_q^\mathrm{cmd}$ and $I_p=k_\mathrm{base}I_p^\mathrm{cmd}$,
+with $I_p=\text{min}(k_\mathrm{base}I_p^\mathrm{cmd},I_L)$ when LVPL is enabled;
+recovery-rate dynamics are bypassed. At $T_M=0$, $V_M=V_T$ and the moving
+LVPL ceiling uses $\dot V_M$ directly.
+
 The $I_q$ limiter branch is selected by the initial reactive power $Q_0$ and
 the sign that enables the corresponding limit.
 
 ```math
 \begin{aligned}
-  0 &= -\dot V_M + \dfrac{1}{T_M} (V_T - V_M) \\
-  0 &= -\dot I_q +
+  0 &= -T_M \dot V_M + (V_T - V_M) \\
+  0 &= -T_\mathrm{g}\dot I_q + T_\mathrm{g}
     \begin{cases}
       \text{min}(f_\mathrm{q}, R_q^{\max})
         & Q_0 > 0 \land R_q^{\max} > 0 \\
@@ -172,7 +177,7 @@ the sign that enables the corresponding limit.
         & Q_0 < 0 \land R_q^{\min} < 0 \\
       f_\mathrm{q} & \text{otherwise}
     \end{cases} \\
-  0 &= -\dot I_p +
+  0 &= -T_\mathrm{g}\dot I_p + T_\mathrm{g}
     \begin{cases}
       f_\mathrm{p}^{\lim} & s_L = 0 \\
       \text{awmax}(I_p, f_\mathrm{p}^{\lim}; I_L, \dot I_L) & s_L = 1

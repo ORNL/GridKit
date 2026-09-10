@@ -7,12 +7,15 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
+
+#include "TimeConstantTests.hpp"
 
 namespace GridKit
 {
@@ -30,6 +33,22 @@ namespace GridKit
     public:
       GovernorTgov1Tests()  = default;
       ~GovernorTgov1Tests() = default;
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                      = PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{};
+          using Parameter                = typename decltype(data)::Parameters;
+          data.parameters[Parameter::T3] = time_constant;
+          data.parameters[Parameter::T1] = time_constant;
+          PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> model(data);
+          success *= implicitTimeConstant(model, 0, time_constant);
+          success *= implicitTimeConstant(model, 1, time_constant);
+        }
+        return success.report(__func__);
+      }
 
       TestOutcome constructor()
       {
@@ -101,8 +120,8 @@ namespace GridKit
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
 
         // Test answer keys
-        const std::vector<ScalarT> res_answer = {static_cast<ScalarT>(2.0) / static_cast<ScalarT>(15.0),
-                                                 -2.0,
+        const std::vector<ScalarT> res_answer = {1.0,
+                                                 -1.0,
                                                  static_cast<ScalarT>(1.0) / static_cast<ScalarT>(3.0)};
 
         bus.allocate();

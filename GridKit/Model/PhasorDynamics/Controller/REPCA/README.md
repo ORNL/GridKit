@@ -85,12 +85,11 @@ The power bases and both conversion ratios must also be finite and positive;
 
 ### Model Derived Parameters
 
-Let $\epsilon_T=10^{-3}\ \mathrm{s}$. Smaller time constants are raised to that
-floor with a warning:
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
 
 ```math
 \begin{aligned}
-  T_x &\leftarrow \max(T_x,\epsilon_T), \quad x\in\{\mathrm{fltr},\mathrm{fv},\mathrm{p},\mathrm{lag}\} \\
   s_\mathrm{comp}^\mathrm{off} &= 1 - s_\mathrm{comp} \\
   s_\mathrm{ref}^\mathrm{off} &= 1 - s_\mathrm{ref} \\
   k_\mathrm{base} &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}} \\
@@ -192,13 +191,13 @@ $f^\mathrm{ref}$              | [p.u.] | Unknown | Frequency reference          
 
 ```math
 \begin{aligned}
-  0 &= -\dot{V}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (V^\mathrm{ctrl} - V^\mathrm{meas}) \\
-  0 &= -\dot{Q}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (k_\mathrm{base}Q - Q^\mathrm{meas}) \\
+  0 &= -T_\mathrm{fltr} \dot{V}^\mathrm{meas} + (V^\mathrm{ctrl} - V^\mathrm{meas}) \\
+  0 &= -T_\mathrm{fltr} \dot{Q}^\mathrm{meas} + (k_\mathrm{base}Q - Q^\mathrm{meas}) \\
   0 &= -\dot{x}_Q^\mathrm{PI} + s_\mathrm{frz}\, \text{antiwindup}(Q^\mathrm{PI}, K_\mathrm{i}e_\mathrm{RQ}^\mathrm{lim};\,Q^{\min}, Q^{\max}) \\
-  0 &= -\dot{x}_Q^\mathrm{lag} + \dfrac{1}{T_\mathrm{fv}} (Q^\mathrm{PI} - x_Q^\mathrm{lag}) \\
-  0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}} (k_\mathrm{base}P - P^\mathrm{meas}) \\
+  0 &= -T_\mathrm{fv} \dot{x}_Q^\mathrm{lag} + (Q^\mathrm{PI} - x_Q^\mathrm{lag}) \\
+  0 &= -T_\mathrm{p} \dot{P}^\mathrm{meas} + (k_\mathrm{base}P - P^\mathrm{meas}) \\
   0 &= -\dot{x}_P^\mathrm{PI} + \text{antiwindup}(P^\mathrm{PI}, K_\mathrm{ig}e_P^\mathrm{lim};\,P^{\min}, P^{\max}) \\
-  0 &= -\dot{P}^\mathrm{ref} + \dfrac{1}{T_\mathrm{lag}} (P^\mathrm{PI} - P^\mathrm{ref}).
+  0 &= -T_\mathrm{lag} \dot{P}^\mathrm{ref} + (P^\mathrm{PI} - P^\mathrm{ref}).
 \end{aligned}
 ```
 
@@ -218,7 +217,7 @@ target and smooth approximation.
   0 &= -e_\mathrm{RQ}^\mathrm{db} + \text{deadband2}(e_\mathrm{RQ};\,D_\mathrm{bd1},D_\mathrm{bd2}) \\
   0 &= -e_\mathrm{RQ}^\mathrm{lim} + \text{clamp}(e_\mathrm{RQ}^\mathrm{db};\,e^{\min},e^{\max}) \\
   0 &= -Q^\mathrm{PI} + \text{clamp}(K_\mathrm{p}e_\mathrm{RQ}^\mathrm{lim}+x_Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
-  0 &= -T_\mathrm{fv} (k_\mathrm{base}Q^\mathrm{ext}-x_Q^\mathrm{lag}) + T_\mathrm{ft} (Q^\mathrm{PI}-x_Q^\mathrm{lag}) \\
+  0 &= -k_\mathrm{base}Q^\mathrm{ext}+x_Q^\mathrm{lag} + T_\mathrm{ft}\dot{x}_Q^\mathrm{lag} \\
   0 &= -e_f + \text{deadband2}(f^\mathrm{ref}-f;\,D_\mathrm{bd1}^{f},D_\mathrm{bd2}^{f}) \\
   0 &= -e_P + k_\mathrm{base}P_\mathrm{plant}^\mathrm{ref} - P^\mathrm{meas} + \text{droop}(e_f;D_\mathrm{dn},D_\mathrm{up}) \\
   0 &= -e_P^\mathrm{lim} + \text{clamp}(e_P;\,e_P^{\min},e_P^{\max}) \\
@@ -326,7 +325,7 @@ Output          | Units  | Description                         | Note
 
 ## Testing
 
-- `validation()` checks defaults, parameter domains, signal contracts, and time floors.
+- `validation()` checks defaults, parameter domains, signal contracts, and zero time constants.
 - `initializationAndSignals()` checks reconstruction, bases, signals, monitors,
   tags, and selectors.
 - `initializationDomain()` checks adjusted and collapsed limits, nonfinite

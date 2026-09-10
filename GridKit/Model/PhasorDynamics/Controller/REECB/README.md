@@ -86,12 +86,11 @@ Enabling both `PfFlag` and `QFlag` logs an atypical-configuration warning.
 
 ### Model Derived Parameters
 
-Let $\epsilon_T=10^{-3}\ \mathrm{s}$. A time constant below $\epsilon_T$ is
-raised to that floor in place, so every equation below uses the raised value:
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
 
 ```math
 \begin{aligned}
-  T_x &\leftarrow \text{max}(T_x,\epsilon_T), && x\in\{\mathrm{rv},\mathrm{p},\mathrm{iq},\mathrm{pord}\} \\
   s_\mathrm{pf}^\mathrm{off} &= 1 - s_\mathrm{pf} \\
   s_Q^\mathrm{off} &= 1 - s_Q \\
   s_Q^\mathrm{PI} &= s_Q s_V \\
@@ -182,14 +181,20 @@ $P^\mathrm{ref}$       | [p.u.] | Unknown | External active-power reference     
 
 #### Differential
 
+The $Q_V$ and $P^\mathrm{ord}$ equations below apply for positive lags.
+At $T_\mathrm{iq}=0$, $Q_V=s_Q^\mathrm{off}Q^\mathrm{ref}/V_\mathrm{safe}^\mathrm{meas}$.
+At $T_\mathrm{pord}=0$, $P^\mathrm{ord}=\text{clamp}(k_\mathrm{base}P^\mathrm{ref};P^{\min},P^{\max})$;
+slew and freeze dynamics are bypassed. The unused slew helper then uses the
+unscaled order error.
+
 ```math
 \begin{aligned}
-  0 &= -\dot{V}^\mathrm{meas} + \dfrac{1}{T_\mathrm{rv}}(V_T-V^\mathrm{meas}) \\
-  0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}}(k_\mathrm{base}P_e-P^\mathrm{meas}) \\
+  0 &= -T_\mathrm{rv} \dot{V}^\mathrm{meas} + (V_T-V^\mathrm{meas}) \\
+  0 &= -T_\mathrm{p} \dot{P}^\mathrm{meas} + (k_\mathrm{base}P_e-P^\mathrm{meas}) \\
   0 &= -\dot{x}_Q^\mathrm{PI} + s_Q^\mathrm{PI}s_\mathrm{dip}\,\text{antiwindup}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI},K_\mathrm{qi}e_Q;\,V^{\min},V^{\max}) \\
   0 &= -\dot{x}_V^\mathrm{PI} + s_Qs_\mathrm{dip}\,\text{antiwindup}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI},K_\mathrm{vi}e_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
-  0 &= -\dot{Q}_V + \dfrac{1}{T_\mathrm{iq}}s_Q^\mathrm{off}s_\mathrm{dip}\left(\dfrac{Q^\mathrm{ref}}{V_\mathrm{safe}^\mathrm{meas}}-Q_V\right) \\
-  0 &= -\dot{P}^\mathrm{ord} + s_\mathrm{dip}\,\text{antiwindup}(P^\mathrm{ord},r_P^\mathrm{ord};\,P^{\min},P^{\max}).
+  0 &= -T_\mathrm{iq} \dot{Q}_V + s_Q^\mathrm{off}s_\mathrm{dip}\left(\dfrac{Q^\mathrm{ref}}{V_\mathrm{safe}^\mathrm{meas}}-Q_V\right) \\
+  0 &= -T_\mathrm{pord}\dot{P}^\mathrm{ord} + T_\mathrm{pord}s_\mathrm{dip}\,\text{antiwindup}(P^\mathrm{ord},r_P^\mathrm{ord};\,P^{\min},P^{\max}).
 \end{aligned}
 ```
 

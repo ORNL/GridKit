@@ -89,18 +89,13 @@ under [Internal Initialization](#internal-initialization).
 
 ### Model Derived Parameters
 
-Let $\epsilon_T=10^{-3}\ \mathrm{s}$. A time constant below $\epsilon_T$ is
-raised to that floor in place, so every equation below uses the raised value:
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
 
 ```math
 \begin{aligned}
-  T_x
-    &\leftarrow \max\!\left(T_x,\epsilon_T\right),
-       \quad x\in\{r,f,g,w,\mathrm{np}\} \\
   k_{\mathrm{base}}
     &= \dfrac{S^\mathrm{sys}}{10^6 T^\mathrm{rate}} \\
-  k_n
-    &= \dfrac{T_n}{T_{\mathrm{np}}} \\
   N_{\mathrm{GV}}(x)
     &=
       P_{\mathrm{GV}}^{(0)}
@@ -178,6 +173,8 @@ $P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional si
 
 ### Differential Equations
 
+At $T_r=0$, $x_f$ and $c$ are algebraic.
+
 The effective desired-gate response limits
 $G_{\mathrm{resp}}^{\min}$ and $G_{\mathrm{resp}}^{\max}$ and the effective
 dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ are resolved during initialization.
@@ -185,26 +182,22 @@ dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ are resolved during initialization.
 ```math
 \begin{aligned}
   0 &=
-    -\dot{x}_n
-    + \dfrac{1}{T_{\mathrm{np}}}
-      \left(\omega_{\mathrm{db}} - x_n\right) \\
+    -T_{\mathrm{np}} \dot{x}_n
+    + \left(\omega_{\mathrm{db}} - x_n\right) \\
   0 &=
-    -\dot{x}_f
-    + \dfrac{1}{T_f}
-      \left(e_f - x_f\right) \\
+    -T_f \dot{x}_f
+    + \left(e_f - x_f\right) \\
   0 &=
     -\dot{c}
     + \text{antiwindup}
       \left(c, r_c;\, G_{\mathrm{resp}}^{\min},
         G_{\mathrm{resp}}^{\max}\right) \\
   0 &=
-    -\dot{g}
-    + \dfrac{1}{T_g}
-      \left(c - g\right) \\
+    -T_g \dot{g}
+    + \left(c - g\right) \\
   0 &=
-    -\dot{q}
-    + \dfrac{1}{T_w}
-      \left(H_{\mathrm{dam}}^{\mathrm{eff}} - H\right)
+    -T_w \dot{q}
+    + \left(H_{\mathrm{dam}}^{\mathrm{eff}} - H\right)
 \end{aligned}
 ```
 
@@ -223,12 +216,10 @@ target and smooth approximation.
     -e_f
     + k_{\mathrm{base}}\left(P^\mathrm{ref} + P^\mathrm{aux}\right)
     - x_n
-    - k_n\left(\omega_{\mathrm{db}} - x_n\right)
+    - T_n\dot{x}_n
     - R_{\mathrm{perm}}c \\
   0 &=
-    -R_{\mathrm{temp}}f_c
-    + \dfrac{x_f}{T_r}
-    + \dfrac{e_f - x_f}{T_f} \\
+    -T_r R_{\mathrm{temp}}f_c + x_f + T_r\dot{x}_f \\
   0 &=
     -r_c
     + \text{clamp}
@@ -339,7 +330,6 @@ unchanged.
         e_f
         - k_{\mathrm{base}}P^\mathrm{aux}
         + x_n
-        + k_n\left(\omega_{\mathrm{db}} - x_n\right)
         + R_{\mathrm{perm}}c
       \right]
 \end{aligned}
@@ -403,7 +393,7 @@ which can be written in terms of our smooth functions as
 
 CommonMath defines the [`ramp`](GridKit/CommonMath.md#-ramp),
 [`above`](GridKit/CommonMath.md#above), and
-[`below`](GridKit/CommonMath.md#below) targets and smooth approximations. This is deferred until we permit non Hessenberg forms. Once permitted we should define:
+[`below`](GridKit/CommonMath.md#below) targets and smooth approximations. Backlash remains unimplemented. A future implementation can define:
 
 ```math
 \begin{aligned}
