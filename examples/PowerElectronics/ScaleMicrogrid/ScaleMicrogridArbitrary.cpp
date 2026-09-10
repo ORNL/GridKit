@@ -55,7 +55,7 @@ int main(int argc, char const* argv[])
  */
 int printMicrogridSystems(index_type N_size)
 {
-  using namespace GridKit;
+  using namespace GridKit::PowerElectronics;
 
   bool use_jac = true;
 

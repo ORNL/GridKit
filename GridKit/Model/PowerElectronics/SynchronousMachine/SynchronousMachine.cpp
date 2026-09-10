@@ -7,193 +7,194 @@
 
 namespace GridKit
 {
-
-  /*!
-   * @brief Constructor for a constant SynchronousMachine model
-   *
-   * Calls default ModelEvaluatorImpl constructor.
-   * @todo This model's equations are not finished
-   * @todo needs to be tested for correctness
-   *
-   * @tparam ScalarT - floating point type for the model
-   * @tparam IdxT - integer index type for the model
-   *
-   * @param[in] id - unique identifier for the component
-   * @param[in] Lls - stator leakage inductance
-   * @param[in] Llkq - tuple of damper leakage reactances
-   * @param[in] Llfd - field leakage reactance
-   * @param[in] Llkd - damper leakage reactance
-   * @param[in] Lmq - quadrature axis magnetizing reactance
-   * @param[in] Lmd - direct axis magnetizing reactance
-   * @param[in] Rs - stator resistance
-   * @param[in] Rkq - tuple of damper resistances
-   * @param[in] Rfd - field resistance
-   * @param[in] Rkd - damper resistance
-   * @param[in] RJ - rotor moment of inertia
-   * @param[in] P - number of poles
-   * @param[in] mub - rated frequency
-   */
-
-  template <class ScalarT, typename IdxT>
-  SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub)
-    : Lls_(Lls),
-      Llkq_(Llkq),
-      Llfd_(Llfd),
-      Llkd_(Llkd),
-      Lmq_(Lmq),
-      Lmd_(Lmd),
-      Rs_(Rs),
-      Rkq_(Rkq),
-      Rfd_(Rfd),
-      Rkd_(Rkd),
-      RJ_(RJ),
-      P_(P),
-      mub_(mub)
+  namespace PowerElectronics
   {
-    size_           = 13;
-    n_intern_       = 6;
-    n_extern_       = 7;
-    extern_indices_ = {0, 1, 2, 3, 4};
-    idc_            = id;
-  }
+    /*!
+     * @brief Constructor for a constant SynchronousMachine model
+     *
+     * Calls default ModelEvaluatorImpl constructor.
+     * @todo This model's equations are not finished
+     * @todo needs to be tested for correctness
+     *
+     * @tparam ScalarT - floating point type for the model
+     * @tparam IdxT - integer index type for the model
+     *
+     * @param[in] id - unique identifier for the component
+     * @param[in] Lls - stator leakage inductance
+     * @param[in] Llkq - tuple of damper leakage reactances
+     * @param[in] Llfd - field leakage reactance
+     * @param[in] Llkd - damper leakage reactance
+     * @param[in] Lmq - quadrature axis magnetizing reactance
+     * @param[in] Lmd - direct axis magnetizing reactance
+     * @param[in] Rs - stator resistance
+     * @param[in] Rkq - tuple of damper resistances
+     * @param[in] Rfd - field resistance
+     * @param[in] Rkd - damper resistance
+     * @param[in] RJ - rotor moment of inertia
+     * @param[in] P - number of poles
+     * @param[in] mub - rated frequency
+     */
+    template <class ScalarT, typename IdxT>
+    SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub)
+      : Lls_(Lls),
+        Llkq_(Llkq),
+        Llfd_(Llfd),
+        Llkd_(Llkd),
+        Lmq_(Lmq),
+        Lmd_(Lmd),
+        Rs_(Rs),
+        Rkq_(Rkq),
+        Rfd_(Rfd),
+        Rkd_(Rkd),
+        RJ_(RJ),
+        P_(P),
+        mub_(mub)
+    {
+      size_           = 13;
+      n_intern_       = 6;
+      n_extern_       = 7;
+      extern_indices_ = {0, 1, 2, 3, 4};
+      idc_            = id;
+    }
 
-  template <class ScalarT, typename IdxT>
-  SynchronousMachine<ScalarT, IdxT>::~SynchronousMachine()
-  {
-  }
+    template <class ScalarT, typename IdxT>
+    SynchronousMachine<ScalarT, IdxT>::~SynchronousMachine()
+    {
+    }
 
-  /**
-   * Initialization of the grid model
-   */
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::initialize()
-  {
-    return 0;
-  }
+    /**
+     * Initialization of the grid model
+     */
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::initialize()
+    {
+      return 0;
+    }
 
-  /*
-   * \brief Identify differential variables
-   */
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::tagDifferentiable()
-  {
-    // All variables are differentials
-    std::fill(tag_.begin(), tag_.end(), true);
-    return 0;
-  }
+    /*
+     * \brief Identify differential variables
+     */
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::tagDifferentiable()
+    {
+      // All variables are differentials
+      std::fill(tag_.begin(), tag_.end(), true);
+      return 0;
+    }
 
-  /**
-   * @brief Compute the absolute tolerance for each variable in the model
-   *
-   * @param rel_tol The relative tolerance which can be used to pick the
-   *        absolute tolerance.
-   * @tparam ScalarT Scalar data type
-   * @tparam IdxT Index data type
-   * @return int 0 if successful, non-zero otherwise.
-   *
-   * This represents a "noise" level close to zero for which pure relative
-   * error cannot be used.
-   */
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
-  {
-    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-    return 0;
-  }
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+    {
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      return 0;
+    }
 
-  /**
-   * @brief Compute the resisdual of the component.
-   *
-   * @todo not finished
-   */
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateInternalResidual()
-  {
-    ScalarT                  rkq1  = static_cast<ScalarT>(std::get<0>(Rkq_));
-    [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
-    ScalarT                  llkq1 = static_cast<ScalarT>(std::get<0>(Llkq_));
-    [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
+    /**
+     * @brief Compute the resisdual of the component.
+     *
+     * @todo not finished
+     */
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::evaluateInternalResidual()
+    {
+      ScalarT                  rkq1  = static_cast<ScalarT>(std::get<0>(Rkq_));
+      [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
+      ScalarT                  llkq1 = static_cast<ScalarT>(std::get<0>(Llkq_));
+      [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
 
-    static constexpr auto pi = std::numbers::pi_v<RealT>;
+      static constexpr auto pi = std::numbers::pi_v<RealT>;
 
-    ScalarT cos1   = std::cos((P_ / 2.0) * y_int_[0]);
-    ScalarT sin1   = std::sin((P_ / 2.0) * y_int_[0]);
-    ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
-    ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
-    ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
-    ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
+      ScalarT cos1   = std::cos((P_ / 2.0) * y_int_[0]);
+      ScalarT sin1   = std::sin((P_ / 2.0) * y_int_[0]);
+      ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
+      ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
+      ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
+      ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
 
-    f_int_[0] = (-2.0 / 3.0) * (*y_ext_[0] * cos1 + *y_ext_[1] * cos23m + *y_ext_[2] * cos23p) + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4] + Lmq_ * yp_int_[5] + *y_ext_[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
-    f_int_[1] = (-2.0 / 3.0) * (*y_ext_[0] * sin1 - *y_ext_[1] * sin23m - *y_ext_[2] * sin23p) + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6] + Lmd_ * yp_int_[7] - *y_ext_[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
-    f_int_[2] = (-1.0 / 3.0) * (*y_ext_[0] + *y_ext_[1] + *y_ext_[2]) + Rs_ * y_int_[3] + Lls_ * yp_int_[3];
-    f_int_[3] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
-    f_int_[4] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
-    return 0;
-  }
+      f_int_[0] = (-2.0 / 3.0) * (*y_ext_[0] * cos1 + *y_ext_[1] * cos23m + *y_ext_[2] * cos23p) + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4] + Lmq_ * yp_int_[5] + *y_ext_[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
+      f_int_[1] = (-2.0 / 3.0) * (*y_ext_[0] * sin1 - *y_ext_[1] * sin23m - *y_ext_[2] * sin23p) + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6] + Lmd_ * yp_int_[7] - *y_ext_[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
+      f_int_[2] = (-1.0 / 3.0) * (*y_ext_[0] + *y_ext_[1] + *y_ext_[2]) + Rs_ * y_int_[3] + Lls_ * yp_int_[3];
+      f_int_[3] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
+      f_int_[4] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
+      return 0;
+    }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateExternalResidual()
-  {
-    [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
-    [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::evaluateExternalResidual()
+    {
+      [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
+      [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
 
-    static constexpr auto pi = std::numbers::pi_v<RealT>;
+      static constexpr auto pi = std::numbers::pi_v<RealT>;
 
-    ScalarT cos1   = std::cos((P_ / 2.0) * y_int_[0]);
-    ScalarT sin1   = std::sin((P_ / 2.0) * y_int_[0]);
-    ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
-    ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
-    ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
-    ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
+      ScalarT cos1   = std::cos((P_ / 2.0) * y_int_[0]);
+      ScalarT sin1   = std::sin((P_ / 2.0) * y_int_[0]);
+      ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
+      ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
+      ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
+      ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
 
-    *f_ext_[0] += y_int_[1] * cos1 + y_int_[2] * sin1 + y_int_[3];
-    *f_ext_[1] += y_int_[1] * cos23m + y_int_[2] * sin23m + y_int_[3];
-    *f_ext_[2] += y_int_[1] * cos23p + y_int_[2] * sin23p + y_int_[3];
-    *f_ext_[3] += RJ_ * *yp_ext_[4] - (3.0 / 4.0) * P_ * (Lmd_ * y_int_[1] * (y_int_[2] + y_int_[6] + y_int_[7]) - Lmq_ * y_int_[2] * (y_int_[1] + y_int_[4] + *y_ext_[0]));
-    *f_ext_[4] += yp_int_[0] - *y_ext_[4];
-    return 0;
-  }
+      *f_ext_[0] += y_int_[1] * cos1 + y_int_[2] * sin1 + y_int_[3];
+      *f_ext_[1] += y_int_[1] * cos23m + y_int_[2] * sin23m + y_int_[3];
+      *f_ext_[2] += y_int_[1] * cos23p + y_int_[2] * sin23p + y_int_[3];
+      *f_ext_[3] += RJ_ * *yp_ext_[4] - (3.0 / 4.0) * P_ * (Lmd_ * y_int_[1] * (y_int_[2] + y_int_[6] + y_int_[7]) - Lmq_ * y_int_[2] * (y_int_[1] + y_int_[4] + *y_ext_[0]));
+      *f_ext_[4] += yp_int_[0] - *y_ext_[4];
+      return 0;
+    }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateJacobian()
-  {
-    return 0;
-  }
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::evaluateJacobian()
+    {
+      return 0;
+    }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateIntegrand()
-  {
-    return 0;
-  }
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::evaluateIntegrand()
+    {
+      return 0;
+    }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::initializeAdjoint()
-  {
-    return 0;
-  }
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::initializeAdjoint()
+    {
+      return 0;
+    }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointResidual()
-  {
-    return 0;
-  }
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointResidual()
+    {
+      return 0;
+    }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointIntegrand()
-  {
-    return 0;
-  }
+    template <class ScalarT, typename IdxT>
+    int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointIntegrand()
+    {
+      return 0;
+    }
 
-  template <class ScalarT, typename IdxT>
-  CircuitComponent<ScalarT, IdxT>* SynchronousMachine<ScalarT, IdxT>::clone() const
-  {
-    return new SynchronousMachine<ScalarT, IdxT>(*this);
-  }
+    template <class ScalarT, typename IdxT>
+    CircuitComponent<ScalarT, IdxT>* SynchronousMachine<ScalarT, IdxT>::clone() const
+    {
+      return new SynchronousMachine<ScalarT, IdxT>(*this);
+    }
 
-  // Available template instantiations
-  template class SynchronousMachine<double, long int>;
-  template class SynchronousMachine<double, size_t>;
-  template class SynchronousMachine<DependencyTracking::Variable, long int>;
-  template class SynchronousMachine<DependencyTracking::Variable, size_t>;
+    // Available template instantiations
+    template class SynchronousMachine<double, long int>;
+    template class SynchronousMachine<double, size_t>;
+    template class SynchronousMachine<DependencyTracking::Variable, long int>;
+    template class SynchronousMachine<DependencyTracking::Variable, size_t>;
 
+  } // namespace PowerElectronics
 } // namespace GridKit

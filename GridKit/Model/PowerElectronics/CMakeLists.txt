@@ -25,7 +25,6 @@ add_subdirectory(MicrogridBusDQ)
 install(
   FILES CircuitComponent.hpp
         CircuitNode.hpp
-        CircuitGraph.hpp
         SystemModelPowerElectronics.hpp
         NodeBase.hpp
         ExternalConnection.hpp

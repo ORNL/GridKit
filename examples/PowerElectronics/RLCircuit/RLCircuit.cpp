@@ -1,5 +1,4 @@
 
-
 #include <cmath>
 #include <iostream>
 
@@ -21,7 +20,7 @@ int main(int /* argc */, char const** /* argv */)
 
   // TODO:setup as named parameters
   // Create circuit model
-  GridKit::PowerElectronicsModel<double, size_t> sysmodel(use_jac);
+  GridKit::PowerElectronics::PowerElectronicsModel<double, size_t> sysmodel(use_jac);
 
   size_t idoff = 0;
 
@@ -41,17 +40,17 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel.addNode(&bus_ir);
 
   // inductor
-  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit, &bus_ir, &bus_iv);
+  auto* induct = new GridKit::PowerElectronics::Inductor<double, size_t>(idoff, linit, &bus_ir, &bus_iv);
   sysmodel.addComponent(induct);
 
   // resistor
   idoff++;
-  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit, &bus_vr, &bus_ir);
+  auto* resis = new GridKit::PowerElectronics::Resistor<double, size_t>(idoff, rinit, &bus_vr, &bus_ir);
   sysmodel.addComponent(resis);
 
   // voltage source
   idoff++;
-  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit, &bus_iv, &bus_vr);
+  auto* vsource = new GridKit::PowerElectronics::VoltageSource<double, size_t>(idoff, vinit, &bus_iv, &bus_vr);
   sysmodel.addComponent(vsource);
 
   sysmodel.allocate();

@@ -56,7 +56,7 @@ int main(int /* argc */, char const** /* argv */)
  */
 int test(index_type Nsize, real_type error_tol, bool debug_output)
 {
-  using namespace GridKit;
+  using namespace GridKit::PowerElectronics;
 
   bool use_jac = true;
 

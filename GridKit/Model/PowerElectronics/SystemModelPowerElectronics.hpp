@@ -1,5 +1,4 @@
 
-
 #pragma once
 
 #include <algorithm>
@@ -14,518 +13,520 @@
 
 namespace GridKit
 {
-  template <class ScalarT, typename IdxT>
-  class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
+  namespace PowerElectronics
   {
-    using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
-    using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
-    using component_type = CircuitComponent<ScalarT, IdxT>;
-    using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
-
-    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::allocated_;
-    using CircuitComponent<ScalarT, IdxT>::allocateVectors;
-    using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::f_ext_;
-    using CircuitComponent<ScalarT, IdxT>::f_int_;
-    using CircuitComponent<ScalarT, IdxT>::n_extern_;
-    using CircuitComponent<ScalarT, IdxT>::n_intern_;
-    using CircuitComponent<ScalarT, IdxT>::nnz_;
-    using CircuitComponent<ScalarT, IdxT>::size_;
-    using CircuitComponent<ScalarT, IdxT>::tag_;
-    using CircuitComponent<ScalarT, IdxT>::time_;
-    using CircuitComponent<ScalarT, IdxT>::y_ext_;
-    using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_ext_;
-    using CircuitComponent<ScalarT, IdxT>::yp_int_;
-
-  public:
-    /**
-     * @brief Default constructor for the system model
-     *
-     * @post System model parameters set as default
-     */
-    PowerElectronicsModel()
+    template <class ScalarT, typename IdxT>
+    class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
     {
-      // By default don't use the jacobian
-      use_jac_ = false;
-    }
+      using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
+      using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
+      using component_type = CircuitComponent<ScalarT, IdxT>;
+      using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
-    /**
-     * @brief Constructor for the system model
-     *
-     * @param[in] use_jac Boolean to choose if to use jacobian
-     *
-     * @post System model parameters set as input
-     */
-    PowerElectronicsModel(bool use_jac = false)
-    {
-      // Can choose if to use jacobian
-      use_jac_ = use_jac;
-    }
+      using CircuitComponent<ScalarT, IdxT>::abs_tol_;
+      using CircuitComponent<ScalarT, IdxT>::allocated_;
+      using CircuitComponent<ScalarT, IdxT>::allocateVectors;
+      using CircuitComponent<ScalarT, IdxT>::alpha_;
+      using CircuitComponent<ScalarT, IdxT>::f_ext_;
+      using CircuitComponent<ScalarT, IdxT>::f_int_;
+      using CircuitComponent<ScalarT, IdxT>::n_extern_;
+      using CircuitComponent<ScalarT, IdxT>::n_intern_;
+      using CircuitComponent<ScalarT, IdxT>::nnz_;
+      using CircuitComponent<ScalarT, IdxT>::size_;
+      using CircuitComponent<ScalarT, IdxT>::tag_;
+      using CircuitComponent<ScalarT, IdxT>::time_;
+      using CircuitComponent<ScalarT, IdxT>::y_ext_;
+      using CircuitComponent<ScalarT, IdxT>::y_int_;
+      using CircuitComponent<ScalarT, IdxT>::yp_ext_;
+      using CircuitComponent<ScalarT, IdxT>::yp_int_;
 
-    /**
-     * @brief Destructor for the system model
-     *
-     * @pre System components are allocated
-     *
-     * @post System components are deallocated
-     *
-     */
-    virtual ~PowerElectronicsModel()
-    {
-      for (auto comp : this->components_)
+    public:
+      /**
+       * @brief Default constructor for the system model
+       *
+       * @post System model parameters set as default
+       */
+      PowerElectronicsModel()
       {
-        delete comp;
+        // By default don't use the jacobian
+        use_jac_ = false;
       }
-      delete csr_jac_;
-      delete[] map_to_csr_;
-    }
 
-    /**
-     * @brief Will check if each component has jacobian avalible. If one doesn't have it, return false.
-     *
-     *
-     * @return true if all components have jacobian
-     * @return false otherwise
-     */
-    bool hasJacobian() final
-    {
-      if (!this->use_jac_)
-        return false;
-
-      for (const auto& component : components_)
+      /**
+       * @brief Constructor for the system model
+       *
+       * @param[in] use_jac Boolean to choose if to use jacobian
+       *
+       * @post System model parameters set as input
+       */
+      PowerElectronicsModel(bool use_jac = false)
       {
-        if (!component->hasJacobian())
+        // Can choose if to use jacobian
+        use_jac_ = use_jac;
+      }
+
+      /**
+       * @brief Destructor for the system model
+       *
+       * @pre System components are allocated
+       *
+       * @post System components are deallocated
+       *
+       */
+      virtual ~PowerElectronicsModel()
+      {
+        for (auto comp : this->components_)
         {
-          return false;
+          delete comp;
         }
+        delete csr_jac_;
+        delete[] map_to_csr_;
       }
-      return true;
-    }
 
-    /**
-     * @brief Allocate system vectors and construct the system CSR Jacobian
-     *
-     * @post System model vectors allocated with the computed total number of unknowns
-     * @post CSR Jacobian sparsity pattern is computed
-     * @post COO->CSR mapping is computed
-     * @post Every component's \ref CircuitComponent::y_int_, \ref CircuitComponent::yp_int_, and \ref CircuitComponent::f_int_ pointers
-     * are set to their appropriate offsets in the system vector, allowing them to directly access their internal variables, derivatives,
-     * and residuals.
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int allocate() final
-    {
-      size_t component_internal_size = 0;
-      for (component_type* comp : components_)
+      /**
+       * @brief Will check if each component has jacobian avalible. If one doesn't have it, return false.
+       *
+       *
+       * @return true if all components have jacobian
+       * @return false otherwise
+       */
+      bool hasJacobian() final
       {
-        component_internal_size += comp->getInternalSize();
-      }
+        if (!this->use_jac_)
+          return false;
 
-      size_t node_internal_size = 0;
-      for (node_type* node : nodes_)
-      {
-        node_internal_size += node->getInternalSize();
-      }
-
-      n_intern_ = component_internal_size + node_internal_size;
-      n_extern_ = 0;
-      size_     = n_intern_ + n_extern_;
-
-      // Allocation always rebuilds the system Jacobian and its COO-to-CSR map.
-      delete csr_jac_;
-      csr_jac_ = nullptr;
-
-      delete[] map_to_csr_;
-      map_to_csr_ = nullptr;
-
-      if (!allocated_)
-      {
-        allocateVectors(static_cast<IdxT>(size_), true);
-        // Component and node offsets can change when topology is modified.
-        abs_tol_.setToZero(memory::HOST);
-      }
-
-      tag_.resize(size_);
-
-      { // Start node internal indexing after all component internals for proper KLU ordering
-        size_t node_internal_idx = component_internal_size;
-        for (node_type* node : nodes_)
+        for (const auto& component : components_)
         {
-          node->allocate();
-
-          for (size_t i = 0; i < node->getInternalSize(); i++)
+          if (!component->hasJacobian())
           {
-            ExternalConnection<ScalarT, IdxT> node_connection{
-                .y_   = y_int_ + node_internal_idx,
-                .yp_  = yp_int_ + node_internal_idx,
-                .f_   = f_int_ + node_internal_idx,
-                .idx_ = static_cast<IdxT>(node_internal_idx)};
-
-            node->setExternalConnectionNodes(i, node_connection);
-            node_internal_idx++;
+            return false;
           }
         }
+        return true;
       }
 
+      /**
+       * @brief Allocate system vectors and construct the system CSR Jacobian
+       *
+       * @post System model vectors allocated with the computed total number of unknowns
+       * @post CSR Jacobian sparsity pattern is computed
+       * @post COO->CSR mapping is computed
+       * @post Every component's \ref CircuitComponent::y_int_, \ref CircuitComponent::yp_int_, and \ref CircuitComponent::f_int_ pointers
+       * are set to their appropriate offsets in the system vector, allowing them to directly access their internal variables, derivatives,
+       * and residuals.
+       *
+       * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+       */
+      int allocate() final
       {
-        // The offset for each component's internal variables in the system vector.
-        // They start at 0, and are stacked on top of each other.
-        size_t component_internal_idx = 0;
+        size_t component_internal_size = 0;
         for (component_type* comp : components_)
         {
-          comp->allocate();
+          component_internal_size += comp->getInternalSize();
+        }
 
-          // Update component internal pointers to their correct offsets
-          comp->setInternalPointer(&y_int_[component_internal_idx]);
-          comp->setInternalDerivativePointer(&yp_int_[component_internal_idx]);
-          comp->setInternalResidualPointer(&f_int_[component_internal_idx]);
+        size_t node_internal_size = 0;
+        for (node_type* node : nodes_)
+        {
+          node_internal_size += node->getInternalSize();
+        }
 
-          const auto& external_indices = comp->getExternIndices();
-          for (IdxT i = 0; i < comp->size(); i++)
+        n_intern_ = component_internal_size + node_internal_size;
+        n_extern_ = 0;
+        size_     = n_intern_ + n_extern_;
+
+        // Allocation always rebuilds the system Jacobian and its COO-to-CSR map.
+        delete csr_jac_;
+        csr_jac_ = nullptr;
+
+        delete[] map_to_csr_;
+        map_to_csr_ = nullptr;
+
+        if (!allocated_)
+        {
+          allocateVectors(static_cast<IdxT>(size_), true);
+          // Component and node offsets can change when topology is modified.
+          abs_tol_.setToZero(memory::HOST);
+        }
+
+        tag_.resize(size_);
+
+        { // Start node internal indexing after all component internals for proper KLU ordering
+          size_t node_internal_idx = component_internal_size;
+          for (node_type* node : nodes_)
           {
-            if (!external_indices.contains(i))
+            node->allocate();
+
+            for (size_t i = 0; i < node->getInternalSize(); i++)
             {
-              comp->setInternalConnectionNodes(i, component_internal_idx);
-              component_internal_idx++;
+              ExternalConnection<ScalarT, IdxT> node_connection{
+                  .y_   = y_int_ + node_internal_idx,
+                  .yp_  = yp_int_ + node_internal_idx,
+                  .f_   = f_int_ + node_internal_idx,
+                  .idx_ = static_cast<IdxT>(node_internal_idx)};
+
+              node->setExternalConnectionNodes(i, node_connection);
+              node_internal_idx++;
             }
           }
         }
-      }
 
-      // Evaluate component Jacobians to get sparsity
-      for (component_type* component : components_)
-      {
-        component->evaluateJacobian();
-      }
-
-      // Count the number of non-zeros
-      IdxT nnz_dup = 0;
-      for (const component_type* component : components_)
-      {
-        const IdxT* r   = component->jacobianCooRows();
-        const IdxT* c   = component->jacobianCooCols();
-        IdxT        nnz = component->nnz();
-
-        for (IdxT i = 0; i < nnz; ++i)
         {
-          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+          // The offset for each component's internal variables in the system vector.
+          // They start at 0, and are stacked on top of each other.
+          size_t component_internal_idx = 0;
+          for (component_type* comp : components_)
           {
-            ++nnz_dup;
+            comp->allocate();
+
+            // Update component internal pointers to their correct offsets
+            comp->setInternalPointer(&y_int_[component_internal_idx]);
+            comp->setInternalDerivativePointer(&yp_int_[component_internal_idx]);
+            comp->setInternalResidualPointer(&f_int_[component_internal_idx]);
+
+            const auto& external_indices = comp->getExternIndices();
+            for (IdxT i = 0; i < comp->size(); i++)
+            {
+              if (!external_indices.contains(i))
+              {
+                comp->setInternalConnectionNodes(i, component_internal_idx);
+                component_internal_idx++;
+              }
+            }
           }
         }
-      }
 
-      // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
-      IdxT*  rows_dup = new IdxT[nnz_dup];
-      IdxT*  cols_dup = new IdxT[nnz_dup];
-      RealT* vals_dup = new RealT[nnz_dup];
-
-      IdxT counter = 0;
-      for (const component_type* component : components_)
-      {
-        const IdxT*  r   = component->jacobianCooRows();
-        const IdxT*  c   = component->jacobianCooCols();
-        const RealT* v   = component->jacobianCooValues();
-        IdxT         nnz = component->nnz();
-
-        for (IdxT i = 0; i < nnz; ++i)
+        // Evaluate component Jacobians to get sparsity
+        for (component_type* component : components_)
         {
-          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+          component->evaluateJacobian();
+        }
+
+        // Count the number of non-zeros
+        IdxT nnz_dup = 0;
+        for (const component_type* component : components_)
+        {
+          const IdxT* r   = component->jacobianCooRows();
+          const IdxT* c   = component->jacobianCooCols();
+          IdxT        nnz = component->nnz();
+
+          for (IdxT i = 0; i < nnz; ++i)
           {
-            rows_dup[counter] = component->getNodeConnection(r[i]);
-            cols_dup[counter] = component->getNodeConnection(c[i]);
-            vals_dup[counter] = v[i];
-            counter++;
+            if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+            {
+              ++nnz_dup;
+            }
           }
         }
-      }
 
-      // Build the system COO Jacobian
-      LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+        // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
+        IdxT*  rows_dup = new IdxT[nnz_dup];
+        IdxT*  cols_dup = new IdxT[nnz_dup];
+        RealT* vals_dup = new RealT[nnz_dup];
 
-      // Populate CSR data with sort and deduplicate
-      IdxT* row_ptrs = jac.getCsrRowData();
-
-      // Deduplicated nnz
-      nnz_ = jac.getNnz();
-
-      // Allocate cols/vals with deduplicated nnz
-      IdxT*  cols = new IdxT[nnz_];
-      RealT* vals = new RealT[nnz_];
-
-      std::copy(jac.getColData(), jac.getColData() + nnz_, cols);
-      std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
-
-      // Create the CSR Jacobian
-      csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
-
-      const IdxT* map_to_sorted = jac.getMapToSorted();
-      const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
-
-      // Build a mappping from original COO index to CSR index
-      map_to_csr_ = new IdxT[nnz_dup];
-      for (IdxT i = 0; i < nnz_dup; ++i)
-      {
-        map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
-      }
-
-      allocated_ = true;
-      return 0;
-    }
-
-    /**
-     * @brief Set intial y and y' of each component
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int initialize() final
-    {
-      // Initialize components
-      for (const auto& component : components_)
-      {
-        component->initialize();
-      }
-
-      return CircuitComponent<ScalarT, IdxT>::initialize();
-    }
-
-    /**
-     * @brief Tags all system variables as differentiable, based on what the
-     * components that own those variables tag them as.
-     *
-     * Starts by asking all components to tag their differentiables. This implementation
-     * assumes all node variables are algebraic, and will not ask nodes to tag their differentiables.
-     * Sets all variables to algebraic (`false`) to start, then loops over all component internal variables.
-     * Re-creates the same internal variable to system variables mapping as in \ref allocate() - all
-     * internal variables from the same component are stored contiguously in a block, and blocks are
-     * stored contiguously in the same order as \ref components_, with node variables at the end.
-     * Each internal variable's tag in the system is set to its tag in the component.
-     */
-    int tagDifferentiable() final
-    {
-      // Ask all component to tag their differentiables
-      for (size_t i = 0; i < components_.size(); i++)
-      {
-        component_type* component = components_[i];
-
-        // Bubble up errors if necessary
-        if (int err = component->tagDifferentiable())
+        IdxT counter = 0;
+        for (const component_type* component : components_)
         {
-          return err;
-        }
-      }
+          const IdxT*  r   = component->jacobianCooRows();
+          const IdxT*  c   = component->jacobianCooCols();
+          const RealT* v   = component->jacobianCooValues();
+          IdxT         nnz = component->nnz();
 
-      // Fill tags with a default value (false) for node variables. Assumed to be algebraic here.
-      std::fill(tag_.begin(), tag_.end(), false);
-
-      // Copy tags for internal variables from their components - going in the order as described above
-      size_t idx = 0;
-      for (component_type* comp : components_)
-      {
-        const auto& external_indices = comp->getExternIndices();
-
-        // Loop over all component variables - including externals
-        for (IdxT i = 0; i < comp->size(); i++)
-        {
-          // Discard externals
-          if (!external_indices.contains(i))
+          for (IdxT i = 0; i < nnz; ++i)
           {
-            tag_[idx] = comp->tag()[i];
-
-            // Ensures internal variables are contiguous, and in the same order as the component
-            idx++;
+            if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+            {
+              rows_dup[counter] = component->getNodeConnection(r[i]);
+              cols_dup[counter] = component->getNodeConnection(c[i]);
+              vals_dup[counter] = v[i];
+              counter++;
+            }
           }
         }
-      }
 
-      return 0;
-    }
+        // Build the system COO Jacobian
+        LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
 
-    /**
-     * @brief Compute the absolute tolerance for each variable in the model
-     *
-     * @param rel_tol The relative tolerance which can be used to pick the
-     *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     * @return int 0 if successful, non-zero otherwise.
-     *
-     * This represents a "noise" level close to zero for which pure relative
-     * error cannot be used.
-     */
-    int setAbsoluteTolerance(RealT rel_tol) final
-    {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-      return 0;
-    }
+        // Populate CSR data with sort and deduplicate
+        IdxT* row_ptrs = jac.getCsrRowData();
 
-    /**
-     * @brief Evaluate Residuals at each component then collect them
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int evaluateInternalResidual() final
-    {
-      for (IdxT i = 0; i < size_; i++)
-      {
-        f_int_[i] = 0.0;
-      }
+        // Deduplicated nnz
+        nnz_ = jac.getNnz();
 
-      // Update system residual vector
+        // Allocate cols/vals with deduplicated nnz
+        IdxT*  cols = new IdxT[nnz_];
+        RealT* vals = new RealT[nnz_];
 
-      // Evaluate component internal residuals - this is embarassingly parallel
-      for (component_type* component : components_)
-      {
-        if (int err_code = component->evaluateInternalResidual())
-          return err_code;
-      }
+        std::copy(jac.getColData(), jac.getColData() + nnz_, cols);
+        std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
 
-      for (component_type* component : components_)
-      {
-        if (int err_code = component->evaluateExternalResidual())
-          return err_code;
-      }
+        // Create the CSR Jacobian
+        csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
 
-      return 0;
-    }
+        const IdxT* map_to_sorted = jac.getMapToSorted();
+        const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
 
-    /**
-     * @todo implement this for nested systems
-     */
-    int evaluateExternalResidual() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Creates the system Jacobian representing \f$\alpha dF/dy' + dF/dy\f$
-     *
-     * Updates the CSR Jacobian values using the per-component mappings
-     * computed during allocate().
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int evaluateJacobian() final
-    {
-      // Zero out values
-      RealT* vals = csr_jac_->getValues();
-      for (IdxT i = 0; i < csr_jac_->getNnz(); ++i)
-      {
-        vals[i] = 0.0;
-      }
-
-      // Update CSR values from component Jacobians
-      IdxT counter = 0;
-      for (const auto& component : components_)
-      {
-        component->evaluateJacobian();
-
-        const IdxT*  r   = component->jacobianCooRows();
-        const IdxT*  c   = component->jacobianCooCols();
-        const RealT* v   = component->jacobianCooValues();
-        IdxT         nnz = component->nnz();
-
-        for (IdxT i = 0; i < nnz; ++i)
+        // Build a mappping from original COO index to CSR index
+        map_to_csr_ = new IdxT[nnz_dup];
+        for (IdxT i = 0; i < nnz_dup; ++i)
         {
-          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+          map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
+        }
+
+        allocated_ = true;
+        return 0;
+      }
+
+      /**
+       * @brief Set intial y and y' of each component
+       *
+       * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+       */
+      int initialize() final
+      {
+        // Initialize components
+        for (const auto& component : components_)
+        {
+          component->initialize();
+        }
+
+        return CircuitComponent<ScalarT, IdxT>::initialize();
+      }
+
+      /**
+       * @brief Tags all system variables as differentiable, based on what the
+       * components that own those variables tag them as.
+       *
+       * Starts by asking all components to tag their differentiables. This implementation
+       * assumes all node variables are algebraic, and will not ask nodes to tag their differentiables.
+       * Sets all variables to algebraic (`false`) to start, then loops over all component internal variables.
+       * Re-creates the same internal variable to system variables mapping as in \ref allocate() - all
+       * internal variables from the same component are stored contiguously in a block, and blocks are
+       * stored contiguously in the same order as \ref components_, with node variables at the end.
+       * Each internal variable's tag in the system is set to its tag in the component.
+       */
+      int tagDifferentiable() final
+      {
+        // Ask all component to tag their differentiables
+        for (size_t i = 0; i < components_.size(); i++)
+        {
+          component_type* component = components_[i];
+
+          // Bubble up errors if necessary
+          if (int err = component->tagDifferentiable())
           {
-            vals[map_to_csr_[counter]] += v[i];
-            ++counter;
+            return err;
           }
         }
+
+        // Fill tags with a default value (false) for node variables. Assumed to be algebraic here.
+        std::fill(tag_.begin(), tag_.end(), false);
+
+        // Copy tags for internal variables from their components - going in the order as described above
+        size_t idx = 0;
+        for (component_type* comp : components_)
+        {
+          const auto& external_indices = comp->getExternIndices();
+
+          // Loop over all component variables - including externals
+          for (IdxT i = 0; i < comp->size(); i++)
+          {
+            // Discard externals
+            if (!external_indices.contains(i))
+            {
+              tag_[idx] = comp->tag()[i];
+
+              // Ensures internal variables are contiguous, and in the same order as the component
+              idx++;
+            }
+          }
+        }
+
+        return 0;
       }
 
-      jac_call_count_++;
-      return 0;
-    }
-
-    /**
-     * @brief Evaluate integrands for the system quadratures.
-     */
-    int evaluateIntegrand() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Initialize system adjoint.
-     *
-     * Updates variables and optimization parameters, then initializes
-     * adjoints locally and copies them to the system adjoint vector.
-     */
-    int initializeAdjoint() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Compute adjoint residual for the system model.
-     *
-     *
-     */
-    int evaluateAdjointResidual() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Evaluate adjoint integrand for the system model.
-     *
-     *
-     */
-    int evaluateAdjointIntegrand() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Distribute time and time scaling for each component
-     *
-     * @param t
-     * @param a
-     */
-    void updateTime(RealT t, RealT a) final
-    {
-      for (const auto& component : components_)
+      /**
+       * @brief Compute the absolute tolerance for each variable in the model
+       *
+       * @param rel_tol The relative tolerance which can be used to pick the
+       *        absolute tolerance.
+       * @tparam ScalarT Scalar data type
+       * @tparam IdxT Index data type
+       * @return int 0 if successful, non-zero otherwise.
+       *
+       * This represents a "noise" level close to zero for which pure relative
+       * error cannot be used.
+       */
+      int setAbsoluteTolerance(RealT rel_tol) final
       {
-        component->updateTime(t, a);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        return 0;
       }
-      time_  = t;
-      alpha_ = a;
-    }
 
-    CsrMatrixT* getCsrJacobian() const override
-    {
-      return csr_jac_;
-    }
+      /**
+       * @brief Evaluate Residuals at each component then collect them
+       *
+       * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+       */
+      int evaluateInternalResidual() final
+      {
+        for (IdxT i = 0; i < size_; i++)
+        {
+          f_int_[i] = 0.0;
+        }
 
-    void addComponent(component_type* component)
-    {
-      components_.push_back(component);
-      allocated_ = false;
-    }
+        // Update system residual vector
 
-    void addNode(node_type* node)
-    {
-      nodes_.push_back(node);
-      allocated_ = false;
-    }
+        // Evaluate component internal residuals - this is embarassingly parallel
+        for (component_type* component : components_)
+        {
+          if (int err_code = component->evaluateInternalResidual())
+            return err_code;
+        }
 
-  private:
-    static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
+        for (component_type* component : components_)
+        {
+          if (int err_code = component->evaluateExternalResidual())
+            return err_code;
+        }
 
-    std::vector<component_type*> components_;
-    std::vector<node_type*>      nodes_;
+        return 0;
+      }
 
-    IdxT*       map_to_csr_{nullptr};
-    CsrMatrixT* csr_jac_{nullptr};
+      /**
+       * @todo implement this for nested systems
+       */
+      int evaluateExternalResidual() final
+      {
+        return 0;
+      }
 
-    int  jac_call_count_{0};
-    bool use_jac_;
+      /**
+       * @brief Creates the system Jacobian representing \f$\alpha dF/dy' + dF/dy\f$
+       *
+       * Updates the CSR Jacobian values using the per-component mappings
+       * computed during allocate().
+       *
+       * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+       */
+      int evaluateJacobian() final
+      {
+        // Zero out values
+        RealT* vals = csr_jac_->getValues();
+        for (IdxT i = 0; i < csr_jac_->getNnz(); ++i)
+        {
+          vals[i] = 0.0;
+        }
 
-  }; // class PowerElectronicsModel
+        // Update CSR values from component Jacobians
+        IdxT counter = 0;
+        for (const auto& component : components_)
+        {
+          component->evaluateJacobian();
 
+          const IdxT*  r   = component->jacobianCooRows();
+          const IdxT*  c   = component->jacobianCooCols();
+          const RealT* v   = component->jacobianCooValues();
+          IdxT         nnz = component->nnz();
+
+          for (IdxT i = 0; i < nnz; ++i)
+          {
+            if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+            {
+              vals[map_to_csr_[counter]] += v[i];
+              ++counter;
+            }
+          }
+        }
+
+        jac_call_count_++;
+        return 0;
+      }
+
+      /**
+       * @brief Evaluate integrands for the system quadratures.
+       */
+      int evaluateIntegrand() final
+      {
+        return 0;
+      }
+
+      /**
+       * @brief Initialize system adjoint.
+       *
+       * Updates variables and optimization parameters, then initializes
+       * adjoints locally and copies them to the system adjoint vector.
+       */
+      int initializeAdjoint() final
+      {
+        return 0;
+      }
+
+      /**
+       * @brief Compute adjoint residual for the system model.
+       *
+       *
+       */
+      int evaluateAdjointResidual() final
+      {
+        return 0;
+      }
+
+      /**
+       * @brief Evaluate adjoint integrand for the system model.
+       *
+       *
+       */
+      int evaluateAdjointIntegrand() final
+      {
+        return 0;
+      }
+
+      /**
+       * @brief Distribute time and time scaling for each component
+       *
+       * @param t
+       * @param a
+       */
+      void updateTime(RealT t, RealT a) final
+      {
+        for (const auto& component : components_)
+        {
+          component->updateTime(t, a);
+        }
+        time_  = t;
+        alpha_ = a;
+      }
+
+      CsrMatrixT* getCsrJacobian() const override
+      {
+        return csr_jac_;
+      }
+
+      void addComponent(component_type* component)
+      {
+        components_.push_back(component);
+        allocated_ = false;
+      }
+
+      void addNode(node_type* node)
+      {
+        nodes_.push_back(node);
+        allocated_ = false;
+      }
+
+    private:
+      static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
+
+      std::vector<component_type*> components_;
+      std::vector<node_type*>      nodes_;
+
+      IdxT*       map_to_csr_{nullptr};
+      CsrMatrixT* csr_jac_{nullptr};
+
+      int  jac_call_count_{0};
+      bool use_jac_;
+
+    }; // class PowerElectronicsModel
+  } // namespace PowerElectronics
 } // namespace GridKit

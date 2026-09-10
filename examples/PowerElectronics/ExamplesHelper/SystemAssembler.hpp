@@ -32,7 +32,9 @@
  *       does not call PowerElectronicsModel::allocate().
  */
 template <class ScalarT, typename IdxT>
-void assembleSystem(ScaleMicrogridNetwork<ScalarT, IdxT>& network, GridKit::PowerElectronicsModel<ScalarT, IdxT>& sys_model)
+void assembleSystem(ScaleMicrogridNetwork<ScalarT, IdxT>& network, 
+                    GridKit::PowerElectronics::PowerElectronicsModel<ScalarT, 
+                    IdxT>& sys_model)
 {
   size_t N_size = network.N_size;
 

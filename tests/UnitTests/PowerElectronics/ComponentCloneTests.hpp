@@ -17,11 +17,11 @@ namespace GridKit
     {
       using SignalNode          = PowerElectronics::SignalNode<ScalarT, IdxT>;
       using Bus                 = PowerElectronics::MicrogridBus<ScalarT, IdxT>;
-      using BusDQ               = MicrogridBusDQ<ScalarT, IdxT>;
-      using Generator           = DistributedGenerator<ScalarT, IdxT>;
-      using GeneratorParameters = DistributedGeneratorParameters<ScalarT, IdxT>;
-      using Line                = MicrogridLine<ScalarT, IdxT>;
-      using Load                = MicrogridLoad<ScalarT, IdxT>;
+      using BusDQ               = PowerElectronics::MicrogridBusDQ<ScalarT, IdxT>;
+      using Generator           = PowerElectronics::DistributedGenerator<ScalarT, IdxT>;
+      using GeneratorParameters = PowerElectronics::DistributedGeneratorParameters<ScalarT, IdxT>;
+      using Line                = PowerElectronics::MicrogridLine<ScalarT, IdxT>;
+      using Load                = PowerElectronics::MicrogridLoad<ScalarT, IdxT>;
 
     public:
       CircuitComponentCloneTests()
@@ -125,7 +125,7 @@ namespace GridKit
       template <typename ComponentT>
       bool verifyComponentClone(ComponentT& component)
       {
-        using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+        using RealT = typename PowerElectronics::CircuitComponent<ScalarT, IdxT>::RealT;
 
         bool success = true;
 

@@ -1,5 +1,4 @@
 
-
 #pragma once
 
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
@@ -12,68 +11,71 @@ namespace GridKit
 
 namespace GridKit
 {
-  /*!
-   * @brief Declaration of a TransmissionLine class.
-   *
-   * Model from Adam Birchfield paper (medium distances < 2km).
-   * See also textbooks "Power System Analysis" by Grainger and "Power System Dynamics and Stability" by Sauer & Pai
-   *
-   * @note Not used in the Microgrid model.
-   */
-  template <class ScalarT, typename IdxT>
-  class TransmissionLine : public CircuitComponent<ScalarT, IdxT>
+  namespace PowerElectronics
   {
-    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    /*!
+     * @brief Declaration of a TransmissionLine class.
+     *
+     * Model from Adam Birchfield paper (medium distances < 2km).
+     * See also textbooks "Power System Analysis" by Grainger and "Power System Dynamics and Stability" by Sauer & Pai
+     *
+     * @note Not used in the Microgrid model.
+     */
+    template <class ScalarT, typename IdxT>
+    class TransmissionLine : public CircuitComponent<ScalarT, IdxT>
+    {
+      using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
 
-    using CircuitComponent<ScalarT, IdxT>::size_;
-    using CircuitComponent<ScalarT, IdxT>::nnz_;
-    using CircuitComponent<ScalarT, IdxT>::time_;
-    using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::y_ext_;
-    using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_ext_;
-    using CircuitComponent<ScalarT, IdxT>::yp_int_;
-    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::tag_;
-    using CircuitComponent<ScalarT, IdxT>::f_ext_;
-    using CircuitComponent<ScalarT, IdxT>::f_int_;
-    using CircuitComponent<ScalarT, IdxT>::g_;
-    using CircuitComponent<ScalarT, IdxT>::yB_;
-    using CircuitComponent<ScalarT, IdxT>::ypB_;
-    using CircuitComponent<ScalarT, IdxT>::fB_;
-    using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::param_;
-    using CircuitComponent<ScalarT, IdxT>::idc_;
+      using CircuitComponent<ScalarT, IdxT>::size_;
+      using CircuitComponent<ScalarT, IdxT>::nnz_;
+      using CircuitComponent<ScalarT, IdxT>::time_;
+      using CircuitComponent<ScalarT, IdxT>::alpha_;
+      using CircuitComponent<ScalarT, IdxT>::y_ext_;
+      using CircuitComponent<ScalarT, IdxT>::y_int_;
+      using CircuitComponent<ScalarT, IdxT>::yp_ext_;
+      using CircuitComponent<ScalarT, IdxT>::yp_int_;
+      using CircuitComponent<ScalarT, IdxT>::abs_tol_;
+      using CircuitComponent<ScalarT, IdxT>::tag_;
+      using CircuitComponent<ScalarT, IdxT>::f_ext_;
+      using CircuitComponent<ScalarT, IdxT>::f_int_;
+      using CircuitComponent<ScalarT, IdxT>::g_;
+      using CircuitComponent<ScalarT, IdxT>::yB_;
+      using CircuitComponent<ScalarT, IdxT>::ypB_;
+      using CircuitComponent<ScalarT, IdxT>::fB_;
+      using CircuitComponent<ScalarT, IdxT>::gB_;
+      using CircuitComponent<ScalarT, IdxT>::param_;
+      using CircuitComponent<ScalarT, IdxT>::idc_;
 
-    using CircuitComponent<ScalarT, IdxT>::extern_indices_;
-    using CircuitComponent<ScalarT, IdxT>::n_extern_;
-    using CircuitComponent<ScalarT, IdxT>::n_intern_;
+      using CircuitComponent<ScalarT, IdxT>::extern_indices_;
+      using CircuitComponent<ScalarT, IdxT>::n_extern_;
+      using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
-  public:
-    TransmissionLine(IdxT id, RealT R, RealT X, RealT B);
-    virtual ~TransmissionLine();
+    public:
+      TransmissionLine(IdxT id, RealT R, RealT X, RealT B);
+      virtual ~TransmissionLine();
 
-    int initialize();
-    int tagDifferentiable();
-    int setAbsoluteTolerance(RealT);
-    int evaluateInternalResidual() final;
-    int evaluateExternalResidual() final;
-    int evaluateJacobian();
-    int evaluateIntegrand();
+      int initialize();
+      int tagDifferentiable();
+      int setAbsoluteTolerance(RealT);
+      int evaluateInternalResidual() final;
+      int evaluateExternalResidual() final;
+      int evaluateJacobian();
+      int evaluateIntegrand();
 
-    int initializeAdjoint();
-    int evaluateAdjointResidual();
-    // int evaluateAdjointJacobian();
-    int evaluateAdjointIntegrand();
+      int initializeAdjoint();
+      int evaluateAdjointResidual();
+      // int evaluateAdjointJacobian();
+      int evaluateAdjointIntegrand();
 
-    CircuitComponent<ScalarT, IdxT>* clone() const;
+      CircuitComponent<ScalarT, IdxT>* clone() const;
 
-  private:
-    RealT R_;
-    RealT X_;
-    RealT B_;
-    RealT YReMat_;
-    RealT YImMatDi_;
-    RealT YImMatOff_;
-  };
+    private:
+      RealT R_;
+      RealT X_;
+      RealT B_;
+      RealT YReMat_;
+      RealT YImMatDi_;
+      RealT YImMatOff_;
+    };
+  } // namespace PowerElectronics
 } // namespace GridKit
