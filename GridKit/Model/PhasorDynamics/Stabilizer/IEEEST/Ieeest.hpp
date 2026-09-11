@@ -145,7 +145,7 @@ namespace GridKit
 
         IdxT parameter_error_count_{0};
 
-        SignalPortsT             ports_;
+        SignalPortsT              ports_;
         std::unique_ptr<MonitorT> monitor_;
       };
 
