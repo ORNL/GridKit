@@ -9,7 +9,7 @@ contributions are oriented entering the adjacent buses.
 - Setting $\tau = 1$ and $\theta = 0$ gives the ordinary symmetric
   transmission-line $\pi$ model.
 - The total line shunt $G + jB$ is split equally between the two terminals,
-  while the magnetizing shunt $G_\mathrm{mag} + jB_\mathrm{mag}$ is connected at
+  while the magnetizing shunt $`G_\mathrm{mag} + jB_\mathrm{mag}`$ is connected at
   bus 1; both shunts are added outside the $\mathbf{M}$ transformation.
 - The branch has no solver-owned variables; it contributes current residuals
   directly to the connected buses.
