@@ -1312,6 +1312,11 @@ namespace AnalysisManager
          * "undo" the fac scaling. */
         retval = IDASetNonlinConvCoef(mem, 1 / FIXED_STEP_TOL_FAC);
         checkOutput(retval, "IDASetNonlinConvCoef");
+
+        static constexpr RealT DEFAULT_NONLIN_CONV_COEF_IC = 0.0033;
+
+        retval = IDASetNonlinConvCoefIC(mem, DEFAULT_NONLIN_CONV_COEF_IC / FIXED_STEP_TOL_FAC);
+        checkOutput(retval, "IDASetNonlinConvCoefIC");
       }
     }
 
