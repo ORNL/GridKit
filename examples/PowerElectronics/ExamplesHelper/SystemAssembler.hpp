@@ -29,7 +29,7 @@
  *       @p network have been added to @p sys_model.
  *
  * @note This function only assembles the network into the system model. It
- *       does not call PowerElectronics::SystemModel::allocate().
+ *       does not call GridKit::PowerElectronics::SystemModel::allocate().
  */
 template <class ScalarT, typename IdxT>
 void assembleSystem(ScaleMicrogridNetwork<ScalarT, IdxT>&                  network,
