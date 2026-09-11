@@ -883,7 +883,6 @@ namespace GridKit
         return this->evaluateExternalResidual();
       }
 
-
       /**
        * @brief Access the optional variable monitor
        *
