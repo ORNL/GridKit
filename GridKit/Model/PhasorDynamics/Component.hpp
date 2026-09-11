@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <type_traits>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -279,6 +281,34 @@ namespace GridKit
         }
       }
 
+      /**
+       * @brief Number independent states (even) and derivatives (odd).
+       * @pre State vectors and variable indices are allocated and current on HOST.
+       * @note Call after numeric state updates, which clear dependencies.
+       */
+      int initializeDependencyTrackingVariableNumbers()
+        requires std::is_same_v<ScalarT, DependencyTracking::Variable>
+      {
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          const IdxT var_idx = this->getVariableIndex(j);
+          if (var_idx != INVALID_INDEX<IdxT>)
+          {
+            // Even indices for y and odd indices for yp
+            y[j].setVariableNumber(static_cast<size_t>(2 * var_idx));
+            yp[j].setVariableNumber(static_cast<size_t>(2 * var_idx + 1));
+          }
+        }
+
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+
+        return 0;
+      }
+
     protected:
       void setComponentBase(RealT va_component_base)
       {
@@ -400,8 +430,9 @@ namespace GridKit
           IdxT* row_ptrs = new IdxT[static_cast<size_t>(size_) + 1];
           row_ptrs[0]    = 0;
 
-          // Count the number of non-zeros
-          IdxT nnz = 0;
+          // Count the number of non-zeros and include external columns.
+          IdxT nnz         = 0;
+          IdxT num_columns = size_;
           for (IdxT row = 0; row < size_; ++row)
           {
             DependencyMap row_map;
@@ -413,6 +444,7 @@ namespace GridKit
 
               // Divide the stored index by 2
               const size_t jac_col = static_cast<size_t>(col / 2);
+              num_columns          = std::max(num_columns, static_cast<IdxT>(jac_col + 1));
 
               // For counting purposes, there is no need to distinguish odd and even indices.
               // Attempt to insert the colum into the row and increment nnz for new entries.
@@ -462,7 +494,7 @@ namespace GridKit
           }
 
           nnz_     = nnz;
-          csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+          csr_jac_ = new CsrMatrixT(size_, num_columns, nnz_, &row_ptrs, &cols, &vals);
         }
         else
         {
@@ -500,35 +532,6 @@ namespace GridKit
             }
           }
         }
-
-        return 0;
-      }
-
-      /**
-       * @brief Initialize DependencyTracking variable numbers.
-       *
-       * @note Assigns even indices to y and odd indices to yp.
-       *       Should be called in intialize(), after variables have been set (and updated as needed).
-       */
-      int initializeDependencyTrackingVariableNumbers()
-        requires std::is_same_v<ScalarT, DependencyTracking::Variable>
-      {
-        auto* y  = y_.getData();
-        auto* yp = yp_.getData();
-
-        for (IdxT j = 0; j < size_; ++j)
-        {
-          const IdxT var_idx = this->getVariableIndex(j);
-          if (var_idx != INVALID_INDEX<IdxT>)
-          {
-            // Even indices for y and odd indices for yp
-            y[j].setVariableNumber(static_cast<size_t>(2 * var_idx));
-            yp[j].setVariableNumber(static_cast<size_t>(2 * var_idx + 1));
-          }
-        }
-
-        y_.setDataUpdated();
-        yp_.setDataUpdated();
 
         return 0;
       }
