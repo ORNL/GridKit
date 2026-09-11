@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -56,7 +56,7 @@ int main(int /* argc */, char const** /* argv */)
  */
 int test(index_type Nsize, real_type error_tol, bool debug_output)
 {
-  using namespace GridKit;
+  using namespace GridKit::PowerElectronics;
 
   bool use_jac = true;
 
@@ -67,7 +67,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
   // Create circuit model
-  auto* sys_model = new PowerElectronicsModel<real_type, index_type>(use_jac);
+  auto* sys_model = new SystemModel<real_type, index_type>(use_jac);
 
   const std::vector<real_type>* true_vec = &answer_key_N8;
 

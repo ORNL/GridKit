@@ -1,4 +1,4 @@
-add_executable(test_power_electronics_node runCircuitNodeTests.cpp)
+add_executable(test_power_electronics_node runNodeTests.cpp)
 target_link_libraries(
   test_power_electronics_node
   PRIVATE GridKit::power_electronics_circuit_node GridKit::testing)

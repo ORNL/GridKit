@@ -55,7 +55,7 @@ int main(int argc, char const* argv[])
  */
 int printMicrogridSystems(index_type N_size)
 {
-  using namespace GridKit;
+  using namespace GridKit::PowerElectronics;
 
   bool use_jac = true;
 
@@ -65,7 +65,7 @@ int printMicrogridSystems(index_type N_size)
   real_type rel_tol = SCALE_MICROGRID_REL_TOL;
 
   // Create circuit model
-  PowerElectronicsModel<real_type, index_type> sys_model(use_jac);
+  SystemModel<real_type, index_type> sys_model(use_jac);
 
   // Ensure minimum size requirement
   if (N_size < 1)

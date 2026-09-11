@@ -1,4 +1,4 @@
-This sub-directory provides components utilized within the PowerElectronicsModel composer. All components are treated equally and only the composer can view and distribute data to components. Components have no knowledge nor require the existence of any other component.
+This sub-directory provides components utilized within the PowerElectronics::SystemModel composer. All components are treated equally and only the composer can view and distribute data to components. Components have no knowledge nor require the existence of any other component.
 Each component evaluates a set of equations to form residuals. There are two types of variables.
  + Internal Variables $y$. Variables only need by the component.
  + External Variables $w$. Variables shared between multiple components.

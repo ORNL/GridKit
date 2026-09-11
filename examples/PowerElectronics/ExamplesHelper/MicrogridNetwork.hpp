@@ -13,7 +13,7 @@
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
-#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModel.hpp>
 
 /*
  * Contains components and nodes that make up the scaled microgrid network.
@@ -27,11 +27,11 @@ struct ScaleMicrogridNetwork
 
   using SignalNode  = GridKit::PowerElectronics::SignalNode<ScalarT, IdxT>;
   using Bus         = GridKit::PowerElectronics::MicrogridBus<ScalarT, IdxT>;
-  using BusDQ       = GridKit::MicrogridBusDQ<ScalarT, IdxT>;
-  using DGGenerator = GridKit::DistributedGenerator<ScalarT, IdxT>;
-  using Line        = GridKit::MicrogridLine<ScalarT, IdxT>;
-  using Load        = GridKit::MicrogridLoad<ScalarT, IdxT>;
-  using GenParams   = GridKit::DistributedGeneratorParameters<ScalarT, IdxT>;
+  using BusDQ       = GridKit::PowerElectronics::MicrogridBusDQ<ScalarT, IdxT>;
+  using DGGenerator = GridKit::PowerElectronics::DistributedGenerator<ScalarT, IdxT>;
+  using Line        = GridKit::PowerElectronics::MicrogridLine<ScalarT, IdxT>;
+  using Load        = GridKit::PowerElectronics::MicrogridLoad<ScalarT, IdxT>;
+  using GenParams   = GridKit::PowerElectronics::DistributedGeneratorParameters<ScalarT, IdxT>;
 
   size_t                    model_id_next;
   size_t                    N_size;
