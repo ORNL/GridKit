@@ -11,7 +11,7 @@ delay per mode, and a fitted output factor while preserving the input units.
 \end{aligned}
 ```
 
-With $\mathbf{G}_\mathrm{in}$ and $\mathbf{G}_\mathrm{out}$ the transfer matrices
+With $`\mathbf{G}_\mathrm{in}`$ and $`\mathbf{G}_\mathrm{out}`$ the transfer matrices
 of the input and output factors,
 
 ```math
