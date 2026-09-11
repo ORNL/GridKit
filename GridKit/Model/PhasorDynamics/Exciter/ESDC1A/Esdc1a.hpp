@@ -46,12 +46,12 @@ namespace GridKit
       /// External variables read by an `Esdc1a`.
       enum class Esdc1aExternalVariables : size_t
       {
-        VR,      ///< \f$V_\mathrm{r}\f$ Terminal-bus real voltage [p.u.]
-        VI,      ///< \f$V_\mathrm{i}\f$ Terminal-bus imaginary voltage [p.u.]
-        OMEGA,   ///< \f$\omega\f$ Known machine speed deviation [p.u.]
-        VREF,    ///< \f$V_{\mathrm{ref}}\f$ Unknown voltage-control reference [p.u.]
-        VS,      ///< \f$V_S\f$ Known stabilizer input signal [p.u.]
-        VUEL,    ///< \f$V_{\mathrm{UEL}}\f$ Known under-excitation limiter input [p.u.]
+        VR,    ///< \f$V_\mathrm{r}\f$ Terminal-bus real voltage [p.u.]
+        VI,    ///< \f$V_\mathrm{i}\f$ Terminal-bus imaginary voltage [p.u.]
+        OMEGA, ///< \f$\omega\f$ Known machine speed deviation [p.u.]
+        VREF,  ///< \f$V_{\mathrm{ref}}\f$ Unknown voltage-control reference [p.u.]
+        VS,    ///< \f$V_S\f$ Known stabilizer input signal [p.u.]
+        VUEL,  ///< \f$V_{\mathrm{UEL}}\f$ Known under-excitation limiter input [p.u.]
       };
 
       /**

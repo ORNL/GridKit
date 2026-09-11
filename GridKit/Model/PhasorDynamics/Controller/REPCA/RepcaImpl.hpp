@@ -705,7 +705,6 @@ namespace GridKit
         return this->evaluateExternalResidual();
       }
 
-
       /**
        * @brief Access the configured monitor
        *

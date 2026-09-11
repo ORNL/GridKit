@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {

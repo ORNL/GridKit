@@ -1,10 +1,10 @@
 #pragma once
 
-#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
