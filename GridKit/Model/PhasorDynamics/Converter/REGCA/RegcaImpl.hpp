@@ -15,8 +15,8 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/ConfigurationChecks.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/ParameterReader.hpp>
 
