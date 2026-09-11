@@ -13,7 +13,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /// Initial parameters for a classical generator model
-    enum class GenClassicalParameters
+    enum class GenClassicalParameters : size_t
     {
       p0,  ///< \f$P_0\f$ Initial active power
       q0,  ///< \f$Q_0\f$ Initial reactive power
@@ -28,7 +28,6 @@ namespace GridKit
     enum class GenClassicalBuses : size_t
     {
       bus, ///< Unique ID of the connecting bus
-      SIZE
     };
 
     /// Signal inputs for a classical generator model
@@ -36,18 +35,16 @@ namespace GridKit
     {
       pmech, ///< \f$P_m\f$ Unique ID of the signal providing mechanical power
       efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field voltage
-      SIZE
     };
 
     /// Signal outputs for a classical generator model
     enum class GenClassicalSignalOutputs : size_t
     {
       speed, ///< \f$\omega\f$ Unique ID of the signal receiving speed deviation
-      SIZE
     };
 
     /// Variables able to be monitored for a classical generator model
-    enum class GenClassicalMonitorableVariables
+    enum class GenClassicalMonitorableVariables : size_t
     {
       ir,    ///< \f$I_r\f$ Network-frame real terminal current
       ii,    ///< \f$I_i\f$ Network-frame imaginary terminal current
@@ -55,7 +52,7 @@ namespace GridKit
       q,     ///< \f$Q\f$ Reactive power
       delta, ///< \f$\delta\f$ Rotor angle
       omega, ///< \f$\omega\f$ Speed deviation
-      speed  ///< \f$1+\omega\f$ Per-unit machine speed
+      speed, ///< \f$1+\omega\f$ Per-unit machine speed
     };
 
     /**
@@ -67,21 +64,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct GenClassicalData : public ComponentData<real_type,
-                                                   index_type,
-                                                   GenClassicalParameters,
-                                                   GenClassicalBuses,
-                                                   GenClassicalSignalInputs,
-                                                   GenClassicalSignalOutputs,
-                                                   GenClassicalMonitorableVariables>
-    {
-      GenClassicalData() = default;
-
-      using Parameters           = GenClassicalParameters;
-      using Buses                = GenClassicalBuses;
-      using SignalInputs         = GenClassicalSignalInputs;
-      using SignalOutputs        = GenClassicalSignalOutputs;
-      using MonitorableVariables = GenClassicalMonitorableVariables;
-    };
+    using GenClassicalData =
+        ComponentData<real_type,
+                      index_type,
+                      GenClassicalParameters,
+                      GenClassicalBuses,
+                      GenClassicalSignalInputs,
+                      GenClassicalSignalOutputs,
+                      GenClassicalMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

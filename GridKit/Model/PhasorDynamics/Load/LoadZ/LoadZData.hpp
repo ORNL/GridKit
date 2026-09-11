@@ -13,7 +13,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /// Initial parameters for a load
-    enum class LoadZParameters
+    enum class LoadZParameters : size_t
     {
       R, ///< Load resistance
       X, ///< Load reactance
@@ -23,26 +23,23 @@ namespace GridKit
     enum class LoadZBuses : size_t
     {
       bus, ///< Unique ID of the bus to which the load is connected
-      SIZE
     };
 
     /// Signal inputs supported for a load
     enum class LoadZSignalInputs : size_t
     {
-      SIZE
     };
 
     /// Signal outputs supported for a load
     enum class LoadZSignalOutputs : size_t
     {
-      SIZE
     };
 
     /// Variables able to be monitored for a load
-    enum class LoadZMonitorableVariables
+    enum class LoadZMonitorableVariables : size_t
     {
       p,
-      q
+      q,
     };
 
     /**
@@ -54,21 +51,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct LoadZData : public ComponentData<real_type,
-                                            index_type,
-                                            LoadZParameters,
-                                            LoadZBuses,
-                                            LoadZSignalInputs,
-                                            LoadZSignalOutputs,
-                                            LoadZMonitorableVariables>
-    {
-      LoadZData() = default;
-
-      using Parameters           = LoadZParameters;
-      using Buses                = LoadZBuses;
-      using SignalInputs         = LoadZSignalInputs;
-      using SignalOutputs        = LoadZSignalOutputs;
-      using MonitorableVariables = LoadZMonitorableVariables;
-    };
+    using LoadZData =
+        ComponentData<real_type,
+                      index_type,
+                      LoadZParameters,
+                      LoadZBuses,
+                      LoadZSignalInputs,
+                      LoadZSignalOutputs,
+                      LoadZMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -12,8 +12,9 @@
 #include <memory>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -40,7 +41,6 @@ namespace GridKit
         PGV,     ///< \f$P_{\mathrm{GV}}\f$ Gate-to-power curve output on component base
         H,       ///< \f$H\f$ Turbine head on component base
         PMECH,   ///< \f$P_{\mathrm{m}}\f$ Mechanical-power output on system base
-        MAXIMUM,
       };
 
       /// External variables of a `Hygov`.
@@ -49,7 +49,6 @@ namespace GridKit
         OMEGA, ///< \f$\omega\f$ Machine speed deviation
         PREF,  ///< \f$P^{\mathrm{ref}}\f$ Active-power/load reference on system base
         PAUX,  ///< \f$P^{\mathrm{aux}}\f$ Auxiliary power input on system base
-        MAXIMUM,
       };
 
       /**
@@ -89,6 +88,8 @@ namespace GridKit
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
         using SignalT            = SignalNode<ScalarT, IdxT>;
         using ModelDataT         = HygovData<RealT, IdxT>;
+        using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
+        using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT           = Model::VariableMonitor<Hygov, HygovData>;
         using InternalVariablesT = HygovInternalVariables;
         using ExternalVariablesT = HygovExternalVariables;
@@ -106,13 +107,9 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                HygovInternalVariables,
-                                HygovExternalVariables>&
+        SignalPortsT& getPorts()
         {
-          return signals_;
+          return ports_;
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
@@ -186,8 +183,8 @@ namespace GridKit
         ScalarT pref_set_{0};
         ScalarT paux_set_{0};
 
-        ComponentSignals<ScalarT, IdxT, HygovInternalVariables, HygovExternalVariables> signals_;
-        std::unique_ptr<MonitorT>                                                       monitor_;
+        SignalPortsT              ports_;
+        std::unique_ptr<MonitorT> monitor_;
       };
     } // namespace Governor
   } // namespace PhasorDynamics

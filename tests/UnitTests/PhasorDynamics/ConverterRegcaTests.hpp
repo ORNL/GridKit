@@ -50,11 +50,11 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(&bus);
-        success *= (minimal.size() == static_cast<IdxT>(Vars::MAXIMUM));
+        success *= (minimal.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (minimal.getMonitor() == nullptr);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(&bus, makeData());
-        success *= (configured.size() == static_cast<IdxT>(Vars::MAXIMUM));
+        success *= (configured.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify() == 0);
 
@@ -99,7 +99,7 @@ namespace GridKit
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>       unlinked_node;
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> unlinked(&bus, makeData());
-        unlinked.getSignals().template attachSignalNode<Ext::IPCMD>(&unlinked_node);
+        unlinked.getPorts().in.template port<Data::SignalInputs::ipcmd>().connect(&unlinked_node);
         success *= (unlinked.verify() > 0);
 
         // Zero time constants are raised to the well-posedness floor with a
@@ -138,7 +138,7 @@ namespace GridKit
 
         // Outputs alias y directly, so one published port pins the wiring.
         PhasorDynamics::SignalNode<ScalarT, IdxT> pbranch_node;
-        fixture.regca.getSignals().template assignSignalNode<Vars::PBR>(&pbranch_node);
+        fixture.regca.getPorts().out.template port<Data::SignalOutputs::pbranch>().connect(&pbranch_node);
 
         success *= fixture.initialize();
         success *= (fixture.evaluate() == 0);
@@ -725,8 +725,8 @@ namespace GridKit
     private:
       using Params = PhasorDynamics::Converter::RegcaParameters;
       using Vars   = PhasorDynamics::Converter::RegcaInternalVariables;
-      using Ext    = PhasorDynamics::Converter::RegcaExternalVariables;
       using Data   = PhasorDynamics::Converter::RegcaData<RealT, IdxT>;
+      using Ext    = typename Data::SignalInputs;
 
       /// Owns a terminal bus, the model under test, and its two command
       /// signals. Copying would dangle the bus pointer regca holds, so the
@@ -748,15 +748,15 @@ namespace GridKit
         void attachIpcmd(RealT value)
         {
           ipcmd = value;
-          ipcmd_node.set(&ipcmd, &ipcmd_index);
-          regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+          ipcmd_node.link(&ipcmd, &ipcmd_index);
+          regca.getPorts().in.template port<Data::SignalInputs::ipcmd>().connect(&ipcmd_node);
         }
 
         void attachIqcmd(RealT value)
         {
           iqcmd = value;
-          iqcmd_node.set(&iqcmd, &iqcmd_index);
-          regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+          iqcmd_node.link(&iqcmd, &iqcmd_index);
+          regca.getPorts().in.template port<Data::SignalInputs::iqcmd>().connect(&iqcmd_node);
         }
 
         /// Everything initialize() requires: allocation, verification, and

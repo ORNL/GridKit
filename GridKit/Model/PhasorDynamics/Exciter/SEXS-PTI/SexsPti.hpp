@@ -6,28 +6,11 @@
 
 #pragma once
 
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    namespace Exciter
-    {
-      template <typename real_type, typename index_type>
-      struct SexsPtiData;
-    } // namespace Exciter
-
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename scalar_type, typename index_type>
-    class SignalNode;
-
-  } // namespace PhasorDynamics
-} // namespace GridKit
 
 namespace GridKit
 {
@@ -41,7 +24,6 @@ namespace GridKit
         VR,  ///< Lead-lag block state
         EFD, ///< Exciter field voltage output
         VTR, ///< Terminal voltage error signal
-        MAXIMUM,
       };
 
       /// External variables of a `SexsPti`.
@@ -51,7 +33,6 @@ namespace GridKit
         VS,   ///< Stabilizer output signal
         VUEL, ///< Under-excitation limiter signal
         VOEL, ///< Over-excitation limiter signal
-        MAXIMUM,
       };
 
       template <typename scalar_type, typename index_type>
@@ -78,13 +59,14 @@ namespace GridKit
         using Component<scalar_type, index_type>::allocated_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using BusT       = BusBase<ScalarT, IdxT>;
-        using ModelDataT = SexsPtiData<RealT, IdxT>;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
-        using MonitorT   = Model::VariableMonitor<SexsPti, SexsPtiData>;
+        using ScalarT        = scalar_type;
+        using IdxT           = index_type;
+        using RealT          = typename Component<ScalarT, IdxT>::RealT;
+        using BusT           = BusBase<ScalarT, IdxT>;
+        using ModelDataT     = SexsPtiData<RealT, IdxT>;
+        using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
+        using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
+        using MonitorT       = Model::VariableMonitor<SexsPti, SexsPtiData>;
 
         SexsPti(BusT* bus);
         SexsPti(BusT* bus, const ModelDataT& data);
@@ -99,13 +81,9 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                SexsPtiInternalVariables,
-                                SexsPtiExternalVariables>&
+        SignalPortsT& getPorts()
         {
-          return signals_;
+          return ports_;
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
@@ -134,7 +112,7 @@ namespace GridKit
         ScalarT vuel_set_{0};
         ScalarT voel_set_{0};
 
-        ComponentSignals<ScalarT, IdxT, SexsPtiInternalVariables, SexsPtiExternalVariables> signals_;
+        SignalPortsT ports_;
 
         std::unique_ptr<MonitorT> monitor_;
 

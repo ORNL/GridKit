@@ -57,12 +57,12 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> empty(&bus);
-        success *= (empty.size() == static_cast<IdxT>(Internal::MAXIMUM));
+        success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
         success *= (empty.getMonitor() == nullptr);
         success *= (empty.verify() > 0);
 
         Fixture<ScalarT> configured(makeData());
-        success *= (configured.esdc1a.size() == static_cast<IdxT>(Internal::MAXIMUM));
+        success *= (configured.esdc1a.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
         success *= (configured.esdc1a.getMonitor() != nullptr);
         success *= configured.prepare(1.2);
 
@@ -168,13 +168,13 @@ namespace GridKit
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>      busless_efd_node;
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> busless(nullptr, makeData());
-        busless.getSignals().template assignSignalNode<Internal::EFD>(&busless_efd_node);
+        busless.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&busless_efd_node);
         success *= (busless.verify() > 0);
 
-        success *= unlinkedSignalRejected<External::OMEGA>();
-        success *= unlinkedSignalRejected<External::VREF>();
-        success *= unlinkedSignalRejected<External::VS>();
-        success *= unlinkedSignalRejected<External::VUEL>();
+        success *= unlinkedSignalRejected<External::speed>();
+        success *= unlinkedSignalRejected<External::vref>();
+        success *= unlinkedSignalRejected<External::vs>();
+        success *= unlinkedSignalRejected<External::vuel>();
 
         // All five floored time constants at zero use the documented
         // numerical floor and still admit a consistent steady-state
@@ -205,9 +205,9 @@ namespace GridKit
 
         Fixture<ScalarT> fixture(makeData());
         fixture.attachAllInputs(99.0);
-        fixture.input(External::OMEGA)  = 0.02;
-        fixture.input(External::VS)     = 0.03;
-        fixture.input(External::VUEL)   = -0.4;
+        fixture.input(External::speed)  = 0.02;
+        fixture.input(External::vs)     = 0.03;
+        fixture.input(External::vuel)   = -0.4;
         success                        *= fixture.initialize(1.2);
         success                        *= (fixture.esdc1a.tagDifferentiable() == 0);
         success                        *= (fixture.evaluate() == 0);
@@ -223,10 +223,10 @@ namespace GridKit
         success       *= scalarMatches(y[static_cast<size_t>(Internal::VFE)], 0.12, "VFE");
         success       *= scalarMatches(fixture.efd(), 1.2, "seeded efd");
 
-        success *= scalarMatches(fixture.input(External::VREF), 0.973, "published vref");
-        success *= scalarMatches(fixture.input(External::OMEGA), 0.02, "preserved speed input");
-        success *= scalarMatches(fixture.input(External::VS), 0.03, "preserved vs input");
-        success *= scalarMatches(fixture.input(External::VUEL), -0.4, "preserved vuel input");
+        success *= scalarMatches(fixture.input(External::vref), 0.973, "published vref");
+        success *= scalarMatches(fixture.input(External::speed), 0.02, "preserved speed input");
+        success *= scalarMatches(fixture.input(External::vs), 0.03, "preserved vs input");
+        success *= scalarMatches(fixture.input(External::vuel), -0.4, "preserved vuel input");
 
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> monitor(time);
@@ -294,9 +294,9 @@ namespace GridKit
 
               Fixture<ScalarT> scenario(scenario_data);
               scenario.attachAllInputs();
-              scenario.input(External::OMEGA) = 0.02;
-              scenario.input(External::VS)    = 0.03;
-              scenario.input(External::VUEL)  = -0.4;
+              scenario.input(External::speed) = 0.02;
+              scenario.input(External::vs)    = 0.03;
+              scenario.input(External::vuel)  = -0.4;
               if (!scenario.initialize(1.2))
               {
                 std::cout << "ESDC1A initialization scenario failed: UEL=" << uel
@@ -338,27 +338,27 @@ namespace GridKit
         speed_data.parameters[Params::Vrmax]   = 100.0;
         success                               *= initializationRejectedAtomically(speed_data,
                                                     1.2,
-                                                                                  {{External::OMEGA, -1.0},
-                                                                                   {External::VREF, 77.0},
-                                                                                   {External::VS, 77.0},
-                                                                                   {External::VUEL, -77.0}},
+                                                                                  {{External::speed, -1.0},
+                                                                                   {External::vref, 77.0},
+                                                                                   {External::vs, 77.0},
+                                                                                   {External::vuel, -77.0}},
                                                     "zero speed multiplier");
         success                               *= initializationRejectedAtomically(speed_data,
                                                     1.2,
-                                                                                  {{External::OMEGA, -1.1},
-                                                                                   {External::VREF, 77.0},
-                                                                                   {External::VS, 77.0},
-                                                                                   {External::VUEL, -77.0}},
+                                                                                  {{External::speed, -1.1},
+                                                                                   {External::vref, 77.0},
+                                                                                   {External::vs, 77.0},
+                                                                                   {External::vuel, -77.0}},
                                                     "negative speed multiplier");
 
         // The enabled exciter lower limit rejects a negative field-voltage
         // state before initialization writes any storage.
         success *= initializationRejectedAtomically(makeData(),
                                                     -0.2,
-                                                    {{External::OMEGA, 0.0},
-                                                     {External::VREF, 77.0},
-                                                     {External::VS, 77.0},
-                                                     {External::VUEL, -0.5}},
+                                                    {{External::speed, 0.0},
+                                                     {External::vref, 77.0},
+                                                     {External::vs, 77.0},
+                                                     {External::vuel, -0.5}},
                                                     "field-voltage state below zero limit");
 
         // The seeded field voltage maps to a regulator output above Vrmax.
@@ -367,20 +367,20 @@ namespace GridKit
         limit_data.parameters[Params::Vrmin]  = -0.05;
         success                              *= initializationRejectedAtomically(limit_data,
                                                     1.2,
-                                                                                 {{External::OMEGA, 0.0},
-                                                                                  {External::VREF, 77.0},
-                                                                                  {External::VS, 77.0},
-                                                                                  {External::VUEL, -77.0}},
+                                                                                 {{External::speed, 0.0},
+                                                                                  {External::vref, 77.0},
+                                                                                  {External::vs, 77.0},
+                                                                                  {External::vuel, -77.0}},
                                                     "regulator output outside limits");
 
         // A UEL input above the gate operating point holds the high-value
         // gate active, which the smooth gate cannot represent at rest.
         success *= initializationRejectedAtomically(makeData(),
                                                     1.2,
-                                                    {{External::OMEGA, 0.0},
-                                                     {External::VREF, 77.0},
-                                                     {External::VS, 77.0},
-                                                     {External::VUEL, 0.5}},
+                                                    {{External::speed, 0.0},
+                                                     {External::vref, 77.0},
+                                                     {External::vs, 77.0},
+                                                     {External::vuel, 0.5}},
                                                     "active high-value gate");
 
         // A non-finite field-voltage seed is rejected before any signal is
@@ -389,42 +389,42 @@ namespace GridKit
         nonfinite.attachAllInputs(77.0);
         success *= nonfinite.prepare(std::numeric_limits<RealT>::quiet_NaN());
         success *= (nonfinite.esdc1a.initialize() != 0);
-        success *= scalarMatches(nonfinite.input(External::VREF), 77.0, "rejected vref preservation");
+        success *= scalarMatches(nonfinite.input(External::vref), 77.0, "rejected vref preservation");
 
         success *= initializationRejectedAtomically(
             speed_data,
             1.2,
-            {{External::OMEGA, std::numeric_limits<RealT>::infinity()},
-             {External::VREF, 77.0},
-             {External::VS, 0.0},
-             {External::VUEL, -77.0}},
+            {{External::speed, std::numeric_limits<RealT>::infinity()},
+             {External::vref, 77.0},
+             {External::vs, 0.0},
+             {External::vuel, -77.0}},
             "non-finite speed input");
 
         success *= initializationRejectedAtomically(
             makeData(),
             1.2,
-            {{External::OMEGA, 0.0},
-             {External::VREF, 77.0},
-             {External::VS, std::numeric_limits<RealT>::infinity()},
-             {External::VUEL, -0.5}},
+            {{External::speed, 0.0},
+             {External::vref, 77.0},
+             {External::vs, std::numeric_limits<RealT>::infinity()},
+             {External::vuel, -0.5}},
             "non-finite stabilizer input");
 
         success *= initializationRejectedAtomically(
             makeData(),
             1.2,
-            {{External::OMEGA, 0.0},
-             {External::VREF, 77.0},
-             {External::VS, 0.0},
-             {External::VUEL, -std::numeric_limits<RealT>::infinity()}},
+            {{External::speed, 0.0},
+             {External::vref, 77.0},
+             {External::vs, 0.0},
+             {External::vuel, -std::numeric_limits<RealT>::infinity()}},
             "non-finite UEL input");
 
         success *= initializationRejectedAtomically(
             makeData(),
             1.2,
-            {{External::OMEGA, 0.0},
-             {External::VREF, 77.0},
-             {External::VS, 0.0},
-             {External::VUEL, -0.5}},
+            {{External::speed, 0.0},
+             {External::vref, 77.0},
+             {External::vs, 0.0},
+             {External::vuel, -0.5}},
             "zero terminal voltage",
             0.0,
             0.0);
@@ -450,7 +450,7 @@ namespace GridKit
         // the same negative seed rejected above.
         Fixture<ScalarT> zero_boundary(makeData());
         zero_boundary.attachAllInputs();
-        zero_boundary.input(External::VUEL)  = -0.5;
+        zero_boundary.input(External::vuel)  = -0.5;
         success                             *= zero_boundary.initialize(0.0);
         success                             *= (zero_boundary.evaluate() == 0);
         success                             *= allResidualsZero(zero_boundary.esdc1a);
@@ -459,7 +459,7 @@ namespace GridKit
         unlimited_data.parameters[Params::exclim] = false;
         Fixture<ScalarT> unlimited(unlimited_data);
         unlimited.attachAllInputs();
-        unlimited.input(External::VUEL)  = -0.5;
+        unlimited.input(External::vuel)  = -0.5;
         success                         *= unlimited.initialize(-0.2);
         success                         *= (unlimited.evaluate() == 0);
         success                         *= allResidualsZero(unlimited.esdc1a);
@@ -469,7 +469,7 @@ namespace GridKit
         admissible_speed.parameters[Params::Spdmlt] = true;
         Fixture<ScalarT> speed_fixture(admissible_speed);
         speed_fixture.attachAllInputs();
-        speed_fixture.input(External::OMEGA)  = -0.5;
+        speed_fixture.input(External::speed)  = -0.5;
         success                              *= speed_fixture.initialize(1.2);
         success                              *= (speed_fixture.evaluate() == 0);
         success                              *= allResidualsZero(speed_fixture.esdc1a);
@@ -491,7 +491,7 @@ namespace GridKit
         junction_data.parameters[Params::UEL] = static_cast<IdxT>(2);
         Fixture<ScalarT> junction(junction_data);
         junction.attachAllInputs();
-        junction.input(External::VUEL)  = 0.7;
+        junction.input(External::vuel)  = 0.7;
         success                        *= junction.initialize(1.2);
         success                        *= (junction.evaluate() == 0);
         success                        *= allResidualsZero(junction.esdc1a);
@@ -512,7 +512,7 @@ namespace GridKit
         setAnswerKeyState(fixture.esdc1a);
         success *= (fixture.evaluate() == 0);
 
-        const std::array<InternalRow, static_cast<size_t>(Internal::MAXIMUM)> expected{{
+        const std::array<InternalRow, Utilities::enum_size<Internal>()> expected{{
             {Internal::EFDP, 0.04},
             {Internal::VC, 0.27},
             {Internal::VR, 0.97},
@@ -562,9 +562,9 @@ namespace GridKit
         Fixture<ScalarT> summing(makeData());
         summing.attachAllInputs();
         success                       *= summing.initialize(1.2);
-        summing.input(External::VREF)  = 1.1;
-        summing.input(External::VS)    = 0.05;
-        summing.input(External::VUEL)  = 0.2;
+        summing.input(External::vref)  = 1.1;
+        summing.input(External::vs)    = 0.05;
+        summing.input(External::vuel)  = 0.2;
         setState(summing.esdc1a, {{Internal::VC, 0.9}, {Internal::VF, 0.02}, {Internal::EV, 0.1}});
         success *= (summing.evaluate() == 0);
         success *= residualsMatch(summing.esdc1a, {{Internal::EV, 0.13}}, "summing junction");
@@ -576,9 +576,9 @@ namespace GridKit
         Fixture<ScalarT> junction(junction_data);
         junction.attachAllInputs();
         success                        *= junction.initialize(1.2);
-        junction.input(External::VREF)  = 1.1;
-        junction.input(External::VS)    = 0.05;
-        junction.input(External::VUEL)  = 0.2;
+        junction.input(External::vref)  = 1.1;
+        junction.input(External::vs)    = 0.05;
+        junction.input(External::vuel)  = 0.2;
         setState(junction.esdc1a,
                  {{Internal::VC, 0.9},
                   {Internal::VF, 0.02},
@@ -658,7 +658,7 @@ namespace GridKit
         success *= gate.initialize(1.2);
         for (const auto& test_case : gate_cases)
         {
-          gate.input(External::VUEL) = test_case.vuel;
+          gate.input(External::vuel) = test_case.vuel;
           setState(gate.esdc1a, {{Internal::VLL, 0.5}, {Internal::VHV, 0.2}});
           success *= (gate.evaluate() == 0);
           success *= residualsMatch(gate.esdc1a, {{Internal::VHV, test_case.expected}}, test_case.label);
@@ -776,7 +776,7 @@ namespace GridKit
           data.parameters[Params::exclim] = enabled;
           Fixture<ScalarT> feedback(data);
           feedback.attachAllInputs();
-          feedback.input(External::VUEL)  = -0.5;
+          feedback.input(External::vuel)  = -0.5;
           success                        *= feedback.initialize(1.2);
           setState(feedback.esdc1a,
                    {{Internal::EFDP, 1.0}, {Internal::SE, 0.0}, {Internal::VFE, 0.0}});
@@ -823,7 +823,7 @@ namespace GridKit
           Fixture<ScalarT> speed(data);
           speed.attachAllInputs();
           success                      *= speed.initialize(1.2);
-          speed.input(External::OMEGA)  = 0.05;
+          speed.input(External::speed)  = 0.05;
           setState(speed.esdc1a, {{Internal::EFDP, 1.2}, {Internal::EFD, 1.2}});
           success *= (speed.evaluate() == 0);
           success *= residualsMatch(speed.esdc1a,
@@ -870,7 +870,7 @@ namespace GridKit
       using Params   = typename Data::Parameters;
       using Mon      = typename Data::MonitorableVariables;
       using Internal = typename Esdc1aT::InternalVariablesT;
-      using External = typename Esdc1aT::ExternalVariablesT;
+      using External = typename Data::SignalInputs;
 
       using InternalRow  = std::pair<Internal, RealT>;
       using InternalRows = std::vector<InternalRow>;
@@ -885,10 +885,10 @@ namespace GridKit
       class Fixture
       {
       private:
-        std::array<T, static_cast<size_t>(External::MAXIMUM)>    input_values_{};
-        std::array<IdxT, static_cast<size_t>(External::MAXIMUM)> input_indices_{};
+        std::array<T, Utilities::enum_size<External>()>    input_values_{};
+        std::array<IdxT, Utilities::enum_size<External>()> input_indices_{};
         std::array<PhasorDynamics::SignalNode<T, IdxT>,
-                   static_cast<size_t>(External::MAXIMUM)>
+                   Utilities::enum_size<External>()>
             input_nodes_{};
 
         PhasorDynamics::SignalNode<T, IdxT> efd_node_;
@@ -898,7 +898,7 @@ namespace GridKit
           : bus(static_cast<T>(vr), static_cast<T>(vi)),
             esdc1a(&bus, data)
         {
-          esdc1a.getSignals().template assignSignalNode<Internal::EFD>(&efd_node_);
+          esdc1a.getPorts().out.template port<Data::SignalOutputs::efd>().connect(&efd_node_);
         }
 
         Fixture(const Fixture&)            = delete;
@@ -909,22 +909,22 @@ namespace GridKit
         {
           const IdxT external_index_base = esdc1a.size() + bus.size();
 
-          for (size_t port = 0; port < input_values_.size(); ++port)
+          for (auto variant : Utilities::enum_values<External>())
           {
+            const auto port      = static_cast<size_t>(variant);
             input_values_[port]  = static_cast<T>(initial_value);
             input_indices_[port] = external_index_base + static_cast<IdxT>(port);
-            input_nodes_[port].set(&input_values_[port], &input_indices_[port]);
+            input_nodes_[port].link(&input_values_[port], &input_indices_[port]);
           }
 
-          auto& signals = esdc1a.getSignals();
-          signals.template attachSignalNode<External::OMEGA>(
-              &input_nodes_[static_cast<size_t>(External::OMEGA)]);
-          signals.template attachSignalNode<External::VREF>(
-              &input_nodes_[static_cast<size_t>(External::VREF)]);
-          signals.template attachSignalNode<External::VS>(
-              &input_nodes_[static_cast<size_t>(External::VS)]);
-          signals.template attachSignalNode<External::VUEL>(
-              &input_nodes_[static_cast<size_t>(External::VUEL)]);
+          esdc1a.getPorts().in.template port<External::speed>().connect(
+              &input_nodes_[static_cast<size_t>(External::speed)]);
+          esdc1a.getPorts().in.template port<External::vref>().connect(
+              &input_nodes_[static_cast<size_t>(External::vref)]);
+          esdc1a.getPorts().in.template port<External::vs>().connect(
+              &input_nodes_[static_cast<size_t>(External::vs)]);
+          esdc1a.getPorts().in.template port<External::vuel>().connect(
+              &input_nodes_[static_cast<size_t>(External::vuel)]);
         }
 
         /// Seed the assigned field-voltage node.
@@ -1091,10 +1091,10 @@ namespace GridKit
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(External::OMEGA) = 0.05;
-        fixture.input(External::VREF)  = 1.05;
-        fixture.input(External::VS)    = 0.04;
-        fixture.input(External::VUEL)  = 0.2;
+        fixture.input(External::speed) = 0.05;
+        fixture.input(External::vref)  = 1.05;
+        fixture.input(External::vs)    = 0.04;
+        fixture.input(External::vuel)  = 0.2;
       }
 
       /// The rich state shared by the residual answer key and the Jacobian
@@ -1201,7 +1201,7 @@ namespace GridKit
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
         Fixture<ScalarT>                          fixture(makeData());
-        fixture.esdc1a.getSignals().template attachSignalNode<variable>(&unlinked_node);
+        fixture.esdc1a.getPorts().in.template port<variable>().connect(&unlinked_node);
         return fixture.esdc1a.verify() > 0;
       }
 
@@ -1454,7 +1454,7 @@ namespace GridKit
         {
           bus_y[i].setVariableNumber(model_size + i);
         }
-        for (External port : {External::OMEGA, External::VREF, External::VS, External::VUEL})
+        for (auto port : Utilities::enum_values<External>())
         {
           fixture.input(port).setVariableNumber(fixture.inputIndex(port));
         }
@@ -1475,7 +1475,7 @@ namespace GridKit
         fixture.attachAllInputs();
         success *= fixture.initialize(1.2);
         setAnswerKeyInputs(fixture);
-        fixture.input(External::VUEL) = kJacobianVuel;
+        fixture.input(External::vuel) = kJacobianVuel;
         setAnswerKeyState(fixture.esdc1a);
         numberVariables(fixture);
         success *= (fixture.evaluate() == 0);
@@ -1504,7 +1504,7 @@ namespace GridKit
         }
 
         setAnswerKeyInputs(fixture);
-        fixture.input(External::VUEL) = kJacobianVuel;
+        fixture.input(External::vuel) = kJacobianVuel;
         setAnswerKeyState(fixture.esdc1a);
         fixture.esdc1a.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);

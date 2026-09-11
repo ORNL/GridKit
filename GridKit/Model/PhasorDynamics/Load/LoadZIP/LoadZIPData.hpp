@@ -8,7 +8,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /// Parameters for a loadZIP
-    enum class LoadZIPParameters
+    enum class LoadZIPParameters : size_t
     {
       Pnom,   ///< Nominal real power
       Qnom,   ///< Nominal reactive power
@@ -20,29 +20,26 @@ namespace GridKit
     enum class LoadZIPBuses : size_t
     {
       bus, ///< Unique ID of the bus to which the loadZIP is connected
-      SIZE
     };
 
     /// Signal inputs supported for a loadZIP
     enum class LoadZIPSignalInputs : size_t
     {
-      SIZE
     };
 
     /// Signal outputs supported for a loadZIP
     enum class LoadZIPSignalOutputs : size_t
     {
-      SIZE
     };
 
     /// Variables able to be monitored for a loadZIP
-    enum class LoadZIPMonitorableVariables
+    enum class LoadZIPMonitorableVariables : size_t
     {
       ir,
       ii,
       im,
       p,
-      q
+      q,
     };
 
     /**
@@ -54,21 +51,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct LoadZIPData : public ComponentData<real_type,
-                                              index_type,
-                                              LoadZIPParameters,
-                                              LoadZIPBuses,
-                                              LoadZIPSignalInputs,
-                                              LoadZIPSignalOutputs,
-                                              LoadZIPMonitorableVariables>
-    {
-      LoadZIPData() = default;
-
-      using Parameters           = LoadZIPParameters;
-      using Buses                = LoadZIPBuses;
-      using SignalInputs         = LoadZIPSignalInputs;
-      using SignalOutputs        = LoadZIPSignalOutputs;
-      using MonitorableVariables = LoadZIPMonitorableVariables;
-    };
+    using LoadZIPData =
+        ComponentData<real_type,
+                      index_type,
+                      LoadZIPParameters,
+                      LoadZIPBuses,
+                      LoadZIPSignalInputs,
+                      LoadZIPSignalOutputs,
+                      LoadZIPMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

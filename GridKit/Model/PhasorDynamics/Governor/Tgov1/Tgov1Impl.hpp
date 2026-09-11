@@ -15,6 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -44,7 +45,7 @@ namespace GridKit
        * @param omega $\omega$ external variable signal node
        */
       template <typename scalar_type, typename index_type>
-      Tgov1<scalar_type, index_type>::Tgov1(SignalT* pmech, SignalT* omega)
+      Tgov1<scalar_type, index_type>::Tgov1(SignalNodeT* pmech, SignalNodeT* omega)
         : Trate_(100.0),
           R_(0.05),
           Pvmin_(0),
@@ -54,8 +55,8 @@ namespace GridKit
           T3_(7.5),
           Dt_(0)
       {
-        signals_.template assignSignalNode<Tgov1InternalVariables::PM>(pmech);
-        signals_.template attachSignalNode<Tgov1ExternalVariables::DELTAOMEGA>(omega);
+        ports_.out.template port<Tgov1SignalOutputs::pmech>().connect(pmech);
+        ports_.in.template port<Tgov1SignalInputs::speed>().connect(omega);
 
         // 3 internal variables
         size_ = 3;
@@ -68,9 +69,11 @@ namespace GridKit
        * @param data Data to initialize the model from.
        */
       template <typename scalar_type, typename index_type>
-      Tgov1<scalar_type, index_type>::Tgov1(const ModelDataT& data)
+      Tgov1<scalar_type, index_type>::Tgov1(
+          const ModelDataT& data)
       {
         initializeParameters(data);
+
         size_ = 3;
         setDerivedParams();
       }
@@ -194,17 +197,17 @@ namespace GridKit
         }
 
         // Resize signal variable data
-        const auto signal_size = static_cast<size_t>(Tgov1ExternalVariables::MAXIMUM);
+        const auto signal_size = Utilities::enum_size<Tgov1ExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         // Set output signals
-        if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
+        if (auto pmech_port = ports_.out.template port<Tgov1SignalOutputs::pmech>())
         {
           auto*      y  = y_.getData();
           const auto PM = static_cast<IdxT>(Tgov1InternalVariables::PM);
-          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(
+          pmech_port.link(
               &y[static_cast<size_t>(PM)], &(this->getVariableIndex(PM)));
         }
 
@@ -218,9 +221,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::verify() const
       {
-        static constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
-        static constexpr auto PREF       = Tgov1ExternalVariables::PREF;
-
         int ret = 0;
 
         auto check = [&](bool condition, const char* message)
@@ -236,25 +236,21 @@ namespace GridKit
         check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
         check(R_ != ZERO<RealT>, "R must be nonzero");
         check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
-        check(signals_.template isAssigned<Tgov1InternalVariables::PM>(),
+        check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
               "pmech output signal must be assigned");
 
-        if (signals_.template isAttached<DELTAOMEGA>())
+        auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>();
+        if (speed_port.connected() && !speed_port.linked())
         {
-          if (!signals_.template isLinked<DELTAOMEGA>())
-          {
-            Log::error() << "Tgov1: speed signal attached with no linked generator\n";
-            ret += 1;
-          }
+          Log::error() << "Tgov1: speed signal attached with no linked generator\n";
+          ret += 1;
         }
 
-        if (signals_.template isAttached<PREF>())
+        auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>();
+        if (pref_port.connected() && !pref_port.linked())
         {
-          if (!signals_.template isLinked<PREF>())
-          {
-            Log::error() << "Tgov1: pref signal attached with no linked source\n";
-            ret += 1;
-          }
+          Log::error() << "Tgov1: pref signal attached with no linked source\n";
+          ret += 1;
         }
 
         return ret;
@@ -280,9 +276,9 @@ namespace GridKit
         auto* y = y_.getData();
 
         ScalarT omega0{ZERO<RealT>};
-        if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
+        if (auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>())
         {
-          omega0 = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          omega0 = speed_port.readSignal();
         }
 
         const ScalarT pmech0 = y[PM];
@@ -304,9 +300,9 @@ namespace GridKit
         y[PV]  = pv0;
 
         pref_set_ = pref0;
-        if (signals_.template isAttached<Tgov1ExternalVariables::PREF>())
+        if (auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>())
         {
-          signals_.template writeExternalVariable<Tgov1ExternalVariables::PREF>(pref_set_);
+          pref_port.writeValue(pref_set_);
         }
 
         y_.setDataUpdated();
@@ -399,18 +395,17 @@ namespace GridKit
         ws[PREF]       = pref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
+        if (auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>())
         {
-          ws[DELTAOMEGA] = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          ws[DELTAOMEGA] = speed_port.readSignal();
           ws_indices_[DELTAOMEGA] =
-              signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
+              speed_port.signalVariableIndex();
         }
 
-        if (signals_.template isAttached<Tgov1ExternalVariables::PREF>())
+        if (auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>())
         {
-          ws[PREF] = signals_.template readExternalVariable<Tgov1ExternalVariables::PREF>();
-          ws_indices_[PREF] =
-              signals_.template readExternalVariableIndex<Tgov1ExternalVariables::PREF>();
+          ws[PREF]          = pref_port.readSignal();
+          ws_indices_[PREF] = pref_port.signalVariableIndex();
         }
 
         const auto* y  = y_.getData();

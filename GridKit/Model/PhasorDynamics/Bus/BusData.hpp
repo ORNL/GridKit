@@ -26,7 +26,7 @@ namespace GridKit
     };
 
     /// Parameters for a bus
-    enum class BusParameters
+    enum class BusParameters : size_t
     {
       kv, ///< Voltage base [kV]
     };

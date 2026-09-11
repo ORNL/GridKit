@@ -39,7 +39,7 @@ public:
   /// Alias for SystemModel
   using SystemModelT = SystemModel<ScalarT, IdxT>;
   /// Alias for SignalNode
-  using SignalT      = typename SystemModelT::SignalT;
+  using SignalT      = typename SystemModelT::SignalNodeT;
 
   CoSimServer() = delete;
 
@@ -127,7 +127,7 @@ int main()
   sys.allocate();
 
   // Set up cosim
-  CoSimServer<ScalarT, IdxT> server(sys.getSignal(1), sys.getSignal(2));
+  CoSimServer<ScalarT, IdxT> server(sys.getSignalNode(1), sys.getSignalNode(2));
   server.start();
 
   return 0;

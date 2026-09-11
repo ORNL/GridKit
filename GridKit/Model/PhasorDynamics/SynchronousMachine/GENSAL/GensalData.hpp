@@ -13,7 +13,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /// Initial parameters for a Gensal generator model
-    enum class GensalParameters
+    enum class GensalParameters : size_t
     {
       p0,    ///< \f$P_0\f$ Initial active power
       q0,    ///< \f$Q_0\f$ Initial reactive power
@@ -37,7 +37,6 @@ namespace GridKit
     enum class GensalBuses : size_t
     {
       bus, ///< Unique ID of the connecting bus
-      SIZE
     };
 
     /// Signal inputs for a Gensal generator model
@@ -45,18 +44,16 @@ namespace GridKit
     {
       pmech, ///< \f$P_m\f$ Unique ID of the signal providing mechanical power
       efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field voltage
-      SIZE
     };
 
     /// Signal outputs for a Gensal generator model
     enum class GensalSignalOutputs : size_t
     {
       speed, ///< \f$\omega\f$ Unique ID of the signal receiving speed deviation
-      SIZE
     };
 
     /// Variables able to be monitored for a Gensal generator model
-    enum class GensalMonitorableVariables
+    enum class GensalMonitorableVariables : size_t
     {
       ir,     ///< \f$I_r\f$ Network-frame real terminal current
       ii,     ///< \f$I_i\f$ Network-frame imaginary terminal current
@@ -73,7 +70,7 @@ namespace GridKit
       vq,     ///< \f$V_q\f$ Q-axis terminal voltage
       te,     ///< \f$T_e\f$ Electrical torque
       id,     ///< \f$I_d\f$ D-axis current
-      iq      ///< \f$I_q\f$ Q-axis current
+      iq,     ///< \f$I_q\f$ Q-axis current
     };
 
     /**
@@ -85,21 +82,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct GensalData : public ComponentData<real_type,
-                                             index_type,
-                                             GensalParameters,
-                                             GensalBuses,
-                                             GensalSignalInputs,
-                                             GensalSignalOutputs,
-                                             GensalMonitorableVariables>
-    {
-      GensalData() = default;
-
-      using Parameters           = GensalParameters;
-      using Buses                = GensalBuses;
-      using SignalInputs         = GensalSignalInputs;
-      using SignalOutputs        = GensalSignalOutputs;
-      using MonitorableVariables = GensalMonitorableVariables;
-    };
+    using GensalData =
+        ComponentData<real_type,
+                      index_type,
+                      GensalParameters,
+                      GensalBuses,
+                      GensalSignalInputs,
+                      GensalSignalOutputs,
+                      GensalMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

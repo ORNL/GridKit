@@ -153,10 +153,9 @@ namespace GridKit
       ws_indices_[1] = INVALID_INDEX<IdxT>;
 
       // Set output signals
-      if (signals_.template isAssigned<GenClassicalInternalVariables::OMEGA>())
+      if (auto speed_port = ports_.out.template port<GenClassicalSignalOutputs::speed>())
       {
-        auto* y = y_.getData();
-        signals_.template getSignalNode<GenClassicalInternalVariables::OMEGA>()->set(&y[1], &(this->getVariableIndex(1)));
+        speed_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
       }
 
       allocated_ = true;
@@ -169,27 +168,20 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::verify() const
     {
-      static constexpr auto PM  = GenClassicalExternalVariables::PM;
-      static constexpr auto EFD = GenClassicalExternalVariables::EFD;
-
       int ret = 0;
 
-      if (signals_.template isAttached<PM>())
+      auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
+      if (pmech_port.connected() && !pmech_port.linked())
       {
-        if (!signals_.template isLinked<PM>())
-        {
-          Log::error() << "GenClassical: pmech signal attached with no linked governor\n";
-          ret += 1;
-        }
+        Log::error() << "GenClassical: pmech signal attached with no linked governor\n";
+        ret += 1;
       }
 
-      if (signals_.template isAttached<EFD>())
+      auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>();
+      if (efd_port.connected() && !efd_port.linked())
       {
-        if (!signals_.template isLinked<EFD>())
-        {
-          Log::error() << "GenClassical: efd signal attached with no linked exciter\n";
-          ret += 1;
-        }
+        Log::error() << "GenClassical: efd signal attached with no linked exciter\n";
+        ret += 1;
       }
 
       return ret;
@@ -229,15 +221,15 @@ namespace GridKit
 
       // Convert Te to system base for governor PM signal.
       pmech_set_ = this->toSystemBase(Te);
-      if (signals_.template isAttached<GenClassicalExternalVariables::PM>())
+      if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
-        signals_.template writeExternalVariable<GenClassicalExternalVariables::PM>(pmech_set_);
+        pmech_port.writeValue(pmech_set_);
       }
 
       efd_set_ = efd;
-      if (signals_.template isAttached<GenClassicalExternalVariables::EFD>())
+      if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
       {
-        signals_.template writeExternalVariable<GenClassicalExternalVariables::EFD>(efd_set_);
+        efd_port.writeValue(efd_set_);
       }
 
       for (IdxT i = 0; i < size_; ++i)
@@ -357,17 +349,17 @@ namespace GridKit
       auto* ws = ws_.getData();
 
       ws[0] = pmech_set_;
-      if (signals_.template isAttached<GenClassicalExternalVariables::PM>())
+      if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
-        ws[0]          = signals_.template readExternalVariable<GenClassicalExternalVariables::PM>();
-        ws_indices_[0] = signals_.template readExternalVariableIndex<GenClassicalExternalVariables::PM>();
+        ws[0]          = pmech_port.readSignal();
+        ws_indices_[0] = pmech_port.signalVariableIndex();
       }
 
       ws[1] = efd_set_;
-      if (signals_.template isAttached<GenClassicalExternalVariables::EFD>())
+      if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
       {
-        ws[1]          = signals_.template readExternalVariable<GenClassicalExternalVariables::EFD>();
-        ws_indices_[1] = signals_.template readExternalVariableIndex<GenClassicalExternalVariables::EFD>();
+        ws[1]          = efd_port.readSignal();
+        ws_indices_[1] = efd_port.signalVariableIndex();
       }
 
       auto* wb = wb_.getData();

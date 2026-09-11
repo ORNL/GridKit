@@ -38,7 +38,7 @@ public:
   /// Alias for SystemModel
   using SystemModelT = SystemModel<ScalarT, IdxT>;
   /// Alias for SignalNode
-  using SignalT      = typename SystemModelT::SignalT;
+  using SignalT      = typename SystemModelT::SignalNodeT;
 
   CoSimClient() = delete;
 
@@ -61,8 +61,8 @@ public:
       ctx_{},
       socket_(ctx_, zmq::socket_type::req)
   {
-    ir_signal_->set(&ir_, &ir_idx_);
-    ii_signal_->set(&ii_, &ii_idx_);
+    ir_signal_->link(&ir_, &ir_idx_);
+    ii_signal_->link(&ii_, &ii_idx_);
     socket_.connect("tcp://0.0.0.0:5556");
     Log::summary() << "CLIENT: Established connection with server\n";
   }
@@ -146,8 +146,10 @@ int main()
   auto filepath = std::filesystem::path("ThreeBusCoSimClient.case.json");
   auto data     = parseSystemModelData(filepath);
   auto sys      = SystemModel<ScalarT, IdxT>(data);
-  auto client   = CoSimClient<ScalarT, IdxT>(
-      sys.getSignal(1), sys.getSignal(2), sys.getSignal(3), sys.getSignal(4));
+  auto client   = CoSimClient<ScalarT, IdxT>(sys.getSignalNode(1),
+                                           sys.getSignalNode(2),
+                                           sys.getSignalNode(3),
+                                           sys.getSignalNode(4));
   sys.allocate();
   client.exchange();
 

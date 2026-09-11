@@ -16,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -35,7 +36,7 @@ namespace GridKit
       Regca<scalar_type, index_type>::Regca(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<RegcaInternalVariables>());
       }
 
       /**
@@ -54,7 +55,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<RegcaInternalVariables>());
       }
 
       template <typename scalar_type, typename index_type>
@@ -316,7 +317,7 @@ namespace GridKit
         h_.resize(2);
         h_.setToZero();
 
-        auto signal_size = static_cast<size_t>(RegcaExternalVariables::MAXIMUM);
+        auto signal_size = Utilities::enum_size<RegcaExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
@@ -329,32 +330,28 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (signals_.template isAssigned<RegcaInternalVariables::IR>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::ibranchr>())
         {
-          signals_.template getSignalNode<RegcaInternalVariables::IR>()->set(
-              &y[static_cast<size_t>(RegcaInternalVariables::IR)],
-              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::IR))));
+          port.link(&y[static_cast<size_t>(RegcaInternalVariables::IR)],
+                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::IR))));
         }
 
-        if (signals_.template isAssigned<RegcaInternalVariables::II>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::ibranchi>())
         {
-          signals_.template getSignalNode<RegcaInternalVariables::II>()->set(
-              &y[static_cast<size_t>(RegcaInternalVariables::II)],
-              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::II))));
+          port.link(&y[static_cast<size_t>(RegcaInternalVariables::II)],
+                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::II))));
         }
 
-        if (signals_.template isAssigned<RegcaInternalVariables::PBR>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::pbranch>())
         {
-          signals_.template getSignalNode<RegcaInternalVariables::PBR>()->set(
-              &y[static_cast<size_t>(RegcaInternalVariables::PBR)],
-              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::PBR))));
+          port.link(&y[static_cast<size_t>(RegcaInternalVariables::PBR)],
+                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::PBR))));
         }
 
-        if (signals_.template isAssigned<RegcaInternalVariables::QBR>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::qbranch>())
         {
-          signals_.template getSignalNode<RegcaInternalVariables::QBR>()->set(
-              &y[static_cast<size_t>(RegcaInternalVariables::QBR)],
-              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::QBR))));
+          port.link(&y[static_cast<size_t>(RegcaInternalVariables::QBR)],
+                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::QBR))));
         }
 
         allocated_ = true;
@@ -399,18 +396,18 @@ namespace GridKit
         check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
               "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
 
-        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        if (ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
-          if (!signals_.template isLinked<RegcaExternalVariables::IPCMD>())
+          if (!ports_.in.template port<RegcaSignalInputs::ipcmd>().linked())
           {
             Log::error() << "Regca: ipcmd signal attached with no linked source\n";
             ret += 1;
           }
         }
 
-        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        if (ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
-          if (!signals_.template isLinked<RegcaExternalVariables::IQCMD>())
+          if (!ports_.in.template port<RegcaSignalInputs::iqcmd>().linked())
           {
             Log::error() << "Regca: iqcmd signal attached with no linked source\n";
             ret += 1;
@@ -504,13 +501,13 @@ namespace GridKit
         // Publish the resolved system-base commands for downstream controller
         // initialization. Unattached ports retain these values as constant
         // commands.
-        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        if (auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
-          signals_.template writeExternalVariable<RegcaExternalVariables::IPCMD>(ipcmd_set_);
+          ipcmd_port.writeValue(ipcmd_set_);
         }
-        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        if (auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
-          signals_.template writeExternalVariable<RegcaExternalVariables::IQCMD>(iqcmd_set_);
+          iqcmd_port.writeValue(iqcmd_set_);
         }
 
         y_.setDataUpdated();
@@ -682,18 +679,16 @@ namespace GridKit
         ws[IQCMD] = iqcmd_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        if (auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
-          ws[IPCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
-          ws_indices_[IPCMD] =
-              signals_.template readExternalVariableIndex<RegcaExternalVariables::IPCMD>();
+          ws[IPCMD]          = ipcmd_port.readSignal();
+          ws_indices_[IPCMD] = ipcmd_port.signalVariableIndex();
         }
 
-        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        if (auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
-          ws[IQCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
-          ws_indices_[IQCMD] =
-              signals_.template readExternalVariableIndex<RegcaExternalVariables::IQCMD>();
+          ws[IQCMD]          = iqcmd_port.readSignal();
+          ws_indices_[IQCMD] = iqcmd_port.signalVariableIndex();
         }
 
         auto* wb = wb_.getData();

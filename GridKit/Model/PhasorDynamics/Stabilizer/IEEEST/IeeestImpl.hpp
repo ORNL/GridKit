@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -177,11 +178,9 @@ namespace GridKit
         ws_indices_.resize(1);
         ws_indices_[0] = INVALID_INDEX<IdxT>;
 
-        if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
+        if (auto output_port = ports_.out.template port<IeeestSignalOutputs::output>())
         {
-          auto* y = y_.getData();
-          signals_.template getSignalNode<IeeestInternalVariables::VSS>()->set(
-              &y[11], &(this->getVariableIndex(11)));
+          output_port.link(&y_.getData()[11], &(this->getVariableIndex(11)));
         }
 
         allocated_ = true;
@@ -193,17 +192,15 @@ namespace GridKit
       {
         int ret = 0;
 
-        if (signals_.template isAttached<IeeestExternalVariables::U>())
-        {
-          if (!signals_.template isLinked<IeeestExternalVariables::U>())
-          {
-            Log::error() << "Ieeest: input signal U attached with no linked source\n";
-            ret += 1;
-          }
-        }
-        else
+        auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
+        if (!input_port.connected())
         {
           Log::error() << "Ieeest: required input signal U is not attached\n";
+          ret += 1;
+        }
+        if (input_port.connected() && !input_port.linked())
+        {
+          Log::error() << "Ieeest: input signal U attached with no linked source\n";
           ret += 1;
         }
 
@@ -225,8 +222,8 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT u =
-            signals_.template readExternalVariable<IeeestExternalVariables::U>();
+        auto          input_port = ports_.in.template port<IeeestSignalInputs::input>();
+        const ScalarT u          = input_port.readSignal();
 
         auto* y  = y_.getData();
         auto* yp = yp_.getData();
@@ -238,8 +235,7 @@ namespace GridKit
         }
 
         ws_.getData()[0] = u;
-        ws_indices_[0] =
-            signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
+        ws_indices_[0]   = input_port.signalVariableIndex();
 
         y[0] = use_notch_ * u;
         y[4] = u;
@@ -353,10 +349,10 @@ namespace GridKit
       {
         auto* ws = ws_.getData();
 
-        if (signals_.template isAttached<IeeestExternalVariables::U>())
+        if (auto input_port = ports_.in.template port<IeeestSignalInputs::input>())
         {
-          ws[0]          = signals_.template readExternalVariable<IeeestExternalVariables::U>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
+          ws[0]          = input_port.readSignal();
+          ws_indices_[0] = input_port.signalVariableIndex();
         }
 
         const auto* y  = y_.getData();

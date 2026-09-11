@@ -13,10 +13,17 @@ gridkit_add_library(
           Component.hpp
           ComponentData.hpp
           ComponentLibrary.hpp
-          ComponentSignals.hpp
+          ModelData.hpp
+          Port.hpp
+          PortGroup.hpp
+          SignalIn.hpp
+          SignalOut.hpp
+          SignalPorts.hpp
   LINK_LIBRARIES
     INTERFACE
     GridKit::definitions
+    INTERFACE
+    GridKit::Utilities
     INTERFACE
     GridKit::utilities_logger
     INTERFACE
@@ -64,11 +71,7 @@ gridkit_add_library(
     GridKit::phasor_dynamics_core
     PUBLIC
     GridKit::phasor_dynamics_components
-  INCLUDE_DIRECTORIES
-    PRIVATE
-    ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
-    PRIVATE
-    ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
 gridkit_add_library(
   phasor_dynamics_systemmodel_dependency_tracking

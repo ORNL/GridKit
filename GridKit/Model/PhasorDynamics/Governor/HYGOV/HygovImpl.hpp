@@ -17,6 +17,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -33,7 +34,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       Hygov<scalar_type, index_type>::Hygov()
       {
-        size_ = static_cast<IdxT>(HygovInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<HygovInternalVariables>());
       }
 
       /**
@@ -47,7 +48,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(HygovInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<HygovInternalVariables>());
       }
 
       template <typename scalar_type, typename index_type>
@@ -95,7 +96,7 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        const auto signal_size = static_cast<size_t>(HygovExternalVariables::MAXIMUM);
+        const auto signal_size = Utilities::enum_size<HygovExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
@@ -106,12 +107,10 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        if (signals_.template isAssigned<HygovInternalVariables::PMECH>())
+        if (auto port = ports_.out.template port<HygovSignalOutputs::pmech>())
         {
           auto* y = y_.getData();
-          signals_.template getSignalNode<HygovInternalVariables::PMECH>()->set(
-              &y[PMECH],
-              &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
+          port.link(&y[PMECH], &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
         }
 
         allocated_ = true;
@@ -216,25 +215,25 @@ namespace GridKit
           }
         }
 
-        check(signals_.template isAssigned<HygovInternalVariables::PMECH>(),
+        check(ports_.out.template port<HygovSignalOutputs::pmech>().connected(),
               "pmech output signal must be assigned");
 
         // An attached port must resolve to readable signal storage. The
         // enumerator is a template argument, so each port names itself once.
         auto check_attached_signal =
-            [&]<HygovExternalVariables variable>(const char* name)
+            [&]<HygovSignalInputs variable>(const char* name)
         {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
+          if (ports_.in.template port<variable>().connected()
+              && !ports_.in.template port<variable>().linked())
           {
             Log::error() << "Hygov: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
         };
 
-        check_attached_signal.template operator()<HygovExternalVariables::OMEGA>("speed");
-        check_attached_signal.template operator()<HygovExternalVariables::PREF>("pref");
-        check_attached_signal.template operator()<HygovExternalVariables::PAUX>("paux");
+        check_attached_signal.template operator()<HygovSignalInputs::speed>("speed");
+        check_attached_signal.template operator()<HygovSignalInputs::pref>("pref");
+        check_attached_signal.template operator()<HygovSignalInputs::paux>("paux");
 
         return ret;
       }
@@ -292,15 +291,15 @@ namespace GridKit
         const ScalarT pmech0_system = y[PMECH];
 
         ScalarT omega0{ZERO<RealT>};
-        if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
+        if (auto omega_port = ports_.in.template port<HygovSignalInputs::speed>())
         {
-          omega0 = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
+          omega0 = omega_port.readSignal();
         }
 
         ScalarT paux0_system{ZERO<RealT>};
-        if (signals_.template isAttached<HygovExternalVariables::PAUX>())
+        if (auto paux_port = ports_.in.template port<HygovSignalInputs::paux>())
         {
-          paux0_system = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
+          paux0_system = paux_port.readSignal();
         }
 
         auto is_finite = [](ScalarT value)
@@ -405,9 +404,9 @@ namespace GridKit
         pref_set_      = pref0;
         paux_set_      = paux0_system;
 
-        if (signals_.template isAttached<HygovExternalVariables::PREF>())
+        if (auto pref_port = ports_.in.template port<HygovSignalInputs::pref>())
         {
-          signals_.template writeExternalVariable<HygovExternalVariables::PREF>(pref_set_);
+          pref_port.writeValue(pref_set_);
         }
 
         if (Hdam_eff_ > Hdam_)
@@ -494,23 +493,20 @@ namespace GridKit
         ws[PAUX]  = paux_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
+        if (auto omega_port = ports_.in.template port<HygovSignalInputs::speed>())
         {
-          ws[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
-          ws_indices_[OMEGA] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::OMEGA>();
+          ws[OMEGA]          = omega_port.readSignal();
+          ws_indices_[OMEGA] = omega_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<HygovExternalVariables::PREF>())
+        if (auto pref_port = ports_.in.template port<HygovSignalInputs::pref>())
         {
-          ws[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
-          ws_indices_[PREF] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::PREF>();
+          ws[PREF]          = pref_port.readSignal();
+          ws_indices_[PREF] = pref_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<HygovExternalVariables::PAUX>())
+        if (auto paux_port = ports_.in.template port<HygovSignalInputs::paux>())
         {
-          ws[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
-          ws_indices_[PAUX] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::PAUX>();
+          ws[PAUX]          = paux_port.readSignal();
+          ws_indices_[PAUX] = paux_port.signalVariableIndex();
         }
 
         const auto* y  = y_.getData();
