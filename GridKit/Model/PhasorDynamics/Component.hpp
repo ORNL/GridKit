@@ -261,29 +261,21 @@ namespace GridKit
         return gridkit_component_id_;
       }
 
+      /**
+       * @brief CSR construction dispatch depending on ScalarT
+       *
+       * @note Currently only used for testing.
+       */
       int constructCsr()
       {
-        if (coo_jac_ == nullptr)
+        if constexpr (std::is_same_v<ScalarT, DependencyTracking::Variable>)
         {
-          constructCoo();
+          return constructCsrFromDependencies();
         }
-
-        if (csr_jac_ == nullptr)
+        else
         {
-          IdxT* row_ptrs = coo_jac_->getCsrRowData();
-
-          nnz_ = coo_jac_->getNnz();
-
-          IdxT*  cols = new IdxT[static_cast<size_t>(nnz_)];
-          RealT* vals = new RealT[static_cast<size_t>(nnz_)];
-
-          std::copy(coo_jac_->getColData(), coo_jac_->getColData() + nnz_, cols);
-          std::copy(coo_jac_->getValues(), coo_jac_->getValues() + nnz_, vals);
-
-          csr_jac_ = new CsrMatrixT(coo_jac_->getNumRows(), coo_jac_->getNumColumns(), nnz_, &row_ptrs, &cols, &vals);
+          return constructCsrFromCoo();
         }
-
-        return 0;
       }
 
     protected:
@@ -309,13 +301,17 @@ namespace GridKit
        */
       void allocateVectors(IdxT n)
       {
-
         y_.resize(n);
         yp_.resize(n);
         f_.resize(n);
         abs_tol_.resize(n);
       }
 
+      /**
+       * @brief COO construction from component-level raw buffers.
+       *
+       * @note the components retain ownership of the data in the raw buffers.
+       */
       int constructCoo()
       {
         if (coo_jac_ == nullptr)
@@ -336,6 +332,180 @@ namespace GridKit
           coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
           coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
         }
+
+        return 0;
+      }
+
+      /**
+       * @brief CSR construction from COO.
+       *
+       * @note Currently only used for testing.
+       * @todo The matrix is only computed on the first call, and the data is stale on subsequent calls.
+       * @todo Unify with system-level construction that retains map_to_csr_.
+       */
+      int constructCsrFromCoo()
+      {
+        if (coo_jac_ == nullptr)
+        {
+          constructCoo();
+        }
+
+        if (csr_jac_ == nullptr)
+        {
+          IdxT* row_ptrs = coo_jac_->getCsrRowData();
+
+          nnz_ = coo_jac_->getNnz();
+
+          IdxT*  cols = new IdxT[static_cast<size_t>(nnz_)];
+          RealT* vals = new RealT[static_cast<size_t>(nnz_)];
+
+          std::copy(coo_jac_->getColData(), coo_jac_->getColData() + nnz_, cols);
+          std::copy(coo_jac_->getValues(), coo_jac_->getValues() + nnz_, vals);
+
+          csr_jac_ = new CsrMatrixT(coo_jac_->getNumRows(), coo_jac_->getNumColumns(), nnz_, &row_ptrs, &cols, &vals);
+        }
+
+        return 0;
+      }
+
+      /**
+       * @brief CSR construction from Dependency maps.
+       *
+       * @note Currently only used for testing.
+       *       See \ref initializeDependencyTrackingVariableNumbers()
+       */
+      int constructCsrFromDependencies()
+        requires std::is_same_v<ScalarT, DependencyTracking::Variable>
+      {
+        using DependencyMap = typename ScalarT::DependencyMap;
+
+        const auto* f = f_.getData();
+
+        if (csr_jac_ == nullptr)
+        {
+          IdxT* row_ptrs = new IdxT[static_cast<size_t>(size_) + 1];
+          row_ptrs[0]    = 0;
+
+          // Count the number of non-zeros
+          IdxT nnz = 0;
+          for (IdxT row = 0; row < size_; ++row)
+          {
+            DependencyMap row_map;
+
+            for (const auto& dep : f[row].getDependencies())
+            {
+              const auto col = dep.first;
+
+              // Merge-count y and yp dependencies
+              const size_t jac_col = static_cast<size_t>(col / 2);
+
+              if (row_map.insert({jac_col, RealT{}}).second)
+              {
+                ++nnz;
+              }
+            }
+
+            row_ptrs[static_cast<size_t>(row) + 1] = nnz;
+          }
+
+          // Allocate column and value pointers
+          IdxT*  cols = new IdxT[static_cast<size_t>(nnz)];
+          RealT* vals = new RealT[static_cast<size_t>(nnz)];
+
+          // Store column and values
+          IdxT i = 0;
+          for (IdxT row = 0; row < size_; ++row)
+          {
+            DependencyMap row_map;
+
+            for (const auto& dep : f[row].getDependencies())
+            {
+              const auto col = dep.first;
+
+              const size_t jac_col = static_cast<size_t>(col / 2);
+              // Even indices for y and odd indices for yp
+              if (col % 2 == 0)
+              {
+                row_map[jac_col] += static_cast<RealT>(dep.second);
+              }
+              else
+              {
+                row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
+              }
+            }
+
+            for (const auto& entry : row_map)
+            {
+              cols[i] = static_cast<IdxT>(entry.first);
+              vals[i] = static_cast<RealT>(entry.second);
+              ++i;
+            }
+          }
+
+          nnz_     = nnz;
+          csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+        }
+        else
+        {
+          RealT* vals = csr_jac_->getValues();
+
+          IdxT i = 0;
+          for (IdxT row = 0; row < size_; ++row)
+          {
+            DependencyMap row_map;
+
+            for (const auto& dep : f[row].getDependencies())
+            {
+              const auto col = dep.first;
+
+              const size_t jac_col = static_cast<size_t>(col / 2);
+              // Even indices for y and odd indices for yp
+              if (col % 2 == 0)
+              {
+                row_map[jac_col] += static_cast<RealT>(dep.second);
+              }
+              else
+              {
+                row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
+              }
+            }
+
+            for (const auto& entry : row_map)
+            {
+              vals[i] = static_cast<RealT>(entry.second);
+              ++i;
+            }
+          }
+        }
+
+        return 0;
+      }
+
+      /**
+       * @brief Initialize DependencyTracking variable numbers.
+       *
+       * @note Assigns even indices to y and odd indices to yp.
+       *       Should be called in intialize(), after variables have been set (and updated as needed).
+       */
+      int initializeDependencyTrackingVariableNumbers()
+        requires std::is_same_v<ScalarT, DependencyTracking::Variable>
+      {
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          const IdxT var_idx = this->getVariableIndex(j);
+          if (var_idx != INVALID_INDEX<IdxT>)
+          {
+            // Even indices for y and odd indices for yp
+            y[j].setVariableNumber(static_cast<size_t>(2 * var_idx));
+            yp[j].setVariableNumber(static_cast<size_t>(2 * var_idx + 1));
+          }
+        }
+
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
 
         return 0;
       }

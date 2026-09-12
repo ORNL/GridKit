@@ -252,7 +252,6 @@ namespace GridKit
        */
       void allocateVectors(IdxT n)
       {
-
         y_.resize(n);
         yp_.resize(n);
         f_.resize(n);

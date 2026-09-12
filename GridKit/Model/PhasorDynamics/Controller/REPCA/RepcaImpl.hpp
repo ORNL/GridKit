@@ -495,10 +495,10 @@ namespace GridKit
         Pmin_                 = pmin;
         Pmax_                 = pmax;
 
-        freqref_set_ = freqref0;
-        vref_set_    = vref0;
-        qref_set_    = qref0_system;
-        pref_set_    = pref0_system;
+        freqref_set_ = static_cast<RealT>(freqref0);
+        vref_set_    = static_cast<RealT>(vref0);
+        qref_set_    = static_cast<RealT>(qref0_system);
+        pref_set_    = static_cast<RealT>(pref0_system);
 
         if (auto vref_port = ports_.in.template port<RepcaSignalInputs::vref>())
         {
@@ -537,6 +537,13 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
+
         return 0;
       }
 

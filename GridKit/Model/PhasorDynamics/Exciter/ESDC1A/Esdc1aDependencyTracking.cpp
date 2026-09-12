@@ -13,21 +13,28 @@ namespace GridKit
     namespace Exciter
     {
       /**
-       * @brief Report that dependency tracking does not assemble a separate Jacobian.
+       * @brief Evaluate DependencyTracking::Variable Jacobian.
        *
-       * Dependency tracking exposes the Jacobian structure through the
-       * residual rather than a separately assembled matrix.
+       * @note Currently only used for testing.
+       *
+       * DependencyTracking::Variable stores the Jacobian as dependency maps,
+       * updated during calls to evaluateResidual().
        */
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Esdc1a..." << std::endl;
-        Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
+        Log::misc() << "Evaluate DependencyTracking Jacobian for Esdc1a...\n";
+        Log::misc() << "Jacobian evaluation is experimental!\n";
+
+        this->constructCsr();
+
         return 0;
       }
 
+      // Available template instantiations
       template class Esdc1a<DependencyTracking::Variable, long int>;
       template class Esdc1a<DependencyTracking::Variable, size_t>;
+
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

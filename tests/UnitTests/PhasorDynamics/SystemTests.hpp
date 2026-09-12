@@ -494,35 +494,14 @@ namespace GridKit
         system.allocate();
         system.initialize();
 
-        // Set independent variables
-        auto* y = system.y().getData();
-        for (size_t i = 0; i < system.size(); ++i)
-        {
-          y[i].setVariableNumber(i);
-        }
-        system.y().setDataUpdated();
-
-        // Evaluate and get the system residuals
+        // Evaluate and get the system Jacobian
         system.evaluateResidual();
-        auto&       residual      = system.getResidual();
-        const auto* residual_data = residual.getData();
+        system.evaluateJacobian();
+        auto* system_jacobian = system.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
+        system_jacobian->print();
 
-        // Print the dependencies
-        for (size_t i = 0; i < residual.getSize(); ++i)
-        {
-          std::cout << i << "th residual: ";
-          residual_data[i].print(std::cout);
-          std::cout << "\n";
-        }
-
-        // Extract the dependencies
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.getSize());
-        for (IdxT i = 0; i < residual.getSize(); ++i)
-        {
-          dependencies[i] = residual_data[i].getDependencies();
-        }
-
-        return dependencies;
+        return GridKit::Testing::MapFromCsr(system_jacobian);
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
@@ -538,8 +517,8 @@ namespace GridKit
         // Evaluate and get the system Jacobian
         system.evaluateResidual();
         system.evaluateJacobian();
-        GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* system_jacobian = system.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: System Jacobian\n";
+        auto* system_jacobian = system.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: System Jacobian with Enzyme\n";
         system_jacobian->print();
 
         return GridKit::Testing::MapFromCsr(system_jacobian);

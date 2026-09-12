@@ -11,15 +11,19 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Jacobian evaluation not implemented
+     * @brief Evaluate DependencyTracking::Variable Jacobian.
+     *
+     * @note Currently only used for testing.
+     *
+     * No-op, because branch currently does not own residual equations.
      *
      * @return int - error code, 0 = success
      */
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for Branch..." << std::endl;
-      Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
+      Log::misc() << "Evaluate DependencyTracking Jacobian for Branch...\n";
+      Log::misc() << "Jacobian evaluation is experimental!\n";
 
       return 0;
     }

@@ -8,10 +8,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
-#include <limits>
 #include <mutex>
-#include <numbers>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -319,6 +316,13 @@ namespace GridKit
         }
 
         commitInitialPoint(point);
+
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
+
         return 0;
       }
 
@@ -709,11 +713,11 @@ namespace GridKit
           Vref0_ = point.vref;
         }
 
-        pe_set_     = static_cast<ScalarT>(point.signals[PE]);
-        qgen_set_   = static_cast<ScalarT>(point.signals[QGEN]);
-        qext_set_   = static_cast<ScalarT>(point.signals[QEXT]);
-        pfaref_set_ = static_cast<ScalarT>(point.signals[PFAREF]);
-        pref_set_   = static_cast<ScalarT>(point.signals[PREF]);
+        pe_set_     = static_cast<RealT>(point.signals[PE]);
+        qgen_set_   = static_cast<RealT>(point.signals[QGEN]);
+        qext_set_   = static_cast<RealT>(point.signals[QEXT]);
+        pfaref_set_ = static_cast<RealT>(point.signals[PFAREF]);
+        pref_set_   = static_cast<RealT>(point.signals[PREF]);
 
         if (ports_.in.template port<ReecbSignalInputs::qext>())
         {

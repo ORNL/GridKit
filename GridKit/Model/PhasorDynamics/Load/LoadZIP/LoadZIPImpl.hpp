@@ -154,6 +154,13 @@ namespace GridKit
       yp[1] = 0.0;
       y_.setDataUpdated();
       yp_.setDataUpdated();
+
+      // For DependencyTracking::Variable, set variable numbers
+      if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+      {
+        this->initializeDependencyTrackingVariableNumbers();
+      }
+
       return 0;
     }
 
