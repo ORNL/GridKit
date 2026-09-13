@@ -18,7 +18,9 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -129,54 +131,34 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::verify() const
       {
-        int ret = 0;
+        Utilities::ConfigurationChecks checks("Ieeet1");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Ieeet1: " << message << '\n';
-            ret += 1;
-          }
-        };
-
-        check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
-              "Ispdlim must be 0 or 1");
+        checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
+        checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
+        checks.check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
+                     "Ispdlim must be 0 or 1");
 
         const bool saturation_disabled =
             Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
         if (!saturation_disabled)
         {
-          check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
-          check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
-          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+          checks.check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
+          checks.check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
+          checks.check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          checks.check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
 
           const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
-          check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
+          checks.check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
-        auto check_attached_signal =
-            [&]<Ieeet1SignalInputs input>(const char* name)
-        {
-          auto port = ports_.in.template port<input>();
-          if (port.connected() && !port.linked())
-          {
-            Log::error() << "Ieeet1: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+        ports_.in.template port<Ieeet1SignalInputs::speed>().checkOptional(checks, "speed");
+        ports_.in.template port<Ieeet1SignalInputs::vref>().checkOptional(checks, "vref");
+        ports_.in.template port<Ieeet1SignalInputs::vs>().checkOptional(checks, "vs");
+        ports_.in.template port<Ieeet1SignalInputs::vuel>().checkOptional(checks, "vuel");
+        ports_.in.template port<Ieeet1SignalInputs::voel>().checkOptional(checks, "voel");
 
-        check_attached_signal.template operator()<Ieeet1SignalInputs::speed>("speed");
-        check_attached_signal.template operator()<Ieeet1SignalInputs::vref>("vref");
-        check_attached_signal.template operator()<Ieeet1SignalInputs::vs>("vs");
-        check_attached_signal.template operator()<Ieeet1SignalInputs::vuel>("vuel");
-        check_attached_signal.template operator()<Ieeet1SignalInputs::voel>("voel");
-
-        return ret;
+        return static_cast<int>(parameter_error_count_) + checks.errorCount();
       }
 
       /**
@@ -229,19 +211,10 @@ namespace GridKit
         }
 
         // Setpoint members provide the defaults for unattached signals.
-        auto read_signal = [&]<Ieeet1SignalInputs input>(const ScalarT& default_value) -> ScalarT
-        {
-          if (auto port = ports_.in.template port<input>())
-          {
-            return port.readSignal();
-          }
-          return default_value;
-        };
-
-        const ScalarT omega = read_signal.template operator()<Ieeet1SignalInputs::speed>(omega_set_);
-        const ScalarT vs    = read_signal.template operator()<Ieeet1SignalInputs::vs>(vs_set_);
-        const ScalarT vuel  = read_signal.template operator()<Ieeet1SignalInputs::vuel>(vuel_set_);
-        const ScalarT voel  = read_signal.template operator()<Ieeet1SignalInputs::voel>(voel_set_);
+        const ScalarT omega = ports_.in.template port<Ieeet1SignalInputs::speed>().readOrDefault(omega_set_);
+        const ScalarT vs    = ports_.in.template port<Ieeet1SignalInputs::vs>().readOrDefault(vs_set_);
+        const ScalarT vuel  = ports_.in.template port<Ieeet1SignalInputs::vuel>().readOrDefault(vuel_set_);
+        const ScalarT voel  = ports_.in.template port<Ieeet1SignalInputs::voel>().readOrDefault(voel_set_);
 
         uel_on_ = ZERO<RealT>;
         if (ports_.in.template port<Ieeet1SignalInputs::vuel>())
@@ -434,29 +407,12 @@ namespace GridKit
         auto* ws = ws_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
-        auto read_signal = [&]<Ieeet1SignalInputs      input,
-                               Ieeet1ExternalVariables variable>(const ScalarT& latched)
-        {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
-          if (auto port = ports_.in.template port<input>())
-          {
-            ws[index]          = port.readSignal();
-            ws_indices_[index] = port.signalVariableIndex();
-          }
-        };
-
-        read_signal.template operator()<Ieeet1SignalInputs::speed,
-                                        Ieeet1ExternalVariables::OMEGA>(omega_set_);
-        read_signal.template operator()<Ieeet1SignalInputs::vref,
-                                        Ieeet1ExternalVariables::VREF>(vref_set_);
-        read_signal.template operator()<Ieeet1SignalInputs::vs,
-                                        Ieeet1ExternalVariables::VS>(vs_set_);
-        read_signal.template operator()<Ieeet1SignalInputs::vuel,
-                                        Ieeet1ExternalVariables::VUEL>(vuel_set_);
-        read_signal.template operator()<Ieeet1SignalInputs::voel,
-                                        Ieeet1ExternalVariables::VOEL>(voel_set_);
+        auto* ws_indices = ws_indices_.data();
+        ports_.in.template port<Ieeet1SignalInputs::speed>().refreshWorkspace(omega_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::OMEGA)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::OMEGA)]);
+        ports_.in.template port<Ieeet1SignalInputs::vref>().refreshWorkspace(vref_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::VREF)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::VREF)]);
+        ports_.in.template port<Ieeet1SignalInputs::vs>().refreshWorkspace(vs_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::VS)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::VS)]);
+        ports_.in.template port<Ieeet1SignalInputs::vuel>().refreshWorkspace(vuel_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::VUEL)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::VUEL)]);
+        ports_.in.template port<Ieeet1SignalInputs::voel>().refreshWorkspace(voel_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::VOEL)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::VOEL)]);
 
         // Bus voltages
         auto* wb = wb_.getData();
@@ -482,62 +438,27 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Tr))
-        {
-          Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
-        }
-        if (data.parameters.contains(Parameter::Ka))
-        {
-          Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
-        }
-        if (data.parameters.contains(Parameter::Ta))
-        {
-          Ta_ = std::get<RealT>(data.parameters.at(Parameter::Ta));
-        }
-        if (data.parameters.contains(Parameter::Ke))
-        {
-          Ke_ = std::get<RealT>(data.parameters.at(Parameter::Ke));
-        }
-        if (data.parameters.contains(Parameter::Te))
-        {
-          Te_ = std::get<RealT>(data.parameters.at(Parameter::Te));
-        }
-        if (data.parameters.contains(Parameter::Kf))
-        {
-          Kf_ = std::get<RealT>(data.parameters.at(Parameter::Kf));
-        }
-        if (data.parameters.contains(Parameter::Tf))
-        {
-          Tf_ = std::get<RealT>(data.parameters.at(Parameter::Tf));
-        }
-        if (data.parameters.contains(Parameter::Vrmin))
-        {
-          Vrmin_ = std::get<RealT>(data.parameters.at(Parameter::Vrmin));
-        }
-        if (data.parameters.contains(Parameter::Vrmax))
-        {
-          Vrmax_ = std::get<RealT>(data.parameters.at(Parameter::Vrmax));
-        }
-        if (data.parameters.contains(Parameter::E1))
-        {
-          E1_ = std::get<RealT>(data.parameters.at(Parameter::E1));
-        }
-        if (data.parameters.contains(Parameter::E2))
-        {
-          E2_ = std::get<RealT>(data.parameters.at(Parameter::E2));
-        }
-        if (data.parameters.contains(Parameter::Se1))
-        {
-          Se1_ = std::get<RealT>(data.parameters.at(Parameter::Se1));
-        }
-        if (data.parameters.contains(Parameter::Se2))
-        {
-          Se2_ = std::get<RealT>(data.parameters.at(Parameter::Se2));
-        }
-        if (data.parameters.contains(Parameter::Ispdlim))
-        {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
-        }
+        parameter_error_count_ = 0;
+
+        Utilities::ConfigurationChecks checks("Ieeet1");
+        Utilities::ParameterReader     reader(data, checks);
+
+        reader.loadReal(Parameter::Tr, Tr_);
+        reader.loadReal(Parameter::Ka, Ka_);
+        reader.loadReal(Parameter::Ta, Ta_);
+        reader.loadReal(Parameter::Ke, Ke_);
+        reader.loadReal(Parameter::Te, Te_);
+        reader.loadReal(Parameter::Kf, Kf_);
+        reader.loadReal(Parameter::Tf, Tf_);
+        reader.loadReal(Parameter::Vrmin, Vrmin_);
+        reader.loadReal(Parameter::Vrmax, Vrmax_);
+        reader.loadReal(Parameter::E1, E1_);
+        reader.loadReal(Parameter::E2, E2_);
+        reader.loadReal(Parameter::Se1, Se1_);
+        reader.loadReal(Parameter::Se2, Se2_);
+        reader.loadReal(Parameter::Ispdlim, Ispdlim_);
+
+        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }
