@@ -1,5 +1,5 @@
 /**
- * @file DfDws.hpp
+ * @file DfDyExt.hpp
  * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
  */
@@ -17,13 +17,13 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme automatic differentiation Jacobian evaluator: df/dws
+       * @brief Enzyme automatic differentiation Jacobian evaluator : df/dy_ext
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
        */
       template <typename ModelT, MemberFunctions function>
-      struct DfDws
+      struct DfDyExt
       {
         using ScalarT = typename ModelT::ScalarT;
         using IdxT    = typename ModelT::IdxT;
@@ -37,8 +37,7 @@ namespace GridKit
          * @param[in] var_indices - Global variable indices
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
-         * @param[in] wb - Bus variables
-         * @param[in] ws - Signal variables
+         * @param[in] y_ext - External variables
          * @param[out] rows - Row indices
          * @param[out] cols - Column indices
          * @param[out] vals - Values
@@ -51,8 +50,7 @@ namespace GridKit
                          const IdxT*    var_indices,
                          const ScalarT* y,
                          const ScalarT* yp,
-                         const ScalarT* wb,
-                         const ScalarT* ws,
+                         const ScalarT* y_ext,
                          IdxT*          rows,
                          IdxT*          cols,
                          RealT*         vals,
@@ -90,10 +88,8 @@ namespace GridKit
                                      y,
                                      enzyme_const,
                                      yp,
-                                     enzyme_const,
-                                     wb,
                                      enzyme_dup,
-                                     ws,
+                                     y_ext,
                                      output,
                                      enzyme_dupnoneed,
                                      elementary_v.data(),
