@@ -9,10 +9,10 @@ install(PROGRAMS test.sh DESTINATION ${_rel_consumer_path})
 set(_examples_dir ${CMAKE_SOURCE_DIR}/examples)
 if(GRIDKIT_ENABLE_SUNDIALS)
   install(
-    FILES ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasicJson.cpp
+    FILES ${_examples_dir}/PhasorDynamics/Simulation/TwoBus/Basic/TwoBusBasicJson.cpp
     DESTINATION ${_rel_consumer_path}
     RENAME consumer.cpp)
-  install(FILES ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasic.case.json
+  install(FILES ${_examples_dir}/PhasorDynamics/Simulation/TwoBus/Basic/TwoBusBasic.case.json
           DESTINATION ${_rel_consumer_path})
   list(
     APPEND
