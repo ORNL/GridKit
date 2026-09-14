@@ -22,8 +22,8 @@ namespace GridKit
        *
        * @return int - error code, 0 = success
        */
-      template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::evaluateJacobian()
+      template <typename scalar_type, typename index_type, size_t order>
+      int Ieeest<scalar_type, index_type, order>::evaluateJacobian()
       {
         Log::misc() << "Evaluate DependencyTracking Jacobian for Ieeest...\n";
         Log::misc() << "Jacobian evaluation is experimental!\n";
@@ -34,9 +34,16 @@ namespace GridKit
       }
 
       // Available template instantiations
-      template class Ieeest<DependencyTracking::Variable, long int>;
-      template class Ieeest<DependencyTracking::Variable, size_t>;
-
+      template class Ieeest<DependencyTracking::Variable, long int, 0>;
+      template class Ieeest<DependencyTracking::Variable, long int, 1>;
+      template class Ieeest<DependencyTracking::Variable, long int, 2>;
+      template class Ieeest<DependencyTracking::Variable, long int, 3>;
+      template class Ieeest<DependencyTracking::Variable, long int, 4>;
+      template class Ieeest<DependencyTracking::Variable, size_t, 0>;
+      template class Ieeest<DependencyTracking::Variable, size_t, 1>;
+      template class Ieeest<DependencyTracking::Variable, size_t, 2>;
+      template class Ieeest<DependencyTracking::Variable, size_t, 3>;
+      template class Ieeest<DependencyTracking::Variable, size_t, 4>;
     } // namespace Stabilizer
   } // namespace PhasorDynamics
 } // namespace GridKit

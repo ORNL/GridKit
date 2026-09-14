@@ -4,6 +4,7 @@
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
@@ -227,9 +228,7 @@ namespace GridKit
       // initialization.
       for (const auto& stabdata : data.stabilizer)
       {
-        auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-        stabilizer->getPorts().connect(stabdata, signal_nodes_);
-        addComponent(stabilizer);
+        addComponent(IeeestFactory<ScalarT, IdxT>::create(stabdata, signal_nodes_));
       }
 
       for (const auto& excitedata : data.exciter)
