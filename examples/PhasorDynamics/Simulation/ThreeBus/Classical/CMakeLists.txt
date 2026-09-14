@@ -11,7 +11,3 @@ add_test(
   NAME ThreeBusClassical
   COMMAND DynamicSimulation ThreeBusClassical.solver.json
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
-gridkit_example_current_install_path(_install_path)
-install(FILES ThreeBusClassical.case.json ThreeBusClassical.solver.json ThreeBusClassical.ref.csv
-        DESTINATION ${_install_path})
