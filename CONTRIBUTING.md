@@ -47,7 +47,7 @@ in the GridKit™ repository. Make sure that:
 - There are unit tests for the new code.
 - The new code is documented.
 - The feature branch is rebased with respect to the target branch.
-- The [CHANGELOG.md](/CHANGELOG.md) has been updated to reflect the changes.
+- The [CHANGELOG.md](CHANGELOG.md) has been updated to reflect the changes.
 
 We use run continuous integration (CI) on pull requests. If you don't need CI 
 when pushing your changes to a pull request (e.g., changes only affecting 
