@@ -2,7 +2,7 @@
 
 ## One-Line Diagram
 
-![](twoarea_oneline.png)
+![](TwoArea.png)
 
 Figure 1: Oneline of the two-area Case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
@@ -12,11 +12,11 @@ This is a model derived from the well-known Kundur case in Literature. It has be
 
 Model       | Count  
 ------------|--------
-[Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md)         | 10
-[Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md)     | 15 
-[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/README.md)       | 3
-[TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 3
-[IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 3
+[Bus](../../../../docs/GridKit/Model/PhasorDynamics/Bus/README.md)         | 10
+[Branch](../../../../docs/GridKit/Model/PhasorDynamics/Branch/README.md)     | 15
+[GENROU](../../../../docs/GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/README.md)       | 3
+[TGOV1](../../../../docs/GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 3
+[IEEET1](../../../../docs/GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 3
 
 ## Case Events
 

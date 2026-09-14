@@ -15,11 +15,10 @@ Configure and build GridKit with SUNDIALS and Enzyme enabled. CMake copies each
 study's solver file and the required case and reference files into the build
 tree and packages them in the install tree.
 
-From the repository root, run a validation study with:
+From the installed `Validation/IEEE39/` directory, run:
 
 ```bash
-build/application/PhasorDynamics/DynamicSimulation \
-  build/examples/PhasorDynamics/Validation/IEEE39/IEEE39.solver.json
+DynamicSimulation IEEE39.solver.json
 ```
 
 The solver file names its case using a local basename, such as
