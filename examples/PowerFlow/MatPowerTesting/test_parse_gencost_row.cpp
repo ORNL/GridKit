@@ -32,6 +32,19 @@ mpc.gencost = [
 
 )"};
 
+  // A blank line inside the matrix has no trailing semicolon, so it should be
+  // rejected the same way any other malformed row is.
+  static const std::string matpower_data_blank_row{
+      R"(
+
+mpc.gencost = [
+	2	0	0	3	0   14	0;
+
+	2	0	0	3	0   15	0;
+];
+
+)"};
+
 } // namespace
 
 int main(int /* argc */, char** /* argv */)
@@ -53,6 +66,24 @@ int main(int /* argc */, char** /* argv */)
       fail++;
     std::cout << "After reading the gencost component, fail == " << fail
               << "\n";
+  }
+
+  {
+    std::istringstream           iss(matpower_data_blank_row);
+    SystemModelData<RealT, IdxT> mp_blank;
+    bool                         threw = false;
+    try
+    {
+      GridKit::readMatPower(mp_blank, iss);
+    }
+    catch (const std::runtime_error&)
+    {
+      threw = true;
+    }
+    if (!threw)
+      fail++;
+    std::cout << "After reading a gencost component with a blank row, fail == "
+              << fail << "\n";
   }
 
   std::cout << "Tests " << (fail ? "FAILED" : "PASSED") << "\n";

@@ -151,9 +151,9 @@ namespace GridKit
   void readMatPowerGenCostRow(GenCostData<RealT, IdxT>& gcr, std::string& row)
   {
     logs() << "Parsing MATPOWER gen cost row\n";
-    // Ensure last character is semicolon.
+    // Ensure the row is not empty and its last character is a semicolon.
     rtrim(row);
-    if (row[row.size() - 1] != ';')
+    if (row.empty() || row[row.size() - 1] != ';')
       throw std::runtime_error(matlab_syntax_error + "\nGot line " + row);
 
     std::stringstream is(row);
