@@ -1,8 +1,8 @@
-# **Steam Turbine-Governor Model (TGOV1)**
+# TGOV1
+
+Steam turbine-governor model.
 
 ## Block Diagram
-
-Standard model of the stream turbine
 
 ![](../../../../../docs/Figures/TGOV1.JPG)
 
@@ -10,21 +10,24 @@ Figure 1: Governor TGOV1 model. Figure courtesy of [PowerWorld](https://www.powe
 
 ## Model Parameters
 
-Symbol      | Units  | Description                       | Typical Value | Note
-------------|--------|-----------------------------------|---------------| ------
-$T_{\mathrm{rate}}$ | [MVA] | Governor component power base     | 100.0 |
-$R$         | [p.u.] | Permanent droop                   | 0.05 |
-$T_1$       | [sec]  | Steam-bowl time constant          | 0.5  |
-$T_2$       | [sec]  | Turbine numerator time constant   | 2.5  |
-$T_3$       | [sec]  | Reheater time constant            | 7.5  |
-$P_v^{\max}$ | [p.u.] | Maximum valve position           | 1    |
-$P_v^{\min}$ | [p.u.] | Minimum valve position           | 0    |
-$D_t$       | [p.u.] | Turbine damping coefficient       | 0    |
+Symbol              | Units  | JSON    | Description                     | Typical Value | Note
+--------------------|--------|---------|---------------------------------|---------------|-----
+$T_{\mathrm{rate}}$ | [MVA]  | `Trate` | Governor component power base   | 100.0         |
+$R$                 | [p.u.] | `R`     | Permanent droop                 | 0.05          |
+$T_1$               | [s]    | `T1`    | Steam-bowl time constant        | 0.5           |
+$T_2$               | [s]    | `T2`    | Turbine numerator time constant | 2.5           |
+$T_3$               | [s]    | `T3`    | Reheater time constant          | 7.5           |
+$P_\mathrm{v}^{\max}$        | [p.u.] | `Pvmax` | Maximum valve position          | 1             |
+$P_\mathrm{v}^{\min}$        | [p.u.] | `Pvmin` | Minimum valve position          | 0             |
+$D_\mathrm{t}$               | [p.u.] | `Dt`    | Turbine damping coefficient     | 0             |
 
 ### Parameter Validation
 
-The component and system power bases must be positive, $R$ must be nonzero,
-and $P_v^{\min}\le P_v^{\max}$.
+A valid TGOV1 parameter set must satisfy the following conditions:
+
+```math
+T_\mathrm{rate},S_\mathrm{sys}>0,\qquad R\ne0,\qquad P_\mathrm{v}^{\min}\le P_\mathrm{v}^{\max}
+```
 
 Set $T_{\mathrm{rate}}$ equal to the connected machine MVA base. A zero
 component power base is not supported.
@@ -37,7 +40,7 @@ raised to that floor in place, so every equation below uses the raised value:
 ```math
 \begin{aligned}
   T_x
-    &\leftarrow \max\!\left(T_x,\epsilon_T\right),
+    &\leftarrow \max\!(T_x,\epsilon_T),
        \quad x\in\{1,3\}
 \end{aligned}
 ```
@@ -56,16 +59,16 @@ Name    | Port   | Init    | Description
 
 #### Differential
 
-Symbol    | Units  | Description                       | Note
-----------|--------|-----------------------------------|-------
-$P_t$     | [p.u.] | Turbine-block output              | Component base
-$P_v$     | [p.u.] | Valve position                    | Component base
+Symbol | Units  | Description          | Note
+-------|--------|----------------------|---------------
+$P_\mathrm{v}$  | [p.u.] | Valve position       | Component base
+$P_\mathrm{t}$  | [p.u.] | Turbine-block output | Component base
 
 #### Algebraic
 
 Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
-$P_m$           | [p.u.] | Mechanical-power output           | System base; read by the machine model
+$P_\mathrm{m}$           | [p.u.] | Mechanical-power output           | System base; read by the machine model
 
 ### External Variables
 
@@ -83,55 +86,53 @@ $P_\mathrm{ref}$ | [p.u.] | Governor reference               | Component base; o
 
 ## Model Equations
 
+Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup).
+
 For readability, define:
 
 ```math
-g_v=-P_v+\dfrac{P_\mathrm{ref}-\omega}{R}.
+g_v=-P_\mathrm{v}+\dfrac{P_\mathrm{ref}-\omega}{R}
 ```
 
-### Differential Equations
+### Internal Equations
 
-The TGOV1 differential equations, as derived from the model diagram, are
+#### Differential
 
 ```math
 \begin{aligned}
-  0 &= -\dot P_v
+  0 &= -\dot P_\mathrm{v}
        + \dfrac{1}{T_1}\text{antiwindup}
-         \left(P_v,g_v;P_v^{\min},P_v^{\max}\right) \\
-  0 &= -\dot P_t-\dfrac{P_t-P_v-T_2\dot P_v}{T_3}.
+         (P_\mathrm{v},g_v;P_\mathrm{v}^{\min},P_\mathrm{v}^{\max}) \\
+  0 &= -\dot P_\mathrm{t}-\dfrac{P_\mathrm{t}-P_\mathrm{v}-T_2\dot P_\mathrm{v}}{T_3}
 \end{aligned}
 ```
 
-CommonMath defines the [Antiwindup](../../../../CommonMath.md#antiwindup)
-target and smooth approximation.
-
-### Algebraic Equations
-
-The mechanical-power output is given by
+#### Algebraic
 
 ```math
-0=-\dfrac{S_\mathrm{sys}}{T_\mathrm{rate}}P_m
-  +P_t-D_t\omega.
+0=-\dfrac{S_\mathrm{sys}}{T_\mathrm{rate}}P_\mathrm{m}
+  +P_\mathrm{t}-D_\mathrm{t}\omega
 ```
+
+### External Equations
+
+None.
 
 ## Initialization
 
-TGOV1 preserves the machine-provided $P_{m,0}$ and initializes the steady
-state in dependency order:
+The machine provides $P_\mathrm{m}$ on system base:
 
 ```math
 \begin{aligned}
-  P_{m,0}^{\mathrm{TGOV1}}
-    &\leftarrow \dfrac{S_\mathrm{sys}}{T_\mathrm{rate}}P_{m,0} \\
-  P_{v,0}
-    &\leftarrow P_{m,0}^{\mathrm{TGOV1}}+D_t\omega_0 \\
-  P_{t,0}
-    &\leftarrow P_{v,0} \\
-  P_{\mathrm{ref},0}
-    &\leftarrow \omega_0+RP_{v,0} \\
-  \dot P_{v,0},\dot P_{t,0}
-    &\leftarrow 0.
+P_\mathrm{v} &\leftarrow \dfrac{S_\mathrm{sys}}{T_\mathrm{rate}}P_\mathrm{m}+D_\mathrm{t}\omega \\
+P_\mathrm{t} &\leftarrow P_\mathrm{v} \\
+P_\mathrm{ref} &\leftarrow \omega+RP_\mathrm{v} \\
+\dot P_\mathrm{v},\dot P_\mathrm{t} &\leftarrow 0
 \end{aligned}
 ```
 
-Initialization rejects $P_{v,0}$ outside the configured valve limits.
+Initialization rejects $P_\mathrm{v}$ outside the configured valve limits.
+
+## Monitors
+
+None.

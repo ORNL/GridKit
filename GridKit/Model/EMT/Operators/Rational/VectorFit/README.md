@@ -5,16 +5,12 @@ or complex poles and general residue matrices. For pole count $Q$, define the
 pole-index set
 
 ```math
-\mathcal{Q} = \{q \in \mathbb{Z}_{>0} \mid q \le Q\}.
+\mathcal{Q} = \{q \in \mathbb{Z}_{>0} \mid q \le Q\}
 ```
-
-Thus $\mathcal{Q}$ is empty when $Q=0$.
-
-Then
 
 ```math
 \mathbf{H}(s) \approx \mathbf{D} + s\mathbf{E}
-  + \sum_{q \in \mathcal{Q}} \dfrac{\mathbf{R}_q}{s - p_q}.
+  + \sum_{q \in \mathcal{Q}} \dfrac{\mathbf{R}_q}{s - p_q}
 ```
 
 `VectorFit` is a general rational operator; consuming models impose any
@@ -45,21 +41,17 @@ $\mathbf{R}$ | $[y]/(\mathrm{s}[u])$ | `residues` | Residues | $\mathbf{R} \in \
 
 ### Parameter Validation
 
-The input and output dimensions are positive integers, and the pole count is a
-nonnegative integer. Let $\mathcal{Q}_\mathrm{r} \subseteq \mathcal{Q}$ contain
+Let $\mathcal{Q}_\mathrm{r} \subseteq \mathcal{Q}$ contain
 the real-pole indices and
 $\mathcal{Q}_\mathrm{c} \subseteq \mathcal{Q}$ the first indices of the
 nonreal conjugate pairs. Define their partner-index set as
 
 ```math
 \mathcal{Q}_\mathrm{c}^{+}
-  = \{q+1 \mid q \in \mathcal{Q}_\mathrm{c}\}.
+  = \{q+1 \mid q \in \mathcal{Q}_\mathrm{c}\}
 ```
 
-The three sets $\mathcal{Q}_\mathrm{r}$, $\mathcal{Q}_\mathrm{c}$, and
-$\mathcal{Q}_\mathrm{c}^{+}$ are pairwise disjoint and together contain every
-pole index. Real poles have real residues, and each nonreal pole and residue is
-followed by its conjugate.
+The sets $\mathcal{Q}_\mathrm{r}$, $\mathcal{Q}_\mathrm{c}$, and $\mathcal{Q}_\mathrm{c}^{+}$ are pairwise disjoint.
 
 ```math
 \begin{aligned}
@@ -104,6 +96,10 @@ $\mathbf{y}$ | `out` | Output | $[y]$ | Output vector port | $\mathbf{y} \in \ma
 None.
 
 ### Submodel Validation
+
+None.
+
+### Submodel Wiring
 
 None.
 
@@ -177,12 +173,9 @@ None.
     (\mathbf{A}_q\mathbf{w}_q-\mathbf{B}_q\mathbf{v}_q)
 ```
 
-For algebraic input, $\mathbf{E}=\mathbf{0}$ and the input-derivative term
-vanishes.
-
 ## Initialization
 
-None beyond the EMT initialization contract.
+None.
 
 ## Monitors
 

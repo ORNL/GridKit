@@ -1,12 +1,8 @@
 # PSS1A
 
-> [!NOTE]
-> This is not yet implemented
+Specification draft; not implemented. The equations and initialization remain unverified.
 
-> [!NOTE]
-> The Parameters, variables, and equations need to be formatted and verified - this is WIP.
-
-
+## Block Diagram
 
 ![](../../../../../docs/Figures/PSS1A.JPG)
 
@@ -14,24 +10,38 @@ Figure 1: Power system stabilizer PSS1A model. Figure courtesy of [PowerWorld](h
 
 ## Model Parameters
 
+Symbol | Units | JSON | Description | Typical Value | Note
+-------|-------|------|-------------|---------------|-----
+$I_{\mathrm{cs}}$ | [-] | TBD | Stabilizer input code | 2 |
+$A_1$ | [s] | TBD | Notch denominator coefficient | 0 |
+$A_2$ | [s²] | TBD | Notch denominator coefficient | 0 |
+$T_1$ | [s] | TBD | Lead–lag 1 numerator time constant | 0.25 |
+$T_2$ | [s] | TBD | Lead–lag 1 denominator time constant | 0.03 |
+$T_3$ | [s] | TBD | Lead–lag 2 numerator time constant | 0.25 |
+$T_4$ | [s] | TBD | Lead–lag 2 denominator time constant | 0.03 |
+$T_5$ | [s] | TBD | Washout numerator time constant | 20 |
+$T_6$ | [s] | TBD | Transducer time constant | 0.02 |
+$K_\mathrm{s}$ | [p.u.] | TBD | Stabilizer gain | 10 |
+$L_\mathrm{s}^{\max}$ | [p.u.] | TBD | Maximum stabilizer output | 0.1 |
+$L_\mathrm{s}^{\min}$ | [p.u.] | TBD | Minimum stabilizer output | -0.1 |
+$V_\mathrm{cu}$ | [p.u.] | TBD | Upper cutout threshold | 0 |
+$V_\mathrm{cl}$ | [p.u.] | TBD | Lower cutout threshold | 0 |
 
-- $I_{cs}$ - stabilizer input code,  (2)
-- $A_{1}$ - notch filter parameters, (0)
-- $A_{2}$ - notch filter parameters, (0)
-- $T_{1}$ - lead/lag time constant, sec (0.25)
-- $T_{2}$ - lead/lag time constant, sec (0.03)
-- $T_{3}$ - lead/lag time constant, sec (0.25)
-- $T_{4}$ - lead/lag time constant, sec (0.03)
-- $T_{5}$ - washout numerator time constant, sec (20)
-- $T_{6}$ - washout denomirator time constant/transducer time constant, sec (0.02)
-- $K_{S}$ - stabilizer gains, (10)
-- $L_{smax}$ - maximum stabilizer output, pu (0.1)
-- $L_{smin}$ - minimum stabilizer output, pu (-0.1)
-- $V_{cu}$ - stabilizer input cutoff threshold, pu (0)
-- $V_{cl}$ - stabilizer input cutoff threshold, pu (0)
+### Parameter Validation
 
+TBD.
 
+### Model Derived Parameters
 
+TBD.
+
+## Model Ports
+
+Name     | Port   | Init | Description
+---------|--------|------|------------------------------------------
+`input`  | Input  | TBD  | Stabilizer input $u$ selected by $I_{\mathrm{cs}}$
+`vct`    | Input  | TBD  | Cutout signal $V_{\mathrm{ct}}$
+`output` | Output | TBD  | Limited stabilizer output $V_{\mathrm{ss}}$
 
 ## Model Variables
 
@@ -48,12 +58,10 @@ These were the variables listed in the old documentation.
 
 #### Differential
 
-TBD
-
+TBD.
 #### Algebraic
 
-TBD
-
+TBD.
 ### External Variables
 
 #### Differential
@@ -62,13 +70,16 @@ None.
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$u$ | [p.u.] | Stabilizer input signal |
-$V_{ct}$ | [p.u.] | Cutout signal (compared to $V_{cl},V_{cu}$) | from the block diagram
+Symbol   | Units  | Description                                 | Note
+---------|--------|---------------------------------------------|-----------------------
+$u$      | [p.u.] | Stabilizer input signal                     |
+$V_{\mathrm{ct}}$ | [p.u.] | Cutout signal (compared to $V_\mathrm{cl},V_\mathrm{cu}$) | from the block diagram
 
+## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -77,21 +88,32 @@ $V_{ct}$ | [p.u.] | Cutout signal (compared to $V_{cl},V_{cu}$) | from the block
 \dfrac{d^{2}V_{3}}{dt^{2}}+\dfrac{A_{1}}{A_{2}}\dfrac{dV_{3}}{dt}&=\dfrac{1}{A_{2}}(V_{2}-1) \\
 \dfrac{dx_{2}}{dt}&=\dfrac{1}{T_{2}}(V_{3}-V_{4}) \\
 \dfrac{dx_{3}}{dt}&=\dfrac{1}{T_{4}}(V_{4}-V_{5})
-
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
-V_{2} &= x_{1} + K_{S} V_{1} \\
+V_{2} &= x_{1} + K_\mathrm{s} V_{1} \\
 V_{4}&=x_{2}+\dfrac{T_{1}}{T_{2}}V_{3} \\
 V_{5}&=x_{3}+\dfrac{T_{3}}{T_{4}}V_{4} \\
-V_{llout} &= \begin{cases}
-   L_{SMAX} &\text{if } V_{5}>V_{SMAX} \\
-   L_{SMIN} &\text{if } V_{5}<V_{SMIN} \\
+V_{\mathrm{ss}} &= \begin{cases}
+   L_\mathrm{s}^{\max} &\text{if } V_{5}>L_\mathrm{s}^{\max} \\
+   L_\mathrm{s}^{\min} &\text{if } V_{5}<L_\mathrm{s}^{\min} \\
    V_{5}
 \end{cases}
 \end{aligned}
 ```
+
+### External Equations
+
+None.
+
+## Initialization
+
+TBD.
+
+## Monitors
+
+TBD.

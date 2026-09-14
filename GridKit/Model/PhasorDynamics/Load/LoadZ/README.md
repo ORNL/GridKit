@@ -5,10 +5,10 @@ adds their current contribution to the connected bus residual.
 
 ## Model Parameters
 
-Symbol | Units  | JSON | Description
--------|--------|------|------------
-$R$    | [p.u.] | `R`  | Load resistance
-$X$    | [p.u.] | `X`  | Load reactance
+Symbol | Units  | JSON | Description     | Typical Value | Note
+-------|--------|------|-----------------|---------------|-----
+$R$    | [p.u.] | `R`  | Load resistance |               |
+$X$    | [p.u.] | `X`  | Load reactance  |               |
 
 ### Parameter Validation
 
@@ -18,10 +18,16 @@ None.
 
 ```math
 \begin{aligned}
-G &= \frac{R}{R^2 + X^2} \\
-B &= -\frac{X}{R^2 + X^2}
+G &= \dfrac{R}{R^2 + X^2} \\
+B &= -\dfrac{X}{R^2 + X^2}
 \end{aligned}
 ```
+
+## Model Ports
+
+Name  | Port | Init  | Description
+------|------|-------|------------
+`bus` | Bus  | Known | Connected bus that owns terminal voltage variables and current-balance residuals
 
 ## Model Variables
 
@@ -51,19 +57,15 @@ Symbol | Units  | Description                           | Note
 $V_r$  | [p.u.] | Terminal voltage, real component      | Owned by connected bus
 $V_i$  | [p.u.] | Terminal voltage, imaginary component | Owned by connected bus
 
-## Wiring
-
-Port  | Type | Description
-------|------|------------
-`bus` | Bus  | Connected bus that owns terminal voltage variables and current-balance residuals
-
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 None.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -72,15 +74,23 @@ None.
 \end{aligned}
 ```
 
-## Initialization
-
-Initialization solves the algebraic current states from the connected bus
-voltage. Let $V_{r0}$ and $V_{i0}$ be the initialized bus voltage components.
+### External Equations
 
 ```math
 \begin{aligned}
-I_r &= -(G V_{r0} - B V_{i0}) \\
-I_i &= -(B V_{r0} + G V_{i0})
+I_r^{\mathrm{bus}} &\leftarrow I_r^{\mathrm{bus}} + I_r \\
+I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i
+\end{aligned}
+```
+
+## Initialization
+
+The initial bus voltage determines the terminal currents:
+
+```math
+\begin{aligned}
+I_r &\leftarrow -G V_r + B V_i \\
+I_i &\leftarrow -B V_r - G V_i
 \end{aligned}
 ```
 
@@ -88,7 +98,7 @@ The derivative vector entries initialize to zero.
 
 ## Monitors
 
-Name | Units  | Description                                  | Note
------|--------|----------------------------------------------|------
+Monitor | Units  | Description                                  | Note
+--------|--------|----------------------------------------------|------
 `p`  | [p.u.] | Active power at the connected bus terminal   | Positive for injection into the connected bus
 `q`  | [p.u.] | Reactive power at the connected bus terminal | Positive for injection into the connected bus

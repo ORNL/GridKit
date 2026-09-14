@@ -1,15 +1,11 @@
-# Governor Model
+# Governor Models
 
-## Introduction
-
-A governor models the control system that regulates the output power of a machine.
+Governors regulate machine mechanical power.
 
 ## Types
 
-There are a few standard Governor models
-
-- Turbine Governor (See [TGOV1](Tgov1/README.md))
-- Gas Turbine Governor (See [GASTPTI](GASTPTI/README.md))
-- Hydro Turbine Governor (See [HYGOV](HYGOV/README.md))
-- IEEE Type G1 Turbine Governor (See [IEEEG1](IEEEG1/README.md))
-- General Governor (See [GGOV1](GGOV1/README.md))
+- [GASTPTI](GASTPTI/README.md): Gas turbine-governor
+- [GGOV1](GGOV1/README.md): General governor-turbine
+- [HYGOV](HYGOV/README.md): Hydro turbine-governor
+- [IEEEG1](IEEEG1/README.md): IEEE Type 1 speed-governor
+- [TGOV1](Tgov1/README.md): Steam turbine-governor

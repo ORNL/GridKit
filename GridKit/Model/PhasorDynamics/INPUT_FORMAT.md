@@ -16,7 +16,7 @@ also be encoded as [MessagePack](https://msgpack.org).
     implementation.
 
 -   Flexible to handle various kinds of power system dynamics models
-    including phasor dynamics (PD), electromechanical transients (EMT)
+    including phasor dynamics (PD), electromagnetic transients (EMT)
     and hybrid models of the two.
 
 -   Conformity, as much as possible, to the style and formulations of

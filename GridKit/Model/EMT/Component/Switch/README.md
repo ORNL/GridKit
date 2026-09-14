@@ -46,6 +46,10 @@ None.
 
 None.
 
+### Submodel Wiring
+
+None.
+
 ## Model Variables
 
 ### Internal Variables
@@ -85,8 +89,8 @@ None.
 
 ```math
 \begin{cases}
-\mathbf{i}_{12} = \mathbf{0}, & \text{open}, \\
-\mathbf{v}_2-\mathbf{v}_1 = \mathbf{0}, & \text{closed}.
+\mathbf{i}_{12} = \mathbf{0}, & \text{open}\\
+\mathbf{v}_2-\mathbf{v}_1 = \mathbf{0}, & \text{closed}
 \end{cases}
 ```
 
@@ -95,7 +99,7 @@ None.
 ```math
 \begin{aligned}
 \mathbf{i}_1 &\leftarrow -\mathbf{i}_{12} \\
-\mathbf{i}_2 &\leftarrow \mathbf{i}_{12}.
+\mathbf{i}_2 &\leftarrow \mathbf{i}_{12}
 \end{aligned}
 ```
 
