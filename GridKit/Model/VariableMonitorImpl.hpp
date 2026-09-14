@@ -25,11 +25,8 @@ namespace GridKit
      * append likewise on the same line, and the line can be ended by the control
      * monitor.
      */
-    template <typename scalar_type,
-              typename index_type,
-              template <typename, typename> typename eval_type,
-              template <typename, typename> typename model_data_type>
-    class VariableMonitor<eval_type<scalar_type, index_type>, model_data_type>
+    template <typename eval_type, template <typename, typename> typename model_data_type>
+    class VariableMonitor
       : public VariableMonitorBase
     {
       template <typename>
@@ -37,9 +34,9 @@ namespace GridKit
 
     public:
       /// Underlying scalar value type
-      using ScalarT      = scalar_type;
+      using ScalarT      = typename eval_type::ScalarT;
       /// Index type
-      using IdxT         = index_type;
+      using IdxT         = typename eval_type::IdxT;
       /// Underlying real value type
       using RealT        = typename GridKit::ScalarTraits<ScalarT>::RealT;
       /// Type of (EvalT)Data class expected to have MonitorableVariables enum

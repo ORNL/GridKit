@@ -86,6 +86,32 @@ namespace GridKit
                         IeeestSignalOutputs,
                         IeeestMonitorableVariables>;
 
+      /// Degree of the two notch-denominator factors, before multiplying them.
+      /// Exact zero denotes an absent term; small nonzero coefficients retain
+      /// their order even if their product underflows during expansion.
+      template <typename real_type>
+      constexpr size_t ieeestNotchOrder(real_type A1, real_type A2, real_type A3, real_type A4)
+      {
+        size_t order = 0;
+        if (A2 != real_type{0})
+        {
+          order += 2;
+        }
+        else if (A1 != real_type{0})
+        {
+          order += 1;
+        }
+        if (A4 != real_type{0})
+        {
+          order += 2;
+        }
+        else if (A3 != real_type{0})
+        {
+          order += 1;
+        }
+        return order;
+      }
+
     } // namespace Stabilizer
   } // namespace PhasorDynamics
 } // namespace GridKit
