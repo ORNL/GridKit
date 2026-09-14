@@ -17,8 +17,8 @@ namespace GridKit
        *
        * @return int - error code, 0 = success
        */
-      template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::evaluateJacobian()
+      template <typename scalar_type, typename index_type, size_t order>
+      int Ieeest<scalar_type, index_type, order>::evaluateJacobian()
       {
         Log::misc() << "Evaluate Jacobian for Ieeest..." << std::endl;
         Log::misc() << "Jacobian evaluation not implemented!" << std::endl;
@@ -26,8 +26,16 @@ namespace GridKit
       }
 
       // Available template instantiations
-      template class Ieeest<double, long int>;
-      template class Ieeest<double, size_t>;
+      template class Ieeest<double, long int, 0>;
+      template class Ieeest<double, long int, 1>;
+      template class Ieeest<double, long int, 2>;
+      template class Ieeest<double, long int, 3>;
+      template class Ieeest<double, long int, 4>;
+      template class Ieeest<double, size_t, 0>;
+      template class Ieeest<double, size_t, 1>;
+      template class Ieeest<double, size_t, 2>;
+      template class Ieeest<double, size_t, 3>;
+      template class Ieeest<double, size_t, 4>;
     } // namespace Stabilizer
   } // namespace PhasorDynamics
 } // namespace GridKit

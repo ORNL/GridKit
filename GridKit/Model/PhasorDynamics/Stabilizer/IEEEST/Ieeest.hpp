@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include <cstddef>
+#include <memory>
+
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
@@ -16,69 +20,166 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename scalar_type, typename index_type>
+    class SignalNode;
+
     namespace Stabilizer
     {
-      /// Internal variables of `Ieeest`
-      enum class IeeestInternalVariables : size_t
+      /// Complete internal variable layout for each notch-filter order.
+      template <size_t order>
+      struct IeeestVariables;
+
+      template <>
+      struct IeeestVariables<0>
       {
-        X1,  ///< \f$x_1\f$ Notch-filter signal state
-        X2,  ///< \f$x_2\f$ First derivative of the filtered signal
-        X3,  ///< \f$x_3\f$ Second derivative of the filtered signal
-        X4,  ///< \f$x_4\f$ Third derivative of the filtered signal
-        X5,  ///< \f$x_5\f$ Lead-lag 1 state
-        X6,  ///< \f$x_6\f$ Lead-lag 2 state
-        X7,  ///< \f$x_7\f$ Washout state
-        V4,  ///< \f$v_4\f$ Notch-filter output
-        V5,  ///< \f$v_5\f$ Lead-lag 1 output
-        V6,  ///< \f$v_6\f$ Lead-lag 2 output
-        V7,  ///< \f$v_7\f$ Unlimited stabilizer signal
-        VSS, ///< \f$V_{\mathrm{ss}}\f$ Limited stabilizer signal and model output
+        enum class InternalVariables : size_t
+        {
+          X5,  ///< Lead-lag 1 state
+          X6,  ///< Lead-lag 2 state
+          X7,  ///< Washout state
+          V4,  ///< Notch-filter output
+          V5,  ///< Lead-lag 1 output
+          V6,  ///< Lead-lag 2 output
+          V7,  ///< Unlimited stabilizer signal
+          VSS, ///< Limited stabilizer signal and model output
+        };
       };
 
-      /// External variables of an `Ieeest`.
+      template <>
+      struct IeeestVariables<1>
+      {
+        enum class InternalVariables : size_t
+        {
+          X1,  ///< Notch-filter state
+          X5,  ///< Lead-lag 1 state
+          X6,  ///< Lead-lag 2 state
+          X7,  ///< Washout state
+          V4,  ///< Notch-filter output
+          V5,  ///< Lead-lag 1 output
+          V6,  ///< Lead-lag 2 output
+          V7,  ///< Unlimited stabilizer signal
+          VSS, ///< Limited stabilizer signal and model output
+        };
+      };
+
+      template <>
+      struct IeeestVariables<2>
+      {
+        enum class InternalVariables : size_t
+        {
+          X1,  ///< Notch-filter state
+          X2,  ///< First derivative of X1
+          X5,  ///< Lead-lag 1 state
+          X6,  ///< Lead-lag 2 state
+          X7,  ///< Washout state
+          V4,  ///< Notch-filter output
+          V5,  ///< Lead-lag 1 output
+          V6,  ///< Lead-lag 2 output
+          V7,  ///< Unlimited stabilizer signal
+          VSS, ///< Limited stabilizer signal and model output
+        };
+      };
+
+      template <>
+      struct IeeestVariables<3>
+      {
+        enum class InternalVariables : size_t
+        {
+          X1,  ///< Notch-filter state
+          X2,  ///< First derivative of X1
+          X3,  ///< Second derivative of X1
+          X5,  ///< Lead-lag 1 state
+          X6,  ///< Lead-lag 2 state
+          X7,  ///< Washout state
+          V4,  ///< Notch-filter output
+          V5,  ///< Lead-lag 1 output
+          V6,  ///< Lead-lag 2 output
+          V7,  ///< Unlimited stabilizer signal
+          VSS, ///< Limited stabilizer signal and model output
+        };
+      };
+
+      template <>
+      struct IeeestVariables<4>
+      {
+        enum class InternalVariables : size_t
+        {
+          X1,  ///< Notch-filter state
+          X2,  ///< First derivative of X1
+          X3,  ///< Second derivative of X1
+          X4,  ///< Third derivative of X1
+          X5,  ///< Lead-lag 1 state
+          X6,  ///< Lead-lag 2 state
+          X7,  ///< Washout state
+          V4,  ///< Notch-filter output
+          V5,  ///< Lead-lag 1 output
+          V6,  ///< Lead-lag 2 output
+          V7,  ///< Unlimited stabilizer signal
+          VSS, ///< Limited stabilizer signal and model output
+        };
+      };
+
+      /// Internal variables of a `Ieeest` of the given notch-filter order
+      template <size_t order>
+      using IeeestInternalVariables = typename IeeestVariables<order>::InternalVariables;
+
+      /// External variables of a `Ieeest`
       enum class IeeestExternalVariables : size_t
       {
         U, ///< \f$u\f$ Stabilizer input signal
       };
 
-      template <typename scalar_type, typename index_type>
+      /**
+       * @brief IEEEST with a compile-time notch-filter order in [0, 4].
+       *
+       * Only the active notch states are allocated. IeeestFactory selects the
+       * specialization from the two notch-denominator factors.
+       *
+       * @tparam scalar_type Scalar data type.
+       * @tparam index_type Index data type.
+       * @tparam order Degree of the expanded notch denominator.
+       */
+      template <typename scalar_type, typename index_type, size_t order>
       class Ieeest : public Component<scalar_type, index_type>
       {
-        using Component<scalar_type, index_type>::gridkit_component_id_;
+        static_assert(order <= 4, "Ieeest notch filter order must be in [0, 4]");
+
+        using Component<scalar_type, index_type>::abs_tol_;
+        using Component<scalar_type, index_type>::allocated_;
         using Component<scalar_type, index_type>::alpha_;
         using Component<scalar_type, index_type>::f_;
+        using Component<scalar_type, index_type>::gridkit_component_id_;
+        using Component<scalar_type, index_type>::J_cols_buffer_;
+        using Component<scalar_type, index_type>::J_rows_buffer_;
+        using Component<scalar_type, index_type>::J_vals_buffer_;
         using Component<scalar_type, index_type>::nnz_;
+        using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
-        using Component<scalar_type, index_type>::abs_tol_;
-        using Component<scalar_type, index_type>::time_;
+        using Component<scalar_type, index_type>::variable_indices_;
+        using Component<scalar_type, index_type>::wb_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
-        using Component<scalar_type, index_type>::wb_;
         using Component<scalar_type, index_type>::ws_;
         using Component<scalar_type, index_type>::ws_indices_;
-        using Component<scalar_type, index_type>::h_;
-        using Component<scalar_type, index_type>::J_rows_buffer_;
-        using Component<scalar_type, index_type>::J_cols_buffer_;
-        using Component<scalar_type, index_type>::J_vals_buffer_;
-        using Component<scalar_type, index_type>::variable_indices_;
-        using Component<scalar_type, index_type>::residual_indices_;
-        using Component<scalar_type, index_type>::allocated_;
 
       public:
-        using ScalarT        = scalar_type;
-        using IdxT           = index_type;
-        using RealT          = typename Component<ScalarT, IdxT>::RealT;
-        using ModelDataT     = IeeestData<RealT, IdxT>;
-        using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
-        using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
-        using MonitorT       = Model::VariableMonitor<Ieeest, IeeestData>;
+        using ScalarT            = scalar_type;
+        using IdxT               = index_type;
+        using RealT              = typename Component<ScalarT, IdxT>::RealT;
+        using SignalT            = SignalNode<ScalarT, IdxT>;
+        using ModelDataT         = IeeestData<RealT, IdxT>;
+        using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
+        using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
+        using MonitorT           = Model::VariableMonitor<Ieeest, IeeestData>;
+        using InternalVariablesT = IeeestInternalVariables<order>;
+        using ExternalVariablesT = IeeestExternalVariables;
 
         Ieeest();
-        Ieeest(const ModelDataT& data);
+        explicit Ieeest(const ModelDataT& data);
         ~Ieeest();
 
-        int setGridKitComponentID(IdxT) override final;
+        int setGridKitComponentID(IdxT component_id) override final;
         int allocate() override final;
         int verify() const override final;
         int initialize() override final;
@@ -94,7 +195,7 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
+        [[gnu::always_inline]] inline int evaluateInternalResidual(
             const ScalarT*,
             const ScalarT*,
             const ScalarT*,
@@ -102,6 +203,23 @@ namespace GridKit
             ScalarT*);
 
       private:
+        static constexpr size_t X5  = static_cast<size_t>(InternalVariablesT::X5);
+        static constexpr size_t X6  = static_cast<size_t>(InternalVariablesT::X6);
+        static constexpr size_t X7  = static_cast<size_t>(InternalVariablesT::X7);
+        static constexpr size_t V4  = static_cast<size_t>(InternalVariablesT::V4);
+        static constexpr size_t V5  = static_cast<size_t>(InternalVariablesT::V5);
+        static constexpr size_t V6  = static_cast<size_t>(InternalVariablesT::V6);
+        static constexpr size_t V7  = static_cast<size_t>(InternalVariablesT::V7);
+        static constexpr size_t VSS = static_cast<size_t>(InternalVariablesT::VSS);
+        static constexpr size_t U   = static_cast<size_t>(IeeestExternalVariables::U);
+
+        void loadRealParameter(const ModelDataT& data, IeeestParameters parameter, RealT& value);
+        void initializeParameters(const ModelDataT& data);
+        void initializeMonitor();
+        void setDerivedParameters();
+
+        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
+
         RealT A1_{0};
         RealT A2_{0};
         RealT A3_{0};
@@ -121,34 +239,19 @@ namespace GridKit
         RealT Vcu_{0};
         RealT Tdelay_{0};
 
-        RealT a0_{1};
         RealT a1_{0};
         RealT a2_{0};
         RealT a3_{0};
         RealT a4_{0};
+        RealT inv_an_{0}; ///< Reciprocal of the active leading denominator coefficient.
+        RealT inv_T2_{1};
+        RealT inv_T4_{1};
+        RealT inv_T6_{1};
 
-        // Precomputed masks and safe inverse coefficients for branch-free degenerate paths.
-        RealT use_notch_{0};
-        RealT bypass_notch_{1};
-        RealT use_4th_order_{0};
-        RealT use_3rd_order_{0};
-        RealT use_2nd_order_{0};
-        RealT safe_inv_a4_{0};
-        RealT safe_inv_a3_{0};
-        RealT safe_inv_a2_{0};
-        RealT use_T2_block_{1};
-        RealT bypass_T2_block_{0};
-        RealT use_T4_block_{1};
-        RealT bypass_T4_block_{0};
-        RealT use_T6_block_{1};
-        RealT bypass_T6_block_{0};
+        bool parameters_valid_{true};
 
-        SignalPortsT ports_;
-
+        SignalPortsT              ports_;
         std::unique_ptr<MonitorT> monitor_;
-
-        void initializeParameters(const ModelDataT& data);
-        void initializeMonitor();
       };
 
     } // namespace Stabilizer
