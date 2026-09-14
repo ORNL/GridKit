@@ -6,15 +6,22 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Jacobian evaluation not implemented
+     * @brief Evaluate DependencyTracking::Variable Jacobian.
+     *
+     * @note Currently only used for testing.
+     *
+     * DependencyTracking::Variable stores the Jacobian as dependency maps,
+     * updated during calls to evaluateResidual().
      *
      * @return int - error code, 0 = success
      */
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for LoadZIP..." << std::endl;
-      Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
+      Log::misc() << "Evaluate DependencyTracking Jacobian for LoadZIP...\n";
+      Log::misc() << "Jacobian evaluation is experimental!\n";
+
+      this->constructCsr();
 
       return 0;
     }

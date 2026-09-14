@@ -124,6 +124,35 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Initialize DependencyTracking variable numbers.
+       *
+       * @note Assigns even indices to y and odd indices to yp.
+       *       Should be called in intialize(), after variables have been set (and updated as needed).
+       */
+      int initializeDependencyTrackingVariableNumbers()
+        requires std::is_same_v<ScalarT, DependencyTracking::Variable>
+      {
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          const IdxT var_idx = this->getVariableIndex(j);
+          if (var_idx != INVALID_INDEX<IdxT>)
+          {
+            // Even indices for y and odd indices for yp
+            y[j].setVariableNumber(static_cast<size_t>(2 * var_idx));
+            yp[j].setVariableNumber(static_cast<size_t>(2 * var_idx + 1));
+          }
+        }
+
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+
+        return 0;
+      }
+
       IdxT*  J_rows_buffer_{nullptr};
       IdxT*  J_cols_buffer_{nullptr};
       RealT* J_vals_buffer_{nullptr};

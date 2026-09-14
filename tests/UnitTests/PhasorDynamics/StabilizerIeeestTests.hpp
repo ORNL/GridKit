@@ -219,79 +219,19 @@ namespace GridKit
         stab.allocate();
         stab.initialize();
 
-        // --- d/dy: tag internal variables as independent ---
-        auto* y = stab.y().getData();
-        for (size_t i = 0; i < stab.size(); ++i)
-        {
-          y[i].setVariableNumber(i);
-        }
         // Tag external signal u as an additional independent variable
-        u_value.setVariableNumber(stab.size());
-        u_value.setValue(0.5);
-
+        u_value.setVariableNumber(2 * stab.size()); // @todo avoid requiring knowledge of the numbering
         setStatePointDep(stab);
 
-        stab.evaluateResidual();
-        auto&               residual_y_view = stab.getResidual();
-        std::vector<DepVar> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
-
-        // --- d/dy': tag derivatives as independent ---
-        u_value = 0.5;
-        stab.initialize();
-        auto* yp = stab.yp().getData();
-        for (size_t i = 0; i < stab.size(); ++i)
-        {
-          yp[i].setVariableNumber(i);
-        }
-
-        setStatePointDep(stab);
+        stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
 
         stab.evaluateResidual();
-        auto&               residual_yp_view = stab.getResidual();
-        std::vector<DepVar> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
+        stab.evaluateJacobian();
+        auto model_jacobian = stab.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: Ieeest DependencyTracking Jacobian\n";
+        model_jacobian->print();
 
-        // Print dependencies for debugging
-        for (size_t i = 0; i < residual_y.size(); ++i)
-        {
-          std::cout << i << "th residual, y: ";
-          (residual_y[i]).print(std::cout);
-          std::cout << "\n";
-          std::cout << i << "th residual, yp: ";
-          (residual_yp[i]).print(std::cout);
-          std::cout << "\n";
-        }
-
-        // Merge d/dy and d/dy' into a single dependency map
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
-        for (IdxT i = 0; i < residual_y.size(); ++i)
-        {
-          auto dependency_y  = (residual_y[i]).getDependencies();
-          auto dependency_yp = (residual_yp[i]).getDependencies();
-
-          for (const auto& pair_y : dependency_y)
-          {
-            auto it_yp = dependency_yp.find(pair_y.first);
-            if (it_yp != dependency_yp.end())
-            {
-              dependencies[i].insert(std::make_pair(pair_y.first, pair_y.second + it_yp->second));
-            }
-            else
-            {
-              dependencies[i].insert(std::make_pair(pair_y.first, pair_y.second));
-            }
-          }
-
-          // Insert yp dependencies that did not exist in the y dependencies
-          for (const auto& pair_yp : dependency_yp)
-          {
-            if (!dependency_y.contains(pair_yp.first))
-            {
-              dependencies[i].insert(std::make_pair(pair_yp.first, pair_yp.second));
-            }
-          }
-        }
-
-        return dependencies;
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
@@ -323,7 +263,7 @@ namespace GridKit
         stab.evaluateJacobian();
         stab.constructCsr();
         auto model_jacobian = stab.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: Ieeest Jacobian\n";
+        std::cout << "Sparse Csr Matrix: Ieeest Enzyme Jacobian\n";
         model_jacobian->print();
 
         return GridKit::Testing::MapFromCsr(model_jacobian);

@@ -101,36 +101,28 @@ namespace GridKit
         bus.allocate();
         load.allocate();
 
+        for (size_t i = 0; i < bus.size(); ++i)
+        {
+          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
+          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+        }
+
         bus.initialize();
         load.initialize();
 
-        auto* load_y = load.y().getData();
-        for (size_t i = 0; i < load.size(); ++i)
-        {
-          load_y[i].setVariableNumber(i); ///< load independent variables
-        }
-        load.y().setDataUpdated();
-        auto* bus_y = bus.y().getData();
-        for (size_t i = 0; i < bus.size(); ++i)
-        {
-          bus_y[i].setVariableNumber(i + load.size()); // Bus independent variables
-        }
-        bus.y().setDataUpdated();
-
         bus.evaluateResidual();
-        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                 ///< the dependencies
+        load.evaluateResidual(); //< Tracks dependencies
+        load.evaluateJacobian(); //< Converts dependencies to CSR
+        auto* model_jacobian = load.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: Load DependencyTracking Jacobian\n";
+        model_jacobian->print();
 
-        auto&                                                    residuals     = load.getResidual();
-        const auto*                                              residual_data = residuals.getData();
-        std::vector<DependencyTracking::Variable::DependencyMap> ref           = analyticalJacobian(R, X);
-
-        /// Compare dependencies computed automatically to the ones computed analytically
-        for (size_t i = 0; i < residuals.getSize(); ++i)
+        // Compare model Jacobian wih dependencies computed analytically
+        auto ref                = analyticalJacobian(R, X);
+        auto model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
+        for (size_t i = 0; i < ref.size(); ++i)
         {
-          DependencyTracking::Variable                       res           = residual_data[i];
-          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i]));
+          success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));
         }
 
         return success.report(__func__);
@@ -190,23 +182,26 @@ namespace GridKit
         bus.allocate();
         load.allocate();
 
-        bus.initialize();
-        load.initialize();
-
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
           bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
         }
 
+        bus.initialize();
+        load.initialize();
+
+        bus.evaluateResidual();
+        load.evaluateResidual();
+
         bus.evaluateJacobian();
         load.evaluateJacobian();
         load.constructCsr();
-        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: Load Jacobian\n";
+        auto* model_jacobian = load.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: Load Enzyme Jacobian\n";
         model_jacobian->print();
 
-        /// Compare model Jacobian wih dependencies computed analytically
+        // Compare model Jacobian wih dependencies computed analytically
         std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian(R, X);
         std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)
@@ -219,7 +214,7 @@ namespace GridKit
 #endif
 
     private:
-      static constexpr RealT tol_ = 1.0e-10;
+      static constexpr RealT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
       auto makeData() -> DataT
       {
