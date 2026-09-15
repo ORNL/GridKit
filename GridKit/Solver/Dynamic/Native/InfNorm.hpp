@@ -38,7 +38,8 @@ namespace AnalysisManager
          */
         std::unique_ptr<State> scale_;
         /**
-         * @brief The absolute value of yprev. Used to calculate `scale_`
+         * @brief The absolute value of yprev. Used to calculate
+         *        \ref InfNorm::scale_
          *
          */
         std::unique_ptr<State> yprev_abs_;

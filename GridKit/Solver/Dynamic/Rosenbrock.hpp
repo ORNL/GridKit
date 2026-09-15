@@ -461,7 +461,9 @@ namespace AnalysisManager
         std::unique_ptr<State> RHS_;
         /**
          * @brief Right-hand side of linear solve used in the first stage.
-         *        Stored separately from `RHS_` since it can be re-used by future steps if the current step is rejected.
+         *        Stored separately from
+         *        \ref Rosenbrock::RHS_
+         *        since it can be re-used by future steps if the current step is rejected.
          *
          * @see `skip_f_`
          *
