@@ -8,14 +8,14 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -50,10 +50,7 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-
-        Utilities::ConfigurationChecks checks("Ieeest");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "Ieeest");
         reader.loadReal(Parameter::A1, A1_);
         reader.loadReal(Parameter::A2, A2_);
         reader.loadReal(Parameter::A3, A3_);
@@ -72,8 +69,6 @@ namespace GridKit
         reader.loadReal(Parameter::Vcl, Vcl_);
         reader.loadReal(Parameter::Vcu, Vcu_);
         reader.loadReal(Parameter::Tdelay, Tdelay_);
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         a0_ = 1;
         a1_ = A1_ + A3_;
@@ -143,37 +138,30 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Ieeest<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
+        Model::ConfigurationChecks checks;
 
-        auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
-        if (!input_port.connected())
-        {
-          Log::error() << "Ieeest: required input signal U is not attached\n";
-          ret += 1;
-        }
-        if (input_port.connected() && !input_port.linked())
-        {
-          Log::error() << "Ieeest: input signal U attached with no linked source\n";
-          ret += 1;
-        }
+        const auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
+        checks.check(input_port.connected(), "required input signal U is not attached");
+        checks.check(!input_port.connected() || input_port.linked(), "input signal U attached with no linked source");
 
-        if (a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0)
-        {
-          Log::error() << "Ieeest: a2, a3, and a4 are all zero - no valid notch filter\n";
-          ret += 1;
-        }
+        checks.check(!(a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0),
+                     "a2, a3, and a4 are all zero - no valid notch filter");
 
-        return ret;
+        return checks;
       }
 
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::initialize()
       {
-        if (verify() != 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Ieeest: cannot initialize with invalid configuration\n";
+          Log::error() << "Ieeest: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 

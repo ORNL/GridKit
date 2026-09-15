@@ -56,9 +56,9 @@ namespace GridKit
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
 
-      virtual int verify() const override final
+      virtual Model::ConfigurationChecks verify() const override final
       {
-        return static_cast<int>(parameter_error_count_);
+        return {};
       }
 
     public:
@@ -116,9 +116,6 @@ namespace GridKit
       RealT g_;
 
       std::unique_ptr<MonitorT> monitor_;
-
-      /// Count of parameter-loading errors reported through verify()
-      IdxT parameter_error_count_{0};
     };
 
   } // namespace PhasorDynamics

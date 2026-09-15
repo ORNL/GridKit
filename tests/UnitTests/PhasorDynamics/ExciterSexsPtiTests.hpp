@@ -72,7 +72,7 @@ namespace GridKit
 
         exciter.allocate();
         efd_node.init(1.2);
-        success *= (exciter.verify() == 0);
+        success *= (exciter.verify().passed());
         exciter.initialize();
         exciter.evaluateResidual();
 
@@ -124,7 +124,7 @@ namespace GridKit
 
         exciter.allocate();
         efd_node.init(1.2);
-        success *= (exciter.verify() == 0);
+        success *= (exciter.verify().passed());
         exciter.initialize();
         exciter.evaluateResidual();
 
@@ -280,13 +280,12 @@ namespace GridKit
 
         auto missing = makeTestData();
         missing.parameters.erase(Parameter::K);
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> missing_model(&bus, missing);
-        success *= (missing_model.verify() > 0);
+        success *= constructionRejected<PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT>>(&bus, missing);
 
         auto invalid                      = makeTestData();
         invalid.parameters[Parameter::Tb] = 0.0;
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> invalid_model(&bus, invalid);
-        success *= (invalid_model.verify() > 0);
+        success *= (!invalid_model.verify().passed());
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -331,7 +330,7 @@ namespace GridKit
         // Suppress the expected missing-EFD configuration error below.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        success *= (missing_efd_system.verify() > 0);
+        success *= (!missing_efd_system.verify().passed());
         Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);

@@ -78,14 +78,14 @@ namespace GridKit
         Ieeest(const ModelDataT& data);
         ~Ieeest();
 
-        int setGridKitComponentID(IdxT) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int                        setGridKitComponentID(IdxT) override final;
+        int                        allocate() override final;
+        Model::ConfigurationChecks verify() const override final;
+        int                        initialize() override final;
+        int                        tagDifferentiable() override final;
+        int                        setAbsoluteTolerance(RealT rel_tol) override final;
+        int                        evaluateResidual() override final;
+        int                        evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -146,9 +146,6 @@ namespace GridKit
         SignalPortsT ports_;
 
         std::unique_ptr<MonitorT> monitor_;
-
-        /// Count of parameter-loading errors reported through verify()
-        IdxT parameter_error_count_{0};
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();

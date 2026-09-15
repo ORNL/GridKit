@@ -4,6 +4,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -61,7 +62,8 @@ namespace GridKit
         }
       }
 
-      virtual int verify() const = 0;
+      /// Report every configuration problem; passed() when the model can initialize.
+      virtual Model::ConfigurationChecks verify() const = 0;
 
       IdxT size() override final
       {
