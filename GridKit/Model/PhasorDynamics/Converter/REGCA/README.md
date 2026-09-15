@@ -93,8 +93,8 @@ Name       | Port   | Init    | Description
 `bus`      | Bus    | Known   | Terminal bus voltage
 `ipcmd`    | Input  | Unknown | Active-current command input
 `iqcmd`    | Input  | Unknown | Reactive-current command input
-`ibranchr` | Output | Known   | Branch-current real-component output
-`ibranchi` | Output | Known   | Branch-current imaginary-component output
+`ir`       | Output | Known   | Terminal-current real-component output
+`ii`       | Output | Known   | Terminal-current imaginary-component output
 `pbranch`  | Output | Known   | Branch active-power output
 `qbranch`  | Output | Known   | Branch reactive-power output
 
@@ -265,8 +265,8 @@ All internal derivatives initialize to zero.
 
 Monitor | Units  | Description                 | Note
 --------|--------|-----------------------------|------
-`ir`   | [p.u.] | Real current injection      | System base; exported through `ibranchr` when assigned
-`ii`   | [p.u.] | Imaginary current injection | System base; exported through `ibranchi` when assigned
+`ir`   | [p.u.] | Real current injection      | System base; exported through `ir` when assigned
+`ii`   | [p.u.] | Imaginary current injection | System base; exported through `ii` when assigned
 `p`    | [p.u.] | Active-power output         | System base; exported through `pbranch` when assigned
 `q`    | [p.u.] | Reactive-power output       | System base; exported through `qbranch` when assigned
 
