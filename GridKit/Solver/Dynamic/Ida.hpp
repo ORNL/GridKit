@@ -8,6 +8,7 @@
 
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_context.h>
+#include <sundials/sundials_nonlinearsolver.h>
 #include <sunlinsol/sunlinsol_dense.h>  /* access to dense linear solver        */
 #include <sunmatrix/sunmatrix_sparse.h> /* access to sparse SUNMatrix           */
 
@@ -65,6 +66,7 @@ namespace AnalysisManager
       int configureLinearSolverSparse();
 #endif
       int configureLinearSolverDense();
+      int configureNonlinearSolver();
       int getDefaultInitialCondition();
       int initializeSimulation(RealT t0, bool findConsistent = true);
 
@@ -201,6 +203,8 @@ namespace AnalysisManager
       SUNMatrix       JacobianMatB_{};
       SUNLinearSolver linearSolver_{};
       SUNLinearSolver linearSolverB_{};
+
+      SUNNonlinearSolver nonlinearSolver_{}; ///< Fixed-step corrector, null in adaptive mode
 
       RealT t_init_{};
 
