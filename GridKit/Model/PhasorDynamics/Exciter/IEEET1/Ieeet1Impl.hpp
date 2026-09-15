@@ -11,15 +11,15 @@
 #include <iostream>
 #include <mutex>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -128,9 +128,9 @@ namespace GridKit
        * @brief Verify parameter values and attached signal links
        */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Ieeet1<scalar_type, index_type>::verify() const
       {
-        Utilities::ConfigurationChecks checks("Ieeet1");
+        Model::ConfigurationChecks checks;
 
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
         checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
@@ -151,13 +151,18 @@ namespace GridKit
           checks.check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
-        ports_.in.template port<Ieeet1SignalInputs::speed>().checkOptional(checks, "speed");
-        ports_.in.template port<Ieeet1SignalInputs::vref>().checkOptional(checks, "vref");
-        ports_.in.template port<Ieeet1SignalInputs::vs>().checkOptional(checks, "vs");
-        ports_.in.template port<Ieeet1SignalInputs::vuel>().checkOptional(checks, "vuel");
-        ports_.in.template port<Ieeet1SignalInputs::voel>().checkOptional(checks, "voel");
+        const auto speed_port = ports_.in.template port<Ieeet1SignalInputs::speed>();
+        checks.check(!speed_port.connected() || speed_port.linked(), "speed signal attached with no linked source");
+        const auto vref_port = ports_.in.template port<Ieeet1SignalInputs::vref>();
+        checks.check(!vref_port.connected() || vref_port.linked(), "vref signal attached with no linked source");
+        const auto vs_port = ports_.in.template port<Ieeet1SignalInputs::vs>();
+        checks.check(!vs_port.connected() || vs_port.linked(), "vs signal attached with no linked source");
+        const auto vuel_port = ports_.in.template port<Ieeet1SignalInputs::vuel>();
+        checks.check(!vuel_port.connected() || vuel_port.linked(), "vuel signal attached with no linked source");
+        const auto voel_port = ports_.in.template port<Ieeet1SignalInputs::voel>();
+        checks.check(!voel_port.connected() || voel_port.linked(), "voel signal attached with no linked source");
 
-        return static_cast<int>(parameter_error_count_) + checks.errorCount();
+        return checks;
       }
 
       /**
@@ -187,9 +192,13 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::initialize()
       {
-        if (verify() != 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
+          Log::error() << "Ieeet1: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 
@@ -409,15 +418,47 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::evaluateResidual()
       {
+        const auto OMEGA = static_cast<size_t>(Ieeet1ExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Ieeet1ExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Ieeet1ExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Ieeet1ExternalVariables::VUEL);
+        const auto VOEL  = static_cast<size_t>(Ieeet1ExternalVariables::VOEL);
+
         auto* ws = ws_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
-        auto* ws_indices = ws_indices_.data();
-        ports_.in.template port<Ieeet1SignalInputs::speed>().refreshWorkspace(omega_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::OMEGA)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::OMEGA)]);
-        ports_.in.template port<Ieeet1SignalInputs::vref>().refreshWorkspace(vref_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::VREF)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::VREF)]);
-        ports_.in.template port<Ieeet1SignalInputs::vs>().refreshWorkspace(vs_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::VS)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::VS)]);
-        ports_.in.template port<Ieeet1SignalInputs::vuel>().refreshWorkspace(vuel_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::VUEL)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::VUEL)]);
-        ports_.in.template port<Ieeet1SignalInputs::voel>().refreshWorkspace(voel_set_, ws[static_cast<size_t>(Ieeet1ExternalVariables::VOEL)], ws_indices[static_cast<size_t>(Ieeet1ExternalVariables::VOEL)]);
+        ws[OMEGA] = omega_set_;
+        ws[VREF]  = vref_set_;
+        ws[VS]    = vs_set_;
+        ws[VUEL]  = vuel_set_;
+        ws[VOEL]  = voel_set_;
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+
+        if (auto port = ports_.in.template port<Ieeet1SignalInputs::speed>())
+        {
+          ws[OMEGA]          = port.readSignal();
+          ws_indices_[OMEGA] = port.signalVariableIndex();
+        }
+        if (auto port = ports_.in.template port<Ieeet1SignalInputs::vref>())
+        {
+          ws[VREF]          = port.readSignal();
+          ws_indices_[VREF] = port.signalVariableIndex();
+        }
+        if (auto port = ports_.in.template port<Ieeet1SignalInputs::vs>())
+        {
+          ws[VS]          = port.readSignal();
+          ws_indices_[VS] = port.signalVariableIndex();
+        }
+        if (auto port = ports_.in.template port<Ieeet1SignalInputs::vuel>())
+        {
+          ws[VUEL]          = port.readSignal();
+          ws_indices_[VUEL] = port.signalVariableIndex();
+        }
+        if (auto port = ports_.in.template port<Ieeet1SignalInputs::voel>())
+        {
+          ws[VOEL]          = port.readSignal();
+          ws_indices_[VOEL] = port.signalVariableIndex();
+        }
 
         // Bus voltages
         auto* wb = wb_.getData();
@@ -443,10 +484,7 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-
-        Utilities::ConfigurationChecks checks("Ieeet1");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "Ieeet1");
 
         reader.loadReal(Parameter::Tr, Tr_);
         reader.loadReal(Parameter::Ka, Ka_);
@@ -462,8 +500,6 @@ namespace GridKit
         reader.loadReal(Parameter::Se1, Se1_);
         reader.loadReal(Parameter::Se2, Se2_);
         reader.loadReal(Parameter::Ispdlim, Ispdlim_);
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }

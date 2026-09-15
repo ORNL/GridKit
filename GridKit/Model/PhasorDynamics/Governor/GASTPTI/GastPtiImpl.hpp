@@ -9,16 +9,18 @@
 #include <algorithm>
 #include <cassert>
 #include <mutex>
+#include <stdexcept>
+#include <string>
 #include <variant>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Enum.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -130,14 +132,14 @@ namespace GridKit
        * mechanical-power output assignment, attached external signals, and
        * distinct indexed ports.
        *
-       * @return int Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int GastPti<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks GastPti<scalar_type, index_type>::verify() const
       {
         const auto PMECH = static_cast<size_t>(GastPtiInternalVariables::PMECH);
 
-        Utilities::ConfigurationChecks checks("GastPti");
+        Model::ConfigurationChecks checks;
 
         checks.check(std::isfinite(R_) && R_ > ZERO<RealT>, "R must be finite and positive");
         checks.check(std::isfinite(At_) && At_ >= ZERO<RealT>,
@@ -153,7 +155,7 @@ namespace GridKit
         }
 
         checks.check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
-              "Dturb must be finite and non-negative");
+                     "Dturb must be finite and non-negative");
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
@@ -166,17 +168,19 @@ namespace GridKit
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
           checks.check(std::isfinite(system_to_component)
-                    && system_to_component > ZERO<RealT>
-                    && std::isfinite(component_to_system)
-                    && component_to_system > ZERO<RealT>,
-                "system/component power-base conversion ratios must be finite and positive");
+                           && system_to_component > ZERO<RealT>
+                           && std::isfinite(component_to_system)
+                           && component_to_system > ZERO<RealT>,
+                       "system/component power-base conversion ratios must be finite and positive");
         }
 
         checks.check(ports_.out.template port<GastPtiSignalOutputs::pmech>().connected(),
                      "pmech output must be assigned");
 
-        ports_.in.template port<GastPtiSignalInputs::speed>().checkOptional(checks, "speed");
-        ports_.in.template port<GastPtiSignalInputs::pref>().checkOptional(checks, "pref");
+        const auto speed_port = ports_.in.template port<GastPtiSignalInputs::speed>();
+        checks.check(!speed_port.connected() || speed_port.linked(), "speed signal attached with no linked source");
+        const auto pref_port = ports_.in.template port<GastPtiSignalInputs::pref>();
+        checks.check(!pref_port.connected() || pref_port.linked(), "pref signal attached with no linked source");
 
         const bool omega_linked =
             ports_.in.template port<GastPtiSignalInputs::speed>().connected()
@@ -217,7 +221,7 @@ namespace GridKit
           }
         }
 
-        return static_cast<int>(parameter_error_count_) + checks.errorCount();
+        return checks;
       }
 
       /**
@@ -258,9 +262,13 @@ namespace GridKit
           return 1;
         }
 
-        if (verify() > 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "GastPti: cannot initialize with invalid configuration\n";
+          Log::error() << "GastPti: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 
@@ -559,11 +567,7 @@ namespace GridKit
       {
         if (!std::isfinite(value) || value < ZERO<RealT>)
         {
-          Log::error() << "GastPti: " << name
-                       << " must be finite and non-negative\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
+          throw std::invalid_argument(std::string("GastPti: ") + name + " must be finite and non-negative");
         }
 
         const bool raised = value < TIME_CONSTANT_MINIMUM;
@@ -584,10 +588,7 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-
-        Utilities::ConfigurationChecks checks("GastPti");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "GastPti");
 
         reader.loadReal(Params::R, R_);
         reader.loadReal(Params::T1, T1_);
@@ -603,8 +604,6 @@ namespace GridKit
         {
           this->setComponentBase(trate * static_cast<RealT>(1.0e6));
         }
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }

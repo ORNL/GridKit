@@ -9,17 +9,20 @@
 #include <algorithm>
 #include <array>
 #include <mutex>
+#include <numbers>
+#include <stdexcept>
+#include <string>
 #include <variant>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Enum.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -160,12 +163,12 @@ namespace GridKit
        * attached optional signals. Operating-point feasibility is checked by
        * initialize().
        *
-       * @return Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Reecb<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Reecb<scalar_type, index_type>::verify() const
       {
-        Utilities::ConfigurationChecks checks("Reecb");
+        Model::ConfigurationChecks checks;
 
         checks.check(bus_ != nullptr, "terminal bus is required");
 
@@ -180,10 +183,10 @@ namespace GridKit
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
           checks.check(std::isfinite(system_to_component)
-                    && system_to_component > ZERO<RealT>
-                    && std::isfinite(component_to_system)
-                    && component_to_system > ZERO<RealT>,
-                "system/component power-base conversion ratios must be finite and positive");
+                           && system_to_component > ZERO<RealT>
+                           && std::isfinite(component_to_system)
+                           && component_to_system > ZERO<RealT>,
+                       "system/component power-base conversion ratios must be finite and positive");
         }
 
         checks.check(std::isfinite(Trv_), "Trv must be finite");
@@ -251,13 +254,18 @@ namespace GridKit
 
         checks.check(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive");
 
-        ports_.in.template port<ReecbSignalInputs::pe>().checkOptional(checks, "pe");
-        ports_.in.template port<ReecbSignalInputs::qgen>().checkOptional(checks, "qgen");
-        ports_.in.template port<ReecbSignalInputs::qext>().checkOptional(checks, "qext");
-        ports_.in.template port<ReecbSignalInputs::pfaref>().checkOptional(checks, "pfaref");
-        ports_.in.template port<ReecbSignalInputs::pref>().checkOptional(checks, "pref");
+        const auto pe_port = ports_.in.template port<ReecbSignalInputs::pe>();
+        checks.check(!pe_port.connected() || pe_port.linked(), "pe signal attached with no linked source");
+        const auto qgen_port = ports_.in.template port<ReecbSignalInputs::qgen>();
+        checks.check(!qgen_port.connected() || qgen_port.linked(), "qgen signal attached with no linked source");
+        const auto qext_port = ports_.in.template port<ReecbSignalInputs::qext>();
+        checks.check(!qext_port.connected() || qext_port.linked(), "qext signal attached with no linked source");
+        const auto pfaref_port = ports_.in.template port<ReecbSignalInputs::pfaref>();
+        checks.check(!pfaref_port.connected() || pfaref_port.linked(), "pfaref signal attached with no linked source");
+        const auto pref_port = ports_.in.template port<ReecbSignalInputs::pref>();
+        checks.check(!pref_port.connected() || pref_port.linked(), "pref signal attached with no linked source");
 
-        return static_cast<int>(parameter_error_count_) + checks.errorCount();
+        return checks;
       }
 
       /**
@@ -286,9 +294,13 @@ namespace GridKit
           return 1;
         }
 
-        if (verify() > 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Reecb: cannot initialize with invalid configuration\n";
+          Log::error() << "Reecb: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 
@@ -1184,17 +1196,11 @@ namespace GridKit
       {
         if (!std::isfinite(value))
         {
-          Log::error() << "Reecb: " << name << " must be finite\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
+          throw std::invalid_argument(std::string("Reecb: ") + name + " must be finite");
         }
         if (value < ZERO<RealT>)
         {
-          Log::error() << "Reecb: " << name << " must be non-negative\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
+          throw std::invalid_argument(std::string("Reecb: ") + name + " must be non-negative");
         }
 
         const bool raised = value < TIME_CONSTANT_MINIMUM;
@@ -1214,12 +1220,9 @@ namespace GridKit
       void Reecb<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Params = typename ModelDataT::Parameters;
+        Vref0_given_ = data.parameters.contains(Params::Vref0);
 
-        parameter_error_count_ = 0;
-        Vref0_given_           = data.parameters.contains(Params::Vref0);
-
-        Utilities::ConfigurationChecks checks("Reecb");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "Reecb");
 
         RealT mva{};
         if (reader.requireReal(Params::mva, mva))
@@ -1255,8 +1258,6 @@ namespace GridKit
         reader.loadReal(Params::Pmax, Pmax_);
         reader.loadReal(Params::Pmin, Pmin_);
         reader.loadReal(Params::Imax, Imax_);
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }

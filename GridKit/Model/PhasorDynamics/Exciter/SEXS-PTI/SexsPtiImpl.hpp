@@ -6,17 +6,18 @@
  * @brief Definition of the SEXS-PTI exciter model.
  */
 
+#include <algorithm>
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -93,9 +94,9 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks SexsPti<scalar_type, index_type>::verify() const
       {
-        Utilities::ConfigurationChecks checks("SexsPti");
+        Model::ConfigurationChecks checks;
 
         checks.check(bus_ != nullptr, "bus pointer is null");
         checks.check(Ta_ >= 0.0, "Ta must be non-negative");
@@ -107,12 +108,16 @@ namespace GridKit
         checks.check(ports_.out.template port<SexsPtiSignalOutputs::efd>().connected(),
                      "required EFD signal is not assigned");
 
-        ports_.in.template port<SexsPtiSignalInputs::vref>().checkOptional(checks, "vref");
-        ports_.in.template port<SexsPtiSignalInputs::vs>().checkOptional(checks, "vs");
-        ports_.in.template port<SexsPtiSignalInputs::vuel>().checkOptional(checks, "vuel");
-        ports_.in.template port<SexsPtiSignalInputs::voel>().checkOptional(checks, "voel");
+        const auto vref_port = ports_.in.template port<SexsPtiSignalInputs::vref>();
+        checks.check(!vref_port.connected() || vref_port.linked(), "vref signal attached with no linked source");
+        const auto vs_port = ports_.in.template port<SexsPtiSignalInputs::vs>();
+        checks.check(!vs_port.connected() || vs_port.linked(), "vs signal attached with no linked source");
+        const auto vuel_port = ports_.in.template port<SexsPtiSignalInputs::vuel>();
+        checks.check(!vuel_port.connected() || vuel_port.linked(), "vuel signal attached with no linked source");
+        const auto voel_port = ports_.in.template port<SexsPtiSignalInputs::voel>();
+        checks.check(!voel_port.connected() || voel_port.linked(), "voel signal attached with no linked source");
 
-        return missing_param_count_ + checks.errorCount();
+        return checks;
       }
 
       template <typename scalar_type, typename index_type>
@@ -248,14 +253,40 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::evaluateResidual()
       {
+        const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
+        const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);
+        const auto VUEL = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
+        const auto VOEL = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
+
         auto* ws = ws_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
-        auto* ws_indices = ws_indices_.data();
-        ports_.in.template port<SexsPtiSignalInputs::vref>().refreshWorkspace(vref_set_, ws[static_cast<size_t>(SexsPtiExternalVariables::VREF)], ws_indices[static_cast<size_t>(SexsPtiExternalVariables::VREF)]);
-        ports_.in.template port<SexsPtiSignalInputs::vs>().refreshWorkspace(vs_set_, ws[static_cast<size_t>(SexsPtiExternalVariables::VS)], ws_indices[static_cast<size_t>(SexsPtiExternalVariables::VS)]);
-        ports_.in.template port<SexsPtiSignalInputs::vuel>().refreshWorkspace(vuel_set_, ws[static_cast<size_t>(SexsPtiExternalVariables::VUEL)], ws_indices[static_cast<size_t>(SexsPtiExternalVariables::VUEL)]);
-        ports_.in.template port<SexsPtiSignalInputs::voel>().refreshWorkspace(voel_set_, ws[static_cast<size_t>(SexsPtiExternalVariables::VOEL)], ws_indices[static_cast<size_t>(SexsPtiExternalVariables::VOEL)]);
+        ws[VREF] = vref_set_;
+        ws[VS]   = vs_set_;
+        ws[VUEL] = vuel_set_;
+        ws[VOEL] = voel_set_;
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+
+        if (auto port = ports_.in.template port<SexsPtiSignalInputs::vref>())
+        {
+          ws[VREF]          = port.readSignal();
+          ws_indices_[VREF] = port.signalVariableIndex();
+        }
+        if (auto port = ports_.in.template port<SexsPtiSignalInputs::vs>())
+        {
+          ws[VS]          = port.readSignal();
+          ws_indices_[VS] = port.signalVariableIndex();
+        }
+        if (auto port = ports_.in.template port<SexsPtiSignalInputs::vuel>())
+        {
+          ws[VUEL]          = port.readSignal();
+          ws_indices_[VUEL] = port.signalVariableIndex();
+        }
+        if (auto port = ports_.in.template port<SexsPtiSignalInputs::voel>())
+        {
+          ws[VOEL]          = port.readSignal();
+          ws_indices_[VOEL] = port.signalVariableIndex();
+        }
 
         auto* wb = wb_.getData();
         wb[0]    = bus_->Vr();
@@ -276,8 +307,7 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        Utilities::ConfigurationChecks checks("SexsPti");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "SexsPti");
 
         reader.requireReal(Params::Ta, Ta_);
         reader.requireReal(Params::Tb, Tb_);
@@ -285,8 +315,6 @@ namespace GridKit
         reader.requireReal(Params::K, K_);
         reader.requireReal(Params::Efdmax, Efdmax_);
         reader.requireReal(Params::Efdmin, Efdmin_);
-
-        missing_param_count_ = checks.errorCount();
       }
 
       template <typename scalar_type, typename index_type>
