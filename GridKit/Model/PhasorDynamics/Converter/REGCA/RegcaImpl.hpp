@@ -10,15 +10,15 @@
 #include <cmath>
 #include <mutex>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -169,10 +169,7 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-
-        Utilities::ConfigurationChecks checks("Regca");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "Regca");
 
         reader.requireReal(Params::p0, p0_);
         reader.requireReal(Params::q0, q0_);
@@ -191,8 +188,6 @@ namespace GridKit
         reader.requireReal(Params::Vhvmax, Vhvmax_);
 
         reader.loadReal(Params::Khv, Khv_);
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }
@@ -318,12 +313,12 @@ namespace GridKit
        * terminal bus, and checks that attached command ports have linked sources.
        * Operating-point admissibility is checked by initialize().
        *
-       * @return Number of configuration errors, zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Regca<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Regca<scalar_type, index_type>::verify() const
       {
-        Utilities::ConfigurationChecks checks("Regca");
+        Model::ConfigurationChecks checks;
 
         checks.check(bus_ != nullptr, "bus pointer is null");
 
@@ -338,10 +333,12 @@ namespace GridKit
         checks.check(std::isfinite(Khv_) && Khv_ >= ZERO<RealT>,
                      "Khv must be finite and non-negative");
 
-        ports_.in.template port<RegcaSignalInputs::ipcmd>().checkOptional(checks, "ipcmd");
-        ports_.in.template port<RegcaSignalInputs::iqcmd>().checkOptional(checks, "iqcmd");
+        const auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>();
+        checks.check(!ipcmd_port.connected() || ipcmd_port.linked(), "ipcmd signal attached with no linked source");
+        const auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>();
+        checks.check(!iqcmd_port.connected() || iqcmd_port.linked(), "iqcmd signal attached with no linked source");
 
-        return static_cast<int>(parameter_error_count_) + checks.errorCount();
+        return checks;
       }
 
       /**

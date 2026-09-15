@@ -71,7 +71,7 @@ namespace GridKit
         stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
 
         stab.allocate();
-        success *= (stab.verify() == 0);
+        success *= (stab.verify().passed());
         stab.initialize();
         stab.evaluateResidual();
 

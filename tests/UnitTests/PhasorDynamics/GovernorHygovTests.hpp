@@ -57,7 +57,7 @@ namespace GridKit
         Fixture<ScalarT> configured(makeData());
         success *= (configured.hygov.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
         success *= (configured.hygov.getMonitor() != nullptr);
-        success *= (configured.hygov.verify() == 0);
+        success *= (configured.hygov.verify().passed());
 
         const auto previous_verbosity = Log::verbosity();
         // Suppress expected errors and warnings from the invalid cases below.
@@ -65,15 +65,14 @@ namespace GridKit
         Log::setVerbosity(Log::Verbosity::NONE);
 
         Fixture<ScalarT> minimal(makeMinimalData());
-        success *= (minimal.hygov.verify() == 0);
+        success *= (minimal.hygov.verify().passed());
         success *= defaultsMatchDocumentedValues();
 
         auto missing_trate_data = makeMinimalData();
         missing_trate_data.parameters.erase(Params::Trate);
-        Fixture<ScalarT> missing_trate(missing_trate_data);
-        success *= (missing_trate.hygov.verify() > 0);
+        success *= constructionRejected<Fixture<ScalarT>>(missing_trate_data);
 
-        success *= (empty.verify() > 0);
+        success *= (!empty.verify().passed());
 
         const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT infinity = std::numeric_limits<RealT>::infinity();
@@ -116,15 +115,14 @@ namespace GridKit
         {
           for (const RealT value : nonfinite_values)
           {
-            Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
-            success *= (invalid_fixture.hygov.verify() > 0);
+            success *= parameterRejected(parameter, value);
           }
         }
 
         // The pmech output is required, so a model without an assigned node
         // is rejected even when every parameter is valid.
         PhasorDynamics::Governor::Hygov<ScalarT, IdxT> unassigned(makeData());
-        success *= (unassigned.verify() > 0);
+        success *= (!unassigned.verify().passed());
 
         const std::array<std::pair<Params, RealT>, 19> invalid_parameter_values{{
             {Params::Trate, 0.0},
@@ -150,8 +148,7 @@ namespace GridKit
 
         for (const auto& [parameter, value] : invalid_parameter_values)
         {
-          Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
-          success *= (invalid_fixture.hygov.verify() > 0);
+          success *= parameterRejected(parameter, value);
         }
 
         // A curve with no rise cannot yield a unique gate.
@@ -161,7 +158,7 @@ namespace GridKit
                                      {Params::Pgv3, 0.0},
                                      {Params::Pgv4, 0.0},
                                      {Params::Pgv5, 0.0}});
-        success *= (flat_curve.hygov.verify() > 0);
+        success *= (!flat_curve.hygov.verify().passed());
 
         // A curve that rises only outside the configured response limits is
         // valid because initialization may expand those limits.
@@ -175,33 +172,32 @@ namespace GridKit
              {Params::Pgv3, 0.5},
              {Params::Pgv4, 0.5},
              {Params::Pgv5, 1.0}});
-        success *= (flat_configured_range.hygov.verify() == 0);
+        success *= (flat_configured_range.hygov.verify().passed());
 
         // A requested backlash is accepted, warns, and remains inactive.
         Fixture<ScalarT> backlash(makeData(), {{Params::db2, 0.5}});
-        success *= (backlash.hygov.verify() == 0);
+        success *= (backlash.hygov.verify().passed());
 
         // Integer JSON values are accepted for real parameters; booleans are
         // not numeric.
         auto integer_real                   = makeData();
         integer_real.parameters[Params::Tw] = static_cast<IdxT>(2);
         Fixture<ScalarT> integer_model(integer_real);
-        success *= (integer_model.hygov.verify() == 0);
+        success *= (integer_model.hygov.verify().passed());
 
-        auto bad_numeric_type                      = makeData();
-        bad_numeric_type.parameters[Params::Trate] = true;
-        Fixture<ScalarT> bad_numeric_model(bad_numeric_type);
-        success *= (bad_numeric_model.hygov.verify() > 0);
+        auto bad_numeric_type                       = makeData();
+        bad_numeric_type.parameters[Params::Trate]  = true;
+        success                                    *= constructionRejected<Fixture<ScalarT>>(bad_numeric_type);
 
         Fixture<ScalarT> overflowing_component_base(
             makeData(),
             {{Params::Trate, std::numeric_limits<RealT>::max()}});
-        success *= (overflowing_component_base.hygov.verify() > 0);
+        success *= (!overflowing_component_base.hygov.verify().passed());
 
         Fixture<ScalarT> overflowing_base_ratio(
             makeData(),
             {{Params::Trate, std::numeric_limits<RealT>::min()}});
-        success *= (overflowing_base_ratio.hygov.verify() > 0);
+        success *= (!overflowing_base_ratio.hygov.verify().passed());
 
         const std::array<RealT, 6> invalid_system_bases{{
             0.0,
@@ -215,7 +211,7 @@ namespace GridKit
         for (const RealT system_base : invalid_system_bases)
         {
           Fixture<ScalarT> invalid_base(makeData(), {}, system_base);
-          success *= (invalid_base.hygov.verify() > 0);
+          success *= (!invalid_base.hygov.verify().passed());
         }
 
         success *= unlinkedSignalRejected<External::speed>();
@@ -1007,7 +1003,7 @@ namespace GridKit
         /// verification, and a machine-provided mechanical-power value.
         bool prepare(RealT pmech)
         {
-          const bool success = (hygov.allocate() == 0) && (hygov.verify() == 0);
+          const bool success = (hygov.allocate() == 0) && (hygov.verify().passed());
           if (!success)
           {
             std::cout << "HYGOV fixture preparation failed\n";
@@ -1268,13 +1264,27 @@ namespace GridKit
         return success;
       }
 
+      /// True when the value is rejected at construction or by verify().
+      bool parameterRejected(Params parameter, RealT value) const
+      {
+        try
+        {
+          Fixture<ScalarT> fixture(makeData(), {{parameter, value}});
+          return !fixture.hygov.verify().passed();
+        }
+        catch (const std::invalid_argument&)
+        {
+          return true;
+        }
+      }
+
       template <External variable>
       bool unlinkedSignalRejected() const
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
         Fixture<ScalarT>                          fixture(makeData());
         fixture.hygov.getPorts().in.template port<variable>().connect(&unlinked_node);
-        return fixture.hygov.verify() > 0;
+        return !fixture.hygov.verify().passed();
       }
 
       template <typename VectorT>

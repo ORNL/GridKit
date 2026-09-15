@@ -8,29 +8,31 @@
 
 #include <cmath>
 #include <map>
+#include <stdexcept>
+#include <string>
 #include <variant>
 
 #include <magic_enum/magic_enum.hpp>
 
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
+#include <GridKit/Model/PhasorDynamics/ModelData.hpp>
 
 namespace GridKit
 {
-  namespace Utilities
+  namespace Model
   {
     /**
      * @brief Reads typed parameters out of a model data container.
      *
-     * Every method leaves the target untouched and reports one error through
-     * the shared checks object when a provided value has the wrong type or is
-     * not finite; an omitted optional parameter keeps the model default
-     * silently. Real parameters accept integer values. Parameter names in
-     * messages come from the parameter enumeration.
+     * A provided value with the wrong type or a non-finite value cannot
+     * produce a valid model, so every method throws std::invalid_argument
+     * at the first such value; the message names the model and the
+     * parameter. An omitted optional parameter leaves the target untouched.
+     * Real parameters accept integer values.
      *
-     * @tparam ModelDataT A model data container exposing `RealT`, `IdxT`,
-     *         the `Parameters` enumeration, and the `parameters` map.
+     * @tparam ModelDataT A model data container satisfying
+     *         PhasorDynamics::ModelData.
      */
-    template <typename ModelDataT>
+    template <PhasorDynamics::ModelData ModelDataT>
     class ParameterReader
     {
     public:
@@ -38,9 +40,13 @@ namespace GridKit
       using IdxT        = typename ModelDataT::IdxT;
       using ParametersT = typename ModelDataT::Parameters;
 
-      ParameterReader(const ModelDataT& data, ConfigurationChecks& checks)
+      /**
+       * @param[in] data Model data container to read from.
+       * @param[in] model Model name used in rejection messages.
+       */
+      ParameterReader(const ModelDataT& data, const char* model)
         : parameters_(data.parameters),
-          checks_(checks)
+          model_(model)
       {
       }
 
@@ -49,9 +55,9 @@ namespace GridKit
        *
        * @param[in] key Parameter to look up.
        * @param[out] target Stores the finite numeric value when provided.
-       * @return true when the parameter was provided and stored.
+       * @return true when the parameter was provided.
        */
-      bool loadReal(ParametersT key, RealT& target)
+      bool loadReal(ParametersT key, RealT& target) const
       {
         if (!parameters_.contains(key))
         {
@@ -70,16 +76,12 @@ namespace GridKit
         }
         else
         {
-          checks_.fail() << "parameter '" << magic_enum::enum_name(key)
-                         << "' must be numeric\n";
-          return false;
+          reject(key, "must be numeric");
         }
 
         if (!std::isfinite(parsed_value))
         {
-          checks_.fail() << "parameter '" << magic_enum::enum_name(key)
-                         << "' must be finite\n";
-          return false;
+          reject(key, "must be finite");
         }
 
         target = parsed_value;
@@ -90,16 +92,14 @@ namespace GridKit
        * @brief Load a real parameter that must be provided.
        *
        * @param[in] key Parameter to look up.
-       * @param[out] target Stores the finite numeric value when provided.
-       * @return true when the parameter was provided and stored.
+       * @param[out] target Stores the finite numeric value.
+       * @return true, since a missing parameter is rejected.
        */
-      bool requireReal(ParametersT key, RealT& target)
+      bool requireReal(ParametersT key, RealT& target) const
       {
         if (!parameters_.contains(key))
         {
-          checks_.fail() << "missing required parameter '"
-                         << magic_enum::enum_name(key) << "'\n";
-          return false;
+          reject(key, "is required");
         }
         return loadReal(key, target);
       }
@@ -109,9 +109,9 @@ namespace GridKit
        *
        * @param[in] key Parameter to look up.
        * @param[out] target Stores the boolean value when provided.
-       * @return true when the parameter was provided and stored.
+       * @return true when the parameter was provided.
        */
-      bool loadSwitch(ParametersT key, bool& target)
+      bool loadSwitch(ParametersT key, bool& target) const
       {
         if (!parameters_.contains(key))
         {
@@ -125,9 +125,7 @@ namespace GridKit
           return true;
         }
 
-        checks_.fail() << "parameter '" << magic_enum::enum_name(key)
-                       << "' must be boolean\n";
-        return false;
+        reject(key, "must be boolean");
       }
 
       /**
@@ -135,16 +133,14 @@ namespace GridKit
        *        integer 0/1 value is accepted.
        *
        * @param[in] key Parameter to look up.
-       * @param[out] target Stores the switch value when provided.
-       * @return true when the parameter was provided and stored.
+       * @param[out] target Stores the switch value.
+       * @return true, since a missing parameter is rejected.
        */
-      bool requireSwitch(ParametersT key, bool& target)
+      bool requireSwitch(ParametersT key, bool& target) const
       {
         if (!parameters_.contains(key))
         {
-          checks_.fail() << "missing required parameter '"
-                         << magic_enum::enum_name(key) << "'\n";
-          return false;
+          reject(key, "is required");
         }
 
         const auto& value = parameters_.at(key);
@@ -160,9 +156,7 @@ namespace GridKit
           return true;
         }
 
-        checks_.fail() << "parameter '" << magic_enum::enum_name(key)
-                       << "' must be bool or 0/1\n";
-        return false;
+        reject(key, "must be bool or 0/1");
       }
 
       /**
@@ -170,9 +164,9 @@ namespace GridKit
        *
        * @param[in] key Parameter to look up.
        * @param[out] target Stores the integer value when provided.
-       * @return true when the parameter was provided and stored.
+       * @return true when the parameter was provided.
        */
-      bool loadSelector(ParametersT key, IdxT& target)
+      bool loadSelector(ParametersT key, IdxT& target) const
       {
         if (!parameters_.contains(key))
         {
@@ -186,14 +180,20 @@ namespace GridKit
           return true;
         }
 
-        checks_.fail() << "parameter '" << magic_enum::enum_name(key)
-                       << "' must be an integer selector\n";
-        return false;
+        reject(key, "must be an integer selector");
       }
 
     private:
+      /// Reject the model data with a message naming the model and parameter.
+      [[noreturn]] void reject(ParametersT key, const char* reason) const
+      {
+        throw std::invalid_argument(std::string(model_) + ": parameter '"
+                                    + std::string(magic_enum::enum_name(key))
+                                    + "' " + reason);
+      }
+
       const std::map<ParametersT, std::variant<bool, RealT, IdxT>>& parameters_;
-      ConfigurationChecks&                                          checks_;
+      const char*                                                   model_;
     };
-  } // namespace Utilities
+  } // namespace Model
 } // namespace GridKit

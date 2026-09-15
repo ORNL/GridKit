@@ -7,18 +7,22 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <mutex>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -142,12 +146,12 @@ namespace GridKit
        * attached external signals. Seed feasibility is operating-point
        * dependent and is checked by initialize().
        *
-       * @return Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Esdc1a<scalar_type, index_type>::verify() const
       {
-        Utilities::ConfigurationChecks checks("Esdc1a");
+        Model::ConfigurationChecks checks;
 
         checks.check(bus_ != nullptr, "bus pointer is null");
 
@@ -178,12 +182,16 @@ namespace GridKit
         checks.check(!Spdmlt_ || ports_.in.template port<Esdc1aSignalInputs::speed>().connected(),
                      "speed signal is required when Spdmlt is enabled");
 
-        ports_.in.template port<Esdc1aSignalInputs::speed>().checkOptional(checks, "speed");
-        ports_.in.template port<Esdc1aSignalInputs::vref>().checkOptional(checks, "vref");
-        ports_.in.template port<Esdc1aSignalInputs::vs>().checkOptional(checks, "vs");
-        ports_.in.template port<Esdc1aSignalInputs::vuel>().checkOptional(checks, "vuel");
+        const auto speed_port = ports_.in.template port<Esdc1aSignalInputs::speed>();
+        checks.check(!speed_port.connected() || speed_port.linked(), "speed signal attached with no linked source");
+        const auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>();
+        checks.check(!vref_port.connected() || vref_port.linked(), "vref signal attached with no linked source");
+        const auto vs_port = ports_.in.template port<Esdc1aSignalInputs::vs>();
+        checks.check(!vs_port.connected() || vs_port.linked(), "vs signal attached with no linked source");
+        const auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>();
+        checks.check(!vuel_port.connected() || vuel_port.linked(), "vuel signal attached with no linked source");
 
-        return static_cast<int>(parameter_error_count_) + checks.errorCount();
+        return checks;
       }
 
       /**
@@ -220,14 +228,18 @@ namespace GridKit
         const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
         const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
-        bool ret = verify() == 0;
-        if (!ret)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Esdc1a: cannot initialize with invalid configuration\n";
+          Log::error() << "Esdc1a: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 
-        auto* y = y_.getData();
+        bool  ret = true;
+        auto* y   = y_.getData();
 
         // The assigned efd node aliases this entry after allocate(). Its
         // seeded value remains untouched throughout initialization.
@@ -599,8 +611,8 @@ namespace GridKit
        *
        * No parameter is required; every parameter keeps the default
        * documented in the model README when omitted. A non-numeric value, a
-       * switch outside \f$\{0,1\}\f$, or a non-integer selector is counted and
-       * reported by verify() rather than throwing. Integer JSON values are
+       * switch outside \f$\{0,1\}\f$, a non-integer selector, or a negative
+       * lag is rejected with std::invalid_argument. Integer JSON values are
        * accepted for real parameters.
        *
        * @param[in] data Parameters and monitored-variable selections.
@@ -610,10 +622,7 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-
-        Utilities::ConfigurationChecks checks("Esdc1a");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "Esdc1a");
 
         reader.loadReal(Params::Tr, Tr_);
         reader.loadReal(Params::Ka, Ka_);
@@ -633,8 +642,6 @@ namespace GridKit
         reader.loadReal(Params::Se2, Se2_);
         reader.loadSelector(Params::UEL, UEL_);
         reader.loadSwitch(Params::exclim, exclim_);
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }
@@ -692,15 +699,16 @@ namespace GridKit
       void Esdc1a<scalar_type, index_type>::setDerivedParameters()
       {
         // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
-        Utilities::ConfigurationChecks checks("Esdc1a");
-        checks.check(Tr_ >= ZERO<RealT>, "Tr must be non-negative");
-        checks.check(Ta_ >= ZERO<RealT>, "Ta must be non-negative");
-        checks.check(Tb_ >= ZERO<RealT>, "Tb must be non-negative");
-        checks.check(Te_ >= ZERO<RealT>, "Te must be non-negative");
-        checks.check(Tf1_ >= ZERO<RealT>, "Tf1 must be non-negative");
-        parameter_error_count_ += static_cast<IdxT>(checks.errorCount());
+        // rejected here while the value as read is still available.
+        const std::array<std::pair<RealT, const char*>, 5> lags{
+            {{Tr_, "Tr"}, {Ta_, "Ta"}, {Tb_, "Tb"}, {Te_, "Te"}, {Tf1_, "Tf1"}}};
+        for (const auto& [value, name] : lags)
+        {
+          if (value < ZERO<RealT>)
+          {
+            throw std::invalid_argument(std::string("Esdc1a: ") + name + " must be non-negative");
+          }
+        }
 
         if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
             || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM

@@ -93,27 +93,19 @@ namespace GridKit
      * @brief verify method checks that attached signals are also linked
      */
     template <typename scalar_type, typename index_type>
-    int BusToSignalAdapter<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks BusToSignalAdapter<scalar_type, index_type>::verify() const
     {
       using SignalIn = BusToSignalAdapterSignalInputs;
 
-      int ret = 0;
+      Model::ConfigurationChecks checks;
 
-      auto ir_port = ports_.in.template port<SignalIn::ir>();
-      if (ir_port.connected() && !ir_port.linked())
-      {
-        Log::error() << "BusToSignalAdapter: Ir signal attached with no linked source\n";
-        ret += 1;
-      }
+      const auto ir_port = ports_.in.template port<SignalIn::ir>();
+      checks.check(!ir_port.connected() || ir_port.linked(), "Ir signal attached with no linked source");
 
-      auto ii_port = ports_.in.template port<SignalIn::ii>();
-      if (ii_port.connected() && !ii_port.linked())
-      {
-        Log::error() << "BusToSignalAdapter: Ii signal attached with no linked source\n";
-        ret += 1;
-      }
+      const auto ii_port = ports_.in.template port<SignalIn::ii>();
+      checks.check(!ii_port.connected() || ii_port.linked(), "Ii signal attached with no linked source");
 
-      return ret;
+      return checks;
     }
 
     /**

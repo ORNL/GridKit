@@ -57,27 +57,27 @@ namespace GridKit
         PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(&bus);
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (empty.getMonitor() == nullptr);
-        success *= (empty.verify() > 0);
+        success *= (!empty.verify().passed());
 
         Fixture<ScalarT> configured(makeData());
         configured.attachAllInputs();
         success *= (configured.repca.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.repca.getMonitor() != nullptr);
-        success *= (configured.repca.verify() == 0);
+        success *= (configured.repca.verify().passed());
 
         Fixture<ScalarT> documented_defaults(makeMinimalData());
         documented_defaults.attachAllInputs();
-        success *= (documented_defaults.repca.verify() == 0);
+        success *= (documented_defaults.repca.verify().passed());
         success *= defaultsMatchDocumentedValues();
 
         auto integer_numeric                    = makeData();
         integer_numeric.parameters[Params::mva] = static_cast<IdxT>(100);
         Fixture<ScalarT> integer_parameter(integer_numeric);
         integer_parameter.attachAllInputs();
-        success *= (integer_parameter.repca.verify() == 0);
+        success *= (integer_parameter.repca.verify().passed());
 
         PhasorDynamics::Controller::Repca<ScalarT, IdxT> missing_signals(&bus, makeData());
-        success *= (missing_signals.verify() > 0);
+        success *= (!missing_signals.verify().passed());
 
         success *= invalidParameterCase(Params::mva, 0.0);
         success *= invalidParameterCase(Params::Tfv, -0.1);
@@ -143,7 +143,7 @@ namespace GridKit
         {
           Fixture<ScalarT> nonfinite_system_base(makeData(), 1.0, 0.0, infinity);
           nonfinite_system_base.attachAllInputs();
-          success *= (nonfinite_system_base.repca.verify() > 0);
+          success *= (!nonfinite_system_base.repca.verify().passed());
         }
         {
           auto tiny_base_data                    = makeData();
@@ -153,7 +153,7 @@ namespace GridKit
                                                   0.0,
                                                   std::numeric_limits<RealT>::max());
           overflowing_base_ratio.attachAllInputs();
-          success *= (overflowing_base_ratio.repca.verify() > 0);
+          success *= (!overflowing_base_ratio.repca.verify().passed());
         }
 
         const std::array<Params, 3> flag_parameters{{
@@ -182,7 +182,7 @@ namespace GridKit
             data.parameters[flag] = value;
             Fixture<ScalarT> model(data);
             model.attachAllInputs();
-            success *= (model.repca.verify() == 0);
+            success *= (model.repca.verify().passed());
           }
 
           for (const IdxT value : invalid_integral_flag_values)
@@ -197,7 +197,7 @@ namespace GridKit
         }
 
         PhasorDynamics::Controller::Repca<ScalarT, IdxT> busless(nullptr, makeData());
-        success *= (busless.verify() > 0);
+        success *= (!busless.verify().passed());
 
         success *= unlinkedSignalRejected<Ext::ir>();
         success *= unlinkedSignalRejected<Ext::ii>();
@@ -606,7 +606,7 @@ namespace GridKit
         // An invalid configuration is rejected before any state is written.
         {
           auto invalid_data                    = data;
-          invalid_data.parameters[Params::Tfv] = -0.1;
+          invalid_data.parameters[Params::Ddn] = -0.1;
           Fixture<ScalarT> invalid_fixture(invalid_data);
           invalid_fixture.attachAllInputs();
           setInitializationInputs(invalid_fixture);
@@ -1396,7 +1396,7 @@ namespace GridKit
         bool prepare(RealT qext, RealT pext)
         {
           const bool success = (bus.allocate() == 0) && (repca.allocate() == 0)
-                               && (repca.verify() == 0) && (bus.initialize() == 0);
+                               && (repca.verify().passed()) && (bus.initialize() == 0);
           if (!success)
           {
             std::cout << "REPCA fixture preparation failed\n";
@@ -1717,9 +1717,16 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        Fixture<ScalarT> fixture(data);
-        fixture.attachAllInputs();
-        return fixture.repca.verify() > 0;
+        try
+        {
+          Fixture<ScalarT> fixture(data);
+          fixture.attachAllInputs();
+          return !fixture.repca.verify().passed();
+        }
+        catch (const std::invalid_argument&)
+        {
+          return true;
+        }
       }
 
       template <Ext variable>
@@ -1729,7 +1736,7 @@ namespace GridKit
         fixture.attachAllInputs();
         PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
         fixture.repca.getPorts().in.template port<variable>().connect(&unlinked_node);
-        return fixture.repca.verify() > 0;
+        return !fixture.repca.verify().passed();
       }
 
       /// Fill state and derivative with a recognizable ramp, restoring the

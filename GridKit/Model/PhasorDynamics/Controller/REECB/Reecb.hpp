@@ -115,14 +115,14 @@ namespace GridKit
         Reecb(BusT* bus, const ModelDataT& data);
         ~Reecb();
 
-        int setGridKitComponentID(IdxT component_id) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int                        setGridKitComponentID(IdxT component_id) override final;
+        int                        allocate() override final;
+        Model::ConfigurationChecks verify() const override final;
+        int                        initialize() override final;
+        int                        tagDifferentiable() override final;
+        int                        setAbsoluteTolerance(RealT rel_tol) override final;
+        int                        evaluateResidual() override final;
+        int                        evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -224,7 +224,6 @@ namespace GridKit
         RealT Imax_{1.3};
 
         bool Vref0_given_{false};
-        IdxT parameter_error_count_{0};
 
         // Derived parameters
         RealT pf_on_{0};

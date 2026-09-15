@@ -12,13 +12,13 @@
 #include <limits>
 #include <mutex>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -93,10 +93,7 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-
-        Utilities::ConfigurationChecks checks("Tgov1");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "Tgov1");
 
         reader.loadReal(Parameter::Trate, Trate_);
         reader.loadReal(Parameter::R, R_);
@@ -106,8 +103,6 @@ namespace GridKit
         reader.loadReal(Parameter::T2, T2_);
         reader.loadReal(Parameter::T3, T3_);
         reader.loadReal(Parameter::Dt, Dt_);
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
       }
 
       /**
@@ -197,10 +192,10 @@ namespace GridKit
        * @brief verify method checks that attached signals are also linked
        */
       template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Tgov1<scalar_type, index_type>::verify() const
       {
 
-        Utilities::ConfigurationChecks checks("Tgov1");
+        Model::ConfigurationChecks checks;
 
         checks.check(Trate_ > ZERO<RealT>, "Trate must be positive");
         checks.check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
@@ -209,10 +204,12 @@ namespace GridKit
         checks.check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
                      "pmech output signal must be assigned");
 
-        ports_.in.template port<Tgov1SignalInputs::speed>().checkOptional(checks, "speed");
-        ports_.in.template port<Tgov1SignalInputs::pref>().checkOptional(checks, "pref");
+        const auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>();
+        checks.check(!speed_port.connected() || speed_port.linked(), "speed signal attached with no linked source");
+        const auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>();
+        checks.check(!pref_port.connected() || pref_port.linked(), "pref signal attached with no linked source");
 
-        return static_cast<int>(parameter_error_count_) + checks.errorCount();
+        return checks;
       }
 
       /**
@@ -222,9 +219,13 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::initialize()
       {
-        if (verify() != 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Tgov1: cannot initialize with invalid configuration\n";
+          Log::error() << "Tgov1: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 

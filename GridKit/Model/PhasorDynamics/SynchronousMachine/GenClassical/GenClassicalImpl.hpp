@@ -10,13 +10,13 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -50,8 +50,7 @@ namespace GridKit
     {
       using Parameter = typename ModelDataT::Parameters;
 
-      Utilities::ConfigurationChecks checks("GenClassical");
-      Utilities::ParameterReader     reader(data, checks);
+      Model::ParameterReader reader(data, "GenClassical");
       reader.loadReal(Parameter::p0, p0_);
       reader.loadReal(Parameter::q0, q0_);
       reader.loadReal(Parameter::H, H_);
@@ -59,8 +58,6 @@ namespace GridKit
       reader.loadReal(Parameter::Ra, Ra_);
       reader.loadReal(Parameter::Xdp, Xdp_);
       reader.loadReal(Parameter::mva, mva_base_);
-
-      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
     }
 
     template <typename scalar_type, typename index_type>
@@ -146,26 +143,17 @@ namespace GridKit
      * @brief verify method checks that attached signals are also linked
      */
     template <typename scalar_type, typename index_type>
-    int GenClassical<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks GenClassical<scalar_type, index_type>::verify() const
     {
+      Model::ConfigurationChecks checks;
 
-      int ret = static_cast<int>(parameter_error_count_);
+      const auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
+      checks.check(!pmech_port.connected() || pmech_port.linked(), "pmech signal attached with no linked governor");
 
-      auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
-      if (pmech_port.connected() && !pmech_port.linked())
-      {
-        Log::error() << "GenClassical: pmech signal attached with no linked governor\n";
-        ret += 1;
-      }
+      const auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>();
+      checks.check(!efd_port.connected() || efd_port.linked(), "efd signal attached with no linked exciter");
 
-      auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>();
-      if (efd_port.connected() && !efd_port.linked())
-      {
-        Log::error() << "GenClassical: efd signal attached with no linked exciter\n";
-        ret += 1;
-      }
-
-      return ret;
+      return checks;
     }
 
     /**

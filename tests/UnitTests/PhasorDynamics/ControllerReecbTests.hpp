@@ -93,7 +93,7 @@ namespace GridKit
         Fixture<ScalarT> configured(makeData());
         success *= (configured.reecb.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.reecb.getMonitor() != nullptr);
-        success *= (configured.reecb.verify() == 0);
+        success *= (configured.reecb.verify().passed());
         success *= (configured.reecb.initialize() != 0);
         success *= (configured.reecb.allocate() == 0);
         success *= (configured.reecb.tagDifferentiable() == 0);
@@ -111,20 +111,19 @@ namespace GridKit
         }
 
         Fixture<ScalarT> documented_defaults(makeMinimalData());
-        success *= (documented_defaults.reecb.verify() == 0);
+        success *= (documented_defaults.reecb.verify().passed());
         success *= defaultsMatchDocumentedValues();
 
         auto missing_mva_data = makeMinimalData();
         missing_mva_data.parameters.erase(Params::mva);
-        Fixture<ScalarT> missing_mva(missing_mva_data);
-        success *= (missing_mva.reecb.verify() > 0);
+        success *= constructionRejected<Fixture<ScalarT>>(missing_mva_data);
 
         // Integer JSON values are accepted for real parameters; booleans are
         // not numeric.
         auto integer_numeric                    = makeData();
         integer_numeric.parameters[Params::mva] = static_cast<IdxT>(100);
         Fixture<ScalarT> integer_parameter(integer_numeric);
-        success *= (integer_parameter.reecb.verify() == 0);
+        success *= (integer_parameter.reecb.verify().passed());
         success *= invalidParameterCase(Params::mva, true);
 
         const RealT                  nan      = std::numeric_limits<RealT>::quiet_NaN();
@@ -215,7 +214,7 @@ namespace GridKit
             auto data             = makeData();
             data.parameters[flag] = value;
             Fixture<ScalarT> model(data);
-            success *= (model.reecb.verify() == 0);
+            success *= (model.reecb.verify().passed());
           }
 
           for (const IdxT value : invalid_integral_flag_values)
@@ -231,7 +230,7 @@ namespace GridKit
 
         PhasorDynamics::Controller::Reecb<ScalarT, IdxT> busless(nullptr, makeData());
         busless.setSystemBase(kNominalFrequency, kSystemBaseVa);
-        success *= (busless.verify() > 0);
+        success *= (!busless.verify().passed());
 
         success *= unlinkedSignalRejected<Ext::pe>();
         success *= unlinkedSignalRejected<Ext::qgen>();
@@ -1891,7 +1890,7 @@ namespace GridKit
         bool prepare(RealT iqcmd, RealT ipcmd)
         {
           const bool ready = (bus.allocate() == 0) && (reecb.allocate() == 0)
-                             && (reecb.verify() == 0) && (bus.initialize() == 0);
+                             && (reecb.verify().passed()) && (bus.initialize() == 0);
           if (!ready)
           {
             std::cout << "REECB fixture preparation failed\n";
@@ -2310,8 +2309,15 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        Fixture<ScalarT> fixture(data);
-        return fixture.reecb.verify() > 0;
+        try
+        {
+          Fixture<ScalarT> fixture(data);
+          return !fixture.reecb.verify().passed();
+        }
+        catch (const std::invalid_argument&)
+        {
+          return true;
+        }
       }
 
       template <Ext variable>
@@ -2320,7 +2326,7 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
         Fixture<ScalarT>                          fixture(makeData());
         fixture.reecb.getPorts().in.template port<variable>().connect(&unlinked_node);
-        return fixture.reecb.verify() > 0;
+        return !fixture.reecb.verify().passed();
       }
 
       /// Fill state and derivative with a recognizable ramp, restoring the
