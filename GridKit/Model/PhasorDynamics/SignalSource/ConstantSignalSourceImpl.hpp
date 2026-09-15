@@ -1,11 +1,11 @@
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSource.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -45,10 +45,7 @@ namespace GridKit
     {
       using Parameters = ModelDataT::Parameters;
 
-      parameter_error_count_ = 0;
-
-      Utilities::ConfigurationChecks checks("ConstantSignalSource");
-      Utilities::ParameterReader     reader(data, checks);
+      Model::ParameterReader reader(data, "ConstantSignalSource");
 
       // The signal values are differentiable scalars, so each is loaded
       // through a real intermediate.
@@ -62,8 +59,6 @@ namespace GridKit
       {
         s_imag_ = s_imag;
       }
-
-      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
     }
 
     /**
@@ -98,9 +93,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int ConstantSignalSource<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks ConstantSignalSource<scalar_type, index_type>::verify() const
     {
-      return static_cast<int>(parameter_error_count_);
+      return {};
     }
 
     template <typename scalar_type, typename index_type>

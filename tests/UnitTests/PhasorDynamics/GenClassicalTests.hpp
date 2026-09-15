@@ -326,7 +326,7 @@ namespace GridKit
 
         gen.setSystemBase(60.0, 100.0e6);
         gen.allocate();
-        success *= gen.verify() == 0;
+        success *= gen.verify().passed();
         success *= speed.linked();
 
         gen.initialize();

@@ -7,17 +7,21 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <mutex>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -143,12 +147,12 @@ namespace GridKit
        * bus, required measurement signals, and attached optional reference
        * signals. Command-output assignment is optional.
        *
-       * @return Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Repca<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Repca<scalar_type, index_type>::verify() const
       {
-        Utilities::ConfigurationChecks checks("Repca");
+        Model::ConfigurationChecks checks;
 
         checks.check(bus_ != nullptr, "regulated bus is required");
 
@@ -185,18 +189,33 @@ namespace GridKit
                      "femin <= 0 <= femax is required");
         checks.check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
 
-        ports_.in.template port<RepcaSignalInputs::ir>().checkRequired(checks, "ir");
-        ports_.in.template port<RepcaSignalInputs::ii>().checkRequired(checks, "ii");
-        ports_.in.template port<RepcaSignalInputs::p>().checkRequired(checks, "p");
-        ports_.in.template port<RepcaSignalInputs::q>().checkRequired(checks, "q");
+        const auto ir_port = ports_.in.template port<RepcaSignalInputs::ir>();
 
-        ports_.in.template port<RepcaSignalInputs::vref>().checkOptional(checks, "vref");
-        ports_.in.template port<RepcaSignalInputs::pref>().checkOptional(checks, "pref");
-        ports_.in.template port<RepcaSignalInputs::qref>().checkOptional(checks, "qref");
-        ports_.in.template port<RepcaSignalInputs::freq>().checkOptional(checks, "freq");
-        ports_.in.template port<RepcaSignalInputs::freqref>().checkOptional(checks, "freqref");
+        checks.check(ir_port.connected(), "ir signal is required");
 
-        return static_cast<int>(parameter_error_count_) + checks.errorCount();
+        checks.check(!ir_port.connected() || ir_port.linked(), "ir signal attached with no linked source");
+        const auto ii_port = ports_.in.template port<RepcaSignalInputs::ii>();
+        checks.check(ii_port.connected(), "ii signal is required");
+        checks.check(!ii_port.connected() || ii_port.linked(), "ii signal attached with no linked source");
+        const auto p_port = ports_.in.template port<RepcaSignalInputs::p>();
+        checks.check(p_port.connected(), "p signal is required");
+        checks.check(!p_port.connected() || p_port.linked(), "p signal attached with no linked source");
+        const auto q_port = ports_.in.template port<RepcaSignalInputs::q>();
+        checks.check(q_port.connected(), "q signal is required");
+        checks.check(!q_port.connected() || q_port.linked(), "q signal attached with no linked source");
+
+        const auto vref_port = ports_.in.template port<RepcaSignalInputs::vref>();
+        checks.check(!vref_port.connected() || vref_port.linked(), "vref signal attached with no linked source");
+        const auto pref_port = ports_.in.template port<RepcaSignalInputs::pref>();
+        checks.check(!pref_port.connected() || pref_port.linked(), "pref signal attached with no linked source");
+        const auto qref_port = ports_.in.template port<RepcaSignalInputs::qref>();
+        checks.check(!qref_port.connected() || qref_port.linked(), "qref signal attached with no linked source");
+        const auto freq_port = ports_.in.template port<RepcaSignalInputs::freq>();
+        checks.check(!freq_port.connected() || freq_port.linked(), "freq signal attached with no linked source");
+        const auto freqref_port = ports_.in.template port<RepcaSignalInputs::freqref>();
+        checks.check(!freqref_port.connected() || freqref_port.linked(), "freqref signal attached with no linked source");
+
+        return checks;
       }
 
       /**
@@ -250,9 +269,13 @@ namespace GridKit
           return 1;
         }
 
-        if (verify() > 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Repca: cannot initialize with invalid configuration\n";
+          Log::error() << "Repca: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 
@@ -815,10 +838,7 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-
-        Utilities::ConfigurationChecks checks("Repca");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "Repca");
 
         reader.loadReal(Params::mva, mva_base_);
         reader.loadSwitch(Params::VcompFlag, VcompFlag_);
@@ -851,8 +871,6 @@ namespace GridKit
         reader.loadReal(Params::Pmax, Pmax_);
         reader.loadReal(Params::Pmin, Pmin_);
         reader.loadReal(Params::Tlag, Tlag_);
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }
@@ -902,13 +920,15 @@ namespace GridKit
       {
         // The lags are raised to the floor below, so negative values must be
         // rejected here while the value as read is still available.
-        Utilities::ConfigurationChecks checks("Repca");
-        checks.check(Tfltr_ >= ZERO<RealT>, "Tfltr must be non-negative");
-        checks.check(Tft_ >= ZERO<RealT>, "Tft must be non-negative");
-        checks.check(Tfv_ >= ZERO<RealT>, "Tfv must be non-negative");
-        checks.check(Tp_ >= ZERO<RealT>, "Tp must be non-negative");
-        checks.check(Tlag_ >= ZERO<RealT>, "Tlag must be non-negative");
-        parameter_error_count_ += static_cast<IdxT>(checks.errorCount());
+        const std::array<std::pair<RealT, const char*>, 5> lags{
+            {{Tfltr_, "Tfltr"}, {Tft_, "Tft"}, {Tfv_, "Tfv"}, {Tp_, "Tp"}, {Tlag_, "Tlag"}}};
+        for (const auto& [value, name] : lags)
+        {
+          if (value < ZERO<RealT>)
+          {
+            throw std::invalid_argument(std::string("Repca: ") + name + " must be non-negative");
+          }
+        }
 
         if (Tfltr_ < TIME_CONSTANT_MINIMUM || Tfv_ < TIME_CONSTANT_MINIMUM
             || Tp_ < TIME_CONSTANT_MINIMUM || Tlag_ < TIME_CONSTANT_MINIMUM)

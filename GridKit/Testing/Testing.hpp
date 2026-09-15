@@ -12,12 +12,28 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <stdexcept>
 #include <utility>
 
 namespace GridKit
 {
   namespace Testing
   {
+    /// True when constructing a ModelT from the arguments throws
+    /// std::invalid_argument, the rejection for invalid model data.
+    template <typename ModelT, typename... ArgsT>
+    bool constructionRejected(ArgsT&&... args)
+    {
+      try
+      {
+        ModelT model(std::forward<ArgsT>(args)...);
+      }
+      catch (const std::invalid_argument&)
+      {
+        return true;
+      }
+      return false;
+    }
 
     enum TestOutcome
     {

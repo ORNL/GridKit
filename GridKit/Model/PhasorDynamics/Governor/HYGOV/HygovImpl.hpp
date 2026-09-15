@@ -7,17 +7,23 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
 #include <mutex>
 #include <numeric>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -125,12 +131,12 @@ namespace GridKit
        * power feasibility is operating-point dependent and is checked by
        * initialize().
        *
-       * @return int Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Hygov<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Hygov<scalar_type, index_type>::verify() const
       {
-        Utilities::ConfigurationChecks checks("Hygov");
+        Model::ConfigurationChecks checks;
 
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
@@ -208,11 +214,14 @@ namespace GridKit
         checks.check(ports_.out.template port<HygovSignalOutputs::pmech>().connected(),
                      "pmech output signal must be assigned");
 
-        ports_.in.template port<HygovSignalInputs::speed>().checkOptional(checks, "speed");
-        ports_.in.template port<HygovSignalInputs::pref>().checkOptional(checks, "pref");
-        ports_.in.template port<HygovSignalInputs::paux>().checkOptional(checks, "paux");
+        const auto speed_port = ports_.in.template port<HygovSignalInputs::speed>();
+        checks.check(!speed_port.connected() || speed_port.linked(), "speed signal attached with no linked source");
+        const auto pref_port = ports_.in.template port<HygovSignalInputs::pref>();
+        checks.check(!pref_port.connected() || pref_port.linked(), "pref signal attached with no linked source");
+        const auto paux_port = ports_.in.template port<HygovSignalInputs::paux>();
+        checks.check(!paux_port.connected() || paux_port.linked(), "paux signal attached with no linked source");
 
-        return static_cast<int>(parameter_error_count_) + checks.errorCount();
+        return checks;
       }
 
       /**
@@ -254,14 +263,18 @@ namespace GridKit
         const auto H       = static_cast<size_t>(HygovInternalVariables::H);
         const auto PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
 
-        bool ret = verify() == 0;
-        if (!ret)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Hygov: cannot initialize with invalid configuration\n";
+          Log::error() << "Hygov: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 
-        auto* y = y_.getData();
+        bool  ret = true;
+        auto* y   = y_.getData();
 
         // The assigned pmech node aliases this entry after allocate(). Its
         // system-base value remains untouched throughout initialization.
@@ -615,10 +628,7 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-
-        Utilities::ConfigurationChecks checks("Hygov");
-        Utilities::ParameterReader     reader(data, checks);
+        Model::ParameterReader reader(data, "Hygov");
 
         RealT trate{};
         if (reader.requireReal(Params::Trate, trate))
@@ -658,8 +668,6 @@ namespace GridKit
         reader.loadReal(Params::Pgv3, Pgv_[3]);
         reader.loadReal(Params::Pgv4, Pgv_[4]);
         reader.loadReal(Params::Pgv5, Pgv_[5]);
-
-        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }
@@ -735,15 +743,16 @@ namespace GridKit
         }
 
         // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
-        Utilities::ConfigurationChecks checks("Hygov");
-        checks.check(Tr_ >= ZERO<RealT>, "Tr must be non-negative");
-        checks.check(Tf_ >= ZERO<RealT>, "Tf must be non-negative");
-        checks.check(Tg_ >= ZERO<RealT>, "Tg must be non-negative");
-        checks.check(Tw_ >= ZERO<RealT>, "Tw must be non-negative");
-        checks.check(Tnp_ >= ZERO<RealT>, "Tnp must be non-negative");
-        parameter_error_count_ += static_cast<IdxT>(checks.errorCount());
+        // rejected here while the value as read is still available.
+        const std::array<std::pair<RealT, const char*>, 5> lags{
+            {{Tr_, "Tr"}, {Tf_, "Tf"}, {Tg_, "Tg"}, {Tw_, "Tw"}, {Tnp_, "Tnp"}}};
+        for (const auto& [value, name] : lags)
+        {
+          if (value < ZERO<RealT>)
+          {
+            throw std::invalid_argument(std::string("Hygov: ") + name + " must be non-negative");
+          }
+        }
 
         if (Tr_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM
             || Tg_ < TIME_CONSTANT_MINIMUM || Tw_ < TIME_CONSTANT_MINIMUM
