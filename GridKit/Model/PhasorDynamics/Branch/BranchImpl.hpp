@@ -7,12 +7,12 @@
  *
  */
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -152,9 +152,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Branch<scalar_type, index_type>::verify() const
     {
-      Utilities::ConfigurationChecks checks("Branch");
+      Model::ConfigurationChecks checks;
 
       checks.check(bus1_ != nullptr, "bus1 pointer is null");
       checks.check(bus2_ != nullptr, "bus2 pointer is null");
@@ -170,7 +170,7 @@ namespace GridKit
       checks.check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
       checks.check(tap_ > RealT{0.0}, "tap must be positive");
 
-      return parameter_error_count_ + checks.errorCount();
+      return checks;
     }
 
     template <typename scalar_type, typename index_type>
@@ -340,8 +340,7 @@ namespace GridKit
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
 
-      Utilities::ConfigurationChecks checks("Branch");
-      Utilities::ParameterReader     reader(data, checks);
+      Model::ParameterReader reader(data, "Branch");
 
       reader.loadReal(Parameter::R, R_);
       reader.loadReal(Parameter::X, X_);
@@ -351,8 +350,6 @@ namespace GridKit
       reader.loadReal(Parameter::Bmag, Bmag_);
       reader.loadReal(Parameter::tap, tap_);
       reader.loadReal(Parameter::phase, phase_);
-
-      parameter_error_count_ = checks.errorCount();
 
       if (data.buses.contains(Buses::bus1))
       {

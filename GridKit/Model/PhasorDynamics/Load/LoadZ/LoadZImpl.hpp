@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -49,12 +49,9 @@ namespace GridKit
     {
       using Parameter = typename ModelDataT::Parameters;
 
-      Utilities::ConfigurationChecks checks("LoadZ");
-      Utilities::ParameterReader     reader(data, checks);
+      Model::ParameterReader reader(data, "LoadZ");
       reader.loadReal(Parameter::R, R_);
       reader.loadReal(Parameter::X, X_);
-
-      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
       size_ = 2;
       setDerivedParams();

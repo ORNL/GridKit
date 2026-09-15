@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -9,9 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -46,10 +46,7 @@ namespace GridKit
     {
       using Parameter = typename ModelDataT::Parameters;
 
-      parameter_error_count_ = 0;
-
-      Utilities::ConfigurationChecks checks("Gensal");
-      Utilities::ParameterReader     reader(data, checks);
+      Model::ParameterReader reader(data, "Gensal");
       reader.loadReal(Parameter::p0, p0_);
       reader.loadReal(Parameter::q0, q0_);
       reader.loadReal(Parameter::H, H_);
@@ -66,8 +63,6 @@ namespace GridKit
       reader.loadReal(Parameter::S10, S10_);
       reader.loadReal(Parameter::S12, S12_);
       reader.loadReal(Parameter::mva, mva_base_);
-
-      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
     }
 
     template <typename scalar_type, typename index_type>
@@ -171,26 +166,17 @@ namespace GridKit
      * @brief verify method checks that attached signals are also linked
      */
     template <typename scalar_type, typename index_type>
-    int Gensal<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Gensal<scalar_type, index_type>::verify() const
     {
+      Model::ConfigurationChecks checks;
 
-      int ret = static_cast<int>(parameter_error_count_);
+      const auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>();
+      checks.check(!pmech_port.connected() || pmech_port.linked(), "pmech signal attached with no linked governor");
 
-      auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>();
-      if (pmech_port.connected() && !pmech_port.linked())
-      {
-        Log::error() << "Gensal: pmech signal attached with no linked governor\n";
-        ret += 1;
-      }
+      const auto efd_port = ports_.in.template port<GensalSignalInputs::efd>();
+      checks.check(!efd_port.connected() || efd_port.linked(), "efd signal attached with no linked exciter");
 
-      auto efd_port = ports_.in.template port<GensalSignalInputs::efd>();
-      if (efd_port.connected() && !efd_port.linked())
-      {
-        Log::error() << "Gensal: efd signal attached with no linked exciter\n";
-        ret += 1;
-      }
-
-      return ret;
+      return checks;
     }
 
     /**

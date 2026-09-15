@@ -1,11 +1,11 @@
 #pragma once
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -59,16 +59,11 @@ namespace GridKit
     {
       using Parameter = typename ModelDataT::Parameters;
 
-      parameter_error_count_ = 0;
-
-      Utilities::ConfigurationChecks checks("LoadZIP");
-      Utilities::ParameterReader     reader(data, checks);
+      Model::ParameterReader reader(data, "LoadZIP");
       reader.loadReal(Parameter::Pnom, Pnom_);
       reader.loadReal(Parameter::Qnom, Qnom_);
       reader.loadReal(Parameter::alphaI, alphaI_);
       reader.loadReal(Parameter::alphaP, alphaP_);
-
-      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
       setDerivedParams();
     }

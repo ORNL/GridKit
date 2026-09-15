@@ -184,7 +184,7 @@ namespace GridKit
         // Suppress the expected missing-bus configuration error below.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        success *= missing_bus_system.verify() > 0;
+        success *= !missing_bus_system.verify().passed();
         Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
@@ -502,7 +502,7 @@ namespace GridKit
         // Suppress the expected missing-output configuration error below.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        success *= missing_output_system.verify() > 0;
+        success *= !missing_output_system.verify().passed();
         Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);

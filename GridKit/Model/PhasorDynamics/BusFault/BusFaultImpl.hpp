@@ -2,12 +2,12 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/ConfigurationChecks.hpp>
-#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -61,14 +61,11 @@ namespace GridKit
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
 
-      Utilities::ConfigurationChecks checks("BusFault");
-      Utilities::ParameterReader     reader(data, checks);
+      Model::ParameterReader reader(data, "BusFault");
 
       reader.loadReal(Parameter::R, R_);
       reader.loadReal(Parameter::X, X_);
       reader.loadSwitch(Parameter::state0, status_);
-
-      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
       if (data.buses.contains(Buses::bus))
       {
