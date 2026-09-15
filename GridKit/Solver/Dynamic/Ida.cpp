@@ -1302,10 +1302,7 @@ namespace AnalysisManager
 
         // Set a large tolerance so the error test will never fail
         static constexpr RealT FIXED_STEP_TOL_FAC = 1e100;
-        setTolerance(mem,
-                     FIXED_STEP_TOL_FAC * rel_tol,
-                     FIXED_STEP_TOL_FAC * abs_tol_override,
-                     FIXED_STEP_TOL_FAC);
+        setTolerance(mem, rel_tol, abs_tol_override, FIXED_STEP_TOL_FAC);
 
         /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
          * the large tolerances set above, we need to choose this tolerance to
@@ -1317,6 +1314,12 @@ namespace AnalysisManager
 
         retval = IDASetNonlinConvCoefIC(mem, DEFAULT_NONLIN_CONV_COEF_IC / FIXED_STEP_TOL_FAC);
         checkOutput(retval, "IDASetNonlinConvCoefIC");
+
+        // IDACalcIC's line search floor must be scaled like its weights
+        static const RealT DEFAULT_STEP_TOL_IC = std::pow(std::numeric_limits<RealT>::epsilon(), 2.0 / 3.0);
+
+        retval = IDASetStepToleranceIC(mem, DEFAULT_STEP_TOL_IC / FIXED_STEP_TOL_FAC);
+        checkOutput(retval, "IDASetStepToleranceIC");
       }
     }
 
@@ -1329,8 +1332,8 @@ namespace AnalysisManager
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
      *        tolerance
-     * @param abs_tol_fac A factor to apply to the absolute tolerance if not
-     *        overridden
+     * @param abs_tol_fac A factor to apply to the tolerances passed to IDA,
+     *        the model keeps the unscaled absolute tolerance
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
      */
@@ -1344,7 +1347,7 @@ namespace AnalysisManager
 
       if (abs_tol_override > 0)
       {
-        retval = IDASStolerances(mem, rel_tol, abs_tol_override);
+        retval = IDASStolerances(mem, abs_tol_fac * rel_tol, abs_tol_fac * abs_tol_override);
         checkOutput(retval, "IDASStolerances");
         return;
       }
@@ -1355,7 +1358,7 @@ namespace AnalysisManager
       copyVec(model_->absoluteTolerance(), abs_tol_vec);
       N_VScale(abs_tol_fac, abs_tol_vec, abs_tol_vec);
 
-      retval = IDASVtolerances(mem, rel_tol, abs_tol_vec);
+      retval = IDASVtolerances(mem, abs_tol_fac * rel_tol, abs_tol_vec);
       checkOutput(retval, "IDASVtolerances");
 
       N_VDestroy(abs_tol_vec);
