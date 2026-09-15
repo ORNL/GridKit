@@ -1,14 +1,13 @@
 # Converter Model
 
-`Converter` maps a DC-link voltage and three-phase switching function to the
-bridge voltage of a two-level voltage-source inverter. The operator adds no DAE
-variables or residual rows.
+`Converter` maps a DC voltage and three-phase switching function to the
+bridge voltage of a two-level voltage-source inverter.
 
 ## Block Diagram
 
 ![Converter model block diagram](../../../../../docs/Figures/EMT/Converter/diagram.png)
 
-Figure 1: Converter model
+Figure 1: Converter model; representative switching leg followed by neutral projection
 
 ## Model Parameters
 
@@ -20,7 +19,7 @@ None.
 
 ### Derived Parameters
 
-The normalized phase incidence matrix and zero-sequence projector are
+The normalized phase incidence matrix and zero-sequence removal projector are
 
 ```math
 \begin{aligned}
@@ -46,8 +45,10 @@ The normalized phase incidence matrix and zero-sequence projector are
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{s}$ | `s` | Input | [-] | Switching function vector | $\mathbf{s} \in [0,1]^3$
-$V_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | $V_{\mathrm{dc}} \ge 0$
-$\mathbf{v}_{\mathrm{o}}$ | `vo` | Output | [V] | Bridge voltage vector | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
+$v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC voltage | $v_{\mathrm{dc}} \ge 0$
+$\mathbf{e}$ | `e` | Output | [V] | Bridge voltage vector | $\mathbf{e} \in \mathbb{R}^3$
+
+Vectors use $(a,b,c)$ order; $e_a+e_b+e_c=0$.
 
 ## Submodels
 
@@ -73,14 +74,14 @@ None.
 
 #### Differential
 
-None.
+The connected DC voltage may be differential.
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{s}$ | [-] | Switching function vector | $\mathbf{s} \in [0,1]^3$
-$V_{\mathrm{dc}}$ | [V] | DC-link voltage | $V_{\mathrm{dc}} \ge 0$
+$v_{\mathrm{dc}}$ | [V] | DC voltage | $v_{\mathrm{dc}} \ge 0$
 
 ## Model Equations
 
@@ -97,7 +98,7 @@ None.
 ### External Equations
 
 ```math
-\mathbf{v}_{\mathrm{o}} \leftarrow V_\mathrm{dc}\mathbf{P}\mathbf{s}
+\mathbf{e} \leftarrow v_{\mathrm{dc}}\mathbf{P}\mathbf{s}
 ```
 
 ## Initialization
@@ -108,7 +109,4 @@ None beyond the EMT initialization contract.
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`vo` | [V] | Bridge voltage | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
-
-In case JSON, `mon: ["vo"]` expands to the scalar monitors `voa`, `vob`, `voc`.
-See [case connections](../../INPUT_FORMAT.md#case-connections) for vector signal wiring.
+`e` | [V] | Bridge voltage | $\mathbf{e} \in \mathbb{R}^3$
