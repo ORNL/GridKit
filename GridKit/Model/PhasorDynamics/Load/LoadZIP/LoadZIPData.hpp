@@ -30,6 +30,8 @@ namespace GridKit
     /// Signal outputs supported for a loadZIP
     enum class LoadZIPSignalOutputs : size_t
     {
+      ir, ///< Real terminal current
+      ii, ///< Imaginary terminal current
     };
 
     /// Variables able to be monitored for a loadZIP
