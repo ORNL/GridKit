@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
@@ -47,78 +49,26 @@ namespace GridKit
       void Ieeest<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Parameter = typename ModelDataT::Parameters;
-        if (data.parameters.contains(Parameter::A1))
-        {
-          A1_ = std::get<RealT>(data.parameters.at(Parameter::A1));
-        }
-        if (data.parameters.contains(Parameter::A2))
-        {
-          A2_ = std::get<RealT>(data.parameters.at(Parameter::A2));
-        }
-        if (data.parameters.contains(Parameter::A3))
-        {
-          A3_ = std::get<RealT>(data.parameters.at(Parameter::A3));
-        }
-        if (data.parameters.contains(Parameter::A4))
-        {
-          A4_ = std::get<RealT>(data.parameters.at(Parameter::A4));
-        }
-        if (data.parameters.contains(Parameter::A5))
-        {
-          A5_ = std::get<RealT>(data.parameters.at(Parameter::A5));
-        }
-        if (data.parameters.contains(Parameter::A6))
-        {
-          A6_ = std::get<RealT>(data.parameters.at(Parameter::A6));
-        }
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-        if (data.parameters.contains(Parameter::T4))
-        {
-          T4_ = std::get<RealT>(data.parameters.at(Parameter::T4));
-        }
-        if (data.parameters.contains(Parameter::T5))
-        {
-          T5_ = std::get<RealT>(data.parameters.at(Parameter::T5));
-        }
-        if (data.parameters.contains(Parameter::T6))
-        {
-          T6_ = std::get<RealT>(data.parameters.at(Parameter::T6));
-        }
-        if (data.parameters.contains(Parameter::Ks))
-        {
-          Ks_ = std::get<RealT>(data.parameters.at(Parameter::Ks));
-        }
-        if (data.parameters.contains(Parameter::Lsmin))
-        {
-          Lsmin_ = std::get<RealT>(data.parameters.at(Parameter::Lsmin));
-        }
-        if (data.parameters.contains(Parameter::Lsmax))
-        {
-          Lsmax_ = std::get<RealT>(data.parameters.at(Parameter::Lsmax));
-        }
-        if (data.parameters.contains(Parameter::Vcl))
-        {
-          Vcl_ = std::get<RealT>(data.parameters.at(Parameter::Vcl));
-        }
-        if (data.parameters.contains(Parameter::Vcu))
-        {
-          Vcu_ = std::get<RealT>(data.parameters.at(Parameter::Vcu));
-        }
-        if (data.parameters.contains(Parameter::Tdelay))
-        {
-          Tdelay_ = std::get<RealT>(data.parameters.at(Parameter::Tdelay));
-        }
+
+        Model::ParameterReader reader(data, "Ieeest");
+        reader.loadReal(Parameter::A1, A1_);
+        reader.loadReal(Parameter::A2, A2_);
+        reader.loadReal(Parameter::A3, A3_);
+        reader.loadReal(Parameter::A4, A4_);
+        reader.loadReal(Parameter::A5, A5_);
+        reader.loadReal(Parameter::A6, A6_);
+        reader.loadReal(Parameter::T1, T1_);
+        reader.loadReal(Parameter::T2, T2_);
+        reader.loadReal(Parameter::T3, T3_);
+        reader.loadReal(Parameter::T4, T4_);
+        reader.loadReal(Parameter::T5, T5_);
+        reader.loadReal(Parameter::T6, T6_);
+        reader.loadReal(Parameter::Ks, Ks_);
+        reader.loadReal(Parameter::Lsmin, Lsmin_);
+        reader.loadReal(Parameter::Lsmax, Lsmax_);
+        reader.loadReal(Parameter::Vcl, Vcl_);
+        reader.loadReal(Parameter::Vcu, Vcu_);
+        reader.loadReal(Parameter::Tdelay, Tdelay_);
 
         a0_ = 1;
         a1_ = A1_ + A3_;
@@ -188,37 +138,30 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Ieeest<scalar_type, index_type>::verify() const
       {
-        int ret = 0;
+        Model::ConfigurationChecks checks;
 
-        auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
-        if (!input_port.connected())
-        {
-          Log::error() << "Ieeest: required input signal U is not attached\n";
-          ret += 1;
-        }
-        if (input_port.connected() && !input_port.linked())
-        {
-          Log::error() << "Ieeest: input signal U attached with no linked source\n";
-          ret += 1;
-        }
+        const auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
+        checks.check(input_port.connected(), "required input signal U is not attached");
+        checks.check(!input_port.connected() || input_port.linked(), "input signal U attached with no linked source");
 
-        if (a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0)
-        {
-          Log::error() << "Ieeest: a2, a3, and a4 are all zero - no valid notch filter\n";
-          ret += 1;
-        }
+        checks.check(!(a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0),
+                     "a2, a3, and a4 are all zero - no valid notch filter");
 
-        return ret;
+        return checks;
       }
 
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::initialize()
       {
-        if (verify() != 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Ieeest: cannot initialize with invalid configuration\n";
+          Log::error() << "Ieeest: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 

@@ -10,6 +10,8 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
@@ -47,40 +49,15 @@ namespace GridKit
     void GenClassical<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
 
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
-
-      if (data.parameters.contains(Parameter::H))
-      {
-        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
-      }
-
-      if (data.parameters.contains(Parameter::D))
-      {
-        D_ = std::get<RealT>(data.parameters.at(Parameter::D));
-      }
-
-      if (data.parameters.contains(Parameter::Ra))
-      {
-        Ra_ = std::get<RealT>(data.parameters.at(Parameter::Ra));
-      }
-
-      if (data.parameters.contains(Parameter::Xdp))
-      {
-        Xdp_ = std::get<RealT>(data.parameters.at(Parameter::Xdp));
-      }
-
-      if (data.parameters.contains(Parameter::mva))
-      {
-        mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
-      }
+      Model::ParameterReader reader(data, "GenClassical");
+      reader.loadReal(Parameter::p0, p0_);
+      reader.loadReal(Parameter::q0, q0_);
+      reader.loadReal(Parameter::H, H_);
+      reader.loadReal(Parameter::D, D_);
+      reader.loadReal(Parameter::Ra, Ra_);
+      reader.loadReal(Parameter::Xdp, Xdp_);
+      reader.loadReal(Parameter::mva, mva_base_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -166,25 +143,17 @@ namespace GridKit
      * @brief verify method checks that attached signals are also linked
      */
     template <typename scalar_type, typename index_type>
-    int GenClassical<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks GenClassical<scalar_type, index_type>::verify() const
     {
-      int ret = 0;
+      Model::ConfigurationChecks checks;
 
-      auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
-      if (pmech_port.connected() && !pmech_port.linked())
-      {
-        Log::error() << "GenClassical: pmech signal attached with no linked governor\n";
-        ret += 1;
-      }
+      const auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
+      checks.check(!pmech_port.connected() || pmech_port.linked(), "pmech signal attached with no linked governor");
 
-      auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>();
-      if (efd_port.connected() && !efd_port.linked())
-      {
-        Log::error() << "GenClassical: efd signal attached with no linked exciter\n";
-        ret += 1;
-      }
+      const auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>();
+      checks.check(!efd_port.connected() || efd_port.linked(), "efd signal attached with no linked exciter");
 
-      return ret;
+      return checks;
     }
 
     /**

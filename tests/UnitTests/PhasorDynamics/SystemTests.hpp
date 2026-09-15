@@ -68,9 +68,9 @@ namespace GridKit
           return 0;
         }
 
-        int verify() const override final
+        Model::ConfigurationChecks verify() const override final
         {
-          return 0;
+          return {};
         }
 
         int initialize() override final
@@ -415,7 +415,7 @@ namespace GridKit
         InitializationFailureComponent             component;
         system.addComponent(&component);
 
-        success *= system.verify() == 0;
+        success *= system.verify().passed();
 
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::NONE);

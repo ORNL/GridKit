@@ -78,9 +78,9 @@ namespace GridKit
 
       int setGridKitComponentID(IdxT component_id) override;
 
-      int allocate() override;
-      int verify() const override;
-      int initialize() override;
+      int                        allocate() override;
+      Model::ConfigurationChecks verify() const override;
+      int                        initialize() override;
 
       bool hasJacobian() override;
 

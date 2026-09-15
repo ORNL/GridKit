@@ -56,26 +56,24 @@ namespace GridKit
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(&bus, makeData());
         success *= (configured.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.getMonitor() != nullptr);
-        success *= (configured.verify() == 0);
+        success *= (configured.verify().passed());
 
         const auto previous_verbosity = Log::verbosity();
         // Suppress expected errors and warnings from the invalid cases below.
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
-        success *= (minimal.verify() > 0);
+        success *= (!minimal.verify().passed());
 
         for (const Params parameter : {Params::Tg, Params::p0, Params::q0})
         {
           auto data = makeData();
           data.parameters.erase(parameter);
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing(&bus, data);
-          success *= (missing.verify() > 0);
+          success *= constructionRejected<PhasorDynamics::Converter::Regca<ScalarT, IdxT>>(&bus, data);
         }
 
-        auto bad_switch                   = makeData();
-        bad_switch.parameters[Params::sL] = static_cast<IdxT>(2);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(&bus, bad_switch);
-        success *= (bad_switch_model.verify() > 0);
+        auto bad_switch                    = makeData();
+        bad_switch.parameters[Params::sL]  = static_cast<IdxT>(2);
+        success                           *= constructionRejected<PhasorDynamics::Converter::Regca<ScalarT, IdxT>>(&bus, bad_switch);
 
         success *= invalidParameterCase(bus, Params::mva, 0.0);
         success *= invalidParameterCase(bus, Params::IL1, -0.1);
@@ -95,12 +93,12 @@ namespace GridKit
         // A null bus and an attached command with no linked source count as
         // configuration errors on the same footing as bad parameters.
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> busless(nullptr, makeData());
-        success *= (busless.verify() > 0);
+        success *= (!busless.verify().passed());
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>       unlinked_node;
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> unlinked(&bus, makeData());
         unlinked.getPorts().in.template port<Data::SignalInputs::ipcmd>().connect(&unlinked_node);
-        success *= (unlinked.verify() > 0);
+        success *= (!unlinked.verify().passed());
 
         // Zero time constants are raised to the well-posedness floor with a
         // warning, and the raised model still initializes to zero residuals.
@@ -764,7 +762,7 @@ namespace GridKit
         bool prepare()
         {
           const bool success = (bus.allocate() == 0) && (regca.allocate() == 0)
-                               && (regca.verify() == 0) && (bus.initialize() == 0);
+                               && (regca.verify().passed()) && (bus.initialize() == 0);
           if (!success)
           {
             std::cout << "REGCA fixture preparation failed\n";
@@ -963,8 +961,15 @@ namespace GridKit
       {
         auto data              = makeData();
         data.parameters[param] = value;
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
-        return model.verify() > 0;
+        try
+        {
+          PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
+          return !model.verify().passed();
+        }
+        catch (const std::invalid_argument&)
+        {
+          return true;
+        }
       }
 
       bool allResidualsZero(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca) const

@@ -7,6 +7,7 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -40,9 +41,10 @@ namespace GridKit
 
       virtual ~BusBase();
 
-      virtual int verify() const
+      /// Report every configuration problem; passed() when the bus can initialize.
+      virtual Model::ConfigurationChecks verify() const
       {
-        return 0;
+        return {};
       }
 
       IdxT size() override final
