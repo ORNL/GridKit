@@ -9,11 +9,10 @@ install(PROGRAMS test.sh DESTINATION ${_rel_consumer_path})
 set(_examples_dir ${CMAKE_SOURCE_DIR}/examples)
 if(GRIDKIT_ENABLE_SUNDIALS)
   install(
-    FILES ${_examples_dir}/PhasorDynamics/Simulation/TwoBus/Basic/TwoBusBasicJson.cpp
+    FILES
+      ${CMAKE_SOURCE_DIR}/tests/IntegrationTests/PhasorDynamics/TenGen/Classical/TenGenClassical.cpp
     DESTINATION ${_rel_consumer_path}
     RENAME consumer.cpp)
-  install(FILES ${_examples_dir}/PhasorDynamics/Simulation/TwoBus/Basic/TwoBusBasic.case.json
-          DESTINATION ${_rel_consumer_path})
   list(
     APPEND
     GRIDKIT_CONSUMER_TEST_LINK_LIBRARIES
