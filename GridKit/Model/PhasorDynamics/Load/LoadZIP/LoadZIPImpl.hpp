@@ -118,6 +118,15 @@ namespace GridKit
       wb_.resize(2);
       h_.resize(2);
 
+      if (auto port = ports_.out.template port<LoadZIPSignalOutputs::ir>())
+      {
+        port.link(&y_.getData()[0], &(this->getVariableIndex(0)));
+      }
+      if (auto port = ports_.out.template port<LoadZIPSignalOutputs::ii>())
+      {
+        port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
+      }
+
       allocated_ = true;
       return 0;
     }

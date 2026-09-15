@@ -158,6 +158,15 @@ namespace GridKit
         speed_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
       }
 
+      if (auto ir_port = ports_.out.template port<GenClassicalSignalOutputs::ir>())
+      {
+        ir_port.link(&y_.getData()[3], &(this->getVariableIndex(3)));
+      }
+      if (auto ii_port = ports_.out.template port<GenClassicalSignalOutputs::ii>())
+      {
+        ii_port.link(&y_.getData()[4], &(this->getVariableIndex(4)));
+      }
+
       allocated_ = true;
       return 0;
     }
