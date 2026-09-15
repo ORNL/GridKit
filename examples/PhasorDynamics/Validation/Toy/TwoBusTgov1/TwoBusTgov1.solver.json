@@ -1,11 +1,12 @@
 {
     "system_model_file": "TwoBusTgov1.case.json",
     "dt_monitor": 0.004166666666666667,
-    "tmax":  10,
+    "tmax": 10.0,
     "events": [
-        {"time": 1, "type": "fault_on", "element_id": 0},
-        {"time": 1.1, "type": "fault_off", "element_id": 0}
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.1, "type": "fault_off", "element_id": 0 }
     ],
     "reference_file": "reference/TwoBusTgov1.ref.csv",
-    "error_tolerance":  [2.01e-4, 1e-4]
+    "error_type": "relative",
+    "error_tolerance": [2.01e-4, 1e-4]
 }
