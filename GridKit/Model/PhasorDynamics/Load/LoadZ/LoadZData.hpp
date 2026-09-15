@@ -33,6 +33,8 @@ namespace GridKit
     /// Signal outputs supported for a load
     enum class LoadZSignalOutputs : size_t
     {
+      ir, ///< Real terminal current
+      ii, ///< Imaginary terminal current
     };
 
     /// Variables able to be monitored for a load
