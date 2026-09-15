@@ -9,3 +9,5 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/examples/PhasorDynamics/Simulation)
 
 install(TARGETS test_pd_integration)
+
+add_subdirectory(TenGen)

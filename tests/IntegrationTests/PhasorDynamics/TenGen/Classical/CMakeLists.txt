@@ -1,0 +1,8 @@
+add_executable(test_pd_tengen_classical TenGenClassical.cpp)
+target_link_libraries(
+  test_pd_tengen_classical
+  PRIVATE GridKit::phasor_dynamics_systemmodel GridKit::solvers_dyn)
+
+add_test(NAME TenGenClassical COMMAND test_pd_tengen_classical)
+
+install(TARGETS test_pd_tengen_classical)
