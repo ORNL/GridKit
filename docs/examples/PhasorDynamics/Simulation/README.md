@@ -7,6 +7,7 @@
 
 TwoBus <TwoBus/README>
 TwoArea <TwoArea/README>
+IEEE39 <IEEE39/README>
 ACTIVSg10k <ACTIVSg10k/README>
 ```
 

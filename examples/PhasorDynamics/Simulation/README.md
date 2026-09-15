@@ -9,4 +9,5 @@ inputs and C++.
 | `ThreeBus/` | Machine, load, and signal-source examples. |
 | `TenGen/` | C++ examples that construct and simulate a network. |
 | `TwoArea/` | Two-area case data and documentation; no solver file or CMake test yet. |
+| `IEEE39/` | A bus-fault contingency sweep over the reusable IEEE39 case. |
 | `ACTIVSg10k/` | A short simulation without disturbances using the reusable ACTIVSg10k case. |
