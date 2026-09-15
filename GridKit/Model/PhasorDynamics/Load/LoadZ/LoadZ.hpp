@@ -3,6 +3,7 @@
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -43,6 +44,8 @@ namespace GridKit
       using ModelDataT = LoadZData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
 
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+
     public:
       LoadZ(BusT* bus, const ModelDataT& data);
       virtual ~LoadZ();
@@ -61,6 +64,11 @@ namespace GridKit
       }
 
     public:
+      SignalPortsT& getPorts()
+      {
+        return ports_;
+      }
+
       void setR(RealT R)
       {
         R_ = R;
@@ -106,6 +114,8 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      SignalPortsT ports_;
+
       BusT* bus_{nullptr};
       RealT R_{0.1};
       RealT X_{0.01};
