@@ -5,7 +5,6 @@ inputs.
 
 | Example | Description |
 | --- | --- |
-| `TwoBus/` | Machine, governor, and exciter examples. |
-| `ThreeBus/` | Machine, load, and signal-source examples. |
+| `Toy/` | A three-bus constant signal source example. |
 | `IEEE39/` | A bus-fault contingency sweep over the reusable IEEE39 case. |
 | `ACTIVSg10k/` | A short simulation without disturbances using the reusable ACTIVSg10k case. |

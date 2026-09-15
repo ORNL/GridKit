@@ -1,5 +1,4 @@
-add_subdirectory(TwoBus)
-add_subdirectory(ThreeBus)
+add_subdirectory(Toy)
 
 if(GRIDKIT_ENABLE_ENZYME)
   add_subdirectory(IEEE39)

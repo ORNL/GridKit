@@ -5,7 +5,6 @@
 :titlesonly:
 :hidden:
 
-TwoBus <TwoBus/README>
 IEEE39 <IEEE39/README>
 ACTIVSg10k <ACTIVSg10k/README>
 ```
