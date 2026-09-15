@@ -4,6 +4,7 @@
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -40,6 +41,8 @@ namespace GridKit
       using ModelDataT = BusFaultData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<BusFault, BusFaultData>;
 
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+
       BusFault(BusT* bus);
       BusFault(BusT* bus, RealT R, RealT X, int status);
       BusFault(BusT* bus, const ModelDataT& data);
@@ -63,6 +66,11 @@ namespace GridKit
       }
 
     public:
+      SignalPortsT& getPorts()
+      {
+        return ports_;
+      }
+
       void setR(RealT R)
       {
         R_ = R;
@@ -112,6 +120,8 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      SignalPortsT ports_;
+
       BusT* bus_;
       RealT R_{0.0};
       RealT X_{0.0};

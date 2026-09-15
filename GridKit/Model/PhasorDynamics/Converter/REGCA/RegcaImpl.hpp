@@ -330,13 +330,13 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (auto port = ports_.out.template port<RegcaSignalOutputs::ibranchr>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::ir>())
         {
           port.link(&y[static_cast<size_t>(RegcaInternalVariables::IR)],
                     &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::IR))));
         }
 
-        if (auto port = ports_.out.template port<RegcaSignalOutputs::ibranchi>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::ii>())
         {
           port.link(&y[static_cast<size_t>(RegcaInternalVariables::II)],
                     &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::II))));

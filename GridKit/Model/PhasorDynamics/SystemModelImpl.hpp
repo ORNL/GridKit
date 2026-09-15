@@ -123,6 +123,7 @@ namespace GridKit
           bus_index = loaddata.buses.at(LoadZBuses::bus);
         }
         auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
+        load->getPorts().connect(loaddata, signal_nodes_);
         addComponent(load);
       }
 
@@ -137,6 +138,7 @@ namespace GridKit
         }
         auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
                                                    loadzipdata);
+        loadzip->getPorts().connect(loadzipdata, signal_nodes_);
         addComponent(loadzip);
       }
 
@@ -307,6 +309,7 @@ namespace GridKit
           bus_index = faultdata.buses.at(BusFaultBuses::bus);
         }
         auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
+        fault->getPorts().connect(faultdata, signal_nodes_);
         addFault(fault);
       }
 
