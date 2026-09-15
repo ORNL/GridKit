@@ -43,14 +43,14 @@ namespace GridKit
       ConstantSignalSource(const ModelDataT& data);
       ~ConstantSignalSource();
 
-      int setGridKitComponentID(IdxT) override final;
-      int allocate() override final;
-      int verify() const override final;
-      int initialize() override final;
-      int tagDifferentiable() override final;
-      int setAbsoluteTolerance(RealT) override final;
-      int evaluateResidual() override final;
-      int evaluateJacobian() override final;
+      int                        setGridKitComponentID(IdxT) override final;
+      int                        allocate() override final;
+      Model::ConfigurationChecks verify() const override final;
+      int                        initialize() override final;
+      int                        tagDifferentiable() override final;
+      int                        setAbsoluteTolerance(RealT) override final;
+      int                        evaluateResidual() override final;
+      int                        evaluateJacobian() override final;
 
       SignalPortsT& getPorts()
       {
@@ -69,9 +69,6 @@ namespace GridKit
 
       /// Component ports
       SignalPortsT ports_;
-
-      /// Count of parameter-loading errors reported through verify()
-      IdxT parameter_error_count_{0};
 
       // Parameter initialization function
       void initializeParameters(const ModelDataT& data);
