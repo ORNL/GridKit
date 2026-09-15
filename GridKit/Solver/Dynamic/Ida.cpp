@@ -1340,6 +1340,12 @@ namespace AnalysisManager
 
         retval = IDASetNonlinConvCoefIC(mem, DEFAULT_NONLIN_CONV_COEF_IC / FIXED_STEP_TOL_FAC);
         checkOutput(retval, "IDASetNonlinConvCoefIC");
+
+        // IDACalcIC's line search floor must be scaled like its weights
+        static const RealT DEFAULT_STEP_TOL_IC = std::pow(std::numeric_limits<RealT>::epsilon(), 2.0 / 3.0);
+
+        retval = IDASetStepToleranceIC(mem, DEFAULT_STEP_TOL_IC / FIXED_STEP_TOL_FAC);
+        checkOutput(retval, "IDASetStepToleranceIC");
       }
     }
 
