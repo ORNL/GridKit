@@ -24,7 +24,7 @@ For example `texas-summer2025.state.json` might be structured as:
 
 Each entry gives initial outputs and operating settings. Models use these values and connected inputs to initialize their own state.
 
-Buses own their voltage and shunt outputs. Devices own their current and power outputs. These values support initialization across PowerFlow, OPF, PhasorDynamics, and EMT.
+Buses own their voltage and shunt outputs. Devices own their terminal current outputs. These values support initialization across PowerFlow, OPF, PhasorDynamics, and EMT.
 
 ## Bus
 
@@ -55,15 +55,15 @@ EMT bus entries give instantaneous phase voltages. Device entries give currents.
 
 Device entries give initial outputs and settings such as `online`, `open`, `tap`, and `phase`.
 
-Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple terminals. Numbers follow the model's terminal numbering. Currents are positive into each connected bus. EMT uses the model's phase output names.
+Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple terminals. Numbers follow the model's terminal numbering. Currents are positive into each connected bus. Phasor currents use the system base. EMT uses the model's phase output names and units.
 
-> A model may accept terminal `p`/`q` or `ir`/`ii`. Bus voltage relates the two; if both are supplied, they must agree. Here `p` and `q` mean terminal power. Nominal load values and control references are separate quantities.
+> At nonzero voltage, convert terminal power to initial current with `I = conj((P + jQ) / V)`.
 
 ```json
 "gen_id_2":{
     "online": true,
-    "p": 55,
-    "q": -12
+    "ir": 0.8,
+    "ii": -0.2
 },
 "br_id_2":{
     "open": false,
@@ -74,20 +74,22 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 
 # Migration
 
-- Initialize each model from its supplied outputs and connected inputs.
-- Derive missing values and check supplied values against the model's initialization equations.
+- Initialize components from output values and connected inputs.
+- Derive missing values and check the initialization equations.
 
 `Bus`:
 
-- Remove bus `init` fields from `INPUT_FORMAT.md`.
+- Treat buses as components with `vr` and `vi` output ports.
+- Move voltage initialization from the case to the state file.
 
 `Branch`:
 
-- Remove `tap` and `phase` as parameters.
-- Add `setTap(..)` and `setPhase(..)`.
-- Add `setOpen(..)`.
+- Expose `ir1`, `ii1`, `ir2`, and `ii2` as output ports.
+- Make `tap`, `phase`, and `open` input ports.
 
-`LoadZIP`, `GENROU`, `GENSAL`, `GenClassical`:
+`REGCA`, `LoadZ`, `LoadZIP`, `GENROU`, `GENSAL`, `GenClassical`:
 
-- Move dispatch values from case parameters to state entries.
-- Add `setOnline(..)`.
+- Expose `ir` and `ii` as output ports.
+- Initialize from terminal voltage and current.
+- Remove generator and converter `p0`/`q0` parameters.
+- Make `online` an input port.
