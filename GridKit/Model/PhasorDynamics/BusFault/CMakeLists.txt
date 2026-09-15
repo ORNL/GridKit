@@ -28,6 +28,13 @@ gridkit_add_library(
   SOURCES BusFaultDependencyTracking.cpp
   LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
 
+target_link_libraries(
+  phasor_dynamics_bus_fault
+  PUBLIC GridKit::phasor_dynamics_signal)
+target_link_libraries(
+  phasor_dynamics_bus_fault_dependency_tracking
+  PUBLIC GridKit::phasor_dynamics_signal_dependency_tracking)
+
 # Link to interface target for all components
 target_link_libraries(
   phasor_dynamics_components

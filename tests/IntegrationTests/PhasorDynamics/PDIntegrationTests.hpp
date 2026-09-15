@@ -736,8 +736,8 @@ namespace GridKit
         {
           IPCMD,
           IQCMD,
-          IBRANCHR,
-          IBRANCHI,
+          IR,
+          II,
           PBRANCH,
           QBRANCH,
           QEXT,
@@ -783,37 +783,37 @@ namespace GridKit
 
         data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD)},
                        {"Reactive Current Command", signalId(LoopSignal::IQCMD)},
-                       {"Branch Current Real", signalId(LoopSignal::IBRANCHR)},
-                       {"Branch Current Imaginary", signalId(LoopSignal::IBRANCHI)},
+                       {"Branch Current Real", signalId(LoopSignal::IR)},
+                       {"Branch Current Imaginary", signalId(LoopSignal::II)},
                        {"Branch Active Power", signalId(LoopSignal::PBRANCH)},
                        {"Branch Reactive Power", signalId(LoopSignal::QBRANCH)},
                        {"Reactive Power Command", signalId(LoopSignal::QEXT)},
                        {"Active Power Command", signalId(LoopSignal::PEXT)},
                        {"Plant Active Power Reference", signalId(LoopSignal::PLANT_PREF)}};
 
-        auto& converter                                        = data.regca.emplace_back();
-        converter.buses[RegcaBuses::bus]                       = RENEWABLE_BUS_ID;
-        converter.signal_inputs[RegcaSignalInputs::ipcmd]      = signalId(LoopSignal::IPCMD);
-        converter.signal_inputs[RegcaSignalInputs::iqcmd]      = signalId(LoopSignal::IQCMD);
-        converter.signal_outputs[RegcaSignalOutputs::ibranchr] = signalId(LoopSignal::IBRANCHR);
-        converter.signal_outputs[RegcaSignalOutputs::ibranchi] = signalId(LoopSignal::IBRANCHI);
-        converter.signal_outputs[RegcaSignalOutputs::pbranch]  = signalId(LoopSignal::PBRANCH);
-        converter.signal_outputs[RegcaSignalOutputs::qbranch]  = signalId(LoopSignal::QBRANCH);
-        converter.parameters[RegcaParameters::p0]              = INITIAL_ACTIVE_POWER;
-        converter.parameters[RegcaParameters::q0]              = INITIAL_REACTIVE_POWER;
-        converter.parameters[RegcaParameters::mva]             = COMPONENT_MVA;
-        converter.parameters[RegcaParameters::Tg]              = FAST_TIME_CONSTANT;
-        converter.parameters[RegcaParameters::TM]              = FAST_TIME_CONSTANT;
-        converter.parameters[RegcaParameters::Rqmax]           = static_cast<RealT>(999.0);
-        converter.parameters[RegcaParameters::Rqmin]           = static_cast<RealT>(-999.0);
-        converter.parameters[RegcaParameters::Rpmax]           = static_cast<RealT>(999.0);
-        converter.parameters[RegcaParameters::sL]              = true;
-        converter.parameters[RegcaParameters::IL1]             = static_cast<RealT>(1.1);
-        converter.parameters[RegcaParameters::VL0]             = static_cast<RealT>(0.4);
-        converter.parameters[RegcaParameters::VL1]             = static_cast<RealT>(0.9);
-        converter.parameters[RegcaParameters::VA0]             = static_cast<RealT>(0.4);
-        converter.parameters[RegcaParameters::VA1]             = static_cast<RealT>(0.9);
-        converter.parameters[RegcaParameters::Vhvmax]          = static_cast<RealT>(1.2);
+        auto& converter                                       = data.regca.emplace_back();
+        converter.buses[RegcaBuses::bus]                      = RENEWABLE_BUS_ID;
+        converter.signal_inputs[RegcaSignalInputs::ipcmd]     = signalId(LoopSignal::IPCMD);
+        converter.signal_inputs[RegcaSignalInputs::iqcmd]     = signalId(LoopSignal::IQCMD);
+        converter.signal_outputs[RegcaSignalOutputs::ir]      = signalId(LoopSignal::IR);
+        converter.signal_outputs[RegcaSignalOutputs::ii]      = signalId(LoopSignal::II);
+        converter.signal_outputs[RegcaSignalOutputs::pbranch] = signalId(LoopSignal::PBRANCH);
+        converter.signal_outputs[RegcaSignalOutputs::qbranch] = signalId(LoopSignal::QBRANCH);
+        converter.parameters[RegcaParameters::p0]             = INITIAL_ACTIVE_POWER;
+        converter.parameters[RegcaParameters::q0]             = INITIAL_REACTIVE_POWER;
+        converter.parameters[RegcaParameters::mva]            = COMPONENT_MVA;
+        converter.parameters[RegcaParameters::Tg]             = FAST_TIME_CONSTANT;
+        converter.parameters[RegcaParameters::TM]             = FAST_TIME_CONSTANT;
+        converter.parameters[RegcaParameters::Rqmax]          = static_cast<RealT>(999.0);
+        converter.parameters[RegcaParameters::Rqmin]          = static_cast<RealT>(-999.0);
+        converter.parameters[RegcaParameters::Rpmax]          = static_cast<RealT>(999.0);
+        converter.parameters[RegcaParameters::sL]             = true;
+        converter.parameters[RegcaParameters::IL1]            = static_cast<RealT>(1.1);
+        converter.parameters[RegcaParameters::VL0]            = static_cast<RealT>(0.4);
+        converter.parameters[RegcaParameters::VL1]            = static_cast<RealT>(0.9);
+        converter.parameters[RegcaParameters::VA0]            = static_cast<RealT>(0.4);
+        converter.parameters[RegcaParameters::VA1]            = static_cast<RealT>(0.9);
+        converter.parameters[RegcaParameters::Vhvmax]         = static_cast<RealT>(1.2);
 
         auto& controller                                     = data.reecb.emplace_back();
         controller.buses[ReecbBuses::bus]                    = RENEWABLE_BUS_ID;
@@ -832,8 +832,8 @@ namespace GridKit
 
         auto& plant                                    = data.repca.emplace_back();
         plant.buses[RepcaBuses::bus]                   = RENEWABLE_BUS_ID;
-        plant.signal_inputs[RepcaSignalInputs::ir]     = signalId(LoopSignal::IBRANCHR);
-        plant.signal_inputs[RepcaSignalInputs::ii]     = signalId(LoopSignal::IBRANCHI);
+        plant.signal_inputs[RepcaSignalInputs::ir]     = signalId(LoopSignal::IR);
+        plant.signal_inputs[RepcaSignalInputs::ii]     = signalId(LoopSignal::II);
         plant.signal_inputs[RepcaSignalInputs::p]      = signalId(LoopSignal::PBRANCH);
         plant.signal_inputs[RepcaSignalInputs::q]      = signalId(LoopSignal::QBRANCH);
         plant.signal_inputs[RepcaSignalInputs::pref]   = signalId(LoopSignal::PLANT_PREF);
