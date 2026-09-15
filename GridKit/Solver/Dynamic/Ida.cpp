@@ -10,6 +10,7 @@
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
+#include <sunnonlinsol/sunnonlinsol_newton.h>
 
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -19,6 +20,87 @@ namespace AnalysisManager
 
   namespace Sundials
   {
+
+    namespace
+    {
+      /// Newton step v = -J^{-1} F at the correction x, refreshing J there if asked
+      int newtonStep(SUNNonlinearSolverContent_Newton c, N_Vector x, N_Vector v, N_Vector w, bool refresh, void* mem, sunrealtype& norm)
+      {
+        int retval = c->Sys(x, v, mem);
+        if (retval == 0 && refresh)
+        {
+          retval = c->LSetup(SUNTRUE, &c->jcur, mem);
+        }
+        if (retval == 0)
+        {
+          N_VScale(-1.0, v, v);
+          retval = c->LSolve(v, mem);
+          norm   = N_VWrmsNorm(v, w);
+        }
+        return retval;
+      }
+
+      /* Full Newton from the predictor, damped by an 'optimal multiplier' (i.e. weighted
+       * by Newton-step norm). */
+      int dampedNewton(SUNNonlinearSolverContent_Newton c, N_Vector ycor, N_Vector w, sunrealtype tol, void* mem)
+      {
+        N_Vector    step   = c->delta;
+        N_Vector    trial  = N_VClone(ycor);
+        N_Vector    next   = N_VClone(ycor);
+        sunrealtype lambda = 1.0;
+        sunrealtype norm{};
+        sunrealtype trial_norm{};
+
+        N_VConst(0.0, ycor);
+
+        // Newton-Rhapson step
+        int retval = newtonStep(c, ycor, step, w, true, mem, norm);
+
+        // Increase damping / shrink neighborhood of search
+        for (c->curiter = 0; retval == 0 && norm > tol && c->curiter < c->maxiters;)
+        {
+          ++c->niters;
+          N_VLinearSum(1.0, ycor, lambda, step, trial);
+          retval = newtonStep(c, trial, next, w, false, mem, trial_norm);
+          if (retval == 0 && trial_norm < norm)
+          {
+            N_VScale(1.0, trial, ycor);
+            retval = newtonStep(c, ycor, step, w, true, mem, norm);
+            lambda = 1.0;
+            ++c->curiter;
+          }
+          else if (retval == 0 && lambda * norm <= tol)
+          {
+            break;
+          }
+          else
+          {
+            lambda *= 0.5;
+          }
+        }
+        N_VDestroy(trial);
+        N_VDestroy(next);
+
+        c->jcur = SUNFALSE;
+        if (retval == 0 && norm > tol)
+        {
+          ++c->nconvfails;
+          retval = SUN_NLS_CONV_RECVR;
+        }
+        return retval;
+      }
+
+      /// IDA default Newton, then the recovery IDA would otherwise seek by shrinking the step
+      int fixedStepSolve(SUNNonlinearSolver nls, N_Vector y0, N_Vector ycor, N_Vector w, sunrealtype tol, sunbooleantype call_lsetup, void* mem)
+      {
+        int retval = SUNNonlinSolSolve_Newton(nls, y0, ycor, w, tol, call_lsetup, mem);
+        if (retval == SUN_NLS_CONV_RECVR)
+        {
+          retval = dampedNewton(static_cast<SUNNonlinearSolverContent_Newton>(nls->content), ycor, w, tol, mem);
+        }
+        return retval;
+      }
+    } // namespace
 
     template <class ScalarT, typename IdxT>
     Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
@@ -96,10 +178,36 @@ namespace AnalysisManager
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
 
+      if (time_step_ > 0)
+      {
+        this->configureNonlinearSolver();
+      }
+
       setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, max_order_, suppress_alg_);
 
       // Set up linear solver
       return this->configureLinearSolver();
+    }
+
+    /**
+     * @brief Attach IDA's Newton corrector with the fixed-step line-search recovery
+     *
+     * This helps the solver in regions with a sharp limit,
+     * otherwise it will 'miss' the barrier/feature of the algebra
+     *
+     * @note Must precede setIDAOptions, which sets the nonlinear iteration cap
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::configureNonlinearSolver()
+    {
+      nonlinearSolver_ = SUNNonlinSol_Newton(yy_, context_);
+      int retval       = IDASetNonlinearSolver(solver_, nonlinearSolver_);
+      checkOutput(retval, "IDASetNonlinearSolver");
+      nonlinearSolver_->ops->solve = fixedStepSolve;
+      return retval;
     }
 
     /**
@@ -378,6 +486,7 @@ namespace AnalysisManager
       N_VDestroy(yy0_);
       N_VDestroy(yp0_);
       SUNLinSolFree(linearSolver_);
+      SUNNonlinSolFree(nonlinearSolver_);
       SUNMatDestroy(JacobianMat_);
       IDAFree(&solver_);
       return 0;
@@ -1340,6 +1449,12 @@ namespace AnalysisManager
 
         retval = IDASetNonlinConvCoefIC(mem, DEFAULT_NONLIN_CONV_COEF_IC / FIXED_STEP_TOL_FAC);
         checkOutput(retval, "IDASetNonlinConvCoefIC");
+
+        // IDACalcIC's line search floor must be scaled like its weights
+        static const RealT DEFAULT_STEP_TOL_IC = std::pow(std::numeric_limits<RealT>::epsilon(), 2.0 / 3.0);
+
+        retval = IDASetStepToleranceIC(mem, DEFAULT_STEP_TOL_IC / FIXED_STEP_TOL_FAC);
+        checkOutput(retval, "IDASetStepToleranceIC");
       }
     }
 
