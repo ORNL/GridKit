@@ -7,7 +7,7 @@ bridge voltage of a two-level voltage-source inverter.
 
 ![Converter model block diagram](../../../../../docs/Figures/EMT/Converter/diagram.png)
 
-Figure 1: Converter model; representative switching leg followed by neutral projection
+Figure 1: Converter model; representative switching leg, $\ell\in\{a,b,c\}$
 
 ## Model Parameters
 

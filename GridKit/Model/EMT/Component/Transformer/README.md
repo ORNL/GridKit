@@ -155,12 +155,12 @@ g(\psi) = \dfrac{\psi}{L_\mathrm{m}}
 
 ```math
 \begin{aligned}
-0 &= \dfrac{X}{\omega_\mathrm{b}}\dfrac{\mathrm{d}\mathbf{i}_{12}}{\mathrm{d}t}
-     + \mathbf{e}_2 - \mathbf{e}_1 \\
-0 &= \dfrac{1}{\omega_\mathrm{b}}\dfrac{\mathrm{d}\boldsymbol{\psi}_1}{\mathrm{d}t}
-     - \mathbf{e}_1 \\
-0 &= \dfrac{1}{\omega_\mathrm{b}}\dfrac{\mathrm{d}\boldsymbol{\psi}_2}{\mathrm{d}t}
-     - \mathbf{e}_2
+0 &= X\dfrac{\mathrm{d}\mathbf{i}_{12}}{\mathrm{d}t}
+     + \omega_\mathrm{b}(\mathbf{e}_2 - \mathbf{e}_1) \\
+0 &= \dfrac{\mathrm{d}\boldsymbol{\psi}_1}{\mathrm{d}t}
+     - \omega_\mathrm{b}\mathbf{e}_1 \\
+0 &= \dfrac{\mathrm{d}\boldsymbol{\psi}_2}{\mathrm{d}t}
+     - \omega_\mathrm{b}\mathbf{e}_2
 \end{aligned}
 ```
 
