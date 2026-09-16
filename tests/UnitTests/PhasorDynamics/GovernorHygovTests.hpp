@@ -1566,7 +1566,7 @@ namespace GridKit
         for (size_t i = 0; i < model_size; ++i)
         {
           y[i].setVariableNumber(2 * i);
-          yp[i].setVariableNumber(2 * i);
+          yp[i].setVariableNumber(2 * i + 1);
         }
         for (auto port : Utilities::enum_values<External>())
         {
