@@ -256,15 +256,15 @@ namespace GridKit
         const auto* y  = fixture.hygov.y().getData();
         success       *= scalarMatches(y[static_cast<size_t>(Internal::XF)], 0.0, "XF at rest");
         success       *= scalarMatches(y[static_cast<size_t>(Internal::C)],
-                                       0.9000000000001573,
-                                       "C on component base");
+                                 0.9000000000001573,
+                                 "C on component base");
         success       *= scalarMatches(y[static_cast<size_t>(Internal::G)],
-                                       0.9000000000001573,
-                                       "G on component base");
+                                 0.9000000000001573,
+                                 "G on component base");
         success       *= scalarMatches(y[static_cast<size_t>(Internal::Q)], 0.9, "Q on component base");
         success       *= scalarMatches(y[static_cast<size_t>(Internal::PGV)],
-                                       0.9,
-                                       "PGV on component base");
+                                 0.9,
+                                 "PGV on component base");
         success       *= scalarMatches(y[static_cast<size_t>(Internal::H)], 1.0, "H at the dam head");
         success       *= scalarMatches(fixture.pmech(), 0.4, "preserved pmech value");
 
@@ -325,7 +325,7 @@ namespace GridKit
         success                       *= (fixture.evaluate() == 0);
         success                       *= residualsMatch(fixture.hygov,
                                                         {{Internal::EF, 0.2}},
-                                                        "reference step on the component base");
+                                  "reference step on the component base");
 
         // Unattached ports fall back to the references latched by
         // initialize(), so the same steady state holds without a controller.
@@ -455,8 +455,8 @@ namespace GridKit
         success                                  *= vectorUnchanged(effective_fixture.hygov.y(), effective_y, "state");
         success                                  *= vectorUnchanged(effective_fixture.hygov.yp(), effective_yp, "derivative");
         success                                  *= scalarMatches(effective_fixture.input(External::pref),
-                                                                  0.0009,
-                                                                  "preserved pref");
+                                 0.0009,
+                                 "preserved pref");
         effective_fixture.input(External::speed)  = 0.0;
         success                                  *= (effective_fixture.evaluate() == 0);
         success                                  *= allResidualsZero(effective_fixture.hygov);
@@ -548,7 +548,7 @@ namespace GridKit
         success                         *= effective_edge.initialize(p_max + 0.5 * kTol);
         success                         *= stateMatches(effective_edge.hygov,
                                                         {{Internal::C, 1.0}, {Internal::G, 1.0}},
-                                                        "half the tolerance beyond the achievable maximum");
+                                "half the tolerance beyond the achievable maximum");
         const RealT effective_edge_head  = static_cast<RealT>(
             effective_edge.hygov.y().getData()[static_cast<size_t>(Internal::H)]);
         if (!(effective_edge_head > 1.0))
