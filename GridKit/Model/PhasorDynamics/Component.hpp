@@ -264,7 +264,8 @@ namespace GridKit
       /**
        * @brief CSR construction dispatch depending on ScalarT
        *
-       * @note Currently only used for testing.
+       * @note Currently only used for testing, particularly for comparing 
+       *       Enzyme and DependencyTracking Jacobians.
        */
       int constructCsr()
       {
@@ -310,7 +311,7 @@ namespace GridKit
       /**
        * @brief COO construction from component-level raw buffers.
        *
-       * @note the components retain ownership of the data in the raw buffers.
+       * @note The components retain ownership of the data in the raw buffers.
        */
       int constructCoo()
       {
@@ -339,7 +340,9 @@ namespace GridKit
       /**
        * @brief CSR construction from COO.
        *
-       * @note Currently only used for testing.
+       * @note Currently only used for testing, particularly for comparing 
+       *       Enzyme and DependencyTracking Jacobians.
+       *
        * @todo The matrix is only computed on the first call, and the data is stale on subsequent calls.
        * @todo Unify with system-level construction that retains map_to_csr_.
        */
@@ -371,8 +374,19 @@ namespace GridKit
       /**
        * @brief CSR construction from Dependency maps.
        *
-       * @note Currently only used for testing.
-       *       See \ref initializeDependencyTrackingVariableNumbers()
+       * This merges the y and yp dependencies back to the same location in the Jacobian. 
+       * See \ref initializeDependencyTrackingVariableNumbers() for the initial even/odd split.
+       * The DependencyMap manipulations are expected to be a bottleneck, so this is not intended 
+       * for simulations. 
+       *
+       * @note Currently only used for testing, particularly for comparing 
+       *       Enzyme and DependencyTracking Jacobians. Will be used to benchmark the 
+       *       performance of the two methods in the near future.
+       *
+       * @note For dependency maps, there is no functional difference in Jacobian construction 
+       *       between components and systems. However, the resulting component-level CSR will 
+       *       be invalid if tracked indices are greater than the local `size_`, and should not
+       *       be used for simulation. Systems do not rely on the component-level results.
        */
       int constructCsrFromDependencies()
         requires std::is_same_v<ScalarT, DependencyTracking::Variable>
@@ -392,13 +406,16 @@ namespace GridKit
           {
             DependencyMap row_map;
 
+            // Merge-count y and yp dependencies
             for (const auto& dep : f[row].getDependencies())
             {
               const auto col = dep.first;
 
-              // Merge-count y and yp dependencies
+              // Divide the stored index by 2
               const size_t jac_col = static_cast<size_t>(col / 2);
 
+              // For counting purposes, there is no need to distinguish odd and even indices.
+              // Attempt to insert the colum into the row and increment nnz for new entries.
               if (row_map.insert({jac_col, RealT{}}).second)
               {
                 ++nnz;
@@ -422,7 +439,9 @@ namespace GridKit
             {
               const auto col = dep.first;
 
+              // Divide the stored index by 2
               const size_t jac_col = static_cast<size_t>(col / 2);
+
               // Even indices for y and odd indices for yp
               if (col % 2 == 0)
               {
@@ -447,6 +466,7 @@ namespace GridKit
         }
         else
         {
+          // Assuming the sparsity pattern is unchanged, only update the values.
           RealT* vals = csr_jac_->getValues();
 
           IdxT i = 0;
@@ -458,7 +478,9 @@ namespace GridKit
             {
               const auto col = dep.first;
 
+              // Divide the stored index by 2
               const size_t jac_col = static_cast<size_t>(col / 2);
+
               // Even indices for y and odd indices for yp
               if (col % 2 == 0)
               {
@@ -470,6 +492,7 @@ namespace GridKit
               }
             }
 
+            // Only update the values
             for (const auto& entry : row_map)
             {
               vals[i] = static_cast<RealT>(entry.second);
