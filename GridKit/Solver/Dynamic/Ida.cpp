@@ -96,7 +96,7 @@ namespace AnalysisManager
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
 
-      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, suppress_alg_);
+      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, max_order_, suppress_alg_);
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -551,6 +551,7 @@ namespace AnalysisManager
                     backward_rel_tol_,
                     backward_abs_tol_override_,
                     backward_max_steps_,
+                    backward_max_order_,
                     backward_suppress_alg_);
 
       retval = IDASetUserDataB(solver_, backwardID_, model_);
@@ -1251,6 +1252,32 @@ namespace AnalysisManager
     }
 
     /**
+     * @brief Set the maximum integration method order
+     *
+     * @param max_order The maximum integration method order
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setMaxOrder(int max_order)
+    {
+      max_order_ = max_order;
+    }
+
+    /**
+     * @brief Set the maximum integration method order for the backward simulation
+     *
+     * @param max_order The maximum integration method order
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardMaxOrder(int max_order)
+    {
+      backward_max_order_ = max_order;
+    }
+
+    /**
      * @brief A helper function to set common IDA options
      *
      * @param mem The IDA memory (either forward or backward)
@@ -1260,6 +1287,7 @@ namespace AnalysisManager
      *        absolute tolerance for the nonlinear solver rather than the
      *        model's default absolute tolerance
      * @param max_steps The maximum number of steps
+     * @param max_order The maximum integration method order
      * @param suppress_alg If true, algebraic variables are excluded from IDA's
      *        local error test
      * @tparam ScalarT Scalar data type
@@ -1271,6 +1299,7 @@ namespace AnalysisManager
                                            ScalarT rel_tol,
                                            ScalarT abs_tol_override,
                                            IdxT    max_steps,
+                                           int     max_order,
                                            bool    suppress_alg)
     {
       int retval = 0;
@@ -1280,6 +1309,8 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetMaxStep");
       retval = IDASetMaxNumSteps(mem, static_cast<long int>(max_steps));
       checkOutput(retval, "IDASetMaxNumSteps");
+      retval = IDASetMaxOrd(mem, time_step == 0 ? max_order : std::min(max_order, 2));
+      checkOutput(retval, "IDASetMaxOrd");
       retval = IDASetSuppressAlg(mem, suppress_alg ? SUNTRUE : SUNFALSE);
       checkOutput(retval, "IDASetSuppressAlg");
 
@@ -1289,11 +1320,6 @@ namespace AnalysisManager
       }
       else
       {
-        /* Since the starting procedure is first order, the maximum global order
-         * of convergence is two */
-        retval = IDASetMaxOrd(mem, 2);
-        checkOutput(retval, "IDASetMaxOrd");
-
         /* Enable more nonlinear iterations because a failed nonlinear solve
          * causes a failed integration with fixed steps */
         static constexpr int FIXED_STEP_NONLIN_ITRS = 16;
