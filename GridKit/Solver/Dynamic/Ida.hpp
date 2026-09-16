@@ -259,7 +259,7 @@ namespace AnalysisManager
       void setTolerance(void*   mem,
                         ScalarT rel_tol,
                         ScalarT abs_tol_override,
-                        ScalarT abs_tol_fac = 1);
+                        ScalarT tol_fac = 1);
       void setQuadratureTolerance(void*   mem,
                                   ScalarT rel_tol,
                                   ScalarT abs_tol_override);

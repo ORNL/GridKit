@@ -1328,10 +1328,7 @@ namespace AnalysisManager
 
         // Set a large tolerance so the error test will never fail
         static constexpr RealT FIXED_STEP_TOL_FAC = 1e100;
-        setTolerance(mem,
-                     FIXED_STEP_TOL_FAC * rel_tol,
-                     FIXED_STEP_TOL_FAC * abs_tol_override,
-                     FIXED_STEP_TOL_FAC);
+        setTolerance(mem, rel_tol, abs_tol_override, FIXED_STEP_TOL_FAC);
 
         /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
          * the large tolerances set above, we need to choose this tolerance to
@@ -1355,8 +1352,7 @@ namespace AnalysisManager
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
      *        tolerance
-     * @param abs_tol_fac A factor to apply to the absolute tolerance if not
-     *        overridden
+     * @param tol_fac A factor to apply to the relative and absolute tolerances
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
      */
@@ -1364,13 +1360,13 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setTolerance(void*   mem,
                                           ScalarT rel_tol,
                                           ScalarT abs_tol_override,
-                                          ScalarT abs_tol_fac)
+                                          ScalarT tol_fac)
     {
       int retval = 0;
 
       if (abs_tol_override > 0)
       {
-        retval = IDASStolerances(mem, rel_tol, abs_tol_override);
+        retval = IDASStolerances(mem, tol_fac * rel_tol, tol_fac * abs_tol_override);
         checkOutput(retval, "IDASStolerances");
         return;
       }
@@ -1379,9 +1375,9 @@ namespace AnalysisManager
       checkAllocation((void*) abs_tol_vec, "N_VClone");
       model_->setAbsoluteTolerance(rel_tol);
       copyVec(model_->absoluteTolerance(), abs_tol_vec);
-      N_VScale(abs_tol_fac, abs_tol_vec, abs_tol_vec);
+      N_VScale(tol_fac, abs_tol_vec, abs_tol_vec);
 
-      retval = IDASVtolerances(mem, rel_tol, abs_tol_vec);
+      retval = IDASVtolerances(mem, tol_fac * rel_tol, abs_tol_vec);
       checkOutput(retval, "IDASVtolerances");
 
       N_VDestroy(abs_tol_vec);
