@@ -1,6 +1,6 @@
+#include <exception>
 #include <filesystem>
 #include <fstream>
-#include <exception>
 
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
