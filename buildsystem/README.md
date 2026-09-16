@@ -11,7 +11,7 @@ spack env activate -p gridkit
 spack repo add buildsystem/spack_repo/gridkit
 spack develop --path=$(pwd) gridkit@develop
 spack compiler find
-spack add gridkit+enzyme+ipopt+klu+sundials ^sundials@develop
+spack add gridkit+enzyme+ipopt+klu+sundials ^sundials@7.8.0
 spack concretize -f
 spack install
 spack env deactivate
