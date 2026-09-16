@@ -65,7 +65,7 @@ namespace GridKit
         IdxT nnz_dup = 0;
         for (const auto& component : components_)
         {
-          auto component_jacobian = component->getCooJacobian();
+          const auto component_jacobian = component->getCooJacobian();
 
           if (component_jacobian != nullptr)
           {
