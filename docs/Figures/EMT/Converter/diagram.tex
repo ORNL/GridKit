@@ -3,38 +3,43 @@
 \input{../diagram-style.tex}
 
 \tikzset{
-    igbt/.style = {nigbt, bodydiode, semithick, scale=1.2}
+    igbt/.style = {nigbt, bodydiode, semithick}
 }
+
+% TUNABLES: DC rail and switch positions for one representative phase.
+\def\railrow{2.25}
+\def\switchrow{1.15}
 
 \begin{document}
 \begin{tikzpicture}[emt diagram]
 
 % ================= DC input =================
-\node[signal] (dc+) at (-4.15, 3.7) {};
-\node[signal] (dc-) at (-4.15, -3.7) {};
-\draw[line] (dc+) -- (0, 3.7);
-\draw[line] (dc-) -- (0, -3.7);
+\node[signal] (dc+) at (-2.3,\railrow) {};
+\node[signal] (dc-) at (-2.3,-\railrow) {};
+\draw[line] (dc+) -- (0,\railrow);
+\draw[line] (dc-) -- (0,-\railrow);
 
-\node[pm] at (-4.55, 3.7) {$+$};
-\node[sig] at (-4.55, 0) {$v_{\mathrm{dc}}$};
-\node[pm] at (-4.55, -3.7) {$-$};
+\node[pm] at (-2.7,\railrow) {$+$};
+\node[sig] at (-2.7,0) {$v_{\mathrm{dc}}$};
+\node[pm] at (-2.7,-\railrow) {$-$};
 
 % ================= Representative IGBT leg =================
-\node[igbt, xscale=-1] (S+) at (0, 1.85) {};
-\node[igbt, xscale=-1] (S-) at (0, -1.85) {};
-\draw[line] (S+.C) -- (0, 3.7);
+\node[igbt, xscale=-1] (S+) at (0,\switchrow) {};
+\node[igbt, xscale=-1] (S-) at (0,-\switchrow) {};
+\draw[line] (S+.C) -- (0,\railrow);
 \draw[line] (S+.E) -- (0, 0);
 \draw[line] (S-.C) -- (0, 0);
-\draw[line] (S-.E) -- (0, -3.7);
-\node[sig, anchor=west] at ($(S+.G)+(0.15,0)$) {$\mathbf{s}$};
-\node[sig, anchor=west] at ($(S-.G)+(0.15,0)$) {$\mathbf{1}-\mathbf{s}$};
+\draw[line] (S-.E) -- (0,-\railrow);
+\node[sig, anchor=west] at ($(S+.G)+(0.15,0)$) {$s_\ell$};
+\node[sig, anchor=west] at ($(S-.G)+(0.15,0)$) {$1-s_\ell$};
 
-% ================= Bridge-voltage output =================
-\node[signal, label={[sig]left:$\mathbf{e}$}] (phase) at (0, 0) {};
-\draw[->, line] (phase) -- (3.35, 0);
+% Phase terminal of the representative switching leg.
+\node[signal] (phase) at (0,0) {};
+\draw[line] (phase) -- (2.9,0) node[signal] {};
+\node[sig, above] at (2.9,0) {$\ell$};
 
 % ================= Model enclosure =================
-\draw[enclosure] (-2.55, -4.45) rectangle (2.35, 4.45);
+\draw[enclosure] (-1.6,-2.65) rectangle (2.3,2.65);
 
 \end{tikzpicture}
 \end{document}
