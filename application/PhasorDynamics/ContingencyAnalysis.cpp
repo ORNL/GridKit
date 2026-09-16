@@ -1,4 +1,5 @@
 #include <chrono>
+#include <exception>
 #include <filesystem>
 #include <future>
 
@@ -149,7 +150,7 @@ void runStudyOpenMP(const StudyData& study_data, std::vector<TestStatus>& stat_v
 }
 #endif
 
-int main(int argc, const char* argv[])
+int runApplication(int argc, const char* argv[])
 {
   // Study file
   checkCommandLine(argc, "ContingencyAnalysis");
@@ -187,4 +188,18 @@ int main(int argc, const char* argv[])
   }
 
   return status.get();
+}
+
+int main(int argc, const char* argv[])
+{
+  try
+  {
+    return runApplication(argc, argv);
+  }
+  catch (const std::exception& error)
+  {
+    Log::error() << "ContingencyAnalysis failed: " << error.what() << '\n';
+  }
+
+  return 1;
 }

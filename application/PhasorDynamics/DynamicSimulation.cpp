@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <exception>
 
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -17,7 +18,7 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-int main(int argc, const char* argv[])
+int runApplication(int argc, const char* argv[])
 {
   // Study file
   checkCommandLine(argc, "DynamicSimulation");
@@ -80,4 +81,18 @@ int main(int argc, const char* argv[])
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
   return status.get();
+}
+
+int main(int argc, const char* argv[])
+{
+  try
+  {
+    return runApplication(argc, argv);
+  }
+  catch (const std::exception& error)
+  {
+    Log::error() << "DynamicSimulation failed: " << error.what() << '\n';
+  }
+
+  return 1;
 }
