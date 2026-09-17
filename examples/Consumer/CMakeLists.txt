@@ -13,11 +13,16 @@ if(GRIDKIT_ENABLE_SUNDIALS)
       ${CMAKE_SOURCE_DIR}/tests/IntegrationTests/PhasorDynamics/TenGen/Classical/TenGenClassical.cpp
     DESTINATION ${_rel_consumer_path}
     RENAME consumer.cpp)
+  install(
+    FILES
+      ${CMAKE_SOURCE_DIR}/tests/IntegrationTests/PhasorDynamics/TenGen/Classical/reference/TenGenClassical.ref.csv
+    DESTINATION ${_rel_consumer_path}/reference)
   list(
     APPEND
     GRIDKIT_CONSUMER_TEST_LINK_LIBRARIES
     GridKit::phasor_dynamics_systemmodel
-    GridKit::solvers_dyn)
+    GridKit::solvers_dyn
+    GridKit::testing)
 else()
   install(
     FILES ${_examples_dir}/PowerElectronics/DistributedGeneratorTest/DGTest.cpp
