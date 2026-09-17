@@ -15,9 +15,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for LoadZIP..." << std::endl;
-      Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
-
       if (J_rows_buffer_ == nullptr)
       {
         // Reserve space for the dense blocks.
