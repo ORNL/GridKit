@@ -5,7 +5,8 @@
 :titlesonly:
 :hidden:
 
-Simulation <Simulation/README>
+DynamicSimulation <DynamicSimulation/README>
+ContingencyAnalysis <ContingencyAnalysis/README>
 Validation <Validation/README>
 ```
 

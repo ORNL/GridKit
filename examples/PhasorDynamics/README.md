@@ -5,8 +5,9 @@ use the reusable models in `cases/PhasorDynamics/`.
 
 | Examples | Purpose |
 | --- | --- |
-| [Simulation](Simulation/README.md) | Examples using JSON inputs, including a short ACTIVSg10k run without disturbances. |
-| `Validation/` | System studies compared against PowerWorld reference results. |
+| [DynamicSimulation](DynamicSimulation/README.md) | Individual simulation studies. |
+| [ContingencyAnalysis](ContingencyAnalysis/README.md) | Bus-fault contingency studies. |
+| [Validation](Validation/README.md) | System studies compared against PowerWorld reference results. |
 
 ## Running a Study
 
@@ -14,10 +15,11 @@ Configure and build GridKit with SUNDIALS and Enzyme enabled. CMake copies each
 study's solver file and the required case and reference files into the build
 tree and packages them in the install tree.
 
-From the installed `Validation/IEEE39/` directory, run:
+For an installation under `/path/to/install`, run:
 
 ```bash
-DynamicSimulation IEEE39.solver.json
+cd /path/to/install/share/gridkit/examples/PhasorDynamics/Validation/IEEE39
+/path/to/install/bin/DynamicSimulation IEEE39.solver.json
 ```
 
 The solver file names its case using a local basename, such as

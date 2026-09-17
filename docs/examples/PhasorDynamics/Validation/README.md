@@ -14,3 +14,8 @@ Hawaii <Hawaii/README>
 IEEE39 <IEEE39/README>
 WECC240 <WECC240/README>
 ```
+
+```{include} ../../../../examples/PhasorDynamics/Validation/README.md
+:start-line: 1
+:relative-images:
+```

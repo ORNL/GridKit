@@ -1,4 +1,4 @@
-# Simulation
+# DynamicSimulation
 
 ```{toctree}
 :maxdepth: 4
@@ -6,11 +6,10 @@
 :hidden:
 
 ThreeBusConstantSource <Toy/ThreeBusConstantSource/README>
-IEEE39 <IEEE39/README>
 ACTIVSg10k <ACTIVSg10k/README>
 ```
 
-```{include} ../../../../examples/PhasorDynamics/Simulation/README.md
+```{include} ../../../../examples/PhasorDynamics/DynamicSimulation/README.md
 :start-line: 1
 :relative-images:
 ```
