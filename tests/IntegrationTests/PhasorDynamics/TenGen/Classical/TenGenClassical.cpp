@@ -9,6 +9,7 @@
  * It is the same as Example_TenGen_Genrou but with simpler generator models
  *
  */
+#include <cmath>
 #include <cstdio>
 #include <ctime>
 #include <fstream>
@@ -44,6 +45,9 @@ int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
+  using GridKit::Testing::isEqual;
+
+  GridKit::Testing::TestStatus success = true;
 
   /* Create model parts */
   BusInfinite<scalar_type, index_type> bus1(1, 0);
@@ -180,13 +184,28 @@ int main()
   real_type start = static_cast<real_type>(clock());
   ida.initializeSimulation(0.0, false);
 
-  // Run for 1s
+  const auto*                  y = sys.y().getData();
+  const std::vector<real_type> initial(y, y + sys.y().getSize());
+
+  // Run for 1s and check that the initial operating point is preserved.
   ida.runSimulation(1.0, dt, output_cb);
+  y = sys.y().getData();
+  for (index_type i = 0; i < sys.y().getSize(); ++i)
+  {
+    success *= isEqual(y[i], initial[i], 1e-4);
+  }
 
   // Introduce fault to ground and run for 0.1s
   fault.setStatus(1);
   ida.initializeSimulation(1.0);
   ida.runSimulation(1.1, dt, output_cb);
+
+  // Pm = 0.5 pu, H = 3 s; neglect electrical output and damping during the fault.
+  using Variable               = GenClassicalInternalVariables;
+  const auto      omega_index  = static_cast<index_type>(Variable::OMEGA);
+  const real_type omega_ref    = std::sqrt(1.0 + 0.5 * 0.1 / 3.0) - 1.0;
+  success                     *= std::hypot(bus10.Vr(), bus10.Vi()) < 1e-3;
+  success                     *= isEqual(gen10.y().getData()[omega_index], omega_ref, 5e-5);
 
   // Clear fault and run until t = 10s.
   fault.setStatus(0);
@@ -194,9 +213,13 @@ int main()
   ida.runSimulation(10.0, dt, output_cb);
   real_type stop = static_cast<real_type>(clock());
 
+  // Voltage should recover to within 2% of its initial magnitude.
+  const real_type voltage  = std::hypot(bus10.Vr(), bus10.Vi());
+  success                 *= std::abs(voltage - 1.0) < 0.02;
+
   fileout.close();
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
-  return 0;
+  return success.report("TenGenClassical");
 }
