@@ -324,13 +324,12 @@ namespace GridKit
         set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
         set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
-        std::string      base_name = "TwoBus/Basic/TwoBusBasic";
-        std::string      in_file   = base_name + ".case.json";
+        std::string      in_file   = "TwoBusBasic/TwoBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
 
         auto success = compare(set_data, file_data);
 
-        auto error_set = runSimulation(set_data, base_name + ".ref.csv");
+        auto error_set = runSimulation(set_data, "TwoBusBasic/reference/TwoBusBasic.ref.csv");
 
         RealT error_V_allowed = 2.01e-4;
         RealT error_w_allowed = 1e-4;
@@ -444,7 +443,7 @@ namespace GridKit
         set_data.exciter[0].parameters[Ieeet1Parameters::Ispdlim]    = 0.;
         set_data.exciter[0].monitored_variables.insert(Ieeet1Var::efd);
 
-        std::string      in_file   = "TwoBus/Ieeet1/TwoBusIeeet1.case.json";
+        std::string      in_file   = "TwoBusIeeet1/TwoBusIeeet1.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
 
         auto success = compare(set_data, file_data);
@@ -530,7 +529,7 @@ namespace GridKit
         set_data.gov[0].parameters[Tgov1Parameters::T3]           = 7.5;
         set_data.gov[0].parameters[Tgov1Parameters::Dt]           = 0.0;
 
-        std::string      in_file   = "TwoBus/Tgov1/TwoBusTgov1.case.json";
+        std::string      in_file   = "TwoBusTgov1/TwoBusTgov1.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
 
         auto success = compare(set_data, file_data);
@@ -636,7 +635,7 @@ namespace GridKit
         set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
         set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
-        std::string      in_file   = "ThreeBus/Basic/ThreeBusBasic.case.json";
+        std::string      in_file   = "ThreeBusBasic/ThreeBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
 
         auto success = compare(set_data, file_data);
@@ -717,7 +716,7 @@ namespace GridKit
         set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
         set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
-        std::string      in_file   = "ThreeBus/Classical/ThreeBusClassical.case.json";
+        std::string      in_file   = "ThreeBusClassical/ThreeBusClassical.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
 
         auto success = compare(set_data, file_data);

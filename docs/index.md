@@ -10,6 +10,7 @@
 Installation <INSTALL>
 Applications <application/README>
 Models <GridKit/Model/README>
+Cases <cases/README>
 Examples <examples/README>
 API Reference <api>
 Development <development/README>

@@ -6,6 +6,8 @@ target_link_libraries(
 add_test(
   NAME PhasorDynamicsIntegrationTest
   COMMAND test_pd_integration
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/examples/PhasorDynamics/Tiny)
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/examples/PhasorDynamics/Validation/Toy)
 
 install(TARGETS test_pd_integration)
+
+add_subdirectory(TenGen)

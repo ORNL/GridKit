@@ -1,0 +1,6 @@
+.gk-card .sd-card-img-top {
+  height: 11rem;
+  object-fit: contain;
+  background: #fff;
+  padding: 0.5rem;
+}
