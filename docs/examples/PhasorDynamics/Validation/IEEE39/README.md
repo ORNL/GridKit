@@ -4,11 +4,3 @@
 :start-line: 1
 :relative-images:
 ```
-
-```{toctree}
-:maxdepth: 1
-:titlesonly:
-:hidden:
-
-Case description <../../../../cases/PhasorDynamics/IEEE39/README>
-```

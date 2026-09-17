@@ -339,4 +339,4 @@ $\text{droop}(0;D_\mathrm{dn},D_\mathrm{up})=0$.
 
 [^frequency-measurement]: Background for phase-derived, filtered frequency
     measurement: [PSCAD Frequency/Phase/Magnitude Meter](https://www.pscad.com/webhelp-pscad-v5.1.0-ol/Master_Library_Models/Meters/Frequency_Phase_Magnitude_Meter.htm) and
-    [Ting et al., *Evaluating Methods for Measuring Grid Frequency in Low-Inertia Power Systems*](https://research-hub.nrel.gov/en/publications/evaluating-methods-for-measuring-grid-frequency-in-low-inertia-po-3/).
+    [Ting et al., *Evaluating Methods for Measuring Grid Frequency in Low-Inertia Power Systems*](https://research-hub.nlr.gov/en/publications/evaluating-methods-for-measuring-grid-frequency-in-low-inertia-po-3/).

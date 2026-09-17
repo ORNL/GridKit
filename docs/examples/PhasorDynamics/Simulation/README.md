@@ -5,6 +5,7 @@
 :titlesonly:
 :hidden:
 
+ThreeBusConstantSource <Toy/ThreeBusConstantSource/README>
 IEEE39 <IEEE39/README>
 ACTIVSg10k <ACTIVSg10k/README>
 ```

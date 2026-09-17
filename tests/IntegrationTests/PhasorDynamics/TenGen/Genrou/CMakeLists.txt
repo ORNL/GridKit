@@ -8,3 +8,5 @@ configure_file(reference/TenGenGenrou.ref.csv reference/TenGenGenrou.ref.csv COP
 add_test(NAME TenGenGenrou COMMAND test_pd_tengen_genrou)
 
 install(TARGETS test_pd_tengen_genrou)
+install(FILES reference/TenGenGenrou.ref.csv
+        DESTINATION share/gridkit/tests/PhasorDynamics/TenGen/Genrou/reference)
