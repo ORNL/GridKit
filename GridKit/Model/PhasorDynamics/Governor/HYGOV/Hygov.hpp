@@ -8,7 +8,6 @@
 
 #include <array>
 #include <cstddef>
-#include <limits>
 #include <memory>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>

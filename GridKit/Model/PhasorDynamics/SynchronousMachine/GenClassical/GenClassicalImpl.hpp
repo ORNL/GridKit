@@ -220,13 +220,13 @@ namespace GridKit
       y[4] = ii;
 
       // Convert Te to system base for governor PM signal.
-      pmech_set_ = this->toSystemBase(Te);
+      pmech_set_ = static_cast<RealT>(this->toSystemBase(Te));
       if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
         pmech_port.writeValue(pmech_set_);
       }
 
-      efd_set_ = efd;
+      efd_set_ = static_cast<RealT>(efd);
       if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
       {
         efd_port.writeValue(efd_set_);
@@ -239,6 +239,12 @@ namespace GridKit
 
       y_.setDataUpdated();
       yp_.setDataUpdated();
+
+      // For DependencyTracking::Variable, set variable numbers
+      if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+      {
+        this->initializeDependencyTrackingVariableNumbers();
+      }
 
       return 0;
     }

@@ -17,6 +17,16 @@ namespace GridKit
       return false;
     }
 
+    /**
+     * @brief By default, Jacobians are not available
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateJacobian()
+    {
+      return 0;
+    }
+
     // Available template instantiations
     // template class SystemModel<double, long int>;
     template class SystemModel<double, size_t>;

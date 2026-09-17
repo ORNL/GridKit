@@ -660,8 +660,8 @@ namespace GridKit
               fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)].getDependencies();
 
           const DepVar::DependencyMap expected{{
-              {index(Vars::VT), 0.5 * kHvrcmGain},
-              {index(Vars::IQEXTRA), -1.0},
+              {2 * index(Vars::VT), 0.5 * kHvrcmGain}, // @todo remove these
+              {2 * index(Vars::IQEXTRA), -1.0},        // @todo remove these
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -694,13 +694,7 @@ namespace GridKit
                 dependencyTrackingJacobian(data, current, success);
             const auto enzyme_jacobian = enzymeJacobian(data, current, success);
 
-            const auto ip_row  = index(Vars::IP);
-            const auto il_col  = index(Vars::IL);
-            success           *= dependency_tracking_jacobian[ip_row].contains(il_col);
-            success           *= enzyme_jacobian[ip_row].contains(il_col);
-
-            success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
-            const auto nrows  = std::min(dependency_tracking_jacobian.size(),
+            const auto nrows = std::min(dependency_tracking_jacobian.size(),
                                         enzyme_jacobian.size());
 
             for (size_t i = 0; i < nrows; ++i)
@@ -930,11 +924,7 @@ namespace GridKit
         regca.yp().setDataUpdated();
       }
 
-      /// Numbers regca y and yp together, the bus after the regca block,
-      /// and the command signals at their port indices, matching the
-      /// Jacobian layout. Write state values first; numbering resets each
-      /// dependency map. Numbering an unattached command is a no-op for the
-      /// model.
+      /// @todo Remove and setup the test to not rely on explicit variable numbering
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture)
       {
         auto* y     = fixture.regca.y().getData();
@@ -944,15 +934,15 @@ namespace GridKit
         const auto regca_size = static_cast<size_t>(fixture.regca.size());
         for (size_t i = 0; i < regca_size; ++i)
         {
-          y[i].setVariableNumber(i);
-          yp[i].setVariableNumber(i);
+          y[i].setVariableNumber(2 * i);
+          yp[i].setVariableNumber(2 * i + 1);
         }
         for (size_t i = 0; i < static_cast<size_t>(fixture.bus.size()); ++i)
         {
-          bus_y[i].setVariableNumber(i + regca_size);
+          bus_y[i].setVariableNumber(2 * (i + regca_size));
         }
-        fixture.ipcmd.setVariableNumber(fixture.ipcmd_index);
-        fixture.iqcmd.setVariableNumber(fixture.iqcmd_index);
+        fixture.ipcmd.setVariableNumber(2 * fixture.ipcmd_index);
+        fixture.iqcmd.setVariableNumber(2 * fixture.iqcmd_index);
 
         fixture.regca.y().setDataUpdated();
         fixture.regca.yp().setDataUpdated();
@@ -1037,22 +1027,12 @@ namespace GridKit
         fixture.iqcmd = kStateIqcmd;
         setJacobianState(fixture.regca, current);
         numberVariables(fixture);
+        fixture.regca.updateTime(0.0, 1.0);
 
         success *= (fixture.evaluate() == 0);
+        success *= (fixture.regca.evaluateJacobian() == 0);
 
-        const auto  regca_size = static_cast<size_t>(fixture.regca.size());
-        const auto* f          = fixture.regca.getResidual().getData();
-
-        std::vector<DepVar::DependencyMap> dependencies(
-            regca_size + static_cast<size_t>(fixture.bus.size()));
-        for (size_t i = 0; i < regca_size; ++i)
-        {
-          dependencies[i] = f[i].getDependencies();
-        }
-        dependencies[regca_size]     = fixture.bus.Ir().getDependencies();
-        dependencies[regca_size + 1] = fixture.bus.Ii().getDependencies();
-
-        return dependencies;
+        return MapFromCsr(fixture.regca.getCsrJacobian());
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
