@@ -17,9 +17,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate DependencyTracking Jacobian for Genrou...\n";
-      Log::misc() << "Jacobian evaluation is experimental!\n";
-
       this->constructCsr();
 
       return 0;
