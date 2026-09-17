@@ -64,6 +64,8 @@ namespace GridKit
       double                                         dt_fixed;
       /// maximum number of solver time steps, or 0 for the IDA default
       std::size_t                                    max_steps;
+      /// maximum IDA integration method order
+      int                                            max_order;
       /// IDA consistent initial condition calculation type
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
       /// set of system events
@@ -103,6 +105,7 @@ namespace GridKit
       c.abs_tol            = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
       c.dt_fixed           = j.value("dt_fixed", 0.0);
       c.max_steps          = j.value("max_steps", std::size_t{0});
+      c.max_order          = j.value("max_order", 5);
       c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
       if (j.contains("consistent_ic_type"))
       {

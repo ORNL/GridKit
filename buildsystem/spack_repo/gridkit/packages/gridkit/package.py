@@ -33,8 +33,8 @@ class Gridkit(CMakePackage):
     depends_on("ipopt", when="+ipopt")
     depends_on("resolve@gridkit-pinned+klu", when="+resolve+klu")
     depends_on("resolve@gridkit-pinned~klu", when="+resolve~klu")
-    depends_on("sundials@develop+klu~mpi", when="+sundials+klu")
-    depends_on("sundials@develop~klu~mpi", when="+sundials~klu")
+    depends_on("sundials@7.8.0+klu~mpi", when="+sundials+klu")
+    depends_on("sundials@7.8.0~klu~mpi", when="+sundials~klu")
 
     def cmake_args(self):
         args = []

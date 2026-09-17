@@ -1,4 +1,5 @@
 #include <chrono>
+#include <exception>
 #include <filesystem>
 #include <future>
 
@@ -38,6 +39,7 @@ TestStatus runStudy(StudyData study_data)
   ida.setTolerance(study_data.rel_tol, study_data.abs_tol);
   ida.setFixedStep(study_data.dt_fixed);
   ida.setMaxSteps(study_data.max_steps);
+  ida.setMaxOrder(study_data.max_order);
   ida.setConsistentICType(study_data.consistent_ic_type);
   ida.configureSimulation();
 
@@ -148,7 +150,7 @@ void runStudyOpenMP(const StudyData& study_data, std::vector<TestStatus>& stat_v
 }
 #endif
 
-int main(int argc, const char* argv[])
+int runApplication(int argc, const char* argv[])
 {
   // Study file
   checkCommandLine(argc, "ContingencyAnalysis");
@@ -186,4 +188,18 @@ int main(int argc, const char* argv[])
   }
 
   return status.get();
+}
+
+int main(int argc, const char* argv[])
+{
+  try
+  {
+    return runApplication(argc, argv);
+  }
+  catch (const std::exception& error)
+  {
+    Log::error() << "ContingencyAnalysis failed: " << error.what() << '\n';
+  }
+
+  return 1;
 }

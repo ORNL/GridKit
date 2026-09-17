@@ -142,6 +142,8 @@ namespace AnalysisManager
       void setConsistentICType(IdaConsistentICType consistent_ic_type);
       void setMaxSteps(IdxT maxSteps) override;
       void setBackwardMaxSteps(IdxT maxSteps);
+      void setMaxOrder(int max_order);
+      void setBackwardMaxOrder(int max_order);
 
       IdaStats getStats() const;
 
@@ -220,6 +222,7 @@ namespace AnalysisManager
       RealT               rel_tol_{DEFAULT_REL_TOL};
       RealT               abs_tol_override_{};
       IdxT                max_steps_{};
+      int                 max_order_{5};
       bool                suppress_alg_{false};
       IdaConsistentICType consistent_ic_type_{IdaConsistentICType::YA_YDP};
 
@@ -227,6 +230,7 @@ namespace AnalysisManager
       RealT backward_rel_tol_{DEFAULT_REL_TOL};
       RealT backward_abs_tol_override_{};
       IdxT  backward_max_steps_{};
+      int   backward_max_order_{5};
       bool  backward_suppress_alg_{false};
 
       RealT quadrature_rel_tol_{0.1 * DEFAULT_REL_TOL};
@@ -250,11 +254,12 @@ namespace AnalysisManager
                          ScalarT rel_tol,
                          ScalarT abs_tol_override,
                          IdxT    max_steps,
+                         int     max_order,
                          bool    suppress_alg);
       void setTolerance(void*   mem,
                         ScalarT rel_tol,
                         ScalarT abs_tol_override,
-                        ScalarT abs_tol_fac = 1);
+                        ScalarT tol_fac = 1);
       void setQuadratureTolerance(void*   mem,
                                   ScalarT rel_tol,
                                   ScalarT abs_tol_override);

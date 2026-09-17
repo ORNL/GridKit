@@ -27,7 +27,7 @@ MSVC toolchain) are possible but not regularly tested.
 |---|---|---|
 | CMake | >= 3.13 | |
 | C++ compiler | C++20 | Clang or GCC |
-| SUNDIALS | `develop` branch | Optional; disabled by default |
+| SUNDIALS | >= 7.8.0 | Optional; disabled by default |
 | SuiteSparse (KLU) | >= 7.x | Optional; needed for sparse solvers in SUNDIALS |
 | Ipopt | >= 3.14 | Optional; disabled by default |
 | HSL | >= 2015 | Optional; required by Ipopt for efficient linear solvers |
@@ -353,7 +353,7 @@ spack develop --path=$(pwd) gridkit@develop
 spack compiler find
 
 # Add GridKit with desired variants, then build
-spack add gridkit+sundials+ipopt+klu ^sundials@develop
+spack add gridkit+sundials+ipopt+klu ^sundials@7.8.0
 spack concretize -f
 spack install
 spack env deactivate

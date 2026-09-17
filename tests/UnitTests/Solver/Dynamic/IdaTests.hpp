@@ -526,14 +526,19 @@ namespace GridKit
       TestOutcome fixedStep()
       {
         const unsigned n_steps = 32;
+        const double   tol     = 1.0e-6;
         TestStatus     success = true;
 
         Model::NullEvaluator<ScalarT, IdxT> model;
 
         Ida<double, size_t> ida(&model);
         ida.setFixedStep(1.0 / n_steps);
-        ida.setTolerance(1.0e-6);
+        ida.setTolerance(tol);
         ida.configureSimulation();
+
+        // Fixed-step error-test scaling must not affect the tolerance used by
+        // the model to construct its absolute-tolerance vector.
+        success *= (model.absoluteTolerance().getData()[0] == tol);
 
         ida.initializeSimulation(0.0, false);
         ida.runSimulation(1.0);

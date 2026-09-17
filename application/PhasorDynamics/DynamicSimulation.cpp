@@ -1,3 +1,4 @@
+#include <exception>
 #include <filesystem>
 #include <fstream>
 
@@ -17,7 +18,7 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-int main(int argc, const char* argv[])
+int runApplication(int argc, const char* argv[])
 {
   // Study file
   checkCommandLine(argc, "DynamicSimulation");
@@ -32,6 +33,7 @@ int main(int argc, const char* argv[])
   ida.setTolerance(study.rel_tol, study.abs_tol);
   ida.setFixedStep(study.dt_fixed);
   ida.setMaxSteps(study.max_steps);
+  ida.setMaxOrder(study.max_order);
   ida.setConsistentICType(study.consistent_ic_type);
   ida.configureSimulation();
 
@@ -79,4 +81,18 @@ int main(int argc, const char* argv[])
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
   return status.get();
+}
+
+int main(int argc, const char* argv[])
+{
+  try
+  {
+    return runApplication(argc, argv);
+  }
+  catch (const std::exception& error)
+  {
+    Log::error() << "DynamicSimulation failed: " << error.what() << '\n';
+  }
+
+  return 1;
 }
