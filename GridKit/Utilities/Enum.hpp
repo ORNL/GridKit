@@ -39,7 +39,7 @@ namespace GridKit
     };
 
     /// An enum with a contiguous sequence of variants, a known maximum value,
-    /// and an underlying type of @ref std::size_t.
+    /// and an underlying type of `std::size_t`.
     template <typename T>
     concept SizedEnum = std::is_enum_v<T>
                         && std::is_same_v<std::underlying_type_t<T>,

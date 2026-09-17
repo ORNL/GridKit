@@ -250,8 +250,8 @@ Initialization resolves the steady-state quantities in dependency order; all
 internal derivatives start at zero. Initialize the component-base commands:
 $I_p\leftarrow k_\mathrm{base}I_p^\mathrm{cmd}$ and
 $I_q\leftarrow k_\mathrm{base}I_q^\mathrm{cmd}$.
-CommonMath defines the [initialization inverse](../../../../CommonMath.md#initialization-inverses)
-`iclamp`. At a bound, REECB uses an outward offset
+REECB's `iclamp` helper inverts the CommonMath [clamp](../../../../CommonMath.md#clamp)
+during initialization. At a bound, REECB uses an outward offset
 $\delta=-\ln(\text{expm1}(\mu\epsilon_\mathrm{init}/2))/\mu$ to keep the clamp error
 within $\epsilon_\mathrm{init}$; collapsed bounds return the bound.
 
