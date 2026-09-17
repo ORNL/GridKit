@@ -8,9 +8,9 @@ The relation between all the bus current injections and bus voltage is given by 
 ```math
 I_{i}=\sum_{j=1}^{n} Y_{ij}V_{j} ~~~ i=1,2,...,n
 ```
-where  $`n`$ is the number of buses in the network. $`I_{i}`$ and $`V_{j}`$ are injected current at bus $`i`$ and voltage at bus $`j`$. $`Y_{ij}`$ are the elements of the admittance matrix **Y**. Diagonal elements $`Y_{ii}`$ are equal to the sum of all admittances of all devices incident to the bus $`i`$. Off-diagonal elements $`Y_{ij}`$ are equal to the **negative** of the sum of the admittances that are joining buses $`i`$ and $`j`$. In case that there is shift transformer at the bus, $`Y_{ij}`$ should be calculated as explained in the branch section.
+where  $n$ is the number of buses in the network. $I_{i}$ and $V_{j}$ are injected current at bus $i$ and voltage at bus $j$. $Y_{ij}$ are the elements of the admittance matrix **Y**. Diagonal elements $Y_{ii}$ are equal to the sum of all admittances of all devices incident to the bus $i$. Off-diagonal elements $Y_{ij}$ are equal to the **negative** of the sum of the admittances that are joining buses $i$ and $j$. In case that there is shift transformer at the bus, $Y_{ij}$ should be calculated as explained in the branch section.
 
-In the power system, complex voltage and current values are unknown, but rather real power injections at the generator buses and voltage magnitude setpoint as well as complex power (S) consumed by the load.
+In the power system, complex voltages are unknows, while voltage magnitude setpoints, active power injections at the generator buses,  and complex power (S) consumed by the load are the input parameters.
 The relation between injected current and power at the node is given as:
 ```math
 S_{i}=P_{i}+jQ_{i}=V_{i}I^*_{i}

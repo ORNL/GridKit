@@ -4,11 +4,11 @@ Transmission lines and different types of transformers (traditional, Load Tap-Ch
 
 ## Transmission Line Model
 
-The most common circuit that is used to represent the transmission line model is $`\pi`$ circuit as shown in Figure 1. The nominal flow direction is from sending bus _s_ to receiving bus _r_.
+The most common circuit that is used to represent the transmission line model is $\Pi$ circuit as shown in Figure 1. The nominal flow direction is from sending bus _s_ to receiving bus _r_.
 
 ![](../../../../docs/Figures/TL.jpg)
 
-Figure 1: Transmission line $`\pi`$ equivalent circuit
+Figure 1: Transmission line $\Pi$ equivalent circuit
 
 Here
 ``` math
@@ -18,12 +18,12 @@ and
 ``` math
 Y'=G+jB,
 ```
-where $`R`$ is line series resistance, $`X`$ is line series reactance, $`B`$ is line shunt charging, and $`G`$ is line shunt conductance. As can be seen from Figure 1 total $`B`$ and $`G`$ are separated between two buses.
+where $R$ is line series resistance, $X$ is line series reactance, $B$ is line shunt charging, and $G$ is line shunt conductance. As can be seen from Figure 1 total $B$ and $G$ are separated between two buses.
 The current leaving the sending bus can be obtained from Kirchhoff's current law as
 ```math
 I_s = y(V_s - V_r) + \frac{Y'}{2} V_s,
 ```
-where $`V_s`$ and $`V_r`$ are voltages on sending and receiving bus, respectively, and
+where $V_s$ and $V_r$ are voltages on sending and receiving bus, respectively, and
 ```math
 y = \frac{1}{Z'} = \frac{R}{R^2+X^2} + j\frac{-X}{R^2+X^2} = g + jb.
 ```
@@ -96,13 +96,13 @@ P_{r} =  \left(g + \frac{G}{2}\right) |V_{r}|^2 + [-g \cos(\theta_s - \theta_r) 
 Q_{r} = -\left(b + \frac{B}{2}\right) |V_{r}|^2 + [ g \sin(\theta_s - \theta_r) + b \cos(\theta_s - \theta_r)] |V_{s}| |V_{r}|
 ```
 
-These quantities are treated as _loads_ and are substracted from $`P`$ and $`Q`$ residuals computed on the respective buses.
+These quantities are treated as _loads_ and are substracted from $P$ and $Q$ residuals computed on the respective buses.
 
 ## Branch Model
 
 **Note: Transformer model not yet implemented**
 
-The branch model can be created by adding the ideal transformer in series with the $`\pi`$ circuit as shown in Figure 2 where $`\tau`$ is a tap ratio magnitude and $`\theta_{shift}`$is the phase shift angle.
+The branch model can be created by adding the ideal transformer in series with the $\Pi$ circuit as shown in Figure 2 where $\tau$ is a tap ratio magnitude and $\theta_{shift}$ is the phase shift angle.
 
 ![](../../../../docs/Figures/branch.jpg)
 
@@ -120,4 +120,4 @@ The branch admitance matrix is then:
 ```
 ### Branch contribution to residuals for sending and receiving bus
 
-The power flow contribution for the transformer model are obtained in a similar manner as for the $`\pi`$-model.
+The power flow contribution for the transformer model are obtained in a similar manner as for the $\Pi$-model.
