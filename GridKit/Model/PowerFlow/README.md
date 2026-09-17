@@ -25,11 +25,11 @@ P_{i}+jQ_{i}=V_{i}\sum_{j=1}^{n} Y_{ij}^*V_{j}^* \;\;\;\;\;\; i=1,2,...,n
 
 Considering:
 ```math
-V_{i}=\vert V_{i} \vert e^{j\theta_{i}}
+V_{i}=\vert V_{i} \vert \exp(j\theta_{i})
 ```
 
 ```math
-Y_{ij}=\vert Y_{ij} \vert e^{j\psi_{ij}}=G_{ij}+jB_{ij}
+Y_{ij}=\vert Y_{ij} \vert \exp(j\psi_{ij})=G_{ij}+jB_{ij}
 ```
 
 ```math

@@ -113,9 +113,9 @@ The branch admitance matrix is then:
 ```math
 \mathbf{Y}_{BR}=
 \begin{bmatrix}
- \left(g + jb + \dfrac{G+jB}{2} \right)\dfrac{1}{\tau^2} & -(g + jb)\dfrac{1}{\tau e^{-j\theta_{shift}}}\\
+ \left(g + jb + \dfrac{G+jB}{2} \right)\dfrac{1}{\tau^2} & -(g + jb)\dfrac{1}{\tau \exp(-j\theta_{shift})}\\
  &\\
-     -(g + jb)\dfrac{1}{\tau e^{j\theta_{shift}}}.       &   g + jb + \dfrac{G+jB}{2}
+     -(g + jb)\dfrac{1}{\tau \exp(j\theta_{shift})}.       &   g + jb + \dfrac{G+jB}{2}
 \end{bmatrix}
 ```
 ### Branch contribution to residuals for sending and receiving bus
