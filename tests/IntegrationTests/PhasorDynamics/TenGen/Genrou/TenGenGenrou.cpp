@@ -18,6 +18,7 @@
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
 using scalar_type = double;
@@ -189,6 +190,13 @@ int main()
   fileout.close();
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+
+  auto error_set = GridKit::Testing::compareCSV(
+      "TenGenGenrou_Results.csv",
+      "reference/TenGenGenrou.ref.csv",
+      GridKit::Testing::ErrorType::ABSOLUTE);
+  error_set->display();
+  success *= error_set->total_error.max_value < 1e-4;
 
   return success.report("TenGenGenrou");
 }
