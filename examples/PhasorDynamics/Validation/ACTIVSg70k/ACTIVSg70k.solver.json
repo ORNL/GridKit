@@ -1,0 +1,8 @@
+{
+    "system_model_file": "ACTIVSg70k.case.json",
+    "output_file": "ACTIVSg70k.vm.csv",
+    "dt_monitor": 0.016666666666666667,
+    "tmax": 0.05,
+    "max_steps": 1000000,
+    "events": []
+}
