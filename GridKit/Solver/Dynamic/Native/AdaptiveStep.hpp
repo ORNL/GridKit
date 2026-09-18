@@ -15,6 +15,7 @@ namespace AnalysisManager
     template <typename RealT>
     class AdaptiveStep : public StepController<RealT>
     {
+    public:
       /**
        * @brief Parameters for the step controller.
        *
@@ -49,7 +50,6 @@ namespace AnalysisManager
         RealT fac_scale_ = 0.9;
       } params_;
 
-    public:
       AdaptiveStep(const Parameters& params)
         : params_(params)
       {

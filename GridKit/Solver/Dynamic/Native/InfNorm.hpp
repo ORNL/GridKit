@@ -19,7 +19,7 @@ namespace AnalysisManager
     class InfNorm : public ErrorNorm<ScalarT, IdxT>
     {
       using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
-      using RealT = ErrorNorm<ScalarT, IdxT>::RealT;
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
       /**
        * @brief A workspace for the linear algebra operations required to calculate the norm.
@@ -72,6 +72,7 @@ namespace AnalysisManager
       }
 
       RealT errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const final;
+      int   allocate(size_t size);
     };
 
   } // namespace NativeDynamicSolver

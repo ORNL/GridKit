@@ -26,21 +26,16 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     InfNorm<ScalarT, IdxT>::RealT InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const
     {
-      if (int err_code = workspace_.out_->copyFromExternal(&err, memspace, memspace))
-      {
-        throw std::format("GridKit::LinearAlgebra::Vector::copyFromExternal failed with error code {}", err_code);
-      }
-      if (int err_code = workspace_.scale_->copyFromExternal(&y, memspace, memspace))
-      {
-        throw std::format("GridKit::LinearAlgebra::Vector::copyFromExternal failed with error code {}", err_code);
-      }
-      if (int err_code = workspace_.yprev_abs_->copyFromExternal(&yprev, memspace, memspace))
+      if (int err_code = workspace_.out_->copyFromExternal(err, memspace, memspace))
       {
         throw std::format("GridKit::LinearAlgebra::Vector::copyFromExternal failed with error code {}", err_code);
       }
 
-      handler.abs(workspace_.scale_.get(), workspace_.scale_.get(), memspace);
-      handler.abs(workspace_.yprev_abs_.get(), workspace_.scale_.get(), memspace);
+      workspace_.scale_->setDataUpdated();
+      workspace_.yprev_abs_->setDataUpdated();
+
+      handler.abs(&y, workspace_.scale_.get(), memspace);
+      handler.abs(&yprev, workspace_.yprev_abs_.get(), memspace);
       handler.max(workspace_.yprev_abs_.get(), workspace_.scale_.get(), workspace_.scale_.get(), memspace);
 
       // TODO: This scal shouldn't be necessary, but axpy doesn't support scaling the y parameter. In the future,
@@ -51,5 +46,21 @@ namespace AnalysisManager
 
       return handler.amax(workspace_.out_.get(), memspace);
     }
+
+    template <class ScalarT, typename IdxT>
+    int InfNorm<ScalarT, IdxT>::allocate(size_t size)
+    {
+      workspace_.out_       = std::make_unique<State>(size);
+      workspace_.scale_     = std::make_unique<State>(size);
+      workspace_.yprev_abs_ = std::make_unique<State>(size);
+
+      workspace_.out_->allocate();
+      workspace_.scale_->allocate();
+      workspace_.yprev_abs_->allocate();
+
+      return 0;
+    }
+
+    template class InfNorm<double, int>;
   } // namespace NativeDynamicSolver
 } // namespace AnalysisManager
