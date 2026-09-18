@@ -22,9 +22,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for Bus..." << std::endl;
-      Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
-
       if (J_rows_buffer_ == nullptr)
       {
         J_rows_buffer_ = new IdxT[4];

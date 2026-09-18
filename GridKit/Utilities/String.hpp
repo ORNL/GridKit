@@ -12,14 +12,14 @@ namespace GridKit
     /**
      * @brief Convert a string to all uppercase
      */
-    std::string toUpper(std::string str)
+    inline std::string toUpper(std::string str)
     {
       std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c)
                      { return std::toupper(c); });
       return str;
     }
 
-    std::string strip(std::string str)
+    inline std::string strip(std::string str)
     {
       auto notspace = [](char c)
       { return !std::isspace(c); };
