@@ -284,7 +284,7 @@ namespace GridKit
       /**
        * @brief CSR construction dispatch depending on ScalarT
        *
-       * @note Currently only used for testing, particularly for comparing 
+       * @note Currently only used for testing, particularly for comparing
        *       Enzyme and DependencyTracking Jacobians.
        */
       int constructCsr()
@@ -360,7 +360,7 @@ namespace GridKit
       /**
        * @brief CSR construction from COO.
        *
-       * @note Currently only used for testing, particularly for comparing 
+       * @note Currently only used for testing, particularly for comparing
        *       Enzyme and DependencyTracking Jacobians.
        *
        * @todo The matrix is only computed on the first call, and the data is stale on subsequent calls.
@@ -394,17 +394,17 @@ namespace GridKit
       /**
        * @brief CSR construction from Dependency maps.
        *
-       * This merges the y and yp dependencies back to the same location in the Jacobian. 
+       * This merges the y and yp dependencies back to the same location in the Jacobian.
        * See \ref initializeDependencyTrackingVariableNumbers() for the initial even/odd split.
-       * The DependencyMap manipulations are expected to be a bottleneck, so this is not intended 
-       * for simulations. 
+       * The DependencyMap manipulations are expected to be a bottleneck, so this is not intended
+       * for simulations.
        *
-       * @note Currently only used for testing, particularly for comparing 
-       *       Enzyme and DependencyTracking Jacobians. Will be used to benchmark the 
+       * @note Currently only used for testing, particularly for comparing
+       *       Enzyme and DependencyTracking Jacobians. Will be used to benchmark the
        *       performance of the two methods in the near future.
        *
-       * @note For dependency maps, there is no functional difference in Jacobian construction 
-       *       between components and systems. However, the resulting component-level CSR will 
+       * @note For dependency maps, there is no functional difference in Jacobian construction
+       *       between components and systems. However, the resulting component-level CSR will
        *       be invalid if tracked indices are greater than the local `size_`, and should not
        *       be used for simulation. Systems do not rely on the component-level results.
        */
