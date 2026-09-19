@@ -135,6 +135,15 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
+      if (auto port = ports_.out.template port<BusFaultSignalOutputs::ir>())
+      {
+        port.link(&y_.getData()[0], &(this->getVariableIndex(0)));
+      }
+      if (auto port = ports_.out.template port<BusFaultSignalOutputs::ii>())
+      {
+        port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
+      }
+
       allocated_ = true;
       return 0;
     }

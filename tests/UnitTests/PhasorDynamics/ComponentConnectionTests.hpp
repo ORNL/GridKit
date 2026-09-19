@@ -279,8 +279,8 @@ namespace GridKit
         PhasorDynamics::Converter::Regca<ScalarT, IdxT>  converter(&bus, converter_data);
         PhasorDynamics::Controller::Repca<ScalarT, IdxT> plant(&bus, plant_data);
 
-        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ibranchr>().connect(&ir);
-        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ibranchi>().connect(&ii);
+        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ir>().connect(&ir);
+        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ii>().connect(&ii);
         converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::pbranch>().connect(&p);
         converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::qbranch>().connect(&q);
         plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::ir>().connect(&ir);
