@@ -1,11 +1,14 @@
 #pragma once
 
+#include <cstdint>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
 
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
@@ -20,6 +23,51 @@ namespace GridKit
     using Log           = ::GridKit::Utilities::Logger;
     using MonitorFormat = ::GridKit::Model::VariableMonitorFormat;
 
+    using MonitorSink   = ::GridKit::Model::VariableMonitorBase::SinkSpec;
+    using MonitorLayout = ::GridKit::Model::VariableMonitorLayout;
+
+    /// Parse output sinks, rejecting requests that cannot be honored
+    inline std::vector<MonitorSink> parseMonitorSinks(const json& monitors)
+    {
+      if (!monitors.is_array())
+      {
+        throw std::invalid_argument("Monitor configuration must be an array");
+      }
+      std::vector<MonitorSink> sinks;
+      for (const auto& raw_mon : monitors)
+      {
+        const auto fmt_str    = raw_mon.at("format").get<std::string>();
+        const auto format     = magic_enum::enum_cast<MonitorFormat>(fmt_str, magic_enum::case_insensitive);
+        const auto layout_str = raw_mon.value("layout", std::string{"wide"});
+        const auto layout     = magic_enum::enum_cast<MonitorLayout>(layout_str, magic_enum::case_insensitive);
+        if (!format || !layout)
+        {
+          throw std::invalid_argument("Invalid monitor format or layout: " + fmt_str + "/" + layout_str);
+        }
+        const auto file_name  = raw_mon.value("file_name", std::string{});
+        const auto delim      = raw_mon.value("delim", std::string{","});
+        const auto batch_rows = raw_mon.value("batch_rows", json(256));
+        if (!batch_rows.is_number_integer() || batch_rows < 1
+            || batch_rows > std::numeric_limits<std::int64_t>::max())
+        {
+          throw std::invalid_argument("Monitor batch_rows must be a positive int64 integer");
+        }
+        const bool is_arrow = *format == MonitorFormat::ARROW || *format == MonitorFormat::ARROW_STREAM;
+        if (is_arrow && file_name.empty())
+        {
+          throw std::invalid_argument("Arrow monitor output requires a file_name");
+        }
+#ifndef GRIDKIT_ENABLE_ARROW
+        if (is_arrow)
+        {
+          throw std::invalid_argument("Arrow monitor output requires GridKit_ENABLE_ARROW=ON");
+        }
+#endif
+        sinks.push_back({*format, file_name, delim, *layout, batch_rows.get<std::int64_t>()});
+      }
+      return sinks;
+    }
+
     template <typename RealT, typename IdxT>
     void parseSystemContents(const json& j, SystemModelData<RealT, IdxT>& sm);
 
@@ -29,11 +77,6 @@ namespace GridKit
     template <typename RealT = double, typename IdxT = size_t>
     void from_json(const json& j, SystemModelData<RealT, IdxT>& sm)
     {
-      auto enum_parse = []<typename EnumT, typename KeyT>(EnumT, KeyT&& key)
-      {
-        return magic_enum::enum_cast<EnumT>(key, magic_enum::case_insensitive);
-      };
-
       auto header = j.at("header");
 
       if (header.contains("format_version"))
@@ -64,23 +107,7 @@ namespace GridKit
       // sets it with `output_file` and `output_layout`.
       if (j.contains("monitors"))
       {
-        for (auto&& raw_mon : j.at("monitors"))
-        {
-          auto file_name = raw_mon.value("file_name", std::string{});
-          auto fmt_str   = raw_mon.at("format").get<std::string>();
-          auto format    = enum_parse(MonitorFormat{}, fmt_str);
-          auto delim     = raw_mon.value("delim", std::string(","));
-          if (format.has_value())
-          {
-            sm.monitor_sink.emplace_back(format.value(), file_name, delim);
-          }
-          else
-          {
-            Log::error() << "\n\tInvalid monitor format: \"" << fmt_str << "\"."
-                         << "\n\tSee the \"monitors\" list in your JSON file."
-                         << std::endl;
-          }
-        }
+        sm.monitor_sink = parseMonitorSinks(j.at("monitors"));
       }
 
       parseSystemContents(j, sm);

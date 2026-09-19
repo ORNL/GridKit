@@ -6,6 +6,9 @@
 
 #include <ostream>
 #include <string>
+#include <type_traits>
+
+#include <GridKit/Model/VariableMonitorArrowOutput.hpp>
 
 namespace GridKit
 {
@@ -200,6 +203,20 @@ namespace GridKit
                      { this->printFullFooter(sink); },
                      sink);
         }
+      }
+
+      void printFullHeader(const VariableMonitorArrowOutput& sink) const
+      {
+        sink.beginTable(entries_);
+      }
+
+      void printFull(const VariableMonitorArrowOutput& sink) const
+      {
+        sink.append(sample_, static_cast<double>(*time_), entries_);
+      }
+
+      void printFullFooter(const VariableMonitorArrowOutput&) const
+      {
       }
 
     protected:
@@ -476,7 +493,8 @@ namespace GridKit
                                        Sink<Format::YAML, Layout::WIDE>,
                                        Sink<Format::CSV, Layout::LONG>,
                                        Sink<Format::JSON, Layout::LONG>,
-                                       Sink<Format::YAML, Layout::LONG>>;
+                                       Sink<Format::YAML, Layout::LONG>,
+                                       VariableMonitorArrowOutput>;
 
       /**
        * @brief Construct the sink type whose format and layout match the spec
@@ -485,7 +503,21 @@ namespace GridKit
       static SinkVariant make_sink(const SinkSpec& spec, T&& arg)
       {
         using SinkT = std::variant_alternative_t<index, SinkVariant>;
-        if (spec.format == SinkT::format && spec.layout == SinkT::layout)
+        if constexpr (std::is_same_v<SinkT, VariableMonitorArrowOutput>)
+        {
+          if (spec.format == Format::ARROW || spec.format == Format::ARROW_STREAM)
+          {
+            if constexpr (std::is_constructible_v<std::string, T>)
+            {
+              return SinkT(std::forward<T>(arg), spec.format == Format::ARROW_STREAM, spec.layout, spec.batch_rows);
+            }
+            else
+            {
+              throw std::invalid_argument("Arrow monitor output requires a file name");
+            }
+          }
+        }
+        else if (spec.format == SinkT::format && spec.layout == SinkT::layout)
         {
           return SinkT(std::forward<T>(arg), spec.delim);
         }

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -60,9 +61,11 @@ namespace GridKit
      */
     enum class VariableMonitorFormat
     {
-      CSV,  ///< CSV format
-      JSON, ///< JSON format
-      YAML  ///< YAML format
+      CSV,         ///< CSV format
+      JSON,        ///< JSON format
+      YAML,        ///< YAML format
+      ARROW,       ///< Arrow IPC file format
+      ARROW_STREAM ///< Arrow IPC stream format
     };
 
     /**
@@ -98,13 +101,15 @@ namespace GridKit
       struct SinkSpec
       {
         /// Output format
-        Format      format;
+        Format       format;
         /// Output file name (empty for stdout)
-        std::string file_name{};
+        std::string  file_name{};
         /// Delimiter (used only with CSV format currently)
-        std::string delim{","};
+        std::string  delim{","};
         /// Table layout
-        Layout      layout{Layout::WIDE};
+        Layout       layout{Layout::WIDE};
+        /// Rows per Arrow record batch
+        std::int64_t batch_rows{256};
       };
 
       virtual ~VariableMonitorBase()
