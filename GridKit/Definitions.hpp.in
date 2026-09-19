@@ -1,5 +1,6 @@
 #pragma once
 
+#cmakedefine GRIDKIT_ENABLE_ARROW
 #cmakedefine GRIDKIT_ENABLE_ENZYME
 #cmakedefine GRIDKIT_ENABLE_OPENMP
 #cmakedefine GRIDKIT_ENABLE_THREADS
