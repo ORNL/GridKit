@@ -168,9 +168,9 @@ namespace GridKit
         output_stream << "Sparse Csr Matrix: BusFault DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
-        auto dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
-        const auto& bus_residual = bus.getResidual();
-        const auto internal_rows = dependencies.size();
+        auto        dependencies  = GridKit::Testing::MapFromCsr(model_jacobian);
+        const auto& bus_residual  = bus.getResidual();
+        const auto  internal_rows = dependencies.size();
         dependencies.resize(internal_rows + bus_residual.getSize());
         for (IdxT row = 0; row < bus_residual.getSize(); ++row)
         {
