@@ -5,6 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
@@ -60,13 +61,39 @@ namespace GridKit
       {
         for (auto&& raw_mon : j.at("monitors"))
         {
-          auto file_name = raw_mon.value("file_name", std::string{});
-          auto fmt_str   = raw_mon.at("format").get<std::string>();
-          auto format    = enum_parse(MonitorFormat{}, fmt_str);
-          auto delim     = raw_mon.value("delim", std::string(","));
+          auto file_name  = raw_mon.value("file_name", std::string{});
+          auto fmt_str    = raw_mon.at("format").get<std::string>();
+          auto format     = enum_parse(MonitorFormat{}, fmt_str);
+          auto delim      = raw_mon.value("delim", std::string(","));
+          auto batch_rows = raw_mon.value("batch_rows", int64_t{256});
           if (format.has_value())
           {
-            sm.monitor_sink.emplace_back(format.value(), file_name, delim);
+            auto is_arrow = format.value() == MonitorFormat::ARROW
+                            || format.value() == MonitorFormat::ARROW_STREAM;
+#ifndef GRIDKIT_ENABLE_ARROW
+            if (is_arrow)
+            {
+              Log::error() << "\n\tMonitor format \"" << fmt_str << "\" requires GridKit"
+                           << "\n\tbuilt with GridKit_ENABLE_ARROW=ON; skipping this output."
+                           << std::endl;
+              continue;
+            }
+#endif
+            if (is_arrow && file_name.empty())
+            {
+              Log::error() << "\n\tMonitor format \"" << fmt_str << "\" requires a \"file_name\"."
+                           << "\n\tSee the \"monitors\" list in your JSON file."
+                           << std::endl;
+              continue;
+            }
+            if (batch_rows < 1)
+            {
+              Log::error() << "\n\tMonitor \"batch_rows\" must be a positive integer."
+                           << "\n\tSee the \"monitors\" list in your JSON file."
+                           << std::endl;
+              continue;
+            }
+            sm.monitor_sink.emplace_back(format.value(), file_name, delim, batch_rows);
           }
           else
           {
