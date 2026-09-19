@@ -4,6 +4,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -62,6 +63,17 @@ namespace GridKit
       }
 
       virtual int verify() const = 0;
+
+      // @todo This is much clearer if we write it this way
+      virtual int evaluateInternalResidual()
+      {
+        return this->evaluateResidual();
+      }
+
+      virtual int evaluateExternalResidual()
+      {
+        return 0;
+      }
 
       IdxT size() override final
       {
@@ -264,7 +276,7 @@ namespace GridKit
       /**
        * @brief CSR construction dispatch depending on ScalarT
        *
-       * @note Currently only used for testing, particularly for comparing 
+       * @note Currently only used for testing, particularly for comparing
        *       Enzyme and DependencyTracking Jacobians.
        */
       int constructCsr()
@@ -309,6 +321,18 @@ namespace GridKit
       }
 
       /**
+       * @brief Allocate this component's external variable vectors.
+       */
+      void allocateExternalVectors(IdxT n)
+      {
+        y_ext_.resize(n);
+        y_ext_.setToZero();
+        yp_ext_.resize(n);
+        yp_ext_.setToZero();
+        variable_indices_ext_.assign(static_cast<size_t>(n), INVALID_INDEX<IdxT>);
+      }
+
+      /**
        * @brief COO construction from component-level raw buffers.
        *
        * @note The components retain ownership of the data in the raw buffers.
@@ -340,7 +364,7 @@ namespace GridKit
       /**
        * @brief CSR construction from COO.
        *
-       * @note Currently only used for testing, particularly for comparing 
+       * @note Currently only used for testing, particularly for comparing
        *       Enzyme and DependencyTracking Jacobians.
        *
        * @todo The matrix is only computed on the first call, and the data is stale on subsequent calls.
@@ -374,17 +398,17 @@ namespace GridKit
       /**
        * @brief CSR construction from Dependency maps.
        *
-       * This merges the y and yp dependencies back to the same location in the Jacobian. 
+       * This merges the y and yp dependencies back to the same location in the Jacobian.
        * See \ref initializeDependencyTrackingVariableNumbers() for the initial even/odd split.
-       * The DependencyMap manipulations are expected to be a bottleneck, so this is not intended 
-       * for simulations. 
+       * The DependencyMap manipulations are expected to be a bottleneck, so this is not intended
+       * for simulations.
        *
-       * @note Currently only used for testing, particularly for comparing 
-       *       Enzyme and DependencyTracking Jacobians. Will be used to benchmark the 
+       * @note Currently only used for testing, particularly for comparing
+       *       Enzyme and DependencyTracking Jacobians. Will be used to benchmark the
        *       performance of the two methods in the near future.
        *
-       * @note For dependency maps, there is no functional difference in Jacobian construction 
-       *       between components and systems. However, the resulting component-level CSR will 
+       * @note For dependency maps, there is no functional difference in Jacobian construction
+       *       between components and systems. However, the resulting component-level CSR will
        *       be invalid if tracked indices are greater than the local `size_`, and should not
        *       be used for simulation. Systems do not rely on the component-level results.
        */
@@ -537,14 +561,19 @@ namespace GridKit
       IdxT              nnz_{0};
       /// Global (system-level) variable indices
       std::vector<IdxT> variable_indices_;
+      std::vector<IdxT> variable_indices_ext_;
       /// Global (system-level) residual indices
       std::vector<IdxT> residual_indices_;
+      std::vector<IdxT> residual_indices_ext_;
 
       VectorT           y_;
+      VectorT           y_ext_;
       VectorT           yp_;
+      VectorT           yp_ext_;
       std::vector<bool> tag_;
       VectorT           abs_tol_;
       VectorT           f_;
+      VectorT           f_ext_;
       bool              allocated_{false};
 
       std::vector<ScalarT> g_;
@@ -570,15 +599,6 @@ namespace GridKit
       std::vector<ScalarT> param_lo_{};
 
       IdxT gridkit_component_id_{0};
-
-      /// Bus interface values seen by the internal residual
-      VectorT           wb_;
-      /// External residual equations vector
-      VectorT           h_;
-      /// External signal values seen by the internal residual
-      VectorT           ws_;
-      /// Global indices of attached external signals
-      std::vector<IdxT> ws_indices_;
 
       RealT time_;
       RealT alpha_;
