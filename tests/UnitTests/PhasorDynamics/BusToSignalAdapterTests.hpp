@@ -80,7 +80,7 @@ namespace GridKit
         adapter.getPorts().in.template port<SignalIn::ir>().connect(&ir_sig);
         adapter.getPorts().in.template port<SignalIn::ii>().connect(&ii_sig);
         adapter.allocate();
-        success *= (adapter.verify() == 0);
+        success *= (adapter.verify().passed());
         success *= (vr_sig.read() == Vr);
         success *= (vi_sig.read() == Vi);
 

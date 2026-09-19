@@ -9,8 +9,9 @@
 #include <algorithm>
 #include <cmath>
 #include <mutex>
-#include <variant>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
@@ -168,78 +169,25 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
+        Model::ParameterReader reader(data, "Regca");
 
-        auto load_required_real = [&](auto key, RealT& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            Log::error() << "Regca: missing required parameter '" << name << "'\n";
-            ++parameter_error_count_;
-            return;
-          }
+        reader.requireReal(Params::p0, p0_);
+        reader.requireReal(Params::q0, q0_);
+        reader.requireReal(Params::mva, mva_base_);
+        reader.requireReal(Params::Tg, Tg_);
+        reader.requireReal(Params::TM, TM_);
+        reader.requireReal(Params::Rqmax, Rqmax_);
+        reader.requireReal(Params::Rqmin, Rqmin_);
+        reader.requireReal(Params::Rpmax, Rpmax_);
+        reader.requireSwitch(Params::sL, sL_);
+        reader.requireReal(Params::IL1, IL1_);
+        reader.requireReal(Params::VL0, VL0_);
+        reader.requireReal(Params::VL1, VL1_);
+        reader.requireReal(Params::VA0, VA0_);
+        reader.requireReal(Params::VA1, VA1_);
+        reader.requireReal(Params::Vhvmax, Vhvmax_);
 
-          const auto& value = data.parameters.at(key);
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            target = *real_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            target = static_cast<RealT>(*index_value);
-          }
-          else
-          {
-            Log::error() << "Regca: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        auto load_required_switch = [&](auto key, bool& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            Log::error() << "Regca: missing required parameter '" << name << "'\n";
-            ++parameter_error_count_;
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* bool_value = std::get_if<bool>(&value))
-          {
-            target = *bool_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value);
-                   index_value && (*index_value == 0 || *index_value == 1))
-          {
-            target = (*index_value == 1);
-          }
-          else
-          {
-            Log::error() << "Regca: parameter '" << name << "' must be bool or 0/1\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        load_required_real(Params::p0, p0_, "p0");
-        load_required_real(Params::q0, q0_, "q0");
-        load_required_real(Params::mva, mva_base_, "mva");
-        load_required_real(Params::Tg, Tg_, "Tg");
-        load_required_real(Params::TM, TM_, "TM");
-        load_required_real(Params::Rqmax, Rqmax_, "Rqmax");
-        load_required_real(Params::Rqmin, Rqmin_, "Rqmin");
-        load_required_real(Params::Rpmax, Rpmax_, "Rpmax");
-        load_required_switch(Params::sL, sL_, "sL");
-        load_required_real(Params::IL1, IL1_, "IL1");
-        load_required_real(Params::VL0, VL0_, "VL0");
-        load_required_real(Params::VL1, VL1_, "VL1");
-        load_required_real(Params::VA0, VA0_, "VA0");
-        load_required_real(Params::VA1, VA1_, "VA1");
-        load_required_real(Params::Vhvmax, Vhvmax_, "Vhvmax");
-        if (data.parameters.contains(Params::Khv))
-        {
-          load_required_real(Params::Khv, Khv_, "Khv");
-        }
+        reader.loadReal(Params::Khv, Khv_);
 
         setDerivedParameters();
       }
@@ -365,56 +313,32 @@ namespace GridKit
        * terminal bus, and checks that attached command ports have linked sources.
        * Operating-point admissibility is checked by initialize().
        *
-       * @return Number of configuration errors, zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Regca<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Regca<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
+        Model::ConfigurationChecks checks;
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Regca: " << message << '\n';
-            ret += 1;
-          }
-        };
+        checks.check(bus_ != nullptr, "bus pointer is null");
 
-        if (bus_ == nullptr)
-        {
-          Log::error() << "Regca: bus pointer is null\n";
-          ret += 1;
-        }
+        checks.check(mva_base_ > ZERO<RealT>, "mva must be positive");
+        checks.check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
+        checks.check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
+        checks.check(KL_ > ZERO<RealT>, "LVPL release slope must be positive");
+        checks.check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
+        checks.check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
+                     "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
 
-        check(mva_base_ > ZERO<RealT>, "mva must be positive");
-        check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
-        check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
-        check(std::isfinite(Khv_) && Khv_ >= ZERO<RealT>,
-              "Khv must be finite and non-negative");
-        check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
-        check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
-              "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
+        checks.check(std::isfinite(Khv_) && Khv_ >= ZERO<RealT>,
+                     "Khv must be finite and non-negative");
 
-        if (ports_.in.template port<RegcaSignalInputs::ipcmd>())
-        {
-          if (!ports_.in.template port<RegcaSignalInputs::ipcmd>().linked())
-          {
-            Log::error() << "Regca: ipcmd signal attached with no linked source\n";
-            ret += 1;
-          }
-        }
+        const auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>();
+        checks.check(!ipcmd_port.connected() || ipcmd_port.linked(), "ipcmd signal attached with no linked source");
+        const auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>();
+        checks.check(!iqcmd_port.connected() || iqcmd_port.linked(), "iqcmd signal attached with no linked source");
 
-        if (ports_.in.template port<RegcaSignalInputs::iqcmd>())
-        {
-          if (!ports_.in.template port<RegcaSignalInputs::iqcmd>().linked())
-          {
-            Log::error() << "Regca: iqcmd signal attached with no linked source\n";
-            ret += 1;
-          }
-        }
-
-        return ret;
+        return checks;
       }
 
       /**
