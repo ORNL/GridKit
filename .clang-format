@@ -66,6 +66,9 @@ IncludeCategories:
   - Regex:          '^<(nlohmann|magic_enum)'       # Library includes
     Priority:       3
     CaseSensitive:  true
+  - Regex:          '^<arrow\/'                     # Library includes
+    Priority:       3
+    CaseSensitive:  true
   - Regex:          '^<(idas|sun|kinsol|nvector)'   # Library includes
     Priority:       3
     CaseSensitive:  true
