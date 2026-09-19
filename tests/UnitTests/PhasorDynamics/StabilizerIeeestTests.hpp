@@ -900,8 +900,8 @@ namespace GridKit
         }
         // Check the new single-pass CSR assembly against Enzyme as well.
         Fixture<DepVar> automatic(data);
-        automatic.u() = 0.5;
-        success *= automatic.initialize();
+        automatic.u()  = 0.5;
+        success       *= automatic.initialize();
         setAnswerKey(automatic.model);
         auto* automatic_y  = automatic.model.y().getData();
         auto* automatic_yp = automatic.model.yp().getData();
@@ -913,11 +913,11 @@ namespace GridKit
         }
         automatic.u().setVariableNumber(2 * static_cast<size_t>(automatic.uIndex()));
         automatic.model.updateTime(0.0, 1.0);
-        success *= (automatic.evaluate() == 0);
-        success *= (automatic.model.evaluateJacobian() == 0);
-        const auto assembled = MapFromCsr(automatic.model.getCsrJacobian());
-        const auto expected_csr = enzymeJacobian(data, success);
-        success *= (assembled.size() == expected_csr.size());
+        success                 *= (automatic.evaluate() == 0);
+        success                 *= (automatic.model.evaluateJacobian() == 0);
+        const auto assembled     = MapFromCsr(automatic.model.getCsrJacobian());
+        const auto expected_csr  = enzymeJacobian(data, success);
+        success                 *= (assembled.size() == expected_csr.size());
         for (size_t row = 0; row < std::min(assembled.size(), expected_csr.size()); ++row)
         {
           success *= isEqual(assembled[row], expected_csr[row], kTol);
