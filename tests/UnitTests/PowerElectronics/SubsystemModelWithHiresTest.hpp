@@ -5,6 +5,7 @@
 #include <limits>
 #include <vector>
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/NodeBase.hpp>
@@ -13,6 +14,7 @@
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -541,7 +543,7 @@ namespace GridKit
         // Construct the partition interface
         // ---------------------------------------------------------------------
 
-        bus_interface_ = new BusPartitionInterface<ScalarT, IdxT>(&bus_, comp3_, 4);
+        bus_interface_ = new PowerElectronics::BusPartitionInterface<ScalarT, IdxT>(&bus_, comp3_, 4);
 
         bus_interface_->allocate();
 
@@ -571,7 +573,8 @@ namespace GridKit
         delete system_;
       }
 
-      void distributeVariables(const std::vector<ScalarT>& y, const std::vector<ScalarT>& yp)
+      template <typename T>
+      void distributeVariables(const T& y, T& yp)
       {
         for (auto* partition : partitions_)
         {
@@ -640,17 +643,12 @@ namespace GridKit
 
         auto* reference_residual = system_->getResidual().getData();
 
-        RealT max_error = 0.0;
+        RealT tolerance = 100 * std::numeric_limits<RealT>::epsilon();
 
         for (size_t i = 0; i < system_->size(); ++i)
         {
-          double error = std::abs(partition_residual[i] - reference_residual[i]) / std::abs(reference_residual[i] + 1);
-          max_error    = std::max(max_error, error);
+          success *= Testing::isEqual(partition_residual[i], reference_residual[i], tolerance);
         }
-
-        std::cout << "max error " << max_error << std::endl;
-
-        success *= max_error <= std::numeric_limits<RealT>::epsilon();
 
         return success.report(__func__);
       }
@@ -698,35 +696,26 @@ namespace GridKit
 
           auto* partition_jac = partition->getCsrJacobian();
 
-          const auto* row_ptr = partition_jac->getRowData();
-          const auto* cols    = partition_jac->getColData();
-          const auto* vals    = partition_jac->getValues();
-
-          const size_t n = partition->getInternalSize();
-
-          std::vector<std::vector<RealT>> dense_jac(n, std::vector<RealT>(n, 0.0));
-
-          // Convert the partition CSR Jacobian to a dense matrix.
-          for (size_t row = 0; row < n; ++row)
-          {
-            for (IdxT k = row_ptr[row]; k < row_ptr[row + 1]; ++k)
-            {
-              dense_jac[row][cols[k]] = vals[k];
-            }
-          }
+          const auto   jac_map        = Testing::MapFromCsr(partition_jac);
+          const size_t partition_size = partition->getInternalSize();
 
           // Compare with the corresponding entries of the full Jacobian.
-          for (size_t row = 0; row < n; ++row)
+          for (size_t row = 0; row < partition_size; ++row)
           {
             const IdxT global_row = partition->getNodeConnection(row);
             const IdxT ref_row    = sysmodel_to_hires[global_row];
 
-            for (size_t col = 0; col < n; ++col)
+            for (size_t col = 0; col < partition_size; ++col)
             {
               const IdxT global_col = partition->getNodeConnection(col);
               const IdxT ref_col    = sysmodel_to_hires[global_col];
 
-              success *= std::abs(dense_jac[row][col] - reference_jac[ref_row][ref_col]) <= std::numeric_limits<RealT>::epsilon();
+              const auto& jac_row       = jac_map[row];
+              const RealT jac_value     = jac_row.contains(col) ? jac_row.at(col) : RealT{0};
+              const RealT ref_jac_value = reference_jac[ref_row][ref_col];
+              const RealT tolerance     = 100 * std::numeric_limits<RealT>::epsilon();
+
+              success *= Testing::isEqual(jac_value, ref_jac_value, tolerance);
             }
           }
         }
@@ -735,6 +724,9 @@ namespace GridKit
       }
 
     private:
+      /// @brief system size.
+      static constexpr size_t SYSTEM_SIZE = 8;
+
       /// @brief Bus used to define the connection between the HIRES components.
       Bus bus_;
 
@@ -757,16 +749,16 @@ namespace GridKit
       HiresComponent3<ScalarT, IdxT>* comp3_;
 
       /// @brief Partition interface representing the bus connection across the subsystem boundary.
-      BusPartitionInterface<ScalarT, IdxT>* bus_interface_;
+      PowerElectronics::BusPartitionInterface<ScalarT, IdxT>* bus_interface_;
 
       /// @brief Collection of subsystems comprising the partitioned HIRES system.
       std::vector<Subsystem*> partitions_;
 
       /// @brief State vector used to initialize and evaluate the HIRES system.
-      std::vector<ScalarT> y_;
+      std::array<ScalarT, SYSTEM_SIZE> y_;
 
       /// @brief State derivative vector used to initialize and evaluate the HIRES system.
-      std::vector<ScalarT> yp_;
+      std::array<ScalarT, SYSTEM_SIZE> yp_;
     };
 
   } // namespace Testing
