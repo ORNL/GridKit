@@ -6,7 +6,9 @@ target_link_libraries(
 add_executable(test_subsystem_model_with_hires runSubsystemModelWithHiresTest.cpp)
 target_link_libraries(
   test_subsystem_model_with_hires
-  PRIVATE GridKit::power_elec_partition_interfaces GridKit::testing GridKit::sparse_matrix)
+  PRIVATE GridKit::power_elec_partition_interfaces 
+          GridKit::testing GridKit::sparse_matrix
+          GridKit::Utilities)
 
 add_executable(test_power_electronics_component_clone runComponentCloneTests.cpp)
 target_link_libraries(
