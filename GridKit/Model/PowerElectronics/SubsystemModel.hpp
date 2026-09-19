@@ -5,7 +5,9 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -88,7 +90,6 @@ namespace GridKit
     using SystemModel::csr_jac_;
     using SystemModel::jac_call_count_;
     using SystemModel::map_to_csr_;
-    using SystemModel::neg1_;
     using SystemModel::nodes_;
     using SystemModel::use_jac_;
 
@@ -150,27 +151,23 @@ namespace GridKit
      */
     int allocate() override
     {
-      if (int err_code = buildIndexMappings())
+      if (this->isAllocated())
+      {
+        restoreGlobalConnection();
+      }
+
+      if (int err_code = buildConnectionMap())
       {
         return err_code;
       }
-
-      if (int err_code = mapGlobalToLocal())
-      {
-        return err_code;
-      }
-
-      n_intern_ = internal_map_.size();
-      n_extern_ = external_map_.size();
-      size_     = n_intern_;
 
       // Allocate subsystem vectors.
       y_ext_data_.resize(n_extern_);
       yp_ext_data_.resize(n_extern_);
       f_ext_data_.resize(n_extern_);
 
-      connection_nodes_ = std::make_unique<IdxT[]>(size_);
-      if (!allocated_)
+      connection_nodes_ = std::make_unique<IdxT[]>(n_intern_ + n_extern_);
+      if (!this->isAllocated())
       {
         allocateVectors(static_cast<IdxT>(size_), true);
         abs_tol_.setToZero(memory::HOST);
@@ -181,86 +178,91 @@ namespace GridKit
       external_data_indices_.resize(n_extern_);
 
       // Store the mapping from local subsystem indices back to their global system indices
-      for (const auto [global_idx, local_idx] : internal_map_)
+      for (const auto [global_idx, local_idx] : global_to_local_map_)
       {
         this->setConnectionNodes(local_idx, global_idx);
       }
 
       // Store the global indices of all external coupling variables.
-      for (const auto [global_idx, local_idx] : external_map_)
+      size_t counter = 0;
+      for (size_t i = n_intern_; i < (n_intern_ + n_extern_); i++)
       {
-        external_data_indices_[local_idx - n_intern_] = global_idx;
+        external_data_indices_[counter] = this->getNodeConnection(i);
+        counter++;
       }
 
-      { // Start node internal indexing after all component internals for proper KLU ordering
-        size_t node_internal_idx;
-        for (node_type* node : nodes_)
+      // Start node internal indexing after all component internals for proper KLU ordering
+      for (node_type* node : nodes_)
+      {
+        for (size_t i = 0; i < node->getInternalSize(); i++)
         {
-          for (size_t i = 0; i < node->getInternalSize(); i++)
-          {
-            node_internal_idx = node->getNodeConnection(i).idx_;
+          const IdxT node_global_connection = node->getNodeConnection(i).idx_;
+          const IdxT node_local_connection  = global_to_local_map_.at(node_global_connection);
 
-            ExternalConnection<ScalarT, IdxT> node_connection{
-                .y_   = y_int_ + node_internal_idx,
-                .yp_  = yp_int_ + node_internal_idx,
-                .f_   = f_int_ + node_internal_idx,
-                .idx_ = static_cast<IdxT>(node_internal_idx)};
+          ExternalConnection<ScalarT, IdxT> node_connection{
+              .y_   = y_int_ + node_local_connection,
+              .yp_  = yp_int_ + node_local_connection,
+              .f_   = f_int_ + node_local_connection,
+              .idx_ = static_cast<IdxT>(node_local_connection)};
 
-            node->setExternalConnectionNodes(i, node_connection);
-          }
+          node->setExternalConnectionNodes(i, node_connection);
         }
       }
 
+      ScalarT* y_ext_data_ptr  = y_ext_data_.getData();
+      ScalarT* yp_ext_data_ptr = yp_ext_data_.getData();
+      ScalarT* f_ext_data_ptr  = f_ext_data_.getData();
+
+      size_t component_internal_idx = 0;
+      for (component_type* comp : components_)
       {
-        ScalarT* y_ext_data_ptr  = y_ext_data_.getData();
-        ScalarT* yp_ext_data_ptr = yp_ext_data_.getData();
-        ScalarT* f_ext_data_ptr  = f_ext_data_.getData();
+        // Update component internal pointers to their correct offsets
+        comp->setInternalPointer(&y_int_[component_internal_idx]);
+        comp->setInternalDerivativePointer(&yp_int_[component_internal_idx]);
+        comp->setInternalResidualPointer(&f_int_[component_internal_idx]);
 
-        // The offset for each component's internal variables in the system vector.
-        // They start at 0, and are stacked on top of each other.
-        size_t component_internal_idx = 0;
-        for (component_type* comp : components_)
+        component_internal_idx += comp->getInternalSize();
+
+        const auto& external_indices = comp->getExternIndices();
+
+        for (IdxT i = 0; i < comp->size(); i++)
         {
-          // Update component internal pointers to their correct offsets
-          comp->setInternalPointer(&y_int_[component_internal_idx]);
-          comp->setInternalDerivativePointer(&yp_int_[component_internal_idx]);
-          comp->setInternalResidualPointer(&f_int_[component_internal_idx]);
+          const IdxT comp_global_connection = comp->getNodeConnection(i);
+          const IdxT comp_local_connection  = global_to_local_map_.at(comp_global_connection);
 
-          component_internal_idx += comp->getInternalSize();
-
-          const auto& external_indices = comp->getExternIndices();
-
-          for (IdxT local_index : external_indices)
+          // Internal component variables use their subsystem-local connection indices.
+          if (!external_indices.contains(i))
           {
-            const IdxT connection_index = comp->getNodeConnection(local_index);
+            comp->setConnectionNodes(i, comp_local_connection);
+            continue;
+          }
 
-            // A variable can be external from the component's point of view while still
-            // being owned by this subsystem. In that case, connect the component directly
-            // to the corresponding entry in the subsystem's internal vectors.
-            if (connection_index < n_intern_)
-            {
-              ExternalConnection<ScalarT, IdxT> connection{
-                  .y_   = y_int_ + connection_index,
-                  .yp_  = yp_int_ + connection_index,
-                  .f_   = f_int_ + connection_index,
-                  .idx_ = connection_index};
+          if (comp_local_connection < this->getInternalSize())
+          {
+            // This variable is external to the component but internal to the subsystem,
+            // since it is owned by another component within the subsystem.
 
-              comp->setExternalConnectionNodes(local_index, connection);
+            ExternalConnection<ScalarT, IdxT> connection{
+                .y_   = y_int_ + comp_local_connection,
+                .yp_  = yp_int_ + comp_local_connection,
+                .f_   = f_int_ + comp_local_connection,
+                .idx_ = comp_local_connection};
 
-              continue;
-            }
-
+            comp->setExternalConnectionNodes(i, connection);
+          }
+          else
+          {
             // Otherwise the variable is owned outside this subsystem. Connect the
             // component to the subsystem's external coupling-data storage instead.
-            const IdxT external_offset = connection_index - static_cast<IdxT>(n_intern_);
+            const IdxT external_offset = comp_local_connection - static_cast<IdxT>(this->getInternalSize());
 
             ExternalConnection<ScalarT, IdxT> connection{
                 .y_   = y_ext_data_ptr + external_offset,
                 .yp_  = yp_ext_data_ptr + external_offset,
                 .f_   = f_ext_data_ptr + external_offset,
-                .idx_ = connection_index};
+                .idx_ = comp_local_connection};
 
-            comp->setExternalConnectionNodes(local_index, connection);
+            comp->setExternalConnectionNodes(i, connection);
           }
         }
       }
@@ -283,7 +285,7 @@ namespace GridKit
       // variables are retained.
       auto isValidEntry = [this](IdxT row, IdxT col)
       {
-        if (row == neg1_ || col == neg1_)
+        if (row == INVALID_INDEX<IdxT> || col == INVALID_INDEX<IdxT>)
         {
           return false;
         }
@@ -319,8 +321,7 @@ namespace GridKit
       IdxT*  cols_dup = new IdxT[nnz_dup];
       RealT* vals_dup = new RealT[nnz_dup];
 
-      IdxT counter = 0;
-
+      counter = 0;
       for (const component_type* component : components_)
       {
         const IdxT*  r   = component->jacobianCooRows();
@@ -464,13 +465,6 @@ namespace GridKit
             "SubsystemModel::addComponent: cannot add an unallocated component.");
       }
 
-      if (connections_are_local_)
-      {
-        throw std::logic_error(
-            "SubsystemModel::addComponent: cannot add component while "
-            "in local-indexed state. Call release() first.");
-      }
-
       SystemModel::addComponent(component);
     }
 
@@ -491,13 +485,6 @@ namespace GridKit
             "SubsystemModel::addNode: cannot add an unallocated node.");
       }
 
-      if (connections_are_local_)
-      {
-        throw std::logic_error(
-            "SubsystemModel::addNode: cannot add node while in "
-            "local-indexed state. Call release() first.");
-      }
-
       SystemModel::addNode(node);
     }
 
@@ -516,29 +503,29 @@ namespace GridKit
     }
 
     /**
-     * @brief Restore the subsystem topology to global system indexing.
+     * @brief Restores the subsystem to global system indexing.
      *
-     * Reverses local subsystem connection indices with the original
-     * global system indices. The local internal/external mappings are
-     * then cleared so that components or nodes can safely be added or removed.
+     * Restores the original global connection indices of all components and nodes,
+     * then clears the subsystem's global-to-local connection map. The subsystem is
+     * marked unallocated so that its local indexing can be rebuilt when it is
+     * allocated again.
      *
-     * @pre Component and node connections may use local subsystem indices.
+     * @pre Component and node connections may use subsystem-local indices.
      *
-     * @post Component and node connections use their original global indices,
-     *       the subsystem mappings are cleared, and the subsystem is marked
-     *       unallocated.
+     * @post Component and node connections use their original global system indices,
+     *       `global_to_local_map_` is empty, and the subsystem is unallocated.
      *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+     * @return 0 on success, otherwise an error code returned while restoring the
+     *         global connections.
      */
-    int release()
+    int restoreGlobalConnection()
     {
       if (int err_code = mapLocalToGlobal())
       {
         return err_code;
       }
 
-      internal_map_.clear();
-      external_map_.clear();
+      global_to_local_map_.clear();
 
       allocated_ = false;
 
@@ -572,244 +559,156 @@ namespace GridKit
 
     const std::unordered_map<IdxT, IdxT>& getInternalMap() const
     {
-      return internal_map_;
-    }
-
-    const std::unordered_map<IdxT, IdxT>& getExternalMap() const
-    {
-      return external_map_;
+      return global_to_local_map_;
     }
 
   private:
     /**
-     * @brief Restore local subsystem connection indices to global system indices.
+     * @brief Restores subsystem-local connection indices to global system indices.
      *
-     * Reverses \ref mapGlobalToLocal(). Internal subsystem indices are translated
-     * through the subsystem connection-node table, while external subsystem
-     * indices are translated through external_data_indices_.
+     * Replaces the local connection indices stored by each component and node with
+     * their corresponding global system indices. Each local index is mapped back to
+     * its original global connection using the subsystem connection table.
      *
-     * The component/node connectivity is unchanged; only the index representation
-     * is restored.
+     * This reverses the local indexing established during subsystem allocation
+     * without changing the underlying component or node connectivity.
      *
-     * @pre Component and node connections use local subsystem indices.
+     * @pre Component and node connections use subsystem-local indices.
      *
-     * @post Component and node connections use their original global indices.
+     * @post Component and node connections use their original global system indices.
      *
      * @return 0 on success.
      */
     int mapLocalToGlobal()
     {
-      if (!connections_are_local_)
+      if (!this->isAllocated())
       {
         return 0;
       }
 
+      IdxT local_connection;
+
       for (component_type* component : components_)
       {
-
         for (IdxT i = 0; i < component->size(); i++)
         {
-          const IdxT index = component->getNodeConnection(i);
+          local_connection = component->getNodeConnection(i);
 
-          if (index == neg1_)
+          if (local_connection != INVALID_INDEX<IdxT>)
           {
-            continue;
-          }
-          else if (index < this->getInternalSize())
-          {
-            component->setConnectionNodes(i, this->getNodeConnection(index));
-          }
-          else
-          {
-            component->setConnectionNodes(i, external_data_indices_[index - this->getInternalSize()]);
+            component->setConnectionNodes(i, this->getNodeConnection(local_connection));
           }
         }
       }
 
       for (node_type* node : nodes_)
       {
-
         for (IdxT i = 0; i < node->size(); i++)
         {
-          const IdxT index = node->getNodeConnection(i).idx_;
+          local_connection = node->getNodeConnection(i).idx_;
 
-          if (index == neg1_)
+          if (local_connection != INVALID_INDEX<IdxT>)
           {
-            continue;
+            node->setConnectionNodes(i, this->getNodeConnection(local_connection));
           }
-          node->setConnectionNodes(i, this->getNodeConnection(index));
         }
       }
-
-      connections_are_local_ = false;
 
       return 0;
     }
 
     /**
-     * @brief Replace global connection indices with subsystem-local indices.
+     * @brief Builds the global-to-local connection map for the subsystem.
      *
-     * Uses the mappings created by \ref buildIndexMappings() to rewrite the connection
-     * indices stored by every component and node. Variables owned by the subsystem
-     * use `internal_map_`; variables owned outside the subsystem use `external_map_`.
+     * Assigns a local connection index to every variable referenced by the subsystem.
+     * Variables owned by components and nodes in the subsystem form the internal
+     * variables of the subsystem and are assigned the first N local indices [0, N).
+     * Variables required by the subsystem but owned outside it are then assigned
+     * local indices starting at N.
      *
-     * This changes only the indexing used to identify connections; it does not
-     * change the physical component/node connectivity.
-     *
-     * @pre `internal_map_` and `external_map_` have been constructed from global
-     *      connection indices.
-     *
-     * @post All valid component and node connections use local subsystem indices.
-     *
-     * @return 0 on success.
-     */
-    int mapGlobalToLocal()
-    {
-      if (connections_are_local_)
-      {
-        return 0;
-      }
-
-      for (component_type* component : components_)
-      {
-        for (IdxT i = 0; i < component->size(); ++i)
-        {
-          const IdxT index = component->getNodeConnection(i);
-
-          if (index == neg1_)
-          {
-            continue;
-          }
-
-          if (internal_map_.contains(index))
-          {
-            component->setConnectionNodes(i, internal_map_.at(index));
-          }
-          else
-          {
-            component->setConnectionNodes(i, external_map_.at(index));
-          }
-        }
-      }
-
-      for (node_type* node : nodes_)
-      {
-        for (IdxT i = 0; i < node->size(); ++i)
-        {
-          const IdxT index = node->getNodeConnection(i).idx_;
-
-          if (index == neg1_)
-          {
-            continue;
-          }
-
-          node->setConnectionNodes(i, internal_map_.at(index));
-        }
-      }
-
-      connections_are_local_ = true;
-
-      return 0;
-    }
-
-    /**
-     * @brief Build the global-to-local variable mappings for the subsystem.
-     *
-     * Examines the connection indices of all components and nodes in the
-     * subsystem and divides the referenced variables into two groups:
-     *
-     * - Internal variables are owned by a component or node in this subsystem.
-     * - External variables are required by a subsystem component but are owned
-     *   outside the subsystem.
-     *
-     * Internal variables receive local indices first. External coupling variables
-     * are then assigned indices immediately after the internal range. This gives
-     * every variable referenced by the subsystem a unique local index while
-     * preserving its original global index in the corresponding map.
+     * A variable that is external to a component may still be internal to the
+     * subsystem if it is owned by another component or node in the same subsystem.
+     * Such variables retain the local indices assigned during the internal passes.
      *
      * @pre Component and node connections use global system indices.
      *
-     * @post internal_map_ and external_map_ contain the global-to-local mappings
-     *       needed to convert the subsystem topology to local indexing.
+     * @post `global_to_local_map_` maps each referenced global connection to its
+     *       subsystem-local index, with internal variables followed by external
+     *       variables.
      *
      * @return 0 on success.
      */
-    int buildIndexMappings()
+    int buildConnectionMap()
     {
 
-      if (connections_are_local_)
-      {
-        return 0;
-      }
+      global_to_local_map_.clear();
 
-      internal_map_.clear();
-      external_map_.clear();
-
-      size_t component_internal_idx = 0;
-      // Pass 1: Add variables owned internally by subsystem components.
+      // Collect each component's internal variables and assign them local indices,
+      // since they make up the internal variables of the subsystem.
+      IdxT local_connection = 0;
       for (component_type* comp : components_)
       {
         const auto& extern_indices = comp->getExternIndices();
 
         for (IdxT i = 0; i < comp->size(); i++)
         {
-          const IdxT index = comp->getNodeConnection(i);
+          const IdxT global_connection = comp->getNodeConnection(i);
 
-          if (index != neg1_ && !extern_indices.contains(i))
+          if (global_connection != INVALID_INDEX<IdxT> && !extern_indices.contains(i))
           {
-            internal_map_[index] = component_internal_idx++;
+            global_to_local_map_[global_connection] = local_connection++;
           }
         }
       }
 
-      // Pass 2: Add variables owned by subsystem nodes.
+      // Node variables are also owned by the subsystem and therefore complete
+      // the set of subsystem-internal variables.
       for (node_type* node : nodes_)
       {
-
         for (IdxT i = 0; i < node->size(); i++)
         {
-          const IdxT index = node->getNodeConnection(i).idx_;
+          const IdxT global_connection = node->getNodeConnection(i).idx_;
 
-          if (index != neg1_)
+          if (global_connection != INVALID_INDEX<IdxT>)
           {
-            internal_map_[index] = component_internal_idx++;
+            global_to_local_map_[global_connection] = local_connection++;
           }
         }
       }
 
-      // Pass 3: Add component dependencies that are owned outside the subsystem.
-      size_t component_external_idx = component_internal_idx;
+      // Everything assigned so far is internal to the subsystem.
+      const IdxT internal_size = local_connection;
+
+      // Finally assign local indices to variables owned outside the subsystem.
       for (component_type* comp : components_)
       {
         auto extern_indices = comp->getExternIndices();
+
         for (IdxT j = 0; j < comp->size(); j++)
         {
-          if (!extern_indices.contains(j))
+          if (extern_indices.contains(j))
           {
-            continue;
-          }
+            const IdxT global_connection = comp->getNodeConnection(j);
 
-          const IdxT index = comp->getNodeConnection(j);
-
-          if (index != neg1_ && !internal_map_.contains(index) && !external_map_.contains(index))
-          {
-            external_map_[index] = component_external_idx++;
+            if (global_connection != INVALID_INDEX<IdxT> && !global_to_local_map_.contains(global_connection))
+            {
+              global_to_local_map_[global_connection] = local_connection++;
+            }
           }
         }
       }
+
+      n_intern_ = static_cast<size_t>(internal_size);
+      n_extern_ = static_cast<size_t>(local_connection - internal_size);
+      size_     = local_connection;
 
       return 0;
     }
 
     /**
-     *@brief Maps global system indices to local subsystem indices for internal variables.
+     *@brief Maps global system connection indices to local subsystem connection indices.
      */
-    std::unordered_map<IdxT, IdxT> internal_map_;
-
-    /**
-     * @brief Maps global system indices to local subsystem indices for external variables.
-     */
-    std::unordered_map<IdxT, IdxT> external_map_;
+    std::unordered_map<IdxT, IdxT> global_to_local_map_;
 
     /**
      * @brief Global system index corresponding to each entry in the external subsystem vectors.
@@ -845,11 +744,6 @@ namespace GridKit
      * in the partition split.
      */
     std::vector<interface_type*> interfaces_;
-
-    /**
-     * @brief Keeps track of whether the components are in local state or global state
-     */
-    bool connections_are_local_{false};
 
   }; // class SubsystemModel
 
