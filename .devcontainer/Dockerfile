@@ -4,9 +4,9 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 ARG LLVM_VERSION=16
 ARG BUILD_JOBS=4
-# GridKit currently requires SUNDIALS develop. Replace this with the full,
-# tested commit SHA after the first successful end-to-end build.
-ARG SUNDIALS_REF=develop
+# GridKit requires SUNDIALS >= 7.8.0 (INSTALL.md); match the version pinned
+# in buildsystem/spack_repo/gridkit/packages/gridkit/package.py.
+ARG SUNDIALS_REF=v7.8.0
 ARG IPOPT_REF=releases/3.14.19
 # GridKit requires Enzyme >= 0.0.206 and warns that some versions are
 # incompatible. Start with this candidate and pin its full SHA after testing.
