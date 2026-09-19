@@ -95,6 +95,7 @@
 - Added `GridKit_ENABLE_DEVELOPER_MODE` CMake option; in developer mode the Logger defaults to `EVERYTHING` verbosity.
 - Added `Logger::raiseVerbosity()`, which raises the verbosity without lowering a higher level.
 - Changed most of the core library code outputs to use the Logger instead of `std::cout`/`std::cerr`.
+- Added Apache Arrow IPC monitor output formats (`arrow` for the Feather v2 file format, `arrow_stream` for live streaming), behind the optional `GridKit_ENABLE_ARROW` build flag.
 
 ## v0.1
 

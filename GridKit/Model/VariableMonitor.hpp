@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -58,9 +59,11 @@ namespace GridKit
      */
     enum class VariableMonitorFormat
     {
-      CSV,  ///< CSV format
-      JSON, ///< JSON format
-      YAML  ///< YAML format
+      CSV,         ///< CSV format
+      JSON,        ///< JSON format
+      YAML,        ///< YAML format
+      ARROW,       ///< Apache Arrow IPC file format (Feather v2)
+      ARROW_STREAM ///< Apache Arrow IPC stream format
     };
 
     /**
@@ -94,6 +97,11 @@ namespace GridKit
       {
       };
 
+      /// Type used for dispatch (Arrow IPC output; carries no state)
+      struct Arrow
+      {
+      };
+
       /// Short alias for local use
       using Format = VariableMonitorFormat;
 
@@ -108,6 +116,8 @@ namespace GridKit
         std::string file_name{};
         /// Delimiter (used only with CSV format currently)
         std::string delim{","};
+        /// Rows buffered before a record batch is written (Arrow formats only)
+        int64_t     batch_rows{256};
       };
 
       virtual ~VariableMonitorBase()
@@ -134,6 +144,12 @@ namespace GridKit
       {
       }
 
+      /**
+       * @brief Collect column names for Arrow output (one per monitored
+       * variable)
+       */
+      virtual void appendHeader(std::vector<std::string>&, Arrow) const = 0;
+
       ///@}
 
       ///@{
@@ -143,6 +159,12 @@ namespace GridKit
       virtual void append(std::string&, Csv) const  = 0;
       virtual void append(std::string&, Json) const = 0;
       virtual void append(std::string&, Yaml) const = 0;
+
+      /**
+       * @brief Collect current values for Arrow output; order matches the
+       * column names
+       */
+      virtual void append(std::vector<double>&, Arrow) const = 0;
 
       ///@}
 

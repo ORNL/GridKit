@@ -51,6 +51,7 @@ namespace GridKit
       using Csv          = VariableMonitorBase::Csv;
       using Json         = VariableMonitorBase::Json;
       using Yaml         = VariableMonitorBase::Yaml;
+      using Arrow        = VariableMonitorBase::Arrow;
       ///@}
 
       VariableMonitor() = default;
@@ -141,7 +142,8 @@ namespace GridKit
 
         template <typename FuncT>
         ValueFormatter(FuncT f)
-          : impl_{ValueFormatterType<FuncT>{f}}
+          : impl_{ValueFormatterType<FuncT>{f}},
+            num_impl_{makeNumericGetter(f)}
         {
         }
 
@@ -150,8 +152,39 @@ namespace GridKit
           return impl_();
         }
 
+        /// Bit-exact numeric value used for Arrow output
+        double value() const
+        {
+          return num_impl_();
+        }
+
       private:
+        /**
+         * @brief Build the numeric getter counterpart of the string formatter
+         *
+         * Getters with non-numeric return types cannot be represented in a
+         * float64 column and are recorded as NaN.
+         */
+        template <typename FuncT>
+        static std::function<double(void)> makeNumericGetter(FuncT f)
+        {
+          using RetValueT = std::remove_cvref_t<std::invoke_result_t<FuncT>>;
+
+          if constexpr (std::is_arithmetic_v<RetValueT>
+                        || std::is_same_v<RetValueT, ScalarT>)
+          {
+            return [f]()
+            { return static_cast<double>(static_cast<RealT>(f())); };
+          }
+          else
+          {
+            return []()
+            { return std::numeric_limits<double>::quiet_NaN(); };
+          }
+        }
+
         std::function<std::string(void)> impl_;
+        std::function<double(void)>      num_impl_;
       };
 
       ///@}
@@ -234,6 +267,25 @@ namespace GridKit
           appendVariable(out, v, Yaml());
         }
         indent_.erase(indent_.size() - 2);
+      }
+
+      void appendHeader(std::vector<std::string>& names, Arrow) const override
+      {
+        for (auto v : variables_)
+        {
+          std::string name{label_};
+          name += '_';
+          name.append(enum_name(v));
+          names.push_back(std::move(name));
+        }
+      }
+
+      void append(std::vector<double>& values, Arrow) const override
+      {
+        for (auto v : variables_)
+        {
+          values.push_back(f_[static_cast<size_t>(enum_integer(v))].value());
+        }
       }
 
     private:
