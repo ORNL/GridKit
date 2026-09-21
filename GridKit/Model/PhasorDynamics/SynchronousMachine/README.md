@@ -5,7 +5,7 @@
 ![](../../../../docs/Figures/SM1.JPG)
 
 Figure 1: Synchronous Machine. Figure courtesy of
-[PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf/)
+[PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf)
 
 For the d–q reference frame:
 - The q-axis leads the d-axis

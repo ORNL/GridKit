@@ -7,7 +7,7 @@ author = "GridKit Developers"
 
 docs_dir = Path(__file__).parent.resolve()
 
-extensions = ["breathe", "exhale", "myst_parser"]
+extensions = ["breathe", "exhale", "myst_parser", "sphinx_design"]
 
 breathe_projects = {"GridKit": str(docs_dir / "xml")}
 breathe_default_project = "GridKit"
@@ -34,8 +34,11 @@ exhale_args = {
 primary_domain = "cpp"
 
 html_theme = "sphinx_rtd_theme"
+html_static_path = ["_static"]
+html_css_files = ["css/gridkit.css"]
 html_theme_options = {
-    "collapse_navigation": True,
+    "collapse_navigation": False,
+    "includehidden": True,
     "navigation_depth": 6,
     "titles_only": True,
 }
@@ -43,6 +46,7 @@ html_theme_options = {
 myst_enable_extensions = [
     "alert",
     "amsmath",
+    "colon_fence",
     "dollarmath",
     "html_image",
 ]
