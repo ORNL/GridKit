@@ -17,9 +17,9 @@ Problem variables are voltage magnitudes and phases; they are stored in bus obje
 
 ### Residual
 
-**Bus 1**: Slack bus, does not store variables no residuals. Voltage and phase are set to $`V_1 \equiv 1`$p.u. and $`\theta_1 \equiv 0`$, respectively.
+**Bus 1**: Slack bus, does not store variables no residuals. Voltage and phase are set to $V_1 \equiv 1$ p.u. and $\theta_1 \equiv 0$, respectively.
 
-**Bus 2**: PQ bus, stores variables $`V_2, \theta_2`$ and residuals $`P_2, Q_2`$. Load $`P_{L1} = 2.5`$p.u., $`Q_{L1} = -j0.8`$p.u. is attached to it. From the equations for [branch](../../../GridKit/Model/PowerFlow/Branch/README.md) and [load](../../../GridKit/Model/PowerFlow/Load/README.md) components, we assemble Bus 2 residuals as:
+**Bus 2**: PQ bus, stores variables $V_2, \theta_2$ and residuals $P_2, Q_2$. Load $P_{L1} = 2.5$ p.u., $Q_{L1} = -j0.8$ p.u. is attached to it. From the equations for [branch](../../../GridKit/Model/PowerFlow/Branch/README.md) and [load](../../../GridKit/Model/PowerFlow/Load/README.md) components, we assemble Bus 2 residuals as:
 ```math
 \begin{array}{rcll}
 P_2 & = &-P_{L1} &~~~\mathrm{(load ~2)} \\
@@ -31,7 +31,7 @@ Q_2 & = & -Q_{L1} &~~~\mathrm{(load ~2)} \\
 \end{array}
 ``` 
 
-**Bus 3**: PV bus, stores variable $`\theta_3`$ and residual $`P_3`$. Voltage is set to $`|V_3| \equiv 1.1`$p.u.. Generator $`P_{G3} = 2`$p.u. is attached to it. From the equations for [branch](../../../GridKit/Model/PowerFlow/Branch/README.md) and [generator](../../../GridKit/Model/PowerFlow/README.md) components, we assemble Bus 3 residual as:
+**Bus 3**: PV bus, stores variable $\theta_3$ and residual $P_3$. Voltage is set to $|V_3| \equiv 1.1$ p.u.. Generator $P_{G3} = 2$ p.u. is attached to it. From the equations for [branch](../../../GridKit/Model/PowerFlow/Branch/README.md) and [generator](../../../GridKit/Model/PowerFlow/README.md) components, we assemble Bus 3 residual as:
 ```math
 \begin{array}{rcll}
 P_3 & = &P_{G3} &~~~\mathrm{(generator ~3)} \\
@@ -40,7 +40,7 @@ P_3 & = &P_{G3} &~~~\mathrm{(generator ~3)} \\
 \end{array}
 ```
 
-By substituting $`b_{12}=-10`$p.u., $`b_{13}=-15`$p.u., and $`b_{23}=12`$p.u., we obtain residuals
+By substituting $b_{12}=-10$ p.u., $b_{13}=-15$ p.u., and $b_{23}=12$ p.u., we obtain residuals
 ```math
 \begin{aligned}
 P_{2} &= -2.5 - 10|V_2|\sin(\theta_2) - 13.2|V_2|\sin(\theta_2 - \theta_3), \\
@@ -48,15 +48,15 @@ Q_{2} &=  0.8 - 22|V_2|^2 + 10|V_2|\cos(\theta_2) + 13.2|V_2|\cos(\theta_2 - \th
 P_{3} &= -2   - 16.5\sin(\theta_3) + 13.2|V_2|\sin(\theta_2 - \theta_3),
 \end{aligned}
 ```
-with variables $`\theta_2, |V_2|`$ and $`\theta_3`$.
+with variables $\theta_2, |V_2|$ and $\theta_3$.
 
 ### Jacobian
 
-Nonlinear solver can approximate Jacobian numerically, however this is computationaly expensive and scales poorly with the size of the problem. Typically, one needs to provide Jacobian in addition to residual to the nonlinear solver. For nonlinear problem defined by (vector) function $`\mathbf{f}(\mathbf{x})=0`$, Jacobian matrix is defined as
+Nonlinear solver can approximate Jacobian numerically, however this is computationaly expensive and scales poorly with the size of the problem. Typically, one needs to provide Jacobian in addition to residual to the nonlinear solver. For nonlinear problem defined by (vector) function $\mathbf{f}(\mathbf{x})=0$, Jacobian matrix is defined as
 ```math
 J_{i,j}=\frac{\partial f_i}{\partial x_j}, ~~~ i,j=1,\ldots,N
 ```
-where $`N`$ is the size of vectors $`\mathbf{f}`$ and $`\mathbf{x}`$. Jacobian for our model is evaluated as
+where $N$ is the size of vectors $\mathbf{f}$ and $\mathbf{x}$. Jacobian for our model is evaluated as
 ```math
 \mathbf{J} = 
 \begin{bmatrix}
