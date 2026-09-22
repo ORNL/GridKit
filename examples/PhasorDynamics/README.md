@@ -8,6 +8,7 @@ use the reusable models in `cases/PhasorDynamics/`.
 | [DynamicSimulation](DynamicSimulation/README.md) | Individual simulation studies. |
 | [ContingencyAnalysis](ContingencyAnalysis/README.md) | Bus-fault contingency studies. |
 | [Validation](Validation/README.md) | System studies compared against PowerWorld reference results. |
+| [HICSS-60](HICSS-60/README.md) | Paper experiments, figures, and benchmark results. |
 
 ## Running a Study
 

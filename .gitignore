@@ -4,6 +4,7 @@
 .vscode/
 *.DS_Store
 build/
+/examples/PhasorDynamics/HICSS-60/output/
 *.swp
 doxygen-docs/
 docs/_build/

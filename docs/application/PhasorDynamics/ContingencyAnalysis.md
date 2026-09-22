@@ -18,3 +18,6 @@ reported separately. Failed records have null totals and are not valid samples
 for a Jacobian-evaluations-per-accepted-step plot. Results are written after
 workers finish, including when some faults fail; the application still returns
 a failure exit status in that case.
+
+The [paper bus-fault experiment](../../../examples/PhasorDynamics/HICSS-60/ctg-analysis/README.md)
+generates one single-fault input per candidate bus and collects these records.

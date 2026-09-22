@@ -1,0 +1,25 @@
+{
+    "system_model_file": "../../../../../cases/PhasorDynamics/ACTIVSg2000/ACTIVSg2000.case.json",
+    "tmax": 20.0,
+    "mu": 240.0,
+    "rel_tol": 1e-11,
+    "abs_tol": 1e-13,
+    "dt_fixed": 0.0,
+    "dt_monitor": 0.004166666666666667,
+    "max_steps": 1000000,
+    "max_order": 5,
+    "consistent_ic_type": "ya_ydp",
+    "events": [
+        {
+            "time": 1.0,
+            "type": "fault_on",
+            "element_id": 0
+        },
+        {
+            "time": 1.15,
+            "type": "fault_off",
+            "element_id": 0
+        }
+    ],
+    "solver_trace_file": "../data/rtol-1e-11.trace.csv"
+}
