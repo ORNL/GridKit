@@ -31,6 +31,7 @@ namespace AnalysisManager
     {
       long int num_steps_                       = 0;
       long int num_residual_evals_              = 0;
+      long int num_jacobian_evals_              = 0;
       long int num_linear_decompositions_       = 0;
       long int num_error_test_fails_            = 0;
       long int num_nonlinear_iters_             = 0;
@@ -68,7 +69,7 @@ namespace AnalysisManager
       int getDefaultInitialCondition();
       int initializeSimulation(RealT t0, bool findConsistent = true);
 
-      int runSimulation(RealT tf, RealT dt_monitor = 0, std::optional<std::function<void(RealT)>> step_callback = {});
+      int runSimulation(RealT tf, RealT dt_monitor = 0, std::optional<std::function<void(RealT)>> step_callback = {}, std::optional<std::function<void(RealT, RealT)>> accepted_step_callback = {});
       int deleteSimulation();
 
       int configureQuadrature();

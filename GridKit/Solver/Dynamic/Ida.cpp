@@ -336,14 +336,22 @@ namespace AnalysisManager
      * sink-backed monitoring or a step callback is active. When `dt_monitor` is
      * zero, the configured maximum-step limit must be sufficient for a direct
      * solve to the final time.
+     * An accepted-step callback receives the internal step end time and size.
+     * Output still uses interpolation at the requested monitor times.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>> step_callback)
+    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>> step_callback, const std::optional<std::function<void(RealT, RealT)>> accepted_step_callback)
     {
       int        retval          = 0;
       const bool monitoring      = model_->monitoring();
       const bool output_required = monitoring || step_callback.has_value();
       const int  nsteps          = getMonitorStepCount(tf, dt_monitor);
+      RealT      internal_time   = t_init_;
+      if (accepted_step_callback)
+      {
+        retval = IDAGetCurrentTime(solver_, &internal_time);
+        checkOutput(retval, "IDAGetCurrentTime");
+      }
 
       for (int i = 1; i <= nsteps; i++)
       {
@@ -355,8 +363,41 @@ namespace AnalysisManager
 
         const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
         RealT       tret;
-        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
-        checkOutput(retval, "IDASolve");
+        if (accepted_step_callback)
+        {
+          long int   steps = 0;
+          const auto limit = max_steps_ ? static_cast<long int>(max_steps_) : 500L;
+          while (internal_time < tout)
+          {
+            if (limit > 0 && steps >= limit)
+            {
+              checkOutput(IDA_TOO_MUCH_WORK, "IDASolve");
+            }
+            const RealT previous_time = internal_time;
+            retval                    = IDASolve(solver_, tout, &internal_time, yy_, yp_, IDA_ONE_STEP);
+            checkOutput(retval, "IDASolve");
+            // After an interpolated output, IDA_ONE_STEP may return the already
+            // accepted internal point before advancing again.
+            if (internal_time == previous_time)
+            {
+              continue;
+            }
+            RealT h;
+            retval = IDAGetLastStep(solver_, &h);
+            checkOutput(retval, "IDAGetLastStep");
+            (*accepted_step_callback)(internal_time, h);
+            ++steps;
+          }
+          // No new step is needed: use IDA's normal output path to interpolate
+          // and update its returned-time bookkeeping exactly as an untraced run.
+          retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
+          checkOutput(retval, "IDASolve");
+        }
+        else
+        {
+          retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
+          checkOutput(retval, "IDASolve");
+        }
 
         if (output_required)
         {
@@ -1001,6 +1042,7 @@ namespace AnalysisManager
     {
       num_steps_                       += other.num_steps_;
       num_residual_evals_              += other.num_residual_evals_;
+      num_jacobian_evals_              += other.num_jacobian_evals_;
       num_linear_decompositions_       += other.num_linear_decompositions_;
       num_error_test_fails_            += other.num_error_test_fails_;
       num_nonlinear_iters_             += other.num_nonlinear_iters_;
@@ -1022,6 +1064,7 @@ namespace AnalysisManager
 
       out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_steps_ << '\n'
           << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
+          << std::setw(label_width) << "Jacobian evals" << " : " << std::setw(stat_width) << num_jacobian_evals_ << '\n'
           << std::setw(label_width) << "Linear decompositions" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
           << std::setw(label_width) << "Error test failures" << " : " << std::setw(stat_width) << num_error_test_fails_ << '\n'
           << std::setw(label_width) << "Nonlinear iterations" << " : " << std::setw(stat_width) << num_nonlinear_iters_ << '\n'
@@ -1056,6 +1099,9 @@ namespace AnalysisManager
                                          &dummy2,
                                          &dummy2);
       checkOutput(retval, "IDAGetIntegratorStats");
+
+      retval = IDAGetNumJacEvals(solver_, &stats.num_jacobian_evals_);
+      checkOutput(retval, "IDAGetNumJacEvals");
 
       retval = IDAGetNonlinSolvStats(solver_, &stats.num_nonlinear_iters_, &stats.num_nonlinear_convergence_fails_);
       checkOutput(retval, "IDAGetNonlinSolvStats");

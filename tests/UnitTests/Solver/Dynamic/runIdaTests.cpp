@@ -9,6 +9,8 @@ int main()
   GridKit::Testing::IdaTests<double, size_t> test;
 
   result += test.callback();
+  result += test.acceptedStepCallback();
+  result += test.statisticsAcrossRestarts();
   result += test.dtMonitorZero();
   result += test.monitorActivityIsCached();
   result += test.dtMonitorSuppressesEpsilonFinalStep();

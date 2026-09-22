@@ -1,7 +1,7 @@
+#include <algorithm>
 #include <exception>
-#include <filesystem>
-#include <fstream>
 
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -9,6 +9,7 @@
 #include <GridKit/Testing/Testing.hpp>
 
 #include "AnalysisUtilities.hpp"
+#include "SolverTrace.hpp"
 
 using namespace AnalysisManager::Sundials;
 using namespace GridKit::PhasorDynamics;
@@ -24,6 +25,8 @@ int runApplication(int argc, const char* argv[])
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
 
+  GridKit::Math::MU<real_type> = study.mu;
+
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
@@ -37,6 +40,13 @@ int runApplication(int argc, const char* argv[])
   ida.setConsistentICType(study.consistent_ic_type);
   ida.configureSimulation();
 
+  const auto differential = std::count(sys.tag().begin(), sys.tag().end(), true);
+  std::cout << "Variables: " << differential << " differential, "
+            << sys.size() - static_cast<index_type>(differential) << " algebraic\n";
+
+  SolverTrace trace(study.solver_trace_file);
+  const auto  accepted_step_callback = trace.callback(ida);
+
   // Start timer
   real_type start = static_cast<real_type>(clock());
 
@@ -46,10 +56,12 @@ int runApplication(int argc, const char* argv[])
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
   ida.initializeSimulation(0.0);
+  trace.record("init", 0.0, ida);
   for (const auto& event : study.events)
   {
     // Run to event time
-    ida.runSimulation(event.time, dt_monitor);
+    ida.runSimulation(event.time, dt_monitor, {}, accepted_step_callback);
+    trace.finish(event.time, ida);
 
     // Set up run for event (to start at event time)
     switch (event.type)
@@ -64,15 +76,19 @@ int runApplication(int argc, const char* argv[])
 
     // Re-initialize simulation at event time
     ida.initializeSimulation(event.time);
+    trace.record("init", event.time, ida);
   }
 
   // Run to final time
-  ida.runSimulation(final_time, dt_monitor);
+  ida.runSimulation(final_time, dt_monitor, {}, accepted_step_callback);
+  trace.finish(final_time, ida);
 
   real_type stop = static_cast<real_type>(clock());
 
   // Stop the variable monitor
   sys.stopMonitor();
+
+  trace.write();
 
   // Generate aggregate errors comparing variable output to reference solution
   TestStatus status = checkErrors(study);
