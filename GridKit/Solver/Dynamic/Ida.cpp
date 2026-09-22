@@ -20,6 +20,27 @@ namespace AnalysisManager
   namespace Sundials
   {
 
+#ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
+    namespace
+    {
+      // Refactorization reuses pivots; a zero pivot need not mean J is singular.
+      int setupKlu(SUNLinearSolver solver, SUNMatrix matrix)
+      {
+        int retval = SUNLinSolSetup_KLU(solver, matrix);
+        if (retval == SUNLS_PACKAGE_FAIL_REC
+            && SUNLinSol_KLUGetCommon(solver)->status == KLU_SINGULAR)
+        {
+          retval = SUNLinSol_KLUReInit(solver, matrix, 0, SUNKLU_REINIT_PARTIAL);
+          if (retval == 0)
+          {
+            retval = SUNLinSolSetup_KLU(solver, matrix);
+          }
+        }
+        return retval;
+      }
+    } // namespace
+#endif
+
     template <class ScalarT, typename IdxT>
     Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
       : DynamicSolver<ScalarT, IdxT>(model)
@@ -168,6 +189,7 @@ namespace AnalysisManager
 
       linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
       checkAllocation((void*) linearSolver_, "SUNLinSol_KLU");
+      linearSolver_->ops->setup = setupKlu;
 
       // Set the ordering in KLU to approximate minimum degree (AMD) approach.
       retval = SUNLinSol_KLUSetOrdering(linearSolver_, 0);
@@ -1377,9 +1399,16 @@ namespace AnalysisManager
       retval = IDASetSuppressAlg(mem, suppress_alg ? SUNTRUE : SUNFALSE);
       checkOutput(retval, "IDASetSuppressAlg");
 
+      // Adaptive stepping enabled
       if (time_step == 0)
       {
         setTolerance(mem, rel_tol, abs_tol_override);
+
+        // Refresh the IC Jacobian sooner and allow more Newton iterations per step.
+        retval = IDASetMaxNumItersIC(mem, 3);
+        checkOutput(retval, "IDASetMaxNumItersIC");
+        retval = IDASetMaxNonlinIters(mem, 8);
+        checkOutput(retval, "IDASetMaxNonlinIters");
       }
       else
       {
