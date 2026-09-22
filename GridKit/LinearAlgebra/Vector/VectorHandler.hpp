@@ -80,6 +80,22 @@ namespace GridKit
       // Vector infinity norm
       ScalarT amax(Vector<ScalarT, IdxT>* x, memory::MemorySpace memspace);
 
+      //Compute the infinity norm of component-wise tolerance-scaled errors.
+      ScalarT weightedInfNorm(Vector<ScalarT, IdxT>* error,
+                              Vector<ScalarT, IdxT>* state,
+                              Vector<ScalarT, IdxT>* previous_state,
+                              Vector<ScalarT, IdxT>* absolute_tolerance,
+                              ScalarT                relative_tolerance,
+                              memory::MemorySpace    memspace);
+
+      // Compute the root-mean-square norm of component-wise tolerance-scaled errors.
+      ScalarT weightedRmsNorm(Vector<ScalarT, IdxT>* error,
+                              Vector<ScalarT, IdxT>* state,
+                              Vector<ScalarT, IdxT>* previous_state,
+                              Vector<ScalarT, IdxT>* absolute_tolerance,
+                              ScalarT                relative_tolerance,
+                              memory::MemorySpace    memspace);
+
     private:
       VectorHandlerCpu<ScalarT, IdxT> cpuImpl_;
     }; // class VectorHandler
