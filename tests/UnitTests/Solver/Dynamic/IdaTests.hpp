@@ -332,6 +332,78 @@ namespace GridKit
       LinearAlgebra::CsrMatrix<typename NullEvaluator<ScalarT, IdxT>::RealT, IdxT> jacobian_{1, 1, 1};
     };
 
+    /// Nonsingular rotating matrix whose original diagonal pivots vanish at t=0.5.
+    template <class ScalarT, typename IdxT>
+    class PivotChangeEvaluator : public NullEvaluator<ScalarT, IdxT>
+    {
+      using RealT = typename NullEvaluator<ScalarT, IdxT>::RealT;
+
+    public:
+      PivotChangeEvaluator()
+      {
+        jacobian_.allocateMatrixData(memory::HOST);
+        const IdxT rows[] = {0, 2, 4};
+        const IdxT cols[] = {0, 1, 0, 1};
+        std::copy_n(rows, 3, jacobian_.getRowData());
+        std::copy_n(cols, 4, jacobian_.getColData());
+        this->csr_jac_ = &jacobian_;
+      }
+
+      IdxT size() override
+      {
+        return 2;
+      }
+
+      IdxT nnz() override
+      {
+        return 4;
+      }
+
+      bool hasJacobian() override
+      {
+        return true;
+      }
+
+      int initialize() override
+      {
+        this->allocate();
+        this->y_.setToZero();
+        this->yp_.setToZero();
+        this->tag_.assign(2, false);
+        return 0;
+      }
+
+      void updateTime(RealT t, RealT) override
+      {
+        time_ = t;
+      }
+
+      int evaluateResidual() override
+      {
+        const ScalarT x = this->y_.getData()[0] - time_ * time_;
+        const ScalarT y = this->y_.getData()[1] - time_ * time_ * time_;
+        auto*         f = this->f_.getData();
+        f[0]            = (1.0 - 2.0 * time_) * x - 2.0 * time_ * y;
+        f[1]            = 2.0 * time_ * x + (1.0 - 2.0 * time_) * y;
+        this->f_.setDataUpdated();
+        return 0;
+      }
+
+      int evaluateJacobian() override
+      {
+        auto* values = jacobian_.getValues();
+        values[0] = values[3] = 1.0 - 2.0 * time_;
+        values[1]             = -2.0 * time_;
+        values[2]             = 2.0 * time_;
+        jacobian_.setUpdated(memory::HOST);
+        return 0;
+      }
+
+    private:
+      RealT                                 time_{};
+      LinearAlgebra::CsrMatrix<RealT, IdxT> jacobian_{2, 2, 4};
+    };
+
     template <class ScalarT, typename IdxT>
     class MonitoringProbeEvaluator : public NullEvaluator<ScalarT, IdxT>
     {
@@ -755,6 +827,28 @@ namespace GridKit
 
         success *= (stats.num_steps_ == n_steps);
 
+        return success.report(__func__);
+      }
+
+      TestOutcome changingPivots()
+      {
+        TestStatus                                 success = true;
+        Model::PivotChangeEvaluator<ScalarT, IdxT> model;
+        Ida<ScalarT, IdxT>                         ida(&model);
+        ida.setFixedStep(0.5);
+        ida.setTolerance(1.0e-8);
+        ida.configureSimulation();
+        try
+        {
+          ida.initializeSimulation(0.0);
+          ida.runSimulation(0.5);
+          success *= isEqual(model.y().getData()[0], 0.25, 1.0e-8);
+          success *= isEqual(model.y().getData()[1], 0.125, 1.0e-8);
+        }
+        catch (const AnalysisManager::Sundials::SundialsException&)
+        {
+          success = false;
+        }
         return success.report(__func__);
       }
 
