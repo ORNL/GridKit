@@ -36,6 +36,20 @@ namespace GridKit
       // vector infinity norm
       ScalarT amax(Vector<ScalarT, IdxT>* x);
 
+      // Infinity norm of component-wise tolerance-scaled errors
+      ScalarT weightedInfNorm(Vector<ScalarT, IdxT>* error,
+                              Vector<ScalarT, IdxT>* state,
+                              Vector<ScalarT, IdxT>* previous_state,
+                              Vector<ScalarT, IdxT>* absolute_tolerance,
+                              ScalarT                relative_tolerance);
+
+      // Root-mean-square norm of component-wise tolerance-scaled errors
+      ScalarT weightedRmsNorm(Vector<ScalarT, IdxT>* error,
+                              Vector<ScalarT, IdxT>* state,
+                              Vector<ScalarT, IdxT>* previous_state,
+                              Vector<ScalarT, IdxT>* absolute_tolerance,
+                              ScalarT                relative_tolerance);
+
       // mass axpy: y = y - x*alpha, where x is [n x k] and alpha is [k x 1]; x is stored columnwise
       void axpyMulti(IdxT size, Vector<ScalarT, IdxT>* alpha, IdxT k, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y);
 
