@@ -113,6 +113,11 @@ rsync -avz --delete kestrel:~/gridkit/uq-usecase/mkdocs-site/ ~/projects/scidac/
   && open ~/projects/scidac/gridkit/gridkit-mkdocs/index.html
 ```
 
+**Note:** `rebuild_if_updated.sh` now automatically merges `origin/develop` into your local 
+`isatkaus/uq-usecase` branch, rebuilds, runs tests, and **pushes the merged state back to 
+`origin/isatkaus/uq-usecase`**. This keeps your personal branch in sync with the remote, 
+enabling `wip.sh` to run smoothly without validation conflicts.
+
 To force a rebuild even without new commits:
 ```bash
 bash rebuild_if_updated.sh --force 2>&1 | tee logs/rebuild.log
