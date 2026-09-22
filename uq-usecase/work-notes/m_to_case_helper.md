@@ -32,15 +32,18 @@ before any downstream workflow (aleatoric UQ, dynamic simulation) relies on it.
 ```
 base .m                                           ← case_ACTIVSg200.m
    │
-   ├─ perturb  (make_load_scale_m / make_wind_dispatch_m / make_gen_off_m)
+   ├─ perturb / set operating point
+   │     In production: load/wind/PV timeseries from PCM → 8760 hourly .m files.
+   │     For testing: make_load_scale_m, make_wind_dispatch_m, make_gen_off_m.
    │
    └─→ perturbed .m
        │
-       ├─ PM.jl solve PF  (run_pm_solve_out)     ← pm_helper.md
+       ├─ PF solve  (PM.jl or GridKit solve_pf)   ← pm_helper.md / pf_helper.md
        │
        └─→ solved .m                              ← same MATPOWER format, updated
-           │                                        VM/VA/PG/QG (and possibly
-           │                                        GEN_STATUS)
+           │                                        VM/VA (both solvers) and
+           │                                        PG/QG (PM.jl; GridKit after
+           │                                        post-solve writeback is added)
            │
            ├─ build_case_from_solved_m(base_json, solved_m, out.json)  ← THIS DOC
            │
@@ -49,9 +52,109 @@ base .m                                           ← case_ACTIVSg200.m
                └─ DynamicSimulation  (aleatoric_helper.md, to come)
 ```
 
-Everything before the fourth stage is already covered in `pf_helper.md`,
-`pm_helper.md`, and `pf_utils.py`. This doc concentrates on the fourth stage
-in isolation.
+Everything before `build_case_from_solved_m` is already covered in
+`pf_helper.md`, `pm_helper.md`, and `pf_utils.py`. This doc concentrates on
+the `.m` → `case.json` mapping stage in isolation.
+
+## PF solver choice and the solved `.m` contract
+
+The pipeline's PF-solve stage (stage 3) can use either solver. Both read a
+MATPOWER `.m` and produce a solved `.m` with updated bus voltages:
+
+| Solver | Wrapper | Updates in solved `.m` | PV→PQ switching |
+|---|---|---|---|
+| PM.jl | `pm_utils.run_pm_solve_out` | `mpc.bus` VM, VA; **`mpc.gen` PG, QG** | Yes (correct Q limits) |
+| GridKit `solve_pf` | `pf_utils.run_solve_pf_out` | `mpc.bus` VM, VA only | No (see below) |
+
+Both return `(bus_df, stderr, return_code)` with columns
+`[bus_i, V_pu, theta_deg, type]`.
+
+### What `build_case_from_solved_m` reads from the solved `.m`
+
+| Field | Source column | Used for | PF-solve role |
+|---|---|---|---|
+| VM, VA | `mpc.bus[:, 8:9]` | bus `init.Vr/Vi`, LoadZIP `Vnom` | Solved (all buses). Both solvers update. |
+| PD, QD | `mpc.bus[:, 3:4]` | LoadZIP `Pnom/Qnom` | Input (unchanged by PF solve). |
+| PG (non-slack) | `mpc.gen[:, 2]` | Genrou `p0` | Input (dispatch from PCM). Unchanged by both solvers. No gap. |
+| PG (slack gen) | `mpc.gen[:, 2]` | Genrou `p0` | Solved (absorbs losses + imbalance). PM.jl updates; GridKit does not. |
+| QG (slack + PV gens) | `mpc.gen[:, 3]` | Genrou `q0` | Solved (reactive needed to hold voltage). PM.jl updates; GridKit does not. |
+| GEN_STATUS | `mpc.gen[:, 8]` | offline-gen removal | Input (unchanged by PF solve). |
+
+**Summary of the gap**: for ACTIVSg200, GridKit's output `.m` has stale values
+in 1 slack-gen PG + 49 gen QG (1 slack + 48 PV-bus). All other PG values are
+dispatch inputs and are correct in both solvers.
+
+### The PG/QG gap in GridKit's `solve_pf --output-m`
+
+GridKit's KINSOL solver correctly solves the power balance equations for all
+bus voltages and angles. The solved values are internally consistent: the
+slack bus P injection and PV-bus Q injections are implicitly determined by
+the converged (V, θ) solution. However, `solve_pf.cpp`'s output writer only
+extracts V and θ from the bus objects and writes them to `mpc.bus`. It never
+performs the post-solve step of computing generator injections from the
+converged network state.
+
+**This is a missing output feature, not a missing solve capability.** The
+solved (V, θ) contain all the information needed to recover PG and QG. The
+post-solve computation is:
+
+For any generator at bus $i$, the net complex power injection at bus $i$ is:
+
+$$S_i = V_i \sum_{j} Y_{ij}^* V_j^*$$
+
+where $Y_{ij}$ are elements of the bus admittance matrix and $V_k = |V_k| e^{j\theta_k}$.
+Expanding into real and reactive components:
+
+$$P_i = |V_i| \sum_{j} |V_j| \bigl( G_{ij} \cos\theta_{ij} + B_{ij} \sin\theta_{ij} \bigr)$$
+
+$$Q_i = |V_i| \sum_{j} |V_j| \bigl( G_{ij} \sin\theta_{ij} - B_{ij} \cos\theta_{ij} \bigr)$$
+
+where $\theta_{ij} = \theta_i - \theta_j$. Then:
+
+- **Slack gen PG**: $PG_\text{slack} = (P_i + PD_i) \times \text{baseMVA}$, where $P_i$
+  is the net injection and $PD_i$ is the load at the slack bus. This reflects loss
+  pickup: the slack absorbs the system real-power mismatch.
+- **PV-bus gen QG**: $QG_k = (Q_i + QD_i) \times \text{baseMVA}$, where $Q_i$ is the
+  net reactive injection and $QD_i$ is the reactive load at bus $i$. At multi-gen
+  buses, QG is split among generators proportional to their Qmax (MATPOWER convention).
+
+Since we wrote `solve_pf.cpp` (see [`pf_helper.md`](pf_helper.md) Section 1 for
+architecture), adding this post-solve PG/QG writeback is a straightforward extension.
+The bus admittance matrix $Y_\text{bus}$ is already assembled internally by
+`SystemModelPowerFlow`; the post-solve step computes bus injections from the
+converged state and writes updated PG/QG columns to `mpc.gen` in the output `.m`.
+
+### PV→PQ switching: a separate (and larger) issue
+
+The PG/QG output gap above is purely a writeback issue. A more fundamental
+limitation is that GridKit's PF solver does not implement PV→PQ switching
+(Q-limit enforcement). This means the solved V and θ themselves may be wrong
+when generators hit reactive limits. See [`pf_helper.md`](pf_helper.md)
+Section 1 (verified from six independent code paths) and Section 11
+(behavioral confirmation under stress).
+
+For the aleatoric UQ pipeline, the perturbation levels (±5-20% per-bus load)
+sit inside the "safe envelope" where no additional generators hit Q limits
+beyond those already limited at base case (see `pf_helper.md` Section 6: the
+~0.030 pu offset is constant across all 14 mild perturbations). At these
+levels, the V/θ solution from GridKit is usable for relative comparisons. For
+absolute-voltage accuracy, PM.jl remains required.
+
+### Current default and swap path
+
+**Current default**: PM.jl (correct PV→PQ switching, correct PG/QG in output).
+
+**To enable GridKit as an alternative**:
+1. Add post-solve PG/QG computation to `solve_pf.cpp` (formulas above).
+2. Add a `run_pf_solve(m_path, out_m_path, solver="pm", **kwargs)` dispatcher
+   in `pf_utils.py` that routes to either `pm_utils.run_pm_solve_out` or
+   `pf_utils.run_solve_pf_out`.
+3. Notebook config sets `PF_SOLVER = "pm"` (or `"gridkit"`); all PF calls go
+   through the dispatcher.
+
+The swap is meaningful only inside the safe envelope (mild perturbations).
+Outside it, PM.jl is required regardless of the PG/QG fix, because the V/θ
+solution itself is wrong without PV→PQ switching.
 
 ## Field-by-field mapping
 
@@ -76,6 +179,20 @@ is degrees in MATPOWER and must be converted to radians before `cos`/`sin`.
 Any JSON bus with no matching `BUS_I` is left unchanged (this should be zero
 for ACTIVSg200 → `illinois.json`, which is 1:1 by construction).
 
+Actual `Bus` device from `illinois.case.json` (bus 49) — only `init.Vr/Vi`
+is touched, `name`/`params.kv`/`mon` are never modified:
+
+```json
+{
+    "number": 49,
+    "class": "Bus",
+    "name": "RANTOUL 2 1",
+    "init": {"Vr": 0.16975389826059847, "Vi": -1.023389141624529},
+    "params": {"kv": 13.800000190734863},
+    "mon": ["Vr", "Vi"]
+}
+```
+
 ### 2. Generator dispatch (online)
 
 For every JSON device with `class == "Genrou"`, decode
@@ -90,6 +207,11 @@ q0 = QG / baseMVA
 ```
 
 Written into `Genrou.params.p0` and `Genrou.params.q0`.
+
+See [`cases/illinois.md` — example JSON pieces (bus 49, id `49_1`)](../cases/illinois.md#example-json-pieces-bus-49-id-49_1)
+for the full `Genrou` + `SexsPti` device pair, including the dynamics
+parameters (`H`, `Xd`, ...) that this mapping stage never touches (see
+[§5 below](#5-what-is-not-touched)).
 
 ### 3. Offline generator handling (new; not in `patch_case_from_m`)
 
@@ -133,6 +255,29 @@ Qnom_pu = QD / baseMVA
 Vnom_pu = VM
 ```
 
+**`Vnom` does not exist in the base `illinois.json`.** The base file's
+`LoadZIP` devices only carry `{Pnom, Qnom, alphaI, alphaP}` — verified by
+grepping `illinois.case.json` for `"Vnom"` (zero hits). `build_case_from_solved_m`
+adds the `Vnom` key the first time `patch_load` runs; it is never a
+base-vs-patched *comparison*, only a new field. `cases/illinois.md`'s
+"Load demand" table shows a `Vnom (json)` column with plausible-looking
+values — those are derived from each bus's own `Vr/Vi` for display purposes,
+not read from a literal `LoadZIP.Vnom` field, since no such field exists
+before the first patch. That doc should clarify this instead of implying
+`Vnom` is already stored on the device.
+
+Actual single-device `LoadZIP` from `illinois.case.json` (bus 2, before any
+patch — note the absent `Vnom`):
+
+```json
+{
+    "class": "LoadZIP",
+    "ports": {"bus": 2},
+    "id": "load_2_1",
+    "params": {"Pnom": 0.10819626, "Qnom": 0.03083585, "alphaI": 0.0, "alphaP": 0.0}
+}
+```
+
 Then split the LoadZIP devices at each bus into two groups:
 
 - **Real loads**: `Pnom > 0` OR (`Pnom == 0` AND `Qnom >= 0`), AND `id` does
@@ -142,6 +287,20 @@ Then split the LoadZIP devices at each bus into two groups:
 Shunt-like devices are excluded from PD/QD patching (they represent reactive
 compensation, not real load). Their `Vnom` **is** refreshed to `VM` so their
 per-unit reference tracks the new bus voltage.
+
+There are **4** shunt-like `LoadZIP` devices in `illinois.json`, not just the
+one at bus 15 used as the worked example in [§4f](#4f-shunt-exclusion) below:
+`shunt_15_1` (Qnom=-0.3233), `shunt_95_1` (Qnom=-0.3143), `shunt_100_1`
+(Qnom=-0.8443), `shunt_194_1` (Qnom=-0.5307). Example from the base JSON:
+
+```json
+{
+    "class": "LoadZIP",
+    "ports": {"bus": 15},
+    "id": "shunt_15_1",
+    "params": {"Pnom": 0.0, "Qnom": -0.32326737, "alphaI": 0.0, "alphaP": 0.0}
+}
+```
 
 For the real loads at each bus:
 
@@ -159,7 +318,9 @@ For the real loads at each bus:
   ```
 
   This preserves the ratio between multiple loads at the same bus (Illinois has
-  38 buses with 2 LoadZIP devices each; see illinois.md).
+  a number of multi-ZIP buses each with 2 LoadZIP devices; `illinois.md` says
+  38, but that count has not been independently re-verified — see the caveat
+  in [the identity round-trip test](#the-identity-round-trip-test) above).
 
 - **Zero-load bus (PD=QD=0)**: set all real LoadZIP `Pnom=0, Qnom=0`, `Vnom=VM`.
 - **Degenerate case (S_P=0 but PD>0)**: distribute PD equally across the N
@@ -210,13 +371,41 @@ equilibrium*. Two sources of residual:
 Concrete tolerances used in the notebook:
 
 - Bus count updated: exactly `n_buses` in JSON.
-- Genrous updated: exactly `n_online_gen_in_JSON` (40 for illinois-v2 base).
-- Genrous removed: 0 (nothing is offline in the base `.m` that's online in
-  the JSON).
-- LoadZIP updated: exactly the 108-load-bus × device count from illinois.md.
-- Shunts skipped: exactly 1 (bus 15).
+- Genrous updated: **38**, not all 40 present in the base JSON. Buses **161**
+  and **197** are `GEN_STATUS=0` in the base `.m` (verified in
+  [`cases/illinois.md` — Discrepancy vs. .m file](../cases/illinois.md#discrepancy-vs-m-file))
+  but are present in `illinois.json` with non-zero `p0/q0` — since the identity
+  round-trip PM.jl-solves the *same* base `.m` (PM.jl does not change
+  `GEN_STATUS`), both are caught by the offline-removal rule below rather than
+  patched.
+- Genrous removed: **2** (`161_1`, `197_1`) — 6 devices total once their
+  `Tgov1`/`SexsPti` companions are included. This is the concrete case that
+  motivates `remove_offline_gens` existing at all; see
+  [What we already know about the target cases](#what-we-already-know-about-the-target-cases)
+  above.
+- LoadZIP updated: 164 total `LoadZIP` devices in the base JSON, of which 4 are
+  shunt-like (see next bullet) and are excluded from `Pnom`/`Qnom` patching.
+  The exact load-bus / multi-ZIP-bus breakdown is documented in
+  [`cases/illinois.md` — Load demand](../cases/illinois.md#load-demand-pdqdvm--loadzip-pnomqnomvnom);
+  that doc's bus-count arithmetic should be re-verified against the
+  notebook's own §2 counting cells (`loadzip_by_bus`) rather than assumed, since
+  the two haven't always agreed (see caveat below).
+- Shunts skipped: **4** (`shunt_15_1`, `shunt_95_1`, `shunt_100_1`,
+  `shunt_194_1`) — not just bus 15. Bus 15 is used as the single worked
+  example in §4f below, but it is one of four, not the only one.
+- `Vnom` **does not exist** in the base `illinois.json` at all — only
+  `Pnom`, `Qnom`, `alphaI`, `alphaP` are present on `LoadZIP` devices today.
+  `build_case_from_solved_m` adds the `Vnom` key the first time `patch_load`
+  runs. So "LoadZIP.Vnom" in the identity round-trip is always a *new* field
+  in `out.json`, never a residual-vs-base comparison.
 - Any structural change in `out.json` vs `illinois.json` **other than** the
   four field families above → hard fail.
+
+**Caveat**: the shunt count and `Vnom`-absence above were confirmed by reading
+`illinois.case.json` directly (grep for `"id": "shunt_"` and for `"Vnom"`).
+`cases/illinois.md`'s prose predates this check and still says "exactly 1
+(bus 15)" in places — that doc needs the same correction; don't treat it as
+the source of truth for shunt count until it's updated.
 
 ## Perturbation-driven tests (non-identity)
 

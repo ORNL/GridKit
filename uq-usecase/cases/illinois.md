@@ -286,7 +286,29 @@ All 49 generators from the TAMU base case `.m`, compared to the current JSON val
 
 Formula: `Pnom = PD / 100`, `Qnom = QD / 100`, `Vnom = VM`
 
-**Coverage**: 108 buses have `PD > 0` in the TAMU base case `.m`; all 108 have a corresponding LoadZIP in the JSON. One additional bus (bus 15) has a LoadZIP in the JSON but `PD = 0` in the base case `.m` — see extra-bus note below. Total LoadZIP devices: 164 across 109 buses; 38 buses have 2 LoadZIP devices each (see multi-ZIP examples below).
+**`Vnom` is not a stored field in the base JSON.** `illinois.case.json`'s `LoadZIP`
+devices only carry `{Pnom, Qnom, alphaI, alphaP}` (verified: zero hits grepping the
+file for `"Vnom"`). The `Vnom (json)` column below is **derived** for this table —
+computed from each bus's own `Vr`/`Vi` (`Vnom = sqrt(Vr^2 + Vi^2)`), not read from a
+literal `LoadZIP.Vnom` key. `m_to_case.py`'s `build_case_from_solved_m` is what
+actually adds the `Vnom` key to each device, the first time load-patching runs; see
+[`work-notes/m_to_case_helper.md` — LoadZIP demand](../work-notes/m_to_case_helper.md#4-loadzip-demand-new-not-in-patch_case_from_m).
+
+**Shunt-like devices: there are 4, not 1.** `illinois.case.json` has **four**
+`LoadZIP` devices with `Pnom=0, Qnom<0` (capacitor banks): `shunt_15_1`
+(Qnom=-0.3233), `shunt_95_1` (Qnom=-0.3143), `shunt_100_1` (Qnom=-0.8443), and
+`shunt_194_1` (Qnom=-0.5307) — confirmed by grepping for `"id": "shunt_"`. Bus 15
+is used below as the single worked example; the same "don't patch Pnom/Qnom,
+do refresh Vnom" rule applies to the other three.
+
+**Coverage**: 108 buses have `PD > 0` in the TAMU base case `.m`; all 108 have a
+corresponding LoadZIP in the JSON. Total LoadZIP devices: 164 (confirmed by direct
+count in the JSON). **The bus-count / multi-ZIP-bus breakdown below (109 buses,
+38 multi-ZIP buses) has not been independently re-verified and does not
+self-consistently add up against the 164 total** (38 buses x2 + 71 buses x1 = 147,
+not 164) — treat these two numbers as needing a re-count from
+`m_to_case_helper.ipynb`'s own §2 counting cells (`loadzip_by_bus`,
+`multi_zip_buses`) rather than as verified facts, until that notebook has been run.
 
 Sample comparison, base case `.m` vs current JSON. Rows marked `(×2)` have 2 LoadZIP devices; individual device values are shown indented:
 
@@ -310,7 +332,7 @@ Sample comparison, base case `.m` vs current JSON. Rows marked `(×2)` have 2 Lo
 | 18 | 0.71 | 0.20 | 1.0248 | 0.0071 | 0.0020 | 1 | 0.0113 | 0.0032 | 1.0059 | ✗ | ✗ |
 | **15** *(extra)* | **0** | **0** | **1.0491** | **0** | **0** | **1** | **0.0000** | **-0.3233** | **1.0381** | n/a | n/a |
 
-**Bus 15 (extra LoadZIP)**: `PD=QD=0` in the TAMU base case `.m`, but the JSON has one LoadZIP with `Pnom=0, Qnom=-0.3233`. Negative Qnom indicates a **capacitor bank** (reactive compensation). This device is not a real load and should not be patched with `PD/QD` from the `.m` file; its Qnom should remain as-is (or be determined by a separate reactive dispatch).
+**Bus 15 (extra LoadZIP)**: `PD=QD=0` in the TAMU base case `.m`, but the JSON has one LoadZIP with `Pnom=0, Qnom=-0.3233`. Negative Qnom indicates a **capacitor bank** (reactive compensation). This device is not a real load and should not be patched with `PD/QD` from the `.m` file; its Qnom should remain as-is (or be determined by a separate reactive dispatch). This is one of **4** such shunt-like devices in the case — see the note above.
 
 **Multi-ZIP buses**: When a bus has 2 LoadZIP devices, each represents a separate load at that bus (e.g., different customers or load classes). The sum of all `Pnom`/`Qnom` values across devices at the same bus is what must match `PD/100` / `QD/100` after patching. All devices share the same `Vnom` (the bus voltage from the PF solution). In `m_to_case.py`, the total `PD` from the `.m` file must be distributed across the N devices at each bus — the simplest approach is to scale each device's existing `Pnom` by the ratio `(PD/100) / sum_Pnom_json`.
 

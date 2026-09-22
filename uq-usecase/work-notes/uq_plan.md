@@ -13,6 +13,50 @@ Tracks can be combined for a 2D study (scenario x parameter sample) or run indep
 
 ---
 
+## Contents
+
+- [Task 0: Scenario generation pipeline](#task-0-scenario-generation-pipeline-pf-solver-prerequisite-for-track-1)
+- [Task 0b: Fault-response sensitivity prototype](#task-0b-fault-response-sensitivity-prototype-before-committing-to-8760-scenarios)
+- [Track 1: Aleatoric UQ (PCM operating conditions)](#track-1-aleatoric-uq-pcm-operating-conditions)
+- [Track 2: Epistemic UQ (dynamic parameter uncertainty)](#track-2-epistemic-uq-dynamic-parameter-uncertainty)
+- [Directory Structure](#directory-structure)
+- [Notebooks](#notebooks)
+- [Open Questions](#open-questions)
+- [Existing Assets to Reuse](#existing-assets-to-reuse)
+- [Next Steps](#next-steps)
+- [References](#references)
+
+## Related investigative documents
+
+These companion docs contain the detailed investigations behind decisions made in this
+plan. Linking directly to sections rather than just files, since each doc is long.
+
+**[`pf_helper.md`](pf_helper.md)** — PF solver comparison (GridKit `solve_pf` vs PowerModels.jl):
+- [§1 GridKit PF solver: architecture and implementation](pf_helper.md#1-gridkit-pf-solver-architecture-and-implementation) — source-level proof GridKit has no PV→PQ switching
+- [§4 Base-case results](pf_helper.md#4-base-case-results) — three-way comparison vs TAMU/PowerWorld reference
+- [§6 PM.jl cross-validation](pf_helper.md#6-pmjl-cross-validation-voltage-bias-is-constant-across-the-mild-perturbation-envelope) — the ~0.030 pu constant-offset envelope
+- [§8 Why voltage is stiff: PV bus regulation](pf_helper.md#8-why-voltage-is-stiff-pv-bus-regulation-novice-explanation) — regulated-bus fraction (24.5% Illinois, 24.3% Hawaii40) explains angle-dominated response
+- [§9 PV-curve nose and voltage collapse](pf_helper.md#9-pv-curve-nose-and-voltage-collapse-pmjl-section-8a) — load-scaling stress test, nose between 2x-3x base load
+- [§10 Generator outage stress test](pf_helper.md#10-generator-outage-stress-test-pmjl-section-8b) — largest-N-gens-off stress test
+- [§11 GridKit vs PM.jl under stress](pf_helper.md#11-gridkit-vs-pmjl-under-stress-section-9-in-pm_helperipynb) — where the safe envelope breaks down
+- [§16 Recommendation: use PM.jl as the production PF solver](pf_helper.md#16-recommendation-use-pmjl-as-the-production-pf-solver) — decision + GridKit parity development plan
+- [§17 Remaining open items](pf_helper.md#17-remaining-open-items)
+
+**[`m_to_case_helper.md`](m_to_case_helper.md)** — MATPOWER `.m` → GridKit `case.json` mapping:
+- [Two entry points (they coexist)](m_to_case_helper.md#two-entry-points-they-coexist) — `patch_case_from_m` vs `build_case_from_solved_m`
+- [PF solver choice and the solved `.m` contract](m_to_case_helper.md#pf-solver-choice-and-the-solved-m-contract) — the PG/QG writeback gap in GridKit's `solve_pf`
+- [Field-by-field mapping](m_to_case_helper.md#field-by-field-mapping) — bus init, Genrou dispatch, offline-gen removal, LoadZIP patching
+- [The identity round-trip test](m_to_case_helper.md#the-identity-round-trip-test) — tolerance philosophy
+- [Perturbation-driven tests (non-identity)](m_to_case_helper.md#perturbation-driven-tests-non-identity) — unit tests 4a-4h
+- [Findings](m_to_case_helper.md#findings) — currently all `[TODO]`, pending notebook execution
+- [Known limitations (to lift in production)](m_to_case_helper.md#known-limitations-to-lift-in-production)
+
+**Case references:**
+- [`cases/illinois.md`](../cases/illinois.md) — Illinois (ACTIVSg200) bus/gen tables, `.m` ↔ `case.json` field mapping, UQ parameter selection
+- [`cases/hawaii.md`](../cases/hawaii.md) — Hawaii40 bus/gen tables, UQ parameter selection
+
+---
+
 ## Task 0: Scenario generation pipeline (PF solver, prerequisite for Track 1)
 
 ### Goal
@@ -85,7 +129,8 @@ investigating first to avoid the Julia dependency. Full generator commitment opt
 
 ### Motivation
 
-`pf_helper.md` Section 13 found that steady-state PF solutions across both Illinois
+[`pf_helper.md` §8](pf_helper.md#8-why-voltage-is-stiff-pv-bus-regulation-novice-explanation)
+found that steady-state PF solutions across both Illinois
 (ACTIVSg200, 24.5% regulated buses) and Hawaii40 (24.3% regulated buses) are dominated by
 **angle** response; voltage magnitude barely moves even under large perturbations (10 gens
 offline, ±80% load). This raises an obvious question for Track 1: if |V| doesn't fluctuate
@@ -96,14 +141,14 @@ condition?
 
 ### Working hypothesis: pre-fault |V| flatness does NOT imply flat fault response
 
-The Section 13 finding is specific to steady-state redispatch: PV/slack buses absorb real
+The [§8](pf_helper.md#8-why-voltage-is-stiff-pv-bus-regulation-novice-explanation) finding is specific to steady-state redispatch: PV/slack buses absorb real
 power imbalance almost entirely through angle because AVR control pins |V| at its setpoint.
 A fault is a different regime — during the fault, the faulted bus voltage is driven toward
 zero by the network's short-circuit impedance, not by generator voltage setpoints, so the
 "AVR keeps |V| flat" mechanism is locally broken regardless of which operating point the
 disturbance starts from.
 
-What *does* vary substantially across operating points, per Section 13, is bus **angle**
+What *does* vary substantially across operating points, per [§8](pf_helper.md#8-why-voltage-is-stiff-pv-bus-regulation-novice-explanation), is bus **angle**
 (swings of 10-16 degrees observed under generator-offline and heavy-load perturbations).
 Pre-fault angle separation between generators sets the accelerating power in the swing
 equation:
@@ -122,20 +167,21 @@ mechanism that a steady-state PF perturbation study does not exercise at all.
 
 | Quantity | Expected sensitivity to pre-fault operating point | Why |
 |---|---|---|
-| Pre-fault \|V\| | Low (confirmed, Section 13) | PV/slack regulation absorbs P imbalance into angle |
+| Pre-fault \|V\| | Low (confirmed, [§8](pf_helper.md#8-why-voltage-is-stiff-pv-bus-regulation-novice-explanation)) | PV/slack regulation absorbs P imbalance into angle |
 | During-fault \|V\| dip shape/depth | Low-moderate | Dominated by fixed network Thevenin impedance to the fault; some sensitivity via pre-fault loading changing fault current contribution |
 | Post-fault rotor angle swing (delta excursion) | **High** | Directly driven by pre-fault power transfer / angle separation (equal-area criterion) |
 | Frequency nadir / ROCOF | **High**, especially once Task 0 thins inertia | Nadir is roughly a function of (disturbance size) / (system inertia); thinning spinning generators is likely a larger lever than hour-to-hour dispatch differences |
 | Post-fault V recovery time | Moderate | Depends on reactive reserve near the fault, which correlates with loading level and which generators are online that hour |
 
-### Caveat carried over from Section 13
+### Caveat carried over from §8
 
 GridKit does not enforce `Qmax`/`Qmin` (no PV to PQ switching mid-solve). Post-fault
 reactive demand spikes are exactly when a real system risks voltage collapse if a
 generator hits its Q limit. If GridKit's dynamic model has the same limitation, its
 fault-response |V| recovery may look artificially uniform across scenarios compared to
 what a full model would produce — the same bias flagged for the static PowerModels.jl
-cross-validation (Task 0 / pf_helper.md Section 13), just surfacing in the dynamic
+cross-validation (Task 0 / [pf_helper.md §1](pf_helper.md#1-gridkit-pf-solver-architecture-and-implementation),
+[§8](pf_helper.md#8-why-voltage-is-stiff-pv-bus-regulation-novice-explanation)), just surfacing in the dynamic
 track instead.
 
 ### Proposed cheap test (prototype, before full 8760 commitment)
@@ -247,7 +293,7 @@ Power consumed at voltage V:
 
 Set `Pnom = PD/baseMVA`, `Qnom = QD/baseMVA`, `Vnom = Vm`, leaving `alphaI`/`alphaP`
 unchanged. This is consistent with the existing illinois.json convention (Option B in
-[cases/illinois.md — Load demand section](../cases/illinois.md)). At initialization, when
+[cases/illinois.md — Load demand section](../cases/illinois.md#load-demand-pdqdvm--loadzip-pnomqnomvnom)). At initialization, when
 bus voltage equals Vm, the load consumes P = PD/baseMVA p.u. as required by the PF solution.
 
 Three complications to handle in `m_to_case.py`:
@@ -268,7 +314,7 @@ For `LoadZ` devices (if a case uses them instead of LoadZIP): replace `R` and `X
 `R = G/(G²+B²)`, `X = -B/(G²+B²)` where `G = PD/(baseMVA * Vm²)`, `B = QD/(baseMVA * Vm²)`.
 
 Illinois-specific details (load bus count, multi-ZIP bus list, shunt device names):
-see [`cases/illinois.md` — Load demand section](../cases/illinois.md).
+see [`cases/illinois.md` — Load demand section](../cases/illinois.md#load-demand-pdqdvm--loadzip-pnomqnomvnom).
 
 ### What is and is not changing across PCM scenarios
 
@@ -285,13 +331,20 @@ The 8760 scenarios share (held constant in the base `illinois.json`):
 
 ### Implementation
 
+Full mapping spec, tests, and known limitations: [`m_to_case_helper.md`](m_to_case_helper.md).
+
 **`m_to_case.py`** (DONE) in `py-utils/`:
 - `patch_case_from_m(base_case_json, m_path, output_path)`:
   - Patches bus `init.Vr` / `init.Vi` from `mpc.bus` VM/VA columns
   - Patches Genrou `params.p0` / `params.q0` from `mpc.gen` PG/QG columns
   - Does NOT patch load, dynamic params, or solver settings
+- `build_case_from_solved_m(base_case_json, m_path, output_path)`: superset of the above,
+  also patches `LoadZIP` demand and removes offline-generator device triplets; see
+  [`m_to_case_helper.md` — Field-by-field mapping](m_to_case_helper.md#field-by-field-mapping)
 - `patch_cases_from_m_list(base_case_json, m_paths, output_dir)`: batch version
 - `scenario_summary(paths)`: returns DataFrame of (scenario, gen_id, p0, q0) for sanity checks
+- Validation notebook: [`m_to_case_helper.ipynb`](../notebooks/m_to_case_helper.ipynb) with
+  companion [Findings](m_to_case_helper.md#findings) section
 
 **`uq_setup.ipynb`** (TODO):
 - Select subset or all 8760 scenarios
@@ -530,3 +583,6 @@ From `m_viz_utils.py`:
 - MATPOWER column definitions: https://matpower.org/docs/
 - GridKit case JSON format: `~/gridkit/build/examples/PhasorDynamics/Large/Illinois/illinois.json`
 - PCM data: `/kfs2/projects/scidac/scidac-data/pcm-runs/ACTIVSg200_wind_demand/matpower/`
+- [`pf_helper.md`](pf_helper.md) — GridKit vs PowerModels.jl PF solver investigation (see [Related investigative documents](#related-investigative-documents))
+- [`m_to_case_helper.md`](m_to_case_helper.md) — `.m` → `case.json` mapping spec and tests
+- [`gt_ideas.md`](gt_ideas.md) — aleatoric/epistemic conceptual framing background
