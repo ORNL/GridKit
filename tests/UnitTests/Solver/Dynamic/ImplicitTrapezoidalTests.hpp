@@ -83,8 +83,8 @@ namespace GridKit::Testing
                                                   y1 = fixture.model.y().getData()[1]; })
                    == 0;
 
-        const auto   solution   = fixture.model.analyticSolution(2.0);
-        const double error      = std::hypot(y0 - solution[0], y1 - solution[1]);
+        const auto   solution = fixture.model.analyticSolution(2.0);
+        const double error    = std::hypot(y0 - solution[0], y1 - solution[1]);
 
         if (previous_error != 0.0)
         {
