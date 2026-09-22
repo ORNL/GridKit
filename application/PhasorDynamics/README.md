@@ -9,6 +9,9 @@
   `tmax`               | A floating-point value for max time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
   `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9)
+  `mu`                 | Positive CommonMath smoothing scale (default: 240.0)
+  `contingency_stats_file` | Optional JSON output for `ContingencyAnalysis`, relative to the working directory
+  `solver_trace_file`  | Optional segment-local IDA CSV: `segment,phase,t,h,accepted_steps,residual_evals,jacobian_evals,error_test_failures`; relative to the solver JSON, with a fault-ID suffix for multi-fault `ContingencyAnalysis` runs
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `max_order`          | Maximum IDA integration method order from 1 to 5 (default: 5; fixed stepping is capped at 2)
