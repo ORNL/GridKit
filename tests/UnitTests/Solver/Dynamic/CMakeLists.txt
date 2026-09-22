@@ -10,6 +10,18 @@ if(TARGET SUNDIALS::idas)
 endif()
 
 if(GRIDKIT_ENABLE_RESOLVE)
+  add_executable(test_implicit_trapezoidal runImplicitTrapezoidalTests.cpp)
+  target_link_libraries(
+    test_implicit_trapezoidal
+    GridKit::implicit_trapezoidal
+    GridKit::rms_norm
+    GridKit::testing
+    GridKit::resolve_system_solver
+    ReSolve::ReSolve)
+  add_test(NAME ImplicitTrapezoidalTest COMMAND $<TARGET_FILE:test_implicit_trapezoidal>)
+
+  install(TARGETS test_implicit_trapezoidal RUNTIME DESTINATION bin)
+
   add_executable(test_rosenbrock runRosenbrockTests.cpp)
   target_link_libraries(
     test_rosenbrock

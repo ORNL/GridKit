@@ -82,6 +82,71 @@ namespace GridKit
     }
 
     /**
+     * @brief Compute the weighted infinity error norm in one pass over HOST data.
+     *
+     * @param[in] error Error vector.
+     * @param[in] state Current state.
+     * @param[in] previous_state Previous state.
+     * @param[in] absolute_tolerance Component-wise absolute tolerance.
+     * @param[in] relative_tolerance Relative tolerance.
+     * @return The weighted infinity norm.
+     */
+    template <typename ScalarT, typename IdxT>
+    ScalarT VectorHandlerCpu<ScalarT, IdxT>::weightedInfNorm(Vector<ScalarT, IdxT>* error,
+                                                             Vector<ScalarT, IdxT>* state,
+                                                             Vector<ScalarT, IdxT>* previous_state,
+                                                             Vector<ScalarT, IdxT>* absolute_tolerance,
+                                                             ScalarT                relative_tolerance)
+    {
+      const ScalarT* error_data              = error->getData(memory::HOST);
+      const ScalarT* state_data              = state->getData(memory::HOST);
+      const ScalarT* previous_state_data     = previous_state->getData(memory::HOST);
+      const ScalarT* absolute_tolerance_data = absolute_tolerance->getData(memory::HOST);
+      ScalarT        norm                    = 0;
+
+      for (IdxT i = 0; i < error->getSize(); ++i)
+      {
+        const ScalarT scale = absolute_tolerance_data[i]
+                              + relative_tolerance * std::max(std::abs(state_data[i]), std::abs(previous_state_data[i]));
+        norm = std::max(norm, std::abs(error_data[i]) / scale);
+      }
+      return norm;
+    }
+
+    /**
+     * @brief Compute the weighted root-mean-square error norm in one pass over HOST data.
+     *
+     * @param[in] error Error vector.
+     * @param[in] state Current state.
+     * @param[in] previous_state Previous state.
+     * @param[in] absolute_tolerance Component-wise absolute tolerance.
+     * @param[in] relative_tolerance Relative tolerance.
+     * @return The weighted RMS norm.
+     */
+    template <typename ScalarT, typename IdxT>
+    ScalarT VectorHandlerCpu<ScalarT, IdxT>::weightedRmsNorm(Vector<ScalarT, IdxT>* error,
+                                                             Vector<ScalarT, IdxT>* state,
+                                                             Vector<ScalarT, IdxT>* previous_state,
+                                                             Vector<ScalarT, IdxT>* absolute_tolerance,
+                                                             ScalarT                relative_tolerance)
+    {
+      const ScalarT* error_data              = error->getData(memory::HOST);
+      const ScalarT* state_data              = state->getData(memory::HOST);
+      const ScalarT* previous_state_data     = previous_state->getData(memory::HOST);
+      const ScalarT* absolute_tolerance_data = absolute_tolerance->getData(memory::HOST);
+      ScalarT        squared_norm            = 0;
+
+      for (IdxT i = 0; i < error->getSize(); ++i)
+      {
+        const ScalarT scale = absolute_tolerance_data[i]
+                              + relative_tolerance * std::max(std::abs(state_data[i]), std::abs(previous_state_data[i]));
+        const ScalarT scaled_error  = error_data[i] / scale;
+        squared_norm               += scaled_error * scaled_error;
+      }
+      return std::sqrt(squared_norm / static_cast<ScalarT>(error->getSize()));
+    }
+
+    /**
      * @brief axpy i.e, y = alpha*x+y where alpha is a constant
      *
      * @param[in] alpha The constant
