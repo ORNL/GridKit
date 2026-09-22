@@ -364,7 +364,7 @@ namespace GridKit
           return 1;
         }
         const ScalarT xqpi0      = qpi_input0 - Kp_ * erqlim0;
-        const ScalarT q_aw_rate0 = Math::antiwindup(qpi0, Ki_ * erqlim0, qmin, qmax);
+        const ScalarT q_aw_rate0 = Math::antiwindup(qpi_input0, Ki_ * erqlim0, qmin, qmax);
         const ScalarT xqpi_rate0 = sfrz0 * q_aw_rate0;
         if (!is_finite(q_aw_rate0) || !is_finite(xqpi_rate0)
             || std::abs(static_cast<RealT>(xqpi_rate0)) > INITIALIZATION_TOLERANCE)
@@ -397,7 +397,7 @@ namespace GridKit
           return 1;
         }
         const ScalarT xppi0      = ppi_input0 - Kpg_ * eplim0;
-        const ScalarT p_aw_rate0 = Math::antiwindup(ppi0, Kig_ * eplim0, pmin, pmax);
+        const ScalarT p_aw_rate0 = Math::antiwindup(ppi_input0, Kig_ * eplim0, pmin, pmax);
         if (!is_finite(p_aw_rate0)
             || std::abs(static_cast<RealT>(p_aw_rate0)) > INITIALIZATION_TOLERANCE)
         {
@@ -787,10 +787,10 @@ namespace GridKit
 
         f[VMEAS]      = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
         f[QMEAS]      = -qmeas_dot + (q - qmeas) / Tfltr_;
-        f[XQPI]       = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
+        f[XQPI]       = -xqpi_dot + sfrz * Math::antiwindup(Kp_ * erqlim + xqpi, Ki_ * erqlim, Qmin_, Qmax_);
         f[XQLAG]      = -xqlag_dot + (qpi - xqlag) / Tfv_;
         f[PMEAS]      = -pmeas_dot + (p - pmeas) / Tp_;
-        f[XPPI]       = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
+        f[XPPI]       = -xppi_dot + Math::antiwindup(Kpg_ * eplim + xppi, Kig_ * eplim, Pmin_, Pmax_);
         f[PREF_STATE] = -pref_dot + (ppi - pref) / Tlag_;
 
         f[V]      = -v * v + vr * vr + vi * vi;
