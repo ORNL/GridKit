@@ -136,7 +136,7 @@ the full-scale run.
 
 ---
 
-## Executive Summary
+## Executive Summary (updated 2026-08-26)
 
 **1. Grid visualization (`m_viz`)**
 - Interactive geographic map of any MATPOWER `.m` case — buses, branches, generators,
@@ -146,12 +146,41 @@ the full-scale run.
 
 **2. Epistemic UQ pipeline (`uq_setup`)**
 - HPC-parallelized (across nodes + within node): sampling → simulation → collection → QC.
-- ~22,000 initial epistemic runs completed on 2 grids (Hawaii40, Illinois), largest
-  ensemble 16,000 samples; both uniform and Gaussian (σ=12%) sampling validated.
-- Next: expand to more generators/parameters and sweep fault location.
+- ~43,000 epistemic dynamic simulations completed across 2 grids (Hawaii40, Illinois).
+- Hawaii: systematic hypothesis-driven experiments (v6–v10) varying 4 generators each
+  with N=4000 LHS samples, targeting H-sensitivity detectability vs machine size,
+  distance, and dispatch. Plus a 39-parameter Morris sensitivity design (N=1000)
+  sampling all fleet H parameters simultaneously.
+- Next: analyze v6–v10 results for sensitivity ranking, then sweep fault location.
 
-**3. Power-flow tooling (`solve_pf`)**
-- CLI wrapper around GridKit's existing PF solver; verified converging on 3 test cases.
-- Key result: voltage magnitude barely moves under stress (±80% load, 10 gens offline) —
-  response is carried by angle, so UQ should track angle/flow, not just voltage.
-- Built `.m` → `case.json` bridge, the prerequisite for the next phase (aleatoric UQ).
+**Sample of completed runs** (`/kfs2/projects/scidac/scidac-data/gridkit-runs/`):
+
+| Case | Run | Samples | Distribution | Gens sampled | Hypothesis / purpose |
+|---|---|---:|---|---:|---|
+| Hawaii40 | v2 | 1,000 | uniform ±10% | 4 | initial bus-diverse set |
+| Hawaii40 | v5 | 16,000 | Gaussian σ=12% | 4 | production epistemic (hop distances 1–3+) |
+| Hawaii40 | v6 | 4,000 | uniform ±20% | 4 | smallest H |
+| Hawaii40 | v7 | 4,000 | uniform ±20% | 4 | farthest from fault |
+| Hawaii40 | v8 | 4,000 | uniform ±20% | 4 | smallest mva + dispatch |
+| Hawaii40 | v9 | 4,000 | uniform ±20% | 4 | largest H×mva (positive control) |
+| Hawaii40 | v10 | 4,000 | uniform ±20% | 4 | small p0, moderate H×mva |
+| Hawaii40 | ian-csv | 1,000 | Morris | 39 | all fleet H, sensitivity |
+| Illinois | v2 | 4,000 | Gaussian σ=12% | 4 | hop distances 4–9 from fault |
+
+See [`notes_3.md`](notes_3.md) for v6–v10 experiment designs and fleet analysis.
+
+**3. Power-flow tooling (GridKit `solve_pf` + PM.jl)**
+- Two PF solvers tested on ACTIVSg200: GridKit `solve_pf` (Newton/KINSOL) and PM.jl
+  (Ipopt, industry-standard).
+- **PM.jl is the production PF solver** for all case.json generation: correct PV→PQ
+  switching, writes post-solve PG/QG, reproduces TAMU/PowerWorld reference to 1e-5 pu.
+- GridKit `solve_pf` has no PV→PQ switching; ~0.030 pu voltage bias vs PM.jl. Usable
+  only inside a "safe envelope" (±80% per-bus load, N≤2 gens off) for relative angle
+  comparisons. See [`pf_helper.md`](pf_helper.md) Sections 1 and 11.
+- Pluggable solver interface designed: `run_pf_solve(solver="pm"|"gridkit")` dispatcher
+  in `pf_utils.py`. GridKit swap requires adding post-solve PG/QG writeback to
+  `solve_pf.cpp` (missing output feature, not missing solve capability).
+- `.m` → `case.json` bridge (`m_to_case.py`) implemented and documented: handles bus
+  init, gen dispatch, LoadZIP patching, offline-gen removal. **TODO**: run full
+  notebook test suite (`m_to_case_helper.ipynb` has 4 known bugs to fix first).
+  See [`m_to_case_helper.md`](m_to_case_helper.md).

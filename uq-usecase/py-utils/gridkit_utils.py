@@ -57,6 +57,101 @@ MONITORABLE_VARS_BY_ELEMENT = {
 # ---------------------------------------------------------------------------
 
 
+def validate_csv_columns(csv_path, expected_class="Genrou", expected_param="H"):
+    """
+    Validate that CSV columns follow the Genrou_BUS_UNIT_H naming convention.
+
+    Parameters
+    ----------
+    csv_path : str
+        Path to CSV file with index column + Genrou_*_*_H columns
+    expected_class : str, default "Genrou"
+        Expected class prefix (e.g. "Genrou")
+    expected_param : str, default "H"
+        Expected parameter suffix (e.g. "H")
+
+    Returns
+    -------
+    list
+        Valid column names (after filtering index column)
+
+    Raises
+    ------
+    ValueError
+        If any columns don't match the expected format
+
+    Notes
+    -----
+    Expected column format: {expected_class}_{BUS}_{UNIT}_{expected_param}
+    Example: Genrou_23_1_H, Genrou_126_1_H
+    """
+    with open(csv_path, "r") as f:
+        header_line = f.readline().strip()
+
+    # Skip first (index) column, get rest
+    cols_raw = [c.strip() for c in header_line.split(",")][1:]
+
+    bad_cols = []
+    for col in cols_raw:
+        parts = col.split("_")
+        # Must have at least 4 parts: {class}, BUS, UNIT, {param}
+        if not (
+            len(parts) >= 4
+            and parts[0] == expected_class
+            and parts[-1] == expected_param
+        ):
+            bad_cols.append(col)
+
+    if bad_cols:
+        raise ValueError(
+            f"CSV column naming validation FAILED for {csv_path}\n"
+            f"Expected format: {expected_class}_BUS_UNIT_{expected_param} "
+            f"(e.g., {expected_class}_23_1_{expected_param})\n"
+            f"Found {len(bad_cols)} invalid column(s):\n"
+            f"  {bad_cols[:5]}{'...' if len(bad_cols) > 5 else ''}\n"
+            f"Please fix the CSV file and retry."
+        )
+
+    return cols_raw
+
+
+def deep_merge(base_dict, override_dict):
+    """
+    Recursively merge override_dict into base_dict, preserving nested structures.
+
+    For lists, the override completely replaces (does not merge element-wise).
+    For dicts, recursively merges keys.
+
+    Parameters
+    ----------
+    base_dict : dict
+        Base configuration dictionary (will not be modified)
+    override_dict : dict
+        Override configuration to merge in
+
+    Returns
+    -------
+    dict
+        Merged result (new dict, base_dict unchanged)
+
+    Notes
+    -----
+    This performs a shallow copy of the result. For deep changes to nested
+    structures, use copy.deepcopy() on the result if needed.
+    """
+    result = copy.deepcopy(base_dict)
+
+    for key, value in override_dict.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            # Recursively merge nested dicts
+            result[key] = deep_merge(result[key], value)
+        else:
+            # For non-dicts (including lists), replace entirely
+            result[key] = copy.deepcopy(value)
+
+    return result
+
+
 def generate_samples(param_specs, N, seed=None, method="lhs"):
     from scipy.stats import qmc, norm as sp_norm  # lazy: not needed by m_viz
 
@@ -141,15 +236,16 @@ def make_run_dir(
     case_fn=None,
     solver_fn=None,
     solver_overrides=None,
+    n_samples=None,
 ):
     """
-    Create run_root/run_{i:03d}/, copy case+solver JSON, patch params and monitors.
+    Create run_root/sample_runs/run_{i:0Nd}/, copy case+solver JSON, patch params and monitors.
 
     Parameters
     ----------
     base_case_dir     : str, directory containing the base case files
-    run_root          : str, parent directory for all runs
-    i                 : int, run index
+    run_root          : str, experiment root directory (contains meta.yml, samples.csv, etc.)
+    i                 : int, run index (0-based)
     sample_row        : pd.Series, one row from generate_samples() DataFrame
     param_specs       : list of dict (same structure as generate_samples)
     monitors_by_class : dict mapping device/bus class (lowercase ok) -> list of var names
@@ -160,17 +256,18 @@ def make_run_dir(
     solver_fn         : str or None; if None, auto-detected (single .solver.json in dir)
     solver_overrides  : dict or None; key-value pairs to patch into the solver JSON.
                         Supports top-level keys (e.g. "tmax") and "events" as a list.
-                        For "events", each entry must have "index" (0-based position in
-                        the events array) plus whichever fields to overwrite, e.g.:
-                          {"tmax": 20.0,
-                           "events": [
-                               {"index": 0, "time": 2.0},
-                               {"index": 1, "time": 2.1},
-                           ]}
+                        Events without "index" field are replaced entirely (standard).
+                        Events with "index" field are patched selectively (backward compat).
+    n_samples         : int or None; total number of samples. If provided, uses dynamic
+                        padding (e.g., 1025 samples → run_0000 through run_1024) and
+                        creates runs under run_root/sample_runs/.
+                        If None, uses legacy 3-digit padding under run_root/ directly.
 
     Returns
     -------
     str : path to the new run directory
+        With n_samples: run_root/sample_runs/run_NNNN
+        Without n_samples: run_root/run_NNN (legacy)
     """
     if case_fn is None:
         candidates = [f for f in os.listdir(base_case_dir) if f.endswith(".case.json")]
@@ -196,7 +293,17 @@ def make_run_dir(
             )
         solver_fn = candidates[0]
 
-    run_dir = os.path.join(run_root, f"run_{i:03d}")
+    # Determine run directory structure and padding based on total samples
+    if n_samples is not None:
+        # Dynamic padding: e.g., 1025 samples → 4-digit (run_0000 through run_1024)
+        # Organized under sample_runs/ subdirectory to keep meta.yml, samples.csv visible
+        n_digits = len(str(n_samples - 1))
+        sample_runs_dir = os.path.join(run_root, "sample_runs")
+        run_dir = os.path.join(sample_runs_dir, f"run_{i:0{n_digits}d}")
+    else:
+        # Legacy: 3-digit padding directly under run_root (backward compatibility)
+        run_dir = os.path.join(run_root, f"run_{i:03d}")
+
     os.makedirs(run_dir, exist_ok=True)
 
     # load solver, strip testing keys; remove output_file so the simulator
@@ -211,12 +318,18 @@ def make_run_dir(
     if solver_overrides:
         for key, val in solver_overrides.items():
             if key == "events":
-                # val is a list of {index, ...fields}; patch each event in-place
-                for patch in val:
-                    idx = patch["index"]
-                    for k, v in patch.items():
-                        if k != "index":
-                            solver["events"][idx][k] = v
+                # Check if using the full replacement approach (standard, no "index" field)
+                # or backward-compatible selective patching (with "index" field)
+                if val and all("index" not in event for event in val):
+                    # Full replacement: val is a complete new events array
+                    solver["events"] = val
+                else:
+                    # Selective patching: val is a list of {index, ...fields}
+                    for patch in val:
+                        idx = patch["index"]
+                        for k, v in patch.items():
+                            if k != "index":
+                                solver["events"][idx][k] = v
             else:
                 solver[key] = val
 
@@ -295,35 +408,48 @@ def run_sample(run_dir, runner, solver_fn=None, timeout=300):
     )
 
 
-def collect_and_save(run_root, samples_df, out_path, mon_fn="mon.csv", mode="stacked"):
+def collect_and_save(
+    run_root, samples_df, out_path, mon_fn="mon.csv", mode="stacked", n_samples=None
+):
     """
     Read all run_i/mon.csv and save as Parquet in one of two formats.
 
     Parameters
     ----------
-    run_root   : str, parent dir containing run_000/, run_001/, ...
+    run_root   : str, experiment root dir containing sample_runs/ (or run_000/, run_001/, ... for legacy)
     samples_df : pd.DataFrame from generate_samples(); index = run index 0..N-1
     out_path   : str
         mode="stacked" → path to a single output .parquet file
-        mode="per_run" → path to an output *directory*; writes run_NNN.parquet per run
+        mode="per_run" → path to an output *directory*; writes run_NNNN.parquet per run
     mon_fn     : str, monitor output filename (default "mon.csv")
     mode       : "stacked" (default) or "per_run"
         "stacked"  — single flat file with run_id + time + signals + param cols
         "per_run"  — one file per run, wide format (rows=timesteps, cols=signals only);
                      param values are NOT duplicated — they live in samples.csv
+    n_samples  : int or None; total number of samples. If provided, uses dynamic padding
+                 (e.g., 1025 samples → run_0000 through run_1024) and looks for runs
+                 under run_root/sample_runs/. If None, uses legacy 3-digit padding.
 
     Returns
     -------
     mode="stacked" → pd.DataFrame : run_id | time | <mon vars> | <param cols>
-    mode="per_run" → list of str  : paths to written run_NNN.parquet files
+    mode="per_run" → list of str  : paths to written run_NNNN.parquet files
     """
     import pyarrow as pa
     import pyarrow.parquet as pq
 
+    # Determine run directory structure and padding
+    if n_samples is not None:
+        n_digits = len(str(n_samples - 1))
+        sample_runs_dir = os.path.join(run_root, "sample_runs")
+    else:
+        n_digits = 3
+        sample_runs_dir = run_root
+
     if mode == "stacked":
         frames = []
         for i, row in samples_df.iterrows():
-            mon_path = os.path.join(run_root, f"run_{i:03d}", mon_fn)
+            mon_path = os.path.join(sample_runs_dir, f"run_{i:0{n_digits}d}", mon_fn)
             if not os.path.exists(mon_path) or os.path.islink(mon_path):
                 print(f"  WARNING: missing {mon_path}, skipping run {i}")
                 continue
@@ -347,27 +473,29 @@ def collect_and_save(run_root, samples_df, out_path, mon_fn="mon.csv", mode="sta
         os.makedirs(out_path, exist_ok=True)
         written = []
         for i, _row in samples_df.iterrows():
-            mon_path = os.path.join(run_root, f"run_{i:03d}", mon_fn)
+            mon_path = os.path.join(sample_runs_dir, f"run_{i:0{n_digits}d}", mon_fn)
             if not os.path.exists(mon_path) or os.path.islink(mon_path):
                 print(f"  WARNING: missing {mon_path}, skipping run {i}")
                 continue
             df = pd.read_csv(mon_path)
             df = df.rename(columns={df.columns[0]: "time"})
-            out_file = os.path.join(out_path, f"run_{i:03d}.parquet")
+            out_file = os.path.join(out_path, f"run_{i:0{n_digits}d}.parquet")
             pq.write_table(pa.Table.from_pandas(df, preserve_index=False), out_file)
             written.append(out_file)
 
         if not written:
             raise RuntimeError("No mon.csv files found — did the runs complete?")
 
-        print(f"Saved {len(written)} run files -> {out_path}/run_NNN.parquet")
+        print(f"Saved {len(written)} run files -> {out_path}/run_NNNN.parquet")
         return written
 
     else:
         raise ValueError(f"Unknown mode '{mode}': must be 'stacked' or 'per_run'")
 
 
-def collect_parallel(run_root, out_path, n_workers=32, mon_fn="mon.csv"):
+def collect_parallel(
+    run_root, out_path, n_workers=32, mon_fn="mon.csv", n_samples=None
+):
     """
     Convert all run_NNN/mon.csv files to run_NNN.parquet in parallel using threads.
 
@@ -377,10 +505,14 @@ def collect_parallel(run_root, out_path, n_workers=32, mon_fn="mon.csv"):
 
     Parameters
     ----------
-    run_root   : str, parent dir containing run_000/, run_001/, ... and samples.csv
-    out_path   : str, output directory for run_NNN.parquet files
+    run_root   : str, experiment root dir containing sample_runs/ (or run_000/, run_001/, ... for legacy)
+                 and samples.csv
+    out_path   : str, output directory for run_NNNN.parquet files
     n_workers  : int, number of parallel threads (default 32)
     mon_fn     : str, monitor output filename (default "mon.csv")
+    n_samples  : int or None; total number of samples. If provided, uses dynamic padding
+                 (e.g., 1025 samples → run_0000 through run_1024) and looks for runs
+                 under run_root/sample_runs/. If None, uses legacy 3-digit padding.
 
     Returns
     -------
@@ -398,13 +530,21 @@ def collect_parallel(run_root, out_path, n_workers=32, mon_fn="mon.csv"):
     indices = list(samples_df.index)
     total = len(indices)
 
+    # Determine run directory structure and padding
+    if n_samples is not None:
+        n_digits = len(str(n_samples - 1))
+        sample_runs_dir = os.path.join(run_root, "sample_runs")
+    else:
+        n_digits = 3
+        sample_runs_dir = run_root
+
     os.makedirs(out_path, exist_ok=True)
 
     def _convert_one(i):
-        mon_path = os.path.join(run_root, f"run_{i:03d}", mon_fn)
+        mon_path = os.path.join(sample_runs_dir, f"run_{i:0{n_digits}d}", mon_fn)
         if not os.path.exists(mon_path):
             return i, None, "missing"
-        out_file = os.path.join(out_path, f"run_{i:03d}.parquet")
+        out_file = os.path.join(out_path, f"run_{i:0{n_digits}d}.parquet")
         df = pd.read_csv(mon_path)
         df = df.rename(columns={df.columns[0]: "time"})
         pq.write_table(pa.Table.from_pandas(df, preserve_index=False), out_file)
