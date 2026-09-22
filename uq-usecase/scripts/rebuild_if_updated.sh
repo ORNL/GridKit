@@ -60,6 +60,11 @@ ctest --test-dir "$GRIDKIT_DIR/build" --output-on-failure
 # Record the origin/develop commit we just built against
 echo "$REMOTE_COMMIT" > "$STAMP_FILE"
 
+# ── Push merged state to personal branch ──────────────────────────────────────
+echo ""
+echo "=== Pushing merged state to origin/isatkaus/uq-usecase ==="
+git push origin isatkaus/uq-usecase
+
 echo ""
 echo "=== Done ==="
 echo "  GridKit built:  origin/develop @ $REMOTE_COMMIT"
