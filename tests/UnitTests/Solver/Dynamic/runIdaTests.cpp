@@ -15,6 +15,7 @@ int main()
   result += test.monitorActivityIsCached();
   result += test.dtMonitorSuppressesEpsilonFinalStep();
   result += test.fixedStep();
+  result += test.changingPivots();
   result += test.suppressAlgebraicErrors();
   result += test.consistentICType();
 
