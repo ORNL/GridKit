@@ -301,6 +301,38 @@ namespace GridKit
     };
 
     template <class ScalarT, typename IdxT>
+    class JacobianCountEvaluator : public NullEvaluator<ScalarT, IdxT>
+    {
+    public:
+      JacobianCountEvaluator()
+      {
+        jacobian_.allocateMatrixData(memory::HOST);
+        jacobian_.getRowData()[0] = 0;
+        jacobian_.getRowData()[1] = 1;
+        jacobian_.getColData()[0] = 0;
+        jacobian_.getValues()[0]  = 1.0;
+        jacobian_.setUpdated(memory::HOST);
+        this->csr_jac_ = &jacobian_;
+      }
+
+      bool hasJacobian() override
+      {
+        return true;
+      }
+
+      int evaluateJacobian() override
+      {
+        ++jacobian_calls;
+        return 0;
+      }
+
+      long int jacobian_calls{0};
+
+    private:
+      LinearAlgebra::CsrMatrix<typename NullEvaluator<ScalarT, IdxT>::RealT, IdxT> jacobian_{1, 1, 1};
+    };
+
+    template <class ScalarT, typename IdxT>
     class MonitoringProbeEvaluator : public NullEvaluator<ScalarT, IdxT>
     {
     public:
@@ -487,6 +519,113 @@ namespace GridKit
     class IdaTests
     {
     public:
+      TestOutcome acceptedStepCallback()
+      {
+        TestStatus success = true;
+        for (const double monitor_interval : {0.0, 0.025})
+        {
+          std::vector<double>                              baseline;
+          std::vector<AnalysisManager::Sundials::IdaStats> baseline_stats;
+          for (const bool traced : {false, true})
+          {
+            Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model;
+            Ida<ScalarT, IdxT>                              ida(&model);
+            ida.setTolerance(1.0e-8, 1.0e-10);
+            ida.configureSimulation();
+            ida.initializeSimulation(0.0);
+            size_t sample = 0, segment = 0;
+            double start = 0.0;
+            for (const double end : {0.2, 0.7, 1.0})
+            {
+              long int                                           accepted = 0;
+              double                                             previous = start;
+              std::optional<std::function<void(double, double)>> trace;
+              if (traced)
+              {
+                trace = [&](double t, double h)
+                {
+                  success  *= (std::isfinite(t) && std::isfinite(h) && h > 0 && t > previous);
+                  success  *= (std::abs(t - previous - h) < 1.0e-12);
+                  previous  = t;
+                  ++accepted;
+                  success *= (ida.getStats().num_steps_ == accepted);
+                };
+              }
+              auto output = [&](double t)
+              {
+                const double value  = model.y().getData()[0];
+                success            *= (std::abs(value - 0.5 * (1.0 - std::exp(-2.0 * t))) < 1.0e-7);
+                if (traced)
+                {
+                  success *= (sample < baseline.size());
+                  if (sample < baseline.size())
+                  {
+                    success *= (std::abs(value - baseline[sample]) < 1.0e-12);
+                  }
+                }
+                else
+                {
+                  baseline.push_back(value);
+                }
+                ++sample;
+              };
+              ida.runSimulation(end, monitor_interval, output, trace);
+              const auto stats = ida.getStats();
+              if (traced)
+              {
+                const auto& expected  = baseline_stats[segment];
+                success              *= (accepted == stats.num_steps_ && stats.num_steps_ == expected.num_steps_);
+                success              *= (stats.num_residual_evals_ == expected.num_residual_evals_);
+                success              *= (stats.num_jacobian_evals_ == expected.num_jacobian_evals_);
+                success              *= (stats.num_error_test_fails_ == expected.num_error_test_fails_);
+              }
+              else
+              {
+                baseline_stats.push_back(stats);
+              }
+              ++segment;
+              start = end;
+              if (end < 1.0)
+              {
+                ida.initializeSimulation(end);
+              }
+            }
+            success *= (sample == baseline.size());
+          }
+        }
+        return success.report(__func__);
+      }
+
+      TestOutcome statisticsAcrossRestarts()
+      {
+        TestStatus success = true;
+#ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
+        Model::JacobianCountEvaluator<ScalarT, IdxT> model;
+        Ida<ScalarT, IdxT>                           ida(&model);
+        ida.configureSimulation();
+        ida.initializeSimulation(0.0, false);
+
+        AnalysisManager::Sundials::IdaStats totals;
+        for (const double end : {0.2, 0.7, 1.0})
+        {
+          ida.runSimulation(end, 0.0);
+          const auto segment  = ida.getStats();
+          success            *= (segment.num_steps_ > 0);
+          success            *= (segment.num_jacobian_evals_ > 0);
+          totals             += segment;
+          // Independent oracle: count actual model Jacobian callbacks.
+          success            *= (totals.num_jacobian_evals_ == model.jacobian_calls);
+          if (end < 1.0)
+          {
+            ida.initializeSimulation(end, true);
+            success *= (ida.getStats().num_steps_ == 0);
+          }
+        }
+        success *= (totals.num_steps_ > ida.getStats().num_steps_);
+#endif
+        return success.report(__func__);
+      }
+
       TestOutcome callback()
       {
         const unsigned n_steps = 100;
@@ -544,7 +683,7 @@ namespace GridKit
         const auto run = [](bool monitoring)
         {
           Model::MonitoringProbeEvaluator<ScalarT, IdxT> model(monitoring);
-          Ida<ScalarT, IdxT>                              ida(&model);
+          Ida<ScalarT, IdxT>                             ida(&model);
           ida.configureSimulation();
           ida.initializeSimulation(0.0, false);
 
@@ -554,13 +693,13 @@ namespace GridKit
           return std::pair(model.monitoringCalls(), model.printCalls());
         };
 
-        const auto [inactive_checks, inactive_prints] = run(false);
-        success *= (inactive_checks == 1);
-        success *= (inactive_prints == 0);
+        const auto [inactive_checks, inactive_prints]  = run(false);
+        success                                       *= (inactive_checks == 1);
+        success                                       *= (inactive_prints == 0);
 
-        const auto [active_checks, active_prints] = run(true);
-        success *= (active_checks == 1);
-        success *= (active_prints == 4);
+        const auto [active_checks, active_prints]  = run(true);
+        success                                   *= (active_checks == 1);
+        success                                   *= (active_prints == 4);
 
         return success.report(__func__);
       }
