@@ -737,7 +737,7 @@ namespace GridKit
           success *= allResidualsWithinInitTolerance(disabled_frequency.repca);
 
           setState(disabled_frequency.repca,
-                   {{Vars::PPI, 0.65}, {Vars::EPLIM, 0.1}});
+                   {{Vars::XPPI, 0.48}, {Vars::EPLIM, 0.1}});
           setDerivative(disabled_frequency.repca, {{Vars::XPPI, 0.0}});
           success *= (disabled_frequency.repca.evaluateResidual() == 0);
           success *= residualsMatch(disabled_frequency.repca,
@@ -752,10 +752,10 @@ namespace GridKit
           success *= adjusted.initialize(1.0, 1.25);
 
           setState(adjusted.repca,
-                   {{Vars::QPI, 1.75},
+                   {{Vars::XQPI, 1.55},
                     {Vars::ERQLIM, 0.1},
                     {Vars::SFRZ, 1.0},
-                    {Vars::PPI, 2.25},
+                    {Vars::XPPI, 2.08},
                     {Vars::EPLIM, 0.1}});
           setDerivative(adjusted.repca, {{Vars::XQPI, 0.0}, {Vars::XPPI, 0.0}});
           success *= (adjusted.repca.evaluateResidual() == 0);
@@ -979,7 +979,7 @@ namespace GridKit
         for (const auto& test_case : antiwindup_cases)
         {
           setState(fixture.repca,
-                   {{Vars::QPI, test_case.output},
+                   {{Vars::XQPI, test_case.output - 2.0 * test_case.error},
                     {Vars::ERQLIM, test_case.error},
                     {Vars::SFRZ, 1.0}});
           setDerivative(fixture.repca, {{Vars::XQPI, 0.0}});
@@ -1012,7 +1012,7 @@ namespace GridKit
           setAnswerKeyInputs(blocked);
           success *= blocked.prepare(0.0, 0.0);
           setState(blocked.repca,
-                   {{Vars::QPI, 1.7}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
+                   {{Vars::QPI, 0.9}, {Vars::XQPI, 0.9}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
           setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
           numberVariables(blocked);
           blocked.repca.updateTime(0.0, 1.0);
@@ -1022,7 +1022,7 @@ namespace GridKit
               {2 * index(Vars::XQPI) + 1, -1.0}, // @todo Remove these
               {2 * index(Vars::SFRZ), 0.0},      // @todo Remove these
               {2 * index(Vars::ERQLIM), 0.0},    // @todo Remove these
-              {2 * index(Vars::QPI), 0.0},       // @todo Remove these
+              {2 * index(Vars::XQPI), 0.0},      // @todo Remove these
           };
 
           success *= jacobianRowMatches(
@@ -1152,7 +1152,7 @@ namespace GridKit
         for (const auto& test_case : antiwindup_cases)
         {
           setState(fixture.repca,
-                   {{Vars::PPI, test_case.output},
+                   {{Vars::XPPI, test_case.output - 1.7 * test_case.error},
                     {Vars::EPLIM, test_case.error}});
           setDerivative(fixture.repca, {{Vars::XPPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
@@ -2168,13 +2168,11 @@ namespace GridKit
             {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::q)), 10.0}},
             {{index(Vars::XQPI), -1.0},
              {index(Vars::SFRZ), 1.2},
-             {index(Vars::ERQLIM), 1.5},
-             {index(Vars::QPI), 0.0}},
+             {index(Vars::ERQLIM), 1.5}},
             {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
             {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::p)), 5.0}},
             {{index(Vars::XPPI), -1.0},
-             {index(Vars::EPLIM), 1.8},
-             {index(Vars::PPI), 0.0}},
+             {index(Vars::EPLIM), 1.8}},
             {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
             {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
             {{index(Vars::VLDC), -2.0},
