@@ -1344,6 +1344,11 @@ namespace AnalysisManager
 
         retval = IDASetNonlinConvCoefIC(mem, DEFAULT_NONLIN_CONV_COEF_IC / FIXED_STEP_TOL_FAC);
         checkOutput(retval, "IDASetNonlinConvCoefIC");
+
+        // Scale the IC line-search threshold with the same error weights.
+        const RealT step_tol_ic = std::pow(std::numeric_limits<RealT>::epsilon(), 2.0 / 3.0);
+        retval                  = IDASetStepToleranceIC(mem, step_tol_ic / FIXED_STEP_TOL_FAC);
+        checkOutput(retval, "IDASetStepToleranceIC");
       }
     }
 
