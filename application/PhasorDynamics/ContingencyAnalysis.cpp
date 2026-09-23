@@ -155,6 +155,11 @@ int runApplication(int argc, const char* argv[])
   // Study file
   checkCommandLine(argc, "ContingencyAnalysis");
   auto study_data = parseStudyData(argv[1]);
+  if (study_data.tmax <= 0.0)
+  {
+    Log::error() << "ContingencyAnalysis requires a positive tmax\n";
+    return 1;
+  }
 
   const auto start = Clock::now();
 

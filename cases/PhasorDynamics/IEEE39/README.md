@@ -14,4 +14,7 @@ Unimplemented models:
 
 This case was validated against PowerWorld. The comparison results are provided [here](../../../examples/PhasorDynamics/Validation/IEEE39/README.md).
 
+`IEEE39.m` is MATPOWER `case39`[^2], with the limits and costs for [optimal dispatch](../../../examples/PhasorDynamics/OptimalDispatch/README.md).
+
 [^1]: Texas A&M University, [Electric Grid Test Case Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/).
+[^2]: MATPOWER, [`case39.m`](https://github.com/MATPOWER/matpower/blob/master/data/case39.m).

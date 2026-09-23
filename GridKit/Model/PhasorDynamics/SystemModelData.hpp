@@ -27,6 +27,7 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
+#include <GridKit/Model/StateData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -136,5 +137,25 @@ namespace GridKit
     SystemModelData<double, size_t> parseSystemModelData(std::istream&& stream);
     SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& filePath);
     SystemModelData<double, size_t> parseSystemModelData(const std::string& fileName);
+
+    /**
+     * @brief Write a state into system model data. See `STATE.md`.
+     *
+     * Sets bus `Vr0`/`Vi0`, machine `p0`/`q0`, `LoadZIP` `Pnom`/`Qnom`, and
+     * branch `tap`/`phase`. Removes open branches and offline `LoadZ`
+     * devices. An offline `LoadZIP` draws no power.
+     *
+     * @throws std::invalid_argument for an offline machine, which the
+     * machine models cannot represent yet
+     */
+    void applyState(SystemModelData<double, size_t>& data, const Model::StateData& state);
+
+    /**
+     * @brief Operating state stored in system model data
+     *
+     * Gives bus voltages, machine and load currents, and branch `tap` and
+     * `phase`.
+     */
+    Model::StateData extractState(const SystemModelData<double, size_t>& data);
   } // namespace PhasorDynamics
 } // namespace GridKit

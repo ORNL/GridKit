@@ -71,6 +71,8 @@ gridkit_add_library(
     GridKit::phasor_dynamics_core
     PUBLIC
     GridKit::phasor_dynamics_components
+    PUBLIC
+    GridKit::model_state_data
   INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
 gridkit_add_library(

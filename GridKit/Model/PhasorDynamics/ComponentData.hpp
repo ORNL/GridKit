@@ -3,9 +3,12 @@
 #include <map>
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <variant>
+
+#include <magic_enum/magic_enum.hpp>
 
 namespace GridKit
 {
@@ -73,5 +76,43 @@ namespace GridKit
       /// Disambiguation string for this device
       std::string disambiguation_string;
     };
+
+    /**
+     * @brief Numeric parameter `key` of `data`
+     *
+     * @throws std::invalid_argument if the parameter is missing or Boolean
+     */
+    template <typename DataT>
+    typename DataT::RealT realParameter(const DataT& data, typename DataT::Parameters key)
+    {
+      const std::string name  = data.disambiguation_string + ": parameter " + std::string(magic_enum::enum_name(key));
+      const auto        entry = data.parameters.find(key);
+      if (entry == data.parameters.end())
+      {
+        throw std::invalid_argument(name + " is required");
+      }
+      if (const auto* real_value = std::get_if<typename DataT::RealT>(&entry->second))
+      {
+        return *real_value;
+      }
+      if (const auto* integer_value = std::get_if<typename DataT::IdxT>(&entry->second))
+      {
+        return static_cast<typename DataT::RealT>(*integer_value);
+      }
+      throw std::invalid_argument(name + " must be numeric");
+    }
+
+    /**
+     * @brief Numeric parameter `key` of `data`, or `fallback` if it is not set
+     */
+    template <typename DataT>
+    typename DataT::RealT realParameter(const DataT& data, typename DataT::Parameters key, typename DataT::RealT fallback)
+    {
+      if (!data.parameters.contains(key))
+      {
+        return fallback;
+      }
+      return realParameter(data, key);
+    }
   } // namespace PhasorDynamics
 } // namespace GridKit

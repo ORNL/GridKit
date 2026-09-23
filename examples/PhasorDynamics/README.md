@@ -8,6 +8,7 @@ use the reusable models in `cases/PhasorDynamics/`.
 | [DynamicSimulation](DynamicSimulation/README.md) | Individual simulation studies. |
 | [ContingencyAnalysis](ContingencyAnalysis/README.md) | Bus-fault contingency studies. |
 | [Validation](Validation/README.md) | System studies compared against PowerWorld reference results. |
+| [OptimalDispatch](OptimalDispatch/README.md) | Optimal operating points that start PhasorDynamics in steady state. |
 
 ## Running a Study
 

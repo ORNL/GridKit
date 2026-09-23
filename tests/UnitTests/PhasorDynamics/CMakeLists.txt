@@ -189,6 +189,10 @@ target_link_libraries(
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
                ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasicBad.json COPYONLY)
 
+add_executable(test_phasor_state runStateTests.cpp)
+target_link_libraries(
+  test_phasor_state GridKit::phasor_dynamics_systemmodel GridKit::testing)
+
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(
   test_phasor_system_single_component
@@ -228,6 +232,7 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
+add_test(NAME PhasorDynamicsStateTest COMMAND test_phasor_state)
 
 install(
   TARGETS test_phasor_bus
@@ -252,4 +257,5 @@ install(
           test_phasor_system
           test_phasor_system_single_component
           test_phasor_component_connection
+          test_phasor_state
   RUNTIME DESTINATION bin)

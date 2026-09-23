@@ -85,6 +85,8 @@
 - Added IDA option to choose the consistent initial condition calculation type.
 - Implemented `tagDifferentiable()` for `PowerElectronics` models.
 - Fixed the `TenGenGenrou` example to output the correct omega values.
+- Added the `StateData` reader and writer for the state file format, with `applyState` and `extractState` for PhasorDynamics and a `state_file` option in phasor dynamics solver JSON files.
+- Added the `OptimalPowerFlow` model family and the `OptimalDispatch` application, with sparse Enzyme Jacobians and Hessians and an Ipopt interface, to initialize PhasorDynamics at an optimal operating point with the limits and costs of a MATPOWER case.
 
 ## v0.1
 
