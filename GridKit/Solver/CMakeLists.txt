@@ -10,7 +10,8 @@ endif()
 
 if(TARGET SUNDIALS::idas)
   add_subdirectory(Dynamic)
-  if(GRIDKIT_ENABLE_IPOPT)
-    add_subdirectory(Optimization)
-  endif()
+endif()
+
+if(GRIDKIT_ENABLE_IPOPT)
+  add_subdirectory(Optimization)
 endif()

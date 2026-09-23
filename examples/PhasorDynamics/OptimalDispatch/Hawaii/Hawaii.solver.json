@@ -1,0 +1,8 @@
+{
+    "system_model_file": "Hawaii.case.json",
+    "dispatch_file": "Hawaii.m",
+    "output_state_file": "Hawaii.state.json",
+    "ipopt": {
+        "tol": 1e-08
+    }
+}

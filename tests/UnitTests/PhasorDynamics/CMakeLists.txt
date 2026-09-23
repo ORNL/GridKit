@@ -208,6 +208,10 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemFlat.json
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemHierarchical.json
                ${CMAKE_CURRENT_BINARY_DIR}/SubsystemHierarchical.json COPYONLY)
 
+add_executable(test_phasor_state runStateTests.cpp)
+target_link_libraries(
+  test_phasor_state GridKit::phasor_dynamics_systemmodel GridKit::testing)
+
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(
   test_phasor_system_single_component
@@ -249,6 +253,7 @@ add_test(
 add_test(NAME PhasorDynamicsSubsystemModelTest COMMAND test_phasor_subsystem_model)
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
+add_test(NAME PhasorDynamicsStateTest COMMAND test_phasor_state)
 
 install(
   TARGETS test_phasor_bus
@@ -274,4 +279,5 @@ install(
           test_phasor_subsystem_model
           test_phasor_system_single_component
           test_phasor_component_connection
+          test_phasor_state
   RUNTIME DESTINATION bin)
