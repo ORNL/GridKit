@@ -79,6 +79,71 @@ namespace GridKit
     }
 
     /**
+     * @brief Compute the infinity norm of the component-wise scaled error
+     *
+     * \f[\max_i \frac{|e_i|}{a_i + r\max(|y_i|, |y_{p,i}|)}.\f]
+     *
+     * @param[in] error Error vector \f(e\f).
+     * @param[in] state Current state \f(y\f).
+     * @param[in] previous_state Previous state \f(y_p\f).
+     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(a\f).
+     * @param[in] relative_tolerance Relative tolerance \f(r\f).
+     * @param[in] memspace Memory space in which to perform the reduction.
+     * @return The weighted infinity norm
+     */
+    template <typename ScalarT, typename IdxT>
+    ScalarT VectorHandler<ScalarT, IdxT>::weightedInfNorm(Vector<ScalarT, IdxT>* error,
+                                                          Vector<ScalarT, IdxT>* state,
+                                                          Vector<ScalarT, IdxT>* previous_state,
+                                                          Vector<ScalarT, IdxT>* absolute_tolerance,
+                                                          ScalarT                relative_tolerance,
+                                                          memory::MemorySpace    memspace)
+    {
+      switch (memspace)
+      {
+      case memory::HOST:
+        return cpuImpl_.weightedInfNorm(error, state, previous_state, absolute_tolerance, relative_tolerance);
+      case memory::DEVICE:
+        out::error() << "VectorHandler::weightedInfNorm - DEVICE memory space not yet supported\n";
+        return static_cast<ScalarT>(NAN);
+      }
+      return static_cast<ScalarT>(NAN);
+    }
+
+    /**
+     * @brief Compute the root-mean-square norm of the component-wise scaled error
+     *
+     * \f[\sqrt{\frac{1}{N}\sum_i
+     * \left(\frac{e_i}{a_i + r\max(|y_i|, |y_{p,i}|)}\right)^2}.\f]
+     *
+     * @param[in] error Error vector \f(e\f).
+     * @param[in] state Current state \f(y\f).
+     * @param[in] previous_state Previous state \f(y_p\f).
+     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(a\f).
+     * @param[in] relative_tolerance Relative tolerance \f(r\f).
+     * @param[in] memspace Memory space in which to perform the reduction.
+     * @return The weighted RMS norm
+     */
+    template <typename ScalarT, typename IdxT>
+    ScalarT VectorHandler<ScalarT, IdxT>::weightedRmsNorm(Vector<ScalarT, IdxT>* error,
+                                                          Vector<ScalarT, IdxT>* state,
+                                                          Vector<ScalarT, IdxT>* previous_state,
+                                                          Vector<ScalarT, IdxT>* absolute_tolerance,
+                                                          ScalarT                relative_tolerance,
+                                                          memory::MemorySpace    memspace)
+    {
+      switch (memspace)
+      {
+      case memory::HOST:
+        return cpuImpl_.weightedRmsNorm(error, state, previous_state, absolute_tolerance, relative_tolerance);
+      case memory::DEVICE:
+        out::error() << "VectorHandler::weightedRmsNorm - DEVICE memory space not yet supported\n";
+        return static_cast<ScalarT>(NAN);
+      }
+      return static_cast<ScalarT>(NAN);
+    }
+
+    /**
      * @brief axpy i.e, y = alpha*x+y where alpha is a constant
      *
      * @param[in] alpha The constant

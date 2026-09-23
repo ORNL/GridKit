@@ -72,6 +72,39 @@ namespace GridKit
       }
 
       /**
+       * @brief Test fused tolerance-scaled infinity and RMS norms.
+       */
+      TestOutcome weightedErrorNorms()
+      {
+        TestStatus status = true;
+
+        Vector<ScalarT, IdxT> error(3);
+        Vector<ScalarT, IdxT> state(3);
+        Vector<ScalarT, IdxT> previous_state(3);
+        Vector<ScalarT, IdxT> absolute_tolerance(3);
+        error.allocate(memspace_);
+        state.allocate(memspace_);
+        previous_state.allocate(memspace_);
+        absolute_tolerance.allocate(memspace_);
+
+        ScalarT error_data[]              = {1.1, 2.1, 3.2};
+        ScalarT state_data[]              = {2.0, -2.0, 1.0};
+        ScalarT previous_state_data[]     = {1.0, -4.0, 3.0};
+        ScalarT absolute_tolerance_data[] = {0.1, 0.1, 0.1};
+        error.copyFromExternal(error_data, memory::HOST, memspace_);
+        state.copyFromExternal(state_data, memory::HOST, memspace_);
+        previous_state.copyFromExternal(previous_state_data, memory::HOST, memspace_);
+        absolute_tolerance.copyFromExternal(absolute_tolerance_data, memory::HOST, memspace_);
+
+        const ScalarT relative_tolerance  = 0.5;
+        const ScalarT inf_norm            = handler_.weightedInfNorm(&error, &state, &previous_state, &absolute_tolerance, relative_tolerance, memspace_);
+        const ScalarT rms_norm            = handler_.weightedRmsNorm(&error, &state, &previous_state, &absolute_tolerance, relative_tolerance, memspace_);
+        status                           *= isEqual(inf_norm, ScalarT(2));
+        status                           *= isEqual(rms_norm, ScalarT(std::sqrt(2.0)));
+        return status.report(__func__);
+      }
+
+      /**
        * @brief Test axpy: y = alpha*x + y.
        */
       TestOutcome axpy(IdxT N)
