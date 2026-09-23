@@ -27,6 +27,11 @@ int runApplication(int argc, const char* argv[])
   // Study file
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
+  if (study.tmax <= 0.0)
+  {
+    Log::error() << "DynamicSimulation requires a positive tmax\n";
+    return 1;
+  }
 
   using EventType = SystemEvent::Type;
 

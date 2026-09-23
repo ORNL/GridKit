@@ -9,8 +9,10 @@
 
 #pragma once
 
+#include <cassert>
 #include <vector>
 
+#include <GridKit/AutomaticDifferentiation/Enzyme/CooEntries.hpp>
 #include <GridKit/Constants.hpp>
 
 namespace GridKit
@@ -279,6 +281,138 @@ namespace GridKit
       {
         row /= sizeof(ScalarT);
         return (ScalarT) (row == col);
+      }
+
+      /**
+       * @brief Append an entry whose row and column have global indices
+       *
+       * @note __attribute__((enzyme_sparse_accumulate)) does not support templates yet
+       *
+       * @param[in] row - local row
+       * @param[in] col - local column
+       * @param[in] val - value to be stored
+       * @param[in] row_indices - Global row of each local row
+       * @param[in] col_indices - Global column of each local column
+       * @param[in,out] entries - Entries in global indices
+       */
+      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_mapped_store_double_size_t(
+          size_t        row,
+          size_t        col,
+          double        val,
+          const size_t* row_indices,
+          const size_t* col_indices,
+          CooEntries*   entries)
+      {
+        const size_t row_mapped = row_indices[row];
+        const size_t col_mapped = col_indices[col];
+        if (row_mapped != INVALID_INDEX<size_t> && col_mapped != INVALID_INDEX<size_t>)
+        {
+          entries->rows.push_back(row_mapped);
+          entries->cols.push_back(col_mapped);
+          entries->values.push_back(val);
+        }
+      }
+
+      /**
+       * @brief Append a lower-triangle entry whose row and column have global indices
+       *
+       * @note __attribute__((enzyme_sparse_accumulate)) does not support templates yet
+       *
+       * @param[in] row - local row
+       * @param[in] col - local column
+       * @param[in] val - value to be stored
+       * @param[in] row_indices - Global row of each local row
+       * @param[in] col_indices - Global column of each local column
+       * @param[in,out] entries - Entries in global indices
+       */
+      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_lower_store_double_size_t(
+          size_t        row,
+          size_t        col,
+          double        val,
+          const size_t* row_indices,
+          const size_t* col_indices,
+          CooEntries*   entries)
+      {
+        const size_t row_mapped = row_indices[row];
+        const size_t col_mapped = col_indices[col];
+        if (row_mapped != INVALID_INDEX<size_t> && col_mapped != INVALID_INDEX<size_t> && row_mapped >= col_mapped)
+        {
+          entries->rows.push_back(row_mapped);
+          entries->cols.push_back(col_mapped);
+          entries->values.push_back(val);
+        }
+      }
+
+      /**
+       * @brief Enzyme sparse store into `CooEntries`
+       *
+       * Drops rows and columns without a global index. The zero test marks
+       * the store for Enzyme's sparsity analysis, which replaces the test by
+       * the structural index set. Numerical zeros are therefore stored, and
+       * the entries do not depend on values.
+       *
+       * @param[in] val - value to be stored
+       * @param[in] row - row offset in bytes
+       * @param[in] col - local column
+       * @param[in] row_indices - Global row of each local row
+       * @param[in] col_indices - Global column of each local column
+       * @param[in,out] entries - Entries in global indices
+       */
+      [[maybe_unused]] __attribute__((always_inline)) static void mapped_store(double        val,
+                                                                               size_t        row,
+                                                                               size_t        col,
+                                                                               const size_t* row_indices,
+                                                                               const size_t* col_indices,
+                                                                               CooEntries*   entries)
+      {
+        if (val == 0.0)
+        {
+          return;
+        }
+
+        row /= sizeof(double);
+        inner_mapped_store_double_size_t(row, col, val, row_indices, col_indices, entries);
+      }
+
+      /**
+       * @brief `mapped_store` restricted to the global lower triangle
+       *
+       * @param[in] val - value to be stored
+       * @param[in] row - row offset in bytes
+       * @param[in] col - local column
+       * @param[in] row_indices - Global row of each local row
+       * @param[in] col_indices - Global column of each local column
+       * @param[in,out] entries - Entries in global indices
+       */
+      [[maybe_unused]] __attribute__((always_inline)) static void lower_store(double        val,
+                                                                              size_t        row,
+                                                                              size_t        col,
+                                                                              const size_t* row_indices,
+                                                                              const size_t* col_indices,
+                                                                              CooEntries*   entries)
+      {
+        if (val == 0.0)
+        {
+          return;
+        }
+
+        row /= sizeof(double);
+        inner_lower_store_double_size_t(row, col, val, row_indices, col_indices, entries);
+      }
+
+      /**
+       * @brief Enzyme load for `mapped_store` and `lower_store` views
+       *
+       * Returns zero, so an accumulation stores its increment as a separate
+       * entry.
+       */
+      [[maybe_unused]] __attribute__((always_inline)) static double mapped_load(size_t,
+                                                                                size_t,
+                                                                                const size_t*,
+                                                                                const size_t*,
+                                                                                CooEntries*)
+      {
+        return 0.0;
       }
     } // namespace Sparse
   } // namespace Enzyme
