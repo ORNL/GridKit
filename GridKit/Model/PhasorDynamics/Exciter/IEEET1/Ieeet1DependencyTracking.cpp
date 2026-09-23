@@ -28,9 +28,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate DependencyTracking Jacobian for Ieeet1...\n";
-        Log::misc() << "Jacobian evaluation is experimental!\n";
-
         this->constructCsr();
 
         return 0;

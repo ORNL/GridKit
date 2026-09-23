@@ -22,9 +22,6 @@ namespace GridKit
       template <class scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Ieeet1..." << std::endl;
-        Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
-
         if (J_rows_buffer_ == nullptr)
         {
           // Reserve space for the dense blocks.

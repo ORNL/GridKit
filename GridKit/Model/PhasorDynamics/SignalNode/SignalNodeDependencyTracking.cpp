@@ -4,7 +4,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 
-#include "SignalNodeImpl.hpp"
+#include "SignalNode.hpp"
 
 namespace GridKit
 {

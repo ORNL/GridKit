@@ -23,9 +23,6 @@ namespace GridKit
     template <class scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate DependencyTracking Jacobian for BusFault...\n";
-      Log::misc() << "Jacobian evaluation is experimental!\n";
-
       this->constructCsr();
 
       return 0;

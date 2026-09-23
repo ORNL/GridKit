@@ -22,9 +22,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate DependencyTracking Jacobian for Branch...\n";
-      Log::misc() << "Jacobian evaluation is experimental!\n";
-
       return 0;
     }
 

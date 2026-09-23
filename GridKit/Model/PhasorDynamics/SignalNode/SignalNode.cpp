@@ -1,7 +1,7 @@
 /**
  * @file SignalNode model implementation.
  */
-#include "SignalNodeImpl.hpp"
+#include "SignalNode.hpp"
 
 namespace GridKit
 {

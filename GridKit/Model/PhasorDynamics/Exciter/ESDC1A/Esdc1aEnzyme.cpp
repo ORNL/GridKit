@@ -29,9 +29,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Esdc1a..." << std::endl;
-        Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
-
         if (J_rows_buffer_ == nullptr)
         {
           auto size        = static_cast<size_t>(size_);
