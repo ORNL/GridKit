@@ -24,4 +24,7 @@ Unimplemented models:
 
 This case was validated against PowerWorld. The comparison results are provided [here](../../../examples/PhasorDynamics/Validation/ACTIVSg2000/README.md).
 
+`ACTIVSg2000.m` is MATPOWER `case_ACTIVSg2000`[^2], with the limits and costs for [optimal dispatch](../../../examples/PhasorDynamics/OptimalDispatch/README.md).
+
 [^1]: Texas A&M University, [Grid Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/activsg2000/).
+[^2]: MATPOWER, [`case_ACTIVSg2000.m`](https://github.com/MATPOWER/matpower/blob/master/data/case_ACTIVSg2000.m).

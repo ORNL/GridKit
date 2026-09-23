@@ -52,6 +52,8 @@ namespace GridKit
     {
       /// path to system model JSON file
       fs::path                                       system_model_file;
+      /// path to state JSON file, or empty to use the case operating point
+      fs::path                                       state_file;
       /// monitor output time step size, or 0 for no intermediate monitoring
       double                                         dt_monitor;
       /// max time
@@ -72,6 +74,12 @@ namespace GridKit
       std::vector<SystemEvent>                       events;
       /// path to output file
       fs::path                                       output_file;
+      /// path to the state file written at the end of the study, or empty for none
+      fs::path                                       output_state_file;
+      /// path to the MATPOWER case with limits and costs for optimal dispatch
+      fs::path                                       dispatch_file;
+      /// Ipopt options by name for optimal dispatch
+      ::nlohmann::json                               ipopt;
       /// path to reference file for validation
       fs::path                                       reference_file;
       /// Error tolerance (between output file and reference file)
@@ -99,8 +107,12 @@ namespace GridKit
       using namespace magic_enum;
 
       j.at("system_model_file").get_to(c.system_model_file);
-      c.dt_monitor = j.value("dt_monitor", 0.0);
-      j.at("tmax").get_to(c.tmax);
+      if (j.contains("state_file"))
+      {
+        j.at("state_file").get_to(c.state_file);
+      }
+      c.dt_monitor         = j.value("dt_monitor", 0.0);
+      c.tmax               = j.value("tmax", 0.0);
       c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
       c.abs_tol            = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
       c.dt_fixed           = j.value("dt_fixed", 0.0);
@@ -126,7 +138,7 @@ namespace GridKit
         }
       }
 
-      for (auto& raw_event : j.at("events"))
+      for (auto& raw_event : j.value("events", json::array()))
       {
         auto& event = c.events.emplace_back();
         raw_event.at("time").get_to(event.time);
@@ -146,6 +158,18 @@ namespace GridKit
       {
         j.at("output_file").get_to(c.output_file);
       }
+
+      if (j.contains("output_state_file"))
+      {
+        j.at("output_state_file").get_to(c.output_state_file);
+      }
+
+      if (j.contains("dispatch_file"))
+      {
+        j.at("dispatch_file").get_to(c.dispatch_file);
+      }
+
+      c.ipopt = j.value("ipopt", json::object());
 
       if (j.contains("reference_file"))
       {
@@ -226,9 +250,21 @@ namespace GridKit
           data.reference_file = loc / data.reference_file;
         }
       }
+      if (!data.state_file.empty() && !data.state_file.is_absolute())
+      {
+        data.state_file = loc / data.state_file;
+      }
+      if (!data.dispatch_file.empty() && !data.dispatch_file.is_absolute())
+      {
+        data.dispatch_file = loc / data.dispatch_file;
+      }
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
+      if (!data.state_file.empty())
+      {
+        applyState(data.model_data, Model::parseStateData(data.state_file));
+      }
       std::string model_output_file;
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)

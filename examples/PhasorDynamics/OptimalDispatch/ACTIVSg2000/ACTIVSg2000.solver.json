@@ -1,0 +1,8 @@
+{
+    "system_model_file": "ACTIVSg2000.case.json",
+    "dispatch_file": "ACTIVSg2000.m",
+    "output_state_file": "ACTIVSg2000.state.json",
+    "ipopt": {
+        "tol": 1e-08
+    }
+}

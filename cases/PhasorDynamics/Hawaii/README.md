@@ -19,4 +19,7 @@ Unimplemented models:
 
 This case was validated against PowerWorld. The comparison results are provided [here](../../../examples/PhasorDynamics/Validation/Hawaii/README.md).
 
+`Hawaii.m` is the MATPOWER export `Hawaii40_20231026.m` of the Hawaii40 case[^2], with the limits and costs for [optimal dispatch](../../../examples/PhasorDynamics/OptimalDispatch/README.md).
+
 [^1]: Texas A&M University, [Electric Grid Test Case Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/).
+[^2]: Texas A&M University, [Hawaii40](https://electricgrids.engr.tamu.edu/hawaii40/).
