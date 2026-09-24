@@ -10,6 +10,7 @@ int main()
 
   result += test.constructor();
   result += test.voltageOutputs();
+  result += test.storageBinding();
   result += test.residual();
   result += test.verifyUnlinked();
   result += test.dependencyTracking();

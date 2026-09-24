@@ -13,12 +13,14 @@
         {
             "time": 1.0,
             "type": "fault_on",
-            "element_id": 0
+            "bus": 16,
+            "R": 0.0,
+            "X": 0.01
         },
         {
             "time": 1.15,
             "type": "fault_off",
-            "element_id": 0
+            "bus": 16
         }
     ],
     "reference_file": "../../../../Validation/IEEE39/reference/IEEE39.omega.ref.csv",

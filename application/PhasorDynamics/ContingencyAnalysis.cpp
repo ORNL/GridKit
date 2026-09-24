@@ -125,12 +125,17 @@ StudyResult runStudy(StudyData study_data)
   return result;
 }
 
+std::size_t faultCount(const StudyData& study)
+{
+  return study.fault_bus ? 1 : study.model_data.bus.size();
+}
+
 StudyResult singleFaultStudy(std::size_t fault_id, StudyData study_data)
 {
   // Change bus in schedule to current fault bus
   for (auto& event : study_data.events)
   {
-    event.bus = study_data.model_data.bus[fault_id].bus_id;
+    event.bus = study_data.fault_bus.value_or(study_data.model_data.bus[fault_id].bus_id);
   }
 
   // Make distinct output files
@@ -142,7 +147,7 @@ StudyResult singleFaultStudy(std::size_t fault_id, StudyData study_data)
     sink.file_name = name + "_" + std::to_string(fault_id) + ext;
   }
 
-  if (!study_data.solver_trace_file.empty() && study_data.model_data.bus.size() > 1)
+  if (!study_data.solver_trace_file.empty() && faultCount(study_data) > 1)
   {
     const auto path              = study_data.solver_trace_file;
     study_data.solver_trace_file = path.parent_path() / (path.stem().string() + "_" + std::to_string(fault_id) + path.extension().string());
@@ -166,7 +171,7 @@ StudyResult singleFaultStudy(std::size_t fault_id, StudyData study_data)
 
 void runStudySerial(const StudyData& study_data, std::vector<StudyResult>& stat_vec)
 {
-  for (std::size_t i = 0; i < study_data.model_data.bus.size(); ++i)
+  for (std::size_t i = 0; i < faultCount(study_data); ++i)
   {
     auto stat   = singleFaultStudy(i, study_data);
     stat_vec[i] = stat;
@@ -176,7 +181,7 @@ void runStudySerial(const StudyData& study_data, std::vector<StudyResult>& stat_
 #ifdef GRIDKIT_ENABLE_THREADS
 void runStudyAsync(const StudyData& study_data, std::vector<StudyResult>& stat_vec)
 {
-  auto n_faults = study_data.model_data.bus.size();
+  auto n_faults = faultCount(study_data);
 
   std::vector<std::future<StudyResult>> futures;
   futures.reserve(n_faults);
@@ -197,7 +202,7 @@ void runStudyAsync(const StudyData& study_data, std::vector<StudyResult>& stat_v
 #ifdef _OPENMP
 void runStudyOpenMP(const StudyData& study_data, std::vector<StudyResult>& stat_vec)
 {
-  auto n_faults = study_data.model_data.bus.size();
+  auto n_faults = faultCount(study_data);
 #pragma omp parallel for
   for (std::size_t i = 0; i < n_faults; ++i)
   {
@@ -225,10 +230,9 @@ void writeStatistics(const StudyData& study, const std::vector<StudyResult>& res
   for (std::size_t i = 0; i < results.size(); ++i)
   {
     const auto& result = results[i];
-    const auto& fault  = study.model_data.bus_fault[i];
     json        record = {
         {"fault_id", i},
-        {"bus", fault.buses.at(BusFaultBuses::bus)},
+        {"bus", study.fault_bus.value_or(study.model_data.bus[i].bus_id)},
         {"status", result.status ? "ok" : "failed"},
         {"diagnostic", result.diagnostic},
         {"stats", nullptr},
@@ -276,7 +280,7 @@ int runApplication(int argc, const char* argv[])
   const auto start = Clock::now();
 
   auto faults   = study_data.model_data.bus;
-  auto stat_vec = std::vector<StudyResult>(faults.size());
+  auto stat_vec = std::vector<StudyResult>(faultCount(study_data));
 
   // Use std::async if threads are available (so far, std::async has out-performed OpenMP)
   // Otherwise, use OpenMP if available
@@ -300,7 +304,7 @@ int runApplication(int argc, const char* argv[])
     if (!stat_vec[i].status)
     {
       Log::error() << "Study failed for fault: "
-                   << faults[i].name << '\n';
+                   << study_data.fault_bus.value_or(faults[i].bus_id) << '\n';
     }
   }
 

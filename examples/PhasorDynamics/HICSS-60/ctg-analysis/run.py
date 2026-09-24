@@ -91,6 +91,9 @@ def run_sweep(args, solvers=HERE / "solvers"):
         study = read_json(path)
         case_path = (path.parent / study["system_model_file"]).resolve(strict=True)
         case = read_json(case_path)
+        for event in study["events"]:
+            if event["type"] == "fault_on":
+                event.update(R=0.0, X=args.reactance)
         buses = [bus["number"] for bus in case["buses"]]
         if len(set(buses)) != len(buses):
             raise ValueError(f"Duplicate buses in {name}")
@@ -124,16 +127,10 @@ def run_sweep(args, solvers=HERE / "solvers"):
     for name, spec in inputs.items():
         case = read_json(ROOT / spec["case_file"])
         disable_monitors(case)
-        case["devices"] = [device for device in case["devices"]
-                           if device["class"].lower() != "busfault"]
-        fault = {"class": "BusFault", "id": "paper_fault", "ports": {},
-                 "params": {"state0": False, "R": 0.0, "X": args.reactance}}
-        case["devices"].append(fault)
         work = (args.workdir / name).resolve()
         work.mkdir(parents=True, exist_ok=True)
         if resume and (work / "case.json").exists():
             saved_case = read_json(work / "case.json")
-            saved_case["devices"][-1]["ports"] = {}
             if saved_case != case:
                 raise ValueError(f"{name}: saved case or fault settings differ")
         endpoints = [event["time"] for event in spec["solver"]["events"]]
@@ -152,9 +149,8 @@ def run_sweep(args, solvers=HERE / "solvers"):
                         validate_trace(work / f"bus-{bus}.trace.csv", record, endpoints)
                 print(f"{name}: bus {bus}: reused", flush=True)
                 continue
-            fault["ports"]["bus"] = bus
             write_json(work / "case.json", case)
-            study = dict(spec["solver"], system_model_file="case.json",
+            study = dict(spec["solver"], system_model_file="case.json", fault_bus=bus,
                          contingency_stats_file=f"bus-{bus}.stats.json")
             if "solver_trace_file" in study:
                 study["solver_trace_file"] = f"bus-{bus}.trace.csv"

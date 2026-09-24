@@ -6,6 +6,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -84,6 +85,8 @@ namespace GridKit
       std::vector<SystemEvent>                       events;
       /// path to output file
       fs::path                                       output_file;
+      /// Optional single bus to study in ContingencyAnalysis
+      std::optional<std::size_t>                      fault_bus;
       /// Optional per-fault statistics output for ContingencyAnalysis
       fs::path                                       contingency_stats_file;
       /// Optional segment-local IDA trace (per fault for ContingencyAnalysis)
@@ -176,6 +179,11 @@ namespace GridKit
       if (j.contains("reference_file"))
       {
         j.at("reference_file").get_to(c.reference_file);
+      }
+
+      if (j.contains("fault_bus"))
+      {
+        c.fault_bus = j.at("fault_bus").get<std::size_t>();
       }
 
       if (j.contains("contingency_stats_file"))

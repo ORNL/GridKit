@@ -13,12 +13,14 @@
         {
             "time": 1.0,
             "type": "fault_on",
-            "element_id": 0
+            "bus": 4005,
+            "R": 0.0,
+            "X": 0.01
         },
         {
             "time": 1.15,
             "type": "fault_off",
-            "element_id": 0
+            "bus": 4005
         }
     ],
     "reference_file": "../../../../Validation/WECC240/reference/WECC240.omega.ref.csv",

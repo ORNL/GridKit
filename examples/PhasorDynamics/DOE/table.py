@@ -31,8 +31,8 @@ def seconds(value):
     return f"{value:.3f} [s]"
 
 
-def row(name, measurements):
-    gridkit, fixed_step, speedup = MISSING, MISSING, MISSING
+def row(name, measurements, validation):
+    gridkit, fixed_step, speedup, rmse, rel = MISSING, MISSING, MISSING, MISSING, MISSING
     if name in FIXED_STEP_SECONDS:
         fixed_step = seconds(FIXED_STEP_SECONDS[name])
     if name in measurements:
@@ -43,7 +43,9 @@ def row(name, measurements):
         gridkit = seconds(elapsed)
         if name in FIXED_STEP_SECONDS:
             speedup = f"{FIXED_STEP_SECONDS[name] / elapsed:.1f}×"
-    return f"| {name} | {gridkit} | {fixed_step} | {speedup} |"
+    if name in validation:
+        rmse, rel = (f"{value:.2e}" for value in validation[name])
+    return f"| {name} | {gridkit} | {fixed_step} | {speedup} | {rmse} | {rel} |"
 
 
 def timing_note(measurements):
@@ -59,16 +61,20 @@ def timing_note(measurements):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, default=HERE / "data/measurements.json")
+    parser.add_argument("--validation", type=Path, default=HERE / "data/validation.json")
     args = parser.parse_args()
     measurements = read_json(args.data)
+    validation = read_json(args.validation)
     lines = [
         "# DOE",
         "",
-        "| Case | GridKit | Fixed-Step | Speedup |",
-        "|:--|--:|--:|--:|",
-        *(row(name, measurements) for name in CASES),
+        r"| Case | GridKit | Fixed-Step | Speedup | $\epsilon_{\mathrm{RMSE}}^{\text{abs}}$ | $\epsilon_{\infty}^{\text{rel}}$ |",
+        "|:--|--:|--:|--:|--:|--:|",
+        *(row(name, measurements, validation) for name in CASES),
         "",
         f"{timing_note(measurements)} Study settings are in [solvers](solvers/).",
+        "",
+        "Errors: generator speed against PowerWorld from [Validation](../Validation/).",
     ]
     (HERE / "README.md").write_text("\n".join(lines) + "\n")
 

@@ -79,45 +79,10 @@ namespace GridKit
         return BusTypeT::SIGNAL_VOLTAGE_OUT;
       }
 
-      virtual ScalarT& Vr() override final
-      {
-        return y_.getData()[0];
-      }
-
-      virtual const ScalarT& Vr() const override final
-      {
-        return y_.getData()[0];
-      }
-
-      virtual ScalarT& Vi() override final
-      {
-        return y_.getData()[1];
-      }
-
-      virtual const ScalarT& Vi() const override final
-      {
-        return y_.getData()[1];
-      }
-
-      virtual ScalarT& Ir() override final
-      {
-        return f_.getData()[0];
-      }
-
-      virtual const ScalarT& Ir() const override final
-      {
-        return f_.getData()[0];
-      }
-
-      virtual ScalarT& Ii() override final
-      {
-        return f_.getData()[1];
-      }
-
-      virtual const ScalarT& Ii() const override final
-      {
-        return f_.getData()[1];
-      }
+      using BusBase<ScalarT, IdxT>::Vr;
+      using BusBase<ScalarT, IdxT>::Vi;
+      using BusBase<ScalarT, IdxT>::Ir;
+      using BusBase<ScalarT, IdxT>::Ii;
 
       SignalPortsT& getPorts()
       {
@@ -130,6 +95,8 @@ namespace GridKit
       }
 
     protected:
+      int refreshTerminals() override final;
+
       int constructCoo()
       {
         if (coo_jac_ == nullptr)
