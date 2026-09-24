@@ -64,6 +64,9 @@ namespace AnalysisManager
       // Allocate solution vectors
       yy_ = N_VNew_Serial(static_cast<sunindextype>(model_->size()), context_);
       checkAllocation((void*) yy_, "N_VNew_Serial");
+      // Clones, including IDA's internal vectors, inherit fused multi-vector operations.
+      retval = N_VEnableFusedOps_Serial(yy_, SUNTRUE);
+      checkOutput(retval, "N_VEnableFusedOps_Serial");
       yp_ = N_VClone(yy_);
       checkAllocation((void*) yp_, "N_VClone");
 
