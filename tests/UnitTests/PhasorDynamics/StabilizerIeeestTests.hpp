@@ -89,7 +89,7 @@ namespace GridKit
 
         // Verify output signal is linked and reads the correct value
         success *= vss_node.linked();
-        success *= (vss_node.getVariableIndex() == 11);
+        success *= (vss_node.getVariableIndex() == 7);
         success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.0), tol);
 
         return success.report(__func__);
@@ -128,30 +128,28 @@ namespace GridKit
         setStatePoint(stab);
         stab.evaluateResidual();
 
-        // Hand-computed answer key (see plan for full derivation)
+        // Hand-computed answer key. The notch and lead-lag outputs are evaluated
+        // inline: v4 = x1 + A5*x2 + A6*x3 = 0.38, v5 = x5 + T1/T2*(v4 - x5) = 0.44,
+        // v6 = x6 + T3/T4*(v5 - x6) = 0.552, v7 = Ks*T5/T6*(v6 - x7) = 0.05.
         const std::vector<ScalarT> res_answer = {
-            0.19,   // f[0]:  -x1_dot + x2
-            0.28,   // f[1]:  -x2_dot + x3
-            0.37,   // f[2]:  -x3_dot + x4
-            1.0975, // f[3]:  -x4_dot + (-a0*x1 - a1*x2 - a2*x3 - a3*x4 + u) / a4
-            0.25,   // f[4]:  -T2*x5_dot - x5 + v4
-            0.24,   // f[5]:  -T4*x6_dot - x6 + v5
-            -0.05,  // f[6]:  -T6*x7_dot - x7 + v6
-            -0.42,  // f[7]:  -v4 + x1 + A5*x2 + A6*x3
-            -0.25,  // f[8]:  -T2*(v5 - x5) + T1*(v4 - x5)
-            -0.31,  // f[9]:  -T4*(v6 - x6) + T3*(v5 - x6)
-            5.75,   // f[10]: -T6*v7 + Ks*T5*(v6 - x7)
-            0.0,    // f[11]: limiter (v7=0.05 within [-0.1, 0.1])
+            0.19,    // f[0]: -x1_dot + x2
+            0.28,    // f[1]: -x2_dot + x3
+            0.37,    // f[2]: -x3_dot + x4
+            1.0975,  // f[3]: -x4_dot + (-a0*x1 - a1*x2 - a2*x3 - a3*x4 + u) / a4
+            -0.17,   // f[4]: -T2*x5_dot - x5 + v4
+            -0.22,   // f[5]: -T4*x6_dot - x6 + v5
+            -0.3375, // f[6]: -T6*x7_dot - x7 + v6
+            0.0,     // f[7]: limiter (v7=0.05 within [-0.1, 0.1])
         };
 
-        // Looser tolerance for f[11] — Math::clamp is a smooth ramp approximation.
+        // Looser tolerance for f[7] — Math::clamp is a smooth ramp approximation.
         const auto  loose_tol     = static_cast<RealT>(1.0e-4);
         auto&       residual      = stab.getResidual();
         const auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
-          auto test_tol = (i == 11) ? loose_tol : static_cast<RealT>(10 * std::numeric_limits<ScalarT>::epsilon());
+          auto test_tol = (i == 7) ? loose_tol : static_cast<RealT>(10 * std::numeric_limits<ScalarT>::epsilon());
           if (!isEqual(residual_data[i], res_answer[i], test_tol))
           {
             std::cout << "Incorrect result for residual " << i << ": "
@@ -213,6 +211,7 @@ namespace GridKit
         using namespace GridKit::PhasorDynamics::Stabilizer;
 
         auto stab = Ieeest<DepVar, IdxT>(ieeestdata);
+        u_index   = stab.size(); // u is numbered after the stabilizer's own variables
         stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
         stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
 
@@ -250,6 +249,7 @@ namespace GridKit
         using namespace GridKit::PhasorDynamics::Stabilizer;
 
         auto stab = Ieeest<ScalarT, IdxT>(ieeestdata);
+        u_index   = stab.size(); // u is numbered after the stabilizer's own variables
         stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
         stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
 
@@ -317,18 +317,14 @@ namespace GridKit
         auto* y  = stab.y().getData();
         auto* yp = stab.yp().getData();
 
-        y[0]  = 0.1;  // x1
-        y[1]  = 0.2;  // x2
-        y[2]  = 0.3;  // x3
-        y[3]  = 0.4;  // x4
-        y[4]  = 0.5;  // x5
-        y[5]  = 0.6;  // x6
-        y[6]  = 0.7;  // x7
-        y[7]  = 0.8;  // v4
-        y[8]  = 0.9;  // v5
-        y[9]  = 1.0;  // v6
-        y[10] = 0.05; // v7  (within limiter range)
-        y[11] = 0.05; // Vss (model output)
+        y[0] = 0.1;    // x1
+        y[1] = 0.2;    // x2
+        y[2] = 0.3;    // x3
+        y[3] = 0.4;    // x4
+        y[4] = 0.5;    // x5
+        y[5] = 0.6;    // x6
+        y[6] = 0.5395; // x7  (puts v7 = 0.05 within limiter range)
+        y[7] = 0.05;   // Vss (model output)
 
         yp[0] = 0.01; // x1_dot
         yp[1] = 0.02; // x2_dot
@@ -357,12 +353,8 @@ namespace GridKit
         y[3].setValue(0.4);
         y[4].setValue(0.5);
         y[5].setValue(0.6);
-        y[6].setValue(0.7);
-        y[7].setValue(0.8);
-        y[8].setValue(0.9);
-        y[9].setValue(1.0);
-        y[10].setValue(0.05);
-        y[11].setValue(0.05);
+        y[6].setValue(0.5395);
+        y[7].setValue(0.05);
 
         yp[0].setValue(0.01);
         yp[1].setValue(0.02);
