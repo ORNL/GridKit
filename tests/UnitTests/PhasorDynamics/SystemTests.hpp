@@ -19,6 +19,7 @@
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/NetworkAdmittance.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -524,12 +525,10 @@ namespace GridKit
         SystemModel<ScalarT, IdxT> system;
         Bus<ScalarT, IdxT>         bus(ScalarT{1.0}, ScalarT{0.0});
         LoadZ<ScalarT, IdxT>       load(&bus, RealT{1.0}, RealT{0.0});
-        BusFault<ScalarT, IdxT>    fault(&bus, RealT{1.0}, RealT{0.0}, 0);
 
         bus.setBusID(IdxT{0});
         system.addBus(&bus);
         system.addComponent(&load);
-        system.addFault(&fault);
         if (system.allocate() != 0 || system.initialize() != 0)
         {
           success = false;
@@ -540,22 +539,12 @@ namespace GridKit
         success *= isEqual(bus.Ir(), ScalarT{-1.0});
         success *= isEqual(bus.Ii(), ScalarT{0.0});
 
-        auto* fault_state = fault.y().getData(memory::HOST);
-        if (fault_state == nullptr)
-        {
-          success = false;
-          return success.report(__func__);
-        }
-        fault_state[0] = ScalarT{-1.0};
-        fault_state[1] = ScalarT{0.0};
-        fault.y().setDataUpdated(memory::HOST);
-
-        fault.setStatus(true);
+        success *= bus.setFault(true, RealT{1.0}, RealT{0.0}) == 0;
         success *= system.evaluateResidual() == 0;
         success *= isEqual(bus.Ir(), ScalarT{-2.0});
         success *= isEqual(bus.Ii(), ScalarT{0.0});
 
-        fault.setStatus(false);
+        success *= bus.clearFault() == 0;
         success *= system.evaluateResidual() == 0;
         success *= isEqual(bus.Ir(), ScalarT{-1.0});
         success *= isEqual(bus.Ii(), ScalarT{0.0});
@@ -622,13 +611,13 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
         PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2);
-        PhasorDynamics::BusFault<ScalarT, IdxT>    fault(&bus2);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> generator(&bus2, {});
 
         system.addBus(&bus1);
         system.addBus(&infinite_bus);
         system.addBus(&bus2);
         system.addComponent(&branch);
-        system.addComponent(&fault);
+        system.addComponent(&generator);
 
         if (system.allocate() != 0
             || system.setAbsoluteTolerance(1e-4) != 0)
@@ -668,7 +657,7 @@ namespace GridKit
         };
 
         const IdxT bus2_offset  = bus1.size();
-        const IdxT fault_offset = bus1.size() + bus2.size();
+        const IdxT generator_offset = bus1.size() + bus2.size();
         const auto bus2_first   = static_cast<std::size_t>(bus2_offset);
 
         auto rebind = [&](auto& model, IdxT offset)
@@ -692,10 +681,10 @@ namespace GridKit
         success *= &bus2.Ir() == system.getResidual().getData() + bus2_offset;
 
         // Rebinding the remaining model to the same slice is a no-op.
-        success *= rebind(fault, fault_offset) == 0;
+        success *= rebind(generator, generator_offset) == 0;
 
         checkModel(bus2, bus2_offset);
-        checkModel(fault, fault_offset);
+        checkModel(generator, generator_offset);
 
         // Tags remain model-owned and are collected separately.
         system.tag()[bus2_first]  = true;
@@ -835,13 +824,11 @@ namespace GridKit
         LoadZ<ScalarT, IdxT>       load(&bus, RealT{1.0}, RealT{0.0});
         LoadZIP<ScalarT, IdxT>     zip_load(
             &bus, RealT{2.0}, RealT{1.0}, RealT{0.0}, RealT{0.0});
-        BusFault<ScalarT, IdxT>    fault(&bus, RealT{1.0}, RealT{0.0}, 0);
 
         bus.setBusID(IdxT{0});
         system.addBus(&bus);
         system.addComponent(&load);
         system.addComponent(&zip_load);
-        system.addFault(&fault);
         if (system.allocate() != 0 || system.initialize() != 0)
         {
           success = false;
@@ -883,13 +870,25 @@ namespace GridKit
 
         const IdxT bus_ir         = bus.getResidualIndex(0);
         const IdxT bus_vr         = bus.getVariableIndex(0);
-        const IdxT fault_current_r = fault.getVariableIndex(0);
 
-        // The initial load is invariant while the inactive fault contribution
-        // remains a structural zero in the varying map.
+        // The initial load is invariant while the inactive bus fault
+        // contributes zero to the varying map.
         success *= system.evaluateJacobian() == 0;
         expectValue(bus_ir, bus_vr, RealT{-3.0});
-        expectValue(bus_ir, fault_current_r, RealT{0.0});
+
+        // Direct bus faults remain visible in the cached residual and Jacobian.
+        success *= bus.setFault(true, RealT{1.0}, RealT{0.0}) == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= isEqual(bus.Ir(), ScalarT{-4.0});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-4.0});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-4.0});
+        success *= bus.setFault(false, RealT{1.0}, RealT{0.0}) == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= isEqual(bus.Ir(), ScalarT{-3.0});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-3.0});
 
         auto* first_jacobian = system.getCsrJacobian();
         if (first_jacobian == nullptr)
@@ -911,22 +910,19 @@ namespace GridKit
         }
 
         // Dynamic blocks are still evaluated on every call.
-        fault.setStatus(true);
+        success *= bus.setFault(true, RealT{1.0}, RealT{0.0}) == 0;
         success *= system.evaluateJacobian() == 0;
-        expectValue(bus_ir, bus_vr, RealT{-3.0});
-        expectValue(bus_ir, fault_current_r, RealT{1.0});
+        expectValue(bus_ir, bus_vr, RealT{-4.0});
 
         // An admittance mutation rebuilds the network and resnapshots the
         // constant Jacobian without losing the current dynamic contribution.
         load.setR(RealT{2.0});
         success *= system.evaluateJacobian() == 0;
-        expectValue(bus_ir, bus_vr, RealT{-2.5});
-        expectValue(bus_ir, fault_current_r, RealT{1.0});
+        expectValue(bus_ir, bus_vr, RealT{-3.5});
 
-        fault.setStatus(false);
+        success *= bus.clearFault() == 0;
         success *= system.evaluateJacobian() == 0;
         expectValue(bus_ir, bus_vr, RealT{-2.5});
-        expectValue(bus_ir, fault_current_r, RealT{0.0});
 
         // A pure-Z ZIP moving into the dynamic sweep is immediately reflected
         // in the baseline/source map, then follows voltage changes per call.
@@ -953,7 +949,6 @@ namespace GridKit
         success *= system.initialize() == 0;
         success *= system.evaluateJacobian() == 0;
         expectValue(bus_ir, bus_vr, RealT{-3.0});
-        expectValue(bus_ir, fault_current_r, RealT{0.0});
 
         return success.report(__func__);
       }

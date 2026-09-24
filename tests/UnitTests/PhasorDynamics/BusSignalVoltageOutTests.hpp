@@ -134,6 +134,44 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Outlet references follow bus storage when a bound bus is rebound.
+      TestOutcome storageBinding()
+      {
+        TestStatus success = true;
+        using VectorT      = typename BusT::VectorT;
+        VectorT y(4), yp(4), f(4), tolerance(4);
+        y.allocate(memory::HOST);
+        yp.allocate(memory::HOST);
+        f.allocate(memory::HOST);
+        tolerance.allocate(memory::HOST);
+        y.setToConst(0.0);
+        yp.setToConst(0.0);
+        f.setToConst(0.0);
+        tolerance.setToConst(0.0);
+        auto vr_node = SignalT({.name = "vr", .signal_id = 0});
+        auto vi_node = SignalT({.name = "vi", .signal_id = 1});
+        BusT bus(0.93, -0.27);
+        bus.getPorts().out.template port<SignalOut::vr>().connect(&vr_node);
+        bus.getPorts().out.template port<SignalOut::vi>().connect(&vi_node);
+        success  *= (bus.bind(y, yp, f, tolerance, 0) == 0);
+        success  *= (bus.allocate() == 0);
+        success  *= (bus.initialize() == 0);
+        success  *= (&vr_node.read() == y.getData());
+        success  *= (&vi_node.read() == y.getData() + 1);
+        success  *= (bus.bind(y, yp, f, tolerance, 2) == 0);
+        bus.Vr()  = 1.17;
+        bus.Vi()  = 0.41;
+        bus.Ir()  = -3.7;
+        bus.Ii()  = 2.4;
+        success  *= (&vr_node.read() == y.getData() + 2);
+        success  *= (&vi_node.read() == y.getData() + 3);
+        success  *= isEqual(vr_node.read(), 1.17);
+        success  *= isEqual(vi_node.read(), 0.41);
+        success  *= isEqual(f.getData()[2], -3.7);
+        success  *= isEqual(f.getData()[3], 2.4);
+        return success.report(__func__);
+      }
+
       /// Signal inlets add current injections to the residual
       TestOutcome residual()
       {

@@ -24,6 +24,7 @@ namespace GridKit
     BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn()
     {
       size_ = 0;
+      refreshTerminals();
     }
 
     /*!
@@ -36,6 +37,7 @@ namespace GridKit
     BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(ScalarT /* Vr */, ScalarT /* Vi */)
     {
       size_ = 0;
+      refreshTerminals();
     }
 
     /**
@@ -49,8 +51,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(const ModelDataT& data)
     {
-      bus_id_        = data.bus_id;
-      size_          = 0;
+      bus_id_ = data.bus_id;
+      size_   = 0;
+      refreshTerminals();
       monitor_       = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
       using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::Vr, [this]
