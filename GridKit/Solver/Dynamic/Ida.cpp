@@ -331,8 +331,8 @@ namespace AnalysisManager
     /**
      * @brief Run the IDA solver and optionally produce monitor output every `dt_monitor`.
      *
-     * `dt_monitor` always defines intermediate solver targets, including when
-     * no output is active. Per-target model copies and output are skipped unless
+     * Intermediate `dt_monitor` targets are skipped, and one solve runs from the
+     * first target (which sets IDA's initial step) to `tf`, unless
      * sink-backed monitoring or a step callback is active. When `dt_monitor` is
      * zero, the configured maximum-step limit must be sufficient for a direct
      * solve to the final time.
@@ -347,6 +347,12 @@ namespace AnalysisManager
 
       for (int i = 1; i <= nsteps; i++)
       {
+        // Without output, only the first target (it sets IDA's initial step) and tf are needed.
+        if (!output_required && i > 1 && i < nsteps)
+        {
+          continue;
+        }
+
         const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
         RealT       tret;
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
