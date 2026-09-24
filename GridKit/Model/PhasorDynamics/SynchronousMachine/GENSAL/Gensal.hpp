@@ -18,7 +18,15 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /// Internal variables of a `Gensal`
+    /**
+     * @brief Internal variables of a `Gensal`
+     *
+     * These are the machine's differential states, in the order they are laid
+     * out in the state vector. The d-axis subtransient flux, saturation,
+     * internal voltages, terminal currents and electrical torque are not
+     * unknowns: they form an explicit feed-forward chain over these five states
+     * and the terminal voltage, and are evaluated by `evaluateAlgebraicState`.
+     */
     enum class GensalInternalVariables : size_t
     {
       DELTA,  ///< \f$\delta\f$ rotor angle
@@ -26,15 +34,6 @@ namespace GridKit
       EPQ,    ///< \f$E'_q\f$ q-axis transient voltage
       PSIPD,  ///< \f$\psi'_d\f$ d-axis transient flux
       PSIPPQ, ///< \f$\psi''_q\f$ q-axis subtransient flux
-      PSIPPD, ///< \f$\psi''_d\f$ d-axis subtransient flux
-      KSAT,   ///< \f$k_{sat}\f$ saturation factor
-      VD,     ///< \f$V_d\f$ d-axis terminal voltage
-      VQ,     ///< \f$V_q\f$ q-axis terminal voltage
-      TE,     ///< \f$T_e\f$ electrical torque
-      ID,     ///< \f$I_d\f$ d-axis current
-      IQ,     ///< \f$I_q\f$ q-axis current
-      IR,     ///< \f$I_r\f$ network real current
-      II,     ///< \f$I_i\f$ network imaginary current
     };
 
     /// External variables of a `Gensal`
@@ -126,6 +125,30 @@ namespace GridKit
       ScalarT& Ii()
       {
         return bus_->Ii();
+      }
+
+      /// The machine's algebraic quantities, evaluated from its states
+      struct AlgebraicState
+      {
+        ScalarT psidpp; ///< \f$\psi''_d\f$
+        ScalarT ksat;   ///< \f$k_{sat}\f$
+        ScalarT vd;     ///< \f$V_d\f$
+        ScalarT vq;     ///< \f$V_q\f$
+        ScalarT ir;     ///< \f$I_r\f$, machine base
+        ScalarT ii;     ///< \f$I_i\f$, machine base
+        ScalarT id;     ///< \f$I_d\f$
+        ScalarT iq;     ///< \f$I_q\f$
+        ScalarT telec;  ///< \f$T_e\f$
+      };
+
+      __attribute__((always_inline)) inline AlgebraicState evaluateAlgebraicState(
+          const ScalarT*, const ScalarT*) const;
+
+      /// Algebraic quantities at the present state and terminal voltage
+      AlgebraicState algebraicState()
+      {
+        const ScalarT wb[2] = {Vr(), Vi()};
+        return evaluateAlgebraicState(y_.getData(), wb);
       }
 
     public:
