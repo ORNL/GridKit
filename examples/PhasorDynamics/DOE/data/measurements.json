@@ -1,0 +1,74 @@
+{
+    "ACTIVSg10k": {
+        "counts": [
+            27391,
+            30954
+        ],
+        "cpu_seconds": [
+            6.98949
+        ]
+    },
+    "ACTIVSg200": {
+        "counts": [
+            400,
+            482
+        ],
+        "cpu_seconds": [
+            0.021024
+        ]
+    },
+    "ACTIVSg2000": {
+        "counts": [
+            6056,
+            5830
+        ],
+        "cpu_seconds": [
+            0.653739
+        ]
+    },
+    "ACTIVSg25k": {
+        "counts": [
+            61701,
+            75435
+        ],
+        "cpu_seconds": [
+            16.0128
+        ]
+    },
+    "ACTIVSg70k": {
+        "counts": [
+            135702,
+            190937
+        ],
+        "cpu_seconds": [
+            59.4422
+        ]
+    },
+    "Hawaii": {
+        "counts": [
+            602,
+            522
+        ],
+        "cpu_seconds": [
+            0.054616
+        ]
+    },
+    "IEEE39": {
+        "counts": [
+            180,
+            226
+        ],
+        "cpu_seconds": [
+            0.009539
+        ]
+    },
+    "WECC240": {
+        "counts": [
+            1804,
+            2411
+        ],
+        "cpu_seconds": [
+            0.100746
+        ]
+    }
+}
