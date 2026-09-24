@@ -9,6 +9,7 @@ use the reusable models in `cases/PhasorDynamics/`.
 | [ContingencyAnalysis](ContingencyAnalysis/README.md) | Bus-fault contingency studies. |
 | [Validation](Validation/README.md) | System studies compared against PowerWorld reference results. |
 | [HICSS-60](HICSS-60/README.md) | Paper experiments, figures, and benchmark results. |
+| [DOE](DOE/README.md) | Runtime and speedup table. |
 
 ## Running a Study
 
