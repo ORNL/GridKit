@@ -138,7 +138,7 @@ namespace GridKit
      * @brief Snapshot invariant Jacobian values and flatten varying entries.
      *
      * A component that supplies admittance stamps has a complete, constant
-     * Jacobian contribution. Bus blocks are structural zeros. Everything else
+     * Jacobian contribution. Bus fault blocks and everything else
      * is represented by stable pointers into its COO value buffer.
      */
     template <typename scalar_type, typename index_type>
@@ -176,8 +176,21 @@ namespace GridKit
         }
       }
 
-      // Finite-bus blocks reserve their diagonal structure with zero values.
-      // Infinite buses have empty blocks, so neither kind contributes values.
+      for (auto* bus : buses_)
+      {
+        auto* bus_jacobian = bus->getCooJacobian();
+        if (bus_jacobian == nullptr)
+        {
+          continue;
+        }
+
+        const RealT* values = bus_jacobian->getValues();
+        for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i, ++counter)
+        {
+          varying_jacobian_to_csr_.push_back(map_to_csr_[counter]);
+          varying_jacobian_sources_.push_back(values + i);
+        }
+      }
       jacobian_snapshot_epoch_ = this->admittanceEpoch();
       jacobian_snapshot_ready_ = true;
     }
@@ -219,6 +232,11 @@ namespace GridKit
       }
       else
       {
+        for (auto* bus : buses_)
+        {
+          bus->evaluateJacobian();
+        }
+
         for (auto* component : evaluated_components_)
         {
           component->evaluateJacobian();

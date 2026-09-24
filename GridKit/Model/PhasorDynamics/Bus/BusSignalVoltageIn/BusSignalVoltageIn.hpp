@@ -82,56 +82,10 @@ namespace GridKit
         return BusTypeT::SIGNAL_VOLTAGE_IN;
       }
 
-      /**
-       * @brief Bus voltage, real component, read from the `vr` inlet.
-       *
-       * The BusBase interface requires a mutable reference, but the voltage
-       * is owned by the signal source. Callers must not write through it.
-       */
-      virtual ScalarT& Vr() override final
-      {
-        return const_cast<ScalarT&>(std::as_const(*this).Vr());
-      }
-
-      virtual const ScalarT& Vr() const override final
-      {
-        return readVoltage<BusSignalInputs::vr>("vr");
-      }
-
-      /**
-       * @brief Bus voltage, imaginary component, read from the `vi` inlet.
-       *
-       * See Vr() for the note on the mutable overload.
-       */
-      virtual ScalarT& Vi() override final
-      {
-        return const_cast<ScalarT&>(std::as_const(*this).Vi());
-      }
-
-      virtual const ScalarT& Vi() const override final
-      {
-        return readVoltage<BusSignalInputs::vi>("vi");
-      }
-
-      virtual ScalarT& Ir() override final
-      {
-        return Ir_;
-      }
-
-      virtual const ScalarT& Ir() const override final
-      {
-        return Ir_;
-      }
-
-      virtual ScalarT& Ii() override final
-      {
-        return Ii_;
-      }
-
-      virtual const ScalarT& Ii() const override final
-      {
-        return Ii_;
-      }
+      using BusBase<ScalarT, IdxT>::Vr;
+      using BusBase<ScalarT, IdxT>::Vi;
+      using BusBase<ScalarT, IdxT>::Ir;
+      using BusBase<ScalarT, IdxT>::Ii;
 
       SignalPortsT& getPorts()
       {
@@ -144,18 +98,12 @@ namespace GridKit
       }
 
     private:
-      /// Read a voltage inlet, throwing if it has no linked signal.
-      template <BusSignalInputs input>
-      const ScalarT& readVoltage(const char* name) const
+      int refreshTerminals() override final
       {
-        const auto& port = ports_.in.template port<input>();
-        if (!port.linked())
-        {
-          Log::error() << "BusSignalVoltageIn: voltage inlet " << name
-                       << " read without a linked signal\n";
-          throw std::runtime_error("BusSignalVoltageIn: voltage inlet has no linked signal");
-        }
-        return port.readSignal();
+        this->Vr_input_ = &ports_.in.template port<BusSignalInputs::vr>();
+        this->Vi_input_ = &ports_.in.template port<BusSignalInputs::vi>();
+        this->setTerminals(nullptr, nullptr, &Ir_, &Ii_);
+        return 0;
       }
 
       ScalarT Ir_{0.0};

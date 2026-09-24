@@ -892,6 +892,20 @@ namespace GridKit
         expectValue(bus_ir, bus_vr, RealT{-3.0});
         expectValue(bus_ir, fault_current_r, RealT{0.0});
 
+        // Direct bus faults remain visible in the cached residual and Jacobian.
+        success *= bus.setFault(true, RealT{1.0}, RealT{0.0}) == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= isEqual(bus.Ir(), ScalarT{-4.0});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-4.0});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-4.0});
+        success *= bus.setFault(false, RealT{1.0}, RealT{0.0}) == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= isEqual(bus.Ir(), ScalarT{-3.0});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-3.0});
+
         auto* first_jacobian = system.getCsrJacobian();
         if (first_jacobian == nullptr)
         {
