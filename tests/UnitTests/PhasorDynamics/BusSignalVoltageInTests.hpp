@@ -127,6 +127,32 @@ namespace GridKit
         success *= isEqual(bus.Vr(), 1.17);
         success *= isEqual(bus.Vi(), 0.41);
 
+        // Reads through BusBase must follow relinked and reconnected sources.
+        PhasorDynamics::BusBase<ScalarT, IdxT>& base       = bus;
+        const auto&                             const_base = base;
+        ScalarT                                 replacement_vr{0.82};
+        ScalarT                                 replacement_vi{-0.36};
+        vr_node.link(&replacement_vr, &vr_index);
+        vi_node.link(&replacement_vi, &vi_index);
+        success               *= (&base.Vr() == &replacement_vr);
+        success               *= (&const_base.Vi() == &replacement_vi);
+        auto replacement_node  = SignalT({.name = "replacement", .signal_id = 4});
+        replacement_node.link(&Vr, &vr_index);
+        bus.getPorts().in.template port<SignalIn::vr>().connect(&replacement_node);
+        success *= (&const_base.Vr() == &Vr);
+        vr_node.link(nullptr, &vr_index);
+        bus.getPorts().in.template port<SignalIn::vr>().connect(&vr_node);
+        bool relink_threw = false;
+        try
+        {
+          [[maybe_unused]] const auto& voltage = base.Vr();
+        }
+        catch (const std::runtime_error&)
+        {
+          relink_threw = true;
+        }
+        success *= relink_threw;
+
         // Reading an unconnected voltage inlet is an error, never a default value
         BusT plain;
         plain.allocate();

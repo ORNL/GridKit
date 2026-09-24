@@ -827,9 +827,20 @@ namespace GridKit
       {
         network_.multiply(network_y_data_, network_f_data_);
 
-        for (auto* bus : unmapped_buses_)
+        for (auto* bus : buses_)
         {
-          bus->evaluateResidual();
+          if (bus->size() == 0)
+          {
+            bus->evaluateResidual();
+          }
+          else
+          {
+            const ScalarT ir = bus->Ir();
+            const ScalarT ii = bus->Ii();
+            bus->evaluateResidual();
+            bus->Ir() += ir;
+            bus->Ii() += ii;
+          }
         }
 
         for (auto* component : evaluated_components_)

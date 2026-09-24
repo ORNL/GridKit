@@ -18,7 +18,13 @@ namespace GridKit
   {
     namespace Stabilizer
     {
-      /// Internal variables of `Ieeest`
+      /**
+       * @brief Internal variables of `Ieeest`
+       *
+       * The filter and lead-lag states and the limited output. The notch and
+       * lead-lag outputs and the unlimited signal are explicit functions of
+       * these and the input, and are evaluated inline in the residual.
+       */
       enum class IeeestInternalVariables : size_t
       {
         X1,  ///< \f$x_1\f$ Notch-filter signal state
@@ -28,10 +34,6 @@ namespace GridKit
         X5,  ///< \f$x_5\f$ Lead-lag 1 state
         X6,  ///< \f$x_6\f$ Lead-lag 2 state
         X7,  ///< \f$x_7\f$ Washout state
-        V4,  ///< \f$v_4\f$ Notch-filter output
-        V5,  ///< \f$v_5\f$ Lead-lag 1 output
-        V6,  ///< \f$v_6\f$ Lead-lag 2 output
-        V7,  ///< \f$v_7\f$ Unlimited stabilizer signal
         VSS, ///< \f$V_{\mathrm{ss}}\f$ Limited stabilizer signal and model output
       };
 
@@ -141,6 +143,9 @@ namespace GridKit
         RealT bypass_T4_block_{0};
         RealT use_T6_block_{1};
         RealT bypass_T6_block_{0};
+        RealT safe_inv_T2_{0};
+        RealT safe_inv_T4_{0};
+        RealT safe_inv_T6_{0};
 
         SignalPortsT ports_;
 
