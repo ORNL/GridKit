@@ -286,9 +286,8 @@ namespace GridKit
         const ScalarT pturb0 = pv0;
         const ScalarT pref0  = omega0 + R_ * pv0;
 
-        const RealT pv0_value       = static_cast<RealT>(pv0);
-        const RealT limit_tolerance = static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
-        if (pv0_value < Pvmin_ - limit_tolerance || pv0_value > Pvmax_ + limit_tolerance)
+        const RealT pv0_value = static_cast<RealT>(pv0);
+        if (pv0_value < Pvmin_ - INITIALIZATION_TOLERANCE || pv0_value > Pvmax_ + INITIALIZATION_TOLERANCE)
         {
           Log::error() << "Tgov1: initial valve position is outside [Pvmin, Pvmax]. "
                           "Check initial dispatch and valve limits\n";

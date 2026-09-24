@@ -118,6 +118,10 @@ namespace GridKit
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
+
+        /// Accepted initial valve distance beyond a limit; machine initialization rounding reaches 20 eps.
+        static constexpr RealT INITIALIZATION_TOLERANCE =
+            static_cast<RealT>(32.0) * std::numeric_limits<RealT>::epsilon();
       };
 
     } // namespace Governor
