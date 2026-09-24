@@ -53,7 +53,7 @@ namespace GridKit
         initializeMonitor();
 
         // 9 Internal Variables
-        size_ = 9;
+        size_ = 6;
       }
 
       /**
@@ -115,7 +115,7 @@ namespace GridKit
         // Set output signals
         if (auto efd_port = ports_.out.template port<Ieeet1SignalOutputs::efd>())
         {
-          efd_port.link(&y_.getData()[7], &(this->getVariableIndex(7)));
+          efd_port.link(&y_.getData()[5], &(this->getVariableIndex(5)));
         }
 
         allocated_ = true;
@@ -224,7 +224,7 @@ namespace GridKit
         // other variables.
         if (ports_.out.template port<Ieeet1SignalOutputs::efd>())
         {
-          efd0 = y[7]; ///<- generator needs to be initialized first
+          efd0 = y[5]; ///<- generator needs to be initialized first
         }
 
         // Setpoint members provide the defaults for unattached signals.
@@ -290,10 +290,7 @@ namespace GridKit
         y[2] = efdp; // y2 - efdp - Efd pre mult
         y[3] = vfx;  // y3 - vfx  - Exciter feedback
         y[4] = vtr;  // y4 - vtr  - Term Volt Err
-        y[5] = vf;   // y5 - vf   - Feedback volt
-        y[6] = ve;   // y6 - ve   - Excit. Cntrl Volt
-        y[7] = efd0; // y7 - efd  - Efd
-        y[8] = ksat; // y8 - ksat - Saturation
+        y[5] = efd0; // y5 - efd  - Efd
 
         for (IdxT i = 0; i < yp_.getSize(); ++i)
         {
@@ -336,10 +333,7 @@ namespace GridKit
         tag_[2] = true;  // y2 - efdp - Efd pre mult
         tag_[3] = true;  // y3 - vfx  - Exciter feedback
         tag_[4] = false; // y4 - vtr  - Term Volt Err
-        tag_[5] = false; // y5 - vf   - Feedback volt
-        tag_[6] = false; // y6 - ve   - Excit. Cntrl Volt
-        tag_[7] = false; // y7 - efd  - Efd
-        tag_[8] = false; // y8 - ksat - Saturation
+        tag_[5] = false; // y5 - efd  - Efd
 
         return 0;
       }
@@ -392,10 +386,7 @@ namespace GridKit
         ScalarT efdp = y[2]; // y2 - Efd pre mult
         ScalarT vfx  = y[3]; // y3 - Exciter feedback
         ScalarT vtr  = y[4]; // y4 - Term Volt Err
-        ScalarT vf   = y[5]; // y5 - Feedback volt
-        ScalarT ve   = y[6]; // y6 - Excit. Cntrl Volt
-        ScalarT efd  = y[7]; // y7 - Efd
-        ScalarT ksat = y[8]; // y8 - Saturation
+        ScalarT efd  = y[5]; // y5 - Efd
 
         // Read Internal Derivatives
         ScalarT vts_dot  = yp[0];
@@ -410,6 +401,11 @@ namespace GridKit
         ScalarT vuel  = ws[VUEL];
         ScalarT voel  = ws[VOEL];
 
+        // Explicit algebraic quantities, evaluated rather than solved for
+        const ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
+        const ScalarT ve   = ksat;
+        const ScalarT vf   = Kf_ * efdp / Tf_ - vfx;
+
         // The 'pre-limit' derivative of Vr.
         ScalarT func = (-vr + Ka_ * vtr) / Ta_;
 
@@ -421,10 +417,7 @@ namespace GridKit
 
         // Internal Algebraic Equations
         f[4] = -vts + vref + vs + uel_on_ * vuel + oel_on_ * voel - vtr - vf;
-        f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
-        f[6] = -ve + ksat;
-        f[7] = -efd + efdp + omega * efdp * Ispdlim_;
-        f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
+        f[5] = -efd + efdp + omega * efdp * Ispdlim_;
 
         return 0;
       }
@@ -633,7 +626,7 @@ namespace GridKit
       {
         using Variable = ModelDataT::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
-                      { return y_.getData()[7]; });
+                      { return y_.getData()[5]; });
         monitor_->set(Variable::ksat, [this]
                       { return SB_ * Math::qramp(y_.getData()[2] - SA_); });
       }

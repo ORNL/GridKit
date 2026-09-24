@@ -40,7 +40,7 @@ namespace GridKit
         auto*                              exciter = new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(&bus, data);
 
         success *= (exciter != nullptr);
-        success *= (exciter->size() == 9);
+        success *= (exciter->size() == 6);
         success *= (exciter->getMonitor() != nullptr);
 
         delete exciter;
@@ -124,9 +124,7 @@ namespace GridKit
         const auto* f  = exciter.getResidual().getData();
 
         success *= isEqual(y[2], static_cast<ScalarT>(1.2));
-        success *= isEqual(y[6], static_cast<ScalarT>(0.0));
-        success *= isEqual(y[7], static_cast<ScalarT>(1.2));
-        success *= isEqual(y[8], static_cast<ScalarT>(0.0));
+        success *= isEqual(y[5], static_cast<ScalarT>(1.2));
 
         for (IdxT i = 0; i < exciter.y().getSize(); ++i)
         {
@@ -139,12 +137,6 @@ namespace GridKit
           success *= std::isfinite(f[i]);
           success *= isEqual(f[i], static_cast<ScalarT>(0.0), 100.0 * std::numeric_limits<RealT>::epsilon());
         }
-
-        y[2] = 4.0;
-        exciter.y().setDataUpdated();
-        exciter.evaluateResidual();
-        success *= isEqual(f[8], static_cast<ScalarT>(0.0));
-        y[2]     = 1.2;
 
         yp[0] = 123.0;
         exciter.y().setDataUpdated();
@@ -171,8 +163,9 @@ namespace GridKit
         exciter.evaluateResidual();
         success *= isEqual(f[2], static_cast<ScalarT>(900.0));
 
+        // With Kf = 0 the feedback voltage is -vfx.
         y[1] = 0.0;
-        y[5] = 1.0;
+        y[3] = -1.0;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
         success *= isEqual(f[3], static_cast<ScalarT>(1.0e3));
@@ -249,7 +242,7 @@ namespace GridKit
 
         // vref absorbs both limiter inputs; later changes enter with unit gain.
         success *= isEqual(vref_node.read(),
-                           y[0] + y[4] + y[5] - vuel_value - voel_value,
+                           y[0] + y[4] - vuel_value - voel_value,
                            kTol);
         success *= isEqual(f[4], static_cast<ScalarT>(0.0), kTol);
 
