@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 
@@ -52,6 +53,16 @@ namespace GridKit
         return data;
       }
 
+      /// Rows 3 and 4 divide state rounding by Tdopp or Tqopp; the measured worst row is 12 eps.
+      static ScalarT steadyStateTolerance(const GensalDataT& data)
+      {
+        using Parameter = typename GensalDataT::Parameters;
+
+        const RealT Tdopp = std::get<RealT>(data.parameters.at(Parameter::Tdopp));
+        const RealT Tqopp = std::get<RealT>(data.parameters.at(Parameter::Tqopp));
+        return std::numeric_limits<RealT>::epsilon() / std::min(Tdopp, Tqopp);
+      }
+
     public:
       GensalTests()  = default;
       ~GensalTests() = default;
@@ -70,6 +81,8 @@ namespace GridKit
 
         if (machine)
         {
+          // Five differential states; algebraic quantities are evaluated inline.
+          success *= (machine->size() == IdxT{5});
           delete machine;
         }
         delete bus;
@@ -98,9 +111,10 @@ namespace GridKit
 
         const auto& f      = gen.getResidual();
         const auto* f_data = f.getData();
+        const auto  tol    = steadyStateTolerance(data);
         for (std::size_t i = 0; i < f.getSize(); ++i)
         {
-          if (!isEqual(f_data[i], 0.0, tol_))
+          if (!isEqual(f_data[i], 0.0, tol))
           {
             success = false;
             break;
@@ -139,9 +153,10 @@ namespace GridKit
 
         const auto& f      = gen.getResidual();
         const auto* f_data = f.getData();
+        const auto  tol    = steadyStateTolerance(data);
         for (std::size_t i = 0; i < f.getSize(); ++i)
         {
-          if (!isEqual(f_data[i], 0.0, tol_))
+          if (!isEqual(f_data[i], 0.0, tol))
           {
             success = false;
             break;
@@ -264,21 +279,16 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
         PhasorDynamics::Gensal<ScalarT, IdxT> gen(&bus, data);
 
+        // The machine carries only its five differential states; the algebraic
+        // quantities the equations need are evaluated from them and the bus
+        // voltage: psidpp = 1, vd = 1.5, vq = 2, ir = -2.5, ii = 3.5, id = 3.5,
+        // iq = 2.5, telec = 5.125, ksat = 0.
         const std::vector<ScalarT> res_answer = {
             0.0,
-            0.0,
-            2.2083333333333335,
-            -1.028125,
-            0.65,
-            0.0,
-            0.2,
-            -1.1,
-            -1.4,
-            1.8125,
-            0.5,
-            0.25,
-            2.95,
-            -1.25};
+            3.625,
+            2.55,
+            -0.41875,
+            1.25};
 
         bus.allocate();
         bus.initialize();
@@ -290,20 +300,11 @@ namespace GridKit
 
         static constexpr auto pi = std::numbers::pi_v<RealT>;
 
-        y[0]  = pi;    // delta
-        y[1]  = 1.0;   // omega
-        y[2]  = 2.0;   // Eqp
-        y[3]  = 0.5;   // psidp
-        y[4]  = -0.75; // psiqpp
-        y[5]  = 1.0;   // psidpp
-        y[6]  = 0.2;   // ksat
-        y[7]  = 0.4;   // vd
-        y[8]  = 0.6;   // vq
-        y[9]  = 1.5;   // telec
-        y[10] = 0.25;  // id
-        y[11] = -0.5;  // iq
-        y[12] = 0.75;  // ir
-        y[13] = -0.25; // ii
+        y[0] = pi;    // delta
+        y[1] = 1.0;   // omega
+        y[2] = 2.0;   // Eqp
+        y[3] = 0.5;   // psidp
+        y[4] = -0.75; // psiqpp
 
         yp[0] = 2.0 * pi * 60.0; // delta_dot
         yp[1] = -1.0;            // omega_dot
@@ -344,7 +345,13 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian();
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian              = EnzymeJacobian();
 
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        // Compare all five internal rows and both bus-current rows.
+        const size_t expected_row_count  = 5 + 2;
+        success                         *= dependency_tracking_jacobian.size() == expected_row_count;
+        success                         *= enzyme_jacobian.size() == expected_row_count;
+        const size_t row_count           = std::min(dependency_tracking_jacobian.size(),
+                                          enzyme_jacobian.size());
+        for (size_t i = 0; i < row_count; ++i)
         {
           success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
         }
@@ -384,7 +391,24 @@ namespace GridKit
         std::cout << "Sparse Csr Matrix: Gensal DependencyTracking Jacobian\n";
         model_jacobian->print();
 
-        return GridKit::Testing::MapFromCsr(model_jacobian);
+        // The generator's CSR covers its five internal rows. Append the two
+        // bus-current rows from the bus residual dependencies, folding the
+        // even/odd (y/yp) variable numbers back to variable indices as
+        // constructCsrFromDependencies() does. With alpha set to one above,
+        // y and yp entries fold alike.
+        auto        dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
+        const auto& bus_residual = bus.getResidual();
+        for (IdxT i = 0; i < bus_residual.getSize(); ++i)
+        {
+          DependencyTracking::Variable::DependencyMap row;
+          for (const auto& [number, value] : bus_residual.getData()[i].getDependencies())
+          {
+            row[number / 2] += value;
+          }
+          dependencies.push_back(std::move(row));
+        }
+
+        return dependencies;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()

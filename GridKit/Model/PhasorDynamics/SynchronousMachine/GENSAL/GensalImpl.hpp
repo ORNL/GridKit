@@ -28,7 +28,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 14;
+      size_ = 5;
       setDerivedParams();
     }
 
@@ -134,15 +134,24 @@ namespace GridKit
     void Gensal<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
-      // Convert monitored terminal values to system base.
+      // Terminal quantities are evaluated from the states, not read back from
+      // them, and are converted to system base for reporting.
       monitor_->set(Variable::ir, [this]
-                    { return this->toSystemBase(y_.getData()[12]); });
+                    { return this->toSystemBase(algebraicState().ir); });
       monitor_->set(Variable::ii, [this]
-                    { return this->toSystemBase(y_.getData()[13]); });
-      monitor_->set(Variable::p, [this]
-                    { return this->toSystemBase(Vr() * y_.getData()[12] + Vi() * y_.getData()[13]); });
-      monitor_->set(Variable::q, [this]
-                    { return this->toSystemBase(Vi() * y_.getData()[12] - Vr() * y_.getData()[13]); });
+                    { return this->toSystemBase(algebraicState().ii); });
+      monitor_->set(Variable::p,
+                    [this]
+                    {
+                      const AlgebraicState s = algebraicState();
+                      return this->toSystemBase(Vr() * s.ir + Vi() * s.ii);
+                    });
+      monitor_->set(Variable::q,
+                    [this]
+                    {
+                      const AlgebraicState s = algebraicState();
+                      return this->toSystemBase(Vi() * s.ir - Vr() * s.ii);
+                    });
       monitor_->set(Variable::delta, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
@@ -156,17 +165,17 @@ namespace GridKit
       monitor_->set(Variable::psiqpp, [this]
                     { return y_.getData()[4]; });
       monitor_->set(Variable::psidpp, [this]
-                    { return y_.getData()[5]; });
+                    { return algebraicState().psidpp; });
       monitor_->set(Variable::vd, [this]
-                    { return y_.getData()[7]; });
+                    { return algebraicState().vd; });
       monitor_->set(Variable::vq, [this]
-                    { return y_.getData()[8]; });
+                    { return algebraicState().vq; });
       monitor_->set(Variable::te, [this]
-                    { return y_.getData()[9]; });
+                    { return algebraicState().telec; });
       monitor_->set(Variable::id, [this]
-                    { return y_.getData()[10]; });
+                    { return algebraicState().id; });
       monitor_->set(Variable::iq, [this]
-                    { return y_.getData()[11]; });
+                    { return algebraicState().iq; });
     }
 
     /**
@@ -270,40 +279,33 @@ namespace GridKit
       ScalarT id     = ir * std::sin(delta) - ii * std::cos(delta);
       ScalarT iq     = ir * std::cos(delta) + ii * std::sin(delta);
       ScalarT psiqpp = -Xq2_ * iq;
-      ScalarT vd     = -psiqpp * (ONE<RealT> + omega);
       ScalarT vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xdpp_ + iq * Ra_;
       ScalarT psidpp = vq / (ONE<RealT> + omega);
       ScalarT psidp  = psidpp - (Xdpp_ - Xl_) * id;
       ScalarT Eqp    = psidp + Xd2_ * id;
-      ScalarT ksat   = SB_ * Math::qramp(Eqp - SA_);
-      ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0]  = delta;
-      y[1]  = omega;
-      y[2]  = Eqp;
-      y[3]  = psidp;
-      y[4]  = psiqpp;
-      y[5]  = psidpp;
-      y[6]  = ksat;
-      y[7]  = vd;
-      y[8]  = vq;
-      y[9]  = Te;
-      y[10] = id;
-      y[11] = iq;
-      y[12] = ir;
-      y[13] = ii;
+      y[0] = delta;
+      y[1] = omega;
+      y[2] = Eqp;
+      y[3] = psidp;
+      y[4] = psiqpp;
+
+      // Algebraic quantities consistent with the converged states use the
+      // runtime chain so initial setpoints match residual evaluation exactly.
+      const ScalarT        wb[2] = {vr, vi};
+      const AlgebraicState s     = evaluateAlgebraicState(y, wb);
 
       // Convert Te to system base for governor PM signal.
-      pmech_set_ = static_cast<RealT>(this->toSystemBase(Te));
+      pmech_set_ = static_cast<RealT>(this->toSystemBase(s.telec));
       if (auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>())
       {
         pmech_port.writeValue(pmech_set_);
       }
 
-      efd_set_ = static_cast<RealT>(Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat);
+      efd_set_ = static_cast<RealT>(Eqp + Xd1_ * (s.id + Xd3_ * (Eqp - psidp - Xd2_ * s.id)) + Eqp * s.ksat);
       if (auto efd_port = ports_.in.template port<GensalSignalInputs::efd>())
       {
         efd_port.writeValue(efd_set_);
@@ -328,14 +330,14 @@ namespace GridKit
 
     /**
      * \brief Identify differential variables.
+     *
+     * Every unknown the machine carries is a differential state; its algebraic
+     * quantities are evaluated inline rather than solved for.
      */
     template <typename scalar_type, typename index_type>
     int Gensal<scalar_type, index_type>::tagDifferentiable()
     {
-      for (IdxT i = 0; i < size_; ++i)
-      {
-        tag_[static_cast<size_t>(i)] = i < 5;
-      }
+      tag_.assign(static_cast<size_t>(size_), true);
       return 0;
     }
 
@@ -359,6 +361,64 @@ namespace GridKit
     }
 
     /**
+     * @brief Evaluate the machine's algebraic quantities.
+     *
+     * Subtransient flux, saturation, internal voltage, terminal current,
+     * rotor-frame current and electrical torque are an explicit feed-forward
+     * chain over the five states and the terminal voltage, with no algebraic
+     * loop anywhere in it. They are therefore evaluated here rather than
+     * carried as unknowns and solved for.
+     *
+     * Both residuals and the variable monitor go through this function, so the
+     * chain has exactly one definition for Enzyme to differentiate.
+     *
+     * @param[in] y  - Internal variables
+     * @param[in] wb - Bus variables
+     */
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline typename Gensal<scalar_type, index_type>::AlgebraicState
+    Gensal<scalar_type, index_type>::evaluateAlgebraicState(const ScalarT* y, const ScalarT* wb) const
+    {
+      /* Read variables */
+      const ScalarT delta  = y[0];
+      const ScalarT omega  = y[1];
+      const ScalarT Eqp    = y[2];
+      const ScalarT psidp  = y[3];
+      const ScalarT psiqpp = y[4];
+
+      // Set coupling variable aliases
+      const ScalarT vr = wb[0];
+      const ScalarT vi = wb[1];
+
+      // Set Rotor Angle computation
+      const ScalarT sin_delta = std::sin(delta);
+      const ScalarT cos_delta = std::cos(delta);
+
+      AlgebraicState s;
+
+      // Subtransient flux linkage and saturation on the transient voltage
+      s.psidpp = psidp * Xd4_ + Eqp * Xd5_;
+      s.ksat   = SB_ * Math::qramp(Eqp - SA_);
+
+      // Internal voltage in the rotor frame
+      s.vd = -psiqpp * (ONE<RealT> + omega);
+      s.vq = s.psidpp * (ONE<RealT> + omega);
+
+      // Norton current injection at the terminal
+      const ScalarT Vint_r = sin_delta * s.vd + cos_delta * s.vq;
+      const ScalarT Vint_i = -cos_delta * s.vd + sin_delta * s.vq;
+      s.ir                 = G_ * (Vint_r - vr) - B_ * (Vint_i - vi);
+      s.ii                 = B_ * (Vint_r - vr) + G_ * (Vint_i - vi);
+
+      // Rotor-frame currents and the electrical torque they develop
+      s.id    = s.ir * sin_delta - s.ii * cos_delta;
+      s.iq    = s.ir * cos_delta + s.ii * sin_delta;
+      s.telec = (s.psidpp - s.id * Xdpp_) * s.iq - (psiqpp - s.iq * Xdpp_) * s.id;
+
+      return s;
+    }
+
+    /**
      * @brief Internal residual
      *
      */
@@ -371,20 +431,10 @@ namespace GridKit
         ScalarT*       f)
     {
       /* Read variables */
-      ScalarT delta  = y[0];
       ScalarT omega  = y[1];
       ScalarT Eqp    = y[2];
       ScalarT psidp  = y[3];
       ScalarT psiqpp = y[4];
-      ScalarT psidpp = y[5];
-      ScalarT ksat   = y[6];
-      ScalarT vd     = y[7];
-      ScalarT vq     = y[8];
-      ScalarT telec  = y[9];
-      ScalarT id     = y[10];
-      ScalarT iq     = y[11];
-      ScalarT ir     = y[12];
-      ScalarT ii     = y[13];
 
       /* Read derivatives */
       ScalarT delta_dot  = yp[0];
@@ -393,33 +443,21 @@ namespace GridKit
       ScalarT psidp_dot  = yp[3];
       ScalarT psiqpp_dot = yp[4];
 
-      // Set coupling variable aliases
-      ScalarT vr = wb[0];
-      ScalarT vi = wb[1];
-
       // Set signal variable aliases
       ScalarT pmech = this->toComponentBase(ws[0]);
       ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
+      // Algebraic quantities, evaluated rather than solved for
+      const AlgebraicState s = evaluateAlgebraicState(y, wb);
+
       /* 5 Gensal differential equations */
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
-      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
-      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat));
-      f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f[4] = psiqpp_dot - (ONE<RealT> / Tqopp_) * (-psiqpp - Xq2_ * iq);
-
-      /* 9 Gensal algebraic equations */
-      f[5]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
-      f[6]  = ksat - SB_ * Math::qramp(Eqp - SA_);
-      f[7]  = vd + psiqpp * (ONE<RealT> + omega);
-      f[8]  = vq - psidpp * (ONE<RealT> + omega);
-      f[9]  = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f[10] = id - (ir * std::sin(delta) - ii * std::cos(delta));
-      f[11] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[12] = ir - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
-      f[13] = ii - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
+      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - s.telec);
+      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (s.id + Xd3_ * (Eqp - psidp - Xd2_ * s.id)) + Eqp * s.ksat));
+      f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * s.id);
+      f[4] = psiqpp_dot - (ONE<RealT> / Tqopp_) * (-psiqpp - Xq2_ * s.iq);
 
       return 0;
     }
@@ -432,15 +470,14 @@ namespace GridKit
     __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateBusResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
+        const ScalarT*                  wb,
         ScalarT*                        h)
     {
-      ScalarT ir = y[12];
-      ScalarT ii = y[13];
+      const AlgebraicState s = evaluateAlgebraicState(y, wb);
 
       // Convert current injection to system base for the network.
-      h[0] = this->toSystemBase(ir);
-      h[1] = this->toSystemBase(ii);
+      h[0] = this->toSystemBase(s.ir);
+      h[1] = this->toSystemBase(s.ii);
 
       return 0;
     }
