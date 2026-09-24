@@ -7,9 +7,14 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <mutex>
-#include <variant>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
@@ -142,23 +147,14 @@ namespace GridKit
        * bus, required measurement signals, and attached optional reference
        * signals. Command-output assignment is optional.
        *
-       * @return Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Repca<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Repca<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
+        Model::ConfigurationChecks checks;
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Repca: " << message << '\n';
-            ret += 1;
-          }
-        };
-
-        check(bus_ != nullptr, "regulated bus is required");
+        checks.check(bus_ != nullptr, "regulated bus is required");
 
         const bool valid_component_base = std::isfinite(mva_base_)
                                           && mva_base_ > ZERO<RealT>
@@ -166,69 +162,60 @@ namespace GridKit
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        check(valid_component_base,
-              "mva must define a finite positive component power base");
-        check(valid_system_base, "system power base must be finite and positive");
+        checks.check(valid_component_base,
+                     "mva must define a finite positive component power base");
+        checks.check(valid_system_base, "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
-          check(std::isfinite(system_to_component)
-                    && system_to_component > ZERO<RealT>
-                    && std::isfinite(component_to_system)
-                    && component_to_system > ZERO<RealT>,
-                "system/component power-base conversion ratios must be finite and positive");
+          checks.check(std::isfinite(system_to_component)
+                           && system_to_component > ZERO<RealT>
+                           && std::isfinite(component_to_system)
+                           && component_to_system > ZERO<RealT>,
+                       "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
-              "dbdlow <= 0 <= dbdupper is required");
-        check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
-              "emin <= 0 <= emax is required");
-        check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
-        check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
-              "fdbd1 <= 0 <= fdbd2 is required");
-        check(Ddn_ >= ZERO<RealT>, "Ddn must be non-negative");
-        check(Dup_ >= ZERO<RealT>, "Dup must be non-negative");
-        check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
-              "femin <= 0 <= femax is required");
-        check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
+        checks.check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
+                     "dbdlow <= 0 <= dbdupper is required");
+        checks.check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
+                     "emin <= 0 <= emax is required");
+        checks.check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
+        checks.check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
+                     "fdbd1 <= 0 <= fdbd2 is required");
+        checks.check(Ddn_ >= ZERO<RealT>, "Ddn must be non-negative");
+        checks.check(Dup_ >= ZERO<RealT>, "Dup must be non-negative");
+        checks.check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
+                     "femin <= 0 <= femax is required");
+        checks.check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
 
-        auto check_required_signal = [&]<RepcaSignalInputs variable>(const char* name)
-        {
-          if (!ports_.in.template port<variable>().connected())
-          {
-            Log::error() << "Repca: " << name << " signal is required\n";
-            ret += 1;
-          }
-          else if (!ports_.in.template port<variable>().linked())
-          {
-            Log::error() << "Repca: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+        const auto ir_port = ports_.in.template port<RepcaSignalInputs::ir>();
 
-        check_required_signal.template operator()<RepcaSignalInputs::ir>("ir");
-        check_required_signal.template operator()<RepcaSignalInputs::ii>("ii");
-        check_required_signal.template operator()<RepcaSignalInputs::p>("p");
-        check_required_signal.template operator()<RepcaSignalInputs::q>("q");
+        checks.check(ir_port.connected(), "ir signal is required");
 
-        auto check_optional_signal = [&]<RepcaSignalInputs variable>(const char* name)
-        {
-          if (ports_.in.template port<variable>().connected()
-              && !ports_.in.template port<variable>().linked())
-          {
-            Log::error() << "Repca: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+        checks.check(!ir_port.connected() || ir_port.linked(), "ir signal attached with no linked source");
+        const auto ii_port = ports_.in.template port<RepcaSignalInputs::ii>();
+        checks.check(ii_port.connected(), "ii signal is required");
+        checks.check(!ii_port.connected() || ii_port.linked(), "ii signal attached with no linked source");
+        const auto p_port = ports_.in.template port<RepcaSignalInputs::p>();
+        checks.check(p_port.connected(), "p signal is required");
+        checks.check(!p_port.connected() || p_port.linked(), "p signal attached with no linked source");
+        const auto q_port = ports_.in.template port<RepcaSignalInputs::q>();
+        checks.check(q_port.connected(), "q signal is required");
+        checks.check(!q_port.connected() || q_port.linked(), "q signal attached with no linked source");
 
-        check_optional_signal.template operator()<RepcaSignalInputs::vref>("vref");
-        check_optional_signal.template operator()<RepcaSignalInputs::pref>("pref");
-        check_optional_signal.template operator()<RepcaSignalInputs::qref>("qref");
-        check_optional_signal.template operator()<RepcaSignalInputs::freq>("freq");
-        check_optional_signal.template operator()<RepcaSignalInputs::freqref>("freqref");
+        const auto vref_port = ports_.in.template port<RepcaSignalInputs::vref>();
+        checks.check(!vref_port.connected() || vref_port.linked(), "vref signal attached with no linked source");
+        const auto pref_port = ports_.in.template port<RepcaSignalInputs::pref>();
+        checks.check(!pref_port.connected() || pref_port.linked(), "pref signal attached with no linked source");
+        const auto qref_port = ports_.in.template port<RepcaSignalInputs::qref>();
+        checks.check(!qref_port.connected() || qref_port.linked(), "qref signal attached with no linked source");
+        const auto freq_port = ports_.in.template port<RepcaSignalInputs::freq>();
+        checks.check(!freq_port.connected() || freq_port.linked(), "freq signal attached with no linked source");
+        const auto freqref_port = ports_.in.template port<RepcaSignalInputs::freqref>();
+        checks.check(!freqref_port.connected() || freqref_port.linked(), "freqref signal attached with no linked source");
 
-        return ret;
+        return checks;
       }
 
       /**
@@ -282,9 +269,13 @@ namespace GridKit
           return 1;
         }
 
-        if (verify() > 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Repca: cannot initialize with invalid configuration\n";
+          Log::error() << "Repca: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 
@@ -847,92 +838,39 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
+        Model::ParameterReader reader(data, "Repca");
 
-        auto load_real = [&](auto key, RealT& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          RealT       parsed_value{};
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            parsed_value = *real_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            parsed_value = static_cast<RealT>(*index_value);
-          }
-          else
-          {
-            Log::error() << "Repca: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-            return;
-          }
-
-          if (!std::isfinite(parsed_value))
-          {
-            Log::error() << "Repca: parameter '" << name << "' must be finite\n";
-            ++parameter_error_count_;
-            return;
-          }
-
-          target = parsed_value;
-        };
-
-        auto load_switch = [&](auto key, bool& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* bool_value = std::get_if<bool>(&value))
-          {
-            target = *bool_value;
-          }
-          else
-          {
-            Log::error() << "Repca: parameter '" << name << "' must be boolean\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        load_real(Params::mva, mva_base_, "mva");
-        load_switch(Params::VcompFlag, VcompFlag_, "VcompFlag");
-        load_switch(Params::RefFlag, RefFlag_, "RefFlag");
-        load_switch(Params::Freqflag, Freqflag_, "Freqflag");
-        load_real(Params::Tfltr, Tfltr_, "Tfltr");
-        load_real(Params::Vfrz, Vfrz_, "Vfrz");
-        load_real(Params::Rc, Rc_, "Rc");
-        load_real(Params::Xc, Xc_, "Xc");
-        load_real(Params::Kc, Kc_, "Kc");
-        load_real(Params::dbdlow, dbdlow_, "dbdlow");
-        load_real(Params::dbdupper, dbdupper_, "dbdupper");
-        load_real(Params::emax, emax_, "emax");
-        load_real(Params::emin, emin_, "emin");
-        load_real(Params::Kp, Kp_, "Kp");
-        load_real(Params::Ki, Ki_, "Ki");
-        load_real(Params::Qmax, Qmax_, "Qmax");
-        load_real(Params::Qmin, Qmin_, "Qmin");
-        load_real(Params::Tft, Tft_, "Tft");
-        load_real(Params::Tfv, Tfv_, "Tfv");
-        load_real(Params::Tp, Tp_, "Tp");
-        load_real(Params::fdbd1, fdbd1_, "fdbd1");
-        load_real(Params::fdbd2, fdbd2_, "fdbd2");
-        load_real(Params::Ddn, Ddn_, "Ddn");
-        load_real(Params::Dup, Dup_, "Dup");
-        load_real(Params::femax, femax_, "femax");
-        load_real(Params::femin, femin_, "femin");
-        load_real(Params::Kpg, Kpg_, "Kpg");
-        load_real(Params::Kig, Kig_, "Kig");
-        load_real(Params::Pmax, Pmax_, "Pmax");
-        load_real(Params::Pmin, Pmin_, "Pmin");
-        load_real(Params::Tlag, Tlag_, "Tlag");
+        reader.loadReal(Params::mva, mva_base_);
+        reader.loadSwitch(Params::VcompFlag, VcompFlag_);
+        reader.loadSwitch(Params::RefFlag, RefFlag_);
+        reader.loadSwitch(Params::Freqflag, Freqflag_);
+        reader.loadReal(Params::Tfltr, Tfltr_);
+        reader.loadReal(Params::Vfrz, Vfrz_);
+        reader.loadReal(Params::Rc, Rc_);
+        reader.loadReal(Params::Xc, Xc_);
+        reader.loadReal(Params::Kc, Kc_);
+        reader.loadReal(Params::dbdlow, dbdlow_);
+        reader.loadReal(Params::dbdupper, dbdupper_);
+        reader.loadReal(Params::emax, emax_);
+        reader.loadReal(Params::emin, emin_);
+        reader.loadReal(Params::Kp, Kp_);
+        reader.loadReal(Params::Ki, Ki_);
+        reader.loadReal(Params::Qmax, Qmax_);
+        reader.loadReal(Params::Qmin, Qmin_);
+        reader.loadReal(Params::Tft, Tft_);
+        reader.loadReal(Params::Tfv, Tfv_);
+        reader.loadReal(Params::Tp, Tp_);
+        reader.loadReal(Params::fdbd1, fdbd1_);
+        reader.loadReal(Params::fdbd2, fdbd2_);
+        reader.loadReal(Params::Ddn, Ddn_);
+        reader.loadReal(Params::Dup, Dup_);
+        reader.loadReal(Params::femax, femax_);
+        reader.loadReal(Params::femin, femin_);
+        reader.loadReal(Params::Kpg, Kpg_);
+        reader.loadReal(Params::Kig, Kig_);
+        reader.loadReal(Params::Pmax, Pmax_);
+        reader.loadReal(Params::Pmin, Pmin_);
+        reader.loadReal(Params::Tlag, Tlag_);
 
         setDerivedParameters();
       }
@@ -982,20 +920,15 @@ namespace GridKit
       {
         // The lags are raised to the floor below, so negative values must be
         // rejected here while the value as read is still available.
-        auto check_non_negative = [&](RealT value, const char* name)
+        const std::array<std::pair<RealT, const char*>, 5> lags{
+            {{Tfltr_, "Tfltr"}, {Tft_, "Tft"}, {Tfv_, "Tfv"}, {Tp_, "Tp"}, {Tlag_, "Tlag"}}};
+        for (const auto& [value, name] : lags)
         {
           if (value < ZERO<RealT>)
           {
-            Log::error() << "Repca: " << name << " must be non-negative\n";
-            ++parameter_error_count_;
+            throw std::invalid_argument(std::string("Repca: ") + name + " must be non-negative");
           }
-        };
-
-        check_non_negative(Tfltr_, "Tfltr");
-        check_non_negative(Tft_, "Tft");
-        check_non_negative(Tfv_, "Tfv");
-        check_non_negative(Tp_, "Tp");
-        check_non_negative(Tlag_, "Tlag");
+        }
 
         if (Tfltr_ < TIME_CONSTANT_MINIMUM || Tfv_ < TIME_CONSTANT_MINIMUM
             || Tp_ < TIME_CONSTANT_MINIMUM || Tlag_ < TIME_CONSTANT_MINIMUM)

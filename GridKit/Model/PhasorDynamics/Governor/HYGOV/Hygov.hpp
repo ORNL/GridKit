@@ -97,14 +97,14 @@ namespace GridKit
         explicit Hygov(const ModelDataT& data);
         ~Hygov();
 
-        int setGridKitComponentID(IdxT component_id) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int                        setGridKitComponentID(IdxT component_id) override final;
+        int                        allocate() override final;
+        Model::ConfigurationChecks verify() const override final;
+        int                        initialize() override final;
+        int                        tagDifferentiable() override final;
+        int                        setAbsoluteTolerance(RealT rel_tol) override final;
+        int                        evaluateResidual() override final;
+        int                        evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -173,9 +173,7 @@ namespace GridKit
         std::array<RealT, 6> Gv_{};
         std::array<RealT, 6> Pgv_{};
 
-        RealT leadlag_gain_{ZERO<RealT>};
-
-        IdxT    parameter_error_count_{0};
+        RealT   leadlag_gain_{ZERO<RealT>};
         RealT   Gmin_response_{Gmin_};
         RealT   Gmax_response_{Gmax_};
         RealT   Hdam_eff_{Hdam_};

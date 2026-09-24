@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <mutex>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -90,45 +92,16 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Trate))
-        {
-          Trate_ = std::get<RealT>(data.parameters.at(Parameter::Trate));
-        }
+        Model::ParameterReader reader(data, "Tgov1");
 
-        if (data.parameters.contains(Parameter::R))
-        {
-          R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-        }
-
-        if (data.parameters.contains(Parameter::Pvmin))
-        {
-          Pvmin_ = std::get<RealT>(data.parameters.at(Parameter::Pvmin));
-        }
-
-        if (data.parameters.contains(Parameter::Pvmax))
-        {
-          Pvmax_ = std::get<RealT>(data.parameters.at(Parameter::Pvmax));
-        }
-
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-
-        if (data.parameters.contains(Parameter::Dt))
-        {
-          Dt_ = std::get<RealT>(data.parameters.at(Parameter::Dt));
-        }
+        reader.loadReal(Parameter::Trate, Trate_);
+        reader.loadReal(Parameter::R, R_);
+        reader.loadReal(Parameter::Pvmin, Pvmin_);
+        reader.loadReal(Parameter::Pvmax, Pvmax_);
+        reader.loadReal(Parameter::T1, T1_);
+        reader.loadReal(Parameter::T2, T2_);
+        reader.loadReal(Parameter::T3, T3_);
+        reader.loadReal(Parameter::Dt, Dt_);
       }
 
       /**
@@ -218,41 +191,24 @@ namespace GridKit
        * @brief verify method checks that attached signals are also linked
        */
       template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Tgov1<scalar_type, index_type>::verify() const
       {
-        int ret = 0;
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Tgov1: " << message << '\n';
-            ret += 1;
-          }
-        };
+        Model::ConfigurationChecks checks;
 
-        check(Trate_ > ZERO<RealT>, "Trate must be positive");
-        check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
-        check(R_ != ZERO<RealT>, "R must be nonzero");
-        check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
-        check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
-              "pmech output signal must be assigned");
+        checks.check(Trate_ > ZERO<RealT>, "Trate must be positive");
+        checks.check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
+        checks.check(R_ != ZERO<RealT>, "R must be nonzero");
+        checks.check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
+        checks.check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
+                     "pmech output signal must be assigned");
 
-        auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>();
-        if (speed_port.connected() && !speed_port.linked())
-        {
-          Log::error() << "Tgov1: speed signal attached with no linked generator\n";
-          ret += 1;
-        }
+        const auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>();
+        checks.check(!speed_port.connected() || speed_port.linked(), "speed signal attached with no linked source");
+        const auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>();
+        checks.check(!pref_port.connected() || pref_port.linked(), "pref signal attached with no linked source");
 
-        auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>();
-        if (pref_port.connected() && !pref_port.linked())
-        {
-          Log::error() << "Tgov1: pref signal attached with no linked source\n";
-          ret += 1;
-        }
-
-        return ret;
+        return checks;
       }
 
       /**
@@ -262,9 +218,13 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::initialize()
       {
-        if (verify() != 0)
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
         {
-          Log::error() << "Tgov1: cannot initialize with invalid configuration\n";
+          Log::error() << "Tgov1: " << error << '\n';
+        }
+        if (!checks.passed())
+        {
           return 1;
         }
 

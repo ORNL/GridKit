@@ -53,9 +53,9 @@ namespace GridKit
       int evaluateResidual() override final;
       int evaluateJacobian() override final;
 
-      int verify() const override final
+      Model::ConfigurationChecks verify() const override final
       {
-        return 0;
+        return {};
       }
 
       void updateTime(RealT /* t */, RealT /* a */) override final
