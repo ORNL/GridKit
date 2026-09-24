@@ -11,7 +11,7 @@ Parameters:
  + $K_{pv}$ - PI Controller Parameter in 1 & 2
  + $K_{iv}$ - PI Controller Parameter in 1 & 2
  + $K_{pc}$ - PI Controller Parameter in 1 & 2
- + $C_f$ - Shunt??
+ + $C_f$ - LC-filter capacitance
  + $r_{Lf}$ - Resistance of line f
  + $L_{f}$ - Inductance of line f
  + $r_{Lc}$ - Resistance of line c
@@ -38,10 +38,10 @@ Variables (Internal):
  + $i_{od}$     - Current of Line o (dq-space)
  + $i_{oq}$     - Current of Line o (dq-space)
 
-Equations (External, Residuals):
+Component external contributions:
  + $\omega_{com} - \omega$ &emsp;&emsp;&emsp;(If this generator is considered the reference one, otherwise 0)
- + $\cos(\delta) i_{od} - \sin(\delta) i_{oq}$
- + $\sin(\delta) i_{od} + \cos(\delta) i_{oq}$
+ + $\cos(\delta) i_{od} - \sin(\delta) i_{oq}$ &emsp;&emsp; (Bus residual terms)
+ + $\sin(\delta) i_{od} + \cos(\delta) i_{oq}$ &emsp;&emsp; (Bus residual terms)
 
 Equations (Internal):
  + $\omega_{com} = \omega_{b} - m_{p} P$
@@ -70,5 +70,5 @@ Equations (Internal):
 Note all internal direct equalities are simplified into the differential equations.
 
 
-1. Pogaku, Nagaraju, Milan Prodanovic, and Timothy C. Green. "Modeling, analysis and testing of autonomous operation of an inverter-based microgrid." IEEE Transactions on power electronics 22.2 (2007): 613-625.
-2. Bidram, Ali, Frank L. Lewis, and Ali Davoudi. "Distributed control systems for small-scale power networks: Using multiagent cooperative control theory." IEEE Control systems magazine 34.6 (2014): 56-77.
+[^1]: Pogaku, Nagaraju, Milan Prodanovic, and Timothy C. Green. "Modeling, analysis and testing of autonomous operation of an inverter-based microgrid." IEEE Transactions on power electronics 22.2 (2007): 613-625.
+[^2]: Bidram, Ali, Frank L. Lewis, and Ali Davoudi. "Distributed control systems for small-scale power networks: Using multiagent cooperative control theory." IEEE Control systems magazine 34.6 (2014): 56-77.
