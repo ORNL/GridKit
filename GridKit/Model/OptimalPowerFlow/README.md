@@ -61,7 +61,7 @@ objective gradient from dependencies. Tests compare the two.
 
 ## Data
 
-`SystemModelData` holds the network. The `OptimalDispatch` application builds
+`SystemModelData` holds the network. The `EconomicDispatch` application builds
 it from a PhasorDynamics case, and `applyMatpowerData` adds limits and costs
 from a [MATPOWER case](https://matpower.org/docs/ref/matpower/caseformat.html)
 of the same network:

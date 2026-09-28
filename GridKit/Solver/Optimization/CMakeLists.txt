@@ -18,9 +18,9 @@ if(TARGET SUNDIALS::idas)
 endif()
 
 gridkit_add_library(
-  solvers_opt_problem
-  SOURCES OptimizationProblem.cpp
-  HEADERS OptimizationProblem.hpp
+  solvers_opt_steady
+  SOURCES SteadyState.cpp
+  HEADERS SteadyState.hpp
   LINK_LIBRARIES
     PUBLIC
     IPOPT

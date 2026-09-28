@@ -15,7 +15,7 @@ if(GRIDKIT_ENABLE_IPOPT)
     test_opf_system
     GridKit::optimal_power_flow_systemmodel
     GridKit::optimal_power_flow_systemmodel_dependency_tracking
-    GridKit::solvers_opt_problem
+    GridKit::solvers_opt_steady
     GridKit::testing)
   add_test(NAME OptimalPowerFlowSystemTest COMMAND test_opf_system)
   install(TARGETS test_opf_system)

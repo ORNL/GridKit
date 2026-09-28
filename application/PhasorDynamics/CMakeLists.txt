@@ -22,22 +22,6 @@ target_include_directories(
   ContingencyAnalysis
   PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
-if(GRIDKIT_ENABLE_ENZYME AND GRIDKIT_ENABLE_IPOPT)
-  add_executable(OptimalDispatch OptimalDispatch.cpp)
-  target_link_libraries(
-    OptimalDispatch
-    PUBLIC GridKit::optimal_power_flow_systemmodel
-           GridKit::phasor_dynamics_systemmodel
-           GridKit::model_state_data
-           GridKit::solvers_opt_problem)
-  target_include_directories(OptimalDispatch
-                             PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
-  install(
-    TARGETS OptimalDispatch
-    EXPORT gridkit-targets
-    RUNTIME)
-endif()
-
 if(GRIDKIT_ENABLE_OPENMP)
   target_link_libraries(ContingencyAnalysis PUBLIC OpenMP::OpenMP_CXX)
 endif()

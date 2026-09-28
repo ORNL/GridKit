@@ -1,5 +1,5 @@
 /**
- * @file OptimizationProblem.hpp
+ * @file SteadyState.hpp
  * @brief Ipopt problem over a `Model::OptimizationEvaluator`.
  */
 
@@ -22,7 +22,7 @@ namespace AnalysisManager
      * model's `allocate()`.
      */
     template <typename scalar_type, typename index_type>
-    class OptimizationProblem : public Ipopt::TNLP
+    class SteadyState : public Ipopt::TNLP
     {
     public:
       using ScalarT    = scalar_type;
@@ -41,7 +41,7 @@ namespace AnalysisManager
        * @param[in] model - Allocated model, which holds the solution after
        * the solve
        */
-      explicit OptimizationProblem(ModelT* model);
+      explicit SteadyState(ModelT* model);
 
       bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style) override;
 

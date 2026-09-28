@@ -33,36 +33,3 @@ Each event group describes a system event that occurs at a given time point
   `time`             | A floating point value for time event occurs
   `type`             | Event type (one of { "fault_on", "fault_off" })
   `element_id`       | An integer value referencing the element associated with the event (e.g., bus fault id)
-
-## Optimal dispatch
-
-`OptimalDispatch` solves the AC optimal power flow of the case with the limits
-and costs of its MATPOWER case and writes the solution to `output_state_file`.
-`DynamicSimulation` starts from that state through `state_file`.
-
-Dispatch requires `system_model_file`, `dispatch_file`, and `output_state_file`;
-`state_file` and `ipopt` are optional. See the
-[IEEE39 input](../../examples/PhasorDynamics/OptimalDispatch/IEEE39/IEEE39.solver.json).
-Input paths are relative to the solver file; output is relative to the working
-directory. Missing state values use the case operating point; supplied currents
-must include both `ir` and `ii`.
-
-```shell
-OptimalDispatch IEEE39.solver.json
-```
-
- Case device                                  | Optimal power flow component
- ---------------------------------------------|-----------------------------
- `Bus`, `BusInfinite`                         | `Bus`, infinite for `BusInfinite`
- `Branch`                                     | `Branch` with the same parameters
- `Genrou`, `Gensal`, `GenClassical`, `Regca`  | `Generator`
- `LoadZIP`                                    | `Load` with its demand from the state
- `LoadZ`                                      | `Shunt` with $G + jB = 1 / (R + jX)$
-
-Controllers, exciters, governors, stabilizers, and faults do not enter the
-optimal power flow. PhasorDynamics initialization checks the dispatch against
-their limits.
-
-Ipopt uses exact sparse derivatives. The application sets `bound_relax_factor`
-to 0, because PhasorDynamics initialization rejects limits that relaxed bounds
-violate. Options under `ipopt` are applied after it.
