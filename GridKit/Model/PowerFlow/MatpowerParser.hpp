@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -14,6 +15,7 @@
 #include <ostream>
 #include <regex>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 #include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
@@ -30,7 +32,7 @@ namespace GridKit
       "`mpc.version = '2'`."
       "\n\tOpen brace ('[') must be on the same line as the field for matrix "
       "initialization."
-      "\n\tEach row of a matrix must be terminated by a semicolon."};
+      "\n\tMatrix rows end at a semicolon or newline."};
 
   /// @endcond
 
@@ -60,7 +62,42 @@ namespace GridKit
   inline void trim_matlab_comments(std::string& s)
   {
     const std::string nothing = "";
-    s                         = std::regex_replace(s, std::regex("%.+"), nothing);
+    s                         = std::regex_replace(s, std::regex("%.*"), nothing);
+  }
+
+  /// Read nonempty rows from a matrix assignment through its closing bracket.
+  template <typename ReadRow>
+  void readMatPowerMatrix(std::istream& is, std::string line, ReadRow read_row)
+  {
+    const auto start = line.find('[');
+    if (start == std::string::npos)
+    {
+      throw std::invalid_argument(matlab_syntax_error);
+    }
+    line.erase(0, start + 1);
+
+    do
+    {
+      trim_matlab_comments(line);
+      const auto end = line.find(']');
+      line           = line.substr(0, end);
+      std::replace(line.begin(), line.end(), ';', '\n');
+
+      std::istringstream rows(line);
+      for (std::string row; std::getline(rows, row);)
+      {
+        if (row.find_first_not_of(" \t\r") != std::string::npos)
+        {
+          read_row(row);
+        }
+      }
+      if (end != std::string::npos)
+      {
+        return;
+      }
+    } while (std::getline(is, line));
+
+    throw std::invalid_argument("MATPOWER matrix is not closed by ]");
   }
 
   // Retrieve MATPOWER component from assignment line.
@@ -70,7 +107,7 @@ namespace GridKit
   inline std::string getMatPowerComponent(const std::string& line)
   {
     logs() << "Getting matpower component from line\n";
-    std::regex  pat("mpc.([a-zA-Z]+)\\s*=.+");
+    std::regex  pat(R"(mpc\.(\w+)\s*=.*)");
     std::smatch matches;
     std::string component;
     if (std::regex_match(line, matches, pat))
@@ -235,49 +272,41 @@ namespace GridKit
         // First, parse matrix components
         if (component == "bus")
         {
-          while (std::getline(is, line))
-          {
-            if (line.find("];") != std::string::npos)
-              break;
-            BusDataT  br;
-            LoadDataT lr;
-            readMatPowerBusRow(line, br, lr);
+          readMatPowerMatrix(is, line, [&](std::string row)
+                             {
+            row += ';';
+            BusDataT  br{};
+            LoadDataT lr{};
+            readMatPowerBusRow(row, br, lr);
             mp.bus.push_back(std::move(br));
-            mp.load.push_back(std::move(lr));
-          }
+            mp.load.push_back(std::move(lr)); });
         }
         else if (component == "gen")
         {
-          while (std::getline(is, line))
-          {
-            if (line.find("];") != std::string::npos)
-              break;
-            GenDataT gr;
-            readMatPowerGenRow(gr, line);
-            mp.gen.push_back(gr);
-          }
+          readMatPowerMatrix(is, line, [&](std::string row)
+                             {
+            row += ';';
+            GenDataT gr{};
+            readMatPowerGenRow(gr, row);
+            mp.gen.push_back(gr); });
         }
         else if (component == "branch")
         {
-          while (std::getline(is, line))
-          {
-            if (line.find("];") != std::string::npos)
-              break;
-            BranchDataT br;
-            readMatPowerBranchRow(br, line);
-            mp.branch.push_back(br);
-          }
+          readMatPowerMatrix(is, line, [&](std::string row)
+                             {
+            row += ';';
+            BranchDataT br{};
+            readMatPowerBranchRow(br, row);
+            mp.branch.push_back(br); });
         }
         else if (component == "gencost")
         {
-          while (std::getline(is, line))
-          {
-            if (line.find("];") != std::string::npos)
-              break;
-            GenCostDataT gcr;
-            readMatPowerGenCostRow(gcr, line);
-            mp.gencost.push_back(gcr);
-          }
+          readMatPowerMatrix(is, line, [&](std::string row)
+                             {
+            row += ';';
+            GenCostDataT gcr{};
+            readMatPowerGenCostRow(gcr, row);
+            mp.gencost.push_back(gcr); });
         }
 
         // Next, parse scalar components

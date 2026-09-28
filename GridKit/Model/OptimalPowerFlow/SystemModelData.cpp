@@ -54,10 +54,11 @@ namespace GridKit
           const auto bus    = buses.find(number);
           if (bus == buses.end())
           {
-            throw std::invalid_argument("MATPOWER bus " + std::to_string(number) + " is not in the case");
+            throw std::invalid_argument("MATPOWER bus " + std::to_string(number) + " is unknown or repeated");
           }
           bus->second->parameters[BusParameters::Vmin] = row.at(Column::VMIN);
           bus->second->parameters[BusParameters::Vmax] = row.at(Column::VMAX);
+          buses.erase(bus);
         }
 
         if (rows.size() != data.bus.size())
@@ -96,6 +97,10 @@ namespace GridKit
           if (row.at(Column::RATE_A) > 0.0)
           {
             branch.parameters[BranchParameters::Smax] = row.at(Column::RATE_A) / mva_base;
+          }
+          else
+          {
+            branch.parameters.erase(BranchParameters::Smax);
           }
         }
 
