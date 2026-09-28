@@ -146,7 +146,7 @@ if(GRIDKIT_ENABLE_SUNDIALS)
 endif()
 
 if(GRIDKIT_ENABLE_ZMQ)
-  find_package(ZMQ REQUIRED)
+  find_package(cppzmq REQUIRED)
 endif()
 
 if(GRIDKIT_ENABLE_ENZYME)

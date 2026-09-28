@@ -4,10 +4,10 @@ readonly _cosim_dir=$(dirname $(realpath $0))
 
 cd ${_cosim_dir}
 
-./CoSimServer -c 'TwoBusCoSimServer.case.json' -b 1 &
+./CoSimServer -c 'ThreeBusCoSimServer.case.json' -b 1 &
 _srv_pid=$!
 
-./CoSimClient -c 'TwoBusCoSimClient.case.json' -b 2
+./CoSimClient -c 'ThreeBusCoSimClient.case.json' -b 2
 if [ $? -ne 0 ]; then
     _exit_code=1
 fi
