@@ -13,6 +13,7 @@ Converter <Converter/README>
 Exciter <Exciter/README>
 Governor <Governor/README>
 Load <Load/README>
+Source <Source/README>
 SignalNode <SignalNode/README>
 SignalSource <SignalSource/README>
 Stabilizer <Stabilizer/README>

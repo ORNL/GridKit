@@ -146,6 +146,7 @@ are specified:
   [Branch](Branch/README.md) | algebraic pi model for a line or off-nominal transformer branch
   [LoadZ](Load/LoadZ/README.md) | Constant-impedance load model
   [LoadZIP](Load/LoadZIP/README.md) | ZIP load model
+  [DependentNorton](Source/DependentNorton/README.md) | Controlled current source with a parallel admittance
   [Genrou](SynchronousMachine/GENROU/README.md) | 6th order machine model
   [Gensal](SynchronousMachine/GENSAL/README.md) | 5th order salient-pole machine model
   [GenClassical](SynchronousMachine/GenClassical/README.md) | the classical machine model
