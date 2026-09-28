@@ -66,7 +66,7 @@ A valid ESDC1A parameter set must satisfy the following conditions:
 The saturation points are either disabled together,
 
 ```math
-S_E(E_1) = S_E(E_2) = 0,
+S_E(E_1) = S_E(E_2) = 0
 ```
 
 or define a valid two-point scaled-quadratic fit:

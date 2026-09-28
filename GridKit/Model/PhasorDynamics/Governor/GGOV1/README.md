@@ -70,11 +70,25 @@ A valid GGOV1 parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
-  &P^{\mathrm{rate}}\ge 0,\quad R\gt 0,\quad I_R\in\{-2,-1,1\},\quad s_\mathrm{flag}\in\{0,1\} \\
-  &T_\mathrm{pelec},T_\mathrm{dgov},T_B,T_C,T_\mathrm{eng},T_\mathrm{fload},T_A,T_\mathrm{sa},T_\mathrm{sb}\ge 0,\quad T_\mathrm{act}\gt 0 \\
-  &T_B \gt 0\quad\text{or}\quad(T_B = 0\ \text{and}\ T_C = 0) \\
-  &e^{\min}\le e^{\max},\quad V^{\min}\le V^{\max},\quad R_\mathrm{close}\lt 0\lt R_\mathrm{open} \\
-  &K_\mathrm{turb}\gt 0
+  P^{\mathrm{rate}} &\ge 0,\quad R \gt 0,\quad K_\mathrm{turb} \gt 0 \\
+  I_R &\in \{-2,-1,1\},\quad s_\mathrm{flag} \in \{0,1\}
+\end{aligned}
+```
+
+```math
+\begin{aligned}
+  T_\mathrm{pelec}, T_\mathrm{dgov}, T_\mathrm{eng}, T_\mathrm{fload} &\ge 0 \\
+  T_A, T_\mathrm{sa}, T_\mathrm{sb}, T_C &\ge 0 \\
+  T_\mathrm{act} &\gt 0 \\
+  T_B &\gt 0\quad\text{or}\quad T_B = T_C = 0
+\end{aligned}
+```
+
+```math
+\begin{aligned}
+  e^{\min} &\le e^{\max} \\
+  V^{\min} &\le V^{\max} \\
+  R_\mathrm{close} &\lt 0 \lt R_\mathrm{open}
 \end{aligned}
 ```
 

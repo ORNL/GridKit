@@ -12,7 +12,7 @@ Fifth-order salient-pole synchronous machine. See the [shared conventions](../RE
 ## Block Diagram
 ![](../../../../../docs/Figures/GENSAL.JPG)
 
-Figure 2: GENSAL. Figure courtesy of
+Figure 1: GENSAL. Figure courtesy of
 [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters

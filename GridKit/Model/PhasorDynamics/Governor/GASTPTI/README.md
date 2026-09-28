@@ -202,7 +202,7 @@ s^{\mathrm{valve}}
   \begin{cases}
     (
       V_T-\text{iramp}\!(m_T),
-      x_F,
+      x_F
     )
       & s^{\mathrm{valve}}=1 \\
     (

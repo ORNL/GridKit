@@ -73,7 +73,7 @@ p_{q+1} &= p_q^{\ast},
 \end{aligned}
 ```
 
-### Derived Parameters
+### Model Derived Parameters
 
 ```math
 \begin{aligned}

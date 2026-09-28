@@ -29,7 +29,7 @@ M &\in \mathbb{Z}_{>0} \\
 \end{aligned}
 ```
 
-### Derived Parameters
+### Model Derived Parameters
 
 ```math
 \tau_{\min} = \min(\boldsymbol{\tau}),
@@ -112,7 +112,7 @@ Accepted input history is stored as the knot sequence
 
 ```math
 (t_j,\ \mathbf{u}_j,\ \mathbf{u}'_j),
-\qquad 0 = t_0 < t_1 < \cdots < t_n,
+\qquad 0 = t_0 < t_1 < \cdots < t_n
 ```
 
 where $\mathbf{u}_j$ and $\mathbf{u}'_j$ are the input value and derivative at
@@ -145,7 +145,7 @@ u(\xi)
    + \theta(1-\theta)^2\,h_j\,u'_j \\
   &\quad
    + \theta^2(3-2\theta)\,u_{j+1}
-   - \theta^2(1-\theta)\,h_j\,u'_{j+1},
+   - \theta^2(1-\theta)\,h_j\,u'_{j+1}
 \end{aligned}
 ```
 
