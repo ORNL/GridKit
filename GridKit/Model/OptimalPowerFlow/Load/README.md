@@ -1,6 +1,6 @@
 # Load
 
-Fixed power demand given by the state. The `OptimalDispatch` application makes
+Fixed power demand given by the state. The `EconomicDispatch` application makes
 one for every LoadZIP device in the case.
 
 ## Model Parameters

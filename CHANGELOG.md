@@ -96,7 +96,7 @@
 - Added `Logger::raiseVerbosity()`, which raises the verbosity without lowering a higher level.
 - Changed most of the core library code outputs to use the Logger instead of `std::cout`/`std::cerr`.
 - Added the `StateData` reader and writer for the state file format, with `applyState` and `extractState` for PhasorDynamics and a `state_file` option in phasor dynamics solver JSON files.
-- Added the `OptimalPowerFlow` model family and the `OptimalDispatch` application, with sparse Enzyme Jacobians and Hessians and an Ipopt interface, to initialize PhasorDynamics at an optimal operating point with the limits and costs of a MATPOWER case.
+- Added the `OptimalPowerFlow` model family and the `EconomicDispatch` application, with sparse Enzyme Jacobians and Hessians and an Ipopt interface, to initialize PhasorDynamics at an optimal operating point with the limits and costs of a MATPOWER case.
 
 ## v0.1
 

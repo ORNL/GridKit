@@ -1,6 +1,6 @@
 /**
- * @file OptimalDispatch.cpp
- * @brief Optimal dispatch of a PhasorDynamics case, written as its initial
+ * @file EconomicDispatch.cpp
+ * @brief Economic dispatch of a PhasorDynamics case, written as its initial
  * state.
  */
 
@@ -21,7 +21,7 @@
 #include <GridKit/Model/OptimalPowerFlow/SystemModelData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Model/StateData.hpp>
-#include <GridKit/Solver/Optimization/OptimizationProblem.hpp>
+#include <GridKit/Solver/Optimization/SteadyState.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace OPF = GridKit::OptimalPowerFlow;
@@ -191,7 +191,7 @@ int runApplication(int argc, const char* argv[])
 {
   if (argc < 2)
   {
-    std::cerr << "Usage: OptimalDispatch <json-input-file>\n";
+    std::cerr << "Usage: EconomicDispatch <json-input-file>\n";
     return 1;
   }
 
@@ -234,7 +234,7 @@ int runApplication(int argc, const char* argv[])
     return 1;
   }
 
-  Ipopt::SmartPtr<Ipopt::TNLP> problem = new AnalysisManager::IpoptInterface::OptimizationProblem<double, size_t>(&model);
+  Ipopt::SmartPtr<Ipopt::TNLP> problem = new AnalysisManager::IpoptInterface::SteadyState<double, size_t>(&model);
 
   const Ipopt::ApplicationReturnStatus status = app->OptimizeTNLP(problem);
   if (status != Ipopt::Solve_Succeeded && status != Ipopt::Solved_To_Acceptable_Level)
@@ -260,7 +260,7 @@ int main(int argc, const char* argv[])
   }
   catch (const std::exception& error)
   {
-    Log::error() << "OptimalDispatch failed: " << error.what() << '\n';
+    Log::error() << "EconomicDispatch failed: " << error.what() << '\n';
   }
 
   return 1;
