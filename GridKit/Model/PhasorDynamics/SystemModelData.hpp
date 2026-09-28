@@ -23,6 +23,7 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSourceData.hpp>
+#include <GridKit/Model/PhasorDynamics/Source/DependentNorton/DependentNortonData.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -61,6 +62,7 @@ namespace GridKit
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadZDataT        = LoadZData<RealT, IdxT>;
       using LoadZIPDataT      = LoadZIPData<RealT, IdxT>;
+      using DependentNortonDataT = Source::DependentNortonData<RealT, IdxT>;
       using ConstantSourceT   = ConstantSignalSourceData<RealT, IdxT>;
       using FunctionSourceT   = FunctionSignalSourceData<RealT, IdxT>;
       using SignalDataT       = SignalNodeData<RealT, IdxT>;
@@ -114,6 +116,7 @@ namespace GridKit
       std::vector<GenClassicalDataT> genclassical;    ///< Classical generator instances within the model
       std::vector<LoadZDataT>        loadz;           ///< LoadZ instances within the model
       std::vector<LoadZIPDataT>      loadzip;         ///< LoadZIP instances within the model
+      std::vector<DependentNortonDataT> dependent_norton; ///< Norton source instances within the model
       std::vector<Tgov1DataT>        gov;             ///< Governors within the model
       std::vector<Esdc1aDataT>       esdc1a;          ///< ESDC1A exciters within the model
       std::vector<GastPtiDataT>      gastpti;         ///< GASTPTI governors within the model

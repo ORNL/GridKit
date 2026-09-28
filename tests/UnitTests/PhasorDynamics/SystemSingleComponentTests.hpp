@@ -190,6 +190,53 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Construct and initialize a source at a fixed-voltage terminal from model data.
+      TestOutcome dependentNorton()
+      {
+        using Data         = PhasorDynamics::Source::DependentNortonData<RealT, IdxT>;
+        using BusType      = typename PhasorDynamics::BusData<RealT, IdxT>::BusType;
+        using ConstantData = PhasorDynamics::ConstantSignalSourceData<RealT, IdxT>;
+
+        TestStatus                                   success = true;
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.freq_base = 60.0;
+        data.va_base   = 100.0e6;
+        data.bus.resize(1);
+        data.bus[0].bus_id   = 1;
+        data.bus[0].bus_type = BusType::SLACK;
+        data.bus[0].Vr0      = 0.8;
+        data.bus[0].Vi0      = 0.6;
+        data.signal.resize(2);
+        data.signal[0].signal_id = 1;
+        data.signal[1].signal_id = 2;
+
+        Data source_data;
+        source_data.device_class                           = "DependentNorton";
+        source_data.buses[Data::Buses::bus]                = 1;
+        source_data.parameters[Data::Parameters::G]        = static_cast<RealT>(0.5);
+        source_data.parameters[Data::Parameters::B]        = static_cast<RealT>(-0.25);
+        source_data.signal_inputs[Data::SignalInputs::inr] = 1;
+        source_data.signal_inputs[Data::SignalInputs::ini] = 2;
+        data.dependent_norton.push_back(source_data);
+
+        ConstantData current_data;
+        current_data.parameters[ConstantData::Parameters::Sr]        = static_cast<RealT>(0.55);
+        current_data.parameters[ConstantData::Parameters::Si]        = static_cast<RealT>(0.1);
+        current_data.signal_outputs[ConstantData::SignalOutputs::sr] = 1;
+        current_data.signal_outputs[ConstantData::SignalOutputs::si] = 2;
+        data.constant_source.push_back(current_data);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+        success *= system.allocate() == 0;
+        success *= system.verify() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == 0;
+        return success.report(__func__);
+      }
+
       TestOutcome load()
       {
         TestStatus success = true;
