@@ -19,7 +19,7 @@
     "buses": [
         {
             "number": 1,
-            "class": "BusInfinite",
+            "class": "Bus",
             "name": "1",
             "init": {
                 "Vr": 1.06,
@@ -32,7 +32,7 @@
         },
         {
             "number": 2,
-            "class": "Bus",
+            "class": "BusInfinite",
             "name": "2",
             "init": {
                 "Vr": 1.0599558398065716,
@@ -161,7 +161,7 @@
         },
         {
             "class": "BusToSignalAdapter",
-            "ports": {"bus":1, "vr_out":1, "vi_out":2, "ir_in":3, "ii_in":4},
+            "ports": {"bus":2, "vr_out":1, "vi_out":2, "ir_in":3, "ii_in":4},
             "id": "adapt3",
             "params": {}
         }

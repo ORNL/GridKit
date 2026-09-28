@@ -161,7 +161,7 @@
         },
         {
             "class": "BusToSignalAdapter",
-            "ports": {"bus":1, "vr_in":1, "vi_in":2, "ir_out":3, "ii_out":4},
+            "ports": {"bus":1, "ir_out":1, "ii_out":2, "vr_in":3, "vi_out":4},
             "id": "adapt3",
             "params": {}
         }

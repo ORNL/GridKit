@@ -32,7 +32,7 @@
         },
         {
             "number": 2,
-            "class": "Bus",
+            "class": "BusInfinite",
             "name": "2",
             "init": {
                 "Vr": 1.0599558398065716,
