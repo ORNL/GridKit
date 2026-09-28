@@ -104,6 +104,6 @@ case `id`. Bus keys are `bus_id_` followed by the bus number.
   `Vr0`/`Vi0`, machine `p0`/`q0`, `LoadZIP` `Pnom`/`Qnom`, and branch `tap`
   and `phase`. Open branches and offline `LoadZ` devices are removed, and an
   offline `LoadZIP` draws no power. Offline machines are rejected.
-- `OptimalDispatch` builds the OPF network and initial state together. It
+- `EconomicDispatch` builds the OPF network and initial state together. It
   fills omitted bus voltages and device current pairs from the case, preserves
   supplied settings and metadata, and writes solved voltages and currents.

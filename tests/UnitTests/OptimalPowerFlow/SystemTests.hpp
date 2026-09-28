@@ -15,7 +15,7 @@
 #include <GridKit/Model/OptimalPowerFlow/SystemModel.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModelData.hpp>
 #include <GridKit/Model/StateData.hpp>
-#include <GridKit/Solver/Optimization/OptimizationProblem.hpp>
+#include <GridKit/Solver/Optimization/SteadyState.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
@@ -528,7 +528,7 @@ namespace GridKit
           return false;
         }
 
-        Ipopt::SmartPtr<Ipopt::TNLP> problem = new AnalysisManager::IpoptInterface::OptimizationProblem<RealT, IdxT>(&system);
+        Ipopt::SmartPtr<Ipopt::TNLP> problem = new AnalysisManager::IpoptInterface::SteadyState<RealT, IdxT>(&system);
         return app->OptimizeTNLP(problem) == Ipopt::Solve_Succeeded;
       }
     };
