@@ -230,16 +230,16 @@ namespace GridKit
           mpc.bus_name = {
             'ONE';
           };
-          mpc.gen = [ % 1 2 3;
+          mpc.gen = [ % ] 1 2 3;
+            %
             1 2.5	3;
-            4 5 6
-            7 8 9];
-          mpc.gencost = [2 0 0 2 1 0];
+            4 5 6; 7 8 9];
+          mpc.gencost = [2 0.5 0.25 2 1 0];
         )");
 
         success *= matpower.matrices.size() == 2;
         success *= matpower.matrix("gen") == OPF::MatpowerMatrix{{1.0, 2.5, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}};
-        success *= matpower.matrix("gencost") == OPF::MatpowerMatrix{{2.0, 0.0, 0.0, 2.0, 1.0, 0.0}};
+        success *= matpower.matrix("gencost") == OPF::MatpowerMatrix{{2.0, 0.5, 0.25, 2.0, 1.0, 0.0}};
 
         success *= throws<std::invalid_argument>([&]
                                                  { matpower.matrix("branch"); });
@@ -263,6 +263,7 @@ namespace GridKit
 
         OPF::SystemModelData<RealT, IdxT> network = data();
         network.branch[0].parameters.erase(OPF::BranchParameters::Smax);
+        network.branch[2].parameters[OPF::BranchParameters::Smax] = 0.25;
         OPF::applyMatpowerData(network, parse(matpowerCase(MATPOWER_BRANCH, MATPOWER_GEN, MATPOWER_GENCOST)));
 
         success *= isEqual(network.bus[0].parameters.at(OPF::BusParameters::Vmin), 0.94);
@@ -290,6 +291,13 @@ namespace GridKit
         success *= isEqual(gen_3.at(OPF::GeneratorParameters::c0), 7.0);
         success *= isEqual(gen_3.at(OPF::GeneratorParameters::c1), 1400.0);
         success *= isEqual(gen_3.at(OPF::GeneratorParameters::c2), 200.0);
+
+        auto duplicate                   = parse(matpowerCase(MATPOWER_BRANCH, MATPOWER_GEN, MATPOWER_GENCOST));
+        duplicate.matrices.at("bus")[1]  = duplicate.matrices.at("bus")[0];
+        success                         *= throws<std::invalid_argument>([&]()
+                                                 {
+                                                   auto invalid = data();
+                                                   OPF::applyMatpowerData(invalid, duplicate); });
 
         // Extra and missing branches and generators, a piecewise-linear cost, and a cubic cost
         const std::string branch_extra = MATPOWER_BRANCH + "\n1 2 0.01 0.1 0 0 0 0 0 0 1";

@@ -76,7 +76,8 @@ of the same network:
 - Values in MW, Mvar, and MVA and costs in P [MW] become system base values.
 
 `parseMatpowerData` reads every numeric `mpc.<name>` matrix. Rows end at `;` or
-at the end of a line, so both MATPOWER and PowerWorld exports read.
+at the end of a line, so both MATPOWER and PowerWorld exports read. Matrix
+scanning is shared with the PowerFlow reader.
 
 ## State
 
