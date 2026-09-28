@@ -38,6 +38,8 @@ Input paths are relative to the solver file; output is relative to the working
 directory. Missing state values use the case operating point; supplied currents
 must include both `ir` and `ii`.
 
+Machines marked `online: false` in the input state are currently rejected.
+
  Case device                                  | Optimal power flow component
  ---------------------------------------------|-----------------------------
  `Bus`, `BusInfinite`                         | `Bus`, infinite for `BusInfinite`
