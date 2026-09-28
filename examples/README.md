@@ -2,6 +2,8 @@
 
 GridKit™ usage examples are organized as follows:
 
+- [EconomicDispatch](EconomicDispatch/README.md) solves AC optimal power flow
+and writes operating states for PhasorDynamics.
 - [EMT](EMT/README.md) contains architecture skeletons for future EMT examples.
 - `Enzyme` directory contains Enzyme automatic differentiation examples.
 - `Experimental` directory contains examples of dynamic-constrained
