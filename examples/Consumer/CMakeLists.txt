@@ -36,6 +36,12 @@ else()
     GridKit::power_elec_microload)
 endif()
 
+if(GRIDKIT_ENABLE_ENZYME AND GRIDKIT_ENABLE_IPOPT)
+  install(FILES ${CMAKE_SOURCE_DIR}/tests/UnitTests/OptimalPowerFlow/runSystemTests.cpp
+                ${CMAKE_SOURCE_DIR}/tests/UnitTests/OptimalPowerFlow/SystemTests.hpp
+          DESTINATION ${_rel_consumer_path}/OptimalPowerFlow)
+endif()
+
 # Install CMakeLists.txt for example project
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/GridKitConsumer/CMakeLists.txt.in
                ${CMAKE_CURRENT_BINARY_DIR}/GridKitConsumer/CMakeLists.txt @ONLY)

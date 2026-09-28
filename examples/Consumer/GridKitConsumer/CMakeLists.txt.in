@@ -28,3 +28,15 @@ include(CTest)
 add_test(NAME GridKitConsumer
     COMMAND consumer
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+
+if(TARGET GridKit::optimal_power_flow_systemmodel_dependency_tracking
+   AND TARGET GridKit::solvers_opt_steady)
+  add_executable(opf_consumer OptimalPowerFlow/runSystemTests.cpp)
+  target_link_libraries(
+    opf_consumer
+    GridKit::optimal_power_flow_systemmodel
+    GridKit::optimal_power_flow_systemmodel_dependency_tracking
+    GridKit::solvers_opt_steady
+    GridKit::testing)
+  add_test(NAME GridKitOPFConsumer COMMAND opf_consumer)
+endif()
