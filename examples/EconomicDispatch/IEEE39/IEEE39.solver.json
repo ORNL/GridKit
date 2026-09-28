@@ -1,0 +1,8 @@
+{
+    "system_model_file": "IEEE39.case.json",
+    "dispatch_file": "IEEE39.m",
+    "output_state_file": "IEEE39.state.json",
+    "ipopt": {
+        "tol": 1e-08
+    }
+}
