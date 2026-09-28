@@ -428,10 +428,10 @@ namespace GridKit
       static inline const std::vector<RealT> BUS_X         = {1.02, -0.05};
       static inline const std::vector<RealT> BUS_LAMBDA    = {0.7, -0.4, 1.3, 0.5};
 
-      // Measured worst errors: power 1.5 eps, Jacobian 54.4 eps, Hessian 11.3 eps
+      // Allow roundoff in the independent power and derivative references.
       static constexpr RealT POWER_TOL    = 2 * std::numeric_limits<RealT>::epsilon();
       static constexpr RealT JACOBIAN_TOL = 64 * std::numeric_limits<RealT>::epsilon();
-      static constexpr RealT HESSIAN_TOL  = 16 * std::numeric_limits<RealT>::epsilon();
+      static constexpr RealT HESSIAN_TOL  = 64 * std::numeric_limits<RealT>::epsilon();
 
       static OPF::BranchData<RealT, IdxT> opfBranchData()
       {

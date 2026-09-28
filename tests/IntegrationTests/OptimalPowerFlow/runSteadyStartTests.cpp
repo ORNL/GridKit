@@ -17,6 +17,8 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
+#include "StateUtilities.hpp"
+
 namespace
 {
   using SystemModelT = GridKit::PhasorDynamics::SystemModel<double, size_t>;
