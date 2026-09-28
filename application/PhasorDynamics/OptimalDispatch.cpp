@@ -5,40 +5,90 @@
  */
 
 #include <exception>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <ranges>
 #include <stdexcept>
 #include <string>
+#include <variant>
 
 #include <IpIpoptApplication.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <nlohmann/json.hpp>
 
 #include <GridKit/Model/OptimalPowerFlow/SystemModel.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModelData.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Model/StateData.hpp>
 #include <GridKit/Solver/Optimization/OptimizationProblem.hpp>
-
-#include "AnalysisUtilities.hpp"
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace OPF = GridKit::OptimalPowerFlow;
 namespace PD  = GridKit::PhasorDynamics;
+namespace fs  = std::filesystem;
 
-using PD::json;
-using PD::Log;
+using json = nlohmann::json;
+using Log  = GridKit::Utilities::Logger;
+using GridKit::Model::StateData;
+
+/// Numeric case parameter, or its model default if omitted
+template <typename DataT>
+typename DataT::RealT realParameter(const DataT& data, typename DataT::Parameters key, typename DataT::RealT fallback = 0.0)
+{
+  const auto entry = data.parameters.find(key);
+  if (entry == data.parameters.end())
+  {
+    return fallback;
+  }
+  if (const auto* value = std::get_if<typename DataT::RealT>(&entry->second))
+  {
+    return *value;
+  }
+  if (const auto* value = std::get_if<typename DataT::IdxT>(&entry->second))
+  {
+    return static_cast<typename DataT::RealT>(*value);
+  }
+  throw std::invalid_argument(data.disambiguation_string + ": parameter " + std::string(magic_enum::enum_name(key)) + " must be numeric");
+}
+
+/// Preserve a supplied current pair, or initialize it from the case power
+void initializeCurrent(StateData& state, const std::string& id, size_t bus, double p, double q)
+{
+  const auto* record = state.device(id);
+  const bool  has_ir = record != nullptr && record->values.contains("ir");
+  const bool  has_ii = record != nullptr && record->values.contains("ii");
+  if (has_ir != has_ii)
+  {
+    throw std::invalid_argument(id + ": state must supply both ir and ii");
+  }
+  if (!has_ir)
+  {
+    GridKit::Model::setTerminalCurrent(state, id, bus, 0, 1, p, q);
+  }
+}
 
 /**
  * @brief Dispatchable generators from PhasorDynamics machines
  */
 template <typename MachineDataT>
-void addGenerators(OPF::SystemModelData<>& data, const std::vector<MachineDataT>& machines)
+void addGenerators(OPF::SystemModelData<>& data, StateData& state, const std::vector<MachineDataT>& machines)
 {
-  using Buses = typename MachineDataT::Buses;
+  using Buses      = typename MachineDataT::Buses;
+  using Parameters = typename MachineDataT::Parameters;
 
   for (const auto& machine : machines)
   {
     auto& generator                           = data.generator.emplace_back();
     generator.id                              = machine.disambiguation_string;
     generator.buses[OPF::GeneratorBuses::bus] = machine.buses.at(Buses::bus);
+
+    const auto* record = state.device(generator.id);
+    if (record != nullptr && !record->flag("online", true))
+    {
+      throw std::invalid_argument("Offline machine " + generator.id + " is not supported yet");
+    }
+    initializeCurrent(state, generator.id, machine.buses.at(Buses::bus), realParameter(machine, Parameters::p0), realParameter(machine, Parameters::q0));
   }
 }
 
@@ -46,9 +96,10 @@ void addGenerators(OPF::SystemModelData<>& data, const std::vector<MachineDataT>
  * @brief Optimal power flow network of a PhasorDynamics case
  *
  * Machines become generators, `LoadZIP` devices fixed loads, and `LoadZ`
- * devices shunts. Branches keep the PhasorDynamics parameters.
+ * devices shunts. Branches keep the PhasorDynamics parameters. Missing state
+ * voltages and current pairs are initialized from the case in the same pass.
  */
-OPF::SystemModelData<> network(const PD::SystemModelData<>& grid)
+OPF::SystemModelData<> network(const PD::SystemModelData<>& grid, StateData& state)
 {
   using BusType = PD::SystemModelData<>::BusDataT::BusType;
 
@@ -60,6 +111,10 @@ OPF::SystemModelData<> network(const PD::SystemModelData<>& grid)
     auto& record    = data.bus.emplace_back();
     record.number   = bus.bus_id;
     record.infinite = bus.bus_type == BusType::SLACK;
+
+    auto& voltage = state.buses[GridKit::Model::busKey(bus.bus_id)].values;
+    voltage.try_emplace("vr", bus.Vr0);
+    voltage.try_emplace("vi", bus.Vi0);
   }
 
   for (const auto& branch : grid.branch)
@@ -71,27 +126,28 @@ OPF::SystemModelData<> network(const PD::SystemModelData<>& grid)
     for (const auto& key : std::views::keys(branch.parameters))
     {
       const auto parameter                 = magic_enum::enum_cast<OPF::BranchParameters>(magic_enum::enum_name(key));
-      record.parameters[parameter.value()] = PD::realParameter(branch, key);
+      record.parameters[parameter.value()] = realParameter(branch, key);
     }
   }
 
-  addGenerators(data, grid.genrou);
-  addGenerators(data, grid.gensal);
-  addGenerators(data, grid.genclassical);
-  addGenerators(data, grid.regca);
+  addGenerators(data, state, grid.genrou);
+  addGenerators(data, state, grid.gensal);
+  addGenerators(data, state, grid.genclassical);
+  addGenerators(data, state, grid.regca);
 
   for (const auto& load : grid.loadzip)
   {
     auto& record                      = data.load.emplace_back();
     record.id                         = load.disambiguation_string;
     record.buses[OPF::LoadBuses::bus] = load.buses.at(PD::LoadZIPBuses::bus);
+    initializeCurrent(state, record.id, load.buses.at(PD::LoadZIPBuses::bus), -realParameter(load, PD::LoadZIPParameters::Pnom), -realParameter(load, PD::LoadZIPParameters::Qnom));
   }
 
   // Y = 1 / (R + jX)
   for (const auto& load : grid.loadz)
   {
-    const double r = PD::realParameter(load, PD::LoadZParameters::R);
-    const double x = PD::realParameter(load, PD::LoadZParameters::X);
+    const double r = realParameter(load, PD::LoadZParameters::R, 0.1);
+    const double x = realParameter(load, PD::LoadZParameters::X, 0.01);
 
     auto& record                               = data.shunt.emplace_back();
     record.id                                  = load.disambiguation_string;
@@ -133,18 +189,36 @@ void setOptions(Ipopt::IpoptApplication& app, const json& options)
 
 int runApplication(int argc, const char* argv[])
 {
-  PD::checkCommandLine(argc, "OptimalDispatch");
-  const PD::StudyData study = PD::parseStudyData(argv[1]);
-  if (study.dispatch_file.empty() || study.output_state_file.empty())
+  if (argc < 2)
   {
-    Log::error() << "OptimalDispatch requires dispatch_file and output_state_file\n";
+    std::cerr << "Usage: OptimalDispatch <json-input-file>\n";
     return 1;
   }
 
-  OPF::SystemModelData<> data = network(study.model_data);
-  OPF::applyMatpowerData(data, OPF::parseMatpowerData(study.dispatch_file));
+  const fs::path file = argv[1];
+  std::ifstream  stream(file);
+  if (!stream)
+  {
+    throw std::runtime_error("Could not open dispatch study " + file.string());
+  }
+  const json options = json::parse(stream);
+  const auto input   = [&](const char* key)
+  {
+    const auto path = options.at(key).get<fs::path>();
+    return path.is_absolute() ? path : file.parent_path() / path;
+  };
+  const auto output = options.at("output_state_file").get<fs::path>();
+  const auto grid   = PD::parseSystemModelData(input("system_model_file"));
 
-  OPF::SystemModel<double, size_t> model(data, PD::extractState(study.model_data));
+  StateData state;
+  if (options.contains("state_file") && !options.at("state_file").get<fs::path>().empty())
+  {
+    state = GridKit::Model::parseStateData(input("state_file"));
+  }
+  auto data = network(grid, state);
+  OPF::applyMatpowerData(data, OPF::parseMatpowerData(input("dispatch_file")));
+
+  OPF::SystemModel<double, size_t> model(data, state);
   if (model.allocate() != 0)
   {
     return 1;
@@ -153,7 +227,7 @@ int runApplication(int argc, const char* argv[])
   // PhasorDynamics initialization rejects limits that relaxed bounds violate
   Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
   app->Options()->SetNumericValue("bound_relax_factor", 0.0);
-  setOptions(*app, study.ipopt);
+  setOptions(*app, options.value("ipopt", json::object()));
   if (app->Initialize() != Ipopt::Solve_Succeeded)
   {
     Log::error() << "Ipopt initialization failed\n";
@@ -172,8 +246,8 @@ int runApplication(int argc, const char* argv[])
   model.evaluateObjective();
   std::cout << "\nOptimal cost " << model.objective() << "\n";
 
-  GridKit::Model::writeStateData(model.solutionState(), study.output_state_file);
-  std::cout << "State written to " << study.output_state_file << "\n";
+  GridKit::Model::writeStateData(model.solutionState(), output);
+  std::cout << "State written to " << output << "\n";
 
   return 0;
 }

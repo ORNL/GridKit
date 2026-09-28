@@ -21,7 +21,8 @@ OptimalDispatch IEEE39.solver.json
 {
   "system_model_file": "IEEE39.case.json",
   "state_file": "IEEE39.state.json",
-  "tmax": 10.0
+  "tmax": 10.0,
+  "events": []
 }
 ```
 
