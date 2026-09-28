@@ -140,6 +140,20 @@ namespace GridKit
         addComponent(loadzip);
       }
 
+      // Add dependent Norton sources
+      for (const auto& sourcedata : data.dependent_norton)
+      {
+        BusT* bus = nullptr;
+        if (sourcedata.buses.contains(Source::DependentNortonBuses::bus))
+        {
+          bus = getBus(sourcedata.buses.at(Source::DependentNortonBuses::bus));
+        }
+
+        auto* source = new Source::DependentNorton<ScalarT, IdxT>(bus, sourcedata);
+        source->getPorts().connect(sourcedata, signal_nodes_);
+        addComponent(source);
+      }
+
       // Add GENROU generators
       for (const auto& gendata : data.genrou)
       {

@@ -11,4 +11,5 @@
 #include <GridKit/AutomaticDifferentiation/Enzyme/DfDy.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/DfDyp.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/DhDwb.hpp>
+#include <GridKit/AutomaticDifferentiation/Enzyme/DhDws.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/DhDy.hpp>

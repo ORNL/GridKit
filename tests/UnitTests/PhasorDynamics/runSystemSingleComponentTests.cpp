@@ -23,6 +23,7 @@ int main()
   result += test.genClassical();
   result += test.tgov1();
   result += test.hygov();
+  result += test.dependentNorton();
 
   // @todo The following components are not tested here because they require non-trivial constructors
   // PhasorDynamics::Exciter::SexsPti

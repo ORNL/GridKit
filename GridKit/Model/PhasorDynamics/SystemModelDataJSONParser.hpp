@@ -135,6 +135,12 @@ namespace GridKit
           raw_component.get_to(loadzip);
           sm.loadzip.push_back(loadzip);
         }
+        else if (kind == "DependentNorton")
+        {
+          typename SystemModelData<RealT, IdxT>::DependentNortonDataT dependent_norton;
+          raw_component.get_to(dependent_norton);
+          sm.dependent_norton.push_back(dependent_norton);
+        }
         else if (kind == "Regca")
         {
           typename SystemModelData<RealT, IdxT>::RegcaDataT regca;
