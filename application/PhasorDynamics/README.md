@@ -7,18 +7,15 @@
   `system_model_file`  | Path to the system model file[^1]
   `state_file`         | Path to a state file[^2] that sets the initial operating point (optional)
   `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
-  `tmax`               | A floating-point value for max time (required by `DynamicSimulation` and `ContingencyAnalysis`)
+  `tmax`               | A floating-point value for max time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
   `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9)
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `max_order`          | Maximum IDA integration method order from 1 to 5 (default: 5; fixed stepping is capped at 2)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
-  `events`             | An array of event groups (see [Events](#events) below, default: none)
+  `events`             | An array of event groups (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
-  `output_state_file`  | Path to the state file[^2] the study writes (required by `OptimalDispatch`)
-  `dispatch_file`      | Path to the MATPOWER case[^3] with limits and costs (required by `OptimalDispatch`)
-  `ipopt`              | Ipopt options by name (optional, `OptimalDispatch` only)
   `reference_file`     | A string containing the name of the case (optional)
   `error_type`         | One of { "relative" (default), "absolute" }
   `error_tolerance`    | A floating-point value for highest allowable total error (default: 1.0e-4)
@@ -26,7 +23,6 @@
 
 [^1]: See system model [case format](../../GridKit/Model/PhasorDynamics/INPUT_FORMAT.md)
 [^2]: See the [state format](../../GridKit/Model/STATE.md)
-[^3]: See the optimal power flow [data](../../GridKit/Model/OptimalPowerFlow/README.md#data)
 
 ## Events
 
@@ -43,6 +39,13 @@ Each event group describes a system event that occurs at a given time point
 `OptimalDispatch` solves the AC optimal power flow of the case with the limits
 and costs of its MATPOWER case and writes the solution to `output_state_file`.
 `DynamicSimulation` starts from that state through `state_file`.
+
+Dispatch requires `system_model_file`, `dispatch_file`, and `output_state_file`;
+`state_file` and `ipopt` are optional. See the
+[IEEE39 input](../../examples/PhasorDynamics/OptimalDispatch/IEEE39/IEEE39.solver.json).
+Input paths are relative to the solver file; output is relative to the working
+directory. Missing state values use the case operating point; supplied currents
+must include both `ir` and `ii`.
 
 ```shell
 OptimalDispatch IEEE39.solver.json

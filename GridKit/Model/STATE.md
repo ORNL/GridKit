@@ -99,11 +99,11 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 `GridKit/Model/StateData.hpp` reads and writes this format. Device keys are the
 case `id`. Bus keys are `bus_id_` followed by the bus number.
 
-- `PhasorDynamics::applyState` writes a state into parsed case data: bus
+- The application helper `application/PhasorDynamics/StateUtilities.hpp`
+  applies a state to parsed PhasorDynamics case data: bus
   `Vr0`/`Vi0`, machine `p0`/`q0`, `LoadZIP` `Pnom`/`Qnom`, and branch `tap`
   and `phase`. Open branches and offline `LoadZ` devices are removed, and an
   offline `LoadZIP` draws no power. Offline machines are rejected.
-- `PhasorDynamics::extractState` returns the operating point stored in a case:
-  bus voltages, machine and load currents, and branch `tap` and `phase`.
-- `OptimalDispatch` reads a state as its starting point and writes the solved
-  bus voltages and device currents.
+- `OptimalDispatch` builds the OPF network and initial state together. It
+  fills omitted bus voltages and device current pairs from the case, preserves
+  supplied settings and metadata, and writes solved voltages and currents.

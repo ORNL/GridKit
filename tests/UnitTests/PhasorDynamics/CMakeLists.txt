@@ -202,7 +202,13 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
 
 add_executable(test_phasor_state runStateTests.cpp)
 target_link_libraries(
-  test_phasor_state GridKit::phasor_dynamics_systemmodel GridKit::testing)
+  test_phasor_state
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::model_state_data
+  GridKit::testing)
+target_include_directories(
+  test_phasor_state
+  PRIVATE ${CMAKE_SOURCE_DIR}/application/PhasorDynamics)
 
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cmath>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -9,46 +8,41 @@
 #include <GridKit/Model/StateData.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
+#include "StateUtilities.hpp"
+
 namespace GridKit
 {
   namespace Testing
   {
     /**
-     * @brief `applyState` and `extractState` on system model data
+     * @brief Application state initialization of PhasorDynamics case data
      */
     class StateTests
     {
       using DataT = PhasorDynamics::SystemModelData<double, size_t>;
 
     public:
-      /// Applying the extracted state keeps the case operating point
-      TestOutcome roundTrip()
+      /// Supplied voltage, current, and tap values set the case operating point
+      TestOutcome applyState()
       {
         TestStatus success = true;
 
-        const DataT      data  = caseData();
-        Model::StateData state = PhasorDynamics::extractState(data);
+        DataT            data = caseData();
+        Model::StateData state;
+        state.buses[Model::busKey(1)].values = {{"vr", 1.0}, {"vi", 0.0}};
+        state.buses[Model::busKey(2)].values = {{"vr", 1.0}, {"vi", -0.1}};
+        state.devices["genrou_1"].values     = {{"ir", 0.8}, {"ii", -0.2}};
+        state.devices["loadzip_2"].values    = {{"ir", -0.7}, {"ii", 0.1}};
+        state.devices["branch_1_2"].values   = {{"tap", 1.05}, {"phase", 0.02}};
+        PhasorDynamics::applyState(data, state);
 
-        DataT copy                                                          = caseData();
-        copy.genrou[0].parameters[PhasorDynamics::GenrouParameters::p0]     = 0.0;
-        copy.loadzip[0].parameters[PhasorDynamics::LoadZIPParameters::Pnom] = 0.0;
-        PhasorDynamics::applyState(copy, state);
-
-        success *= isEqual(copy.bus[1].Vr0, data.bus[1].Vr0) && isEqual(copy.bus[1].Vi0, data.bus[1].Vi0);
-        success *= isEqual(real(copy.genrou[0].parameters.at(PhasorDynamics::GenrouParameters::p0)), P0);
-        success *= isEqual(real(copy.genrou[0].parameters.at(PhasorDynamics::GenrouParameters::q0)), Q0);
-        success *= isEqual(real(copy.loadzip[0].parameters.at(PhasorDynamics::LoadZIPParameters::Pnom)), PNOM);
-        success *= isEqual(real(copy.loadzip[0].parameters.at(PhasorDynamics::LoadZIPParameters::Qnom)), QNOM);
-        success *= isEqual(real(copy.branch[0].parameters.at(PhasorDynamics::BranchParameters::tap)), TAP);
-
-        // Power of the LoadZ at its bus voltage
-        const Model::StateRecord* bus  = state.bus(2);
-        const double              v2   = bus->value("vr", 0.0) * bus->value("vr", 0.0) + bus->value("vi", 0.0) * bus->value("vi", 0.0);
-        double                    p    = 0.0;
-        double                    q    = 0.0;
-        success                       *= Model::terminalPower(state, "loadz_2", 2, 0, 1, p, q);
-        success                       *= isEqual(p, -v2 * R / (R * R + X * X));
-        success                       *= isEqual(q, -v2 * X / (R * R + X * X));
+        success *= isEqual(data.bus[1].Vr0, 1.0) && isEqual(data.bus[1].Vi0, -0.1);
+        success *= isEqual(real(data.genrou[0].parameters.at(PhasorDynamics::GenrouParameters::p0)), 0.8);
+        success *= isEqual(real(data.genrou[0].parameters.at(PhasorDynamics::GenrouParameters::q0)), 0.2);
+        success *= isEqual(real(data.loadzip[0].parameters.at(PhasorDynamics::LoadZIPParameters::Pnom)), 0.71);
+        success *= isEqual(real(data.loadzip[0].parameters.at(PhasorDynamics::LoadZIPParameters::Qnom)), 0.03);
+        success *= isEqual(real(data.branch[0].parameters.at(PhasorDynamics::BranchParameters::tap)), 1.05);
+        success *= isEqual(real(data.branch[0].parameters.at(PhasorDynamics::BranchParameters::phase)), 0.02);
 
         return success.report(__func__);
       }
@@ -58,8 +52,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        DataT            data                      = caseData();
-        Model::StateData state                     = PhasorDynamics::extractState(data);
+        DataT            data = caseData();
+        Model::StateData state;
         state.devices["branch_1_2"].flags["open"]  = true;
         state.devices["loadz_2"].flags["online"]   = false;
         state.devices["loadzip_2"].flags["online"] = false;
@@ -99,8 +93,8 @@ namespace GridKit
 
       static void applyOfflineMachine()
       {
-        DataT            data                     = caseData();
-        Model::StateData state                    = PhasorDynamics::extractState(data);
+        DataT            data = caseData();
+        Model::StateData state;
         state.devices["genrou_1"].flags["online"] = false;
         PhasorDynamics::applyState(data, state);
       }
