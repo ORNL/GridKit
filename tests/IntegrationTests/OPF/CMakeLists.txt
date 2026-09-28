@@ -23,8 +23,7 @@ function(add_opf_catalog_case case_name)
     NAME OPFCaseCatalog_${case_name}
     COMMAND
       test_opf_case_catalog ${PROJECT_SOURCE_DIR}/cases/OPF/${case_name}.opf.json
-      ${PROJECT_SOURCE_DIR}/cases/PhasorDynamics/${case_name}/${case_name}.state.json
-      solve)
+      ${PROJECT_SOURCE_DIR}/cases/PhasorDynamics/${case_name}/${case_name}.state.json solve)
 endfunction()
 
 add_opf_catalog_case(IEEE39)
