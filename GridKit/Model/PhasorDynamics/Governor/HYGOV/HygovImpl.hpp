@@ -7,7 +7,7 @@
 #pragma once
 
 #include <algorithm>
-#include <mutex>
+#include <atomic>
 #include <numeric>
 #include <variant>
 
@@ -753,8 +753,8 @@ namespace GridKit
       /**
        * @brief Static method to log time constant warnings
        *
-       * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed.
+       * @note Guarded by a static std::atomic<bool> flag so the warning is
+       *       printed at most once per model type.
        */
       template <typename scalar_type, typename index_type>
       void Hygov<scalar_type, index_type>::logTimeConstantWarning()
@@ -816,9 +816,11 @@ namespace GridKit
             || Tg_ < TIME_CONSTANT_MINIMUM || Tw_ < TIME_CONSTANT_MINIMUM
             || Tnp_ < TIME_CONSTANT_MINIMUM)
         {
-          static std::once_flag time_constant_warning_flag_;
-          std::call_once(time_constant_warning_flag_,
-                         &logTimeConstantWarning);
+          static std::atomic<bool> time_constant_warning_flag_{false};
+          if (!time_constant_warning_flag_.exchange(true))
+          {
+            logTimeConstantWarning();
+          }
         }
 
         // HYGOV residuals solve explicitly for the state derivatives to preserve
