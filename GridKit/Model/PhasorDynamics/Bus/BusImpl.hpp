@@ -81,7 +81,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::~Bus()
     {
-      // std::cout << "Destroy PQ bus ..." << std::endl;
       if (J_rows_buffer_ != nullptr)
       {
         delete[] J_rows_buffer_;
@@ -173,7 +172,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::initialize()
     {
-      // std::cout << "Initialize Bus..." << std::endl;
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
@@ -204,7 +202,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::evaluateResidual()
     {
-      // std::cout << "Evaluating residual of a PQ bus ...\n";
       auto* f = f_.getData();
 
       f[0] = 0.0;

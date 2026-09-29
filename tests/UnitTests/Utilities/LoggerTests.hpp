@@ -88,9 +88,6 @@ namespace GridKit
         out::summary() << s1;
         out::misc() << s1;
 
-        // std::cout << file.str();
-        // std::cout << answer;
-
         status = (answer == file.str());
 
         return status.report(__func__);
@@ -122,8 +119,6 @@ namespace GridKit
         out::warning() << s2;
         out::summary() << s1;
         out::misc() << s1;
-
-        // std::cout << file.str();
 
         status = (answer == file.str());
 
@@ -158,8 +153,6 @@ namespace GridKit
         out::summary() << s3;
         out::misc() << s1;
 
-        // std::cout << file.str();
-
         status = (answer == file.str());
 
         return status.report(__func__);
@@ -192,8 +185,6 @@ namespace GridKit
         out::warning() << s2;
         out::summary() << s3;
         out::misc() << s4;
-
-        // std::cout << file.str();
 
         status = (answer == file.str());
 

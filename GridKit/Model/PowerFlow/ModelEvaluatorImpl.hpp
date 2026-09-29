@@ -82,13 +82,6 @@ namespace GridKit
       return size_opt_;
     }
 
-    // virtual void updateTime(RealT t, RealT a)
-    // {
-    //     time_ = t;
-    //     alpha_ = a;
-    //     std::cout << "updateTime: t = " << time_ << "\n";
-    // }
-
     virtual void setMaxSteps(IdxT& msa) const
     {
       msa = max_steps_;

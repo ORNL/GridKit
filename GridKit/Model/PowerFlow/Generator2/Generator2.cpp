@@ -161,18 +161,9 @@ namespace GridKit
     return 0;
   }
 
-  // template <class ScalarT, typename IdxT>
-  // int Generator2<ScalarT, IdxT>::evaluateAdjointJacobian()
-  // {
-  //     std::cout << "Evaluate adjoint Jacobian for Gen2..." << std::endl;
-  //     std::cout << "Adjoint Jacobian evaluation not implemented!" << std::endl;
-  //     return 0;
-  // }
-
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
-    // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
     const auto* yB = yB_.getData();
     auto*       gB = gB_.getData();
 

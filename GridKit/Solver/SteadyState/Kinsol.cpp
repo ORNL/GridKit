@@ -113,8 +113,6 @@ namespace AnalysisManager
       N_VConst(1.0, scale_);
       retval = KINSol(solver_, yy_, KIN_LINESEARCH, scale_, scale_);
       checkOutput(retval, "KINSol");
-      // printOutput(tout);
-      // std::cout << "\n";
       return retval;
     }
 

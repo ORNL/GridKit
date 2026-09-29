@@ -445,7 +445,6 @@ namespace GridKit
 
         for (IdxT i = 0; i < x.getSize(); ++i)
         {
-          // std::cout << x->getData("cpu")[i] << "\n";
           if (!isEqual(x.getData(memory::HOST)[i], answer))
           {
             std::cout << std::setprecision(16);

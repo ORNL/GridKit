@@ -118,10 +118,6 @@ namespace GridKit
         >> br.Vmin;  // Minimum voltage magnitude (p.u.)
 
     lr.bus_i = br.bus_i;
-
-    // std::cout << br.str();
-    // logs() << "Read BusData with the following values:\n" << br.str();
-    // return br;
   }
 
   template <typename RealT = double, typename IdxT = int>

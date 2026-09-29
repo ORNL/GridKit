@@ -22,7 +22,6 @@ namespace GridKit
       Q_(data.Qg),
       bus_(bus)
   {
-    // std::cout << "Create a load model with " << size_ << " variables ...\n";
     size_ = 0;
   }
 
@@ -66,7 +65,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int GeneratorPQ<ScalarT, IdxT>::evaluateResidual()
   {
-    // std::cout << "Evaluating load residual ...\n";
     bus_->P() += P_;
     bus_->Q() += Q_;
     if (bus_->size() > 0)

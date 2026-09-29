@@ -150,7 +150,6 @@ namespace AnalysisManager
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
       {
         param[static_cast<size_t>(i)] = x[i];
-        // std::cout << "x[" << i << "] = " << x[i] << "\n";
       }
       model_->param().setDataUpdated();
 
@@ -169,7 +168,6 @@ namespace AnalysisManager
 
       // For now assumes only one forward integrand and multiple optimization parameters.
       g[0] = (integrator_->getIntegral())[0] - x[model_->sizeParams()];
-      // std::cout << "constraint:" << g[0] << std::endl;
       return true;
     }
 
