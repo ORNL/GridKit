@@ -1,5 +1,6 @@
 #include "MultiStageCosimulation.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -10,8 +11,6 @@
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Solver/Dynamic/Interpolation.hpp>
 #include <GridKit/Solver/Dynamic/Rosenbrock.hpp>
-
-#include "GridKit/Solver/Dynamic/Native/FixedStep.hpp"
 
 namespace AnalysisManager
 {
@@ -93,6 +92,8 @@ namespace AnalysisManager
       }
 
       global_size += static_cast<IdxT>(partition_size);
+
+      ida_solvers_[p] = std::make_unique<IdaSolver>(partitions_[p]);
     }
 
     for (size_t stage = 0; stage <= num_stages_; ++stage)
@@ -123,58 +124,6 @@ namespace AnalysisManager
 
     y_.setToZero(memspace_);
     yp_.setToZero(memspace_);
-
-    // for (size_t p = 0; p < num_partitions_; ++p)
-    // {
-    //   auto* partition = partitions_[p];
-
-    //   const auto partition_size = partition->getInternalSize();
-
-    //   linear_workspaces_[p] = std::make_unique<ReSolve::LinAlgWorkspaceCpu>();
-
-    //   resolve_lin_solver_[p] = std::make_unique<ReSolve::SystemSolver>(
-    //       linear_workspaces_[p].get(),
-    //       "klu",
-    //       "klu",
-    //       "klu");
-
-    //   resolve_lin_solver_[p]->initialize();
-
-    //   gridkit_lin_solver_[p] = std::make_unique<GridKitResolveSolver>(*resolve_lin_solver_[p]);
-
-    //   // Error norm
-    //   auto abs_tol = std::make_unique<State>(partition_size);
-    //   abs_tol->allocate(memspace_);
-    //   abs_tol->setToConst(static_cast<ScalarT>(1e-8), memspace_);
-
-    //   typename ErrorNorm::Parameters error_params{
-    //       .abs_tol_ = std::move(abs_tol),
-    //       .rel_tol_ = static_cast<RealT>(1e-6)};
-
-    //   error_norms_[p] = std::make_unique<ErrorNorm>(std::move(error_params));
-
-    //   // Rosenbrock
-    //   solvers_[p] = std::make_unique<RosenbrockIntegrator>(
-    //       RosenbrockIntegrator::Tableau::rodas5p(),
-    //       partition,
-    //       *gridkit_lin_solver_[p],
-    //       vector_handler_,
-    //       error_norms_[p].get(),
-    //       memspace_);
-
-    //   const int err = solvers_[p]->allocate();
-
-    //   if (err != 0)
-    //   {
-    //     return err;
-    //   }
-    //   }
-
-    for (size_t p = 0; p < num_partitions_; ++p)
-    {
-      auto solver     = std::make_unique<IdaSolver>(partitions_[p]);
-      ida_solvers_[p] = std::move(solver);
-    }
 
     return 0;
   }
@@ -238,10 +187,11 @@ namespace AnalysisManager
         std::swap(curr_stages_yp_, next_stages_yp_);
       }
 
-      // std::cout << "End of step: " << t << std::endl;
+      // // std::cout << "End of step: " << t << std::endl;
 
-      // y_.copyFromExternal(*curr_stages_.back(), memspace_);
-      // yp_.copyFromExternal(*curr_stages_yp_.back(), memspace_);
+      y_.copyFromExternal(*curr_stages_y_.back(), memspace_);
+      yp_.copyFromExternal(*curr_stages_yp_.back(), memspace_);
+
       // ZOH(t,
       //     dt);
       // for (size_t partition_idx = 0; partition_idx < num_partitions_; partition_idx++)
@@ -343,19 +293,94 @@ namespace AnalysisManager
   }
 
   template <class ScalarT, typename IdxT>
+  typename MultiStageCosimulation<ScalarT, IdxT>::MergedTimePoints
+  MultiStageCosimulation<ScalarT, IdxT>::mergeTimePoints(
+      const std::vector<ScalarT>& first,
+      const std::vector<ScalarT>& second)
+  {
+    constexpr RealT tolerance = 1e-14;
+
+    MergedTimePoints result;
+
+    result.times.reserve(first.size() + second.size());
+    result.from_first.reserve(first.size() + second.size());
+    result.from_second.reserve(first.size() + second.size());
+
+    size_t first_idx  = 0;
+    size_t second_idx = 0;
+
+    while (first_idx < first.size() && second_idx < second.size())
+    {
+      const RealT first_time  = first[first_idx];
+      const RealT second_time = second[second_idx];
+
+      if (std::abs(first_time - second_time) <= tolerance)
+      {
+        result.times.push_back(first_time);
+        result.from_first.push_back(true);
+        result.from_second.push_back(true);
+
+        ++first_idx;
+        ++second_idx;
+      }
+      else if (first_time < second_time)
+      {
+        result.times.push_back(first_time);
+        result.from_first.push_back(true);
+        result.from_second.push_back(false);
+
+        ++first_idx;
+      }
+      else
+      {
+        result.times.push_back(second_time);
+        result.from_first.push_back(false);
+        result.from_second.push_back(true);
+
+        ++second_idx;
+      }
+    }
+
+    while (first_idx < first.size())
+    {
+      result.times.push_back(first[first_idx]);
+      result.from_first.push_back(true);
+      result.from_second.push_back(false);
+
+      ++first_idx;
+    }
+
+    while (second_idx < second.size())
+    {
+      result.times.push_back(second[second_idx]);
+      result.from_first.push_back(false);
+      result.from_second.push_back(true);
+
+      ++second_idx;
+    }
+
+    return result;
+  }
+
+  template <class ScalarT, typename IdxT>
   int MultiStageCosimulation<ScalarT, IdxT>::partitionStageSolve(size_t curr_stage, size_t next_stage, RealT t0, RealT dt)
   {
     assert(curr_stage >= 1);
     assert(next_stage >= 2);
 
-    const auto curr_stage_output_times = Interpolant::getPhysicalOutputTimes(max(curr_stage, 2), t0, dt);
+    const auto curr_stage_output_times = Interpolant::getPhysicalOutputTimes(curr_stage, t0, dt);
     const auto next_stage_output_times = Interpolant::getPhysicalOutputTimes(next_stage, t0, dt);
+
+    MergedTimePoints output_data = mergeTimePoints(curr_stage_output_times, next_stage_output_times);
+
+    output_data.times.erase(output_data.times.begin());
+    output_data.from_first.erase(output_data.from_first.begin());
+    output_data.from_second.erase(output_data.from_second.begin());
 
     const size_t num_iterations = curr_stage == 1 ? 1 : max_iterations_;
 
     for (size_t iteration = 0; iteration < num_iterations; iteration++)
     {
-#pragma omp parallel for
       for (size_t partition_idx = 0; partition_idx < num_partitions_; partition_idx++)
       {
         auto* partition = partitions_[partition_idx];
@@ -363,7 +388,6 @@ namespace AnalysisManager
         distributeCouplingVariables(partition_idx, curr_stage);
       }
 
-#pragma omp parallel for
       for (size_t partition_idx = 0; partition_idx < num_partitions_; partition_idx++)
       {
         auto* partition = partitions_[partition_idx];
@@ -393,23 +417,30 @@ namespace AnalysisManager
             throw std::runtime_error("Output time mismatch in stage output.");
           }
 
-          if (output_data.from_first[output_idx])
-          {
-            gatherLocalVariables(*curr_stages_y_[curr_stage_idx], *curr_stages_yp_[curr_stage_idx], partition);
-            ++curr_stage_idx;
-          }
-
           const bool is_last_iteration = (iteration == (num_iterations - 1));
 
+          // Non-final iterations: the solve is still provisional. Park the freshly
+          // computed *next-stage* values (from_second schedule) in next_stages_, where
+          // they feed the coupling interpolant on the following pass.
           if (output_data.from_second[output_idx] && is_last_iteration)
           {
-            gatherLocalVariables(*next_stages_y_[next_stage_idx], *next_stages_yp_[next_stage_idx], partition);
+            gatherLocalVariables(*next_stages_y_[next_stage_idx],
+                                 *next_stages_yp_[next_stage_idx],
+                                 partition);
             ++next_stage_idx;
           }
 
-          ++output_idx;
+          // Final iteration: converged values. Commit the *current-stage* values
+          // (from_first schedule) to curr_stages_.
+          if (output_data.from_first[output_idx] && !is_last_iteration)
+          {
+            gatherLocalVariables(*curr_stages_y_[curr_stage_idx],
+                                 *curr_stages_yp_[curr_stage_idx],
+                                 partition);
+            ++curr_stage_idx;
+          }
 
-          return;
+          ++output_idx;
         };
 
         ida_solvers_[partition_idx] = std::make_unique<IdaSolver>(partitions_[partition_idx]);
@@ -522,7 +553,7 @@ namespace AnalysisManager
 
     // solver->setSuppressAlgebraicErrors(true);
     solver->setMaxSteps(5000);
-    solver->setTolerance(1e-7, 1e-7);
+    solver->setTolerance(1e-12, 1e-12);
     solver->configureSimulation();
     solver->getDefaultInitialCondition();
     solver->initializeSimulation(t0, true);
@@ -538,85 +569,6 @@ namespace AnalysisManager
         return retval;
       }
     }
-
-    return 0;
-  }
-
-  template <class ScalarT, typename IdxT>
-  int MultiStageCosimulation<ScalarT, IdxT>::ros_integrate(
-      Subsystem*                        partition,
-      RealT                             t0,
-      RealT                             dt,
-      const std::vector<RealT>&         output_times,
-      const std::function<void(RealT)>& sol_out)
-  {
-    using FixedStep = AnalysisManager::NativeDynamicSolver::FixedStep<RealT>;
-
-    // Linear solver
-    ReSolve::LinAlgWorkspaceCpu linear_workspace;
-
-    ReSolve::SystemSolver resolve_solver(
-        &linear_workspace,
-        "klu",
-        "klu",
-        "klu");
-
-    resolve_solver.initialize();
-
-    GridKit::LinearAlgebra::ResolveSystemSolver<ScalarT, IdxT>
-        linear_solver(resolve_solver);
-
-    // Rosenbrock integrator
-    RosenbrockIntegrator solver(
-        RosenbrockIntegrator::Tableau::rodas5p(),
-        partition,
-        linear_solver,
-        vector_handler_,
-        nullptr,
-        memspace_);
-
-    int retval = solver.allocate();
-
-    if (retval != 0)
-    {
-      return retval;
-    }
-
-    retval = solver.initializeSimulation(t0);
-
-    if (retval != 0)
-    {
-      return retval;
-    }
-
-    std::cout << "\nBefore Rosenbrock: t = " << t0 << '\n';
-    printState("partition y", partition->y());
-
-    // Fixed-step controller
-    FixedStep step_controller;
-
-    typename RosenbrockIntegrator::Parameters params;
-
-    const RealT step_size = dt / 10.0;
-
-    params.starting_step_ = step_size;
-    params.max_steps_ =
-        static_cast<size_t>(std::ceil(dt / step_size)) + 10;
-
-    // Integrate
-    retval = solver.integrate(
-        output_times,
-        step_controller,
-        params,
-        sol_out);
-
-    if (retval != 0)
-    {
-      return retval;
-    }
-
-    std::cout << "\nAfter Rosenbrock: t = " << t0 + dt << '\n';
-    printState("partition y", partition->y());
 
     return 0;
   }

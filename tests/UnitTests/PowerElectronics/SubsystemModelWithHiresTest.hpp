@@ -580,22 +580,21 @@ namespace GridKit
         {
 
           // Test the forcing function mechanism.
-          auto forcing_function = [partition, &y, &yp]([[maybe_unused]] ScalarT t)
+          auto forcing_function = [partition, &y, &yp]([[maybe_unused]] ScalarT t) -> void
           {
-            typename Subsystem::ForcingData forcing_data;
-
-            forcing_data.y.resize(partition->getExternSize());
-            forcing_data.yp.resize(partition->getExternSize());
+            auto* y_data  = partition->getExternalDataY().getData();
+            auto  yp_data = partition->getExternalDataYP().getData();
 
             for (size_t i = 0; i < partition->getExternSize(); ++i)
             {
               const auto global_index = partition->getExternalDataIndices()[i];
 
-              forcing_data.y[i]  = y[global_index];
-              forcing_data.yp[i] = yp[global_index];
+              y_data[i]  = y[global_index];
+              yp_data[i] = yp[global_index];
             }
 
-            return forcing_data;
+            partition->getExternalDataY().setDataUpdated();
+            partition->getExternalDataYP().setDataUpdated();
           };
 
           partition->setForcingFunction(std::move(forcing_function));

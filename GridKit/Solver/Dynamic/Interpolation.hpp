@@ -138,7 +138,7 @@ namespace GridKit
      * @warning Returning a raw pointer allocated with `new` can easily cause memory
      * ownership issues. Consider returning `std::unique_ptr<Vector>` instead.
      */
-    Vector* evaluate(RealT t, Vector& y)
+    void evaluate(RealT t, Vector& y)
     {
       checkReady();
 
@@ -148,27 +148,24 @@ namespace GridKit
 
       if (n == 1)
       {
-        y->copyFromExternal(*node_values_[0], memspace_, memspace_);
-        return y_.get();
+        y.copyFromExternal(*node_values_[0], memspace_, memspace_);
       }
 
       const double              x     = toReferenceTime(t);
       const std::vector<double> basis = interpolationBasis(x);
 
-      y->setToConst(0.0, memspace_);
+      y.setToConst(0.0, memspace_);
 
       for (size_t i = 0; i < n; ++i)
       {
         vector_handler_.axpy(
             basis[i],
             node_values_[i].get(),
-            y.get(),
+            &y,
             memspace_);
       }
 
-      y->setDataUpdated(memspace_);
-
-      return y_.get();
+      y.setDataUpdated(memspace_);
     }
 
     static std::vector<RealT> getPhysicalOutputTimes(size_t num_nodes, RealT t0, RealT dt, NodeType node_type = NodeType::Chebyshev)

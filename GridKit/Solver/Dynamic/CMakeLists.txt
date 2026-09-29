@@ -64,4 +64,33 @@ if(GRIDKIT_ENABLE_RESOLVE)
       GridKit::sparse_matrix)
 endif()
 
+if(GRIDKIT_ENABLE_RESOLVE)
+  gridkit_add_library(
+    MultiStageCosim
+    SOURCES MultiStageCosimulation.cpp
+    HEADERS MultiStageCosimulation.hpp
+    LINK_LIBRARIES
+      PRIVATE
+      ReSolve::ReSolve
+      PUBLIC
+      GridKit::dense_vector
+      PUBLIC
+      GridKit::definitions
+      PUBLIC
+      GridKit::utilities_logger
+      PUBLIC
+      GridKit::sparse_matrix
+      PUBLIC
+      GridKit::rosenbrock
+      PUBLIC
+      GridKit::adaptive_step
+      PUBLIC
+      GridKit::resolve_system_solver
+      PUBLIC
+      GridKit::inf_norm
+      PUBLIC
+      solvers_dyn
+      PUBLIC
+      GridKit::fixed_step)
+endif()
 add_subdirectory(Native)

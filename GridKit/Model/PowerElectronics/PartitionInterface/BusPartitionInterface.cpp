@@ -222,7 +222,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusPartitionInterface<ScalarT, IdxT>::evaluateExternalResidual()
     {
-      std::fill_n(component_f_ext_.get(), component_->getExternSize(), ScalarT{});
+      std::fill_n(component_f_ext_.get(), component_->getExternSize(), ScalarT{0});
 
       updateComponentPointers();
 
@@ -308,6 +308,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusPartitionInterface<ScalarT, IdxT>::updateComponentPointers()
     {
+      component_->updateTime(time_, alpha_);
       size_t internal_index = 0;
       size_t external_index = 0;
 
@@ -363,6 +364,7 @@ namespace GridKit
 
     // Available template instantiations
     template class BusPartitionInterface<double, long int>;
+    template class BusPartitionInterface<double, int>;
     template class BusPartitionInterface<double, size_t>;
     template class BusPartitionInterface<DependencyTracking::Variable, long int>;
     template class BusPartitionInterface<DependencyTracking::Variable, size_t>;

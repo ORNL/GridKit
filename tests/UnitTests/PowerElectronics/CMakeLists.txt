@@ -19,6 +19,18 @@ target_link_libraries(
           GridKit::power_elec_microbusdq
           GridKit::testing)
 
+add_executable(test_power_electronics_cosim_hires runCosimHiresTests.cpp)
+target_link_libraries(
+  test_power_electronics_cosim_hires
+  PRIVATE GridKit::MultiStageCosim
+          GridKit::power_elec_partition_interfaces)
+
+add_executable(test_power_electronics_cosim_dae_test runCosimPartitionedDAETests.cpp)
+target_link_libraries(
+  test_power_electronics_cosim_dae_test
+  PRIVATE GridKit::MultiStageCosim
+          GridKit::power_elec_partition_interfaces)
+
 add_test(NAME PowerElectronicsNodeTest COMMAND $<TARGET_FILE:test_power_electronics_node>)
 add_test(NAME SubsystemModelWithHires COMMAND $<TARGET_FILE:test_subsystem_model_with_hires>)
 add_test(NAME PowerElectronicsComponentCloneTest
