@@ -14,27 +14,38 @@ The composer suppose Jacobian constructions as well.
 Example with two components is as follows.
 
 Component 1:
-```math
-\begin{align}
-   0 = f_1\left(\frac{dy_{1}}{dt}, y_1 , w \right)  & \qquad \text{(Internal Equations Residual)}\\
-   c_1(y_1, w)  & \qquad \text{(External Coupling Term)}\\
-\end{align}
-```
+
+$$
+\begin{aligned}
+0 &= f_1\left(\frac{dy_1}{dt}, y_1, w\right)
+   &\qquad& \text{(Internal Equations Residual)} \\
+  &c_1(y_1,w)
+   &\qquad& \text{(External Coupling Term)}
+\end{aligned}
+$$
+
 Component 2:
-```math
-\begin{align}
-   0 = f_2\left(\frac{dy_{2}}{dt}, y_2 ,w\right)  & \qquad \text{(Internal Equations Residual)}\\
-   c_2(y_2,w)  & \qquad \text{(External Coupling Term)}\\
-\end{align}
-```
+
+$$
+\begin{aligned}
+0 &= f_2\left(\frac{dy_2}{dt}, y_2, w\right)
+   &\qquad& \text{(Internal Equations Residual)} \\
+  &c_2(y_2,w)
+   &\qquad& \text{(External Coupling Term)}
+\end{aligned}
+$$
 
 The composition of components 1 and 2:
-```math
-\begin{align}
-   0 = f_1\left(\frac{dy_{1}}{dt}, y_1 ,w\right)  & \qquad \text{(Internal Equations Residuals)}\\
-   0 = f_2\left(\frac{dy_{2}}{dt}, y_2 ,w\right)  &\\
-   0 = c_1(y_1, w) + c_2(y_2,w)  & \qquad \text{(External Coupling Residuals)}\\
-\end{align}
-```
+
+$$
+\begin{aligned}
+0 &= f_1\left(\frac{dy_1}{dt}, y_1,w\right)
+   &\qquad& \text{(Internal Equations Residuals)} \\
+0 &= f_2\left(\frac{dy_2}{dt}, y_2,w\right)
+   &      & \\
+0 &= c_1(y_1,w) + c_2(y_2,w)
+   &\qquad& \text{(External Coupling Residuals)}
+\end{aligned}
+$$
 
 Note the dimensions of $y$ can be $0$ if there are no internal equations (an example seen in Resistors and MicrogridBus). 
