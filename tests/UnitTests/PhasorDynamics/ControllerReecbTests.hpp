@@ -2571,28 +2571,10 @@ namespace GridKit
         return rowsMatch(reecb.getResidual(), values, "residual", context, tolerance);
       }
 
-      template <size_t size>
-      bool residualsMatch(const ReecbT&                          reecb,
-                          const std::array<VariableValue, size>& values,
-                          const char*                            context   = "",
-                          RealT                                  tolerance = kTol) const
-      {
-        return rowsMatch(reecb.getResidual(), values, "residual", context, tolerance);
-      }
-
       bool stateMatches(const ReecbT&                        reecb,
                         std::initializer_list<VariableValue> values,
                         const char*                          context   = "",
                         RealT                                tolerance = kTol) const
-      {
-        return rowsMatch(reecb.y(), values, "state", context, tolerance);
-      }
-
-      template <size_t size>
-      bool stateMatches(const ReecbT&                          reecb,
-                        const std::array<VariableValue, size>& values,
-                        const char*                            context   = "",
-                        RealT                                  tolerance = kTol) const
       {
         return rowsMatch(reecb.y(), values, "state", context, tolerance);
       }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iomanip>
@@ -1488,14 +1487,6 @@ namespace GridKit
       bool stateMatches(const GastPtiT&                      gastpti,
                         std::initializer_list<VariableValue> values,
                         const char*                          context = "") const
-      {
-        return rowsMatch(gastpti.y(), values, "state", context);
-      }
-
-      template <size_t size>
-      bool stateMatches(const GastPtiT&                        gastpti,
-                        const std::array<VariableValue, size>& values,
-                        const char*                            context = "") const
       {
         return rowsMatch(gastpti.y(), values, "state", context);
       }
