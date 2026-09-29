@@ -188,7 +188,7 @@ namespace GridKit
 
         Fixture<ScalarT> floored(zero_time);
         success *= floored.initialize(1.2);
-        success *= (floored.evaluate() == 0);
+        success *= (floored.esdc1a.evaluateResidual() == 0);
         success *= allResidualsZero(floored.esdc1a);
 
         Log::setVerbosity(previous_verbosity);
@@ -210,7 +210,7 @@ namespace GridKit
         fixture.input(External::vuel)   = -0.4;
         success                        *= fixture.initialize(1.2);
         success                        *= (fixture.esdc1a.tagDifferentiable() == 0);
-        success                        *= (fixture.evaluate() == 0);
+        success                        *= (fixture.esdc1a.evaluateResidual() == 0);
 
         const auto* y  = fixture.esdc1a.y().getData();
         success       *= scalarMatches(y[static_cast<size_t>(Internal::EFDP)], 1.2, "EFDP");
@@ -276,7 +276,7 @@ namespace GridKit
         // references.
         Fixture<ScalarT> unattached(makeData());
         success *= unattached.initialize(1.2);
-        success *= (unattached.evaluate() == 0);
+        success *= (unattached.esdc1a.evaluateResidual() == 0);
         success *= allResidualsZero(unattached.esdc1a);
 
         // Every selector combination must preserve the seeded field voltage
@@ -306,7 +306,7 @@ namespace GridKit
                 continue;
               }
 
-              success *= (scenario.evaluate() == 0);
+              success *= (scenario.esdc1a.evaluateResidual() == 0);
               success *= allResidualsZero(scenario.esdc1a);
               success *= scalarMatches(scenario.efd(), 1.2, "scenario efd preservation");
             }
@@ -452,7 +452,7 @@ namespace GridKit
         zero_boundary.attachAllInputs();
         zero_boundary.input(External::vuel)  = -0.5;
         success                             *= zero_boundary.initialize(0.0);
-        success                             *= (zero_boundary.evaluate() == 0);
+        success                             *= (zero_boundary.esdc1a.evaluateResidual() == 0);
         success                             *= allResidualsZero(zero_boundary.esdc1a);
 
         auto unlimited_data                       = makeData();
@@ -461,7 +461,7 @@ namespace GridKit
         unlimited.attachAllInputs();
         unlimited.input(External::vuel)  = -0.5;
         success                         *= unlimited.initialize(-0.2);
-        success                         *= (unlimited.evaluate() == 0);
+        success                         *= (unlimited.esdc1a.evaluateResidual() == 0);
         success                         *= allResidualsZero(unlimited.esdc1a);
 
         // A depressed speed input rescales the seed without rejection.
@@ -471,7 +471,7 @@ namespace GridKit
         speed_fixture.attachAllInputs();
         speed_fixture.input(External::speed)  = -0.5;
         success                              *= speed_fixture.initialize(1.2);
-        success                              *= (speed_fixture.evaluate() == 0);
+        success                              *= (speed_fixture.esdc1a.evaluateResidual() == 0);
         success                              *= allResidualsZero(speed_fixture.esdc1a);
         success                              *= scalarMatches(
             speed_fixture.esdc1a.y().getData()[static_cast<size_t>(Internal::EFDP)],
@@ -483,7 +483,7 @@ namespace GridKit
         Fixture<ScalarT> near_gate(makeData());
         near_gate.attachAllInputs();
         success *= near_gate.initialize(1.2);
-        success *= (near_gate.evaluate() == 0);
+        success *= (near_gate.esdc1a.evaluateResidual() == 0);
         success *= allResidualsZero(near_gate.esdc1a);
 
         // Summing-junction routing removes the gate constraint entirely.
@@ -493,7 +493,7 @@ namespace GridKit
         junction.attachAllInputs();
         junction.input(External::vuel)  = 0.7;
         success                        *= junction.initialize(1.2);
-        success                        *= (junction.evaluate() == 0);
+        success                        *= (junction.esdc1a.evaluateResidual() == 0);
         success                        *= allResidualsZero(junction.esdc1a);
 
         Log::setVerbosity(previous_verbosity);
@@ -510,7 +510,7 @@ namespace GridKit
         success *= fixture.initialize(1.2);
         setAnswerKeyInputs(fixture);
         setAnswerKeyState(fixture.esdc1a);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.esdc1a.evaluateResidual() == 0);
 
         const std::array<InternalRow, Utilities::enum_size<Internal>()> expected{{
             {Internal::EFDP, 0.04},
@@ -546,14 +546,14 @@ namespace GridKit
         // Transducer: the sensed voltage relaxes toward the bus magnitude.
         setState(fixture.esdc1a, {{Internal::VC, 1.1}});
         setDerivative(fixture.esdc1a, {{Internal::VC, 0.2}});
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.esdc1a.evaluateResidual() == 0);
         success *= residualsMatch(fixture.esdc1a, {{Internal::VC, -5.2}}, "voltage transducer");
 
         // The field-voltage state and the stabilizing feedback share the
         // (VR - VFE) drive.
         setState(fixture.esdc1a, {{Internal::VR, 0.6}, {Internal::VFE, 0.2}, {Internal::VF, 0.1}});
         setDerivative(fixture.esdc1a, {{Internal::EFDP, 0.1}, {Internal::VF, 0.05}});
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.esdc1a.evaluateResidual() == 0);
         success *= residualsMatch(fixture.esdc1a,
                                   {{Internal::EFDP, 0.7}, {Internal::VF, -19.0 / 140.0}},
                                   "field-voltage and feedback drive");
@@ -566,7 +566,7 @@ namespace GridKit
         summing.input(External::vs)    = 0.05;
         summing.input(External::vuel)  = 0.2;
         setState(summing.esdc1a, {{Internal::VC, 0.9}, {Internal::VF, 0.02}, {Internal::EV, 0.1}});
-        success *= (summing.evaluate() == 0);
+        success *= (summing.esdc1a.evaluateResidual() == 0);
         success *= residualsMatch(summing.esdc1a, {{Internal::EV, 0.13}}, "summing junction");
 
         // UEL >= 2 routes the UEL input through the summing junction and
@@ -585,7 +585,7 @@ namespace GridKit
                   {Internal::EV, 0.1},
                   {Internal::VLL, 0.5},
                   {Internal::VHV, 0.2}});
-        success *= (junction.evaluate() == 0);
+        success *= (junction.esdc1a.evaluateResidual() == 0);
         success *= residualsMatch(junction.esdc1a,
                                   {{Internal::EV, 0.33}, {Internal::VHV, 0.3}},
                                   "summing-junction UEL routing");
@@ -598,7 +598,7 @@ namespace GridKit
         success *= lead_lag.initialize(1.2);
         setState(lead_lag.esdc1a, {{Internal::XLL, 0.4}, {Internal::EV, 0.7}, {Internal::VLL, 0.5}});
         setDerivative(lead_lag.esdc1a, {{Internal::XLL, 0.0}});
-        success *= (lead_lag.evaluate() == 0);
+        success *= (lead_lag.esdc1a.evaluateResidual() == 0);
         success *= residualsMatch(lead_lag.esdc1a,
                                   {{Internal::XLL, 0.6}, {Internal::VLL, 0.02}},
                                   "lead-lag");
@@ -624,7 +624,7 @@ namespace GridKit
         {
           setState(fixture.esdc1a, {{Internal::VR, test_case.vr}, {Internal::VHV, test_case.vhv}});
           setDerivative(fixture.esdc1a, {{Internal::VR, 0.0}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.esdc1a.evaluateResidual() == 0);
           success *= residualsMatch(fixture.esdc1a,
                                     {{Internal::VR, test_case.expected}},
                                     test_case.label);
@@ -660,7 +660,7 @@ namespace GridKit
         {
           gate.input(External::vuel) = test_case.vuel;
           setState(gate.esdc1a, {{Internal::VLL, 0.5}, {Internal::VHV, 0.2}});
-          success *= (gate.evaluate() == 0);
+          success *= (gate.esdc1a.evaluateResidual() == 0);
           success *= residualsMatch(gate.esdc1a, {{Internal::VHV, test_case.expected}}, test_case.label);
         }
 
@@ -710,7 +710,7 @@ namespace GridKit
             setState(saturation.esdc1a,
                      {{Internal::EFDP, evaluation.efdp},
                       {Internal::SE, evaluation.se}});
-            success *= (saturation.evaluate() == 0);
+            success *= (saturation.esdc1a.evaluateResidual() == 0);
             success *= residualsMatch(saturation.esdc1a,
                                       {{Internal::SE, evaluation.expected}},
                                       test_case.label);
@@ -724,7 +724,7 @@ namespace GridKit
         disabled.attachAllInputs();
         success *= disabled.initialize(1.2);
         setState(disabled.esdc1a, {{Internal::EFDP, 2.0}, {Internal::SE, 0.05}});
-        success *= (disabled.evaluate() == 0);
+        success *= (disabled.esdc1a.evaluateResidual() == 0);
         success *= residualsMatch(disabled.esdc1a, {{Internal::SE, -0.05}}, "saturation disabled");
 
         // The field-voltage-state lower limit blocks outward motion, admits
@@ -758,7 +758,7 @@ namespace GridKit
                     {Internal::VR, test_case.vr},
                     {Internal::VFE, 0.0}});
           setDerivative(limit.esdc1a, {{Internal::EFDP, 0.0}});
-          success *= (limit.evaluate() == 0);
+          success *= (limit.esdc1a.evaluateResidual() == 0);
           success *= residualsMatch(limit.esdc1a,
                                     {{Internal::EFDP, test_case.expected}},
                                     test_case.label);
@@ -780,7 +780,7 @@ namespace GridKit
           success                        *= feedback.initialize(1.2);
           setState(feedback.esdc1a,
                    {{Internal::EFDP, 1.0}, {Internal::SE, 0.0}, {Internal::VFE, 0.0}});
-          success *= (feedback.evaluate() == 0);
+          success *= (feedback.esdc1a.evaluateResidual() == 0);
           success *= residualsMatch(feedback.esdc1a,
                                     {{Internal::VFE, -0.2}},
                                     enabled ? "feedback with lower limit enabled"
@@ -799,7 +799,7 @@ namespace GridKit
                    {{Internal::EFDP, 0.0}, {Internal::VR, -0.1}, {Internal::VFE, 0.0}});
           setDerivative(transition.esdc1a, {{Internal::EFDP, 0.0}});
           numberVariables(transition);
-          success *= (transition.evaluate() == 0);
+          success *= (transition.esdc1a.evaluateResidual() == 0);
 
           const auto& dependencies =
               transition.esdc1a.getResidual().getData()[static_cast<size_t>(Internal::EFDP)].getDependencies();
@@ -826,7 +826,7 @@ namespace GridKit
           success                      *= speed.initialize(1.2);
           speed.input(External::speed)  = 0.05;
           setState(speed.esdc1a, {{Internal::EFDP, 1.2}, {Internal::EFD, 1.2}});
-          success *= (speed.evaluate() == 0);
+          success *= (speed.esdc1a.evaluateResidual() == 0);
           success *= residualsMatch(speed.esdc1a,
                                     {{Internal::EFD, expected}},
                                     enabled ? "speed multiplier enabled"
@@ -964,11 +964,6 @@ namespace GridKit
             return false;
           }
           return true;
-        }
-
-        int evaluate()
-        {
-          return esdc1a.evaluateResidual();
         }
 
         T efd() const
@@ -1140,11 +1135,11 @@ namespace GridKit
           return false;
         }
 
-        if (implicit_defaults.evaluate() != 0)
+        if (implicit_defaults.esdc1a.evaluateResidual() != 0)
         {
           success = false;
         }
-        if (explicit_defaults.evaluate() != 0)
+        if (explicit_defaults.esdc1a.evaluateResidual() != 0)
         {
           success = false;
         }
@@ -1171,11 +1166,11 @@ namespace GridKit
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.esdc1a);
         setAnswerKeyState(explicit_defaults.esdc1a);
-        if (implicit_defaults.evaluate() != 0)
+        if (implicit_defaults.esdc1a.evaluateResidual() != 0)
         {
           success = false;
         }
-        if (explicit_defaults.evaluate() != 0)
+        if (explicit_defaults.esdc1a.evaluateResidual() != 0)
         {
           success = false;
         }
@@ -1481,7 +1476,7 @@ namespace GridKit
         setAnswerKeyState(fixture.esdc1a);
         numberVariables(fixture);
         fixture.esdc1a.updateTime(0.0, 1.0);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.esdc1a.evaluateResidual() == 0);
         success *= (fixture.esdc1a.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.esdc1a.getCsrJacobian());
@@ -1504,7 +1499,7 @@ namespace GridKit
         fixture.input(External::vuel) = kJacobianVuel;
         setAnswerKeyState(fixture.esdc1a);
         fixture.esdc1a.updateTime(0.0, 1.0);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.esdc1a.evaluateResidual() == 0);
         success *= (fixture.esdc1a.evaluateJacobian() == 0);
         success *= (fixture.esdc1a.constructCsr() == 0);
 

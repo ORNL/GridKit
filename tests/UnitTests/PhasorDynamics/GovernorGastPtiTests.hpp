@@ -201,7 +201,7 @@ namespace GridKit
                     {Internal::XFLOW, 0.4},
                     {Internal::XTEMP, 0.399},
                     {Internal::VLV, 0.402}});
-          success *= (time_fixture.evaluate() == 0);
+          success *= (time_fixture.gastpti.evaluateResidual() == 0);
           success *= residualsMatch(
               time_fixture.gastpti,
               {{Internal::XVALVE, test_case.expected_residual},
@@ -228,7 +228,7 @@ namespace GridKit
         fixture.input(index(External::pref))  = 99.0; // stale value the publication must replace
         success                              *= fixture.initialize(0.4);
         success                              *= (fixture.gastpti.tagDifferentiable() == 0);
-        success                              *= (fixture.evaluate() == 0);
+        success                              *= (fixture.gastpti.evaluateResidual() == 0);
 
         const auto* y  = fixture.gastpti.y().getData();
         success       *= scalarMatches(y[index(Internal::XVALVE)], 0.8, "XVALVE on component base");
@@ -294,14 +294,14 @@ namespace GridKit
         // A system-base reference step lands on the droop row scaled by the
         // base ratio.
         fixture.input(index(External::pref))  = 0.5; // the published 0.4 plus a 0.1 step
-        success                              *= (fixture.evaluate() == 0);
+        success                              *= (fixture.gastpti.evaluateResidual() == 0);
         success                              *= residualsMatch(fixture.gastpti,
                                                                {{Internal::VLOAD, 0.01}},
                                   "reference step on the component base");
 
         // GridKit deliberately leaves references above At uncapped.
         fixture.input(index(External::pref))  = 1.1; // 2.2 on component base; At = 2.0
-        success                              *= (fixture.evaluate() == 0);
+        success                              *= (fixture.gastpti.evaluateResidual() == 0);
         success                              *= residualsMatch(fixture.gastpti,
                                                                {{Internal::VLOAD, 0.07}},
                                   "uncapped reference above At");
@@ -310,7 +310,7 @@ namespace GridKit
         // initialize(), so the same steady state holds without a controller.
         Fixture<ScalarT> fallback(data);
         success *= fallback.initialize(0.4);
-        success *= (fallback.evaluate() == 0);
+        success *= (fallback.gastpti.evaluateResidual() == 0);
         success *= allResidualsZero(fallback.gastpti);
 
         constexpr RealT initial_pmech       = 0.4;
@@ -352,7 +352,7 @@ namespace GridKit
           success                                     *= scalarMatches(speed_fixture.input(index(External::pref)),
                                    pref,
                                    "signed-speed pref publication");
-          success                                     *= (speed_fixture.evaluate() == 0);
+          success                                     *= (speed_fixture.gastpti.evaluateResidual() == 0);
           success                                     *= allResidualsZero(speed_fixture.gastpti);
         }
 
@@ -466,7 +466,7 @@ namespace GridKit
         success *= scalarPreserved(over_rated.pmech(),
                                    0.6,
                                    "preserved over-rated pmech seed");
-        success *= (over_rated.evaluate() == 0);
+        success *= (over_rated.gastpti.evaluateResidual() == 0);
         success *= allResidualsZero(over_rated.gastpti);
 
         // A failed reinitialization must preserve the last committed effective
@@ -502,7 +502,7 @@ namespace GridKit
                  {{Internal::XVALVE, upper_boundary},
                   {Internal::VLV, upper_boundary + boundary_command}});
         setDerivative(reinitialize.gastpti, {{Internal::XVALVE, 0.0}});
-        success *= (reinitialize.evaluate() == 0);
+        success *= (reinitialize.gastpti.evaluateResidual() == 0);
         const RealT expected_boundary_response =
             boundary_weight * boundary_command / valve_time_constant;
         success *= residualsMatch(reinitialize.gastpti,
@@ -538,7 +538,7 @@ namespace GridKit
                                    {Internal::VTEMP, test_case.vtemp},
                                    {Internal::PMECH, 0.4}},
                                   test_case.label);
-          success *= (equal_limits.evaluate() == 0);
+          success *= (equal_limits.gastpti.evaluateResidual() == 0);
           success *= allResidualsZero(equal_limits.gastpti);
         }
 
@@ -549,7 +549,7 @@ namespace GridKit
         fallback_reinitialize.seedPmech(1.0);
         success *= (fallback_reinitialize.gastpti.initialize() != 0);
         fallback_reinitialize.seedPmech(0.4);
-        success *= (fallback_reinitialize.evaluate() == 0);
+        success *= (fallback_reinitialize.gastpti.evaluateResidual() == 0);
         success *= allResidualsZero(fallback_reinitialize.gastpti);
 
         // A zero mechanical-power seed stays admissible.
@@ -559,7 +559,7 @@ namespace GridKit
         success *= stateMatches(zero_seed.gastpti,
                                 {{Internal::XFLOW, 0.0}, {Internal::VTEMP, 2.52}},
                                 "zero seed");
-        success *= (zero_seed.evaluate() == 0);
+        success *= (zero_seed.gastpti.evaluateResidual() == 0);
         success *= allResidualsZero(zero_seed.gastpti);
 
         auto negative_data                     = makeResidualData();
@@ -572,7 +572,7 @@ namespace GridKit
                                  {Internal::VLOAD, -0.2},
                                  {Internal::PMECH, -0.1}},
                                 "negative finite dispatch");
-        success *= (negative_seed.evaluate() == 0);
+        success *= (negative_seed.gastpti.evaluateResidual() == 0);
         success *= allResidualsZero(negative_seed.gastpti);
 
         Log::setVerbosity(previous_verbosity);
@@ -613,7 +613,7 @@ namespace GridKit
           std::cout << "GASTPTI near-gate initialization selected the wrong demand side\n";
           success = false;
         }
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.gastpti.evaluateResidual() == 0);
         success *= allResidualsZero(fixture.gastpti);
 
         // A very large but finite temperature margin must not erase the
@@ -629,7 +629,7 @@ namespace GridKit
                                 {{Internal::VLOAD, 0.8},
                                  {Internal::VLV, 0.8}},
                                 "large finite temperature margin");
-        success *= (large_margin.evaluate() == 0);
+        success *= (large_margin.gastpti.evaluateResidual() == 0);
         success *= allResidualsZero(large_margin.gastpti);
 
         return success.report(__func__);
@@ -647,7 +647,7 @@ namespace GridKit
 
         setAnswerKeyInputs(fixture);
         setAnswerKeyState(fixture.gastpti);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.gastpti.evaluateResidual() == 0);
 
         // The state is chosen so every documented equation has a readable answer.
         const std::array<VariableValue, Utilities::enum_size<Internal>()> expected{{
@@ -694,7 +694,7 @@ namespace GridKit
           setState(antiwindup.gastpti,
                    {{Internal::XVALVE, test_case.xvalve}, {Internal::VLV, test_case.vlv}});
           setDerivative(antiwindup.gastpti, {{Internal::XVALVE, 0.0}});
-          success *= (antiwindup.evaluate() == 0);
+          success *= (antiwindup.gastpti.evaluateResidual() == 0);
           success *= residualsMatch(antiwindup.gastpti,
                                     {{Internal::XVALVE, test_case.expected}},
                                     test_case.label);
@@ -705,7 +705,7 @@ namespace GridKit
         speed_step.attachAllInputs();
         success                                  *= speed_step.initialize(0.4);
         speed_step.input(index(External::speed))  = 0.05;
-        success                                  *= (speed_step.evaluate() == 0);
+        success                                  *= (speed_step.gastpti.evaluateResidual() == 0);
         success                                  *= residualsMatch(speed_step.gastpti,
                                                                    {{Internal::VLOAD, -0.05},
                                                                     {Internal::PMECH, -0.006}},
@@ -749,7 +749,7 @@ namespace GridKit
                     {Internal::VLV, boundary + test_case.command}});
           setDerivative(response.gastpti,
                         {{Internal::XVALVE, ZERO<RealT>}});
-          success *= (response.evaluate() == 0);
+          success *= (response.gastpti.evaluateResidual() == 0);
 
           const RealT expected =
               boundary_weight * test_case.command / valve_time_constant;
@@ -791,7 +791,7 @@ namespace GridKit
                    {{Internal::VLOAD, test_case.vload},
                     {Internal::VTEMP, test_case.vtemp},
                     {Internal::VLV, 0.0}});
-          success *= (gate.evaluate() == 0);
+          success *= (gate.gastpti.evaluateResidual() == 0);
           const RealT expected =
               static_cast<RealT>(Math::min(test_case.vload, test_case.vtemp));
           success *= residualsMatch(gate.gastpti,
@@ -805,7 +805,7 @@ namespace GridKit
         success *= feedback.initialize(0.4);
         setState(feedback.gastpti,
                  {{Internal::XTEMP, 0.9}, {Internal::VTEMP, 1.1}});
-        success *= (feedback.evaluate() == 0);
+        success *= (feedback.gastpti.evaluateResidual() == 0);
         success *= residualsMatch(feedback.gastpti,
                                   {{Internal::VTEMP, 1.06}},
                                   "temperature feedback");
@@ -820,7 +820,7 @@ namespace GridKit
                   {Internal::VTEMP, 0.9},
                   {Internal::VLV, 0.7}});
         numberVariables(selector);
-        success *= (selector.evaluate() == 0);
+        success *= (selector.gastpti.evaluateResidual() == 0);
 
         const DependencyTracking::Variable::DependencyMap expected{
             {2 * index(Internal::VLOAD), 0.5}, // @todo Remove these
@@ -1040,11 +1040,6 @@ namespace GridKit
           return true;
         }
 
-        int evaluate()
-        {
-          return gastpti.evaluateResidual();
-        }
-
         T pmech() const
         {
           return pmech_node_.read();
@@ -1178,11 +1173,11 @@ namespace GridKit
           return false;
         }
 
-        if (implicit_defaults.evaluate() != 0)
+        if (implicit_defaults.gastpti.evaluateResidual() != 0)
         {
           success = false;
         }
-        if (explicit_defaults.evaluate() != 0)
+        if (explicit_defaults.gastpti.evaluateResidual() != 0)
         {
           success = false;
         }
@@ -1209,11 +1204,11 @@ namespace GridKit
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.gastpti);
         setAnswerKeyState(explicit_defaults.gastpti);
-        if (implicit_defaults.evaluate() != 0)
+        if (implicit_defaults.gastpti.evaluateResidual() != 0)
         {
           success = false;
         }
-        if (explicit_defaults.evaluate() != 0)
+        if (explicit_defaults.gastpti.evaluateResidual() != 0)
         {
           success = false;
         }
@@ -1645,7 +1640,7 @@ namespace GridKit
         setState(fixture.gastpti, overrides);
         numberVariables(fixture);
         fixture.gastpti.updateTime(0.0, 1.0);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.gastpti.evaluateResidual() == 0);
         success *= (fixture.gastpti.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.gastpti.getCsrJacobian());
@@ -1665,7 +1660,7 @@ namespace GridKit
         setAnswerKeyState(fixture.gastpti);
         setState(fixture.gastpti, overrides);
         fixture.gastpti.updateTime(0.0, 1.0);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.gastpti.evaluateResidual() == 0);
         success *= (fixture.gastpti.evaluateJacobian() == 0);
         success *= (fixture.gastpti.constructCsr() == 0);
 

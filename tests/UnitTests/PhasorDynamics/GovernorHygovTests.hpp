@@ -231,7 +231,7 @@ namespace GridKit
                                  {Params::Tw, 0.0},
                                  {Params::Tnp, 0.0}});
         success *= floors.initialize(0.4);
-        success *= (floors.evaluate() == 0);
+        success *= (floors.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(floors.hygov);
 
         Log::setVerbosity(previous_verbosity);
@@ -251,7 +251,7 @@ namespace GridKit
         fixture.input(External::pref)  = 99.0; // stale value the publication must replace
         success                       *= fixture.initialize(0.4);
         success                       *= (fixture.hygov.tagDifferentiable() == 0);
-        success                       *= (fixture.evaluate() == 0);
+        success                       *= (fixture.hygov.evaluateResidual() == 0);
 
         const auto* y  = fixture.hygov.y().getData();
         success       *= scalarMatches(y[static_cast<size_t>(Internal::XF)], 0.0, "XF at rest");
@@ -322,7 +322,7 @@ namespace GridKit
         // A system-base reference step lands on the governor error scaled by
         // the base ratio.
         fixture.input(External::pref)  = 0.1025; // the published 0.0025 plus a 0.1 step
-        success                       *= (fixture.evaluate() == 0);
+        success                       *= (fixture.hygov.evaluateResidual() == 0);
         success                       *= residualsMatch(fixture.hygov,
                                                         {{Internal::EF, 0.2}},
                                   "reference step on the component base");
@@ -331,7 +331,7 @@ namespace GridKit
         // initialize(), so the same steady state holds without a controller.
         Fixture<ScalarT> fallback(makeData(), {{Params::Trate, 50.0}});
         success *= fallback.initialize(0.4);
-        success *= (fallback.evaluate() == 0);
+        success *= (fallback.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(fallback.hygov);
 
         return success.report(__func__);
@@ -390,7 +390,7 @@ namespace GridKit
         success *= scalarMatches(effective_fixture.input(External::pref),
                                  0.0009,
                                  "published pref");
-        success *= (effective_fixture.evaluate() == 0);
+        success *= (effective_fixture.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(effective_fixture.hygov);
 
         struct ResponseLimitCase
@@ -424,7 +424,7 @@ namespace GridKit
           success *= stateMatches(fixture.hygov,
                                   {{Internal::G, gate}, {Internal::H, 1.2}},
                                   test_case.label);
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.hygov.evaluateResidual() == 0);
           success *= allResidualsZero(fixture.hygov);
 
           // The effective response bound admits an outward rate between the
@@ -433,7 +433,7 @@ namespace GridKit
                    {{Internal::C, 0.5 * (test_case.limit + gate)},
                     {Internal::RC, test_case.rate}});
           setDerivative(fixture.hygov, {{Internal::C, 0.0}});
-          success                   *= (fixture.evaluate() == 0);
+          success                   *= (fixture.hygov.evaluateResidual() == 0);
           const RealT response_rate  = static_cast<RealT>(
               fixture.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)]);
           const bool rate_is_admitted = test_case.rate > 0.0
@@ -458,13 +458,13 @@ namespace GridKit
                                  0.0009,
                                  "preserved pref");
         effective_fixture.input(External::speed)  = 0.0;
-        success                                  *= (effective_fixture.evaluate() == 0);
+        success                                  *= (effective_fixture.hygov.evaluateResidual() == 0);
         success                                  *= allResidualsZero(effective_fixture.hygov);
 
         setState(effective_fixture.hygov,
                  {{Internal::C, 0.75}, {Internal::RC, 0.2}});
         setDerivative(effective_fixture.hygov, {{Internal::C, 0.0}});
-        success                    *= (effective_fixture.evaluate() == 0);
+        success                    *= (effective_fixture.hygov.evaluateResidual() == 0);
         const RealT preserved_rate  = static_cast<RealT>(
             effective_fixture.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)]);
         if (!(preserved_rate > 0.19))
@@ -480,13 +480,13 @@ namespace GridKit
         success *= stateMatches(effective_fixture.hygov,
                                 {{Internal::H, 1.0}},
                                 "configured dam head after reinitialization");
-        success *= (effective_fixture.evaluate() == 0);
+        success *= (effective_fixture.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(effective_fixture.hygov);
 
         setState(effective_fixture.hygov,
                  {{Internal::C, 0.75}, {Internal::RC, 0.2}});
         setDerivative(effective_fixture.hygov, {{Internal::C, 0.0}});
-        success *= (effective_fixture.evaluate() == 0);
+        success *= (effective_fixture.hygov.evaluateResidual() == 0);
         success *= scalarMatches(
             static_cast<RealT>(effective_fixture.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)]),
             0.0,
@@ -523,7 +523,7 @@ namespace GridKit
             zero_power_fixture.hygov,
             {{Internal::C, 0.09999999999984271}, {Internal::G, 0.09999999999984271}},
             "zero mechanical power");
-        success *= (zero_power_fixture.evaluate() == 0);
+        success *= (zero_power_fixture.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(zero_power_fixture.hygov);
 
         // The smooth identity curve leaves a ln(2)/MU knee at each end, so
@@ -541,7 +541,7 @@ namespace GridKit
         success *= scalarMatches(lower_edge.pmech(),
                                  p_min - 0.5 * kTol,
                                  "clipped pmech value");
-        success *= (lower_edge.evaluate() == 0);
+        success *= (lower_edge.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(lower_edge.hygov);
 
         Fixture<ScalarT> effective_edge(makeData());
@@ -556,7 +556,7 @@ namespace GridKit
           std::cout << "effective head was not raised above configured Hdam\n";
           success = false;
         }
-        success *= (effective_edge.evaluate() == 0);
+        success *= (effective_edge.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(effective_edge.hygov);
 
         success *= initializationRejectedAtomically(
@@ -643,7 +643,7 @@ namespace GridKit
           Fixture<ScalarT> fixture(makeResidualData());
           success *= fixture.initialize(seed.pmech);
           success *= stateMatches(fixture.hygov, {{Internal::G, seed.gate}}, seed.label);
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.hygov.evaluateResidual() == 0);
           success *= allResidualsZero(fixture.hygov);
         }
 
@@ -661,7 +661,7 @@ namespace GridKit
         success *= fixture.initialize(0.4);
         setAnswerKeyInputs(fixture);
         setAnswerKeyState(fixture.hygov);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.hygov.evaluateResidual() == 0);
 
         const std::array<InternalRow, Utilities::enum_size<Internal>()> expected{{
             {Internal::XN, -0.07785714285714286},
@@ -765,7 +765,7 @@ namespace GridKit
           setState(blocked.hygov, {{Internal::C, 1.2}, {Internal::RC, 0.2}});
           setDerivative(blocked.hygov, {{Internal::C, 0.0}});
           numberVariables(blocked);
-          success *= (blocked.evaluate() == 0);
+          success *= (blocked.hygov.evaluateResidual() == 0);
 
           const auto& dependencies =
               blocked.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)].getDependencies();
@@ -846,7 +846,7 @@ namespace GridKit
                                  0.015000004184348527,
                                  "nonidentity-curve published pref");
         success *= scalarMatches(curve_fixture.pmech(), 0.33761676, "preserved pmech value");
-        success *= (curve_fixture.evaluate() == 0);
+        success *= (curve_fixture.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(curve_fixture.hygov);
 
         // A flat source-curve segment must initialize to a gate on that segment.
@@ -870,7 +870,7 @@ namespace GridKit
                     << ", " << flat_gate_maximum << "]\n";
           success = false;
         }
-        success *= (flat_fixture.evaluate() == 0);
+        success *= (flat_fixture.hygov.evaluateResidual() == 0);
         success *= allResidualsZero(flat_fixture.hygov);
 
         return success.report(__func__);
@@ -1031,11 +1031,6 @@ namespace GridKit
             return false;
           }
           return true;
-        }
-
-        int evaluate()
-        {
-          return hygov.evaluateResidual();
         }
 
         T pmech() const
@@ -1221,11 +1216,11 @@ namespace GridKit
           return false;
         }
 
-        if (implicit_defaults.evaluate() != 0)
+        if (implicit_defaults.hygov.evaluateResidual() != 0)
         {
           success = false;
         }
-        if (explicit_defaults.evaluate() != 0)
+        if (explicit_defaults.hygov.evaluateResidual() != 0)
         {
           success = false;
         }
@@ -1252,11 +1247,11 @@ namespace GridKit
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.hygov);
         setAnswerKeyState(explicit_defaults.hygov);
-        if (implicit_defaults.evaluate() != 0)
+        if (implicit_defaults.hygov.evaluateResidual() != 0)
         {
           success = false;
         }
-        if (explicit_defaults.evaluate() != 0)
+        if (explicit_defaults.hygov.evaluateResidual() != 0)
         {
           success = false;
         }
@@ -1442,7 +1437,7 @@ namespace GridKit
           }
           setState(fixture.hygov, test_case.state);
           setDerivative(fixture.hygov, test_case.derivative);
-          if (fixture.evaluate() != 0)
+          if (fixture.hygov.evaluateResidual() != 0)
           {
             success = false;
           }
@@ -1611,7 +1606,7 @@ namespace GridKit
         setState(fixture.hygov, {{Internal::G, gate}});
         numberVariables(fixture);
         fixture.hygov.updateTime(0.0, 1.0);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.hygov.evaluateResidual() == 0);
         success *= (fixture.hygov.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.hygov.getCsrJacobian());
@@ -1629,7 +1624,7 @@ namespace GridKit
         setAnswerKeyState(fixture.hygov);
         setState(fixture.hygov, {{Internal::G, gate}});
         fixture.hygov.updateTime(0.0, 1.0);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.hygov.evaluateResidual() == 0);
         success *= (fixture.hygov.evaluateJacobian() == 0);
         success *= (fixture.hygov.constructCsr() == 0);
 

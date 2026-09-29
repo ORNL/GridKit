@@ -247,13 +247,13 @@ namespace GridKit
 
         Fixture<ScalarT> floored(floor_data);
         success *= floored.initialize(kInitialIqcmd, kInitialIpcmd);
-        success *= (floored.evaluate() == 0);
+        success *= (floored.reecb.evaluateResidual() == 0);
         success *= allResidualsWithinInitTolerance(floored.reecb);
 
         // Each floored lag turns a half-unit state offset into a rate of 500,
         // and saturates the active-power ramp limiter.
         setState(floored.reecb, {{Vars::VMEAS, 0.5}});
-        success *= (floored.evaluate() == 0);
+        success *= (floored.reecb.evaluateResidual() == 0);
         success *= residualsMatch(floored.reecb,
                                   {{Vars::VMEAS, 500.0}},
                                   "floored voltage filter");
@@ -263,7 +263,7 @@ namespace GridKit
                   {Vars::PMEAS, 1.0},
                   {Vars::QV, 1.0},
                   {Vars::PORD, 1.0}});
-        success *= (floored.evaluate() == 0);
+        success *= (floored.reecb.evaluateResidual() == 0);
         success *= residualsMatch(floored.reecb,
                                   {{Vars::PMEAS, 500.0},
                                    {Vars::QV, 500.0},
@@ -272,7 +272,7 @@ namespace GridKit
 
         // The algebraic slew row supplies the differential order row.
         setState(floored.reecb, {{Vars::RPORD, 1.0}});
-        success *= (floored.evaluate() == 0);
+        success *= (floored.reecb.evaluateResidual() == 0);
         success *= residualsMatch(floored.reecb,
                                   {{Vars::PORD, 1.0}, {Vars::RPORD, 0.0}},
                                   "floored active-power order rate");
@@ -292,7 +292,7 @@ namespace GridKit
         fixture.input(Ext::pe)    = kInitialIpcmd;
         fixture.input(Ext::qgen)  = kInitialIqcmd;
         success                  *= fixture.initialize(kInitialIqcmd, kInitialIpcmd);
-        success                  *= (fixture.evaluate() == 0);
+        success                  *= (fixture.reecb.evaluateResidual() == 0);
 
         success *= stateMatches(fixture.reecb,
                                 {{Vars::VMEAS, 1.0},
@@ -350,7 +350,7 @@ namespace GridKit
         // Unassigned command outputs keep the commands in the model vector.
         Fixture<ScalarT> latched(makeData(), 1.0, 0.0, kSystemBaseVa, false);
         success *= latched.initialize(kInitialIqcmd, kInitialIpcmd);
-        success *= (latched.evaluate() == 0);
+        success *= (latched.reecb.evaluateResidual() == 0);
         success *= scalarPreserved(latched.iqcmd(), kInitialIqcmd, "unassigned iqcmd");
         success *= scalarPreserved(latched.ipcmd(), kInitialIpcmd, "unassigned ipcmd");
         success *= allResidualsWithinInitTolerance(latched.reecb);
@@ -379,29 +379,29 @@ namespace GridKit
         pord_above.parameters[Params::Pmax] = 1.0;
         Fixture<ScalarT> adjusted_pmax(pord_above);
         success *= adjusted_pmax.initialize(0.75, 0.75);
-        success *= (adjusted_pmax.evaluate() == 0);
+        success *= (adjusted_pmax.reecb.evaluateResidual() == 0);
         success *= stateMatches(adjusted_pmax.reecb, {{Vars::PORD, 1.5}}, "adjusted Pmax");
         success *= allResidualsWithinInitTolerance(adjusted_pmax.reecb);
         setState(adjusted_pmax.reecb, {{Vars::PORD, 1.25}, {Vars::RPORD, 1.0}});
-        success *= (adjusted_pmax.evaluate() == 0);
+        success *= (adjusted_pmax.reecb.evaluateResidual() == 0);
         success *= residualsMatch(adjusted_pmax.reecb, {{Vars::PORD, 1.0}}, "adjusted Pmax");
 
         auto pord_below                     = data;
         pord_below.parameters[Params::Pmin] = 2.0;
         Fixture<ScalarT> adjusted_pmin(pord_below);
         success *= adjusted_pmin.initialize(0.75, 0.75);
-        success *= (adjusted_pmin.evaluate() == 0);
+        success *= (adjusted_pmin.reecb.evaluateResidual() == 0);
         success *= stateMatches(adjusted_pmin.reecb, {{Vars::PORD, 1.5}}, "adjusted Pmin");
         success *= allResidualsWithinInitTolerance(adjusted_pmin.reecb);
         setState(adjusted_pmin.reecb, {{Vars::PORD, 1.75}, {Vars::RPORD, -1.0}});
-        success *= (adjusted_pmin.evaluate() == 0);
+        success *= (adjusted_pmin.reecb.evaluateResidual() == 0);
         success *= residualsMatch(adjusted_pmin.reecb, {{Vars::PORD, -1.0}}, "adjusted Pmin");
 
         auto expanded_current                     = data;
         expanded_current.parameters[Params::Imax] = 1.0;
         Fixture<ScalarT> adjusted_imax(expanded_current);
         success *= adjusted_imax.initialize(0.75, 0.75);
-        success *= (adjusted_imax.evaluate() == 0);
+        success *= (adjusted_imax.reecb.evaluateResidual() == 0);
         success *= stateMatches(adjusted_imax.reecb, {{Vars::ILCAP, 1.5}}, "adjusted Imax");
         success *= allResidualsWithinInitTolerance(adjusted_imax.reecb);
 
@@ -417,7 +417,7 @@ namespace GridKit
           adjusted_q.input(Ext::pe)    = 0.75;
           adjusted_q.input(Ext::qgen)  = qgen;
           success                     *= adjusted_q.initialize(0.75, 0.75);
-          success                     *= (adjusted_q.evaluate() == 0);
+          success                     *= (adjusted_q.reecb.evaluateResidual() == 0);
           success                     *= allResidualsWithinInitTolerance(adjusted_q.reecb);
         }
 
@@ -443,7 +443,7 @@ namespace GridKit
           adjusted_v.input(Ext::pe)    = test_case.pe;
           adjusted_v.input(Ext::qgen)  = test_case.qgen;
           success                     *= adjusted_v.initialize(0.75, 0.75);
-          success                     *= (adjusted_v.evaluate() == 0);
+          success                     *= (adjusted_v.reecb.evaluateResidual() == 0);
           success                     *= allResidualsWithinInitTolerance(adjusted_v.reecb);
         }
 
@@ -465,7 +465,7 @@ namespace GridKit
         late.input(Ext::pref) = 0.75;
         setState(late.reecb, {{Vars::PORD, 1.25}, {Vars::VT, 1.0}});
         setDerivative(late.reecb, {{Vars::PORD, 0.0}});
-        success *= (late.evaluate() == 0);
+        success *= (late.reecb.evaluateResidual() == 0);
         success *= residualsMatch(late.reecb, {{Vars::PORD, 0.0}}, "rejected Pmax adjustment");
         success *= initializationRejectedAtomically(
             power_factor, 0.75, 0.75, "unrepresentable power-factor reference", 1.0e-8, 0.75);
@@ -487,7 +487,7 @@ namespace GridKit
         collapsed_limits.input(Ext::pe)    = 0.6;
         collapsed_limits.input(Ext::qgen)  = 0.6;
         success                           *= collapsed_limits.initialize(0.75, 0.75);
-        success                           *= (collapsed_limits.evaluate() == 0);
+        success                           *= (collapsed_limits.reecb.evaluateResidual() == 0);
         success                           *= allResidualsWithinInitTolerance(collapsed_limits.reecb);
 
         auto collapsed_reactive                     = collapsed;
@@ -499,7 +499,7 @@ namespace GridKit
         expanded_reactive.input(Ext::pe)    = 0.75;
         expanded_reactive.input(Ext::qgen)  = 0.3;
         success                            *= expanded_reactive.initialize(0.75, 0.75);
-        success                            *= (expanded_reactive.evaluate() == 0);
+        success                            *= (expanded_reactive.reecb.evaluateResidual() == 0);
         success                            *= allResidualsWithinInitTolerance(expanded_reactive.reecb);
 
         auto collapsed_voltage                     = collapsed;
@@ -513,7 +513,7 @@ namespace GridKit
         expanded_voltage.input(Ext::pe)    = 0.75;
         expanded_voltage.input(Ext::qgen)  = 0.75;
         success                           *= expanded_voltage.initialize(0.75, 0.75);
-        success                           *= (expanded_voltage.evaluate() == 0);
+        success                           *= (expanded_voltage.reecb.evaluateResidual() == 0);
         success                           *= allResidualsWithinInitTolerance(expanded_voltage.reecb);
 
         // Zero integral gains leave both controllers unconstrained, so any
@@ -526,7 +526,7 @@ namespace GridKit
         unconstrained.input(Ext::pe)    = 0.75;
         unconstrained.input(Ext::qgen)  = 4.0;
         success                        *= unconstrained.initialize(0.75, 0.75);
-        success                        *= (unconstrained.evaluate() == 0);
+        success                        *= (unconstrained.reecb.evaluateResidual() == 0);
         success                        *= allResidualsWithinInitTolerance(unconstrained.reecb);
 
         // An invalid configuration is rejected before any state is written.
@@ -583,7 +583,7 @@ namespace GridKit
         {
           Fixture<ScalarT> fixture(exactness_data);
           success *= fixture.initialize(0.0, test_case.ipcmd);
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= scalarPreserved(fixture.ipcmd(), test_case.ipcmd, test_case.label);
           success *= allResidualsWithinInitTolerance(fixture.reecb);
         }
@@ -591,7 +591,7 @@ namespace GridKit
         // An interior command recovers the ideal active-power order exactly.
         Fixture<ScalarT> interior(makeData());
         success *= interior.initialize(0.0, 0.75);
-        success *= (interior.evaluate() == 0);
+        success *= (interior.reecb.evaluateResidual() == 0);
         success *= stateMatches(interior.reecb,
                                 {{Vars::PORD, 1.5}},
                                 "interior active-power order");
@@ -602,7 +602,7 @@ namespace GridKit
         limit_data.parameters[Params::Pmax] = 1.5;
         Fixture<ScalarT> at_limit(limit_data);
         success *= at_limit.initialize(0.0, 0.75);
-        success *= (at_limit.evaluate() == 0);
+        success *= (at_limit.reecb.evaluateResidual() == 0);
         success *= stateMatches(at_limit.reecb, {{Vars::PORD, 1.5}}, "order at Pmax");
         success *= allResidualsWithinInitTolerance(at_limit.reecb);
 
@@ -627,7 +627,7 @@ namespace GridKit
           Fixture<ScalarT> asymmetric(asymmetric_data);
           asymmetric.attachAllInputs();
           success *= asymmetric.initialize(0.0, 0.75);
-          success *= (asymmetric.evaluate() == 0);
+          success *= (asymmetric.reecb.evaluateResidual() == 0);
           success *= stateMatches(asymmetric.reecb,
                                   {{Vars::PORD, 1.5}},
                                   test_case.label);
@@ -646,7 +646,7 @@ namespace GridKit
         {
           Fixture<ScalarT> reactive(exactness_data);
           success *= reactive.initialize(iqcmd, 0.75);
-          success *= (reactive.evaluate() == 0);
+          success *= (reactive.reecb.evaluateResidual() == 0);
           success *= scalarPreserved(reactive.iqcmd(), iqcmd, "near-limit reactive command");
           success *= allResidualsWithinInitTolerance(reactive.reecb);
         }
@@ -675,7 +675,7 @@ namespace GridKit
           boundary_data.parameters[Params::Pqflag] = test_case.p_priority;
           Fixture<ScalarT> boundary(boundary_data);
           success *= boundary.initialize(test_case.iqcmd, test_case.ipcmd);
-          success *= (boundary.evaluate() == 0);
+          success *= (boundary.reecb.evaluateResidual() == 0);
           success *= scalarPreserved(boundary.iqcmd(), test_case.iqcmd, test_case.label);
           success *= scalarPreserved(boundary.ipcmd(), test_case.ipcmd, test_case.label);
           success *= stateMatches(boundary.reecb,
@@ -689,7 +689,7 @@ namespace GridKit
         separated_data.parameters[Params::Imax] = 1.0;
         Fixture<ScalarT> separated(separated_data);
         success *= separated.initialize(5.0e-13, 0.5);
-        success *= (separated.evaluate() == 0);
+        success *= (separated.reecb.evaluateResidual() == 0);
         success *= scalarPreserved(separated.iqcmd(), 5.0e-13, "scale-separated current command");
         success *= allResidualsWithinInitTolerance(separated.reecb);
 
@@ -708,7 +708,7 @@ namespace GridKit
         {
           Fixture<ScalarT> capacity_fixture(capacity_data);
           success           *= capacity_fixture.initialize(iqcmd, ipcmd);
-          success           *= (capacity_fixture.evaluate() == 0);
+          success           *= (capacity_fixture.reecb.evaluateResidual() == 0);
           success           *= scalarPreserved(capacity_fixture.iqcmd(), iqcmd, "low-priority command");
           success           *= scalarPreserved(capacity_fixture.ipcmd(), ipcmd, "high-priority command");
           const RealT ilcap  = static_cast<RealT>(capacity_fixture.reecb.y().getData()[index(Vars::ILCAP)]);
@@ -734,7 +734,7 @@ namespace GridKit
         nested.input(Ext::pe)    = 0.6;
         nested.input(Ext::qgen)  = 0.8;
         success                 *= nested.initialize(0.8, 0.6);
-        success                 *= (nested.evaluate() == 0);
+        success                 *= (nested.reecb.evaluateResidual() == 0);
         success                 *= scalarPreserved(nested.iqcmd(), 0.8, "nested-clamp reactive command");
         success                 *= scalarPreserved(nested.ipcmd(), 0.6, "nested-clamp active command");
         success                 *= allResidualsWithinInitTolerance(nested.reecb);
@@ -749,7 +749,7 @@ namespace GridKit
         exhausted.attachAllInputs();
         exhausted.input(Ext::pe)  = 1.25;
         success                  *= exhausted.initialize(0.0, 1.25);
-        success                  *= (exhausted.evaluate() == 0);
+        success                  *= (exhausted.reecb.evaluateResidual() == 0);
         success                  *= scalarPreserved(exhausted.iqcmd(), 0.0, "exhausted reactive-current capacity");
 
         success *= stateMatches(exhausted.reecb,
@@ -772,7 +772,7 @@ namespace GridKit
         setResidualInputs(fixture);
         success *= fixture.prepare(0.25, 0.35);
         setResidualState(fixture.reecb);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.reecb.evaluateResidual() == 0);
 
         const RealT                                                   ideal_circle_leg = circleLeg(1.76);
         const std::array<VariableValue, Utilities::enum_size<Vars>()> expected_residuals{{
@@ -878,7 +878,7 @@ namespace GridKit
                   }
 
                   success *= fixture.initialize(0.75, 0.75);
-                  success *= (fixture.evaluate() == 0);
+                  success *= (fixture.reecb.evaluateResidual() == 0);
                   success *= allResidualsWithinInitTolerance(fixture.reecb);
                   success *= scalarPreserved(fixture.iqcmd(), 0.75, "selector iqcmd");
                   success *= scalarPreserved(fixture.ipcmd(), 0.75, "selector ipcmd");
@@ -953,19 +953,19 @@ namespace GridKit
           fixture.attachAllInputs();
           success *= fixture.initialize(0.75, 0.75);
           success *= scalarMatches(fixture.input(Ext::qext), 1.0, "published voltage reference");
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(fixture.reecb);
 
           // A raised external voltage reference first enters the algebraic
           // voltage error without power-base conversion.
           fixture.input(Ext::qext)  = 1.2;
-          success                  *= (fixture.evaluate() == 0);
+          success                  *= (fixture.reecb.evaluateResidual() == 0);
           success                  *= residualsMatch(fixture.reecb,
                                                      {{Vars::EPIV, 0.2}},
                                     "unconverted voltage reference");
 
           setState(fixture.reecb, {{Vars::EPIV, 0.2}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::XPIV, 0.1}},
                                     "unconverted voltage-reference rate");
@@ -976,19 +976,19 @@ namespace GridKit
           fixture.attachAllInputs();
           success *= fixture.initialize(0.75, 0.75);
           success *= scalarMatches(fixture.input(Ext::qext), 0.75, "published system-base reactive power");
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(fixture.reecb);
 
           // The reactive reference keeps the power-base conversion before the
           // converted value drives the current-command lag.
           fixture.input(Ext::qext)  = 0.85;
-          success                  *= (fixture.evaluate() == 0);
+          success                  *= (fixture.reecb.evaluateResidual() == 0);
           success                  *= residualsMatch(fixture.reecb,
                                                      {{Vars::QREF, 0.2}},
                                     "converted reactive reference");
 
           setState(fixture.reecb, {{Vars::QREF, 1.7}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::QV, 10.0}},
                                     "converted reactive-reference rate");
@@ -1014,23 +1014,23 @@ namespace GridKit
           success                  *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::QV, 0.1}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::QREF, 0.8}},
                                     "constant-reactive reference");
 
           setState(fixture.reecb, {{Vars::QREF, 0.8}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb, {{Vars::QV, 1.4}}, "constant-reactive lag");
 
           setState(fixture.reecb, {{Vars::VT, 0.0}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::SDIP, -1.0}},
                                     "constant-reactive voltage gate");
 
           setState(fixture.reecb, {{Vars::SDIP, 0.0}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb, {{Vars::QV, 0.0}}, "gated constant-reactive lag");
         }
 
@@ -1047,31 +1047,31 @@ namespace GridKit
           success                  *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::XPIQ, 0.82}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::QREF, 0.2}},
                                     "cascaded reactive-power reference");
 
           setState(fixture.reecb, {{Vars::QREF, 0.2}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::EQ, 0.3}},
                                     "cascaded reactive-power error");
 
           setState(fixture.reecb, {{Vars::EQ, 0.3}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::XPIQ, 0.12}, {Vars::QV, 0.0}},
                                     "reactive-power integral rate");
 
           setState(fixture.reecb, {{Vars::VT, 0.0}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::SDIP, -1.0}},
                                     "reactive-power voltage gate");
 
           setState(fixture.reecb, {{Vars::SDIP, 0.0}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb, {{Vars::XPIQ, 0.0}}, "gated reactive-power integrator");
         }
 
@@ -1086,25 +1086,25 @@ namespace GridKit
           fixture.input(Ext::qext)  = 1.05;
           success                  *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::EPIV, 0.05}},
                                     "direct-voltage error");
 
           setState(fixture.reecb, {{Vars::EPIV, 0.05}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::XPIQ, 0.0}, {Vars::XPIV, 0.025}},
                                     "voltage-control integral rate");
 
           setState(fixture.reecb, {{Vars::VT, 2.0}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::SDIP, -1.0}},
                                     "voltage-control voltage gate");
 
           setState(fixture.reecb, {{Vars::SDIP, 0.0}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb, {{Vars::XPIV, 0.0}}, "gated voltage-control integrator");
         }
 
@@ -1137,13 +1137,13 @@ namespace GridKit
             setControlState(fixture.reecb);
             setState(fixture.reecb,
                      {{Vars::XPIQ, 1.0}, {Vars::QREF, 2.0 * test_case.input}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::EQ, test_case.limited_error}},
                                       "reactive-power reference limit");
 
             setState(fixture.reecb, {{Vars::EQ, test_case.limited_error}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::XPIQ, test_case.expected_rate}},
                                       "reactive-power limited-error rate");
@@ -1179,7 +1179,7 @@ namespace GridKit
                      {{Vars::XPIQ, test_case.state},
                       {Vars::QREF, 2.0 * test_case.reference},
                       {Vars::EQ, 2.0 * test_case.reference}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::XPIQ, test_case.expected}},
                                       "reactive-power antiwindup");
@@ -1215,7 +1215,7 @@ namespace GridKit
                       {Vars::EPIV, test_case.reference - 1.0},
                       {Vars::ILCAP, 0.5},
                       {Vars::IQMAX, 0.5}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::XPIV, test_case.expected}},
                                       "voltage-control antiwindup");
@@ -1253,19 +1253,19 @@ namespace GridKit
                       {Vars::IQCMD, 0.0},
                       {Vars::ILCAP, 3.0},
                       {Vars::IQMAX, 3.0}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::IQV, test_case.expected}},
                                       "reactive-current injection curve");
 
             setState(fixture.reecb, {{Vars::IQV, test_case.expected}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::IQRAW, test_case.expected}},
                                       "reactive-current injection sum");
 
             setState(fixture.reecb, {{Vars::IQRAW, test_case.expected}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::IQCMD, test_case.expected}},
                                       "reactive-current injection command");
@@ -1285,13 +1285,13 @@ namespace GridKit
           success                    *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::PMEAS, 0.6}, {Vars::QV, 0.1}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::QREF, 0.3}},
                                     "power-factor reactive reference");
 
           setState(fixture.reecb, {{Vars::QREF, 0.3}});
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.reecb.evaluateResidual() == 0);
           success *= residualsMatch(fixture.reecb,
                                     {{Vars::QV, 0.4}},
                                     "power-factor reference");
@@ -1320,13 +1320,13 @@ namespace GridKit
             fixture.input(Ext::pref)  = rampReference(0.5, test_case.input);
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::RPORD, test_case.expected}},
                                       "active-power ramp limit");
 
             setState(fixture.reecb, {{Vars::RPORD, test_case.expected}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::PORD, test_case.expected}},
                                       "active-power order rate");
@@ -1362,13 +1362,13 @@ namespace GridKit
             fixture.input(Ext::pref)  = rampReference(0.5, test_case.input);
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::RPORD, test_case.expected}},
                                       "asymmetric active-power ramp limit");
 
             setState(fixture.reecb, {{Vars::RPORD, test_case.expected}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::PORD, test_case.expected}},
                                       "asymmetric active-power order rate");
@@ -1390,14 +1390,14 @@ namespace GridKit
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             setState(fixture.reecb, {{Vars::VT, test_case.input}});
-            success          *= (fixture.evaluate() == 0);
+            success          *= (fixture.reecb.evaluateResidual() == 0);
             const RealT gate  = test_case.expected / static_cast<RealT>(0.2);
             success          *= residualsMatch(fixture.reecb,
                                                {{Vars::SDIP, gate - 1.0}},
                                       "active-power voltage gate");
 
             setState(fixture.reecb, {{Vars::SDIP, gate}, {Vars::RPORD, 0.2}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::PORD, test_case.expected}},
                                       "gated active-power order rate");
@@ -1428,7 +1428,7 @@ namespace GridKit
             }
             setState(fixture.reecb,
                      {{Vars::PORD, test_case.state}, {Vars::RPORD, limited_rate}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::PORD, test_case.expected}},
                                       "active-power antiwindup");
@@ -1455,7 +1455,7 @@ namespace GridKit
                       {Vars::IQRAW, test_case.input},
                       {Vars::IQCMD, 0.0},
                       {Vars::QV, test_case.input}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::IQCMD, test_case.expected}},
                                       "reactive-command limit");
@@ -1484,7 +1484,7 @@ namespace GridKit
                       {Vars::IPMAX, 2.0},
                       {Vars::IPCMD, 0.0},
                       {Vars::PORD, test_case.input}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::IPCMD, test_case.expected}},
                                       "active-command limit");
@@ -1507,7 +1507,7 @@ namespace GridKit
             setResidualInputs(fixture);
             success *= fixture.prepare(0.25, 0.35);
             setResidualState(fixture.reecb);
-            success           *= (fixture.evaluate() == 0);
+            success           *= (fixture.reecb.evaluateResidual() == 0);
             const char* label  = "Q-priority current circle";
             if (p_priority)
             {
@@ -1547,7 +1547,7 @@ namespace GridKit
                      {{Vars::ILCAP, 0.0},
                       {Vars::IQCMD, iqcmd},
                       {Vars::IPCMD, ipcmd}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::ILCAP, 0.0}},
                                       "finite selected current circle");
@@ -1563,7 +1563,7 @@ namespace GridKit
           success *= open.prepare(0.0, 0.0);
           setControlState(open.reecb);
           setState(open.reecb, {{Vars::ILCAP, 0.0}, {Vars::IPCMD, 0.0}});
-          success *= (open.evaluate() == 0);
+          success *= (open.reecb.evaluateResidual() == 0);
           success *= residualsMatch(open.reecb,
                                     {{Vars::ILCAP, open_limit}},
                                     "finite open current circle",
@@ -1602,7 +1602,7 @@ namespace GridKit
                       {Vars::IPCMD, test_case.ipcmd},
                       {Vars::IQCMD, 0.0},
                       {Vars::QV, 1.0}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::ILCAP, ideal_capacity}},
                                       "off-axis capacity",
@@ -1616,14 +1616,14 @@ namespace GridKit
             }
 
             setState(fixture.reecb, {{Vars::ILCAP, capacity}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::IQMAX, capacity}},
                                       "reactive-current capacity");
 
             setState(fixture.reecb,
                      {{Vars::IQMAX, capacity}, {Vars::IQRAW, 1.0}});
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.reecb.evaluateResidual() == 0);
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::IQCMD, capacity}},
                                       "capacity magnitude bound");
@@ -1898,11 +1898,6 @@ namespace GridKit
             return false;
           }
           return true;
-        }
-
-        int evaluate()
-        {
-          return reecb.evaluateResidual();
         }
 
         T iqcmd() const
@@ -2238,7 +2233,7 @@ namespace GridKit
           return false;
         }
 
-        if (implicit_defaults.evaluate() != 0 || explicit_defaults.evaluate() != 0)
+        if (implicit_defaults.reecb.evaluateResidual() != 0 || explicit_defaults.reecb.evaluateResidual() != 0)
         {
           success = false;
         }
@@ -2277,7 +2272,7 @@ namespace GridKit
         setResidualInputs(explicit_defaults);
         setResidualState(implicit_defaults.reecb);
         setResidualState(explicit_defaults.reecb);
-        if (implicit_defaults.evaluate() != 0 || explicit_defaults.evaluate() != 0)
+        if (implicit_defaults.reecb.evaluateResidual() != 0 || explicit_defaults.reecb.evaluateResidual() != 0)
         {
           success = false;
         }
