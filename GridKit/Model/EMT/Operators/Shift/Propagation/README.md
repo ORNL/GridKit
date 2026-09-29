@@ -11,7 +11,7 @@ delay per mode, and a fitted output factor while preserving the input units.
 \end{aligned}
 ```
 
-With $`\mathbf{G}_\mathrm{in}`$ and $`\mathbf{G}_\mathrm{out}`$ the transfer matrices
+With $\mathbf G_\mathrm{in}$ and $\mathbf G_\mathrm{out}$ the transfer matrices
 of the input and output factors,
 
 ```math
@@ -37,7 +37,7 @@ $K$ | [-] | `K` | Signal dimension | Required, positive integer
 K \in \mathbb{Z}_{>0}
 ```
 
-### Derived Parameters
+### Model Derived Parameters
 
 The full modal basis has one mode per channel:
 

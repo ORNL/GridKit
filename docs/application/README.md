@@ -1,9 +1,9 @@
 # Applications
 
 ```{toctree}
-:maxdepth: 3
+:maxdepth: 1
 :titlesonly:
-:hidden:
+:class: gk-index
 
 Phasor Dynamics <PhasorDynamics/README>
 ```

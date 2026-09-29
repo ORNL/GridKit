@@ -1,9 +1,9 @@
 # Development
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 :titlesonly:
-:hidden:
+:class: gk-index
 
 Contributing <CONTRIBUTING>
 Buildsystem <buildsystem/README>

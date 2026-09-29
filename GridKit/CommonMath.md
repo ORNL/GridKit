@@ -155,7 +155,7 @@ We implement an approximation to $\text{ReQU}$ using the logistic function.
         x & x\gt y \\[0pt]
         y & x\le y
       \end{cases} \\[0pt]
-    &=y+\text{ReLU}(x-y)=\approx y+\rho(x-y)
+    &=y+\text{ReLU}(x-y)\approx y+\rho(x-y)
 \end{aligned}
 ```
 

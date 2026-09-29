@@ -11,7 +11,7 @@ Sixth-order round-rotor synchronous machine. See the [shared conventions](../REA
 ## Block Diagram
 ![](../../../../../docs/Figures/GENROU.JPG)
 
-Figure 2: GENROU. Figure courtesy of
+Figure 1: GENROU. Figure courtesy of
 [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters

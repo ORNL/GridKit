@@ -10,7 +10,7 @@ the pole-index set
 
 ```math
 \mathbf{H}(s) \approx \mathbf{D} + s\mathbf{E}
-  + \mathbf{C}\dfrac{\mathbf{I}}{s\mathbf{I}-\mathbf{P}}\mathbf{B}
+  + \mathbf{C}(s\mathbf{I}-\mathbf{P})^{-1}\mathbf{B}
 ```
 
 > [!NOTE]
@@ -80,7 +80,7 @@ p_{q+1} &= p_q^{\ast},
 \end{aligned}
 ```
 
-### Derived Parameters
+### Model Derived Parameters
 
 ```math
 \begin{aligned}

@@ -29,7 +29,7 @@ N &\in \mathbb{Z}_{>0} \\
 \end{aligned}
 ```
 
-### Derived Parameters
+### Model Derived Parameters
 
 Define the phase-index set
 

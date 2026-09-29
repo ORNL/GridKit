@@ -24,7 +24,7 @@ $N$ | [-] | `N` | Number of phases | Required, positive integer
 N \in \mathbb{Z}_{>0}
 ```
 
-### Derived Parameters
+### Model Derived Parameters
 
 None.
 

@@ -250,8 +250,9 @@ Initialization resolves the steady-state quantities in dependency order; all
 internal derivatives start at zero. Initialize the component-base commands:
 $I_p\leftarrow k_\mathrm{base}I_p^\mathrm{cmd}$ and
 $I_q\leftarrow k_\mathrm{base}I_q^\mathrm{cmd}$.
-REECB's `iclamp` helper inverts the CommonMath [clamp](../../../../CommonMath.md#clamp)
-during initialization. At a bound, REECB uses an outward offset
+REECB's `iclamp` helper inverts the smooth CommonMath
+[clamp](../../../../CommonMath.md#clamp) during initialization.
+At a bound, REECB uses an outward offset
 $\delta=-\ln(\text{expm1}(\mu\epsilon_\mathrm{init}/2))/\mu$ to keep the clamp error
 within $\epsilon_\mathrm{init}$; collapsed bounds return the bound.
 
@@ -290,6 +291,8 @@ operating point is rejected if no finite solution exists or the
 reactive-current injection is incompatible. Q, V, and P limits are expanded as
 needed; each adjustment logs a warning. This matches PowerWorld's default
 `Modify Limits and Run` treatment of initial limit violations.
+This preserves the supplied operating point for steady-state initialization;
+subsequent simulation uses the adjusted limits.
 
 ```math
 \begin{aligned}
@@ -376,7 +379,7 @@ For $\ell<0<u$, REECB uses
 
 ```math
 \text{aslew}(f;\ell,u)
-=\dfrac{f}{1+\rho(f/u-1)+\rho(f/\ell-1)},
+=\dfrac{f}{1+\rho(f/u-1)+\rho(f/\ell-1)}
 ```
 
 where $\rho$ is GridKit's smooth

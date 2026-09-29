@@ -2,7 +2,7 @@
 
 `Bus` represents an $N$-phase bus in instantaneous phase coordinates. It owns
 the bus voltage and contributes the current-balance residual to
-the assembled DAE. $`\mathcal{D}`$ denotes the set of connected devices.
+the assembled DAE. $\mathcal{D}$ denotes the set of connected devices.
 Bus voltage and its residual are algebraic when no connected model contributes
 a voltage derivative; see [assembly](../README.md#assembly).
 
@@ -24,7 +24,7 @@ $N$ | [-] | `N` | Number of phases | Required, positive integer
 N \in \mathbb{Z}_{>0}
 ```
 
-### Derived Parameters
+### Model Derived Parameters
 
 None.
 

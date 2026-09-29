@@ -251,8 +251,10 @@ REPCA reconstructs a steady operating point; arbitrary-state restart is unsuppor
 
 ### Internal Initialization
 
-Initialization uses `invertClamp` and `invertDeadband` to invert the CommonMath
-[clamp](../../../../CommonMath.md#clamp) and [Type II deadband](../../../../CommonMath.md#type-ii-deadband).
+`iclamp` and `ideadband2` denote the initialization helpers `invertClamp` and
+`invertDeadband`, which recover inputs for the smooth CommonMath
+[clamp](../../../../CommonMath.md#clamp) and
+[Type II deadband](../../../../CommonMath.md#type-ii-deadband) functions.
 Within $10^{-12}$ of a clamp bound, REPCA uses that
 bound moved outward by $0.1$; intervals of width at most $10^{-12}$ return
 $\ell$. Deadband outputs within $10^{-12}$ of zero use the midpoint; other
@@ -330,7 +332,7 @@ Monitor         | Units  | Description                         | Note
 
 ```math
 \text{droop}(e;D_\mathrm{dn},D_\mathrm{up})
-=e\left[D_\mathrm{dn}+(D_\mathrm{up}-D_\mathrm{dn})\sigma(e)\right],
+=e\left[D_\mathrm{dn}+(D_\mathrm{up}-D_\mathrm{dn})\sigma(e)\right]
 ```
 
 where $\sigma$ is GridKit's smooth

@@ -38,7 +38,7 @@ K &\in \mathbb{Z}_{>0} \\
 \end{aligned}
 ```
 
-### Derived Parameters
+### Model Derived Parameters
 
 ```math
 P_{\phi,nk} =
