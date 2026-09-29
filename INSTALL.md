@@ -112,13 +112,17 @@ installed headers, libraries, and CMake config files.
 | `GridKit_ENABLE_SUNDIALS` | `OFF` | Build with SUNDIALS DAE integrators |
 | `GridKit_ENABLE_IPOPT` | `OFF` | Build with Ipopt optimization solver |
 | `GridKit_ENABLE_ENZYME` | `OFF` | Build with Enzyme automatic differentiation |
+| `GridKit_ENABLE_RESOLVE` | `OFF` | Build with ReSolve linear solvers |
 | `GridKit_ENABLE_ASAN` | `OFF` | Enable address sanitizer |
 | `GridKit_ENABLE_UBSAN` | `OFF` | Enable undefined behavior sanitizer |
+| `GridKit_ENABLE_OPENMP` | `OFF` | Enable OpenMP (useful for `ContingencyAnalysis`) |
+| `GridKit_ENABLE_THREADS` | `OFF` | Enable Threads (useful for `ContingencyAnalysis` with `std::async` |
+| `GridKit_ENABLE_ZMQ` | `OFF` | Build the experimental ZeroMQ co-simulation examples and tests |
 | `GridKit_ENABLE_DEVELOPER_MODE` | `OFF` | Enable developer mode: the Logger defaults to `EVERYTHING` verbosity (all messages) |
 | `BUILD_SHARED_LIBS` | `ON` | Build shared libraries |
 | `CMAKE_INSTALL_PREFIX` | system default | Installation root |
 
-Options may also be spelled with the `GridKit_ENABLE_*` prefix.
+Options may also be spelled with the `GRIDKIT_ENABLE_*` prefix, e.g. `GRIDKIT_ENABLE_SUNDIALS`.
 
 Dependency root directories:
 
@@ -128,6 +132,10 @@ Dependency root directories:
 | `IPOPT_DIR` | Ipopt install prefix |
 | `ENZYME_DIR` | Enzyme install prefix |
 | `SUITESPARSE_DIR` | SuiteSparse install prefix |
+| `ReSolve_DIR` | ReSolve install prefix |
+
+ZeroMQ, OpenMP, and Threads are found in standard system locations; add
+nonstandard install prefixes to `CMAKE_PREFIX_PATH`.
 
 ---
 
