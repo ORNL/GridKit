@@ -6,14 +6,20 @@
 
 #include "Logger.hpp"
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Utilities/Colors.hpp>
 
 namespace GridKit
 {
   namespace Utilities
   {
+#ifdef GRIDKIT_ENABLE_DEVELOPER_MODE
+    /// @brief Developer mode prints every message
+    Logger::Verbosity Logger::verbosity_ = Logger::EVERYTHING;
+#else
     /// @brief Default verbosity is to print error and warning messages
     Logger::Verbosity Logger::verbosity_ = Logger::WARNINGS;
+#endif
 
     /// @brief Default output is standard output
     std::ostream* Logger::logger_ = &std::cout;

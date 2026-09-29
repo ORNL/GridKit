@@ -85,6 +85,7 @@
 - Added IDA option to choose the consistent initial condition calculation type.
 - Implemented `tagDifferentiable()` for `PowerElectronics` models.
 - Fixed the `TenGenGenrou` example to output the correct omega values.
+- Added `GridKit_ENABLE_DEVELOPER_MODE` CMake option; in developer mode the Logger defaults to `EVERYTHING` verbosity.
 
 ## v0.1
 

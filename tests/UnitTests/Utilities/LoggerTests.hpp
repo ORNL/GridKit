@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Colors.hpp>
@@ -35,6 +36,28 @@ namespace GridKit
 
       virtual ~LoggerTests()
       {
+      }
+
+      /**
+       * @brief Test the verbosity the Logger starts with.
+       *
+       * Developer mode (GRIDKIT_ENABLE_DEVELOPER_MODE) starts at EVERYTHING;
+       * otherwise the Logger starts at WARNINGS. Must run before any test that
+       * changes the verbosity.
+       */
+      TestOutcome defaultVerbosity()
+      {
+        using out = GridKit::Utilities::Logger;
+
+        TestStatus status;
+
+#ifdef GRIDKIT_ENABLE_DEVELOPER_MODE
+        status = (out::verbosity() == out::EVERYTHING);
+#else
+        status = (out::verbosity() == out::WARNINGS);
+#endif
+
+        return status.report(__func__);
       }
 
       /**
