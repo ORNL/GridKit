@@ -8,7 +8,7 @@ Variables (External):
  + $v_{D}$          - Bus voltage along direct axis
  + $v_{Q}$          - Bus voltage along quadrature axis
 
-Component external contributions:
+Contributions to external equations:
  + $\frac{-v_D}{R_N}$
  + $\frac{-v_Q}{R_N}$
 

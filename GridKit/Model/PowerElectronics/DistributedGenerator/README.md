@@ -1,5 +1,5 @@
 
-The Distributed Generator Component found in references 1 and 2.
+The Distributed Generator Component found in Pogaku et al.[^1] and Bidram et al.[^2].
 
 Parameters:
  + $\omega_b$ - Reference Rotating Frame
@@ -38,12 +38,12 @@ Variables (Internal):
  + $i_{od}$     - Current of Line o (dq-space)
  + $i_{oq}$     - Current of Line o (dq-space)
 
-Component external contributions:
+Contributions to external equations:
  + $\omega_{com} - \omega$ &emsp;&emsp;&emsp;(If this generator is considered the reference one, otherwise 0)
  + $\cos(\delta) i_{od} - \sin(\delta) i_{oq}$ &emsp;&emsp; (Bus residual terms)
  + $\sin(\delta) i_{od} + \cos(\delta) i_{oq}$ &emsp;&emsp; (Bus residual terms)
 
-Equations (Internal):
+Internal equations:
  + $\omega_{com} = \omega_{b} - m_{p} P$
  + $\frac{d\delta}{dt} = \omega_{com} - \omega$
  + $\frac{dP}{dt} = \omega_c ( v_{od} i_{od} + v_{oq} i_{oq} - P)$
