@@ -297,6 +297,7 @@ namespace GridKit
        * Use this function if you update vector elements by accessing the raw data
        * pointer.
        *
+       * @param[in] j        - Index of a vector in multivector
        * @param[in] memspace - Memory space (HOST or DEVICE)
        *
        * @warning This is an expert level method. Use only if you know what
