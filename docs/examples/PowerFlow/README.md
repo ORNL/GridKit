@@ -1,9 +1,9 @@
 # PowerFlow
 
 ```{toctree}
-:maxdepth: 4
+:maxdepth: 1
 :titlesonly:
-:hidden:
+:class: gk-index
 
 Grid3Bus <Grid3Bus/README>
 ```

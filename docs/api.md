@@ -3,7 +3,7 @@
 ```{toctree}
 :maxdepth: 1
 :titlesonly:
-:hidden:
+:class: gk-index
 
 GridKit Core <api/reference/namespace_GridKit>
 Solvers <api/reference/namespace_AnalysisManager>

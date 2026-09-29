@@ -1,9 +1,9 @@
 # PhasorDynamics
 
 ```{toctree}
-:maxdepth: 4
+:maxdepth: 1
 :titlesonly:
-:hidden:
+:class: gk-index
 
 Input Format <INPUT_FORMAT>
 Branch <Branch/README>

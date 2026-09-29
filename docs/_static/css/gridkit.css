@@ -4,3 +4,9 @@
   background: #fff;
   padding: 0.5rem;
 }
+
+.gk-index > ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.4rem 1.5rem;
+}

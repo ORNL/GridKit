@@ -1,9 +1,9 @@
 # PowerElectronics
 
 ```{toctree}
-:maxdepth: 4
+:maxdepth: 1
 :titlesonly:
-:hidden:
+:class: gk-index
 
 Microgrid <Microgrid/README>
 ScaleMicrogrid <ScaleMicrogrid/README>

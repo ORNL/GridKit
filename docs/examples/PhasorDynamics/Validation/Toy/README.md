@@ -1,9 +1,9 @@
 # Toy
 
 ```{toctree}
-:maxdepth: 4
+:maxdepth: 1
 :titlesonly:
-:hidden:
+:class: gk-index
 
 TwoBusBasic <TwoBusBasic/README>
 TwoBusTgov1 <TwoBusTgov1/README>

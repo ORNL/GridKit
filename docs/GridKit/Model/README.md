@@ -1,9 +1,11 @@
 # Models
 
+Browse models by family, or see the shared mathematical functions.
+
 ```{toctree}
-:maxdepth: 4
+:maxdepth: 1
 :titlesonly:
-:hidden:
+:class: gk-index
 
 CommonMath <../CommonMath>
 EMT <EMT/README>
