@@ -12,12 +12,14 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
 
     template <class ScalarT, typename IdxT>
     class GovernorTgov1Tests
@@ -324,8 +326,9 @@ namespace GridKit
 
         gov.evaluateJacobian();
         auto* model_jacobian = gov.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: Tgov1 DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: Tgov1 DependencyTracking Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
@@ -360,8 +363,9 @@ namespace GridKit
         gov.evaluateJacobian();
         gov.constructCsr();
         auto* model_jacobian = gov.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: Tgov1 Enzyme Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: Tgov1 Enzyme Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }

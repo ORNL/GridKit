@@ -447,8 +447,9 @@ namespace GridKit
         bus.evaluateJacobian();
         exciter.evaluateJacobian();
         auto* model_jacobian = exciter.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: SexsPti DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: SexsPti DependencyTracking Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
@@ -481,8 +482,9 @@ namespace GridKit
         exciter.evaluateJacobian();
         exciter.constructCsr();
         auto* model_jacobian = exciter.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: SexsPti Enzyme Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: SexsPti Enzyme Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
