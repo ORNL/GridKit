@@ -1,4 +1,8 @@
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
 #include "SparseCooTests.hpp"
+
+using Log = GridKit::Utilities::Logger;
 
 using namespace GridKit;
 using namespace LinearAlgebra;
@@ -14,7 +18,7 @@ using namespace Testing;
 template <class ScalarT, typename IdxT>
 void runTests(const std::string& backend, memory::MemorySpace memspace, TestingResults& result)
 {
-  std::cout << "Running tests on " << backend << ":\n";
+  Log::misc() << "Running tests on " << backend << ":\n";
 
   SparseCooTests<ScalarT, IdxT> test(memspace);
 

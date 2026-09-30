@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
