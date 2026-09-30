@@ -4,6 +4,8 @@
 #include <cassert>
 #include <iostream>
 
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
 namespace AnalysisManager
 {
   namespace IpoptInterface
@@ -162,7 +164,7 @@ namespace AnalysisManager
       status     = integrator_->runSimulationQuadrature(t_final_, dt_monitor_);
       if (status)
       {
-        std::cerr << "Integration failed when using Pm = " << x[0] << "\n";
+        ::GridKit::Utilities::Logger::error() << "Integration failed when using Pm = " << x[0] << "\n";
         return false;
       }
 
@@ -214,7 +216,7 @@ namespace AnalysisManager
         status     = integrator_->runForwardSimulation(t_final_, dt_monitor_);
         if (status)
         {
-          std::cerr << "Forward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
+          ::GridKit::Utilities::Logger::error() << "Forward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
           return false;
         }
 
@@ -223,7 +225,7 @@ namespace AnalysisManager
         status = integrator_->runBackwardSimulation(t_init_);
         if (status)
         {
-          std::cerr << "Backward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
+          ::GridKit::Utilities::Logger::error() << "Backward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
           return false;
         }
 

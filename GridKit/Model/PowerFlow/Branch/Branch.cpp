@@ -6,6 +6,7 @@
 
 #include <GridKit/Model/PowerFlow/Bus/BaseBus.hpp>
 #include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -145,8 +146,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::evaluateJacobian()
   {
-    std::cout << "Evaluate Jacobian for Branch..." << std::endl;
-    std::cout << "Jacobian evaluation not implemented!" << std::endl;
+    ::GridKit::Utilities::Logger::warning() << "Branch: Jacobian evaluation not implemented!\n";
     return 0;
   }
 

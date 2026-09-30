@@ -14,4 +14,5 @@ set(GridKit_CPU_HEADER_INSTALL CpuMemory.hpp)
 gridkit_add_library(
   cpu_backend
   SOURCES ${GridKit_CPU_SRC}
-  HEADERS ${GridKit_CPU_HEADER_INSTALL})
+  HEADERS ${GridKit_CPU_HEADER_INSTALL}
+  LINK_LIBRARIES PUBLIC GridKit::utilities_logger)

@@ -34,7 +34,7 @@ namespace GridKit
         break;
       default:
         // Throw exception
-        std::cout << "Bus type " << data.type << " unrecognized.\n";
+        ::GridKit::Utilities::Logger::error() << "Bus type " << data.type << " unrecognized.\n";
       }
       return bus;
     }

@@ -17,6 +17,7 @@
 #include <vector>
 
 #include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -36,8 +37,7 @@ namespace GridKit
   inline std::ostream& logs()
   {
 #ifndef NDEBUG
-    std::cerr << "[MatpowerParser.hpp]: ";
-    return std::cerr;
+    return ::GridKit::Utilities::Logger::misc() << "[MatpowerParser.hpp]: ";
 #else
     static std::ofstream ofs;
     ofs.setstate(std::ios_base::badbit);

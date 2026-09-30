@@ -7,6 +7,7 @@
 #include <numbers>
 
 #include <GridKit/Model/PowerFlow/Bus/BaseBus.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -215,8 +216,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::evaluateJacobian()
   {
-    std::cerr << "Evaluate Jacobian for Generator4Param..." << std::endl;
-    std::cerr << "Jacobian evaluation not implemented!" << std::endl;
+    ::GridKit::Utilities::Logger::warning() << "Generator4Param: Jacobian evaluation not implemented!\n";
     return 0;
   }
 
@@ -363,7 +363,7 @@ namespace GridKit
       else
       {
         // Too far away to extrapolate
-        std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+        ::GridKit::Utilities::Logger::warning() << "Trajectory penalty: Out of time bounds at time " << t << "\n";
         return -1.0;
       }
     }
@@ -394,7 +394,7 @@ namespace GridKit
       }
       else
       {
-        std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+        ::GridKit::Utilities::Logger::warning() << "Trajectory penalty: Out of time bounds at time " << t << "\n";
         return -1.0;
       }
     }
@@ -425,7 +425,7 @@ namespace GridKit
       }
       else
       {
-        std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+        ::GridKit::Utilities::Logger::warning() << "Trajectory penalty: Out of time bounds at time " << t << "\n";
         return -1.0;
       }
     }

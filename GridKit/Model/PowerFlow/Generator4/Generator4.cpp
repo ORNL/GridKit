@@ -6,6 +6,7 @@
 #include <numbers>
 
 #include <GridKit/Model/PowerFlow/Bus/BaseBus.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -233,8 +234,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4<ScalarT, IdxT>::evaluateJacobian()
   {
-    std::cerr << "Evaluate Jacobian for Generator4..." << std::endl;
-    std::cerr << "Jacobian evaluation not implemented!" << std::endl;
+    ::GridKit::Utilities::Logger::warning() << "Generator4: Jacobian evaluation not implemented!\n";
     return 0;
   }
 
