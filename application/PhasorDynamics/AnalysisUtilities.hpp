@@ -278,15 +278,15 @@ namespace GridKit
     {
       if (argc < 2)
       {
-        Log::error() << "No input file provided" << std::endl;
-        std::cout << std::format(
-            "\n"
-            "Usage:\n"
-            "       {} <json-input-file>\n"
-            "\n"
-            "Please provide a json input file for the study to run.\n"
-            "\n",
-            appName);
+        Log::error() << "No input file provided\n"
+                     << std::format(
+                            "\n"
+                            "Usage:\n"
+                            "       {} <json-input-file>\n"
+                            "\n"
+                            "Please provide a json input file for the study to run.\n"
+                            "\n",
+                            appName);
         exit(1);
       }
     }
