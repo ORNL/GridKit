@@ -10,7 +10,7 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
-    using out = GridKit::Utilities::Logger;
+    using Log = GridKit::Utilities::Logger;
 
     /**
      * @brief dot product of two vectors i.e, a = x^Ty
@@ -29,7 +29,7 @@ namespace GridKit
       case memory::HOST:
         return cpuImpl_.dot(x, y);
       case memory::DEVICE:
-        out::error() << "VectorHandler::dot - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::dot - DEVICE memory space not yet supported\n";
         return static_cast<ScalarT>(NAN);
       }
       return static_cast<ScalarT>(NAN);
@@ -51,7 +51,7 @@ namespace GridKit
         cpuImpl_.scal(alpha, x);
         break;
       case memory::DEVICE:
-        out::error() << "VectorHandler::scal - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::scal - DEVICE memory space not yet supported\n";
         break;
       }
     }
@@ -72,7 +72,7 @@ namespace GridKit
       case memory::HOST:
         return cpuImpl_.amax(x);
       case memory::DEVICE:
-        out::error() << "VectorHandler::amax - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::amax - DEVICE memory space not yet supported\n";
         return static_cast<ScalarT>(NAN);
       }
       return static_cast<ScalarT>(NAN);
@@ -98,7 +98,7 @@ namespace GridKit
         cpuImpl_.axpy(alpha, x, y);
         break;
       case memory::DEVICE:
-        out::error() << "VectorHandler::axpy - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::axpy - DEVICE memory space not yet supported\n";
         break;
       }
     }
@@ -139,7 +139,7 @@ namespace GridKit
         cpuImpl_.gemv(transpose, k, alpha, beta, V, y, x);
         break;
       case memory::DEVICE:
-        out::error() << "VectorHandler::gemv - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::gemv - DEVICE memory space not yet supported\n";
         break;
       }
     }
@@ -173,7 +173,7 @@ namespace GridKit
         cpuImpl_.axpyMulti(size, alpha, k, x, y);
         break;
       case memory::DEVICE:
-        out::error() << "VectorHandler::axpyMulti - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::axpyMulti - DEVICE memory space not yet supported\n";
         break;
       }
     }
@@ -210,7 +210,7 @@ namespace GridKit
         cpuImpl_.dot2Multi(size, V, k, x, res);
         break;
       case memory::DEVICE:
-        out::error() << "VectorHandler::dot2Multi - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::dot2Multi - DEVICE memory space not yet supported\n";
         break;
       }
     }
@@ -235,7 +235,7 @@ namespace GridKit
         cpuImpl_.scal(diag, vec);
         break;
       case memory::DEVICE:
-        out::error() << "VectorHandler::scal - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::scal - DEVICE memory space not yet supported\n";
         break;
       }
     }
@@ -260,7 +260,7 @@ namespace GridKit
         cpuImpl_.scal(diag, vec, diag_offset);
         break;
       case memory::DEVICE:
-        out::error() << "VectorHandler::scal - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::scal - DEVICE memory space not yet supported\n";
         break;
       }
     }
@@ -286,7 +286,7 @@ namespace GridKit
       case memory::HOST:
         return cpuImpl_.diagSolve(diag, vec);
       case memory::DEVICE:
-        out::error() << "VectorHandler::diagSolve - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::diagSolve - DEVICE memory space not yet supported\n";
         return 1;
       }
       return 1;
@@ -315,7 +315,7 @@ namespace GridKit
       case memory::HOST:
         return cpuImpl_.max(x, y, out);
       case memory::DEVICE:
-        GridKit::LinearAlgebra::out::error() << "VectorHandler::max - DEVICE memory space not yet supported\n";
+        GridKit::LinearAlgebra::Log::error() << "VectorHandler::max - DEVICE memory space not yet supported\n";
         return 1;
       }
       return 1;
@@ -340,7 +340,7 @@ namespace GridKit
       case memory::HOST:
         return cpuImpl_.abs(in, out);
       case memory::DEVICE:
-        GridKit::LinearAlgebra::out::error() << "VectorHandler::abs - DEVICE memory space not yet supported\n";
+        GridKit::LinearAlgebra::Log::error() << "VectorHandler::abs - DEVICE memory space not yet supported\n";
         return 1;
       }
       return 1;
