@@ -20,6 +20,7 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 using scalar_type = double;
 using real_type   = double;
@@ -30,6 +31,10 @@ int main()
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
   using GridKit::Testing::isEqual;
+  using Log = GridKit::Utilities::Logger;
+
+  // Print summaries, such as the run time, without lowering a higher verbosity
+  Log::raiseVerbosity(Log::SUMMARY);
 
   GridKit::Testing::TestStatus success = true;
 
@@ -189,7 +194,7 @@ int main()
 
   fileout.close();
 
-  std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+  Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
   auto error_set = GridKit::Testing::compareCSV(
       "TenGenGenrou_Results.csv",
