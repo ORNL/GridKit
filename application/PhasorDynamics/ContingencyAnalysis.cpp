@@ -152,6 +152,9 @@ void runStudyOpenMP(const StudyData& study_data, std::vector<TestStatus>& stat_v
 
 int runApplication(int argc, const char* argv[])
 {
+  // Print summaries, such as the run time, without lowering a higher verbosity
+  Log::raiseVerbosity(Log::SUMMARY);
+
   // Study file
   checkCommandLine(argc, "ContingencyAnalysis");
   auto study_data = parseStudyData(argv[1]);
@@ -174,7 +177,7 @@ int runApplication(int argc, const char* argv[])
 
   const auto stop = Clock::now();
   const auto dur  = std::chrono::duration<double>(stop - start);
-  std::cout << "\n\nComplete in " << dur << "\n";
+  Log::summary() << "Complete in " << dur << "\n";
 
   TestStatus status;
   for (std::size_t i = 0; i < stat_vec.size(); ++i)
@@ -182,8 +185,8 @@ int runApplication(int argc, const char* argv[])
     status *= stat_vec[i];
     if (!stat_vec[i])
     {
-      std::cout << "Study failed for fault: "
-                << faults[i].disambiguation_string << '\n';
+      Log::error() << "Study failed for fault: "
+                   << faults[i].disambiguation_string << '\n';
     }
   }
 

@@ -86,6 +86,7 @@
 - Implemented `tagDifferentiable()` for `PowerElectronics` models.
 - Fixed the `TenGenGenrou` example to output the correct omega values.
 - Added `GridKit_ENABLE_DEVELOPER_MODE` CMake option; in developer mode the Logger defaults to `EVERYTHING` verbosity.
+- Added `Logger::raiseVerbosity()`, which raises the verbosity without lowering a higher level.
 
 ## v0.1
 

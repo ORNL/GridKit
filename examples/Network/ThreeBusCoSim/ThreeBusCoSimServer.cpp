@@ -118,7 +118,7 @@ private:
 
 int main()
 {
-  Log::setVerbosity(Log::Verbosity::SUMMARY);
+  Log::raiseVerbosity(Log::Verbosity::SUMMARY);
 
   // Instantiate system
   auto filepath = std::filesystem::path("ThreeBusCoSimServer.case.json");

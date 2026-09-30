@@ -21,6 +21,7 @@ int main()
   result += test.warningOutput();
   result += test.summaryOutput();
   result += test.miscOutput();
+  result += test.raiseVerbosity();
 
   // Return tests summary
   return result.summary();

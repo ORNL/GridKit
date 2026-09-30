@@ -49,6 +49,24 @@ namespace GridKit
       updateVerbosity(output_streams_);
     }
 
+    /**
+     * @brief Raises verbosity level to at least `v`
+     *
+     * Unlike `setVerbosity`, this never lowers the verbosity, so a higher
+     * level (e.g. EVERYTHING) is preserved.
+     *
+     * @pre `output_streams_` vector is allocated
+     * @post Verbosity level is the larger of its previous value and `v`, and
+     * outputs for `output_streams_` are set accordingly.
+     */
+    void Logger::raiseVerbosity(Verbosity v)
+    {
+      if (v > verbosity_)
+      {
+        setVerbosity(v);
+      }
+    }
+
     /// @brief Gets verbosity level
     Logger::Verbosity Logger::verbosity()
     {

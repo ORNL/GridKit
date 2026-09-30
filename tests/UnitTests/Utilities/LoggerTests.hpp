@@ -191,6 +191,36 @@ namespace GridKit
         return status.report(__func__);
       }
 
+      /**
+       * @brief Test raising the verbosity level.
+       *
+       * `raiseVerbosity` increases a lower verbosity to the requested level
+       * and leaves an equal or higher verbosity unchanged.
+       */
+      TestOutcome raiseVerbosity()
+      {
+        using out = GridKit::Utilities::Logger;
+
+        TestStatus status;
+
+        const auto previous_verbosity = out::verbosity();
+
+        out::setVerbosity(out::WARNINGS);
+        out::raiseVerbosity(out::SUMMARY);
+        status *= (out::verbosity() == out::SUMMARY);
+
+        out::raiseVerbosity(out::ERRORS);
+        status *= (out::verbosity() == out::SUMMARY);
+
+        out::setVerbosity(out::EVERYTHING);
+        out::raiseVerbosity(out::SUMMARY);
+        status *= (out::verbosity() == out::EVERYTHING);
+
+        out::setVerbosity(previous_verbosity);
+
+        return status.report(__func__);
+      }
+
     private:
       /// Private method to return the string preceding error output
       std::string error_text()
