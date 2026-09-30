@@ -20,8 +20,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for BusFault..." << std::endl;
-      Log::misc() << "Jacobian evaluation not implemented!" << std::endl;
+      Log::misc() << "BusFault: Jacobian evaluation is not implemented\n";
       return 0;
     }
 

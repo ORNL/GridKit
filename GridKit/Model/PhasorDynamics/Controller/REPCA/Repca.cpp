@@ -18,8 +18,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Repca...\n";
-        Log::misc() << "Jacobian evaluation is not implemented!\n";
+        Log::misc() << "Repca: Jacobian evaluation is not implemented\n";
         return 0;
       }
 

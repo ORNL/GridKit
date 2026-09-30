@@ -19,8 +19,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for GenClassical..." << std::endl;
-      Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
+      Log::misc() << "GenClassical: Jacobian evaluation is not implemented\n";
 
       return 0;
     }

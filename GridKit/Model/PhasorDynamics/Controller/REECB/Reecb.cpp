@@ -18,8 +18,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Reecb...\n";
-        Log::misc() << "Jacobian evaluation is not implemented!\n";
+        Log::misc() << "Reecb: Jacobian evaluation is not implemented\n";
         return 0;
       }
 
