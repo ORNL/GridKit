@@ -20,7 +20,7 @@ that name.
 ### Feature branches
 
 For each new feature feature create a new branch from `develop`. Name your
-feature branch `<developer name>/<short_feature_description>_dev. Bug fix
+feature branch `<developer name>/<short_feature_description>_dev`. Bug fix
 branches should follow similar pattern, only ending with `_fix`. Always
 use underscores to separate different words.
 ```

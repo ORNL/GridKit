@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(
   GridKit
-  VERSION 0.1.0
+  VERSION 0.2.0
   LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -130,7 +130,7 @@ if(GRIDKIT_ENABLE_SUNDIALS)
   enable_language(C)
   find_package(
     SUNDIALS
-    7.4.0
+    7.8.0
     REQUIRED
     CONFIG
     PATHS
