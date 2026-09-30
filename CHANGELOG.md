@@ -87,6 +87,7 @@
 - Fixed the `TenGenGenrou` example to output the correct omega values.
 - Added `GridKit_ENABLE_DEVELOPER_MODE` CMake option; in developer mode the Logger defaults to `EVERYTHING` verbosity.
 - Added `Logger::raiseVerbosity()`, which raises the verbosity without lowering a higher level.
+- Changed most of the core library code outputs to use the Logger instead of `std::cout`/`std::cerr`.
 
 ## v0.1
 
