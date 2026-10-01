@@ -126,7 +126,7 @@ git push origin <target branch>
 ```
 where `<target branch>` is `main` or `develop`.
 
-Release branches are not deleted after the merges. A bug found after the
+Unlike feature branches, release branches are not deleted after the merges. A bug found after the
 release is fixed on the release branch, the patch version is bumped (e.g.,
 `v0.2.1`), and the release branch is merged again into `main` and `develop`
 following the same steps.
