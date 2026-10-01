@@ -111,7 +111,7 @@ release preparation are allowed on the release branch; new features go to
 `develop`. Creating the release branch frees `develop` for the next
 release's features.
 
-### Merging a release branch
+### Merging a release branch (maintainers only)
 
 A release branch is merged twice: first into `main` and then back into
 `develop`. Both merges are done through GitHub pull requests and must be
