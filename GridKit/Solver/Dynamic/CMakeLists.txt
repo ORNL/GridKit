@@ -5,7 +5,7 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
+if(TARGET SUNDIALS::idas AND GRIDKIT_ENABLE_SUNDIALS_SPARSE)
   gridkit_add_library(
     solvers_dyn
     SOURCES Ida.cpp
@@ -24,7 +24,7 @@ if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
       PUBLIC
       GridKit::sparse_matrix
       GridKit::dense_vector)
-else()
+elseif(TARGET SUNDIALS::idas)
   gridkit_add_library(
     solvers_dyn
     SOURCES Ida.cpp
@@ -44,6 +44,20 @@ else()
 endif()
 
 if(GRIDKIT_ENABLE_RESOLVE)
+  gridkit_add_library(
+    implicit_trapezoidal
+    SOURCES ImplicitTrapezoidal.cpp
+    HEADERS ImplicitTrapezoidal.hpp
+    LINK_LIBRARIES
+      PRIVATE
+      ReSolve::ReSolve
+      PUBLIC
+      GridKit::dense_vector
+      PUBLIC
+      GridKit::definitions
+      PUBLIC
+      GridKit::sparse_matrix)
+
   gridkit_add_library(
     rosenbrock
     SOURCES Rosenbrock.cpp RosenbrockTableaus.cpp

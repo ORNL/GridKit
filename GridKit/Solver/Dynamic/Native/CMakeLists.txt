@@ -8,6 +8,16 @@ if(GRIDKIT_ENABLE_RESOLVE)
       ReSolve::ReSolve
       PUBLIC
       GridKit::dense_vector)
+
+  gridkit_add_library(
+    rms_norm
+    SOURCES RmsNorm.cpp
+    HEADERS RmsNorm.hpp
+    LINK_LIBRARIES
+      PRIVATE
+      ReSolve::ReSolve
+      PUBLIC
+      GridKit::dense_vector)
 endif()
 
 gridkit_add_library(
