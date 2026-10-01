@@ -98,6 +98,64 @@ Once your branch has been merged or is otherwise no longer needed, delete it
 from the GridKit™ GitHub repository. We recommend cleaning up soon after 
 the merge and periodically going through your existing branches to cleanup.
 
+### Creating a release branch (maintainers only)
+
+Release branches are created by maintainers from `develop` once it contains
+all features planned for the release. Name the branch `release-<version>`.
+```
+git checkout -b release-0.2 develop
+```
+On the release branch, update the version number and
+[CHANGELOG.md](CHANGELOG.md), and commit the changes. Only bug fixes and
+release preparation are allowed on the release branch; new features go to
+`develop`. Creating the release branch frees `develop` for the next
+release's features.
+
+### Merging a release branch (maintainers only)
+
+A release branch is merged twice: first into `main` and then back into
+`develop`. Both merges are done through GitHub pull requests and must be
+merged with a merge commit, not squashed or rebased, so that `main` and
+`develop` share the release branch commits as common ancestors.
+Alternatively, merge the branches on the command line with
+```
+git checkout <target branch>
+git pull
+git merge --no-ff release-0.2
+git push origin <target branch>
+```
+where `<target branch>` is `main` or `develop`.
+
+Unlike feature branches, release branches are not deleted after the merges. A bug found after the
+release is fixed on the release branch, the patch version is bumped (e.g.,
+`v0.2.1`), and the release branch is merged again into `main` and `develop`
+following the same steps.
+
+#### Merging into `main`
+
+When the release branch is ready, create a pull request targeting `main`.
+After the pull request is merged, tag the merge commit with the release
+version and push the tag.
+```
+git checkout main
+git pull
+git tag -a v0.2 -m "GridKit v0.2"
+git push origin v0.2
+```
+
+#### Merging into `develop`
+
+Create a pull request from the release branch targeting `develop`, so that
+bug fixes made on the release branch are not lost. Resolve any merge
+conflicts with features added to `develop` since the release branch was
+created.
+
+If a fix applies only to the release and not to `develop`, still merge the
+release branch, but resolve the conflict in favor of `develop` or revert the
+fix on `develop` right after the merge, noting the reason in the commit
+message. Do not cherry-pick individual fixes instead of merging, as this
+loses the shared history between `main` and `develop`.
+
 ## Documenting Code
 
 ### Doxygen
