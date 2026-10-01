@@ -98,7 +98,7 @@ Once your branch has been merged or is otherwise no longer needed, delete it
 from the GridKit™ GitHub repository. We recommend cleaning up soon after 
 the merge and periodically going through your existing branches to cleanup.
 
-### Creating a release branch
+### Creating a release branch (maintainers only)
 
 Release branches are created by maintainers from `develop` once it contains
 all features planned for the release. Name the branch `release-<version>`.
