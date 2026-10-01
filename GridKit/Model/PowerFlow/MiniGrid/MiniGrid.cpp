@@ -30,7 +30,6 @@ namespace GridKit
       B22_(-22.0),
       B23_(12.0)
   {
-    // std::cout << "Create a load model with " << size_ << " variables ...\n";
   }
 
   template <class ScalarT, typename IdxT>

@@ -140,7 +140,7 @@ using IdxT    = std::size_t;
 
 int main()
 {
-  Log::setVerbosity(Log::Verbosity::SUMMARY);
+  Log::raiseVerbosity(Log::Verbosity::SUMMARY);
 
   // Instantiate system
   auto filepath = std::filesystem::path("ThreeBusCoSimClient.case.json");

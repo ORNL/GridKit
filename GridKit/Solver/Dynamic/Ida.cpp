@@ -672,13 +672,11 @@ namespace AnalysisManager
       long int nstB;
       RealT    time;
 
-      // std::cout << "Backward integration for adjoint analysis ... ";
-
       retval = IDASolveB(solver_, t_init, IDA_NORMAL);
       checkOutput(retval, "IDASolveB");
 
       IDAGetNumSteps(IDAGetAdjIDABmem(solver_, backwardID_), &nstB);
-      // std::cout << "done ( nst = " << nstB << " )\n";
+      Log::summary() << "Backward integration for adjoint analysis done (nst = " << nstB << ")\n";
 
       retval = IDAGetB(solver_, backwardID_, &time, yyB_, ypB_);
       checkOutput(retval, "IDAGetB");

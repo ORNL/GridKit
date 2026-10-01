@@ -1,15 +1,15 @@
-#include <fstream>
-#include <iostream>
-#include <string>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 #include "VectorHandlerTests.hpp"
+
+using Log = GridKit::Utilities::Logger;
 
 int main(int, char**)
 {
   GridKit::Testing::TestingResults result;
 
   {
-    std::cout << "Running vector handler tests on CPU:\n";
+    Log::misc() << "Running vector handler tests on CPU:\n";
 
     GridKit::LinearAlgebra::VectorHandler<double, size_t> handler;
 
@@ -26,8 +26,6 @@ int main(int, char**)
     result += test.diagSolve(100);
     result += test.max(100);
     result += test.abs(100);
-
-    std::cout << "\n";
   }
 
 #ifdef GRIDKIT_ENABLE_CUDA

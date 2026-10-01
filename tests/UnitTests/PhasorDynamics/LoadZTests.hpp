@@ -12,12 +12,15 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <class ScalarT, typename IdxT>
     class LoadZTests
     {
@@ -114,8 +117,9 @@ namespace GridKit
         load.evaluateResidual(); //< Tracks dependencies
         load.evaluateJacobian(); //< Converts dependencies to CSR
         auto* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: Load DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: Load DependencyTracking Jacobian\n";
+        model_jacobian->print(output_stream);
 
         // Compare model Jacobian wih dependencies computed analytically
         auto ref                = analyticalJacobian(R, X);
@@ -198,8 +202,9 @@ namespace GridKit
         load.evaluateJacobian();
         load.constructCsr();
         auto* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: Load Enzyme Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: Load Enzyme Jacobian\n";
+        model_jacobian->print(output_stream);
 
         // Compare model Jacobian wih dependencies computed analytically
         std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian(R, X);

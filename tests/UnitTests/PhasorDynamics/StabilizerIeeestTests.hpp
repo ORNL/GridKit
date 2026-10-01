@@ -11,12 +11,15 @@
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <class ScalarT, typename IdxT>
     class StabilizerIeeestTests
     {
@@ -227,9 +230,10 @@ namespace GridKit
 
         stab.evaluateResidual();
         stab.evaluateJacobian();
-        auto model_jacobian = stab.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: Ieeest DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        auto  model_jacobian = stab.getCsrJacobian();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: Ieeest DependencyTracking Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
@@ -262,9 +266,10 @@ namespace GridKit
         stab.evaluateResidual();
         stab.evaluateJacobian();
         stab.constructCsr();
-        auto model_jacobian = stab.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: Ieeest Enzyme Jacobian\n";
-        model_jacobian->print();
+        auto  model_jacobian = stab.getCsrJacobian();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: Ieeest Enzyme Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }

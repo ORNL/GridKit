@@ -11,12 +11,14 @@
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
 
     template <class ScalarT, typename IdxT>
     class BusFaultTests
@@ -149,8 +151,9 @@ namespace GridKit
 
         fault.evaluateJacobian();
         auto* model_jacobian = fault.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: BusFault DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: BusFault DependencyTracking Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
@@ -185,8 +188,9 @@ namespace GridKit
         fault.evaluateJacobian();
         fault.constructCsr();
         auto* model_jacobian = fault.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: BusFault Enzyme Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: BusFault Enzyme Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }

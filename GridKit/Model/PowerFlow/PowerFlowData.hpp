@@ -38,17 +38,17 @@ namespace GridKit
       inline std::string str() const
       {
         std::stringstream ss;
-        std::cerr << std::setw(10) << bus_i
-                  << std::setw(10) << type
-                  << std::setw(10) << Gs
-                  << std::setw(10) << Bs
-                  << std::setw(10) << area
-                  << std::setw(10) << Vm
-                  << std::setw(10) << Va
-                  << std::setw(10) << baseKV
-                  << std::setw(10) << zone
-                  << std::setw(10) << Vmax
-                  << std::setw(10) << Vmin;
+        ss << std::setw(10) << bus_i
+           << std::setw(10) << type
+           << std::setw(10) << Gs
+           << std::setw(10) << Bs
+           << std::setw(10) << area
+           << std::setw(10) << Vm
+           << std::setw(10) << Va
+           << std::setw(10) << baseKV
+           << std::setw(10) << zone
+           << std::setw(10) << Vmax
+           << std::setw(10) << Vmin;
         ss << "\n";
         return ss.str();
       }
@@ -64,9 +64,9 @@ namespace GridKit
       inline std::string str() const
       {
         std::stringstream ss;
-        std::cerr << std::setw(10) << bus_i
-                  << std::setw(10) << Pd
-                  << std::setw(10) << Qd;
+        ss << std::setw(10) << bus_i
+           << std::setw(10) << Pd
+           << std::setw(10) << Qd;
         ss << "\n";
         return ss.str();
       }

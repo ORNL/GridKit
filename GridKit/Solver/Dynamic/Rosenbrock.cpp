@@ -6,6 +6,7 @@
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/Solver/LinearSolver.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 /**
  * @brief A small helper macro to "bubble" errors. The Rosenbrock implementations call many
@@ -341,7 +342,7 @@ namespace AnalysisManager
 
       if (model_->tag().size() != static_cast<size_t>(model_->size()))
       {
-        std::cerr << "Model tag is either unset or does not match the size of the model\n";
+        ::GridKit::Utilities::Logger::error() << "Model tag is either unset or does not match the size of the model\n";
         return 1;
       }
 
@@ -435,7 +436,7 @@ namespace AnalysisManager
           {
             if (err_norm_ == nullptr)
             {
-              std::cerr << "The provided step controller requires the use of an error norm, but none was provided!\n";
+              ::GridKit::Utilities::Logger::error() << "The provided step controller requires the use of an error norm, but none was provided!\n";
 
               return -1;
             }

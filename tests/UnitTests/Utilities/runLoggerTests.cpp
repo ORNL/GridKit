@@ -15,11 +15,13 @@ int main()
   // Create test results accounting object
   GridKit::Testing::TestingResults result;
 
-  // Run tests
+  // Run tests (defaultVerbosity first, before any test changes the verbosity)
+  result += test.defaultVerbosity();
   result += test.errorOutput();
   result += test.warningOutput();
   result += test.summaryOutput();
   result += test.miscOutput();
+  result += test.raiseVerbosity();
 
   // Return tests summary
   return result.summary();

@@ -10,7 +10,7 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
-    using out = GridKit::Utilities::Logger;
+    using Log = GridKit::Utilities::Logger;
 
     /**
      * @brief dot product of two vectors i.e, a = x^Ty
@@ -173,7 +173,7 @@ namespace GridKit
         }
         break;
       default:
-        out::error() << "Unrecognized transpose option " << transpose
+        Log::error() << "Unrecognized transpose option " << transpose
                      << " in gemv. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
       } // switch
       x->setDataUpdated(memory::HOST);

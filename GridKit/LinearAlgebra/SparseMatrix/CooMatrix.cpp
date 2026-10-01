@@ -6,10 +6,14 @@
 #include <iomanip>
 #include <limits>
 
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
 namespace GridKit
 {
   namespace LinearAlgebra
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <typename RealT, typename IdxT>
     CooMatrix<RealT, IdxT>::CooMatrix()
     {
@@ -102,8 +106,8 @@ namespace GridKit
         // Set device data to null
         if (d_row_data_ || d_col_data_ || d_val_data_)
         {
-          std::cerr << "Device data unexpectedly allocated. "
-                    << "Possible bug in matrix::Sparse class.\n";
+          Log::error() << "Device data unexpectedly allocated. "
+                       << "Possible bug in matrix::Sparse class.\n";
         }
         d_row_data_                = nullptr;
         d_col_data_                = nullptr;
@@ -156,8 +160,8 @@ namespace GridKit
         // Set host data to null
         if (h_row_data_ || h_col_data_ || h_val_data_)
         {
-          std::cerr << "Host data unexpectedly allocated. "
-                    << "Possible bug in matrix::Sparse class.\n";
+          Log::error() << "Host data unexpectedly allocated. "
+                       << "Possible bug in matrix::Sparse class.\n";
         }
         h_row_data_                = nullptr;
         h_col_data_                = nullptr;
@@ -171,8 +175,8 @@ namespace GridKit
         *vals                      = nullptr;
         break;
       default:
-        std::cerr << "CooMatrix constructor failed! "
-                  << "Possible bug in memory spaces setting.\n";
+        Log::error() << "CooMatrix constructor failed! "
+                     << "Possible bug in memory spaces setting.\n";
         break;
       }
     }
@@ -258,14 +262,14 @@ namespace GridKit
       case HOST:
         if (owns_cpu_sparsity_pattern_ && (h_row_data_ || h_col_data_))
         {
-          std::cerr << "Trying to set matrix host data, but the data already set!\n";
-          std::cerr << "Ignoring setDataPointers function call ...\n";
+          Log::warning() << "Trying to set matrix host data, but the data already set! "
+                         << "Ignoring setDataPointers function call.\n";
           return 1;
         }
         if (owns_cpu_values_ && h_val_data_)
         {
-          std::cerr << "Trying to set matrix host values, but the values already set!\n";
-          std::cerr << "Ignoring setValuesPointer function call ...\n";
+          Log::warning() << "Trying to set matrix host values, but the values already set! "
+                         << "Ignoring setValuesPointer function call.\n";
           return 1;
         }
         h_row_data_                = row_data;
@@ -278,14 +282,14 @@ namespace GridKit
       case DEVICE:
         if (owns_gpu_sparsity_pattern_ && (d_row_data_ || d_col_data_))
         {
-          std::cerr << "Trying to set matrix host data, but the data already set!\n";
-          std::cerr << "Ignoring setDataPointers function call ...\n";
+          Log::warning() << "Trying to set matrix host data, but the data already set! "
+                         << "Ignoring setDataPointers function call.\n";
           return 1;
         }
         if (owns_gpu_values_ && d_val_data_)
         {
-          std::cerr << "Trying to set matrix device values, but the values already set!\n";
-          std::cerr << "Ignoring setValuesPointer function call ...\n";
+          Log::warning() << "Trying to set matrix device values, but the values already set! "
+                         << "Ignoring setValuesPointer function call.\n";
           return 1;
         }
         d_row_data_                = row_data;
@@ -360,7 +364,7 @@ namespace GridKit
     {
       if (!h_data_updated_)
       {
-        std::cerr << "CooMatrix::getCsrRowData requires up-to-date host data, but host is out of date!\n";
+        Log::error() << "CooMatrix::getCsrRowData requires up-to-date host data, but host is out of date!\n";
         assert(h_data_updated_);
         return nullptr;
       }
@@ -524,14 +528,14 @@ namespace GridKit
 
         if (h_data_updated_)
         {
-          std::cerr << "CooMatrix::syncData is trying to sync host, but host already up to date!\n";
+          Log::warning() << "CooMatrix::syncData is trying to sync host, but host already up to date!\n";
           assert(!h_data_updated_);
           return 1;
         }
         if (!d_data_updated_)
         {
-          std::cerr << "CooMatrix::syncData is trying to sync host with device, but device is out of date!\n"
-                    << "See CooMatrix::syncData documentation\n.";
+          Log::error() << "CooMatrix::syncData is trying to sync host with device, but device is out of date! "
+                       << "See CooMatrix::syncData documentation.\n";
           assert(d_data_updated_);
         }
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
@@ -555,14 +559,14 @@ namespace GridKit
 
         if (d_data_updated_)
         {
-          std::cerr << "CooMatrix::syncData is trying to sync device, but device already up to date!\n";
+          Log::warning() << "CooMatrix::syncData is trying to sync device, but device already up to date!\n";
           assert(!d_data_updated_);
           return 1;
         }
         if (!h_data_updated_)
         {
-          std::cerr << "CooMatrix::syncData is trying to sync device with host, but host is out of date!\n"
-                    << "See CooMatrix::syncData documentation\n.";
+          Log::error() << "CooMatrix::syncData is trying to sync device with host, but host is out of date! "
+                       << "See CooMatrix::syncData documentation.\n";
           assert(h_data_updated_);
         }
         if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr))

@@ -7,6 +7,7 @@
 #include <numbers>
 
 #include <GridKit/Model/PowerFlow/Bus/BusSlack.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -113,8 +114,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateJacobian()
   {
-    std::cout << "Evaluate Jacobian for Gen2..." << std::endl;
-    std::cout << "Jacobian evaluation not implemented!" << std::endl;
+    ::GridKit::Utilities::Logger::warning() << "Generator2: Jacobian evaluation not implemented!\n";
     return 0;
   }
 
@@ -161,18 +161,9 @@ namespace GridKit
     return 0;
   }
 
-  // template <class ScalarT, typename IdxT>
-  // int Generator2<ScalarT, IdxT>::evaluateAdjointJacobian()
-  // {
-  //     std::cout << "Evaluate adjoint Jacobian for Gen2..." << std::endl;
-  //     std::cout << "Adjoint Jacobian evaluation not implemented!" << std::endl;
-  //     return 0;
-  // }
-
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
-    // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
     const auto* yB = yB_.getData();
     auto*       gB = gB_.getData();
 

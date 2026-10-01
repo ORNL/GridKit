@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Colors.hpp>
@@ -38,6 +39,28 @@ namespace GridKit
       }
 
       /**
+       * @brief Test the verbosity the Logger starts with.
+       *
+       * Developer mode (GRIDKIT_ENABLE_DEVELOPER_MODE) starts at EVERYTHING;
+       * otherwise the Logger starts at WARNINGS. Must run before any test that
+       * changes the verbosity.
+       */
+      TestOutcome defaultVerbosity()
+      {
+        using Log = GridKit::Utilities::Logger;
+
+        TestStatus status;
+
+#ifdef GRIDKIT_ENABLE_DEVELOPER_MODE
+        status = (Log::verbosity() == Log::EVERYTHING);
+#else
+        status = (Log::verbosity() == Log::WARNINGS);
+#endif
+
+        return status.report(__func__);
+      }
+
+      /**
        * @brief Test data stream for error log messages.
        *
        * This method tests streaming messages to `Logger::error()` data
@@ -46,7 +69,7 @@ namespace GridKit
        */
       TestOutcome errorOutput()
       {
-        using out = GridKit::Utilities::Logger;
+        using Log = GridKit::Utilities::Logger;
         std::string s1("Test error output ...");
         std::string s2("Another error output test ...\n");
         std::string answer = error_text() + s1 + "\n" + error_text() + s2;
@@ -55,18 +78,15 @@ namespace GridKit
 
         std::ostringstream file;
 
-        out::setOutput(file);
-        out::setVerbosity(out::ERRORS);
-        out::error() << s1 << std::endl;
-        out::error() << s2;
+        Log::setOutput(file);
+        Log::setVerbosity(Log::ERRORS);
+        Log::error() << s1 << std::endl;
+        Log::error() << s2;
 
-        out::warning() << s1;
-        out::warning() << s2;
-        out::summary() << s1;
-        out::misc() << s1;
-
-        // std::cout << file.str();
-        // std::cout << answer;
+        Log::warning() << s1;
+        Log::warning() << s2;
+        Log::summary() << s1;
+        Log::misc() << s1;
 
         status = (answer == file.str());
 
@@ -83,7 +103,7 @@ namespace GridKit
        */
       TestOutcome warningOutput()
       {
-        using out = GridKit::Utilities::Logger;
+        using Log = GridKit::Utilities::Logger;
         std::string s1("Test error output ...\n");
         std::string s2("Test warning output ...\n");
         std::string answer = error_text() + s1 + warning_text() + s2;
@@ -92,15 +112,13 @@ namespace GridKit
 
         std::ostringstream file;
 
-        out::setOutput(file);
-        out::setVerbosity(out::WARNINGS);
+        Log::setOutput(file);
+        Log::setVerbosity(Log::WARNINGS);
 
-        out::error() << s1;
-        out::warning() << s2;
-        out::summary() << s1;
-        out::misc() << s1;
-
-        // std::cout << file.str();
+        Log::error() << s1;
+        Log::warning() << s2;
+        Log::summary() << s1;
+        Log::misc() << s1;
 
         status = (answer == file.str());
 
@@ -117,7 +135,7 @@ namespace GridKit
        */
       TestOutcome summaryOutput()
       {
-        using out = GridKit::Utilities::Logger;
+        using Log = GridKit::Utilities::Logger;
         std::string s1("Test error output ...\n");
         std::string s2("Test warning output ...\n");
         std::string s3("Test summary output ...\n");
@@ -127,15 +145,13 @@ namespace GridKit
 
         std::ostringstream file;
 
-        out::setOutput(file);
-        out::setVerbosity(out::SUMMARY);
+        Log::setOutput(file);
+        Log::setVerbosity(Log::SUMMARY);
 
-        out::error() << s1;
-        out::warning() << s2;
-        out::summary() << s3;
-        out::misc() << s1;
-
-        // std::cout << file.str();
+        Log::error() << s1;
+        Log::warning() << s2;
+        Log::summary() << s3;
+        Log::misc() << s1;
 
         status = (answer == file.str());
 
@@ -151,7 +167,7 @@ namespace GridKit
        */
       TestOutcome miscOutput()
       {
-        using out = GridKit::Utilities::Logger;
+        using Log = GridKit::Utilities::Logger;
         std::string s1("Test error output ...\n");
         std::string s2("Test warning output ...\n");
         std::string s3("Test summary output ...\n");
@@ -162,17 +178,45 @@ namespace GridKit
 
         std::ostringstream file;
 
-        out::setOutput(file);
-        out::setVerbosity(out::EVERYTHING);
+        Log::setOutput(file);
+        Log::setVerbosity(Log::EVERYTHING);
 
-        out::error() << s1;
-        out::warning() << s2;
-        out::summary() << s3;
-        out::misc() << s4;
-
-        // std::cout << file.str();
+        Log::error() << s1;
+        Log::warning() << s2;
+        Log::summary() << s3;
+        Log::misc() << s4;
 
         status = (answer == file.str());
+
+        return status.report(__func__);
+      }
+
+      /**
+       * @brief Test raising the verbosity level.
+       *
+       * `raiseVerbosity` increases a lower verbosity to the requested level
+       * and leaves an equal or higher verbosity unchanged.
+       */
+      TestOutcome raiseVerbosity()
+      {
+        using Log = GridKit::Utilities::Logger;
+
+        TestStatus status;
+
+        const auto previous_verbosity = Log::verbosity();
+
+        Log::setVerbosity(Log::WARNINGS);
+        Log::raiseVerbosity(Log::SUMMARY);
+        status *= (Log::verbosity() == Log::SUMMARY);
+
+        Log::raiseVerbosity(Log::ERRORS);
+        status *= (Log::verbosity() == Log::SUMMARY);
+
+        Log::setVerbosity(Log::EVERYTHING);
+        Log::raiseVerbosity(Log::SUMMARY);
+        status *= (Log::verbosity() == Log::EVERYTHING);
+
+        Log::setVerbosity(previous_verbosity);
 
         return status.report(__func__);
       }

@@ -498,8 +498,9 @@ namespace GridKit
         system.evaluateResidual();
         system.evaluateJacobian();
         auto* system_jacobian = system.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
-        system_jacobian->print();
+        auto& output_stream   = Log::misc();
+        output_stream << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
+        system_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(system_jacobian);
       }
@@ -518,8 +519,9 @@ namespace GridKit
         system.evaluateResidual();
         system.evaluateJacobian();
         auto* system_jacobian = system.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: System Jacobian with Enzyme\n";
-        system_jacobian->print();
+        auto& output_stream   = Log::misc();
+        output_stream << "Sparse Csr Matrix: System Jacobian with Enzyme\n";
+        system_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(system_jacobian);
       }

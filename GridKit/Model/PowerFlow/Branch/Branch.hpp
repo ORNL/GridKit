@@ -75,7 +75,6 @@ namespace GridKit
 
     void setX(RealT X)
     {
-      // std::cout << "Setting X ...\n";
       X_ = X;
     }
 

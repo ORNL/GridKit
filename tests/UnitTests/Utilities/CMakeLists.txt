@@ -9,7 +9,7 @@ target_include_directories(
 add_executable(test_logger runLoggerTests.cpp)
 target_link_libraries(
   test_logger
-  PRIVATE GridKit::utilities_logger GridKit::testing)
+  PRIVATE GridKit::definitions GridKit::utilities_logger GridKit::testing)
 add_executable(test_cli_args runCliArgsTests.cpp)
 target_link_libraries(
   test_cli_args

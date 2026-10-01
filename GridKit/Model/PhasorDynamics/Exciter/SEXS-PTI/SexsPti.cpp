@@ -15,8 +15,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for SexsPti..." << std::endl;
-        Log::misc() << "Jacobian evaluation not implemented!" << std::endl;
+        Log::misc() << "SexsPti: Jacobian evaluation is not implemented\n";
         return 0;
       }
 

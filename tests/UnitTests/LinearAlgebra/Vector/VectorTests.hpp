@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <iterator>
 #include <sstream>
 #include <string>
@@ -204,10 +205,11 @@ namespace GridKit
         status *= replacement_storage[0] == ScalarT{3.0};
 
         // Owned vector storage must not be replaced by external storage.
+        const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing that owned vector storage cannot be replaced by external storage. "
                     << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        Log::setVerbosity(previous_verbosity);
         Vector<ScalarT, IdxT> owned(N);
         status                 *= owned.allocate(memory::HOST) == 0;
         auto* const owned_data  = owned.getData(memory::HOST);
@@ -445,7 +447,6 @@ namespace GridKit
 
         for (IdxT i = 0; i < x.getSize(); ++i)
         {
-          // std::cout << x->getData("cpu")[i] << "\n";
           if (!isEqual(x.getData(memory::HOST)[i], answer))
           {
             std::cout << std::setprecision(16);

@@ -18,12 +18,14 @@
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Testing/Tokenizer.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
 
     template <class ScalarT, typename IdxT>
     class GenClassicalTests
@@ -474,8 +476,9 @@ namespace GridKit
 
         gen.evaluateJacobian();
         auto* model_jacobian = gen.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: GenClassical DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: GenClassical DependencyTracking Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
@@ -509,8 +512,9 @@ namespace GridKit
         gen.evaluateJacobian();
         gen.constructCsr();
         auto* model_jacobian = gen.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: GenClassical Enzyme Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: GenClassical Enzyme Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }

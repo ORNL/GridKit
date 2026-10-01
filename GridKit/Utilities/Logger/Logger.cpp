@@ -6,14 +6,20 @@
 
 #include "Logger.hpp"
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Utilities/Colors.hpp>
 
 namespace GridKit
 {
   namespace Utilities
   {
+#ifdef GRIDKIT_ENABLE_DEVELOPER_MODE
+    /// @brief Developer mode prints every message
+    Logger::Verbosity Logger::verbosity_ = Logger::EVERYTHING;
+#else
     /// @brief Default verbosity is to print error and warning messages
     Logger::Verbosity Logger::verbosity_ = Logger::WARNINGS;
+#endif
 
     /// @brief Default output is standard output
     std::ostream* Logger::logger_ = &std::cout;
@@ -41,6 +47,24 @@ namespace GridKit
     {
       verbosity_ = v;
       updateVerbosity(output_streams_);
+    }
+
+    /**
+     * @brief Raises verbosity level to at least `v`
+     *
+     * Unlike `setVerbosity`, this never lowers the verbosity, so a higher
+     * level (e.g. EVERYTHING) is preserved.
+     *
+     * @pre `output_streams_` vector is allocated
+     * @post Verbosity level is the larger of its previous value and `v`, and
+     * outputs for `output_streams_` are set accordingly.
+     */
+    void Logger::raiseVerbosity(Verbosity v)
+    {
+      if (v > verbosity_)
+      {
+        setVerbosity(v);
+      }
     }
 
     /// @brief Gets verbosity level

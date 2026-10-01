@@ -20,9 +20,6 @@ namespace GridKit
   BusPQ<ScalarT, IdxT>::BusPQ()
     : BaseBus<ScalarT, IdxT>(0), V0_(0.0), theta0_(0.0)
   {
-    // std::cout << "Create BusPQ..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
-
     size_ = 2;
   }
 
@@ -41,9 +38,6 @@ namespace GridKit
   BusPQ<ScalarT, IdxT>::BusPQ(ScalarT V, ScalarT theta)
     : BaseBus<ScalarT, IdxT>(0), V0_(V), theta0_(theta)
   {
-    // std::cout << "Create BusPQ..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
-
     size_ = 2;
   }
 
@@ -51,16 +45,12 @@ namespace GridKit
   BusPQ<ScalarT, IdxT>::BusPQ(BusData& data)
     : BaseBus<ScalarT, IdxT>(data.bus_i), V0_(data.Vm), theta0_(data.Va)
   {
-    // std::cout << "Create BusPQ..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
-
     size_ = 2;
   }
 
   template <class ScalarT, typename IdxT>
   BusPQ<ScalarT, IdxT>::~BusPQ()
   {
-    // std::cout << "Destroy PQ bus ..." << std::endl;
   }
 
   /*!
@@ -69,7 +59,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::allocate()
   {
-    // std::cout << "Allocate PQ bus ..." << std::endl;
     this->allocateVectors(size_);
     tag_.resize(static_cast<size_t>(size_));
 
@@ -113,7 +102,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::initialize()
   {
-    // std::cout << "Initialize BusPQ..." << std::endl;
     auto* y  = y_.getData();
     auto* yp = yp_.getData();
     y[0]     = V0_;
@@ -137,7 +125,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::evaluateResidual()
   {
-    // std::cout << "Evaluating residual of a PQ bus ...\n";
     auto* f = f_.getData();
     f[0]    = 0.0;
     f[1]    = 0.0;
@@ -151,7 +138,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::initializeAdjoint()
   {
-    // std::cout << "Initialize BusPQ..." << std::endl;
     auto* yB  = yB_.getData();
     auto* ypB = ypB_.getData();
     yB[0]     = 0.0;

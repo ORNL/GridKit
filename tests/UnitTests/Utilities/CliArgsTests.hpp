@@ -62,9 +62,10 @@ namespace GridKit
         status *= args["flag1"].as<bool>() == false;
 
         // bad: duplicate name
+        const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Expect error because options cannot be duplicated\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        Log::setVerbosity(previous_verbosity);
         status *= throws<std::runtime_error>(
             [&]()
             {
@@ -151,9 +152,10 @@ namespace GridKit
         status *=
             args.get<double, 3>("params") == args["params"].as<double, 3>();
 
+        const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Expect error while testing that unrecognized options are rejected\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        Log::setVerbosity(previous_verbosity);
         status *= throws<std::runtime_error>(
             [&]()
             { args.get("bad"); });
@@ -186,6 +188,7 @@ namespace GridKit
               { args.parseArgs(cl.argc, cl.argv); });
         };
 
+        const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
 
         // not providing required option
@@ -213,6 +216,7 @@ namespace GridKit
             []
             { CliArgs args{{.name = {"--one", "-1"}}}; });
 
+        Log::setVerbosity(previous_verbosity);
         return status.report(__func__);
       }
 

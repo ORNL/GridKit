@@ -14,6 +14,8 @@
 #include <sstream>
 #include <vector>
 
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
 namespace GridKit
 {
   /**
@@ -56,7 +58,7 @@ namespace GridKit
       {
         if (oldwordcount != wordcount)
         {
-          std::cerr << "Corrupted input data!\n";
+          ::GridKit::Utilities::Logger::error() << "Corrupted input data!\n";
           return;
         }
       }

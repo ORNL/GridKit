@@ -35,7 +35,7 @@ namespace GridKit
         break;
       default:
         // Throw exception
-        std::cout << "Generator type " << bus->BusType() << " unrecognized.\n";
+        ::GridKit::Utilities::Logger::error() << "Generator type " << bus->BusType() << " unrecognized.\n";
       }
       return gen;
     }

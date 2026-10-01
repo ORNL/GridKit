@@ -44,6 +44,7 @@ namespace GridKit
       static void      openOutputFile(std::string filename);
       static void      closeOutputFile();
       static void      setVerbosity(Verbosity v);
+      static void      raiseVerbosity(Verbosity v);
       static Verbosity verbosity();
 
       static std::vector<std::ostream*>& init();

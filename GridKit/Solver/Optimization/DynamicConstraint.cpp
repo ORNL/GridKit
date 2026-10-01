@@ -4,6 +4,8 @@
 #include <cassert>
 #include <iostream>
 
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
 namespace AnalysisManager
 {
   namespace IpoptInterface
@@ -150,7 +152,6 @@ namespace AnalysisManager
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
       {
         param[static_cast<size_t>(i)] = x[i];
-        // std::cout << "x[" << i << "] = " << x[i] << "\n";
       }
       model_->param().setDataUpdated();
 
@@ -163,13 +164,12 @@ namespace AnalysisManager
       status     = integrator_->runSimulationQuadrature(t_final_, dt_monitor_);
       if (status)
       {
-        std::cerr << "Integration failed when using Pm = " << x[0] << "\n";
+        ::GridKit::Utilities::Logger::error() << "Integration failed when using Pm = " << x[0] << "\n";
         return false;
       }
 
       // For now assumes only one forward integrand and multiple optimization parameters.
       g[0] = (integrator_->getIntegral())[0] - x[model_->sizeParams()];
-      // std::cout << "constraint:" << g[0] << std::endl;
       return true;
     }
 
@@ -216,7 +216,7 @@ namespace AnalysisManager
         status     = integrator_->runForwardSimulation(t_final_, dt_monitor_);
         if (status)
         {
-          std::cerr << "Forward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
+          ::GridKit::Utilities::Logger::error() << "Forward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
           return false;
         }
 
@@ -225,7 +225,7 @@ namespace AnalysisManager
         status = integrator_->runBackwardSimulation(t_init_);
         if (status)
         {
-          std::cerr << "Backward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
+          ::GridKit::Utilities::Logger::error() << "Backward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
           return false;
         }
 

@@ -6,6 +6,7 @@
 
 #include <GridKit/Model/PowerFlow/Bus/BaseBus.hpp>
 #include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -64,7 +65,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   Branch<ScalarT, IdxT>::~Branch()
   {
-    // std::cout << "Destroy Branch..." << std::endl;
   }
 
   /*!
@@ -73,7 +73,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::allocate()
   {
-    // std::cout << "Allocate Branch..." << std::endl;
     return 0;
   }
 
@@ -123,7 +122,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::evaluateResidual()
   {
-    // std::cout << "Evaluating branch residual ...\n";
     RealT   b      = -X_ / (R_ * R_ + X_ * X_);
     RealT   g      = R_ / (R_ * R_ + X_ * X_);
     ScalarT dtheta = theta1() - theta2();
@@ -148,36 +146,31 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::evaluateJacobian()
   {
-    std::cout << "Evaluate Jacobian for Branch..." << std::endl;
-    std::cout << "Jacobian evaluation not implemented!" << std::endl;
+    ::GridKit::Utilities::Logger::warning() << "Branch: Jacobian evaluation not implemented!\n";
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::evaluateIntegrand()
   {
-    // std::cout << "Evaluate Integrand for Branch..." << std::endl;
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::initializeAdjoint()
   {
-    // std::cout << "Initialize adjoint for Branch..." << std::endl;
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::evaluateAdjointResidual()
   {
-    // std::cout << "Evaluate adjoint residual for Branch..." << std::endl;
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
-    // std::cout << "Evaluate adjoint Integrand for Branch..." << std::endl;
     return 0;
   }
 

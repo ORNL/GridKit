@@ -19,6 +19,7 @@
 #include <sunmatrix/sunmatrix_dense.h> // access to dense SUNMatrix
 
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace AnalysisManager
 {
@@ -113,8 +114,6 @@ namespace AnalysisManager
       N_VConst(1.0, scale_);
       retval = KINSol(solver_, yy_, KIN_LINESEARCH, scale_, scale_);
       checkOutput(retval, "KINSol");
-      // printOutput(tout);
-      // std::cout << "\n";
       return retval;
     }
 
@@ -199,7 +198,7 @@ namespace AnalysisManager
     {
       if (v == NULL)
       {
-        std::cerr << "\nERROR: Function " << functionName << " failed -- returned NULL pointer!\n\n";
+        GridKit::Utilities::Logger::error() << "Function " << functionName << " failed -- returned NULL pointer!\n";
         throw SundialsException();
       }
     }
@@ -209,7 +208,7 @@ namespace AnalysisManager
     {
       if (retval < 0)
       {
-        std::cerr << "\nERROR: Function " << functionName << " failed with flag " << retval << "!\n\n";
+        GridKit::Utilities::Logger::error() << "Function " << functionName << " failed with flag " << retval << "!\n";
         throw SundialsException();
       }
     }

@@ -7,6 +7,7 @@
 #include <numbers>
 
 #include <GridKit/Model/PowerFlow/Bus/BaseBus.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -53,7 +54,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::allocate()
   {
-    // std::cout << "Allocate Generator4Param..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
     return 0;
   }
@@ -83,8 +83,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::initialize()
   {
-    // std::cout << "Initialize Generator4Param..." << std::endl;
-
     // Compute initial guess for the generator voltage phase
     const ScalarT delta = atan((Xq_ * P0_ - Rs_ * Q0_) / (V() * V() + Rs_ * P0_ + Xq_ * Q0_)) + theta();
 
@@ -192,7 +190,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::evaluateResidual()
   {
-    // std::cout << "Evaluate residual for Generator4Param..." << std::endl;
     auto* f = f_.getData();
 
     f[0] = dotDelta() - omega_b_ * (omega() - omega_s_);
@@ -210,7 +207,6 @@ namespace GridKit
     {
       bus_->getResidual().setDataUpdated();
     }
-    // std::cout << "Residual: t = " << time_ << std::endl;
 
     f_.setDataUpdated();
 
@@ -220,15 +216,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::evaluateJacobian()
   {
-    std::cerr << "Evaluate Jacobian for Generator4Param..." << std::endl;
-    std::cerr << "Jacobian evaluation not implemented!" << std::endl;
+    ::GridKit::Utilities::Logger::warning() << "Generator4Param: Jacobian evaluation not implemented!\n";
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::evaluateIntegrand()
   {
-    // std::cout << "Evaluate Integrand for Generator4Param..." << std::endl;
     auto* g = g_.getData();
 
     g[0] = trajectoryPenalty(time_);
@@ -239,7 +233,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::initializeAdjoint()
   {
-    // std::cout << "Initialize adjoint for Generator4Param..." << std::endl;
     auto* yB  = yB_.getData();
     auto* ypB = ypB_.getData();
 
@@ -274,7 +267,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::evaluateAdjointResidual()
   {
-    // std::cout << "Evaluate adjoint residual for Generator4Param..." << std::endl;
     ScalarT sinPhi = std::sin(delta() - theta());
     ScalarT cosPhi = std::cos(delta() - theta());
 
@@ -295,18 +287,9 @@ namespace GridKit
     return 0;
   }
 
-  // template <class ScalarT, typename IdxT>
-  // int Generator4Param<ScalarT, IdxT>::evaluateAdjointJacobian()
-  // {
-  //     std::cout << "Evaluate adjoint Jacobian for Generator4Param..." << std::endl;
-  //     std::cout << "Adjoint Jacobian evaluation not implemented!" << std::endl;
-  //     return 0;
-  // }
-
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
-    // std::cout << "Evaluate adjoint Integrand for Generator4Param..." << std::endl;
     const auto* yB = yB_.getData();
     auto*       gB = gB_.getData();
 
@@ -380,7 +363,7 @@ namespace GridKit
       else
       {
         // Too far away to extrapolate
-        std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+        ::GridKit::Utilities::Logger::warning() << "Trajectory penalty: Out of time bounds at time " << t << "\n";
         return -1.0;
       }
     }
@@ -411,7 +394,7 @@ namespace GridKit
       }
       else
       {
-        std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+        ::GridKit::Utilities::Logger::warning() << "Trajectory penalty: Out of time bounds at time " << t << "\n";
         return -1.0;
       }
     }
@@ -442,7 +425,7 @@ namespace GridKit
       }
       else
       {
-        std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+        ::GridKit::Utilities::Logger::warning() << "Trajectory penalty: Out of time bounds at time " << t << "\n";
         return -1.0;
       }
     }

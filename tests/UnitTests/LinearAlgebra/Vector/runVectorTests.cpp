@@ -1,8 +1,8 @@
-#include <fstream>
-#include <iostream>
-#include <string>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 #include "VectorTests.hpp"
+
+using Log = GridKit::Utilities::Logger;
 
 int main(int, char**)
 {
@@ -11,7 +11,7 @@ int main(int, char**)
   {
     GridKit::Testing::VectorTests<double, size_t> test;
 
-    std::cout << "Running vector tests on CPU:\n";
+    Log::misc() << "Running vector tests on CPU:\n";
     result += test.vectorConstructor(50, 5);
     result += test.vectorConstructor(50);
 
@@ -32,7 +32,7 @@ int main(int, char**)
   {
     GridKit::Testing::VectorTests test(GridKit::memory::DEVICE);
 
-    std::cout << "Running Testing on GPU:\n";
+    Log::misc() << "Running Testing on GPU:\n";
     result += test.vectorConstructor(50, 5);
     result += test.vectorConstructor(50);
 

@@ -20,6 +20,9 @@ using index_type  = size_t;
 
 int runApplication(int argc, const char* argv[])
 {
+  // Print summaries, such as the run time, without lowering a higher verbosity
+  Log::raiseVerbosity(Log::SUMMARY);
+
   // Study file
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
@@ -78,7 +81,7 @@ int runApplication(int argc, const char* argv[])
   TestStatus status = checkErrors(study);
 
   // Report run time
-  std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+  Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
   return status.get();
 }

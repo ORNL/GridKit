@@ -46,10 +46,13 @@ option(GridKit_ENABLE_UBSAN "Enable the undefined behavior sanitizer" OFF)
 option(GridKit_ENABLE_OPENMP "Enable OpenMP" OFF)
 
 # Enable Threads
-option(GridKit_ENABLE_THREADS "Enable THreads" OFF)
+option(GridKit_ENABLE_THREADS "Enable Threads" OFF)
 
 # ZeroMQ support is disabled by default
 option(GridKit_ENABLE_ZMQ "Enable ZeroMQ support" OFF)
+
+# Developer mode (including more verbose outputs) disabled by default
+option(GridKit_ENABLE_DEVELOPER_MODE "Enable developer mode" OFF)
 
 # This allows use of "GRIDKIT_*" versions of the above options
 list(
@@ -63,7 +66,8 @@ list(
   UBSAN
   OPENMP
   THREADS
-  ZMQ)
+  ZMQ
+  DEVELOPER_MODE)
 foreach(_opt IN LISTS _gridkit_enable_options)
   if(NOT DEFINED GRIDKIT_ENABLE_${_opt})
     set(GRIDKIT_ENABLE_${_opt} ${GridKit_ENABLE_${_opt}})

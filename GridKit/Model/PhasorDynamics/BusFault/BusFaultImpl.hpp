@@ -116,7 +116,6 @@ namespace GridKit
       {
         this->allocateVectors(size_);
       }
-      // std::cout << "Allocate BusFault..." << std::endl;
       auto size = static_cast<std::size_t>(size_);
 
       tag_.resize(size);

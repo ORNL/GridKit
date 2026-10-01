@@ -11,12 +11,15 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <class ScalarT, typename IdxT>
     class LoadZIPTests
     {
@@ -239,8 +242,9 @@ namespace GridKit
         load.evaluateResidual(); //< Tracks dependencies
         load.evaluateJacobian(); //< Converts dependencies to CSR
         auto* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
@@ -275,8 +279,9 @@ namespace GridKit
         load.evaluateJacobian();
         load.constructCsr();
         auto* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: LoadZIP Enzyme Jacobian\n";
-        model_jacobian->print();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: LoadZIP Enzyme Jacobian\n";
+        model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }

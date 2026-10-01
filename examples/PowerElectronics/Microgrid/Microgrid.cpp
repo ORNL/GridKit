@@ -16,7 +16,7 @@ int main(int /* argc */, char const** /* argv */)
   double rel_tol         = 1.0e-8;
   size_t max_step_number = 3000;
   bool   use_jac         = true;
-  bool   debug_output    = true;
+  bool   debug_output    = false; // set to true to print residuals, Jacobian and final solution
 
   // Create model
   auto* sysmodel = new GridKit::PowerElectronics::SystemModel<double, size_t>(use_jac);

@@ -7,6 +7,7 @@
 #include <numbers>
 
 #include <GridKit/Model/PowerFlow/Bus/BaseBus.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -57,7 +58,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   Generator4Governor<ScalarT, IdxT>::~Generator4Governor()
   {
-    // std::cout << "Destroy Gen2..." << std::endl;
   }
 
   /*!
@@ -66,7 +66,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::allocate()
   {
-    // std::cout << "Allocate Gen2..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
     return 0;
   }
@@ -96,8 +95,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::initialize()
   {
-    // std::cout << "Initialize Generator4Governor..." << std::endl;
-
     // Compute generator voltage phase
     const ScalarT delta = std::atan((Xq_ * P0_ - Rs_ * Q0_) / (V() * V() + Rs_ * P0_ + Xq_ * Q0_)) + theta();
 
@@ -165,7 +162,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::tagDifferentiable()
   {
-    // std::cout << "size of tag vector is " << tag_.size() << "\n";
     tag_[static_cast<size_t>(offsetGen_ + 0)] = true;
     tag_[static_cast<size_t>(offsetGen_ + 1)] = true;
     tag_[static_cast<size_t>(offsetGen_ + 2)] = true;
@@ -264,15 +260,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::evaluateJacobian()
   {
-    std::cout << "Evaluate Jacobian for Gen2..." << std::endl;
-    std::cout << "Jacobian evaluation not implemented!" << std::endl;
+    ::GridKit::Utilities::Logger::warning() << "Generator4Governor: Jacobian evaluation not implemented!\n";
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::evaluateIntegrand()
   {
-    // std::cout << "Evaluate Integrand for Gen2..." << std::endl;
     auto* g = g_.getData();
 
     g[0] = frequencyPenalty(omega());
@@ -283,7 +277,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::initializeAdjoint()
   {
-    // std::cout << "Initialize adjoint for Generator4Governor..." << std::endl;
     auto* yB  = yB_.getData();
     auto* ypB = ypB_.getData();
 
@@ -330,7 +323,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::evaluateAdjointResidual()
   {
-    // std::cout << "Evaluate adjoint residual for Gen2..." << std::endl;
     ScalarT sinPhi = std::sin(delta() - theta());
     ScalarT cosPhi = std::cos(delta() - theta());
 
@@ -370,18 +362,9 @@ namespace GridKit
     return 0;
   }
 
-  // template <class ScalarT, typename IdxT>
-  // int Generator4Governor<ScalarT, IdxT>::evaluateAdjointJacobian()
-  // {
-  //     std::cout << "Evaluate adjoint Jacobian for Gen2..." << std::endl;
-  //     std::cout << "Adjoint Jacobian evaluation not implemented!" << std::endl;
-  //     return 0;
-  // }
-
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
-    // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
     const auto* y  = y_.getData();
     const auto* yB = yB_.getData();
     auto*       gB = gB_.getData();

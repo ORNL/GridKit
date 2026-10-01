@@ -1,3 +1,7 @@
+#pragma once
+
+#include <iostream>
+
 #include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
