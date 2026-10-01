@@ -1,0 +1,386 @@
+#pragma once
+
+#include <iomanip>
+#include <iostream>
+#include <limits>
+
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
+
+namespace GridKit
+{
+  namespace Testing
+  {
+    using Log = ::GridKit::Utilities::Logger;
+
+    template <class ScalarT, typename IdxT>
+    class StabilizerIeeestTests
+    {
+    public:
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+
+      StabilizerIeeestTests()  = default;
+      ~StabilizerIeeestTests() = default;
+
+      TestOutcome constructor()
+      {
+        TestStatus success = true;
+
+        auto  data = makeTestData();
+        auto* stab = new PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>(data);
+
+        success *= (stab != nullptr);
+        success *= (stab->getMonitor() != nullptr);
+
+        delete stab;
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief All states initialize to zero (stabilizer at rest).
+       * With u = 0, all residuals should be zero.
+       */
+      TestOutcome zeroInitialResidual()
+      {
+        TestStatus success = true;
+
+        // Create signal nodes for input (u) and output (Vss)
+        PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
+        ScalarT                                   u_value{0.0};
+        IdxT                                      u_index = 12; // beyond internal variables
+        ScalarT                                   vss_value{0.0};
+        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
+
+        // Link signal nodes to backing storage
+        u_node.link(&u_value, &u_index);
+        vss_node.link(&vss_value, &vss_index);
+
+        using namespace GridKit::PhasorDynamics::Stabilizer;
+
+        auto data = makeTestData();
+        auto stab = Ieeest<ScalarT, IdxT>(data);
+
+        // Wire: stabilizer reads u_node as input, writes vss_node as output
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
+        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
+
+        stab.allocate();
+        success *= (stab.verify() == 0);
+        stab.initialize();
+        stab.evaluateResidual();
+
+        auto        tol    = 10 * std::numeric_limits<RealT>::epsilon();
+        const auto& f      = stab.getResidual();
+        const auto* f_data = f.getData();
+        for (size_t i = 0; i < f.getSize(); ++i)
+        {
+          if (!isEqual(f_data[i], 0.0, tol))
+          {
+            std::cout << "Non-zero residual at index " << i << ": " << f_data[i] << "\n";
+            success = false;
+          }
+        }
+
+        // Verify output signal is linked and reads the correct value
+        success *= vss_node.linked();
+        success *= (vss_node.getVariableIndex() == 11);
+        success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.0), tol);
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Residual evaluation against hand-computed answer key.
+       *
+       * Sets specific y/yp values and verifies residuals match
+       * pre-computed expected values. See plan for derivation.
+       */
+      TestOutcome residual()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
+        ScalarT                                   u_value{0.5};
+        IdxT                                      u_index = 12;
+        ScalarT                                   vss_value{0.0};
+        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
+
+        u_node.link(&u_value, &u_index);
+        vss_node.link(&vss_value, &vss_index);
+
+        using namespace GridKit::PhasorDynamics::Stabilizer;
+
+        auto data = makeTestData();
+        auto stab = Ieeest<ScalarT, IdxT>(data);
+
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
+        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
+
+        stab.allocate();
+        stab.initialize();
+        setStatePoint(stab);
+        stab.evaluateResidual();
+
+        // Hand-computed answer key (see plan for full derivation)
+        const std::vector<ScalarT> res_answer = {
+            0.19,   // f[0]:  -x1_dot + x2
+            0.28,   // f[1]:  -x2_dot + x3
+            0.37,   // f[2]:  -x3_dot + x4
+            1.0975, // f[3]:  -x4_dot + (-a0*x1 - a1*x2 - a2*x3 - a3*x4 + u) / a4
+            0.25,   // f[4]:  -T2*x5_dot - x5 + v4
+            0.24,   // f[5]:  -T4*x6_dot - x6 + v5
+            -0.05,  // f[6]:  -T6*x7_dot - x7 + v6
+            -0.42,  // f[7]:  -v4 + x1 + A5*x2 + A6*x3
+            -0.25,  // f[8]:  -T2*(v5 - x5) + T1*(v4 - x5)
+            -0.31,  // f[9]:  -T4*(v6 - x6) + T3*(v5 - x6)
+            5.75,   // f[10]: -T6*v7 + Ks*T5*(v6 - x7)
+            0.0,    // f[11]: limiter (v7=0.05 within [-0.1, 0.1])
+        };
+
+        // Looser tolerance for f[11] — Math::clamp is a smooth ramp approximation.
+        const auto  loose_tol     = static_cast<RealT>(1.0e-4);
+        auto&       residual      = stab.getResidual();
+        const auto* residual_data = residual.getData();
+
+        for (size_t i = 0; i < res_answer.size(); ++i)
+        {
+          auto test_tol = (i == 11) ? loose_tol : static_cast<RealT>(10 * std::numeric_limits<ScalarT>::epsilon());
+          if (!isEqual(residual_data[i], res_answer[i], test_tol))
+          {
+            std::cout << "Incorrect result for residual " << i << ": "
+                      << std::setprecision(15) << residual_data[i]
+                      << " != " << res_answer[i] << "\n";
+            success = false;
+          }
+        }
+
+        // Verify output signal reads the stabilizer output
+        success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.05), loose_tol);
+
+        return success.report(__func__);
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /**
+       * @brief Compare DependencyTracking Jacobian against Enzyme Jacobian.
+       */
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        auto data = makeTestData();
+
+        std::vector<DependencyTracking::Variable::DependencyMap>
+            dependency_tracking_jacobian = DependencyTrackingJacobian(data);
+
+        std::vector<DependencyTracking::Variable::DependencyMap>
+            enzyme_jacobian = EnzymeJacobian(data);
+
+        // Compare DependencyTracking dependencies to Enzyme's
+        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
+        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        {
+          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+        }
+
+        return success.report(__func__);
+      }
+
+    private:
+      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
+          PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata)
+      {
+        using DepVar = DependencyTracking::Variable;
+
+        // Set up signal nodes with DependencyTracking scalar type
+        PhasorDynamics::SignalNode<DepVar, IdxT> u_node;
+        PhasorDynamics::SignalNode<DepVar, IdxT> vss_node;
+        DepVar                                   u_value{0.5};
+        IdxT                                     u_index = 12;
+        DepVar                                   vss_value{0.0};
+        IdxT                                     vss_index = INVALID_INDEX<IdxT>;
+
+        u_node.link(&u_value, &u_index);
+        vss_node.link(&vss_value, &vss_index);
+
+        using namespace GridKit::PhasorDynamics::Stabilizer;
+
+        auto stab = Ieeest<DepVar, IdxT>(ieeestdata);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
+        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
+
+        stab.allocate();
+        stab.initialize();
+
+        // Tag external signal u as an additional independent variable
+        u_value.setVariableNumber(2 * stab.size()); // @todo avoid requiring knowledge of the numbering
+        setStatePointDep(stab);
+
+        stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
+
+        stab.evaluateResidual();
+        stab.evaluateJacobian();
+        auto  model_jacobian = stab.getCsrJacobian();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: Ieeest DependencyTracking Jacobian\n";
+        model_jacobian->print(output_stream);
+
+        return GridKit::Testing::MapFromCsr(model_jacobian);
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
+          PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata)
+      {
+        PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
+        ScalarT                                   u_value{0.5};
+        IdxT                                      u_index = 12;
+        ScalarT                                   vss_value{0.0};
+        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
+
+        u_node.link(&u_value, &u_index);
+        vss_node.link(&vss_value, &vss_index);
+
+        using namespace GridKit::PhasorDynamics::Stabilizer;
+
+        auto stab = Ieeest<ScalarT, IdxT>(ieeestdata);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
+        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
+
+        stab.allocate();
+        stab.initialize();
+        setStatePoint(stab);
+
+        stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
+
+        stab.evaluateResidual();
+        stab.evaluateJacobian();
+        stab.constructCsr();
+        auto  model_jacobian = stab.getCsrJacobian();
+        auto& output_stream  = Log::misc();
+        output_stream << "Sparse Csr Matrix: Ieeest Enzyme Jacobian\n";
+        model_jacobian->print(output_stream);
+
+        return GridKit::Testing::MapFromCsr(model_jacobian);
+      }
+#endif
+
+    private:
+      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+
+      /**
+       * @brief Standard IEEEST parameter set for all tests.
+       * Derived: a0=1, a1=0.4, a2=0.63, a3=0.1, a4=0.08
+       */
+      auto makeTestData() -> PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT>
+      {
+        using Params = PhasorDynamics::Stabilizer::IeeestParameters;
+
+        PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> data;
+        data.device_class          = "stabilizer";
+        data.disambiguation_string = "ieeest_test";
+        data.monitored_variables.insert(PhasorDynamics::Stabilizer::IeeestMonitorableVariables::vss);
+
+        data.parameters[Params::A1]     = 0.1;
+        data.parameters[Params::A2]     = 0.2;
+        data.parameters[Params::A3]     = 0.3;
+        data.parameters[Params::A4]     = 0.4;
+        data.parameters[Params::A5]     = 0.5;
+        data.parameters[Params::A6]     = 0.6;
+        data.parameters[Params::T1]     = 0.5;
+        data.parameters[Params::T2]     = 1.0;
+        data.parameters[Params::T3]     = 0.3;
+        data.parameters[Params::T4]     = 1.0;
+        data.parameters[Params::T5]     = 2.0;
+        data.parameters[Params::T6]     = 5.0;
+        data.parameters[Params::Ks]     = 10.0;
+        data.parameters[Params::Lsmin]  = -0.1;
+        data.parameters[Params::Lsmax]  = 0.1;
+        data.parameters[Params::Vcl]    = 0.0;
+        data.parameters[Params::Vcu]    = 0.0;
+        data.parameters[Params::Tdelay] = 0.0;
+
+        return data;
+      }
+
+      /**
+       * @brief Set a non-trivial operating point for residual/Jacobian tests.
+       * Avoids zeros and ones to catch coefficient errors.
+       */
+      void setStatePoint(PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>& stab)
+      {
+        auto* y  = stab.y().getData();
+        auto* yp = stab.yp().getData();
+
+        y[0]  = 0.1;  // x1
+        y[1]  = 0.2;  // x2
+        y[2]  = 0.3;  // x3
+        y[3]  = 0.4;  // x4
+        y[4]  = 0.5;  // x5
+        y[5]  = 0.6;  // x6
+        y[6]  = 0.7;  // x7
+        y[7]  = 0.8;  // v4
+        y[8]  = 0.9;  // v5
+        y[9]  = 1.0;  // v6
+        y[10] = 0.05; // v7  (within limiter range)
+        y[11] = 0.05; // Vss (model output)
+
+        yp[0] = 0.01; // x1_dot
+        yp[1] = 0.02; // x2_dot
+        yp[2] = 0.03; // x3_dot
+        yp[3] = 0.04; // x4_dot
+        yp[4] = 0.05; // x5_dot
+        yp[5] = 0.06; // x6_dot
+        yp[6] = 0.07; // x7_dot
+
+        stab.y().setDataUpdated();
+        stab.yp().setDataUpdated();
+      }
+
+      /**
+       * @brief Set the same operating point for DependencyTracking variables.
+       * Uses setValue() to set the numeric value while preserving dependency info.
+       */
+      void setStatePointDep(PhasorDynamics::Stabilizer::Ieeest<DependencyTracking::Variable, IdxT>& stab)
+      {
+        auto* y  = stab.y().getData();
+        auto* yp = stab.yp().getData();
+
+        y[0].setValue(0.1);
+        y[1].setValue(0.2);
+        y[2].setValue(0.3);
+        y[3].setValue(0.4);
+        y[4].setValue(0.5);
+        y[5].setValue(0.6);
+        y[6].setValue(0.7);
+        y[7].setValue(0.8);
+        y[8].setValue(0.9);
+        y[9].setValue(1.0);
+        y[10].setValue(0.05);
+        y[11].setValue(0.05);
+
+        yp[0].setValue(0.01);
+        yp[1].setValue(0.02);
+        yp[2].setValue(0.03);
+        yp[3].setValue(0.04);
+        yp[4].setValue(0.05);
+        yp[5].setValue(0.06);
+        yp[6].setValue(0.07);
+
+        stab.y().setDataUpdated();
+        stab.yp().setDataUpdated();
+      }
+    }; // class StabilizerIeeestTests
+
+  } // namespace Testing
+} // namespace GridKit

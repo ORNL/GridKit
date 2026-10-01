@@ -1,0 +1,50 @@
+name: "\U0001F4A5 Tests error"
+description: "Some GridKit™ tests are failing"
+title: "Testing issue: "
+labels: [testing]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "Failed test outputs or steps to reproduce the failure(s)"
+      description: |
+        Fill in the failing test output, errors,  
+        or steps to reproduce the failure(s).
+      value: |
+        <!-- Include output of `ctest -VV --rerun-failed`. -->        
+        ```console
+        $ ctest -VV --rerun-failed
+        ( failed tests output ...)
+        ```
+    validations:
+      required: true
+
+  - type: input
+    id: gridkit-version
+    attributes:
+      label: "GridKit™ version"
+      description: |
+        Please include the version of GridKit™ which demonstrates the problem.
+        If building from source on a non-tagged version, please include the commit hash.
+    validations:
+      required: true
+
+  - type: textarea
+    id: information
+    attributes:
+      label: "System and environment details"
+      description: |
+        Please include details about your system, such as:
+        - Dependencies and their versions  
+        - Operating system  
+        - Compiler(s)  
+        - Hardware backends (CUDA, HIP)  
+    validations:
+      required: true
+
+
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: "Additional information"
+      description: "Upload test logs or provide any additional context about the issue."

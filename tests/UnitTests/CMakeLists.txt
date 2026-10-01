@@ -1,3 +1,9 @@
 #
+add_subdirectory(AutomaticDifferentiation)
+add_subdirectory(LinearAlgebra)
+add_subdirectory(Math)
+add_subdirectory(Network)
 add_subdirectory(PhasorDynamics)
-add_subdirectory(SparsityPattern)
+add_subdirectory(PowerElectronics)
+add_subdirectory(Solver)
+add_subdirectory(Utilities)

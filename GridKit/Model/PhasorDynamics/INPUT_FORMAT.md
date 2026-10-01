@@ -1,0 +1,226 @@
+# Grid Dynamics case format specification
+
+Adam Birchfield, Texas A&M University, 2/28/2025
+Version 0.2
+
+## Overview
+
+This document describes a data format for grid dynamics cases intended to
+be used in the SciDAC-OE project "Next-Generation Grid Simulations". The
+format is designed first for implementation as UTF-8 encoded JSON but may
+also be encoded as [MessagePack](https://msgpack.org).
+
+### Goals
+
+-   Simplicity both of user understanding and of software
+    implementation.
+
+-   Flexible to handle various kinds of power system dynamics models
+    including phasor dynamics (PD), electromagnetic transients (EMT)
+    and hybrid models of the two.
+
+-   Conformity, as much as possible, to the style and formulations of
+    commercial software formats.
+
+-   Extensible to be able to add many different kinds of nodes and
+    device classes.
+
+-   Self-describing, by explicitly labeling parameters.
+
+-   Backward compatibility. Newer software should always be able to read
+    older files. When possible, also have forward compatibility where
+    older software can read newer files as long as they do not contain
+    newly added or modified devices.
+
+## Format
+
+The root object contains `header`, `params`, `buses`, and `devices`, and may
+also contain `signals` and `monitors`. `header` contains information about
+the case, `params` contains system-wide parameters, `buses` is an array of
+electrical buses, and `devices` is an array of system devices.
+
+### Header
+
+Contained in the `header` key is an object with the following items:
+
+   Name              | Value
+ --------------------|-------------------------------------------------------
+  `format_version`   | Number `0.2`
+  `format_revision`  | Integer `0`
+  `case_name`        | A string containing the name of the case
+  `case_date_time`   | Optional string in the ISO 8601 format indicating a datetime associated with the case. Including a time is optional, but if one is specified, it is recommended that a UTC offset be included.
+  `case_description` | A string with more specific description of what is modeled in the case
+  `case_comments`    | A string with additional notes as needed
+
+### System Parameters
+
+Contained in the `params` key is an object with the following items:
+
+  Name        | Value
+  ------------|-------------------------------------------------------
+  `freq_base` | A floating point value indicating the system frequency base in hertz (Hz). This is commonly 60 Hz
+  `va_base`   | A floating point value indicating the system power base in volt-amperes (VA). This is commonly 100e6 VA
+
+### Monitors
+
+Contained in the `monitors` key is an array of objects, each of which describes
+an output for monitored variables (those listed in the `mon` field of a
+[bus](#buses) or [device](#devices). The following fields are supported:
+
+  Name               | Description
+  -------------------|------------------------------------------------------
+  `file_name`        | Optional string indicating output file name. If omitted, `stdout` is used.
+  `format`           | One of { "CSV", "JSON", "YAML" } (case-insensitive)
+  `delim`            | Optional string specifying delimiter to use for CSV output (default is `","`).
+
+__NOTE__: If `monitors` entry is omitted entirely, you will get the default CSV
+output to `stdout`. If you wish to change the console output format, use an
+entry here without the `file_name` field. For example:
+```json
+  "monitors": [ { "format": "YAML" } ]
+```
+
+### Buses
+
+Contained in the `buses` key is an array of objects, each of which represent
+a bus and has the following fields:
+
+  Name               | Description
+  -------------------|------------------------------------------------------
+  `number`           | Unique non-negative integer identifying the bus
+  `class`            | A string indicating the class of node. See the table below for more information
+  `name`             | String containing the name of the node. This may be empty or non-unique
+  `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
+  `params`           | Object mapping bus parameter names to values. Supported parameter: `kv`, the bus voltage base in kV.
+  `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
+  `extension`        | Optional field containing an object with implementation-defined keys
+
+#### Bus classes
+
+As of the current version and revision, the following bus classes are
+specified:
+
+  Bus class          | Description                                                | Initialization variables | Other variables available to monitor
+  -------------------|------------------------------------------------------------|------------------------- | -------------------------
+  `Bus`              | Positive-sequence, AC phasor domain bus                    | `Vr`, `Vi`               | `Vm`, `Va`
+  `BusInfinite`      | Positive-sequence, AC phasor domain bus with fixed voltage | `Vr`, `Vi`               | `Vm`, `Va`
+
+`Vr` defaults to `1.0`, and `Vi` defaults to `0.0`.
+
+### Signals
+
+Contained in the `signals` key is an array of objects, each of which represent
+a signal and has the following fields:
+
+  Name               | Description
+  -------------------|------------------------------------------------------
+  `signal_id`        | Unique non-negative integer identifying the signal
+  `name`             | String containing the name or description of the signal. This may be empty or non-unique
+
+All interactions with signals are handled by `devices`, which reference signals via `signal_id`
+
+
+### Devices
+
+Contained in the `devices` section is an array of objects, each of which
+represent a device and has the following fields:
+
+  Name              | Description
+  ------------------|------------------------------------------------------
+  `class`           | A string indicating the class of device. See the table below for more information
+  `ports`           | An object mapping the device's port names to associated bus numbers or signal IDs
+  `id`              | A string disambiguating the device from others
+  `params`          | An object mapping initialization parameters to Boolean or numerical values
+  `mon`             | Optional field, which is an array specifying variables to record in an output channel
+  `extension`       | Optional field containing an object with implementation-defined keys
+
+For more information, see the detailed documentation for each device class containing equations, electrical bus configuration, and signal inlets/outlets specifications.
+
+#### Device classes
+
+As of the current version and revision, the following device classes
+are specified:
+
+  Device class | Description
+  -------------|------------
+  [Branch](Branch/README.md) | algebraic pi model for a line or off-nominal transformer branch
+  [BusFault](BusFault/README.md) | simple impedance-based fault at a bus
+  [BusToSignalAdapter](BusToSignalAdapter/README.md) | signal adapter component for a bus
+  [LoadZ](Load/LoadZ/README.md) | Constant-impedance load model
+  [LoadZIP](Load/LoadZIP/README.md) | ZIP load model
+  [Genrou](SynchronousMachine/GENROU/README.md) | 6th order machine model
+  [Gensal](SynchronousMachine/GENSAL/README.md) | 5th order salient-pole machine model
+  [GenClassical](SynchronousMachine/GenClassical/README.md) | the classical machine model
+  [Regca](Converter/REGCA/README.md) | WECC REGCA renewable generator/converter model
+  [Reecb](Controller/REECB/README.md) | WECC REECB renewable electrical-control model
+  [Repca](Controller/REPCA/README.md) | the REPCA renewable plant-control model
+  [GastPti](Governor/GASTPTI/README.md) | the GASTPTI gas turbine-governor model
+  [Tgov1](Governor/Tgov1/README.md) | the TGOV1 governor model
+  [Hygov](Governor/HYGOV/README.md) | the HYGOV hydro turbine-governor model
+  [Ieeet1](Exciter/IEEET1/README.md) | the IEEET1 exciter model
+  [Esdc1a](Exciter/ESDC1A/README.md) | the ESDC1A exciter model
+  [SexsPti](Exciter/SEXS-PTI/README.md) | the SEXS-PTI simplified exciter model
+  [Ieeest](Stabilizer/IEEEST/README.md) | the IEEEST stabilizer model
+  [ConstantSignalSource](SignalSource/README.md) | Constant complex signal source
+
+## Example File for a 2-Bus System
+
+```json
+{
+   "header": {
+       "format_version": 0.2,
+       "format_revision": 0,
+       "case_name": "Two-bus test case 1",
+       "case_description": "A two-bus test case for demonstrating the dynamics format",
+       "case_comments": "This case is set up to monitor the voltage at both buses and the machine angle and speed"
+   },
+   "params": {
+       "freq_base": 60.0,
+       "va_base": 100e6
+   },
+   "buses": [
+       { "number": 1, "class": "Bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
+       { "number": 2, "class": "BusInfinite", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "params": {"kv": 115.0} }
+   ],
+   "signals": [
+       { "signal_id": 1, "name": "Machine Speed Deviation"},
+       { "signal_id": 2, "name": "Mechanical Power"},
+       { "signal_id": 3, "name": "Excitation Field"}
+   ],
+   "devices": [
+       { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
+       { "class": "Genrou", "ports": {"bus":1, "speed": 1, "pmech":2, "efd":3}, "id": "DV1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
+       { "class": "Tgov1", "ports": {"speed": 1, "pmech":2}, "id": "DV2", "params": {"Trate":100.0, "R":0.05, "T1":0.5,"T2":2.5, "T3":7.5, "Pvmax":1, "Pvmin":0, "Dt":0}},
+       { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "DV3", "params": {"Tr":0.0, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1, "Vrmax":1, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0}},
+       { "class": "BusFault", "ports": {"bus":1}, "id": "EVT1", "params": {"state0": false, "R":0.0, "X":1e-3} }
+   ]
+}
+```
+
+## Appendix: Output file format
+
+There could be multiple output file formats, but the simplest output
+file format is a comma-separated text file table. The first row is a
+list of headers for the monitor channels. Then each subsequent row
+represents a time point and gives the value for each channel. The first
+channel is always "Time [s]". The second channel is always "Solver
+Status", an integer where 0 is success, positive integers are warnings
+and negative integers are terminal errors. Then the other channels come
+from any buses or devices which have the `mon` property specified, with
+one channel for each item in the `mon` array.
+The channels must be in the order they appear in the input file. In the
+example above, 4 channels are identified: "Vr" and "Vi" for Bus 1 and
+"delta" and "omega" for the GENROU device at Bus 1. A sample output file
+might look like this:
+
+```
+Time [s], Solver Status, Bus 1 (1) Vr, Bus 1 (1) Vi, GENROU Bus 1 (1-1) delta, GENROU Bus 1 (1-1) omega
+
+0, 0, 0.994988, 0.099997, 0.553983, 0
+0.00416667, 0, 0.994988, 0.099999, 0.553983, 6.84E-09
+0.00833333, 0, 0.994988, 0.0999991, 0.553983, 1.32E-08
+0.0125, 0, 0.994988, 0.0999992, 0.553984, 1.92E-08
+0.0166667, 0, 0.994988, .0999992, 0.553984, 2.49E-08
+0.0208333, 0, 0.994988, 0.0999993, 0.553984, 3.02E-08
+0.025, 0, 0.994988, 0.0999993, 0.553984, 3.51E-08
+```

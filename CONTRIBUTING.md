@@ -17,11 +17,10 @@ Here `origin` is the name of the remote upstream repository in your local
 repository. If you set custom name for your remote, replace `origin` with
 that name.
 
-
 ### Feature branches
 
 For each new feature feature create a new branch from `develop`. Name your
-feature branch `<developer name>/<short_feature_description>_dev. Bug fix
+feature branch `<developer name>/<short_feature_description>_dev`. Bug fix
 branches should follow similar pattern, only ending with `_fix`. Always
 use underscores to separate different words.
 ```
@@ -30,18 +29,39 @@ git checkout -b shaked/sparse_matrix_transpose_dev
 In some instances you also might want to branch off a feature branch, for
 example to fix a bug or suggest significant changes.
 
+Before engaging in extensive development, check the existing issues and pull 
+requests for known issues and fixes. Also consider creating an issue to get 
+feedback on your plans.
 
 ### Merging your feature branch
 
 Feature branches should be merged back to the branch from where they were
 branched off (typically `develop`). All merging should be done through
-GutHub pull request. Before creating a pull request make sure:
+GitHub pull request.
+
+Once your branch is ready, create pull request using the template provided
+in the GridKit™ repository. Make sure that:
 - All tests pass.
 - Code compiles cleanly with flags `-Wall -Wpedantic -Wconversion -Wextra`.
 - The new code follows GridKit™ style guidelines.
 - There are unit tests for the new code.
 - The new code is documented.
 - The feature branch is rebased with respect to the target branch.
+- The [CHANGELOG.md](CHANGELOG.md) has been updated to reflect the changes.
+
+We use run continuous integration (CI) on pull requests. If you don't need CI 
+when pushing your changes to a pull request (e.g., changes only affecting 
+comments), we recommend adding `[skip ci]` in the commit message.
+
+Ensure that the proposed changes have a clear scope, and create separate pull 
+requests for unrelated changes. We recommend for each developer to have a 
+finite (typically less than 5) number of pull requests open at once. 
+Check with the maintainers if you are waiting for an older pull request to 
+be reviewed and merged.
+
+It is the responsibility of the developer to ensure their pull request is reviewed in 
+timely fashion. For pull requests affecting large number of files, please 
+coordinate with reviewers (offline) to make sure they will be available to review. 
 
 To rebase your feature branch, first ensure the target branch is up-to-date.
 Then use
@@ -52,12 +72,147 @@ git rebase -i <target branch>
 to rebase your branch to the target branch. Follow the instructions on the
 screen. You may need to resolve rebase conflicts.
 
-Once your branch is ready, create pull request using the template provided
-in the GridKit™ repository. There has to be at least one approval before
-the pull request can be merged.
+There has to be at least one approval before the pull request can be merged.
 
+### Using draft pull requests
+Use draft pull requests to test your proposed changes in CI and/or to get 
+early feedback on proposed changes. 
+Some reviewers will not look at the code until a pull request is marked as 
+ready for review, so make sure to communicate the intended purpose of your draft
+pull request.
 
+Draft pull requests are not meant for casual collaboration. 
+You can simply point other developers to your feature branch if you need to 
+discuss your proposed changes without running CI or requesting a formal review.
 
+Draft pull requests should be in situations where developers want to confirm their
+approach is acceptable before making a large scale change. For example, if a 
+developer wants to make a change that affects all component models, the developer
+is advised to make such change to only one model (or small subset of models) and
+make it available for review in a draft pull request. Once the development direction is
+approved, the developer can proceed and make the wholesale change.
+
+### Deleting your feature branch
+
+Once your branch has been merged or is otherwise no longer needed, delete it 
+from the GridKit™ GitHub repository. We recommend cleaning up soon after 
+the merge and periodically going through your existing branches to cleanup.
+
+### Creating a release branch (maintainers only)
+
+Release branches are created by maintainers from `develop` once it contains
+all features planned for the release. Name the branch `release-<version>`.
+```
+git checkout -b release-0.2 develop
+```
+On the release branch, update the version number and
+[CHANGELOG.md](CHANGELOG.md), and commit the changes. Only bug fixes and
+release preparation are allowed on the release branch; new features go to
+`develop`. Creating the release branch frees `develop` for the next
+release's features.
+
+### Merging a release branch (maintainers only)
+
+A release branch is merged twice: first into `main` and then back into
+`develop`. Both merges are done through GitHub pull requests and must be
+merged with a merge commit, not squashed or rebased, so that `main` and
+`develop` share the release branch commits as common ancestors.
+Alternatively, merge the branches on the command line with
+```
+git checkout <target branch>
+git pull
+git merge --no-ff release-0.2
+git push origin <target branch>
+```
+where `<target branch>` is `main` or `develop`.
+
+Unlike feature branches, release branches are not deleted after the merges. A bug found after the
+release is fixed on the release branch, the patch version is bumped (e.g.,
+`v0.2.1`), and the release branch is merged again into `main` and `develop`
+following the same steps.
+
+#### Merging into `main`
+
+When the release branch is ready, create a pull request targeting `main`.
+After the pull request is merged, tag the merge commit with the release
+version and push the tag.
+```
+git checkout main
+git pull
+git tag -a v0.2 -m "GridKit v0.2"
+git push origin v0.2
+```
+
+#### Merging into `develop`
+
+Create a pull request from the release branch targeting `develop`, so that
+bug fixes made on the release branch are not lost. Resolve any merge
+conflicts with features added to `develop` since the release branch was
+created.
+
+If a fix applies only to the release and not to `develop`, still merge the
+release branch, but resolve the conflict in favor of `develop` or revert the
+fix on `develop` right after the merge, noting the reason in the commit
+message. Do not cherry-pick individual fixes instead of merging, as this
+loses the shared history between `main` and `develop`.
+
+## Documenting Code
+
+### Doxygen
+All comments in the code should follow [Doxygen](https://www.doxygen.nl/manual/index.html)
+markup. For uniformity, we recommend C-style Doxygen comments starting with
+two `*`.
+
+### Documenting functions
+Functions should be documented in source files. The rationale is to have
+the documentation near the implementation, so that is handy to a developer and
+can be updated quickly when the function modified.
+
+### Minimal function documentation
+Function documentation should include specification of function parameters,
+template parameters (if any), return value, preconditions, postconditions,
+and invariants.
+
+```c++
+/**
+ * @brief <BRIEF DESCRIPTION>
+ *
+ * @param <NAME> <DESCRIPTION>
+ * @tparam <NAME> <DESCRIPTION>
+ * @return <DESCRIPTION OF RETURN VALUE>
+ *
+ * @pre <PRECONDITION>
+ * @post <POSTCONDITION>
+ *
+ * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC
+ */
+```
+
+* `@brief` marks the text that will be displayed in summaries and index lists.
+Typically you would put here a few words description of your function.
+* `@param` describes a function parameter and takes an optional direction:
+`@param[in]` means the parameter's value is only read and not modified within
+the function, `@param[out]` means the parameter is not read and is only
+modified, and `@param[in,out]` means the parameter is both read and modified.
+* `@pre` and `@post` define the pre- and postconditions, which should be
+precise but brief. When in doubt, attempt rigorous conditions but keep in mind
+that some concepts such as "validity" may be difficult or impossible to define
+precisely. Specifications are primarily for human consumption.
+* `@param`, `@pre`, and `@post` sections should be repeated as many time as
+required.
+
+### Doxygen and Markdown
+
+Doxygen supports Markdown markup and it should be used to make documentation
+more clear. For example,
+```text
+ * @return The size of `a`
+```
+is clearer than
+```text
+ * @return The size of a
+```
+when read in plain text and in formatted documentation.
 
 ## Code Style
 
@@ -73,14 +228,15 @@ for warnings and recoverable error, and negative value for irrecoverable
 errors.
 
 ### Output
-If an output is needed (for example, a warning needs to be displayed), use
-`std::cout` and not `printf` as shown below. There should be a space before
-and after each `<<`. If the line needs to be broken, the `<<` operators should
-be aligned:
-
+If an output is needed (for example, a warning needs to be displayed), use 
+the logger. Use `"\n"` rather than `"std::endl"`, unless flushing really is needed.
+There should be a space before and after each `<<`.
+If the line needs to be broken, the `<<` operators should be aligned:
 ```c++
-std::cout << "index out of bounds. Row " << i << " starts at: " << start 
-          << " and ends at " << end << std::endl;
+GridKit::Utilities::Logger::warning() << "Index out of bounds."
+                                      << " Row " << i
+                                      << " starts at: " << start 
+                                      << " and ends at " << end << "\n";
 ```
 
 ### File names
@@ -126,6 +282,24 @@ double another_member;   // No, there is no trailing underscore to distinguish i
 double memberVariable_;  // No, using lowercase camel instead of C-style name format
 ```
 
+#### Exceptions
+
+Public member variables that are accessed directly do not need trailing
+underscores. For example, consider this code:
+```c++
+struct ModelData
+{
+  int id;
+  double value;
+};
+
+ModelData data;
+data.id = 1;
+data.value = 2.0;
+```
+Member variables of struct `data` are accessed directly outside the struct.
+and do not need to be denoted with trailing underscores `_`.
+
 ### Function names
 
 Use lowercase camel format for function names.
@@ -137,9 +311,9 @@ int YetAnotherFunction(); // No, using uppercase camel name format
 
 ### Class names
 
-Class names should us uppercase camel name format.
+Class names should use uppercase camel name format.
 ```c++
-class MyClass // Yes 
+class MyClass // Yes
 {
   ...
 }
@@ -155,23 +329,50 @@ class My_Class // No, using underscore in class name
 }
 ```
 
+### Type declarations and template parameters
 
-
-### Enums (enumerated types)
-
-Always define `enum`s inside `GridKit` namespace. Type names should be
-capitalized and the constant names should be uppercase with underscores
-(but there is no underscore at the end!).
+Always declare type aliases with the `using` keyword rather than `typedef typename`. 
 
 ```c++
-  enum ExampleEnum { CONST_ONE = 0,
-                     CONST_TWO = 8, 
-                     YET_ANOTHER_CONST = 17 };
-``` 
+  using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT; // Yes
+  typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT; // No
+```
+
+Types that are used as template parameters should use `snake_case` format, with
+the `_type` suffix to indicate that it is a type. Use the keyword `typename`
+rather than `class` for template type parameters.
+
+```c++
+  template <typename RealT>; // No, using format reserved for interface types
+  template <class real_type>; // No, using `class` keyword
+
+  template <typename real_type> ...; // Yes
+```
+Types used within class implementation code and provided in the public class
+interface should use `UpperCamelT` format, similar to class names, but with a
+`T` suffix.  For consistency, create aliases for template type parameters
+(*e.g.,* `using ScalarT = scalar_type;`) and use the same name everywhere the
+same type is used. This applies across multiple classes in which the type has
+the same meaning.
+
+```c++
+  template <typename scalar_type, typename index_type>
+  class ExTemp
+  {
+    // Convention used in all applicable classes for scalar, index, and
+    // primitive floating-point types
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
+    using RealT   = GridKit::ScalarTraits<ScalarT>::RealT;
+
+    // void foo(scalar_type value); // No, using template type parameter
+    void foo(ScalarT value); // Yes, using interface types in code
+  };
+```
 
 ### Constants
 
-If a constant is used in more than one file, define it in `Common.h`. For
+If a constant is used in more than one file, define it in `Constants.hpp`. For
 constants with long names, use underscores to separate words in the constant
 name. Use all caps (screaming snake case).
 
@@ -179,12 +380,34 @@ name. Use all caps (screaming snake case).
    constexpr double Pi = 3.1415;      // No, use all caps for the constant name
    constexpr double SQRT_TWO = 1.4142 // Yes
    constexpr double SQRTTWO = 1.4142  // No, the two words not separated by "_"
-   constexpr double EXP = 2.7183      // Yes 
+   constexpr double EXP = 2.7183      // Yes
+```
+
+### Macros
+
+Macros should use all caps, same as constants.
+
+### Enums (enumerated types)
+
+Always define `enum`s inside `GridKit` namespace. The `enum` name should
+be upper camel case, same as class names. The `enum` element names should
+match symbol for physics quantity they represent or they should be uppercase
+(same as names for constants) if they do not represent a physics quantity.
+For example, `enum` element for real component of voltage $V_r$ should be `Vr`.
+A name for `enum` element for a "fast mode", for example, should be something
+like `FAST_MODE`, capitalized with underscores separating words (but no
+underscore at the end!).
+
+```c++
+  enum ExampleEnum { Vr, // Yes, it matches symbol for real voltage component
+                     VR, // No, the element name should match the physics symbol
+                     FAST_MODE}; // Yes, element name is all caps.
 ```
 
 ### Pointers and references
 
-The pointer `*` or reference `&` belong to the type and there should be no space between them and the type name.
+The pointer `*` or reference `&` belong to the type and there should be no 
+space between them and the type name.
 ```c++
 double* x;     // Yes
 int& n;        // Yes
@@ -218,7 +441,7 @@ All braces should follow Allman style:
 ```c++
 namespace SomeNamespace
 {
-  //some code 
+  //some code
 }
 ```
 For short functions (i.e., empty constructor), do not inline braces.
@@ -228,7 +451,7 @@ ClassA::ClassA()
 }
 ```
 Have opening brace at the next line following  `for`, `if`, or `while`
-statement. When using `else`, follow the example below. 
+statement. When using `else`, follow the example below.
 ```c++
 if (cond == true)
 {
@@ -245,13 +468,13 @@ shown here:
 for (int i = 0; i < n; ++i)
 {
   // some code
-} 
+}
 ```
 
 Do not use one-line `if`s and `for`s. Always use braces.
 
 ### Use of spaces and newlines
-There should be spaces between arithmetic operators. 
+There should be spaces between arithmetic operators.
 ```c++
 x = c * (a + b);  // Yes
 x = c*(a+b).      // No, the clarity is better if there are spaces between
@@ -275,29 +498,36 @@ struct MyStruct
 
 ### Include files
 
-Leave one empty line between all the includes and the first line of the actual code. 
+Leave one empty line between all the includes and the first line of the actual code.
 ```c++
 #include <iostream>
 
 int main()
 {
-  std::cout 
+  std::cout
 }
 ```
 
 Header files should be included in 3 separate blocks: standard libraries,
 GridKit external dependencies, and GridKit header files. There should be an
-empty line between the blocks. External libraries should use `<...>`, while
-GridKit headers should be included with `"..."`.
+empty line between the blocks. External libraries should always use `<...>`.
+GridKit headers should be included with `<GridKit/...>` (using full path to
+file) with one exception: headers that are local to a compilation unit should
+use `"..."`. That is, only in a `.cpp` file and only those headers that are
+local to the component (headers from other project components should still use
+`<...>`).
 
 ```c++
+#include "Ida.hpp"     // GridKit local internal header
+
 #include <iostream>    // Standard libs headers
 #include <cmath>
 
 #include <sundials.h>  // GridKit dependencies
 #include <idas.h>
 
-#include "Ida.hpp"     // GridKit internal header
+#include <GridKit/Model/Evaluator.hpp> // GridKit header from another component
+
 ```
 
 ```c++
@@ -361,8 +591,8 @@ MyClass(n, m) : n_(n), m_(m)
 }
 
 // Long initializer list
-MyClass(n, m) 
-  : n_(n), 
+MyClass(n, m)
+  : n_(n),
     m_(m),
     pX_(nullptr),
     pY_(nullptr),
@@ -373,8 +603,6 @@ MyClass(n, m)
 }
 ```
 
-
-
 ### Using namespaces
 All classes should be in namespace `GridKit`. If needed, define additional
 namespaces inside `GridKit`.
@@ -383,7 +611,7 @@ namespace GridKit
 {
   class Solver  // Yes, class defined inside GridKit namespace
   {
-    // some code; 
+    // some code;
   };
 
   namespace LinearAlgebra
@@ -399,3 +627,34 @@ class Matrix   // No, class is outside GridKit namespace
 {
   // matrix code
 };
+```
+
+## Development Container
+A development container is available for all developers using VS Code to develop. 
+This will automatically install all pre-requisite software you need to develop 
+in GridKit. Any developer who wishes to use this setup can follow 
+[this tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) and 
+simply use the option "Reopen Folder in Container" rather than 
+"New Dev Container...", which will automatically build the included container.
+
+## Electric Grid Test Cases
+
+When adding a new test case to to the repository using the GridKit input file 
+format, you should follow the following guidelines to remain consistent with 
+existing GridKit cases. For each test case, the associated README.md should 
+contain the following:
+- A high resolution oneline diagram ($\geq$ 600 dpi)
+- No overlapping labels
+- Use common electrical symbols for components (transformers, generators, loads, etc.)
+- Use a calm color pallet
+
+Within the README file for the test case, specify characteristics such as:
+- Which component models are used
+- Quantity of each component model used
+- Types of events well-suited for the case
+- Any other relevant case characteristics 
+
+Additionally, specify existing multiple resolutions of the case, i.e., if 
+there is a high-fidelity EMT network model along with a phasor-domain network 
+model that is well known and available, we should indicate that both these 
+model resolutions are available within GridKit. 

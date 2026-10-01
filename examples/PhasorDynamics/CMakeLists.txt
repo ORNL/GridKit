@@ -1,1 +1,3 @@
-add_subdirectory(Example1)
+add_subdirectory(DynamicSimulation)
+add_subdirectory(ContingencyAnalysis)
+add_subdirectory(Validation)

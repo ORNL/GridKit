@@ -1,5 +1,5 @@
 # https://spack.readthedocs.io/en/latest/binary_caches.html#spack-build-cache-for-github-actions
-name: Spack Ubunutu x86_64 Buildcache
+name: CPU tests (Ubunutu x86_64)
 
 env:
   SPACK_COLOR: always
@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-24.04-fortran-v0.2.11
+  BASE_VERSION: ubuntu-24.04-fortran-v0.3.0
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -92,14 +92,18 @@ jobs:
     permissions:
       packages: write
       contents: read
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     strategy:
       matrix:
         llvm: ["16"]
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop +enzyme
+          - gridkit@develop ~asan~enzyme~ipopt~klu~resolve~sundials~ubsan
+          - gridkit@develop ~asan~enzyme~ipopt~klu~resolve+sundials~ubsan
+          - gridkit@develop +asan+enzyme+ipopt+klu+resolve+sundials~ubsan build_type=RelWithDebInfo
+            ^enzyme@0.0.206
+          - gridkit@develop +asan~enzyme+ipopt+klu+resolve+sundials+ubsan
 
     steps:
       - name: Add LLVM
@@ -117,7 +121,7 @@ jobs:
           submodules: true
 
       - name: Setup Spack
-        run: echo "$PWD/buildsystem/spack/spack/bin" >> "$GITHUB_PATH"
+        run: echo "$PWD/buildsystem/spack/bin" >> "$GITHUB_PATH"
 
       - name: Create heredoc spack.yaml
         run: |
@@ -126,15 +130,20 @@ jobs:
             specs:
             - ${{ matrix.spack_spec }} target=x86_64_v2
             concretizer:
+              unify: when_possible
               reuse: dependencies
             config:
               install_tree:
                 root: /opt/spack
                 padded_length: 128
             mirrors:
-              local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-              spack: https://binaries.spack.io/v0.23.1
+              local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.BASE_VERSION }}
+              spack: https://binaries.spack.io/v1.0.1
             packages:
+              ipopt:
+                require: ~coinhsl+mumps
+              mumps:
+                require: ~mpi~openmp
               llvm:
                 externals:
                 - spec: llvm@${{ matrix.llvm }}
@@ -149,6 +158,9 @@ jobs:
 
       - name: Find external packages
         run: spack -e . external find --all --exclude llvm
+
+      - name: Spack add repos
+        run: spack -e . repo add buildsystem/spack_repo/gridkit
 
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop
@@ -166,7 +178,10 @@ jobs:
         run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
 
       - name: Test Build
-        run: cd $(spack -e . location --build-dir gridkit@develop) && ctest -VV
+        run: cd $(spack -e . location --build-dir gridkit@develop) && spack -e ${OLDPWD} build-env gridkit ctest -VV
+
+      - name: Test Installation
+        run: cd $(spack -e . location --build-dir gridkit@develop) && spack -e ${OLDPWD} build-env gridkit make test_install
 
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache

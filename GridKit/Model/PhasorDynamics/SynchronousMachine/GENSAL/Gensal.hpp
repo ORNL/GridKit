@@ -1,0 +1,185 @@
+/**
+ * @file Gensal.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Declaration of a GENSAL generator model.
+ *
+ */
+
+#pragma once
+
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    /// Internal variables of a `Gensal`
+    enum class GensalInternalVariables : size_t
+    {
+      DELTA,  ///< \f$\delta\f$ rotor angle
+      OMEGA,  ///< \f$\omega\f$ speed deviation
+      EPQ,    ///< \f$E'_q\f$ q-axis transient voltage
+      PSIPD,  ///< \f$\psi'_d\f$ d-axis transient flux
+      PSIPPQ, ///< \f$\psi''_q\f$ q-axis subtransient flux
+      PSIPPD, ///< \f$\psi''_d\f$ d-axis subtransient flux
+      KSAT,   ///< \f$k_{sat}\f$ saturation factor
+      VD,     ///< \f$V_d\f$ d-axis terminal voltage
+      VQ,     ///< \f$V_q\f$ q-axis terminal voltage
+      TE,     ///< \f$T_e\f$ electrical torque
+      ID,     ///< \f$I_d\f$ d-axis current
+      IQ,     ///< \f$I_q\f$ q-axis current
+      IR,     ///< \f$I_r\f$ network real current
+      II,     ///< \f$I_i\f$ network imaginary current
+    };
+
+    /// External variables of a `Gensal`
+    enum class GensalExternalVariables : size_t
+    {
+      VR,  ///< \f$V_r\f$ network real voltage
+      VI,  ///< \f$V_i\f$ network imaginary voltage
+      PM,  ///< \f$P_m\f$ mechanical power
+      EFD, ///< \f$E_{fd}\f$ field voltage
+    };
+
+    template <typename scalar_type, typename index_type>
+    class Gensal : public Component<scalar_type, index_type>
+    {
+      using Component<scalar_type, index_type>::gridkit_component_id_;
+      using Component<scalar_type, index_type>::alpha_;
+      using Component<scalar_type, index_type>::f_;
+      using Component<scalar_type, index_type>::nnz_;
+      using Component<scalar_type, index_type>::size_;
+      using Component<scalar_type, index_type>::tag_;
+      using Component<scalar_type, index_type>::abs_tol_;
+      using Component<scalar_type, index_type>::time_;
+      using Component<scalar_type, index_type>::y_;
+      using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::wb_;
+      using Component<scalar_type, index_type>::ws_;
+      using Component<scalar_type, index_type>::ws_indices_;
+      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::J_rows_buffer_;
+      using Component<scalar_type, index_type>::J_cols_buffer_;
+      using Component<scalar_type, index_type>::J_vals_buffer_;
+      using Component<scalar_type, index_type>::freq_system_base_;
+      using Component<scalar_type, index_type>::variable_indices_;
+      using Component<scalar_type, index_type>::residual_indices_;
+      using Component<scalar_type, index_type>::allocated_;
+
+    public:
+      using ScalarT        = scalar_type;
+      using IdxT           = index_type;
+      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using BusT           = BusBase<ScalarT, IdxT>;
+      using ModelDataT     = GensalData<RealT, IdxT>;
+      using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
+      using SignalNodeT    = SignalNodeSetT::SignalNodeT;
+      using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
+      using MonitorT       = Model::VariableMonitor<Gensal, GensalData>;
+
+      Gensal(BusT* bus, const ModelDataT& data);
+      ~Gensal();
+
+      int setGridKitComponentID(IdxT) override final;
+      int allocate() override final;
+      int verify() const override final;
+      int initialize() override final;
+      int tagDifferentiable() override final;
+      int setAbsoluteTolerance(RealT rel_tol) override final;
+      int evaluateResidual() override final;
+
+      // Still to be implemented
+      int evaluateJacobian() override final;
+
+      SignalPortsT& getPorts()
+      {
+        return ports_;
+      }
+
+      const Model::VariableMonitorBase* getMonitor() const override;
+
+    private:
+      void initializeParameters(const ModelDataT& data);
+      /// Associate variable getter functions with enum values
+      void initializeMonitor();
+      void setDerivedParams();
+
+      ScalarT& Vr()
+      {
+        return bus_->Vr();
+      }
+
+      ScalarT& Vi()
+      {
+        return bus_->Vi();
+      }
+
+      ScalarT& Ir()
+      {
+        return bus_->Ir();
+      }
+
+      ScalarT& Ii()
+      {
+        return bus_->Ii();
+      }
+
+    public:
+      __attribute__((always_inline)) inline int evaluateInternalResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+
+    private:
+      /* Identification */
+      BusT* bus_;
+
+      /* Component ports */
+      SignalPortsT ports_;
+
+      /* Initial terminal conditions */
+      RealT p0_{0.0};
+      RealT q0_{0.0};
+
+      /* Input parameters */
+      RealT H_{3.0};
+      RealT D_{0.0};
+      RealT Ra_{0.0};
+      RealT Tdop_{7.0};
+      RealT Tdopp_{0.04};
+      RealT Tqopp_{0.05};
+      RealT Xd_{2.1};
+      RealT Xdp_{0.2};
+      RealT Xdpp_{0.18};
+      RealT Xq_{0.5};
+      RealT Xl_{0.15};
+      RealT S10_{0.0};
+      RealT S12_{0.0};
+      RealT mva_base_{100.0};
+
+      /* Derived parameters */
+      RealT   SA_;
+      RealT   SB_;
+      RealT   Xd1_;
+      RealT   Xd2_;
+      RealT   Xd3_;
+      RealT   Xd4_;
+      RealT   Xd5_;
+      RealT   Xq2_;
+      RealT   G_;
+      RealT   B_;
+      /* Setpoints for control variables (determined at initialization) */
+      ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
+      ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set
+
+      /// Variable monitor
+      std::unique_ptr<MonitorT> monitor_;
+    };
+
+  } // namespace PhasorDynamics
+} // namespace GridKit

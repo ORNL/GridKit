@@ -1,0 +1,25 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{commonmath}
+
+\begin{document}
+\begin{tikzpicture}
+\begin{groupplot}[
+    cmbase,
+    axis y line=left,
+    x=0.95cm, y=2cm,
+    xmin=-2.2, xmax=2.4, ymin=-0.2, ymax=1.3,
+    xtick={-1,1},  xticklabels={$\ell$,$u$},
+    ytick={1}, yticklabels={$1$},
+    domain=-2.2:2.4,
+]
+\exactpanel
+  \addplot[domain=-2.2:-1]  {0};
+  \addplot[domain=-1:1]     {1};
+  \addplot[domain=1:2.4]    {0};
+  \cmclosedpoints{(-1,1) (1,1)}
+  \cmopenpoints{(-1,0) (1,0)}
+
+\smoothpanel{sigmaS(x+1,\cmu) + sigmaS(1-x,\cmu) - 1}
+\end{groupplot}
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,23 @@
+% Shared visual language for standalone EMT block diagrams.
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta,backgrounds,calc,fit,positioning}
+
+\tikzset{
+    emt diagram/.style = {>={Stealth[length=2.4mm]}},
+    line/.style        = {semithick, rounded corners=6pt},
+    block/.style       = {draw, semithick, fill=white,
+                          minimum height=1cm, minimum width=2.3cm},
+    hblock/.style      = {block, minimum width=2.24cm, minimum height=1.3cm},
+    vblock/.style      = {block, minimum width=1.3cm, minimum height=2.24cm},
+    sum/.style         = {draw, semithick, fill=white, circle,
+                          inner sep=2.6pt},
+    signal/.style      = {circle, fill, inner sep=1.4pt,
+                          label distance=3pt},
+    sig/.style         = {font=\small},
+    pm/.style          = {font=\scriptsize},
+    wire jump/.style   = {line,
+                          preaction={draw=white, line width=3pt,
+                                     line cap=round}},
+    enclosure/.style   = {draw, dashed, semithick, rounded corners=4pt},
+    operator enclosure/.style = {enclosure, inner xsep=7mm, inner ysep=6mm}
+}

@@ -1,24 +1,103 @@
 #pragma once
 
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
-#include <Model/PhasorDynamics/Branch/Branch.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Model/PhasorDynamics/SystemModel.hpp>
-#include <Utilities/TestHelpers.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
+#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
+#include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using GridKit::PhasorDynamics::BranchBuses;
+    using GridKit::PhasorDynamics::BranchParameters;
+
+    using Log = ::GridKit::Utilities::Logger;
+
     template <class ScalarT, typename IdxT>
     class SystemTests
     {
     private:
-      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using ComponentT = PhasorDynamics::Component<ScalarT, IdxT>;
+      using RealT      = typename ComponentT::RealT;
+
+      class InitializationFailureComponent final : public ComponentT
+      {
+      public:
+        InitializationFailureComponent()
+        {
+          this->size_ = static_cast<IdxT>(1);
+        }
+
+        int setGridKitComponentID(IdxT component_id) override final
+        {
+          this->gridkit_component_id_ = component_id;
+          return 0;
+        }
+
+        int allocate() override final
+        {
+          if (!this->allocated_)
+          {
+            this->allocateVectors(this->size_);
+          }
+
+          const auto size = static_cast<std::size_t>(this->size_);
+          this->tag_.assign(size, false);
+          this->variable_indices_.resize(size);
+          this->residual_indices_.resize(size);
+          this->allocated_ = true;
+          return 0;
+        }
+
+        int verify() const override final
+        {
+          return 0;
+        }
+
+        int initialize() override final
+        {
+          return 1;
+        }
+
+        int tagDifferentiable() override final
+        {
+          return 0;
+        }
+
+        int setAbsoluteTolerance(RealT) override final
+        {
+          return 0;
+        }
+
+        int evaluateResidual() override final
+        {
+          return 0;
+        }
+
+        int evaluateJacobian() override final
+        {
+          return this->constructCoo();
+        }
+      };
 
     public:
       SystemTests()  = default;
@@ -29,20 +108,71 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // ScalarT Vr{1.0};
-        // ScalarT Vi{2.0};
-
         PhasorDynamics::SystemModel<ScalarT, IdxT>* system = nullptr;
 
         // Create an empty system
         system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
-        success *= (system != nullptr);
-
-        if (system)
+        if (system == nullptr)
         {
-          delete system;
+          std::cout << "Default constructor failed!\n";
+          success = false;
+          return success.report(__func__);
         }
+
+        delete system;
+        system = nullptr;
+
+        PhasorDynamics::SystemModelData<ScalarT, IdxT> data;
+
+        // Set bus data
+        data.bus.resize(2);
+
+        // Bus 0
+        data.bus[0].bus_id   = 0;
+        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = 10.0;
+        data.bus[0].Vi0      = 20.0;
+
+        // Bus 1
+        data.bus[1].bus_id   = 1;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].Vr0      = 30.0;
+        data.bus[1].Vi0      = 40.0;
+
+        // Set branch data
+        data.branch.resize(1);
+
+        // Branch 0-1
+        data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+        data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
+        data.branch[0].parameters[BranchParameters::R] = 2.0;
+        data.branch[0].parameters[BranchParameters::X] = 4.0;
+        data.branch[0].parameters[BranchParameters::G] = 0.2;
+        data.branch[0].parameters[BranchParameters::B] = 1.2;
+
+        // Create an empty system model
+        system = new PhasorDynamics::SystemModel<ScalarT, IdxT>(data);
+        system->allocate();
+        system->initialize();
+        system->evaluateResidual();
+
+        // Answer keys
+        const ScalarT Ir0{17.0};  ///< Solution: real current entering bus-0
+        const ScalarT Ii0{-10.0}; ///< Solution: imaginary current entering bus-0
+        const ScalarT Ir1{15.0};  ///< Solution: real current entering bus-1
+        const ScalarT Ii1{-20.0}; ///< Solution: imaginary current entering bus-1
+
+        auto* bus0 = system->getBus(0);
+        auto* bus1 = system->getBus(1);
+
+        success *= isEqual(bus0->Ir(), Ir0);
+        success *= isEqual(bus0->Ii(), Ii0);
+        success *= isEqual(bus1->Ir(), Ir1);
+        success *= isEqual(bus1->Ii(), Ii1);
+
+        delete system;
+        system = nullptr;
 
         return success.report(__func__);
       }
@@ -51,10 +181,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        real_type R{2.0}; ///< Branch series resistance
-        real_type X{4.0}; ///< Branch series reactance
-        real_type G{0.2}; ///< Branch shunt conductance
-        real_type B{1.2}; ///< Branch shunt charging
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
 
         ScalarT Vr1{10.0}; ///< Bus-1 real voltage
         ScalarT Vi1{20.0}; ///< Bus-1 imaginary voltage
@@ -74,8 +204,8 @@ namespace GridKit
         system.addBus(&bus1);
 
         // Add a bus
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus2(Vr2, Vi2);
-        system.addBus(&bus1);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
+        system.addBus(&bus2);
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
         system.addComponent(&branch);
@@ -91,7 +221,311 @@ namespace GridKit
 
         return success.report(__func__);
       }
-    };
 
+      TestOutcome reallocateAfterTopologyChange()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
+        PhasorDynamics::BusFault<ScalarT, IdxT>    fault(&bus1);
+
+        system.addBus(&bus1);
+        system.addComponent(&fault);
+        success                    *= system.allocate() == 0;
+        const IdxT size_before_bus  = system.size();
+
+        system.addBus(&bus2);
+        success *= system.allocate() == 0;
+        success *= system.size() == size_before_bus + bus2.size();
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        const auto* jacobian  = system.getCsrJacobian();
+        success              *= jacobian != nullptr;
+
+        IdxT nnz_without_branch = 0;
+        if (jacobian != nullptr)
+        {
+          success            *= jacobian->getNumRows() == system.size();
+          success            *= jacobian->getNumColumns() == system.size();
+          nnz_without_branch  = jacobian->getNnz();
+        }
+#endif
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
+        system.addComponent(&branch);
+        success *= system.allocate() == 0;
+        success *= system.evaluateJacobian() == 0;
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        jacobian  = system.getCsrJacobian();
+        success  *= jacobian != nullptr;
+        if (jacobian != nullptr)
+        {
+          success *= jacobian->getNumRows() == system.size();
+          success *= jacobian->getNumColumns() == system.size();
+          success *= jacobian->getNnz() > nnz_without_branch;
+        }
+#endif
+
+        return success.report(__func__);
+      }
+
+      TestOutcome modelVectorsAliasSystemStorage()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 2.0);
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2);
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, 1.0, 1.0);
+
+        system.addBus(&bus1);
+        system.addBus(&infinite_bus);
+        system.addBus(&bus2);
+        system.addComponent(&branch);
+        system.addComponent(&load);
+
+        if (system.allocate() != 0
+            || system.setAbsoluteTolerance(1e-4) != 0)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        auto checkAlias = [&](auto& system_vector, auto& model_vector, IdxT offset)
+        {
+          auto*      system_data = system_vector.getData();
+          auto*      model_data  = model_vector.getData();
+          const auto first       = static_cast<std::size_t>(offset);
+
+          if (!system_data || model_data != system_data + first)
+          {
+            success = false;
+            return;
+          }
+
+          success *= system_vector.setToConst(ScalarT{3.0}) == 0;
+          success *= isEqual(model_data[0], ScalarT{3.0});
+
+          success *= model_vector.setToConst(ScalarT{4.0}) == 0;
+          success *= isEqual(system_data[first], ScalarT{4.0});
+        };
+
+        auto checkModel = [&](auto& model, IdxT offset)
+        {
+          success *= model.getVariableIndex(0) == offset;
+          success *= model.getResidualIndex(0) == offset;
+
+          checkAlias(system.y(), model.y(), offset);
+          checkAlias(system.yp(), model.yp(), offset);
+          checkAlias(system.getResidual(), model.getResidual(), offset);
+          checkAlias(system.absoluteTolerance(), model.absoluteTolerance(), offset);
+        };
+
+        const IdxT bus2_offset = bus1.size();
+        const IdxT load_offset = bus1.size() + bus2.size();
+        const auto bus2_first  = static_cast<std::size_t>(bus2_offset);
+
+        auto rebind = [&](auto& model, IdxT offset)
+        {
+          return model.bind(system.y(),
+                            system.yp(),
+                            system.getResidual(),
+                            system.absoluteTolerance(),
+                            offset);
+        };
+
+        // Rebinding the same slices is a no-op.
+        success *= rebind(bus2, bus2_offset) == 0;
+        success *= rebind(load, load_offset) == 0;
+
+        checkModel(bus2, bus2_offset);
+        checkModel(load, load_offset);
+
+        // Tags remain model-owned and are collected separately.
+        system.tag()[bus2_first]  = true;
+        success                  *= system.tagDifferentiable() == 0;
+        success                  *= !system.tag()[bus2_first];
+
+        bus2.tag()[0]  = true;
+        success       *= !system.tag()[bus2_first];
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Test for exception when signals are incorrectly configured
+       */
+      TestOutcome signalError()
+      {
+        using namespace std::filesystem;
+        using namespace GridKit::PhasorDynamics;
+        auto input_file = current_path() / "ThreeBusBasicBad.json";
+        auto data       = parseSystemModelData(input_file);
+        auto sys        = SystemModel<double, size_t>(data);
+
+        TestStatus status{true};
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress the expected signal-configuration error below.
+        // Use EVERYTHING to inspect the diagnostic.
+        Log::setVerbosity(Log::Verbosity::NONE);
+        status *= throws<std::runtime_error>(
+            [&]()
+            { sys.allocate(); });
+        Log::setVerbosity(previous_verbosity);
+
+        return status.report(__func__);
+      }
+
+      /**
+       * @brief Test for exception when a child cannot bind to system storage
+       */
+      TestOutcome allocationError()
+      {
+        using namespace GridKit::PhasorDynamics;
+
+        TestStatus                 status{true};
+        SystemModel<ScalarT, IdxT> system;
+        Bus<ScalarT, IdxT>         bus(ScalarT{1.0}, ScalarT{0.0});
+
+        status *= bus.allocate() == 0;
+        system.addBus(&bus);
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress the expected child-allocation error below.
+        // Use EVERYTHING to inspect the diagnostic.
+        Log::setVerbosity(Log::Verbosity::NONE);
+        status *= throws<std::runtime_error>(
+            [&]()
+            { system.allocate(); });
+        Log::setVerbosity(previous_verbosity);
+
+        return status.report(__func__);
+      }
+
+      /// SystemModel propagates a statically valid component's initialization error.
+      TestOutcome componentInitializationError()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        InitializationFailureComponent             component;
+        system.addComponent(&component);
+
+        success *= system.verify() == 0;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        if (system.hasJacobian())
+        {
+          success *= throws<std::runtime_error>([&]()
+                                                { system.allocate(); });
+        }
+        else
+        {
+          success *= system.allocate() == 0;
+          success *= system.initialize() != 0;
+        }
+
+        Log::setVerbosity(previous_verbosity);
+        return success.report(__func__);
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<ScalarT, IdxT> data;
+
+        // Set bus data
+        data.bus.resize(2);
+
+        // Bus 0
+        data.bus[0].bus_id   = 0;
+        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = 10.0;
+        data.bus[0].Vi0      = 20.0;
+
+        // Bus 1
+        data.bus[1].bus_id   = 1;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].Vr0      = 30.0;
+        data.bus[1].Vi0      = 40.0;
+
+        // Set branch data
+        data.branch.resize(1);
+
+        // Branch 0-1
+        data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+        data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
+        data.branch[0].parameters[BranchParameters::R] = 2.0;
+        data.branch[0].parameters[BranchParameters::X] = 4.0;
+        data.branch[0].parameters[BranchParameters::G] = 0.2;
+        data.branch[0].parameters[BranchParameters::B] = 1.2;
+
+        // Jacobian via DependencyTracking
+        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(data);
+
+        // Jacobian via Enzyme
+        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(data);
+
+        /// Compare DependencyTracking dependencies to Enzyme's
+        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        {
+          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
+        }
+
+        return success.report(__func__);
+      }
+
+    private:
+      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
+          PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
+      {
+        // Create an empty system model
+        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
+
+        // Allocate and initialize the system
+        system.allocate();
+        system.initialize();
+
+        // Evaluate and get the system Jacobian
+        system.evaluateResidual();
+        system.evaluateJacobian();
+        auto* system_jacobian = system.getCsrJacobian();
+        auto& output_stream   = Log::misc();
+        output_stream << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
+        system_jacobian->print(output_stream);
+
+        return GridKit::Testing::MapFromCsr(system_jacobian);
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
+          PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
+      {
+        // Create an empty system model
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        // Allocate and initialize the system
+        system.allocate();
+        system.initialize();
+
+        // Evaluate and get the system Jacobian
+        system.evaluateResidual();
+        system.evaluateJacobian();
+        auto* system_jacobian = system.getCsrJacobian();
+        auto& output_stream   = Log::misc();
+        output_stream << "Sparse Csr Matrix: System Jacobian with Enzyme\n";
+        system_jacobian->print(output_stream);
+
+        return GridKit::Testing::MapFromCsr(system_jacobian);
+      }
+#endif
+    };
   } // namespace Testing
 } // namespace GridKit

@@ -1,0 +1,28 @@
+/**
+ * @file runLoggerTests.cpp
+ * @brief Driver for Logger class tests.
+ * @author Slaven Peles <peless@ornl.org>
+ */
+#include "LoggerTests.hpp"
+
+int main()
+{
+  using namespace GridKit;
+
+  // Create LoggerTests object
+  GridKit::Testing::LoggerTests test;
+
+  // Create test results accounting object
+  GridKit::Testing::TestingResults result;
+
+  // Run tests (defaultVerbosity first, before any test changes the verbosity)
+  result += test.defaultVerbosity();
+  result += test.errorOutput();
+  result += test.warningOutput();
+  result += test.summaryOutput();
+  result += test.miscOutput();
+  result += test.raiseVerbosity();
+
+  // Return tests summary
+  return result.summary();
+}

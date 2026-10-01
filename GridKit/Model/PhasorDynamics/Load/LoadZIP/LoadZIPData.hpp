@@ -1,0 +1,63 @@
+
+#pragma once
+
+#include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    /// Parameters for a loadZIP
+    enum class LoadZIPParameters : size_t
+    {
+      Pnom,   ///< Nominal real power
+      Qnom,   ///< Nominal reactive power
+      alphaI, ///< Fraction of load represented as constant current
+      alphaP, ///< Fraction of load represented as constant power
+    };
+
+    /// Buses for a loadZIP
+    enum class LoadZIPBuses : size_t
+    {
+      bus, ///< Unique ID of the bus to which the loadZIP is connected
+    };
+
+    /// Signal inputs supported for a loadZIP
+    enum class LoadZIPSignalInputs : size_t
+    {
+    };
+
+    /// Signal outputs supported for a loadZIP
+    enum class LoadZIPSignalOutputs : size_t
+    {
+    };
+
+    /// Variables able to be monitored for a loadZIP
+    enum class LoadZIPMonitorableVariables : size_t
+    {
+      ir,
+      ii,
+      im,
+      p,
+      q,
+    };
+
+    /**
+     * @brief Contains modeling data for a load
+     *
+     * @tparam real_type  Real parameter data type
+     * @tparam index_type Integer parameter data type
+     *
+     * Integer parameters are of the same type as matrix and vector indices.
+     */
+    template <typename real_type, typename index_type>
+    using LoadZIPData =
+        ComponentData<real_type,
+                      index_type,
+                      LoadZIPParameters,
+                      LoadZIPBuses,
+                      LoadZIPSignalInputs,
+                      LoadZIPSignalOutputs,
+                      LoadZIPMonitorableVariables>;
+  } // namespace PhasorDynamics
+} // namespace GridKit

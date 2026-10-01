@@ -56,17 +56,25 @@ SpaceAfterCStyleCast: true
 PointerAlignment: Left
 
 # Includes
-IncludeBlocks: Regroup            # Regroup includes based on config
+IncludeBlocks: Regroup  # Regroup includes based on config
 IncludeCategories:
-  - Regex:           '(^"|\.hpp)'  # 'local' includes
-    Priority:        3
-    SortPriority:    0
-    CaseSensitive:   false
-  - Regex:           '\/'         # Library includes
-    Priority:        2
-    SortPriority:    0
-    CaseSensitive:   false
-  - Regex:           '.*'         # Everything else
-    Priority:        1
-    SortPriority:    0
-    CaseSensitive:   false
+  - Regex:          '^"[^/]+\.h"'                   # 'local' includes
+    Priority:       5
+  - Regex:          '^<GridKit\/'                   # Public project includes
+    Priority:       4
+    CaseSensitive:  true
+  - Regex:          '^<(nlohmann|magic_enum)'       # Library includes
+    Priority:       3
+    CaseSensitive:  true
+  - Regex:          '^<(idas|sun|kinsol|nvector)'   # Library includes
+    Priority:       3
+    CaseSensitive:  true
+  - Regex:          '^<(Ip[A-Za-z_]+\.hpp)'         # Ipopt includes
+    Priority:       3
+    CaseSensitive:  true
+  - Regex:          '^<[a-z_]+>'                    # STL includes
+    Priority:       2
+    CaseSensitive:  true
+  - Regex:          '^<[a-z_]+\.h>'                 # C standard headers
+    Priority:       1
+    CaseSensitive:  true

@@ -1,0 +1,22 @@
+#include <GridKit/Definitions.hpp>
+
+#include "ComponentConnectionTests.hpp"
+
+int main()
+{
+  GridKit::Testing::TestingResults                           result;
+  GridKit::Testing::ComponentConnectionTests<double, size_t> test;
+  GridKit::Testing::GastPtiConnectionTests<double, size_t>   gastpti;
+
+  result += test.genrouEsdc1a();
+  result += test.genrouHygov();
+  result += test.genClassicalEsdc1a();
+  result += test.genClassicalHygov();
+  result += test.regcaRepca();
+  result += gastpti.genrouGastPti();
+  result += gastpti.gensalGastPti();
+  result += gastpti.genClassicalGastPti();
+  result += test.regcaReecb();
+
+  return result.summary();
+}

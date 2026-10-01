@@ -1,3 +1,0 @@
-
-add_subdirectory(SparseMatrix)
-add_subdirectory(DenseMatrix)

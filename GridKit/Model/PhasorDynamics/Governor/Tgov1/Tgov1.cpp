@@ -1,0 +1,31 @@
+/**
+ * @file Tgov1.cpp
+ *
+ */
+
+#include "Tgov1Impl.hpp"
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    namespace Governor
+    {
+      /**
+       * @brief Jacobian evaluation not implemented yet
+       *
+       * @return int - error code, 0 = success
+       */
+      template <typename scalar_type, typename index_type>
+      int Tgov1<scalar_type, index_type>::evaluateJacobian()
+      {
+        Log::misc() << "Tgov1: Jacobian evaluation is not implemented\n";
+        return 0;
+      }
+
+      // Available template instantiations
+      template class Tgov1<double, long int>;
+      template class Tgov1<double, size_t>;
+    } // namespace Governor
+  } // namespace PhasorDynamics
+} // namespace GridKit

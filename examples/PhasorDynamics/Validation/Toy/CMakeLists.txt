@@ -1,0 +1,7 @@
+add_subdirectory(TwoBusBasic)
+add_subdirectory(TwoBusTgov1)
+add_subdirectory(TwoBusIeeet1)
+add_subdirectory(TwoBusGensal)
+add_subdirectory(ThreeBusBasic)
+add_subdirectory(ThreeBusClassical)
+add_subdirectory(ThreeBusZipLoad)

@@ -1,101 +1,115 @@
-
 # [[
 #  Author(s):
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-# add_library macro loosely based on https://github.com/LLNL/sundials/blob/master/cmake/macros/SundialsAddLibrary.cmake
+#
+# gridkit_add_library(<target> SOURCES <file>...
+#   [HEADERS <file>...]
+#   [LINK_LIBRARIES <item>...]
+#   [INCLUDE_DIRECTORIES <dir>...]
+#   [COMPILE_OPTIONS <op>...]
+#   [OUTPUT_NAME <name>])
+#
+# Arguments
+# - `SOURCES`: source files
+# - `HEADERS`: header files that should be installed
+# - `LINK_LIBRARIES`: library dependencies
+# - `INCLUDE_DIRECTORIES`: header locations
+# - `COMPILE_OPTIONS`: extra compiler options
+# - `OUTPUT_NAME`: custom library file name (default: `gridkit_<target>`)
+#
+# loosely based on
+# https://github.com/LLNL/sundials/blob/master/cmake/macros/SundialsAddLibrary.cmake
+#
 
 macro(gridkit_add_library target)
 
-  set(options STATIC_ONLY SHARED_ONLY)
+  set(options INTERFACE_TARGET)
   set(oneValueArgs OUTPUT_NAME)
-  set(multiValueArgs SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES)
+  set(multiValueArgs
+      SOURCES
+      HEADERS
+      LINK_LIBRARIES
+      INCLUDE_DIRECTORIES
+      COMPILE_OPTIONS)
 
   # parse arguments
-  cmake_parse_arguments(gridkit_add_library
-    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(
+    gridkit_add_library
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN})
 
-  # library types to create
-  set(_libtypes "")
-  if(GRIDKIT_BUILD_STATIC AND (NOT gridkit_add_library_SHARED_ONLY))
-    set(_libtypes "STATIC")
+  if(gridkit_add_library_INTERFACE_TARGET)
+    # add interface library (sources list must be empty)
+    list(LENGTH gridkit_add_library_SOURCES __n_sources)
+    if(NOT
+       __n_sources
+       EQUAL
+       0)
+      message(FATAL_ERROR "Interface library target cannot have sources")
+    endif()
+    add_library(${target} INTERFACE)
+    # add source include directory
+    target_include_directories(${target} INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+                                                   $<INSTALL_INTERFACE:include>)
+  else()
+    # add library with sources
+    add_library(${target} ${gridkit_add_library_SOURCES})
+    # add source include directory
+    target_include_directories(${target} PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+                                                $<INSTALL_INTERFACE:include>)
   endif()
-  if(GRIDKIT_BUILD_SHARED AND (NOT gridkit_add_library_STATIC_ONLY))
-    set(_libtypes "${_libtypes};SHARED")
+
+  # add link libraries
+  target_link_options(${target} INTERFACE ${GRIDKIT_LINK_OPTIONS})
+  if(gridkit_add_library_LINK_LIBRARIES)
+    target_link_libraries(${target} ${gridkit_add_library_LINK_LIBRARIES})
   endif()
 
-  # build libraries
-  foreach(_libtype ${_libtypes})
-    # library suffix
-    if(${_libtype} MATCHES "STATIC")
-      set(_lib_suffix "_static")
-    else()
-      set(_lib_suffix "_shared")
-    endif()
+  # add specified include dirs
+  if(gridkit_add_library_INCLUDE_DIRECTORIES)
+    target_include_directories(${target} ${gridkit_add_library_INCLUDE_DIRECTORIES})
+  endif()
 
-    # source files
-    set(sources ${gridkit_add_library_SOURCES})
+  # add compile options
+  target_compile_features(${target} INTERFACE cxx_std_20)
+  target_compile_options(${target} INTERFACE ${GRIDKIT_COMPILE_OPTIONS})
+  if(gridkit_add_library_COMPILE_OPTIONS)
+    target_compile_options(${target} ${gridkit_add_library_COMPILE_OPTIONS})
+  endif()
 
-    # obj target needs a unique name
-    set(obj_target ${target}_obj${_lib_suffix})
+  # add alias library
+  add_library(GridKit::${target} ALIAS ${target})
 
-    # -- Create object library --
+  # set output name
+  if(gridkit_add_library_OUTPUT_NAME)
+    set(_output_name ${gridkit_add_library_OUTPUT_NAME})
+  else()
+    set(_output_name gridkit_${target})
+  endif()
+  set_target_properties(${target} PROPERTIES OUTPUT_NAME ${_output_name})
 
-    add_library(${obj_target} OBJECT ${sources})
-    
-    if(gridkit_add_library_LINK_LIBRARIES)
-      if(${_lib_type} MATCHES "STATIC")
-        append_static_suffix(gridkit_add_library_LINK_LIBRARIES _all_libs)
-      else()
-        set(_all_libs ${gridkit_add_library_LINK_LIBRARIES})
-      endif()
-      target_link_libraries(${obj_target} ${_all_libs})
-    endif()
-    
-    # object files going into shared libs need PIC code
-    set_target_properties(${obj_target} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+  # set the library version
+  set_target_properties(${target} PROPERTIES VERSION ${GridKit_VERSION} SOVERSION
+                                                                        ${GridKit_VERSION_MAJOR})
 
-    # set target name
-    set(_actual_target_name ${target}${_lib_suffix})
+  # install
+  install(
+    TARGETS ${target}
+    DESTINATION lib
+    EXPORT gridkit-targets)
+  if(gridkit_add_library_HEADERS)
+    cmake_path(
+      RELATIVE_PATH
+      CMAKE_CURRENT_SOURCE_DIR
+      BASE_DIRECTORY
+      ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE
+      _rel_path)
+    install(FILES ${gridkit_add_library_HEADERS} DESTINATION include/${_rel_path})
+  endif()
 
-    add_library(${_actual_target_name} ${_libtype} $<TARGET_OBJECTS:${obj_target}>)
-
-    if(gridkit_add_library_LINK_LIBRARIES)
-      target_link_libraries(${_actual_target_name} ${gridkit_add_library_LINK_LIBRARIES})
-    endif()
-
-    add_library(GRIDKIT::${target} ALIAS ${_actual_target_name})
-
-    # Set output name
-    if(gridkit_add_library_OUTPUT_NAME)
-      set_target_properties(${_actual_target_name} PROPERTIES
-        OUTPUT_NAME ${gridkit_add_library_OUTPUT_NAME}
-        CLEAN_DIRECT_OUTPUT 1)
-    else()
-      set_target_properties(${_actual_target_name} PROPERTIES
-        OUTPUT_NAME ${target}
-        CLEAN_DIRECT_OUTPUT 1)
-    endif()
-
-    # Set the library version
-    set_target_properties(${_actual_target_name} PROPERTIES
-      VERSION ${PACKAGE_VERSION}
-      SOVERSION ${PACKAGE_VERSION_MAJOR})
-
-    install(TARGETS ${_actual_target_name} DESTINATION lib EXPORT gridkit-targets)
-  endforeach()
-endmacro()
-
-
-macro(append_static_suffix libs_in libs_out)
-  set(${libs_out} "")
-  set(_STATIC_LIB_SUFFIX "_static")
-  foreach(_lib ${${libs_in}})
-    if(TARGET ${_lib}${_STATIC_LIB_SUFFIX})
-      list(APPEND ${libs_out} ${_lib}${_STATIC_LIB_SUFFIX})
-    else()
-      list(APPEND ${libs_out} ${_lib})
-    endif()
-  endforeach()
 endmacro()

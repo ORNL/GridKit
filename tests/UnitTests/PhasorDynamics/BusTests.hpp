@@ -1,10 +1,10 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Utilities/TestHelpers.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 namespace GridKit
 {
@@ -88,6 +88,7 @@ namespace GridKit
         success  *= isEqual(bus.Ir(), Ir);
         bus.Ii()  = Ii;
         success  *= isEqual(bus.Ii(), Ii);
+        bus.getResidual().setDataUpdated();
 
         bus.evaluateResidual();
         success *= isEqual(bus.Ir(), 0.0);

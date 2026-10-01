@@ -1,0 +1,644 @@
+/**
+ * @file Ieeet1Impl.cpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @author Adam Birchfield (abirchfield@tamu.edu)
+ *
+ * @brief Definition of a IEEET1 Exciter.
+ *
+ */
+
+#include <algorithm>
+#include <atomic>
+#include <iostream>
+
+#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    namespace Exciter
+    {
+      using Log = ::GridKit::Utilities::Logger;
+
+      /**
+       * @brief  Constructor for IEEET1 Exciter
+       */
+      template <typename scalar_type, typename index_type>
+      Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus)
+        : Ieeet1(bus, ModelDataT{})
+      {
+      }
+
+      /**
+       * @brief  Constructor for IEEET1 Exciter
+       *
+       * @param bus   Signal used for terminal reference vmag
+       * @param data  Data object to store parameters
+       */
+      template <typename scalar_type, typename index_type>
+      Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus, const ModelDataT& data)
+        : bus_(bus),
+          monitor_(std::make_unique<MonitorT>(data))
+      {
+        // Parse data struct into model
+        this->initModelParams(data);
+
+        initializeMonitor();
+
+        // 9 Internal Variables
+        size_ = 9;
+      }
+
+      /**
+       * @brief  Constructor for IEEET1 Exciter
+       *
+       * @param bus          Signal used for terminal reference vmag
+       * @param data         Data object to store parameters
+       * @param signal_nodes SignalNodeSet instance for accessing signal nodes
+       */
+      template <typename scalar_type, typename index_type>
+      Ieeet1<scalar_type, index_type>::~Ieeet1()
+      {
+      }
+
+      /**
+       * @brief Set the component ID
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      {
+        gridkit_component_id_ = component_id;
+        return 0;
+      }
+
+      /**
+       * @brief Allocate memory for model
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::allocate()
+      {
+        if (!allocated_)
+        {
+          this->allocateVectors(size_);
+        }
+        auto size = static_cast<size_t>(size_); // avoid compiler warnings
+
+        tag_.resize(size);
+
+        variable_indices_.resize(size);
+        residual_indices_.resize(size);
+
+        // Default variable and residual index mapping to local index
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          this->setVariableIndex(j, j);
+          this->setResidualIndex(j, j);
+        }
+
+        // Resize bus data
+        wb_.resize(2);
+
+        // Resize signal variable data
+        const auto signal_size = Utilities::enum_size<Ieeet1ExternalVariables>();
+        ws_.resize(static_cast<IdxT>(signal_size));
+        ws_.setToZero();
+        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+
+        // Set output signals
+        if (auto efd_port = ports_.out.template port<Ieeet1SignalOutputs::efd>())
+        {
+          efd_port.link(&y_.getData()[7], &(this->getVariableIndex(7)));
+        }
+
+        allocated_ = true;
+        return 0;
+      }
+
+      /**
+       * @brief Verify parameter values and attached signal links
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::verify() const
+      {
+        int ret = 0;
+
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
+          {
+            Log::error() << "Ieeet1: " << message << '\n';
+            ret += 1;
+          }
+        };
+
+        check(Ka_ > ZERO<RealT>, "Ka must be positive");
+        check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
+        check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
+              "Ispdlim must be 0 or 1");
+
+        const bool saturation_disabled =
+            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+
+        if (!saturation_disabled)
+        {
+          check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
+          check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
+          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+
+          const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+          check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
+        }
+
+        auto check_attached_signal =
+            [&]<Ieeet1SignalInputs input>(const char* name)
+        {
+          auto port = ports_.in.template port<input>();
+          if (port.connected() && !port.linked())
+          {
+            Log::error() << "Ieeet1: " << name << " signal attached with no linked source\n";
+            ret += 1;
+          }
+        };
+
+        check_attached_signal.template operator()<Ieeet1SignalInputs::speed>("speed");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::vref>("vref");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::vs>("vs");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::vuel>("vuel");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::voel>("voel");
+
+        return ret;
+      }
+
+      /**
+       * @brief Initialization of the Exciter
+       *
+       * Solves for a steady-state initial condition that satisfies
+       * F(y, yp=0, t=0) = 0 exactly for every residual equation.
+       *
+       * Inputs:
+       *   - EFD assigned by the generator.
+       *   - Bus voltage, used to form the sensed terminal voltage magnitude.
+       *   - Attached external signals (omega, V_S, V_UEL, V_OEL)
+       *
+       * Enabled saturation is included via ksat computed from efdp and SA, SB.
+       * The resolved V_ref is written to an attached vref signal.
+       *
+       * @warning IEEE Std 421.5-2016 states: “In some programs, if
+       *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
+       *          calculated by the program to represent a self-excited shunt
+       *          field and a trimmed rheostat as its initial condition.” GridKit
+       *          preserves the configured \f$K_{E}\f$ and resolves
+       *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
+       *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
+       *          10 is unitless and represents 10% of the maximum regulator
+       *          output.
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::initialize()
+      {
+        if (verify() != 0)
+        {
+          Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
+          return 1;
+        }
+
+        // External Variables
+        ScalarT efd0{0};
+        auto*   y  = y_.getData();
+        auto*   yp = yp_.getData();
+
+        // Initial Efd set by generator
+        // The exciter object has no way of knowing if the generator
+        // has set the initial value for Efd.
+        // TODO: Build protections in system initialization call to
+        // ensure Efd is initialized externally before the exciter initializes
+        // other variables.
+        if (ports_.out.template port<Ieeet1SignalOutputs::efd>())
+        {
+          efd0 = y[7]; ///<- generator needs to be initialized first
+        }
+
+        // Setpoint members provide the defaults for unattached signals.
+        auto read_signal = [&]<Ieeet1SignalInputs input>(const ScalarT& default_value) -> ScalarT
+        {
+          if (auto port = ports_.in.template port<input>())
+          {
+            return port.readSignal();
+          }
+          return default_value;
+        };
+
+        const ScalarT omega = read_signal.template operator()<Ieeet1SignalInputs::speed>(omega_set_);
+        const ScalarT vs    = read_signal.template operator()<Ieeet1SignalInputs::vs>(vs_set_);
+        const ScalarT vuel  = read_signal.template operator()<Ieeet1SignalInputs::vuel>(vuel_set_);
+        const ScalarT voel  = read_signal.template operator()<Ieeet1SignalInputs::voel>(voel_set_);
+
+        uel_on_ = ZERO<RealT>;
+        if (ports_.in.template port<Ieeet1SignalInputs::vuel>())
+        {
+          uel_on_ = ONE<RealT>;
+        }
+
+        oel_on_ = ZERO<RealT>;
+        if (ports_.in.template port<Ieeet1SignalInputs::voel>())
+        {
+          oel_on_ = ONE<RealT>;
+        }
+
+        // Terminal Voltage
+        ScalarT vreal = bus_->Vr();
+        ScalarT vimag = bus_->Vi();
+        ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
+
+        ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
+        ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
+        if (Ke_ == ZERO<RealT>)
+        {
+          Ke_eff_ = (Vrmax_ / 10.0 - static_cast<RealT>(ksat))
+                    / static_cast<RealT>(efdp);
+          if (!std::isfinite(Ke_eff_))
+          {
+            Log::error() << "Ieeet1: derived effective Ke must be finite\n";
+            return 1;
+          }
+          Log::misc() << "Ieeet1: Ke is zero so effective Ke is derived during initialization\n";
+        }
+        else
+        {
+          Ke_eff_ = Ke_;
+        }
+
+        ScalarT ve  = ksat;
+        ScalarT vr  = Ke_eff_ * efdp + ve;
+        ScalarT vtr = vr / Ka_;
+        ScalarT vf{0};
+        ScalarT vfx = (Kf_ / Tf_) * efdp;
+
+        const ScalarT vref = Ec + vtr + vf - vs - uel_on_ * vuel - oel_on_ * voel;
+
+        y[0] = Ec;   // y0 - vts  - Sensed term volt
+        y[1] = vr;   // y1 - vr   - Voltage reg
+        y[2] = efdp; // y2 - efdp - Efd pre mult
+        y[3] = vfx;  // y3 - vfx  - Exciter feedback
+        y[4] = vtr;  // y4 - vtr  - Term Volt Err
+        y[5] = vf;   // y5 - vf   - Feedback volt
+        y[6] = ve;   // y6 - ve   - Excit. Cntrl Volt
+        y[7] = efd0; // y7 - efd  - Efd
+        y[8] = ksat; // y8 - ksat - Saturation
+
+        for (IdxT i = 0; i < yp_.getSize(); ++i)
+        {
+          yp[i] = 0.0;
+        }
+
+        omega_set_ = static_cast<RealT>(omega);
+        vref_set_  = static_cast<RealT>(vref);
+        vs_set_    = static_cast<RealT>(vs);
+        vuel_set_  = static_cast<RealT>(vuel);
+        voel_set_  = static_cast<RealT>(voel);
+
+        if (auto vref_port = ports_.in.template port<Ieeet1SignalInputs::vref>())
+        {
+          vref_port.writeValue(vref_set_);
+        }
+
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
+
+        return 0;
+      }
+
+      /**
+       * @brief  Identify differential variables.
+       *
+       * @return int 0
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::tagDifferentiable()
+      {
+        tag_[0] = true;  // y0 - vts  - Sensed term volt
+        tag_[1] = true;  // y1 - vr   - Voltage reg
+        tag_[2] = true;  // y2 - efdp - Efd pre mult
+        tag_[3] = true;  // y3 - vfx  - Exciter feedback
+        tag_[4] = false; // y4 - vtr  - Term Volt Err
+        tag_[5] = false; // y5 - vf   - Feedback volt
+        tag_[6] = false; // y6 - ve   - Excit. Cntrl Volt
+        tag_[7] = false; // y7 - efd  - Efd
+        tag_[8] = false; // y8 - ksat - Saturation
+
+        return 0;
+      }
+
+      /**
+       * @brief Compute the absolute tolerance for each variable in the model
+       *
+       * @param rel_tol The relative tolerance which can be used to pick the
+       *        absolute tolerance.
+       * @tparam scalar_type Scalar data type
+       * @tparam index_type Index data type
+       * @return int 0 if successful, non-zero otherwise.
+       *
+       * This represents a "noise" level close to zero for which pure relative
+       * error cannot be used.
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+      {
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        return 0;
+      }
+
+      /**
+       * @brief Internal Residual
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f)
+      {
+        const auto OMEGA = static_cast<size_t>(Ieeet1ExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Ieeet1ExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Ieeet1ExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Ieeet1ExternalVariables::VUEL);
+        const auto VOEL  = static_cast<size_t>(Ieeet1ExternalVariables::VOEL);
+
+        // Read bus voltage components
+        ScalarT vreal = wb[0];
+        ScalarT vimag = wb[1];
+        ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
+
+        // Read Internal Variables
+        ScalarT vts  = y[0]; // y0 - Sensed term volt
+        ScalarT vr   = y[1]; // y1 - Voltage reg
+        ScalarT efdp = y[2]; // y2 - Efd pre mult
+        ScalarT vfx  = y[3]; // y3 - Exciter feedback
+        ScalarT vtr  = y[4]; // y4 - Term Volt Err
+        ScalarT vf   = y[5]; // y5 - Feedback volt
+        ScalarT ve   = y[6]; // y6 - Excit. Cntrl Volt
+        ScalarT efd  = y[7]; // y7 - Efd
+        ScalarT ksat = y[8]; // y8 - Saturation
+
+        // Read Internal Derivatives
+        ScalarT vts_dot  = yp[0];
+        ScalarT vr_dot   = yp[1];
+        ScalarT efdp_dot = yp[2];
+        ScalarT vfx_dot  = yp[3];
+
+        // Set signal variable aliases
+        ScalarT omega = ws[OMEGA];
+        ScalarT vref  = ws[VREF];
+        ScalarT vs    = ws[VS];
+        ScalarT vuel  = ws[VUEL];
+        ScalarT voel  = ws[VOEL];
+
+        // The 'pre-limit' derivative of Vr.
+        ScalarT func = (-vr + Ka_ * vtr) / Ta_;
+
+        // Internal Differential Equations
+        f[0] = -vts_dot + (Ec - vts) / Tr_;
+        f[1] = -vr_dot + Math::antiwindup(vr, func, Vrmin_, Vrmax_);
+        f[2] = -efdp_dot + (vr - ve - Ke_eff_ * efdp) / Te_;
+        f[3] = -vfx_dot + vf / Tf_;
+
+        // Internal Algebraic Equations
+        f[4] = -vts + vref + vs + uel_on_ * vuel + oel_on_ * voel - vtr - vf;
+        f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
+        f[6] = -ve + ksat;
+        f[7] = -efd + efdp + omega * efdp * Ispdlim_;
+        f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
+
+        return 0;
+      }
+
+      /**
+       * @brief Residual evaluation
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::evaluateResidual()
+      {
+        auto* ws = ws_.getData();
+
+        // Attached signals are read live; unattached ones keep the latched value.
+        auto read_signal = [&]<Ieeet1SignalInputs      input,
+                               Ieeet1ExternalVariables variable>(const ScalarT& latched)
+        {
+          const auto index   = static_cast<size_t>(variable);
+          ws[index]          = latched;
+          ws_indices_[index] = INVALID_INDEX<IdxT>;
+          if (auto port = ports_.in.template port<input>())
+          {
+            ws[index]          = port.readSignal();
+            ws_indices_[index] = port.signalVariableIndex();
+          }
+        };
+
+        read_signal.template operator()<Ieeet1SignalInputs::speed,
+                                        Ieeet1ExternalVariables::OMEGA>(omega_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::vref,
+                                        Ieeet1ExternalVariables::VREF>(vref_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::vs,
+                                        Ieeet1ExternalVariables::VS>(vs_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::vuel,
+                                        Ieeet1ExternalVariables::VUEL>(vuel_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::voel,
+                                        Ieeet1ExternalVariables::VOEL>(voel_set_);
+
+        // Bus voltages
+        auto* wb = wb_.getData();
+        wb[0]    = bus_->Vr();
+        wb[1]    = bus_->Vi();
+
+        // Residual evaluation
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+        evaluateInternalResidual(y, yp, wb, ws, f);
+
+        f_.setDataUpdated();
+
+        return 0;
+      }
+
+      /**
+       * @brief Initialization Exciter Parameters from data structure
+       */
+      template <typename scalar_type, typename index_type>
+      void Ieeet1<scalar_type, index_type>::initModelParams(const ModelDataT& data)
+      {
+        using Parameter = typename ModelDataT::Parameters;
+
+        if (data.parameters.contains(Parameter::Tr))
+        {
+          Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
+        }
+        if (data.parameters.contains(Parameter::Ka))
+        {
+          Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
+        }
+        if (data.parameters.contains(Parameter::Ta))
+        {
+          Ta_ = std::get<RealT>(data.parameters.at(Parameter::Ta));
+        }
+        if (data.parameters.contains(Parameter::Ke))
+        {
+          Ke_ = std::get<RealT>(data.parameters.at(Parameter::Ke));
+        }
+        if (data.parameters.contains(Parameter::Te))
+        {
+          Te_ = std::get<RealT>(data.parameters.at(Parameter::Te));
+        }
+        if (data.parameters.contains(Parameter::Kf))
+        {
+          Kf_ = std::get<RealT>(data.parameters.at(Parameter::Kf));
+        }
+        if (data.parameters.contains(Parameter::Tf))
+        {
+          Tf_ = std::get<RealT>(data.parameters.at(Parameter::Tf));
+        }
+        if (data.parameters.contains(Parameter::Vrmin))
+        {
+          Vrmin_ = std::get<RealT>(data.parameters.at(Parameter::Vrmin));
+        }
+        if (data.parameters.contains(Parameter::Vrmax))
+        {
+          Vrmax_ = std::get<RealT>(data.parameters.at(Parameter::Vrmax));
+        }
+        if (data.parameters.contains(Parameter::E1))
+        {
+          E1_ = std::get<RealT>(data.parameters.at(Parameter::E1));
+        }
+        if (data.parameters.contains(Parameter::E2))
+        {
+          E2_ = std::get<RealT>(data.parameters.at(Parameter::E2));
+        }
+        if (data.parameters.contains(Parameter::Se1))
+        {
+          Se1_ = std::get<RealT>(data.parameters.at(Parameter::Se1));
+        }
+        if (data.parameters.contains(Parameter::Se2))
+        {
+          Se2_ = std::get<RealT>(data.parameters.at(Parameter::Se2));
+        }
+        if (data.parameters.contains(Parameter::Ispdlim))
+        {
+          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
+        }
+
+        setDerivedParameters();
+      }
+
+      /**
+       * @brief Static method to log time constant warnings
+       *
+       * @note Guarded by a static std::atomic<bool> flag so the warning is
+       *       printed at most once per model type.
+       */
+      template <typename scalar_type, typename index_type>
+      void Ieeet1<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "Ieeet1: Tr, Ta, Te, and Tf below "
+                       << TIME_CONSTANT_MINIMUM
+                       << " s are raised to that floor\n";
+      }
+
+      /**
+       * @brief Resolve the parameter-derived constants
+       */
+      template <typename scalar_type, typename index_type>
+      void Ieeet1<scalar_type, index_type>::setDerivedParameters()
+      {
+        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
+            || Te_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM)
+        {
+          static std::atomic<bool> time_constant_warning_flag_{false};
+          if (!time_constant_warning_flag_.exchange(true))
+          {
+            logTimeConstantWarning();
+          }
+        }
+
+        Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
+        Ta_ = std::max(Ta_, TIME_CONSTANT_MINIMUM);
+        Te_ = std::max(Te_, TIME_CONSTANT_MINIMUM);
+        Tf_ = std::max(Tf_, TIME_CONSTANT_MINIMUM);
+
+        SA_ = ZERO<RealT>;
+        SB_ = ZERO<RealT>;
+
+        const bool saturation_disabled =
+            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+
+        if (saturation_disabled)
+        {
+          return;
+        }
+
+        const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT>
+            || Se1_ < ZERO<RealT> || Se2_ < ZERO<RealT>
+            || !sat_ordered)
+        {
+          return;
+        }
+
+        if (Se1_ == ZERO<RealT>)
+        {
+          const RealT dE = E2_ - E1_;
+          SA_            = E1_;
+          SB_            = Se2_ * E2_ / (dE * dE);
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          const RealT dE = E1_ - E2_;
+          SA_            = E2_;
+          SB_            = Se1_ * E1_ / (dE * dE);
+          return;
+        }
+
+        const RealT C = std::sqrt(Se2_ * E2_ / (Se1_ * E1_));
+
+        // Solution 1 (Aligned with PW)
+        SA_ = (C * E1_ - E2_) / (C - ONE<RealT>);
+        SB_ = Se1_ * E1_ / ((E1_ - SA_) * (E1_ - SA_));
+      }
+
+      template <typename scalar_type, typename index_type>
+      const Model::VariableMonitorBase* Ieeet1<scalar_type, index_type>::getMonitor() const
+      {
+        return monitor_.get();
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Ieeet1<scalar_type, index_type>::initializeMonitor()
+      {
+        using Variable = ModelDataT::MonitorableVariables;
+        monitor_->set(Variable::efd, [this]
+                      { return y_.getData()[7]; });
+        monitor_->set(Variable::ksat, [this]
+                      { return SB_ * Math::qramp(y_.getData()[2] - SA_); });
+      }
+    } // namespace Exciter
+  } // namespace PhasorDynamics
+} // namespace GridKit

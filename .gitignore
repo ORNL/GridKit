@@ -4,4 +4,10 @@
 .vscode/
 *.DS_Store
 build/
-*.DS_Store
+*.swp
+doxygen-docs/
+docs/_build/
+docs/api/reference/
+docs/xml/
+__pycache__
+.direnv/
