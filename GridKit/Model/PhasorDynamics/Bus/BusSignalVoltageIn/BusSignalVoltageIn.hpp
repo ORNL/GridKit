@@ -25,7 +25,7 @@ namespace GridKit
      * components _Vr_ and _Vi_ are read directly from input signal ports
      * `vr` and `vi` whenever Vr() or Vi() is called; the bus stores no
      * voltage of its own and never modifies it. Both voltage inlets are
-     * mandatory: verify() reports an error for an inlet that is not
+     * mandatory: verify() logs an error and throws for an inlet that is not
      * connected to a linked signal, and reading the voltage through an
      * unlinked inlet throws. No default voltage is ever used. The bus has
      * no unknowns and no equations (size() == 0, like @ref BusInfinite).

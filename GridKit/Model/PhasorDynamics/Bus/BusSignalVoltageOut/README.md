@@ -11,8 +11,9 @@ the bus residual is evaluated.
 - Ports must be connected before `allocate()` is called. The output signals
   are linked to the bus voltage variables and their system indices in
   `allocate()`.
-- `verify()` returns the number of connected ports that have no linked
-  signal source.
+- Both current inlets are mandatory. `verify()` logs each problem and
+  throws if a current inlet is not connected or not linked, or if a
+  connected outlet is not linked. No default current is ever used.
 - Current entering the bus has positive sign.
 
 ## Model Parameters
@@ -25,8 +26,8 @@ Port | Direction | Units  | Description                                        |
 -----|-----------|--------|----------------------------------------------------|-----
 `vr` | out       | [p.u.] | Bus voltage, real component $V_r$                  |
 `vi` | out       | [p.u.] | Bus voltage, imaginary component $V_i$             |
-`ir` | in        | [p.u.] | Current injection, real component $I_r^{s}$        | Added to $f_0$
-`ii` | in        | [p.u.] | Current injection, imaginary component $I_i^{s}$   | Added to $f_1$
+`ir` | in        | [p.u.] | Current injection, real component $I_r^{s}$        | Required, sets $f_0$
+`ii` | in        | [p.u.] | Current injection, imaginary component $I_i^{s}$   | Required, sets $f_1$
 
 ## Model Variables
 
@@ -45,8 +46,8 @@ $V_i$  | [p.u.] | Bus voltage, imaginary component |
 
 Symbol    | Units  | Description                            | Note
 ----------|--------|----------------------------------------|-----
-$I_r^{s}$ | [p.u.] | Current injection on signal port `ir`  | Optional
-$I_i^{s}$ | [p.u.] | Current injection on signal port `ii`  | Optional
+$I_r^{s}$ | [p.u.] | Current injection on signal port `ir`  |
+$I_i^{s}$ | [p.u.] | Current injection on signal port `ii`  |
 
 ## Model Equations
 
@@ -63,7 +64,7 @@ Let $\mathcal{D}$ denote the set of devices attached directly to the bus.
 \end{aligned}
 ```
 
-An unconnected input port contributes zero.
+Both input ports must be connected; see `verify()`.
 
 ## Initialization
 

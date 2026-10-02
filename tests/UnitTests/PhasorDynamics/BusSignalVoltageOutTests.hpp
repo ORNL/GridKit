@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <map>
+#include <stdexcept>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Constants.hpp>
@@ -32,6 +33,21 @@ namespace GridKit
 
       BusSignalVoltageOutTests()  = default;
       ~BusSignalVoltageOutTests() = default;
+
+      /// True if verify() throws, as it must for a misconnected bus
+      template <typename BusLike>
+      static bool verifyThrows(const BusLike& bus)
+      {
+        try
+        {
+          bus.verify();
+        }
+        catch (const std::runtime_error&)
+        {
+          return true;
+        }
+        return false;
+      }
 
       /// Constructor, allocation, and initialization checks
       TestOutcome constructor()
@@ -77,9 +93,21 @@ namespace GridKit
         auto vr_node = SignalT({.name = "vr", .signal_id = 0});
         auto vi_node = SignalT({.name = "vi", .signal_id = 1});
 
+        // Mandatory current inlets
+        ScalarT Ir{-3.7};
+        ScalarT Ii{2.4};
+        IdxT    ir_index{5};
+        IdxT    ii_index{6};
+        auto    ir_node = SignalT({.name = "ir", .signal_id = 2});
+        auto    ii_node = SignalT({.name = "ii", .signal_id = 3});
+        ir_node.link(&Ir, &ir_index);
+        ii_node.link(&Ii, &ii_index);
+
         BusT bus(Vr, Vi);
         bus.getPorts().out.template port<SignalOut::vr>().connect(&vr_node);
         bus.getPorts().out.template port<SignalOut::vi>().connect(&vi_node);
+        bus.getPorts().in.template port<SignalIn::ir>().connect(&ir_node);
+        bus.getPorts().in.template port<SignalIn::ii>().connect(&ii_node);
 
         success *= vr_node.assigned();
         success *= vi_node.assigned();
@@ -119,16 +147,15 @@ namespace GridKit
         IdxT          ir_index{5};
         IdxT          ii_index{6};
 
-        // Bus without connected ports resets residuals to zero
+        // A bus without connected current inlets is rejected by verify()
         {
           BusT bus(Vr, Vi);
           bus.allocate();
           bus.initialize();
-          bus.Ir() = 1.3;
-          bus.Ii() = -0.8;
-          bus.evaluateResidual();
-          success *= isEqual(bus.Ir(), 0.0);
-          success *= isEqual(bus.Ii(), 0.0);
+          const auto previous_verbosity = Log::verbosity();
+          Log::setVerbosity(Log::Verbosity::NONE); // expected errors
+          success *= verifyThrows(bus);
+          Log::setVerbosity(previous_verbosity);
         }
 
         auto ir_node = SignalT({.name = "ir", .signal_id = 2});
@@ -165,7 +192,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// verify() reports connected inputs without a linked source
+      /// verify() throws for current inlets that are unconnected or unlinked
       TestOutcome verifyUnlinked()
       {
         TestStatus success = true;
@@ -183,12 +210,17 @@ namespace GridKit
         bus.allocate();
         bus.initialize();
 
-        success *= (bus.verify() == 2);
+        success *= verifyThrows(bus);
 
         ScalarT Ir{0.1};
         IdxT    ir_index{0};
         ir_node.link(&Ir, &ir_index);
-        success *= (bus.verify() == 1);
+        success *= verifyThrows(bus);
+
+        ScalarT Ii{0.2};
+        IdxT    ii_index{1};
+        ii_node.link(&Ii, &ii_index);
+        success *= (bus.verify() == 0);
 
         Log::setVerbosity(previous_verbosity);
 

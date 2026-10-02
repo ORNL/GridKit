@@ -22,8 +22,10 @@ namespace GridKit
      * _Vi_ as algebraic variables and uses current balance in Cartesian
      * coordinates as residuals. In addition, it
      * - publishes _Vr_ and _Vi_ on output signal ports `vr` and `vi`, and
-     * - reads current injections from input signal ports `ir` and `ii` and
-     *   adds them to the residuals f[0] and f[1], respectively.
+     * - sets its residuals f[0] and f[1] to the current injections read from
+     *   input signal ports `ir` and `ii`, respectively. Both inlets are
+     *   mandatory: verify() throws if either is not connected to a linked
+     *   signal, and no default value is ever used.
      *
      * Components attached to the bus directly (without signals) keep adding
      * their currents to the residuals after the bus residual is evaluated,

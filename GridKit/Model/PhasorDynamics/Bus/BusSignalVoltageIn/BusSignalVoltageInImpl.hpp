@@ -5,6 +5,7 @@
  */
 
 #include <cmath>
+#include <stdexcept>
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -111,12 +112,15 @@ namespace GridKit
      * Both voltage inlets `vr` and `vi` are mandatory, since the bus has no
      * voltage of its own and no default value is allowed.
      *
-     * @return Number of ports that fail the check.
+     * @throws std::runtime_error if any port fails the check. Each problem
+     *         is logged before throwing.
+     *
+     * @return 0 (an error is reported by throwing).
      */
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageIn<scalar_type, index_type>::verify() const
     {
-      int ret = 0;
+      int errors = 0;
 
       auto check_input = [&]<BusSignalVoltageInInputs input>(const char* name)
       {
@@ -125,12 +129,12 @@ namespace GridKit
         {
           Log::error() << "BusSignalVoltageIn: " << name
                        << " signal inlet is not connected; a default voltage is not allowed\n";
-          ret += 1;
+          errors += 1;
         }
         else if (!port.linked())
         {
           Log::error() << "BusSignalVoltageIn: " << name << " signal attached with no linked source\n";
-          ret += 1;
+          errors += 1;
         }
       };
 
@@ -141,7 +145,7 @@ namespace GridKit
         {
           Log::error() << "BusSignalVoltageIn: " << name
                        << " signal attached but not linked; connect ports before allocate()\n";
-          ret += 1;
+          errors += 1;
         }
       };
 
@@ -150,7 +154,12 @@ namespace GridKit
       check_output.template operator()<BusSignalVoltageInOutputs::ir>("Ir");
       check_output.template operator()<BusSignalVoltageInOutputs::ii>("Ii");
 
-      return ret;
+      if (errors > 0)
+      {
+        throw std::runtime_error("BusSignalVoltageIn: signal ports are not correctly connected");
+      }
+
+      return 0;
     }
 
     /**

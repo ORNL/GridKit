@@ -5,6 +5,7 @@
  */
 
 #include <cmath>
+#include <stdexcept>
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageOut/BusSignalVoltageOut.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -124,22 +125,35 @@ namespace GridKit
     }
 
     /**
-     * @brief Check that connected ports are also linked to a signal source.
+     * @brief Check that the current inlets are connected and linked, and
+     * that connected outlets are linked.
      *
-     * @return Number of connected ports without a linked signal.
+     * Both current inlets `ir` and `ii` are mandatory, since the residuals
+     * are set from them and no default value is allowed.
+     *
+     * @throws std::runtime_error if any port fails the check. Each problem
+     *         is logged before throwing.
+     *
+     * @return 0 (an error is reported by throwing).
      */
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageOut<scalar_type, index_type>::verify() const
     {
-      int ret = 0;
+      int errors = 0;
 
       auto check_input = [&]<BusSignalVoltageOutInputs input>(const char* name)
       {
         const auto& port = ports_.in.template port<input>();
-        if (port.connected() && !port.linked())
+        if (!port.connected())
+        {
+          Log::error() << "BusSignalVoltageOut: " << name
+                       << " signal inlet is not connected; a default current is not allowed\n";
+          errors += 1;
+        }
+        else if (!port.linked())
         {
           Log::error() << "BusSignalVoltageOut: " << name << " signal attached with no linked source\n";
-          ret += 1;
+          errors += 1;
         }
       };
 
@@ -150,7 +164,7 @@ namespace GridKit
         {
           Log::error() << "BusSignalVoltageOut: " << name
                        << " signal attached but not linked; connect ports before allocate()\n";
-          ret += 1;
+          errors += 1;
         }
       };
 
@@ -159,7 +173,12 @@ namespace GridKit
       check_output.template operator()<BusSignalVoltageOutOutputs::vr>("Vr");
       check_output.template operator()<BusSignalVoltageOutOutputs::vi>("Vi");
 
-      return ret;
+      if (errors > 0)
+      {
+        throw std::runtime_error("BusSignalVoltageOut: signal ports are not correctly connected");
+      }
+
+      return 0;
     }
 
     /**
@@ -227,8 +246,10 @@ namespace GridKit
      * @brief Set residuals to the current injections from input signals.
      *
      * Residuals f[0] and f[1] are set to the values read from the `ir` and
-     * `ii` input ports, respectively. An unconnected port sets its residual
-     * to zero. Components attached to the bus add their currents afterwards.
+     * `ii` input ports, respectively. Both inlets are mandatory; verify()
+     * throws if either is not connected to a linked signal, and no default
+     * value is used here. Components attached to the bus add their currents
+     * afterwards.
      *
      * @warning This implementation assumes bus residuals are always evaluated
      * _before_ component model residuals.
@@ -238,23 +259,8 @@ namespace GridKit
     {
       auto* f = f_.getData();
 
-      if (auto ir_port = ports_.in.template port<BusSignalVoltageOutInputs::ir>())
-      {
-        f[0] = ir_port.readSignal();
-      }
-      else
-      {
-        f[0] = 0.0;
-      }
-
-      if (auto ii_port = ports_.in.template port<BusSignalVoltageOutInputs::ii>())
-      {
-        f[1] = ii_port.readSignal();
-      }
-      else
-      {
-        f[1] = 0.0;
-      }
+      f[0] = ports_.in.template port<BusSignalVoltageOutInputs::ir>().readSignal();
+      f[1] = ports_.in.template port<BusSignalVoltageOutInputs::ii>().readSignal();
 
       f_.setDataUpdated();
       return 0;
