@@ -20,7 +20,7 @@ namespace GridKit
       using ScalarT = scalar_type;
       using IdxT    = index_type;
 
-      /// Read the value of the connected signal node (by const reference).
+      /// Read the value of the signal node if connected.
       const ScalarT& readSignal() const
       {
         assert(this->connected());
