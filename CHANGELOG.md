@@ -2,6 +2,8 @@
 
 ## v.03
 
+- Added `BusSignalVoltageOut` bus model with voltage signal outlets and current signal inlets.
+- Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.
 
 ## v0.2
 
