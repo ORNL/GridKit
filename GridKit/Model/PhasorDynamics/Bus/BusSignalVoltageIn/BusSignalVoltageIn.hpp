@@ -22,7 +22,7 @@ namespace GridKit
      * @brief Bus whose voltage is set by input signals.
      *
      * This is the mirror image of @ref BusSignalVoltageOut. The bus voltage
-     * components _Vr_ and _Vi_ are read directly from input signal ports
+     * components _Vr_ and _Vi_ are read directly from signal inlets
      * `vr` and `vi` whenever Vr() or Vi() is called; the bus stores no
      * voltage of its own and never modifies it. Both voltage inlets are
      * mandatory: verify() logs an error and throws for an inlet that is not
@@ -30,10 +30,10 @@ namespace GridKit
      * unlinked inlet throws. No default voltage is ever used. The bus has
      * no unknowns and no equations (size() == 0, like @ref BusInfinite).
      * Components attached to the bus add their current injections to Ir()
-     * and Ii(); the resulting sums are published on output signal ports `ir`
+     * and Ii(); the resulting sums are published on signal outlets `ir`
      * and `ii`.
      *
-     * @note Ports have to be connected before allocate() is called, since
+     * @note Signal ports have to be connected before allocate() is called, since
      *       the output signals are linked there.
      *
      * @warning The current sums are complete only after all attached
@@ -167,7 +167,7 @@ namespace GridKit
       IdxT ir_index_{INVALID_INDEX<IdxT>};
       IdxT ii_index_{INVALID_INDEX<IdxT>};
 
-      /// Signal ports
+      /// Signal ports (inlets and outlets)
       SignalPortsT ports_;
     };
 

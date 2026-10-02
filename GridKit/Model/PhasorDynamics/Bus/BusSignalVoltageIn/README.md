@@ -7,7 +7,7 @@ The bus stores no voltage of its own and has no unknowns and no equations.
 
 ## Notes
 
-- Ports must be connected before `allocate()` is called. The output signals
+- Signal ports must be connected before `allocate()` is called. The signal outlets
   are linked to the current sums in `allocate()`.
 - Both voltage inlets are mandatory. `verify()` logs each problem and
   throws if a voltage inlet is not connected or not linked, or if a
@@ -24,7 +24,7 @@ Same as `Bus`.
 
 ## Model Ports
 
-Port | Direction | Units  | Description                                           | Note
+Signal | Direction | Units  | Description                                           | Note
 -----|-----------|--------|-------------------------------------------------------|-----
 `vr` | in        | [p.u.] | Bus voltage, real component $V_r$                     | Required
 `vi` | in        | [p.u.] | Bus voltage, imaginary component $V_i$                | Required

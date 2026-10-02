@@ -76,8 +76,8 @@ namespace GridKit
     /*!
      * @brief Allocate (empty) bus storage and link output signals.
      *
-     * Output ports `ir` and `ii` are linked to the current sums here, so
-     * ports have to be connected before this method is called. The current
+     * Signal outlets `ir` and `ii` are linked to the current sums here, so
+     * they have to be connected before this method is called. The current
      * sums are not system variables, so the linked indices are invalid.
      */
     template <typename scalar_type, typename index_type>
@@ -144,7 +144,7 @@ namespace GridKit
         if (port.connected() && !port.linked())
         {
           Log::error() << "BusSignalVoltageIn: " << name
-                       << " signal attached but not linked; connect ports before allocate()\n";
+                       << " signal attached but not linked; connect signal ports before allocate()\n";
           errors += 1;
         }
       };

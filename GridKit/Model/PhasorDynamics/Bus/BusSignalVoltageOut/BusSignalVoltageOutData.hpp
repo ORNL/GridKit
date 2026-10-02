@@ -24,14 +24,14 @@ namespace GridKit
     {
     };
 
-    /// Signal input ports of a bus with voltage signal outputs and current signal inputs (see BusSignalVoltageOut)
+    /// Signal inlets of a bus with voltage signal outlets and current signal inlets (see BusSignalVoltageOut)
     enum class BusSignalVoltageOutInputs : size_t
     {
       ir, ///< Real current injection, added to the real current residual
       ii, ///< Imaginary current injection, added to the imaginary current residual
     };
 
-    /// Signal output ports of a bus with voltage signal outputs and current signal inputs (see BusSignalVoltageOut)
+    /// Signal outlets of a bus with voltage signal outlets and current signal inlets (see BusSignalVoltageOut)
     enum class BusSignalVoltageOutOutputs : size_t
     {
       vr, ///< Bus voltage, real component

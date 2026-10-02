@@ -8,7 +8,7 @@ the bus residual is evaluated.
 
 ## Notes
 
-- Ports must be connected before `allocate()` is called. The output signals
+- Signal ports must be connected before `allocate()` is called. The signal outlets
   are linked to the bus voltage variables and their system indices in
   `allocate()`.
 - Both current inlets are mandatory. `verify()` logs each problem and
@@ -22,7 +22,7 @@ Same as `Bus`.
 
 ## Model Ports
 
-Port | Direction | Units  | Description                                        | Note
+Signal | Direction | Units  | Description                                        | Note
 -----|-----------|--------|----------------------------------------------------|-----
 `vr` | out       | [p.u.] | Bus voltage, real component $V_r$                  |
 `vi` | out       | [p.u.] | Bus voltage, imaginary component $V_i$             |
@@ -46,8 +46,8 @@ $V_i$  | [p.u.] | Bus voltage, imaginary component |
 
 Symbol    | Units  | Description                            | Note
 ----------|--------|----------------------------------------|-----
-$I_r^{s}$ | [p.u.] | Current injection on signal port `ir`  |
-$I_i^{s}$ | [p.u.] | Current injection on signal port `ii`  |
+$I_r^{s}$ | [p.u.] | Current injection on signal inlet `ir`  |
+$I_i^{s}$ | [p.u.] | Current injection on signal inlet `ii`  |
 
 ## Model Equations
 
@@ -64,7 +64,7 @@ Let $\mathcal{D}$ denote the set of devices attached directly to the bus.
 \end{aligned}
 ```
 
-Both input ports must be connected; see `verify()`.
+Both signal inlets must be connected; see `verify()`.
 
 ## Initialization
 

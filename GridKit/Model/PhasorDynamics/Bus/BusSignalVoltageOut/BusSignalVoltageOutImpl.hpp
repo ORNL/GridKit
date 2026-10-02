@@ -85,8 +85,8 @@ namespace GridKit
     /*!
      * @brief Allocate bus storage and index maps, and link output signals.
      *
-     * Output ports `vr` and `vi` are linked to the bus voltage variables
-     * and their (system) variable indices here, so ports have to be
+     * Signal outlets `vr` and `vi` are linked to the bus voltage variables
+     * and their (system) variable indices here, so they have to be
      * connected before this method is called.
      */
     template <typename scalar_type, typename index_type>
@@ -110,7 +110,7 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Publish bus voltage on the output signal ports
+      // Publish bus voltage on the signal outlets
       if (auto vr_port = ports_.out.template port<BusSignalVoltageOutOutputs::vr>())
       {
         vr_port.link(&y_.getData()[0], &(this->getVariableIndex(0)));
@@ -163,7 +163,7 @@ namespace GridKit
         if (port.connected() && !port.linked())
         {
           Log::error() << "BusSignalVoltageOut: " << name
-                       << " signal attached but not linked; connect ports before allocate()\n";
+                       << " signal attached but not linked; connect signal ports before allocate()\n";
           errors += 1;
         }
       };
@@ -246,7 +246,7 @@ namespace GridKit
      * @brief Set residuals to the current injections from input signals.
      *
      * Residuals f[0] and f[1] are set to the values read from the `ir` and
-     * `ii` input ports, respectively. Both inlets are mandatory; verify()
+     * `ii` signal inlets, respectively. Both inlets are mandatory; verify()
      * throws if either is not connected to a linked signal, and no default
      * value is used here. Components attached to the bus add their currents
      * afterwards.

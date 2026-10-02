@@ -87,7 +87,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Input ports set the bus voltage
+      /// Signal inlets set the bus voltage
       TestOutcome voltageInputs()
       {
         TestStatus success = true;
@@ -149,7 +149,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Output ports publish the accumulated current injections
+      /// Signal outlets publish the accumulated current injections
       TestOutcome currentOutputs()
       {
         TestStatus success = true;

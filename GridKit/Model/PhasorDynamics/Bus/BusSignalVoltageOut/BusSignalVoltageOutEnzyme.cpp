@@ -16,7 +16,7 @@ namespace GridKit
      * columns, as in Bus. They provide the indices for entries that other
      * components contribute to and that are later deduplicated.
      *
-     * One additional entry per connected input port holds the derivative of
+     * One additional entry per connected signal inlet holds the derivative of
      * the residual with respect to the signal variable, which is one. When
      * the signal has no valid system variable index, the entry is stored as
      * a zero duplicate of the bus-voltage placeholder so that the sparsity

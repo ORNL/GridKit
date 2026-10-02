@@ -21,9 +21,9 @@ namespace GridKit
      * Like @ref Bus, this model owns the bus voltage components _Vr_ and
      * _Vi_ as algebraic variables and uses current balance in Cartesian
      * coordinates as residuals. In addition, it
-     * - publishes _Vr_ and _Vi_ on output signal ports `vr` and `vi`, and
+     * - publishes _Vr_ and _Vi_ on signal outlets `vr` and `vi`, and
      * - sets its residuals f[0] and f[1] to the current injections read from
-     *   input signal ports `ir` and `ii`, respectively. Both inlets are
+     *   signal inlets `ir` and `ii`, respectively. Both inlets are
      *   mandatory: verify() throws if either is not connected to a linked
      *   signal, and no default value is ever used.
      *
@@ -31,7 +31,7 @@ namespace GridKit
      * their currents to the residuals after the bus residual is evaluated,
      * exactly as they do for @ref Bus.
      *
-     * @note Ports have to be connected before allocate() is called, since
+     * @note Signal ports have to be connected before allocate() is called, since
      *       the output signals are linked to the bus variables there.
      */
     template <typename scalar_type, typename index_type>
