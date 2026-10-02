@@ -12,11 +12,14 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <class ScalarT, typename IdxT>
     class BusSignalVoltageOutTests
     {
@@ -167,6 +170,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        // This test triggers error messages on purpose; silence them.
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
+
         auto ir_node = SignalT({.name = "ir", .signal_id = 2});
         auto ii_node = SignalT({.name = "ii", .signal_id = 3});
 
@@ -182,6 +189,8 @@ namespace GridKit
         IdxT    ir_index{0};
         ir_node.link(&Ir, &ir_index);
         success *= (bus.verify() == 1);
+
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }

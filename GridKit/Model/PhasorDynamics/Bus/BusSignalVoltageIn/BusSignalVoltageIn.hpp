@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <stdexcept>
 #include <utility>
 
 #include <GridKit/Constants.hpp>
@@ -23,9 +24,11 @@ namespace GridKit
      * This is the mirror image of @ref BusSignalVoltageOut. The bus voltage
      * components _Vr_ and _Vi_ are read directly from input signal ports
      * `vr` and `vi` whenever Vr() or Vi() is called; the bus stores no
-     * voltage of its own and never modifies it. An unconnected port falls
-     * back to the initial value from the constructor or bus data. The bus
-     * has no unknowns and no equations (size() == 0, like @ref BusInfinite).
+     * voltage of its own and never modifies it. Both voltage inlets are
+     * mandatory: verify() reports an error for an inlet that is not
+     * connected to a linked signal, and reading the voltage through an
+     * unlinked inlet throws. No default voltage is ever used. The bus has
+     * no unknowns and no equations (size() == 0, like @ref BusInfinite).
      * Components attached to the bus add their current injections to Ir()
      * and Ii(); the resulting sums are published on output signal ports `ir`
      * and `ii`.
@@ -61,7 +64,9 @@ namespace GridKit
       using SignalPortsT = SignalPorts<ScalarT, SignalDataT>;
 
       BusSignalVoltageIn();
+      /// Initial voltage arguments are ignored; the voltage comes from signals.
       BusSignalVoltageIn(ScalarT Vr, ScalarT Vi);
+      /// Initial voltage in `data` is ignored; the voltage comes from signals.
       BusSignalVoltageIn(const ModelDataT& data);
       virtual ~BusSignalVoltageIn();
 
@@ -92,8 +97,7 @@ namespace GridKit
 
       virtual const ScalarT& Vr() const override final
       {
-        const auto& port = ports_.in.template port<BusSignalVoltageInInputs::vr>();
-        return port.linked() ? port.readSignal() : Vr0_;
+        return readVoltage<BusSignalVoltageInInputs::vr>("vr");
       }
 
       /**
@@ -108,8 +112,7 @@ namespace GridKit
 
       virtual const ScalarT& Vi() const override final
       {
-        const auto& port = ports_.in.template port<BusSignalVoltageInInputs::vi>();
-        return port.linked() ? port.readSignal() : Vi0_;
+        return readVoltage<BusSignalVoltageInInputs::vi>("vi");
       }
 
       virtual ScalarT& Ir() override final
@@ -143,9 +146,19 @@ namespace GridKit
       }
 
     private:
-      /// Fallback voltage used while an inlet is not connected
-      ScalarT Vr0_{0.0};
-      ScalarT Vi0_{0.0};
+      /// Read a voltage inlet, throwing if it has no linked signal.
+      template <BusSignalVoltageInInputs input>
+      const ScalarT& readVoltage(const char* name) const
+      {
+        const auto& port = ports_.in.template port<input>();
+        if (!port.linked())
+        {
+          Log::error() << "BusSignalVoltageIn: voltage inlet " << name
+                       << " read without a linked signal\n";
+          throw std::runtime_error("BusSignalVoltageIn: voltage inlet has no linked signal");
+        }
+        return port.readSignal();
+      }
 
       ScalarT Ir_{0.0};
       ScalarT Ii_{0.0};

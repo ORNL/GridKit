@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <stdexcept>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Constants.hpp>
@@ -11,11 +12,14 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <class ScalarT, typename IdxT>
     class BusSignalVoltageInTests
     {
@@ -34,6 +38,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        // This test triggers error messages on purpose; silence them.
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
+
         const ScalarT Vr{0.93};
         const ScalarT Vi{-0.27};
 
@@ -42,24 +50,24 @@ namespace GridKit
         bus = new BusT();
         bus->allocate();
         bus->initialize();
-        success *= isEqual(bus->Vr(), 0.0);
-        success *= isEqual(bus->Vi(), 0.0);
         success *= (bus->size() == 0);
         success *= (bus->BusType() == BusTypeT::SIGNAL_VOLTAGE_IN);
-        delete bus;
-
-        bus      = new BusT(Vr, Vi);
-        success *= isEqual(bus->Vr(), Vr);
-        success *= isEqual(bus->Vi(), Vi);
-        bus->allocate();
-        bus->initialize();
-        success *= isEqual(bus->Vr(), Vr);
-        success *= isEqual(bus->Vi(), Vi);
         success *= isEqual(bus->Ir(), 0.0);
         success *= isEqual(bus->Ii(), 0.0);
+        // Voltage inlets are mandatory: an unconnected bus fails verification
+        success *= (bus->verify() == 2);
+        delete bus;
+
+        // Initial voltage arguments are accepted for interface uniformity but not used
+        bus = new BusT(Vr, Vi);
+        bus->allocate();
+        bus->initialize();
+        success *= (bus->verify() == 2);
         delete bus;
 
         bus = nullptr;
+
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }
@@ -69,19 +77,21 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const ScalarT Vr0{1.0};
-        const ScalarT Vi0{0.0};
-        ScalarT       Vr{0.93};  ///< Voltage on signal vr
-        ScalarT       Vi{-0.27}; ///< Voltage on signal vi
-        IdxT          vr_index{7};
-        IdxT          vi_index{8};
+        // This test triggers error messages on purpose; silence them.
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        ScalarT Vr{0.93};  ///< Voltage on signal vr
+        ScalarT Vi{-0.27}; ///< Voltage on signal vi
+        IdxT    vr_index{7};
+        IdxT    vi_index{8};
 
         auto vr_node = SignalT({.name = "vr", .signal_id = 0});
         auto vi_node = SignalT({.name = "vi", .signal_id = 1});
         vr_node.link(&Vr, &vr_index);
         vi_node.link(&Vi, &vi_index);
 
-        BusT bus(Vr0, Vi0);
+        BusT bus;
         bus.getPorts().in.template port<SignalIn::vr>().connect(&vr_node);
         bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
         bus.allocate();
@@ -103,13 +113,23 @@ namespace GridKit
         success *= isEqual(bus.Vr(), 1.17);
         success *= isEqual(bus.Vi(), 0.41);
 
-        // Unconnected inputs fall back to the initial voltage
-        BusT plain(Vr0, Vi0);
+        // Reading an unconnected voltage inlet is an error, never a default value
+        BusT plain;
         plain.allocate();
         plain.initialize();
-        plain.evaluateResidual();
-        success *= isEqual(plain.Vr(), Vr0);
-        success *= isEqual(plain.Vi(), Vi0);
+        success    *= (plain.verify() == 2);
+        bool threw  = false;
+        try
+        {
+          [[maybe_unused]] const auto& v = plain.Vr();
+        }
+        catch (const std::runtime_error&)
+        {
+          threw = true;
+        }
+        success *= threw;
+
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }
@@ -119,10 +139,22 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        // Mandatory voltage inlets
+        ScalarT Vr{0.93};
+        ScalarT Vi{-0.27};
+        IdxT    vr_index{7};
+        IdxT    vi_index{8};
+        auto    vr_node = SignalT({.name = "vr", .signal_id = 0});
+        auto    vi_node = SignalT({.name = "vi", .signal_id = 1});
+        vr_node.link(&Vr, &vr_index);
+        vi_node.link(&Vi, &vi_index);
+
         auto ir_node = SignalT({.name = "ir", .signal_id = 2});
         auto ii_node = SignalT({.name = "ii", .signal_id = 3});
 
-        BusT bus(1.0, 0.0);
+        BusT bus;
+        bus.getPorts().in.template port<SignalIn::vr>().connect(&vr_node);
+        bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
         bus.getPorts().out.template port<SignalOut::ir>().connect(&ir_node);
         bus.getPorts().out.template port<SignalOut::ii>().connect(&ii_node);
 
@@ -157,26 +189,40 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// verify() reports connected inputs without a linked source
+      /// verify() reports voltage inlets that are unconnected or unlinked
       TestOutcome verifyUnlinked()
       {
         TestStatus success = true;
 
+        // This test triggers error messages on purpose; silence them.
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
+
         auto vr_node = SignalT({.name = "vr", .signal_id = 0});
         auto vi_node = SignalT({.name = "vi", .signal_id = 1});
 
-        BusT bus(1.0, 0.0);
+        BusT bus;
         bus.getPorts().in.template port<SignalIn::vr>().connect(&vr_node);
-        bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
         bus.allocate();
         bus.initialize();
 
+        // vr connected but unlinked, vi not connected
         success *= (bus.verify() == 2);
 
         ScalarT Vr{0.1};
         IdxT    vr_index{0};
         vr_node.link(&Vr, &vr_index);
         success *= (bus.verify() == 1);
+
+        bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
+        success *= (bus.verify() == 1);
+
+        ScalarT Vi{0.2};
+        IdxT    vi_index{1};
+        vi_node.link(&Vi, &vi_index);
+        success *= (bus.verify() == 0);
+
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }
@@ -205,7 +251,7 @@ namespace GridKit
         vr_node.link(&Vr, &vr_index);
         vi_node.link(&Vi, &vi_index);
 
-        DtBusT bus(VariableT{1.0}, VariableT{0.0});
+        DtBusT bus;
         bus.getPorts().in.template port<SignalIn::vr>().connect(&vr_node);
         bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
         bus.allocate();

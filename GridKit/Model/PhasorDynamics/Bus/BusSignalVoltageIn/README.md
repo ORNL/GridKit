@@ -9,8 +9,10 @@ The bus stores no voltage of its own and has no unknowns and no equations.
 
 - Ports must be connected before `allocate()` is called. The output signals
   are linked to the current sums in `allocate()`.
-- `verify()` returns the number of connected ports that have no linked
-  signal source.
+- Both voltage inlets are mandatory. `verify()` reports an error for a
+  voltage inlet that is not connected or not linked, and for a connected
+  outlet that is not linked. Reading the voltage through an unlinked inlet
+  throws. No default voltage is ever used.
 - The current sums are complete only after all attached components have
   evaluated their residuals. Consumers of `ir` and `ii` must be evaluated
   after them.
@@ -24,8 +26,8 @@ Same as `Bus`.
 
 Port | Direction | Units  | Description                                           | Note
 -----|-----------|--------|-------------------------------------------------------|-----
-`vr` | in        | [p.u.] | Bus voltage, real component $V_r$                     | Sets $V_r$
-`vi` | in        | [p.u.] | Bus voltage, imaginary component $V_i$                | Sets $V_i$
+`vr` | in        | [p.u.] | Bus voltage, real component $V_r$                     | Required
+`vi` | in        | [p.u.] | Bus voltage, imaginary component $V_i$                | Required
 `ir` | out       | [p.u.] | Sum of real current injections $I_r$                  |
 `ii` | out       | [p.u.] | Sum of imaginary current injections $I_i$             |
 
@@ -41,8 +43,8 @@ None.
 
 Symbol | Units  | Description                                   | Note
 -------|--------|-----------------------------------------------|-----
-$V_r$  | [p.u.] | Bus voltage, real component from port `vr`    | Optional
-$V_i$  | [p.u.] | Bus voltage, imaginary component from port `vi` | Optional
+$V_r$  | [p.u.] | Bus voltage, real component from port `vr`      |
+$V_i$  | [p.u.] | Bus voltage, imaginary component from port `vi` |
 
 ## Model Equations
 
@@ -58,13 +60,12 @@ I_i &= \sum_{d \in \mathcal{D}} I_{i,d}
 ```
 
 where $\mathcal{D}$ is the set of devices attached directly to the bus.
-`Vr()` and `Vi()` return the connected signal value; an unconnected input
-port returns the initial value from bus data instead.
+`Vr()` and `Vi()` return the connected signal value by reference.
 
 ## Initialization
 
 Current sums are set to zero. The voltage is owned by the signal sources and
-is not initialized by the bus.
+is not initialized by the bus; the initial voltage in bus data is ignored.
 
 ## Monitors
 

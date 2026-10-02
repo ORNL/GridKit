@@ -26,11 +26,13 @@ namespace GridKit
     }
 
     /*!
-     * @brief Constructor setting initial values for the bus voltage.
+     * @brief Constructor with the signature of other buses.
+     *
+     * The voltage arguments are ignored; this bus reads its voltage from
+     * its input signals only.
      */
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(ScalarT Vr, ScalarT Vi)
-      : Vr0_(Vr), Vi0_(Vi)
+    BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(ScalarT /* Vr */, ScalarT /* Vi */)
     {
       size_ = 0;
     }
@@ -38,12 +40,13 @@ namespace GridKit
     /**
      * @brief Construct a new BusSignalVoltageIn from bus data.
      *
+     * The initial voltage in `data` is ignored; this bus reads its voltage
+     * from its input signals only.
+     *
      * @param[in] data - structure with bus data
      */
     template <typename scalar_type, typename index_type>
     BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(const ModelDataT& data)
-      : Vr0_(data.Vr0),
-        Vi0_(data.Vi0)
     {
       bus_id_        = data.bus_id;
       size_          = 0;
@@ -102,9 +105,13 @@ namespace GridKit
     }
 
     /**
-     * @brief Check that connected ports are also linked to a signal source.
+     * @brief Check that the voltage inlets are connected and linked, and
+     * that connected outlets are linked.
      *
-     * @return Number of connected ports without a linked signal.
+     * Both voltage inlets `vr` and `vi` are mandatory, since the bus has no
+     * voltage of its own and no default value is allowed.
+     *
+     * @return Number of ports that fail the check.
      */
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageIn<scalar_type, index_type>::verify() const
@@ -114,7 +121,13 @@ namespace GridKit
       auto check_input = [&]<BusSignalVoltageInInputs input>(const char* name)
       {
         const auto& port = ports_.in.template port<input>();
-        if (port.connected() && !port.linked())
+        if (!port.connected())
+        {
+          Log::error() << "BusSignalVoltageIn: " << name
+                       << " signal inlet is not connected; a default voltage is not allowed\n";
+          ret += 1;
+        }
+        else if (!port.linked())
         {
           Log::error() << "BusSignalVoltageIn: " << name << " signal attached with no linked source\n";
           ret += 1;
