@@ -10,24 +10,34 @@ set(_install_headers
     BusFactory.hpp
     BusInfinite.hpp)
 
+set(_bus_signal_voltage_out_headers
+    BusSignalVoltageOut/BusSignalVoltageOut.hpp
+    BusSignalVoltageOut/BusSignalVoltageOutData.hpp)
+
 if(GRIDKIT_ENABLE_ENZYME)
-  gridkit_add_library(
-    phasor_dynamics_bus
-    SOURCES BusEnzyme.cpp BusInfinite.cpp
-    HEADERS ${_install_headers}
-    LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
+  set(_bus_sources BusEnzyme.cpp BusInfinite.cpp
+                   BusSignalVoltageOut/BusSignalVoltageOutEnzyme.cpp)
 else()
-  gridkit_add_library(
-    phasor_dynamics_bus
-    SOURCES Bus.cpp BusInfinite.cpp
-    HEADERS ${_install_headers}
-    LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
+  set(_bus_sources Bus.cpp BusInfinite.cpp
+                   BusSignalVoltageOut/BusSignalVoltageOut.cpp)
 endif()
+
+gridkit_add_library(
+  phasor_dynamics_bus
+  SOURCES ${_bus_sources}
+  HEADERS ${_install_headers}
+  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core PUBLIC GridKit::phasor_dynamics_signal)
 
 gridkit_add_library(
   phasor_dynamics_bus_dependency_tracking
   SOURCES BusDependencyTracking.cpp BusInfiniteDependencyTracking.cpp
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
+          BusSignalVoltageOut/BusSignalVoltageOutDependencyTracking.cpp
+  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
+                 PUBLIC GridKit::phasor_dynamics_signal_dependency_tracking)
+
+# Headers in the BusSignalVoltageOut subdirectory keep their relative path on install
+install(FILES ${_bus_signal_voltage_out_headers}
+        DESTINATION include/GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageOut)
 
 # Link to interface target for all components
 target_link_libraries(
