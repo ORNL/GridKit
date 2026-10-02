@@ -6,57 +6,15 @@
 
 #pragma once
 
-#include <map>
-
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageOut/BusSignalVoltageOutData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
-#include <GridKit/Model/PhasorDynamics/PortGroup.hpp>
-#include <GridKit/Model/PhasorDynamics/SignalIn.hpp>
-#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
-#include <GridKit/Model/PhasorDynamics/SignalOut.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /**
-     * @brief Signal ports of a @ref BusSignalVoltageOut.
-     *
-     * Output ports `vr` and `vi` publish the bus voltage components. Input
-     * ports `ir` and `ii` receive current injections that are added to the
-     * bus current-balance residuals.
-     */
-    template <typename scalar_type, typename index_type>
-    struct BusSignalVoltageOutPorts
-    {
-      using ScalarT        = scalar_type;
-      using IdxT           = index_type;
-      using SignalInT      = SignalIn<ScalarT, IdxT>;
-      using SignalOutT     = SignalOut<ScalarT, IdxT>;
-      using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
-
-      PortGroup<SignalInT, BusSignalVoltageOutInputs>   in;
-      PortGroup<SignalOutT, BusSignalVoltageOutOutputs> out;
-
-      BusSignalVoltageOutPorts() = default;
-
-      /// Connect the ports using maps from port enumerators to signal IDs.
-      void connect(const std::map<BusSignalVoltageOutInputs, IdxT>&  signal_inputs,
-                   const std::map<BusSignalVoltageOutOutputs, IdxT>& signal_outputs,
-                   SignalNodeSetT&                                   signal_nodes)
-      {
-        for (const auto& [variable, id] : signal_inputs)
-        {
-          in[variable].connect(signal_nodes[id]);
-        }
-        for (const auto& [variable, id] : signal_outputs)
-        {
-          out[variable].connect(signal_nodes[id]);
-        }
-      }
-    };
-
     /*!
      * @brief Bus with signal ports.
      *
@@ -99,7 +57,8 @@ namespace GridKit
       using MonitorT     = typename BusBase<ScalarT, IdxT>::MonitorT;
       using ModelDataT   = BusData<RealT, IdxT>;
       using BusTypeT     = typename BusData<RealT, IdxT>::BusType;
-      using SignalPortsT = BusSignalVoltageOutPorts<ScalarT, IdxT>;
+      using SignalDataT  = BusSignalVoltageOutData<RealT, IdxT>;
+      using SignalPortsT = SignalPorts<ScalarT, SignalDataT>;
 
       BusSignalVoltageOut();
       BusSignalVoltageOut(ScalarT Vr, ScalarT Vi);
