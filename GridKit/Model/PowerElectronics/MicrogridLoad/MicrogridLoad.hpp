@@ -20,6 +20,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class MicrogridLoad : public CircuitComponent<ScalarT, IdxT>
   {
+  public:
     using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using NodeT = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
 
@@ -64,6 +65,8 @@ namespace GridKit
     int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
+    int setResistance(RealT R);
+    int setInductance(RealT L);
 
     CircuitComponent<ScalarT, IdxT>* clone() const;
 

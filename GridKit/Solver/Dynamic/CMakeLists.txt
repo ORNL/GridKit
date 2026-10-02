@@ -93,4 +93,9 @@ if(GRIDKIT_ENABLE_RESOLVE)
       PUBLIC
       GridKit::fixed_step)
 endif()
+
+if(GRIDKIT_ENABLE_OPENMP)
+  target_link_libraries(MultiStageCosim PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 add_subdirectory(Native)

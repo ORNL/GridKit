@@ -112,7 +112,7 @@ int main()
   // Create 2 Partitions and  a Partition interfaces to split to network
   // --------------------------------------------------------------------------------
 
-  auto* bus_interface = new GridKit::BusPartitionInterface<double, size_t>(
+  auto* bus_interface = new GridKit::PowerElectronics::BusPartitionInterface<double, size_t>(
       &network.buses[1],
       network.lines[1],
       14);
@@ -232,7 +232,7 @@ int main()
 
   for (auto* partition : partitions)
   {
-    partition->release();
+    partition->restoreGlobalConnection();
   }
 
   const bool components_restored = getComponentConnections(components) == original_component_connections;

@@ -1,5 +1,5 @@
 /**
- * @file BusPartitionInterface.hpp
+ * @file Subsystem.hpp
  * @author Abdourahman Barry (abdourahman@vt.edu)
  *
  */
@@ -54,14 +54,6 @@ namespace GridKit
   class SubsystemModel : public PowerElectronicsModel<ScalarT, IdxT>
   {
   public:
-    struct ForcingData
-    {
-      std::vector<ScalarT> y;
-      std::vector<ScalarT> yp;
-    };
-
-    using TimeFunction = std::function<ForcingData(ScalarT)>;
-
   protected:
     using SystemModel    = PowerElectronicsModel<ScalarT, IdxT>;
     using VectorT        = typename SystemModel::VectorT;
@@ -70,6 +62,7 @@ namespace GridKit
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
     using interface_type = PartitionInterface<ScalarT, IdxT>;
+    using TimeFunction   = std::function<void(ScalarT)>;
 
     using SystemModel::abs_tol_;
     using SystemModel::allocated_;
@@ -162,9 +155,9 @@ namespace GridKit
       }
 
       // Allocate subsystem vectors.
-      y_ext_data_.resize(n_extern_);
-      yp_ext_data_.resize(n_extern_);
-      f_ext_data_.resize(n_extern_);
+      y_ext_data_.resize(static_cast<IdxT>(n_extern_));
+      yp_ext_data_.resize(static_cast<IdxT>(n_extern_));
+      f_ext_data_.resize(static_cast<IdxT>(n_extern_));
 
       connection_nodes_ = std::make_unique<IdxT[]>(n_intern_ + n_extern_);
       if (!this->isAllocated())
@@ -194,7 +187,7 @@ namespace GridKit
       // Start node internal indexing after all component internals for proper KLU ordering
       for (node_type* node : nodes_)
       {
-        for (size_t i = 0; i < node->getInternalSize(); i++)
+        for (IdxT i = 0; i < static_cast<IdxT>(node->getInternalSize()); i++)
         {
           const IdxT node_global_connection = node->getNodeConnection(i).idx_;
           const IdxT node_local_connection  = global_to_local_map_.at(node_global_connection);
@@ -237,7 +230,7 @@ namespace GridKit
             continue;
           }
 
-          if (comp_local_connection < this->getInternalSize())
+          if (comp_local_connection < static_cast<IdxT>(this->getInternalSize()))
           {
             // This variable is external to the component but internal to the subsystem,
             // since it is owned by another component within the subsystem.
@@ -290,8 +283,8 @@ namespace GridKit
           return false;
         }
 
-        const bool row_is_internal = row < this->getInternalSize();
-        const bool col_is_internal = col < this->getInternalSize();
+        const bool row_is_internal = static_cast<size_t>(row) < this->getInternalSize();
+        const bool col_is_internal = static_cast<size_t>(col) < this->getInternalSize();
 
         return (row_is_internal && col_is_internal);
       };
@@ -399,17 +392,7 @@ namespace GridKit
 
       if (forcing_function_)
       {
-        const auto forcing = (*forcing_function_)(time_);
-
-        if (forcing.y.size() != y_ext_data_.getSize() || forcing.yp.size() != yp_ext_data_.getSize())
-        {
-          throw std::runtime_error(
-              "SubsystemModel::distributeExternalVectors: forcing function "
-              "returned vectors with incorrect sizes.");
-        }
-
-        std::copy(forcing.y.begin(), forcing.y.end(), y_ext_data_.getData());
-        std::copy(forcing.yp.begin(), forcing.yp.end(), yp_ext_data_.getData());
+        (*forcing_function_)(time_);
       }
 
       return 0;
@@ -446,6 +429,8 @@ namespace GridKit
       }
 
       return SystemModel::evaluateJacobian();
+
+      return 0;
     }
 
     /**
@@ -700,7 +685,7 @@ namespace GridKit
 
       n_intern_ = static_cast<size_t>(internal_size);
       n_extern_ = static_cast<size_t>(local_connection - internal_size);
-      size_     = local_connection;
+      size_     = internal_size;
 
       return 0;
     }

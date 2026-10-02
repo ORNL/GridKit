@@ -36,28 +36,18 @@ namespace AnalysisManager
   class MultiStageCosimulation
   {
 
-    using State                = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
-    using RealT                = typename GridKit::ScalarTraits<ScalarT>::RealT;
-    using RosenbrockIntegrator = AnalysisManager::NativeDynamicSolver::Rosenbrock<ScalarT, IdxT>;
-    using Interpolant          = GridKit::LagrangeInterpolant<ScalarT, IdxT>;
-    using GridKitResolveSolver = GridKit::LinearAlgebra::ResolveSystemSolver<ScalarT, IdxT>;
-    using Subsystem            = GridKit::SubsystemModel<ScalarT, IdxT>;
-    using MemorySpace          = GridKit::memory::MemorySpace;
-    using CouplingMatrix       = std::vector<std::shared_ptr<State>>;
-    // using ErrorNorm            = NativeDynamicSolver::InfNorm<ScalarT, IdxT>;
-    using IdaSolver            = AnalysisManager::Sundials::Ida<ScalarT, IdxT>;
-
-    struct MergedTimePoints
-    {
-      std::vector<ScalarT> times;
-      std::vector<bool>    from_first;
-      std::vector<bool>    from_second;
-    };
+    using State          = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+    using RealT          = typename GridKit::ScalarTraits<ScalarT>::RealT;
+    using Interpolant    = GridKit::LagrangeInterpolant<ScalarT, IdxT>;
+    using Subsystem      = GridKit::SubsystemModel<ScalarT, IdxT>;
+    using MemorySpace    = GridKit::memory::MemorySpace;
+    using CouplingMatrix = std::vector<std::shared_ptr<State>>;
+    using IdaSolver      = AnalysisManager::Sundials::Ida<ScalarT, IdxT>;
 
   public:
     MultiStageCosimulation(
         size_t      max_iterations = 2,
-        size_t      num_stages     = 1,
+        size_t      num_stages     = 4,
         MemorySpace memspace       = MemorySpace::HOST);
 
     ~MultiStageCosimulation();
@@ -68,129 +58,16 @@ namespace AnalysisManager
 
     int initializeSimulation(std::vector<ScalarT>& time_points, State* y, State* yp);
 
-    int runSimulation(std::optional<std::function<void(const State&)>> step_callback = {});
+    int runSimulation(std::optional<std::function<void(const RealT t, const State&)>> step_callback = {});
 
     State& y()
     {
-      return y_;
+      return *y_;
     }
 
-    void printStages() const
+    State& yp()
     {
-      std::cout << "\nCurrent stages:\n";
-
-      for (IdxT i = 0; i < y_.getSize(); ++i)
-      {
-        for (const auto& stage : curr_stages_y_)
-        {
-          const auto* data = stage->getData(memspace_);
-
-          std::cout << std::setw(18)
-                    << std::setprecision(10)
-                    << std::scientific
-                    << data[i];
-        }
-
-        std::cout << '\n';
-      }
-
-      std::cout << "\nNext stages:\n";
-
-      for (IdxT i = 0; i < y_.getSize(); ++i)
-      {
-        for (const auto& stage : next_stages_y_)
-        {
-          const auto* data = stage->getData(memspace_);
-
-          std::cout << std::setw(18)
-                    << std::setprecision(10)
-                    << std::scientific
-                    << data[i];
-        }
-
-        std::cout << '\n';
-      }
-
-      std::cout << '\n';
-    }
-
-    void printState(std::string msg, State& y) const
-    {
-      std::cout << "\n"
-                << msg << std::endl;
-
-      for (IdxT i = 0; i < y.getSize(); ++i)
-      {
-        const auto* data = y.getData(memspace_);
-
-        std::cout << std::setw(18)
-                  << std::setprecision(10)
-                  << std::scientific
-                  << data[i];
-
-        std::cout << '\n';
-      }
-
-      std::cout << '\n';
-    }
-
-    struct ResidualInfo
-    {
-      RealT  max_abs{0};
-      size_t local_idx{0};
-      IdxT   global_idx{0};
-    };
-
-    /**
-     * @brief Evaluate F(t, y, y') for a partition with its current state and
-     *        external data, and return the largest |F_i| and where it occurs.
-     */
-    ResidualInfo computeMaxResidual(Subsystem* partition, RealT t)
-    {
-      partition->updateTime(t, 0.0);
-      partition->evaluateResidual();
-
-      const auto* r = partition->getResidual().getData();
-
-      ResidualInfo info;
-      for (size_t i = 0; i < partition->getInternalSize(); ++i)
-      {
-        const RealT v = std::abs(r[i]);
-        if (v > info.max_abs)
-        {
-          info.max_abs   = v;
-          info.local_idx = i;
-        }
-      }
-      info.global_idx = partition->getNodeConnection(info.local_idx);
-
-      return info;
-    }
-
-    template <class ModelT>
-    void printMaxResidual(const char* label, ModelT* model)
-    {
-      const auto* residual = model->getResidual().getData();
-
-      double max_residual = 0.0;
-      size_t max_index    = 0;
-
-      for (size_t i = 0; i < model->getInternalSize(); ++i)
-      {
-        const double value = std::abs(residual[i]);
-
-        if (value > max_residual)
-        {
-          max_residual = value;
-          max_index    = i;
-        }
-      }
-
-      std::cout << std::setprecision(16)
-                << '\n'
-                << label << '\n'
-                << "  max residual = " << max_residual << '\n'
-                << "  equation     = " << max_index << '\n';
+      return *yp_;
     }
 
   private:
@@ -200,34 +77,15 @@ namespace AnalysisManager
 
     int gatherLocalVariables(State& global_y, State& global_yp, Subsystem* partition);
 
-    int distributeCouplingVariables(size_t p, size_t stage);
+    int distributeCouplingVariables(size_t partition_idx, size_t stage);
 
     int distributeCouplingStage(size_t partition_idx, size_t stage_idx);
 
-    int ros_integrate(
-        Subsystem*                        partition,
-        RealT                             t0,
-        RealT                             dt,
-        const std::vector<RealT>&         output_times,
-        const std::function<void(RealT)>& sol_out);
-
-    int ZOH(RealT t0, RealT dt);
-
-    MergedTimePoints mergeTimePoints(const std::vector<ScalarT>& first, const std::vector<ScalarT>& second);
-
-    // int integrate(const std::vector<RealT>, std::function<void(RealT)> solout, Subsystem* model);
-
     int integrate(
-        IdaSolver*                 solver,
-        Subsystem*                 model,
-        RealT                      t0,
-        const std::vector<RealT>&  output_times,
-        std::function<void(RealT)> sol_out);
-
-    /**
-     * @brief Linear algebra workspaces used by the partition solvers.
-     */
-    std::vector<std::unique_ptr<ReSolve::LinAlgWorkspaceCpu>> linear_workspaces_;
+        IdaSolver*                  solver,
+        [[maybe_unused]] Subsystem* model,
+        const std::vector<RealT>&   output_times,
+        const bool                  is_last_iteration);
 
     /**
      * @brief Communication and output times for the simulation.
@@ -252,40 +110,35 @@ namespace AnalysisManager
     /**
      * @brief Current global state of the complete system.
      */
-    State y_;
+    std::shared_ptr<State> y_;
 
     /**
      * @brief Current global state derivative of the complete system.
      *
      */
-    State yp_;
+    std::shared_ptr<State> yp_;
 
     /**
      * @brief Global system states associated with current co-simulation stages.
      */
-    std::vector<std::unique_ptr<State>> curr_stages_y_;
+    std::vector<std::shared_ptr<State>> curr_stages_y_;
 
     /**
      * @brief Global system states associated with next co-simulation stages.
      *
      */
-    std::vector<std::unique_ptr<State>> next_stages_y_;
+    std::vector<std::shared_ptr<State>> next_stages_y_;
 
     /**
      * @brief Global system states associated with the co-simulation stages.
      *
      */
-    std::vector<std::unique_ptr<State>> curr_stages_yp_;
+    std::vector<std::shared_ptr<State>> curr_stages_yp_;
 
     /**
      * @brief Global system states derivatives associated with next co-simulation stages.
      */
-    std::vector<std::unique_ptr<State>> next_stages_yp_;
-
-    /**
-     * @brief Parameters used by the Rosenbrock partition integrators.
-     */
-    typename RosenbrockIntegrator::Parameters params_;
+    std::vector<std::shared_ptr<State>> next_stages_yp_;
 
     /**
      * @brief Memory space used for vector storage and operations.
@@ -296,19 +149,6 @@ namespace AnalysisManager
      * @brief Handler used to perform vector operations.
      */
     GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT> vector_handler_;
-
-    /**
-     * @brief Linear solver associated with each subsystem partition.
-     *
-     * Each solver uses the corresponding entry in linear_workspaces_.ReSolve::SystemSolver
-     */
-    std::vector<std::unique_ptr<ReSolve::SystemSolver>> resolve_lin_solver_;
-
-    /** @brief Linear solver associated with each subsystem partition.
-     *
-     * Each solver uses the corresponding entry in linear_workspaces_.
-     */
-    std::vector<std::unique_ptr<GridKitResolveSolver>> gridkit_lin_solver_;
 
     /**
      * @brief Coupling data associated with each subsystem partition.
@@ -328,16 +168,12 @@ namespace AnalysisManager
     std::vector<Subsystem*> partitions_;
 
     /**
-     * @brief Rosenbrock integrators associated with each subsystem partition.
-     *
-     * Each integrator advances one partition using its corresponding
-     * linear solver and coupling data.
-     */
-    std::vector<std::unique_ptr<RosenbrockIntegrator>> solvers_;
-
-    /**
      * @brief IDA integrators associated with each subsystem partition.
      */
     std::vector<std::unique_ptr<IdaSolver>> ida_solvers_;
+
+    std::vector<std::vector<std::unique_ptr<Interpolant>>> interpolants_y_;
+
+    std::vector<std::vector<std::unique_ptr<Interpolant>>> interpolants_yp_;
   };
 } // namespace AnalysisManager

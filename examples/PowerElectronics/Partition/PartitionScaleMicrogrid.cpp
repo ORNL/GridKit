@@ -270,7 +270,7 @@ RunResult evaluatePartitioning(
 
   for (auto* partition : subsystems)
   {
-    partition->release();
+    partition->restoreGlobalConnection();
     delete partition;
   }
 

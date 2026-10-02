@@ -126,7 +126,7 @@ namespace GridKit
 
       n_intern_ = component_internal_size + node_internal_size;
       n_extern_ = 0;
-      size_     = n_intern_ + n_extern_;
+      size_     = static_cast<IdxT>(n_intern_ + n_extern_);
 
       // Allocation always rebuilds the system Jacobian and its COO-to-CSR map.
       delete csr_jac_;
@@ -167,7 +167,7 @@ namespace GridKit
       {
         // The offset for each component's internal variables in the system vector.
         // They start at 0, and are stacked on top of each other.
-        size_t component_internal_idx = 0;
+        IdxT component_internal_idx = 0;
         for (component_type* comp : components_)
         {
           comp->allocate();
@@ -335,6 +335,16 @@ namespace GridKit
         }
       }
 
+      // differential if any connected component says so
+      for (node_type* node : nodes_)
+      {
+        for (IdxT i = 0; i < node->size(); i++)
+        {
+          tag_[idx] = node->tag()[i];
+          idx++;
+        }
+      }
+
       return 0;
     }
 
@@ -428,7 +438,7 @@ namespace GridKit
           const IdxT col = component->getNodeConnection(c[i]);
 
           const bool is_internal_entry = row != INVALID_INDEX<IdxT> && col != INVALID_INDEX<IdxT>
-                                         && row < this->getInternalSize() && col < this->getInternalSize();
+                                         && row < static_cast<IdxT>(this->getInternalSize()) && static_cast<IdxT>(this->getInternalSize());
 
           if (is_internal_entry)
           {

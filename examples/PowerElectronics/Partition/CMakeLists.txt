@@ -1,5 +1,16 @@
+add_executable(cosim cosim.cpp)
 add_executable(PartitionMicrogrid PartitionMicrogrid.cpp)
 add_executable(PartitionScaleMicrogrid PartitionScaleMicrogrid.cpp)
+
+target_link_libraries(
+  cosim
+  PRIVATE GridKit::power_elec_disgen
+          GridKit::power_elec_microline
+          GridKit::power_elec_microload
+          GridKit::solvers_dyn
+          GridKit::power_elec_microbusdq
+          GridKit::MultiStageCosim
+          power_elec_partition_examples_helper)
 
 target_link_libraries(
   PartitionMicrogrid
@@ -21,6 +32,7 @@ target_link_libraries(
 
 if(GRIDKIT_ENABLE_OPENMP)
   target_link_libraries(PartitionScaleMicrogrid PRIVATE OpenMP::OpenMP_CXX)
+  target_link_libraries(cosim PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
 add_test(NAME PartitionMicrogrid COMMAND PartitionMicrogrid)

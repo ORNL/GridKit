@@ -181,8 +181,23 @@ namespace GridKit
     return new MicrogridLoad<ScalarT, IdxT>(*this);
   }
 
+  template <class ScalarT, typename IdxT>
+  int MicrogridLoad<ScalarT, IdxT>::setResistance(RealT R)
+  {
+    R_ = R;
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int MicrogridLoad<ScalarT, IdxT>::setInductance(RealT L)
+  {
+    L_ = L;
+    return 0;
+  }
+
   // Available template instantiations
   template class MicrogridLoad<double, long int>;
+  template class MicrogridLoad<double, int>;
   template class MicrogridLoad<double, size_t>;
   template class MicrogridLoad<DependencyTracking::Variable, long int>;
   template class MicrogridLoad<DependencyTracking::Variable, size_t>;

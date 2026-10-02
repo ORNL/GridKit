@@ -104,7 +104,7 @@ void partitionNetwork(
 
       const IdxT boundary_line_index = partition_end - 1;
 
-      auto* bus_interface = new GridKit::BusPartitionInterface<ScalarT, IdxT>(
+      auto* bus_interface = new GridKit::PowerElectronics::BusPartitionInterface<ScalarT, IdxT>(
           &network.buses[boundary_line_index],
           network.lines[boundary_line_index],
           network.model_id_next++);
@@ -236,7 +236,7 @@ void assembleSystemLeftToRight(
 
   sys_model.addNode(&network.dg_signal);
 
-  for (IdxT i = 0; i < num_ibrs; ++i)
+  for (size_t i = 0; i < num_ibrs; ++i)
   {
     sys_model.addComponent(network.generators[i]);
     sys_model.addComponent(network.busesDQ[i]);

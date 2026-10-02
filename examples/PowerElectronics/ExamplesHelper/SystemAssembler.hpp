@@ -34,7 +34,7 @@
 template <class ScalarT, typename IdxT>
 void assembleSystem(ScaleMicrogridNetwork<ScalarT, IdxT>& network, GridKit::PowerElectronicsModel<ScalarT, IdxT>& sys_model)
 {
-  size_t N_size = network.N_size;
+  IdxT N_size = network.N_size;
 
   // Ensure minimum size requirement
   assert(N_size > 0);
@@ -42,7 +42,7 @@ void assembleSystem(ScaleMicrogridNetwork<ScalarT, IdxT>& network, GridKit::Powe
   // Add all bus nodes
   sys_model.addNode(&network.dg_signal);
 
-  for (size_t i = 0; i < 2 * N_size; i++)
+  for (IdxT i = 0; i < 2 * N_size; i++)
   {
     sys_model.addNode(&network.buses[i]);
   }

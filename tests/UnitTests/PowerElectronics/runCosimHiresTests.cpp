@@ -54,6 +54,16 @@ struct Hires
     system->addNode(&bus);
     system->allocate();
 
+    bus.tag()[0] = true;
+    bus.tag()[1] = true;
+    system->tagDifferentiable();
+    std::cout << "size tag " << bus_comp->tag()[0] << " " << bus_comp->tag()[1] << std::endl;
+
+    for (auto i : system->tag())
+    {
+      std::cout << "tag " << i << std::endl;
+    }
+
     // Initial state: y = (1, 0, 0, 0, 0, 0, 0, 0.0057) in HIRES numbering
     double* y  = system->y().getData();
     double* yp = system->yp().getData();
@@ -120,12 +130,15 @@ std::vector<double> solveCosim(int n_steps)
 
   // Macro time points 0, dt, 2dt, ..., T_END
   std::vector<double> time_points(static_cast<size_t>(n_steps + 1));
-  for (int k = 0; k <= n_steps; ++k)
+  for (size_t k = 0; k <= static_cast<size_t>(n_steps); ++k)
   {
-    time_points[static_cast<size_t>(k)] = T_END * static_cast<double>(k) / static_cast<double>(n_steps);
+    time_points[k] = T_END * static_cast<double>(k) / static_cast<double>(n_steps);
   }
 
-  auto* cosim = new Cosim(1, 4);
+  size_t num_iterations = 1;
+  size_t num_stages     = 4;
+
+  auto* cosim = new Cosim(num_iterations, num_stages);
   cosim->addSubsystems(partition1);
   cosim->addSubsystems(partition2);
   cosim->allocate();
@@ -145,7 +158,7 @@ int main()
 {
   const std::vector<double> ref = solveMonolithic();
 
-  const std::vector<int> step_counts = {10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5000};
+  const std::vector<int> step_counts = {200}; // {10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5000};
   std::vector<double>    errors;
 
   for (int n : step_counts)

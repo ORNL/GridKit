@@ -33,8 +33,8 @@ struct ScaleMicrogridNetwork
   using Load        = GridKit::MicrogridLoad<ScalarT, IdxT>;
   using GenParams   = GridKit::DistributedGeneratorParameters<ScalarT, IdxT>;
 
-  size_t                    model_id_next;
-  size_t                    N_size;
+  IdxT                      model_id_next;
+  IdxT                      N_size;
   SignalNode                dg_signal;
   std::vector<Bus>          buses;
   std::vector<BusDQ*>       busesDQ;
@@ -43,7 +43,7 @@ struct ScaleMicrogridNetwork
   std::vector<Load*>        loads;
   std::vector<GenParams>    DGParam_list;
 
-  ScaleMicrogridNetwork(size_t n_size)
+  ScaleMicrogridNetwork(IdxT n_size)
     : model_id_next(0),
       N_size(n_size),
       buses(2 * n_size),
@@ -146,7 +146,7 @@ struct ScaleMicrogridNetwork
     ScalarT              Lline2 = 0.58 / (2.0 * M_PI * 50.0);
     std::vector<ScalarT> rline_list(2 * N_size - 1, 0.0);
     std::vector<ScalarT> Lline_list(2 * N_size - 1, 0.0);
-    for (IdxT i = 0; i < rline_list.size(); i++)
+    for (IdxT i = 0; static_cast<size_t>(i) < rline_list.size(); i++)
     {
       rline_list[i] = (i % 2) ? rline2 : rline1;
       Lline_list[i] = (i % 2) ? Lline2 : Lline1;
@@ -154,6 +154,11 @@ struct ScaleMicrogridNetwork
 
     // load parms
     // Only the first load has the same paramaters.
+    // ScalarT rload1 = 5.0;   // 3.0;
+    // ScalarT Lload1 = 15.92; // 2.0 / (2.0 * M_PI * 50.0);
+    // ScalarT rload2 = 5.0;   // 2.0;
+    // ScalarT Lload2 = 15.92; // 1.0 / (2.0 * M_PI * 50.0);
+
     ScalarT rload1 = 3.0;
     ScalarT Lload1 = 2.0 / (2.0 * M_PI * 50.0);
     ScalarT rload2 = 2.0;

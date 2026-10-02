@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 
@@ -37,7 +39,7 @@ std::vector<ScalarT> linspace(ScalarT start, ScalarT end, std::size_t num_points
 int main()
 {
 
-  constexpr int N_size  = 2;
+  constexpr int N_size  = 100;
   bool          use_jac = true;
 
   // ---------------------------------------------------------------------------
@@ -87,72 +89,107 @@ int main()
   system->y().setDataUpdated();
   system->yp().setDataUpdated();
 
+  system->initialize();
+  system->evaluateResidual();
+
+  system->updateTime(0.0, 1.0e-8);
+  system->evaluateJacobian();
+  system->tagDifferentiable();
+
+  auto* ida_ic = new AnalysisManager::Sundials::Ida<double, int>(system);
+
+  ida_ic->setTolerance(1.0e-8);
+  ida_ic->setMaxSteps(5000);
+  ida_ic->configureSimulation();
+  ida_ic->getDefaultInitialCondition();
+  ida_ic->initializeSimulation(0.0, true);
+  // ida_ic->runSimulation(0.0001);
+
+  delete ida_ic;
+
   // --------------------------------------------------------------------------------
   // Create 2 Partitions and  a Partition interfaces to split to network
   // --------------------------------------------------------------------------------
-
-  auto* bus_interface = new GridKit::PowerElectronics::BusPartitionInterface<double, int>(
-      &network.buses[1],
-      network.lines[1],
-      14);
-
-  if (int err = bus_interface->allocate())
-  {
-    return err;
-  }
-
-  auto* partition1 = new Subsystem();
-  auto* partition2 = new Subsystem();
-
-  // --------------------------------------------------------------------------------
-  // Manually add components, nodes and a bus partition interface to Partition 1
-  // --------------------------------------------------------------------------------
-
-  partition1->addNode(&network.dg_signal);
-  partition1->addComponent(network.generators[0]);
-  partition1->addComponent(network.busesDQ[0]);
-  partition1->addComponent(network.loads[0]);
-  partition1->addNode(&network.buses[0]);
-  partition1->addComponent(network.lines[0]);
-  partition1->addComponent(network.generators[1]);
-  partition1->addComponent(network.busesDQ[1]);
-  partition1->addInterface(bus_interface);
-  partition1->addNode(&network.buses[1]);
-
-  // ---------------------------------------------------------------------------
-  // Manually add components and nodes to Partition 2
-  // ---------------------------------------------------------------------------
-
-  partition2->addComponent(network.generators[2]);
-  partition2->addComponent(network.busesDQ[2]);
-  partition2->addComponent(network.loads[2]);
-  partition2->addComponent(network.lines[1]);
-  partition2->addNode(&network.buses[2]);
-  partition2->addComponent(network.generators[3]);
-  partition2->addComponent(network.busesDQ[3]);
-  partition2->addComponent(network.lines[2]);
-  partition2->addNode(&network.buses[3]);
+  std::vector<Subsystem*> subsystems;
+  partitionNetwork(network, subsystems, 2);
 
   // ---------------------------------------------------------------------------
   // cosim
   // ---------------------------------------------------------------------------
 
-  std::vector<double> time_points = linspace(0.0, 1.0, 200);
-  // const double        dt          = 0.001;
+  std::vector<double> time_points  = linspace(0.0, 0.01, 2);
+  std::vector<double> time_points1 = linspace(0.01, 1.0, 2);
 
-  // std::vector<double> time_points = {
-  //     0.0,
-  //     dt,
-  //     2.0 * dt};
-  auto* cosim = new AnalysisManager::MultiStageCosimulation<double, int>();
+  time_points.insert(time_points.end(), time_points1.begin() + 1, time_points1.end());
 
-  cosim->addSubsystems(partition1);
-  cosim->addSubsystems(partition2);
+  // std::vector<double> time_points_b = linspace(1.0, 1.01, 50);
+  // std::vector<double> time_points2  = linspace(1.01, 2.0, 40);
+  // time_points_b.insert(time_points_b.end(), time_points2.begin() + 1, time_points2.end());
+
+  auto* cosim = new AnalysisManager::MultiStageCosimulation<double, int>(2, 2);
+
+  for (auto* partition : subsystems)
+  {
+    cosim->addSubsystems(partition);
+  }
+
   cosim->allocate();
   cosim->initializeSimulation(time_points, &system->y(), &system->yp());
   const auto t_start = std::chrono::steady_clock::now();
 
-  cosim->runSimulation();
+  std::ofstream output("cosim_solution.csv");
+
+  output << std::setprecision(16);
+
+  // Header
+  output << "time";
+
+  for (int i = 0; i < cosim->y().getSize() && i < 500; ++i)
+  {
+    output << ",y" << i;
+  }
+
+  output << '\n';
+
+  // Initial condition
+  const auto* y_initial = cosim->y().getData(GridKit::memory::HOST);
+
+  output << time_points.front();
+
+  for (int i = 0; i < cosim->y().getSize() && i < 500; ++i)
+  {
+    output << ',' << y_initial[i];
+  }
+
+  output << '\n';
+
+  auto out_cb = [&](const auto time, const auto& state) -> void
+  {
+    const auto* state_data = state.getData(GridKit::memory::HOST);
+
+    output << time;
+
+    for (int i = 0; i < state.getSize() && i < 500; ++i)
+    {
+      output << ',' << state_data[i];
+    }
+
+    output << '\n';
+  };
+
+  // Run co-simulation and write the solution at every macro step.
+  cosim->runSimulation(out_cb);
+
+  // network.loads[0]->setResistance(3.0);
+  // network.loads[0]->setInductance(6.4e-3);
+
+  // network.loads[2]->setResistance(2.0);
+  // network.loads[2]->setInductance(3.2e-3);
+
+  // cosim->initializeSimulation(time_points_b, &cosim->y(), &cosim->yp());
+  // cosim->runSimulation(out_cb);
+
+  output.close();
 
   const auto t_end = std::chrono::steady_clock::now();
 
@@ -163,28 +200,30 @@ int main()
             << 1e3 * elapsed_s / static_cast<double>(time_points.size() - 1)
             << " ms/step)\n";
 
-  auto* y_data = cosim->y().getData(GridKit::memory::HOST);
+  // auto* y_data = cosim->y().getData(GridKit::memory::HOST);
 
-  std::cout << "\nFinal solution: y = [";
+  // std::cout << "\nFinal solution: y = [";
 
-  for (int i = 0; i < cosim->y().getSize(); ++i)
-  {
-    std::cout << y_data[i];
+  // for (int i = 0; i < cosim->y().getSize(); ++i)
+  // {
+  //   std::cout << y_data[i];
 
-    if (i + 1 < cosim->y().getSize())
-    {
-      std::cout << "\n";
-    }
-  }
+  //   if (i + 1 < cosim->y().getSize())
+  //   {
+  //     std::cout << "\n";
+  //   }
+  // }
 
-  std::cout << "]\n";
+  // std::cout << "]\n";
 
   // ---------------------------------------------------------------------------
   // Clean up
   // ---------------------------------------------------------------------------
   delete system;
-  delete partition1;
-  delete partition2;
+  for (auto* partition : subsystems)
+  {
+    delete partition;
+  }
 
   return 0;
 }

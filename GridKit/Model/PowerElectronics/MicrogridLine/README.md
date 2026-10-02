@@ -14,7 +14,7 @@ Variables (External):
  + $i_{D}$    - Line Current (D)
  + $i_{Q}$    - Line Current (Q)
 
-Equations (External, Residuals):
+Component External Residual Contribution (External, Residuals):
  + $0$ &emsp;&emsp; (Reference Rotor Residual)
  + $-i_{D}$ &emsp;&emsp; (Bus 1 Residuals)
  + $-i_{Q}$

@@ -67,6 +67,8 @@ struct PartitionedDae
     system->addNode(&bus);
     system->allocate();
 
+    // bus.tag()[0] = true;
+
     // Consistent initial state: (x, y, z, w) = (pi, pi/2, 1, 1)
     double* y  = system->y().getData();
     double* yp = system->yp().getData();
@@ -143,7 +145,7 @@ std::vector<double> solveCosim(int n_steps)
     time_points[k] = T_END * k / n_steps;
   }
 
-  auto* cosim = new Cosim(2, 4);
+  auto* cosim = new Cosim(2, 3);
   cosim->addSubsystems(partition1);
   cosim->addSubsystems(partition2);
   cosim->allocate();
@@ -177,7 +179,7 @@ int main()
     ref_error = std::max(ref_error, std::abs(ref[i] - known[i]) / (std::abs(known[i]) + 1));
   }
 
-  const std::vector<int> step_counts = {10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5000};
+  const std::vector<int> step_counts = {5, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5000};
   std::vector<double>    errors;
 
   for (int n : step_counts)
