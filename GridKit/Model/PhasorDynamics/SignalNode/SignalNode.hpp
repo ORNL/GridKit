@@ -77,7 +77,7 @@ namespace GridKit
       }
 
       [[gnu::always_inline]]
-      ScalarT read() const noexcept
+      const ScalarT& read() const noexcept
       {
         assert(signal_);
         return *signal_;

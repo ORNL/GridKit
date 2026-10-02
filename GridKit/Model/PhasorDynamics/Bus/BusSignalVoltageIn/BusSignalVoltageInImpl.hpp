@@ -1,0 +1,216 @@
+/**
+ * @file BusSignalVoltageInImpl.hpp
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Implementation of a bus whose voltage is set by input signals.
+ */
+
+#include <cmath>
+
+#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    /*!
+     * @brief Constructor for a bus whose voltage is set by input signals.
+     *
+     * - Number of equations = 0 (size_)
+     * - Number of variables = 0 (size_)
+     */
+    template <typename scalar_type, typename index_type>
+    BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn()
+    {
+      size_ = 0;
+    }
+
+    /*!
+     * @brief Constructor setting initial values for the bus voltage.
+     */
+    template <typename scalar_type, typename index_type>
+    BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(ScalarT Vr, ScalarT Vi)
+      : Vr0_(Vr), Vi0_(Vi)
+    {
+      size_ = 0;
+    }
+
+    /**
+     * @brief Construct a new BusSignalVoltageIn from bus data.
+     *
+     * @param[in] data - structure with bus data
+     */
+    template <typename scalar_type, typename index_type>
+    BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(const ModelDataT& data)
+      : Vr0_(data.Vr0),
+        Vi0_(data.Vi0)
+    {
+      bus_id_        = data.bus_id;
+      size_          = 0;
+      monitor_       = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
+      using Variable = typename ModelDataT::MonitorableVariables;
+      monitor_->set(Variable::Vr, [this]
+                    { return Vr(); });
+      monitor_->set(Variable::Vi, [this]
+                    { return Vi(); });
+      monitor_->set(Variable::Vm, [this]
+                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+      monitor_->set(Variable::Va, [this]
+                    { return std::atan2(Vi(), Vr()); });
+    }
+
+    template <typename scalar_type, typename index_type>
+    BusSignalVoltageIn<scalar_type, index_type>::~BusSignalVoltageIn()
+    {
+      if (coo_jac_ != nullptr)
+      {
+        delete coo_jac_;
+        coo_jac_ = nullptr;
+      }
+    }
+
+    /*!
+     * @brief Allocate (empty) bus storage and link output signals.
+     *
+     * Output ports `ir` and `ii` are linked to the current sums here, so
+     * ports have to be connected before this method is called. The current
+     * sums are not system variables, so the linked indices are invalid.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::allocate()
+    {
+      if (!allocated_)
+      {
+        this->allocateVectors(size_);
+      }
+      auto size = static_cast<std::size_t>(size_);
+
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
+
+      if (auto ir_port = ports_.out.template port<BusSignalVoltageInOutputs::ir>())
+      {
+        ir_port.link(&Ir_, &ir_index_);
+      }
+      if (auto ii_port = ports_.out.template port<BusSignalVoltageInOutputs::ii>())
+      {
+        ii_port.link(&Ii_, &ii_index_);
+      }
+
+      allocated_ = true;
+      return 0;
+    }
+
+    /**
+     * @brief Check that connected ports are also linked to a signal source.
+     *
+     * @return Number of connected ports without a linked signal.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::verify() const
+    {
+      int ret = 0;
+
+      auto check_input = [&]<BusSignalVoltageInInputs input>(const char* name)
+      {
+        const auto& port = ports_.in.template port<input>();
+        if (port.connected() && !port.linked())
+        {
+          Log::error() << "BusSignalVoltageIn: " << name << " signal attached with no linked source\n";
+          ret += 1;
+        }
+      };
+
+      auto check_output = [&]<BusSignalVoltageInOutputs output>(const char* name)
+      {
+        const auto& port = ports_.out.template port<output>();
+        if (port.connected() && !port.linked())
+        {
+          Log::error() << "BusSignalVoltageIn: " << name
+                       << " signal attached but not linked; connect ports before allocate()\n";
+          ret += 1;
+        }
+      };
+
+      check_input.template  operator()<BusSignalVoltageInInputs::vr>("Vr");
+      check_input.template  operator()<BusSignalVoltageInInputs::vi>("Vi");
+      check_output.template operator()<BusSignalVoltageInOutputs::ir>("Ir");
+      check_output.template operator()<BusSignalVoltageInOutputs::ii>("Ii");
+
+      return ret;
+    }
+
+    /**
+     * @brief Set the bus ID
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::setBusID(IdxT bus_id)
+    {
+      bus_id_ = bus_id;
+      return 0;
+    }
+
+    /**
+     * @brief No variables to tag.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::tagDifferentiable()
+    {
+      return 0;
+    }
+
+    /**
+     * @brief No variables, nothing to set.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::setAbsoluteTolerance(RealT)
+    {
+      return 0;
+    }
+
+    /*!
+     * @brief Reset current sums. The voltage is owned by the signal sources.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::initialize()
+    {
+      Ir_ = 0.0;
+      Ii_ = 0.0;
+      return 0;
+    }
+
+    /*!
+     * @brief Reset current sums to zero.
+     *
+     * Components attached to the bus accumulate their injections into Ir()
+     * and Ii() afterwards. The voltage needs no update here: Vr() and Vi()
+     * read the input signals directly.
+     *
+     * @warning This implementation assumes bus residuals are always evaluated
+     * _before_ component model residuals.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::evaluateResidual()
+    {
+      Ir_ = 0.0;
+      Ii_ = 0.0;
+      return 0;
+    }
+
+    /**
+     * @brief There is no Jacobian for a bus without variables.
+     *
+     * @return int - error code
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::evaluateJacobian()
+    {
+      if (coo_jac_ == nullptr)
+      {
+        nnz_     = 0;
+        coo_jac_ = new CooMatrixT(0, 0, 0);
+      }
+      return 0;
+    }
+  } // namespace PhasorDynamics
+} // namespace GridKit
