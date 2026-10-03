@@ -437,8 +437,10 @@ namespace GridKit
           const IdxT row = component->getNodeConnection(r[i]);
           const IdxT col = component->getNodeConnection(c[i]);
 
-          const bool is_internal_entry = row != INVALID_INDEX<IdxT> && col != INVALID_INDEX<IdxT>
-                                         && row < static_cast<IdxT>(this->getInternalSize()) && static_cast<IdxT>(this->getInternalSize());
+          const bool is_internal_entry = row != INVALID_INDEX<IdxT>
+                                         && col != INVALID_INDEX<IdxT>
+                                         && row < static_cast<IdxT>(this->getInternalSize())
+                                         && col < static_cast<IdxT>(this->getInternalSize());
 
           if (is_internal_entry)
           {

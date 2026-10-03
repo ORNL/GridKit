@@ -39,7 +39,7 @@ std::vector<ScalarT> linspace(ScalarT start, ScalarT end, std::size_t num_points
 int main()
 {
 
-  constexpr int N_size  = 100;
+  constexpr int N_size  = 5000;
   bool          use_jac = true;
 
   // ---------------------------------------------------------------------------
@@ -111,14 +111,14 @@ int main()
   // Create 2 Partitions and  a Partition interfaces to split to network
   // --------------------------------------------------------------------------------
   std::vector<Subsystem*> subsystems;
-  partitionNetwork(network, subsystems, 2);
+  partitionNetwork(network, subsystems, 48);
 
   // ---------------------------------------------------------------------------
   // cosim
   // ---------------------------------------------------------------------------
 
-  std::vector<double> time_points  = linspace(0.0, 0.01, 2);
-  std::vector<double> time_points1 = linspace(0.01, 1.0, 2);
+  std::vector<double> time_points  = linspace(0.0, 0.01, 10);
+  std::vector<double> time_points1 = linspace(0.01, 1.0, 10);
 
   time_points.insert(time_points.end(), time_points1.begin() + 1, time_points1.end());
 
@@ -126,7 +126,7 @@ int main()
   // std::vector<double> time_points2  = linspace(1.01, 2.0, 40);
   // time_points_b.insert(time_points_b.end(), time_points2.begin() + 1, time_points2.end());
 
-  auto* cosim = new AnalysisManager::MultiStageCosimulation<double, int>(2, 2);
+  auto* cosim = new AnalysisManager::MultiStageCosimulation<double, int>(2, 4);
 
   for (auto* partition : subsystems)
   {

@@ -60,7 +60,7 @@ void partitionNetwork(
 
   for (IdxT j = 0; j < num_partitions; j++)
   {
-    auto* partition = new GridKit::SubsystemModel<ScalarT, IdxT>();
+    auto* partition = new GridKit::SubsystemModel<ScalarT, IdxT>(true);
 
     // Add the reference signal node to the first partition.
     if (j == 0)

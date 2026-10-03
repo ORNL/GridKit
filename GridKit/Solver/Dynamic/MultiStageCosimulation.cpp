@@ -583,7 +583,7 @@ namespace AnalysisManager
     for (size_t p = 0; p < num_partitions_; ++p)
     {
       ida_solvers_[p]->setMaxSteps(100000);
-      ida_solvers_[p]->setTolerance(1e-1);
+      ida_solvers_[p]->setTolerance(1e-3);
       ida_solvers_[p]->configureSimulation();
     }
 
