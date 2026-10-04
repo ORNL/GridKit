@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 
 #include <GridKit/Model/Evaluator.hpp>
@@ -479,6 +480,59 @@ namespace GridKit
     private:
       bool steady_state_{false};
     };
+
+    /// Index-1 DAE with a held input: x' = u, z = x + u.
+    template <class ScalarT, typename IdxT>
+    class ForcedEvaluator : public NullEvaluator<ScalarT, IdxT>
+    {
+      using NullEvaluator<ScalarT, IdxT>::y_;
+      using NullEvaluator<ScalarT, IdxT>::yp_;
+      using NullEvaluator<ScalarT, IdxT>::f_;
+      using NullEvaluator<ScalarT, IdxT>::abs_tol_;
+      using NullEvaluator<ScalarT, IdxT>::tag_;
+
+    public:
+      int initialize() override
+      {
+        this->allocate();
+        y_.setToConst(0.0);
+        yp_.setToConst(0.0);
+        f_.setToConst(0.0);
+        abs_tol_.setToConst(0.0);
+        tag_ = {true, false};
+
+        y_.getData()[1]  = input_;
+        yp_.getData()[0] = input_;
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+        return 0;
+      }
+
+      IdxT size() override
+      {
+        return 2;
+      }
+
+      int evaluateResidual() override
+      {
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+
+        f[0] = yp[0] - input_;
+        f[1] = y[1] - y[0] - input_;
+        f_.setDataUpdated();
+        return 0;
+      }
+
+      void setInput(ScalarT input)
+      {
+        input_ = input;
+      }
+
+    private:
+      ScalarT input_{1.0};
+    };
   } // namespace Model
 
   namespace Testing
@@ -589,6 +643,50 @@ namespace GridKit
 
         success *= (observed_steps == 4);
         success *= (observed_t == tf);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome piecewiseConstantInput()
+      {
+        using RealT = typename ScalarTraits<ScalarT>::RealT;
+
+        TestStatus success = true;
+
+        Model::ForcedEvaluator<ScalarT, IdxT> model;
+        Ida<ScalarT, IdxT>                    ida(&model);
+        ida.setTolerance(1.0e-9, 1.0e-11);
+        ida.configureSimulation();
+        ida.initializeSimulation(0.0);
+
+        // Include consecutive intervals with unchanged input as well as jumps.
+        const std::array<RealT, 4> inputs{1.0, -2.0, -2.0, 0.5};
+        const RealT                dt  = 0.125;
+        const RealT                tol = 1.0e-7;
+        RealT                      x   = 0.0;
+
+        for (size_t step = 0; step < inputs.size(); ++step)
+        {
+          const RealT t  = static_cast<RealT>(step + 1) * dt;
+          success       *= ida.runSimulation(t) == 0;
+
+          // Exact integral of the held input; independent of the solver.
+          x       += dt * inputs[step];
+          success *= isEqual(model.y().getData()[0], x, tol);
+          success *= isEqual(model.y().getData()[1], x + inputs[step], tol);
+          success *= isEqual(model.yp().getData()[0], inputs[step], tol);
+
+          if (step + 1 < inputs.size() && inputs[step + 1] != inputs[step])
+          {
+            model.setInput(inputs[step + 1]);
+            success *= ida.initializeSimulation(t) == 0;
+
+            // Reinitialization preserves x and updates z and x' for the new input.
+            success *= isEqual(model.y().getData()[0], x, tol);
+            success *= isEqual(model.y().getData()[1], x + inputs[step + 1], tol);
+            success *= isEqual(model.yp().getData()[0], inputs[step + 1], tol);
+          }
+        }
 
         return success.report(__func__);
       }
