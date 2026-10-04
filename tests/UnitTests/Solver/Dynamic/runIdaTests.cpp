@@ -12,6 +12,7 @@ int main()
   result += test.dtMonitorZero();
   result += test.monitorActivityIsCached();
   result += test.dtMonitorSuppressesEpsilonFinalStep();
+  result += test.piecewiseConstantInput();
   result += test.fixedStep();
   result += test.suppressAlgebraicErrors();
   result += test.consistentICType();

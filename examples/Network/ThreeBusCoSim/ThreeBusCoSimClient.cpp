@@ -1,3 +1,5 @@
+#include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -88,8 +90,10 @@ public:
   /**
    * @brief Send voltage to and receive current from server-side instance for a
    * single time step.
+   *
+   * @return true if either received current changed.
    */
-  void exchange()
+  bool exchange()
   {
     // 1. Send data
     std::ostringstream oss;
@@ -107,8 +111,12 @@ public:
     {
       std::istringstream iss(r_msg.to_string());
       Log::misc() << "CLIENT: Received \"" << iss.str() << "\"\n";
+      const ScalarT ir_old = ir_;
+      const ScalarT ii_old = ii_;
       iss >> ir_ >> ii_;
+      return ir_ != ir_old || ii_ != ii_old;
     }
+    return false;
   }
 
 private:
@@ -151,35 +159,47 @@ int main()
                                            sys.getSignalNode(3),
                                            sys.getSignalNode(4));
   sys.allocate();
-  client.exchange();
 
   // Set up simulation
   Ida<ScalarT, IdxT> ida(&sys);
   ida.setTolerance(1.0e-7, 1.0e-9);
   ida.configureSimulation();
 
-  // TODO: Take one step at a time and exchange data between.
-  //       Use step_callback for now.
-  auto step_cb = [&client](auto)
+  client.exchange();
+
+  // Hold received inputs fixed between communication times.
+  auto run_interval = [&ida, &client](RealT tf, IdxT nsteps)
   {
-    client.exchange();
+    const RealT t0 = ida.getInitialTime();
+    const RealT dt = (tf - t0) / static_cast<RealT>(nsteps);
+
+    for (IdxT step = 1; step <= nsteps; ++step)
+    {
+      const RealT t = step == nsteps ? tf : std::fma(static_cast<RealT>(step), dt, t0);
+      ida.runSimulation(t);
+
+      const bool changed = client.exchange();
+      if (changed && step < nsteps)
+      {
+        ida.initializeSimulation(t);
+      }
+    }
+    // The caller handles fault changes and restarts at interval endpoints.
   };
 
-  RealT dt = 1.0 / 4.0 / 60.0;
-
-  // Run for 1s
+  // Communicate at 240 Hz until the first fault.
   ida.initializeSimulation(0.0);
-  ida.runSimulation(1.0, dt, step_cb);
+  run_interval(1.0, 240);
 
   // Introduce fault and run for the next 0.1s
   sys.getBusFault(0)->setStatus(true);
   ida.initializeSimulation(1.0);
-  ida.runSimulation(1.1, dt, step_cb);
+  run_interval(1.1, 24);
 
   // Clear the fault and run until t = 10s.
   sys.getBusFault(0)->setStatus(false);
   ida.initializeSimulation(1.1);
-  ida.runSimulation(10.0, dt, step_cb);
+  run_interval(10.0, 2136);
 
   return 0;
 }
