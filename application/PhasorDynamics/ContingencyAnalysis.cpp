@@ -7,6 +7,7 @@
 #include <omp.h>
 #endif
 
+#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -63,6 +64,12 @@ TestStatus runStudy(StudyData study_data)
       break;
     case EventType::FAULT_OFF:
       sys.getBusFault(event.element_id)->setStatus(false);
+      break;
+    case EventType::ENABLE:
+      sys.getBranch(event.device)->setEnabled(true);
+      break;
+    case EventType::DISABLE:
+      sys.getBranch(event.device)->setEnabled(false);
       break;
     }
 

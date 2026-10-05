@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -242,6 +243,36 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome singularJacobian()
+      {
+        // Verifies a disabled branch keeps its Jacobian entries, all zero.
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        bus1.allocate();
+        bus2.allocate();
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, 2.0, 4.0, 0.2, 1.2);
+        branch.allocate();
+        branch.evaluateJacobian();
+        const IdxT nnz = branch.nnz();
+
+        success *= branch.setEnabled(false) == 0;
+        branch.evaluateJacobian();
+        success *= branch.nnz() == nnz;
+
+        const RealT* values = branch.getCooJacobian()->getValues();
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          success *= isEqual(values[i], 0.0);
+        }
+
+        return success.report(__func__);
+      }
+#endif
 
       TestOutcome parameterSetters()
       {

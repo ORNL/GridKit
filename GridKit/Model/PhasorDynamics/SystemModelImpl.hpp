@@ -98,6 +98,8 @@ namespace GridKit
         auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index),
                                                  getBus(bus2_index),
                                                  branchdata);
+
+        gridkit_branch_indices_[branchdata.disambiguation_string] = static_cast<IdxT>(components_.size());
         addComponent(branch);
       }
 
@@ -824,6 +826,17 @@ namespace GridKit
     {
       // gridkit_component_id_ is set by System model and guaranteed to be unique
       return components_[gridkit_component_id];
+    }
+
+    /**
+     * @brief Return pointer to a branch by case-file `id`
+     */
+    template <typename scalar_type, typename index_type>
+    Branch<scalar_type, index_type>*
+    SystemModel<scalar_type, index_type>::getBranch(const std::string& id)
+    {
+      // Should fail if user-provided id is incorrect
+      return dynamic_cast<Branch<ScalarT, IdxT>*>(components_[gridkit_branch_indices_.at(id)]);
     }
 
     /**
