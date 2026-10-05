@@ -405,6 +405,7 @@ namespace AnalysisManager
       SUNStepper_SetLastFlag(stepper, retval);
       if (retval < 0)
       {
+        ida.history_valid_ = false;
         return retval;
       }
       ida.history_valid_ = true;

@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 namespace GridKit
@@ -31,6 +32,21 @@ namespace GridKit
         EVERYTHING
       };
 
+      /// Buffer diagnostics on this thread and emit them as one record.
+      /// Configure global output and verbosity before starting worker threads.
+      class ScopedOutput
+      {
+      public:
+        ScopedOutput();
+        ~ScopedOutput();
+        ScopedOutput(const ScopedOutput&)            = delete;
+        ScopedOutput& operator=(const ScopedOutput&) = delete;
+
+      private:
+        std::ostringstream buffer_;
+        std::ostream*      previous_;
+      };
+
       // All methods and data are static so delete constructor and destructor.
       Logger()  = delete;
       ~Logger() = delete;
@@ -50,7 +66,9 @@ namespace GridKit
       static std::vector<std::ostream*>& init();
 
     private:
-      static void updateVerbosity(std::vector<std::ostream*>& output_streams);
+      static std::ostream&              stream(Verbosity level);
+      static thread_local std::ostream* thread_output_;
+      static void                       updateVerbosity(std::vector<std::ostream*>& output_streams);
 
     private:
       static std::ostream               nullstream_;

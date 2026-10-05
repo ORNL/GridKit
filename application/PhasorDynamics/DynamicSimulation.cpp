@@ -1,3 +1,4 @@
+#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -46,13 +47,13 @@ real_type runMonolithic(const StudyData& study)
   IdaT ida(&system);
   configure(ida, study);
 
-  const real_type start = static_cast<real_type>(clock());
+  const auto start = std::chrono::steady_clock::now();
   runStudy(study, ida, [&](std::size_t fault, bool on)
            { system.getBusFault(fault)->setStatus(on); });
-  const real_type stop = static_cast<real_type>(clock());
+  const auto stop = std::chrono::steady_clock::now();
 
   system.stopMonitor();
-  return (stop - start) / CLOCKS_PER_SEC;
+  return std::chrono::duration<real_type>(stop - start).count();
 }
 
 /// Returns the simulation time in seconds, excluding setup.
@@ -73,8 +74,9 @@ real_type runPartitioned(const StudyData& study)
   const auto                             couplings = connectPartitions(systems);
   for (std::size_t p = 0; p < systems.size(); ++p)
   {
-    splitting.addPartition(*solvers[p], couplings[p]);
+    splitting.addPartition(*solvers[p], couplings[p], solvers[p]->context());
   }
+  splitting.setNumThreads(study.partition->threads);
   splitting.setFixedStep(study.partition->dt);
   splitting.setCouplingTolerance(study.partition->tol);
   splitting.setTolerance(study.rel_tol, study.abs_tol);
@@ -101,12 +103,12 @@ real_type runPartitioned(const StudyData& study)
     output.print(); });
   splitting.configureSimulation();
 
-  const real_type start = static_cast<real_type>(clock());
+  const auto start = std::chrono::steady_clock::now();
   runStudy(study, splitting, [&](std::size_t fault, bool on)
            {
     const auto& [p, id] = parts.faults.at(fault);
     systems[p]->getBusFault(id)->setStatus(on); });
-  const real_type stop = static_cast<real_type>(clock());
+  const auto stop = std::chrono::steady_clock::now();
 
   output.stop();
   Log::summary() << "Splitting steps: " << splitting.numSteps() << " (rejected " << splitting.numRejectedSteps() << ")\n";
@@ -115,7 +117,7 @@ real_type runPartitioned(const StudyData& study)
     Log::summary() << "Partition " << p + 1 << ": " << systems[p]->size() << " variables, "
                    << splitting.partitionTime(p) << " seconds\n";
   }
-  return (stop - start) / CLOCKS_PER_SEC;
+  return std::chrono::duration<real_type>(stop - start).count();
 }
 
 int runApplication(int argc, const char* argv[])

@@ -14,3 +14,7 @@ if(GridKit_ENABLE_SUNDIALS)
   enable_language(C)
   find_dependency(SUNDIALS)
 endif()
+
+if(@GRIDKIT_ENABLE_OPENMP@)
+  find_dependency(OpenMP COMPONENTS CXX)
+endif()

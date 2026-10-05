@@ -47,13 +47,14 @@ namespace GridKit
     };
 
     /**
-     * @brief Partitioned integration (Lie–Trotter splitting with ARKODE SplittingStep)
+     * @brief Partitioned integration (multicolor Gauss-Seidel with ARKODE SplittingStep)
      */
     struct PartitionStudyData
     {
-      fs::path file;  ///< .partition.json, relative to the study file
-      double   dt{};  ///< Splitting step, or the first step when adapting
-      double   tol{}; ///< Largest coupling change per step (0: fixed steps)
+      fs::path file;       ///< .partition.json, relative to the study file
+      double   dt{};       ///< Splitting step, or the first step when adapting
+      double   tol{};      ///< Endpoint prediction mismatch (0: fixed steps)
+      int      threads{1}; ///< Partitions of one color advanced at once
     };
 
     /**
@@ -118,7 +119,8 @@ namespace GridKit
         c.partition.emplace();
         partition.at("file").get_to(c.partition->file);
         partition.at("dt").get_to(c.partition->dt);
-        c.partition->tol = partition.value("tol", 0.0);
+        c.partition->tol     = partition.value("tol", 0.0);
+        c.partition->threads = partition.value("threads", 1);
       }
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);

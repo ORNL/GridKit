@@ -51,6 +51,10 @@ else()
       GridKit::dense_vector)
 endif()
 
+if(GRIDKIT_ENABLE_OPENMP)
+  target_link_libraries(solvers_dyn PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 if(GRIDKIT_ENABLE_RESOLVE)
   gridkit_add_library(
     rosenbrock
