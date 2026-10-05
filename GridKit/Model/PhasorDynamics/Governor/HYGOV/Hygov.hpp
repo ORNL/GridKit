@@ -25,21 +25,22 @@ namespace GridKit
 
     namespace Governor
     {
-      /// Internal variables of a `Hygov`.
+      /**
+       * @brief Internal variables of a `Hygov`.
+       *
+       * The deadbanded speed, governor error, desired-gate rate targets, and
+       * gate-curve power are explicit functions of these and the inputs, and
+       * are evaluated inline in the residual.
+       */
       enum class HygovInternalVariables : size_t
       {
-        XN,      ///< \f$x_n\f$ Speed lead-lag denominator state
-        XF,      ///< \f$x_f\f$ Governor error filter output on component base
-        C,       ///< \f$c\f$ Desired-gate position on component base
-        G,       ///< \f$g\f$ Gate position on component base
-        Q,       ///< \f$q\f$ Turbine flow on component base
-        OMEGADB, ///< \f$\omega_{\mathrm{db}}\f$ Deadbanded speed deviation
-        EF,      ///< \f$e_f\f$ Governor error on component base
-        FC,      ///< \f$f_c\f$ Desired-gate derivative target
-        RC,      ///< \f$r_c\f$ Rate-limited desired-gate derivative target
-        PGV,     ///< \f$P_{\mathrm{GV}}\f$ Gate-to-power curve output on component base
-        H,       ///< \f$H\f$ Turbine head on component base
-        PMECH,   ///< \f$P_{\mathrm{m}}\f$ Mechanical-power output on system base
+        XN,    ///< \f$x_n\f$ Speed lead-lag denominator state
+        XF,    ///< \f$x_f\f$ Governor error filter output on component base
+        C,     ///< \f$c\f$ Desired-gate position on component base
+        G,     ///< \f$g\f$ Gate position on component base
+        Q,     ///< \f$q\f$ Turbine flow on component base
+        H,     ///< \f$H\f$ Turbine head on component base
+        PMECH, ///< \f$P_{\mathrm{m}}\f$ Mechanical-power output on system base
       };
 
       /// External variables of a `Hygov`.

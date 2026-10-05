@@ -437,17 +437,14 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::initialize()
       {
-        const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
-        const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
-        const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
-        const auto VT      = static_cast<size_t>(RegcaInternalVariables::VT);
-        const auto IR      = static_cast<size_t>(RegcaInternalVariables::IR);
-        const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
-        const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
-        const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
-        const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
-        const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
-        auto*      y       = y_.getData();
+        const auto VM  = static_cast<size_t>(RegcaInternalVariables::VM);
+        const auto IQ  = static_cast<size_t>(RegcaInternalVariables::IQ);
+        const auto IP  = static_cast<size_t>(RegcaInternalVariables::IP);
+        const auto IR  = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto II  = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto PBR = static_cast<size_t>(RegcaInternalVariables::PBR);
+        const auto QBR = static_cast<size_t>(RegcaInternalVariables::QBR);
+        auto*      y   = y_.getData();
 
         const ScalarT vr = Vr();
         const ScalarT vi = Vi();
@@ -486,16 +483,13 @@ namespace GridKit
         const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
         const ScalarT ii0      = (-vr * qnet0 + vi * ip0 * lvacm) / vt;
 
-        y[VM]      = vt;
-        y[VT]      = vt;
-        y[IP]      = ip0;
-        y[IQ]      = iqcmd0;
-        y[IQEXTRA] = iqextra0;
-        y[IL]      = il0;
-        y[IR]      = this->toSystemBase(ir0);
-        y[II]      = this->toSystemBase(ii0);
-        y[PBR]     = vr * y[IR] + vi * y[II];
-        y[QBR]     = vi * y[IR] - vr * y[II];
+        y[VM]  = vt;
+        y[IP]  = ip0;
+        y[IQ]  = iqcmd0;
+        y[IR]  = this->toSystemBase(ir0);
+        y[II]  = this->toSystemBase(ii0);
+        y[PBR] = vr * y[IR] + vi * y[II];
+        y[QBR] = vi * y[IR] - vr * y[II];
 
         ipcmd_set_ = static_cast<RealT>(this->toSystemBase(ipcmd0));
         iqcmd_set_ = static_cast<RealT>(this->toSystemBase(iqcmd0));
@@ -571,30 +565,24 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
-        const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
-        const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
-        const auto VT      = static_cast<size_t>(RegcaInternalVariables::VT);
-        const auto IR      = static_cast<size_t>(RegcaInternalVariables::IR);
-        const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
-        const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
-        const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
-        const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
-        const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
+        const auto VM  = static_cast<size_t>(RegcaInternalVariables::VM);
+        const auto IQ  = static_cast<size_t>(RegcaInternalVariables::IQ);
+        const auto IP  = static_cast<size_t>(RegcaInternalVariables::IP);
+        const auto IR  = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto II  = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto PBR = static_cast<size_t>(RegcaInternalVariables::PBR);
+        const auto QBR = static_cast<size_t>(RegcaInternalVariables::QBR);
 
         const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
         const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
 
-        const ScalarT vm      = y[VM];
-        const ScalarT iq      = y[IQ];
-        const ScalarT ip      = y[IP];
-        const ScalarT vt      = y[VT];
-        const ScalarT ir      = y[IR];
-        const ScalarT ii      = y[II];
-        const ScalarT iqextra = y[IQEXTRA];
-        const ScalarT il      = y[IL];
-        const ScalarT pbr     = y[PBR];
-        const ScalarT qbr     = y[QBR];
+        const ScalarT vm  = y[VM];
+        const ScalarT iq  = y[IQ];
+        const ScalarT ip  = y[IP];
+        const ScalarT ir  = y[IR];
+        const ScalarT ii  = y[II];
+        const ScalarT pbr = y[PBR];
+        const ScalarT qbr = y[QBR];
 
         const ScalarT vm_dot = yp[VM];
         const ScalarT iq_dot = yp[IQ];
@@ -605,6 +593,13 @@ namespace GridKit
 
         const ScalarT ipcmd = this->toComponentBase(ws[IPCMD]);
         const ScalarT iqcmd = this->toComponentBase(ws[IQCMD]);
+
+        // Terminal voltage magnitude, HVRCM current, and LVPL ceiling,
+        // evaluated rather than solved for
+        const ScalarT vt      = std::sqrt(vr * vr + vi * vi);
+        const ScalarT iqextra = Khv_ * Math::ramp(vt - Vhvmax_);
+        const ScalarT il      = Math::linseg(vm, VL0_, VL1_, IL1_)
+                           + KL_ * Math::ramp(vm - VL1_);
 
         // Form the unconstrained current derivatives, then apply the REGCA
         // recovery rate limits in p.u./s.
@@ -630,12 +625,8 @@ namespace GridKit
         f[IQ] = -iq_dot + iq_rate;
         f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
                 + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
-        f[VT]      = -vt * vt + vr * vr + vi * vi;
-        f[IR]      = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
-        f[II]      = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
-        f[IQEXTRA] = -iqextra + Khv_ * Math::ramp(vt - Vhvmax_);
-        f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
-                + KL_ * Math::ramp(vm - VL1_);
+        f[IR]  = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
+        f[II]  = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
         f[PBR] = -pbr + vr * ir + vi * ii;
         f[QBR] = -qbr + vi * ir - vr * ii;
 

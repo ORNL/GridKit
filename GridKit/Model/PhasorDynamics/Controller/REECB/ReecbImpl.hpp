@@ -335,28 +335,14 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       bool Reecb<scalar_type, index_type>::buildInitialPoint(InitialPoint& point)
       {
-        const auto VMEAS  = static_cast<size_t>(ReecbInternalVariables::VMEAS);
-        const auto PMEAS  = static_cast<size_t>(ReecbInternalVariables::PMEAS);
-        const auto XPIQ   = static_cast<size_t>(ReecbInternalVariables::XPIQ);
-        const auto XPIV   = static_cast<size_t>(ReecbInternalVariables::XPIV);
-        const auto QV     = static_cast<size_t>(ReecbInternalVariables::QV);
-        const auto PORD   = static_cast<size_t>(ReecbInternalVariables::PORD);
-        const auto VT     = static_cast<size_t>(ReecbInternalVariables::VT);
-        const auto VSAFE  = static_cast<size_t>(ReecbInternalVariables::VSAFE);
-        const auto SDIP   = static_cast<size_t>(ReecbInternalVariables::SDIP);
-        const auto IQV    = static_cast<size_t>(ReecbInternalVariables::IQV);
-        const auto QREF   = static_cast<size_t>(ReecbInternalVariables::QREF);
-        const auto EQ     = static_cast<size_t>(ReecbInternalVariables::EQ);
-        const auto VPIQ   = static_cast<size_t>(ReecbInternalVariables::VPIQ);
-        const auto EPIV   = static_cast<size_t>(ReecbInternalVariables::EPIV);
-        const auto RPORD  = static_cast<size_t>(ReecbInternalVariables::RPORD);
-        const auto ILCAP  = static_cast<size_t>(ReecbInternalVariables::ILCAP);
-        const auto IQMAX  = static_cast<size_t>(ReecbInternalVariables::IQMAX);
-        const auto IPMAX  = static_cast<size_t>(ReecbInternalVariables::IPMAX);
-        const auto IQBASE = static_cast<size_t>(ReecbInternalVariables::IQBASE);
-        const auto IQRAW  = static_cast<size_t>(ReecbInternalVariables::IQRAW);
-        const auto IQCMD  = static_cast<size_t>(ReecbInternalVariables::IQCMD);
-        const auto IPCMD  = static_cast<size_t>(ReecbInternalVariables::IPCMD);
+        const auto VMEAS = static_cast<size_t>(ReecbInternalVariables::VMEAS);
+        const auto PMEAS = static_cast<size_t>(ReecbInternalVariables::PMEAS);
+        const auto XPIQ  = static_cast<size_t>(ReecbInternalVariables::XPIQ);
+        const auto XPIV  = static_cast<size_t>(ReecbInternalVariables::XPIV);
+        const auto QV    = static_cast<size_t>(ReecbInternalVariables::QV);
+        const auto PORD  = static_cast<size_t>(ReecbInternalVariables::PORD);
+        const auto IQCMD = static_cast<size_t>(ReecbInternalVariables::IQCMD);
+        const auto IPCMD = static_cast<size_t>(ReecbInternalVariables::IPCMD);
 
         const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
         const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
@@ -637,31 +623,17 @@ namespace GridKit
           return false;
         }
 
-        point.variables[VMEAS]  = vmeas0;
-        point.variables[PMEAS]  = pmeas0;
-        point.variables[XPIQ]   = xpiq0;
-        point.variables[XPIV]   = xpiv0;
-        point.variables[QV]     = qv0;
-        point.variables[PORD]   = pord0;
-        point.variables[VT]     = vt0;
-        point.variables[VSAFE]  = vmeas_safe0;
-        point.variables[SDIP]   = sdip0;
-        point.variables[IQV]    = iqv0;
-        point.variables[QREF]   = qref0;
-        point.variables[EQ]     = eq0;
-        point.variables[VPIQ]   = vpiq0;
-        point.variables[EPIV]   = epiv0;
-        point.variables[RPORD]  = ZERO<RealT>;
-        point.variables[ILCAP]  = ilcap0;
-        point.variables[IQMAX]  = iqmax0;
-        point.variables[IPMAX]  = ipmax0;
-        point.variables[IQBASE] = iqbase0;
-        point.variables[IQRAW]  = iqraw_check;
-        point.signals[PE]       = pe0_system;
-        point.signals[QGEN]     = qgen0_system;
-        point.signals[QEXT]     = qext0_port;
-        point.signals[PFAREF]   = pfaref0;
-        point.signals[PREF]     = pref0_system;
+        point.variables[VMEAS] = vmeas0;
+        point.variables[PMEAS] = pmeas0;
+        point.variables[XPIQ]  = xpiq0;
+        point.variables[XPIV]  = xpiv0;
+        point.variables[QV]    = qv0;
+        point.variables[PORD]  = pord0;
+        point.signals[PE]      = pe0_system;
+        point.signals[QGEN]    = qgen0_system;
+        point.signals[QEXT]    = qext0_port;
+        point.signals[PFAREF]  = pfaref0;
+        point.signals[PREF]    = pref0_system;
 
         point.qmin = qmin;
         point.qmax = qmax;
@@ -865,8 +837,8 @@ namespace GridKit
       /**
        * @brief Evaluate the REECB internal residual
        *
-       * Evaluates the residual rows in enum order. Selector masks keep the
-       * differentiated path branch-free.
+       * Evaluates the six state rows and the two current-command rows in enum
+       * order. Selector masks keep the differentiated path branch-free.
        *
        * @param[in] y Internal variables.
        * @param[in] yp Internal variable derivatives.
@@ -883,28 +855,14 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        const auto VMEAS  = static_cast<size_t>(ReecbInternalVariables::VMEAS);
-        const auto PMEAS  = static_cast<size_t>(ReecbInternalVariables::PMEAS);
-        const auto XPIQ   = static_cast<size_t>(ReecbInternalVariables::XPIQ);
-        const auto XPIV   = static_cast<size_t>(ReecbInternalVariables::XPIV);
-        const auto QV     = static_cast<size_t>(ReecbInternalVariables::QV);
-        const auto PORD   = static_cast<size_t>(ReecbInternalVariables::PORD);
-        const auto VT     = static_cast<size_t>(ReecbInternalVariables::VT);
-        const auto VSAFE  = static_cast<size_t>(ReecbInternalVariables::VSAFE);
-        const auto SDIP   = static_cast<size_t>(ReecbInternalVariables::SDIP);
-        const auto IQV    = static_cast<size_t>(ReecbInternalVariables::IQV);
-        const auto QREF   = static_cast<size_t>(ReecbInternalVariables::QREF);
-        const auto EQ     = static_cast<size_t>(ReecbInternalVariables::EQ);
-        const auto VPIQ   = static_cast<size_t>(ReecbInternalVariables::VPIQ);
-        const auto EPIV   = static_cast<size_t>(ReecbInternalVariables::EPIV);
-        const auto RPORD  = static_cast<size_t>(ReecbInternalVariables::RPORD);
-        const auto ILCAP  = static_cast<size_t>(ReecbInternalVariables::ILCAP);
-        const auto IQMAX  = static_cast<size_t>(ReecbInternalVariables::IQMAX);
-        const auto IPMAX  = static_cast<size_t>(ReecbInternalVariables::IPMAX);
-        const auto IQBASE = static_cast<size_t>(ReecbInternalVariables::IQBASE);
-        const auto IQRAW  = static_cast<size_t>(ReecbInternalVariables::IQRAW);
-        const auto IQCMD  = static_cast<size_t>(ReecbInternalVariables::IQCMD);
-        const auto IPCMD  = static_cast<size_t>(ReecbInternalVariables::IPCMD);
+        const auto VMEAS = static_cast<size_t>(ReecbInternalVariables::VMEAS);
+        const auto PMEAS = static_cast<size_t>(ReecbInternalVariables::PMEAS);
+        const auto XPIQ  = static_cast<size_t>(ReecbInternalVariables::XPIQ);
+        const auto XPIV  = static_cast<size_t>(ReecbInternalVariables::XPIV);
+        const auto QV    = static_cast<size_t>(ReecbInternalVariables::QV);
+        const auto PORD  = static_cast<size_t>(ReecbInternalVariables::PORD);
+        const auto IQCMD = static_cast<size_t>(ReecbInternalVariables::IQCMD);
+        const auto IPCMD = static_cast<size_t>(ReecbInternalVariables::IPCMD);
 
         const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
         const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
@@ -918,20 +876,6 @@ namespace GridKit
         const ScalarT xpiv         = y[XPIV];
         const ScalarT qv           = y[QV];
         const ScalarT pord         = y[PORD];
-        const ScalarT vt           = y[VT];
-        const ScalarT vsafe        = y[VSAFE];
-        const ScalarT sdip         = y[SDIP];
-        const ScalarT iqv          = y[IQV];
-        const ScalarT qref         = y[QREF];
-        const ScalarT eq           = y[EQ];
-        const ScalarT vpiq         = y[VPIQ];
-        const ScalarT epiv         = y[EPIV];
-        const ScalarT rpord        = y[RPORD];
-        const ScalarT ilcap        = y[ILCAP];
-        const ScalarT iqmax        = y[IQMAX];
-        const ScalarT ipmax        = y[IPMAX];
-        const ScalarT iqbase       = y[IQBASE];
-        const ScalarT iqraw        = y[IQRAW];
         const ScalarT iqcmd_system = y[IQCMD];
         const ScalarT ipcmd_system = y[IPCMD];
 
@@ -953,44 +897,46 @@ namespace GridKit
         const ScalarT iqcmd  = this->toComponentBase(iqcmd_system);
         const ScalarT ipcmd  = this->toComponentBase(ipcmd_system);
 
-        const ScalarT verr        = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
-        const ScalarT q_pi_state  = Kqp_ * eq + xpiq;
-        const ScalarT v_pi_state  = Kvp_ * epiv + xpiv;
-        const ScalarT fpord       = (pref - pord) / Tpord_;
-        // Select before the factored square to avoid 0 * inf on the inactive path.
-        const ScalarT high        = pq_on_ * ipcmd + pq_off_ * iqcmd;
-        const ScalarT q_pi_rate   = q_pi_on_ * sdip * Math::antiwindup(q_pi_state, Kqi_ * eq, Vmin_, Vmax_);
-        const ScalarT v_pi_rate   = q_on_ * sdip * awband(v_pi_state, Kvi_ * epiv, iqmax);
-        const ScalarT qv_rate     = q_off_ * sdip * (qref / vsafe - qv) / Tiq_;
-        const ScalarT pord_rate   = sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
-        const ScalarT iqv_target  = Math::clamp(kqv_ * verr, Iql1_, Iqh1_);
+        // Terminal magnitude, voltage gates, references, errors, current
+        // limits, and the reactive-current build-up, evaluated rather than
+        // solved for
+        const ScalarT vt         = std::sqrt(vr * vr + vi * vi);
+        const ScalarT vsafe      = Math::max(vmeas, VMEAS_MINIMUM);
+        const ScalarT sdip       = Math::inside(vt, Vdip_, Vup_);
+        const ScalarT verr       = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
+        const ScalarT iqv        = Math::clamp(kqv_ * verr, Iql1_, Iqh1_);
         // The Volt/VAr channel is a system-base reactive power unless
         // direct-voltage mode selects it as a terminal-voltage reference,
         // which takes no power-base conversion.
-        const ScalarT qref_target = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * this->toComponentBase(extref));
+        const ScalarT qref       = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * this->toComponentBase(extref));
+        const ScalarT eq         = Math::clamp(qref, Qmin_, Qmax_) - qgen;
+        const ScalarT q_pi_state = Kqp_ * eq + xpiq;
+        const ScalarT vpiq       = Math::clamp(q_pi_state, Vmin_, Vmax_);
+        const ScalarT epiv       = q_pi_on_ * vpiq + v_ref_on_ * extref - q_on_ * vmeas;
+        const ScalarT v_pi_state = Kvp_ * epiv + xpiv;
+        const ScalarT fpord      = (pref - pord) / Tpord_;
+        const ScalarT rpord      = aslew(fpord, dPmin_, dPmax_);
+        // Select before the factored square to avoid 0 * inf on the inactive path.
+        const ScalarT high       = pq_on_ * ipcmd + pq_off_ * iqcmd;
+        const ScalarT ilcap      = sqrtramp(circleSquare(Imax_, high));
+        const ScalarT iqmax      = pq_on_ * ilcap + pq_off_ * Imax_;
+        const ScalarT ipmax      = pq_on_ * Imax_ + pq_off_ * ilcap;
+        const ScalarT iqbase     = Math::clamp(v_pi_state, -iqmax, iqmax);
+        const ScalarT iqraw      = q_on_ * iqbase + q_off_ * qv + iqv;
 
-        f[VMEAS]  = -vmeas_dot + (vt - vmeas) / Trv_;
-        f[PMEAS]  = -pmeas_dot + (pe - pmeas) / Tp_;
-        f[XPIQ]   = -xpiq_dot + q_pi_rate;
-        f[XPIV]   = -xpiv_dot + v_pi_rate;
-        f[QV]     = -qv_dot + qv_rate;
-        f[PORD]   = -pord_dot + pord_rate;
-        f[VT]     = -vt * vt + vr * vr + vi * vi;
-        f[VSAFE]  = -vsafe + Math::max(vmeas, VMEAS_MINIMUM);
-        f[SDIP]   = -sdip + Math::inside(vt, Vdip_, Vup_);
-        f[IQV]    = -iqv + iqv_target;
-        f[QREF]   = -qref + qref_target;
-        f[EQ]     = -eq + Math::clamp(qref, Qmin_, Qmax_) - qgen;
-        f[VPIQ]   = -vpiq + Math::clamp(q_pi_state, Vmin_, Vmax_);
-        f[EPIV]   = -epiv + q_pi_on_ * vpiq + v_ref_on_ * extref - q_on_ * vmeas;
-        f[RPORD]  = -rpord + aslew(fpord, dPmin_, dPmax_);
-        f[ILCAP]  = -ilcap + sqrtramp(circleSquare(Imax_, high));
-        f[IQMAX]  = -iqmax + pq_on_ * ilcap + pq_off_ * Imax_;
-        f[IPMAX]  = -ipmax + pq_on_ * Imax_ + pq_off_ * ilcap;
-        f[IQBASE] = -iqbase + Math::clamp(v_pi_state, -iqmax, iqmax);
-        f[IQRAW]  = -iqraw + q_on_ * iqbase + q_off_ * qv + iqv;
-        f[IQCMD]  = -iqcmd + Math::clamp(iqraw, -iqmax, iqmax);
-        f[IPCMD]  = -ipcmd + Math::clamp(pord / vsafe, ZERO<RealT>, ipmax);
+        const ScalarT q_pi_rate = q_pi_on_ * sdip * Math::antiwindup(q_pi_state, Kqi_ * eq, Vmin_, Vmax_);
+        const ScalarT v_pi_rate = q_on_ * sdip * awband(v_pi_state, Kvi_ * epiv, iqmax);
+        const ScalarT qv_rate   = q_off_ * sdip * (qref / vsafe - qv) / Tiq_;
+        const ScalarT pord_rate = sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
+
+        f[VMEAS] = -vmeas_dot + (vt - vmeas) / Trv_;
+        f[PMEAS] = -pmeas_dot + (pe - pmeas) / Tp_;
+        f[XPIQ]  = -xpiq_dot + q_pi_rate;
+        f[XPIV]  = -xpiv_dot + v_pi_rate;
+        f[QV]    = -qv_dot + qv_rate;
+        f[PORD]  = -pord_dot + pord_rate;
+        f[IQCMD] = -iqcmd + Math::clamp(iqraw, -iqmax, iqmax);
+        f[IPCMD] = -ipcmd + Math::clamp(pord / vsafe, ZERO<RealT>, ipmax);
 
         return 0;
       }

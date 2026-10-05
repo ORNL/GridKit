@@ -99,7 +99,6 @@ namespace GridKit
         const std::vector<ScalarT> var_answer = {
             3.0 * std::numbers::pi_v<RealT> / 4.0, // delta
             0.0,                                   // omega
-            3.5,                                   // Te
             1.0,                                   // Ir
             2.0,                                   // Ii
         };
@@ -381,10 +380,10 @@ namespace GridKit
         gen.getPorts().in.template port<Inputs::pmech>().connect(&pmech);
         gen.getPorts().in.template port<Inputs::efd>().connect(&efd);
 
+        // Te = G*efd^2 - efd*((G*vr - B*vi)*cos(delta) + (B*vr + G*vi)*sin(delta)) = 8
         const std::vector<ScalarT> res_answer = {
             0.0,
-            -0.5,
-            -6.0,
+            5.5,
             2.0,
             -6.0};
 
@@ -400,9 +399,8 @@ namespace GridKit
 
         y[0] = pi;   // delta
         y[1] = 1.0;  // omega
-        y[2] = 2.0;  // telec
-        y[3] = -2.0; // ir
-        y[4] = -4.0; // ii
+        y[2] = -2.0; // ir
+        y[3] = -4.0; // ii
 
         yp[0] = 2.0 * pi * 60.0; // delta_dot
         yp[1] = -1.5;            // omega_dot

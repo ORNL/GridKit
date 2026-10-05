@@ -262,9 +262,6 @@ namespace GridKit
                                  0.9000000000001573,
                                  "G on component base");
         success       *= scalarMatches(y[static_cast<size_t>(Internal::Q)], 0.9, "Q on component base");
-        success       *= scalarMatches(y[static_cast<size_t>(Internal::PGV)],
-                                 0.9,
-                                 "PGV on component base");
         success       *= scalarMatches(y[static_cast<size_t>(Internal::H)], 1.0, "H at the dam head");
         success       *= scalarMatches(fixture.pmech(), 0.4, "preserved pmech value");
 
@@ -320,11 +317,11 @@ namespace GridKit
         success *= allResidualsZero(fixture.hygov);
 
         // A system-base reference step lands on the governor error scaled by
-        // the base ratio.
+        // the base ratio, which the error filter integrates at 0.2 / Tf.
         fixture.input(External::pref)  = 0.1025; // the published 0.0025 plus a 0.1 step
         success                       *= (fixture.evaluate() == 0);
         success                       *= residualsMatch(fixture.hygov,
-                                                        {{Internal::EF, 0.2}},
+                                                        {{Internal::XF, 1.0}},
                                   "reference step on the component base");
 
         // Unattached ports fall back to the references latched by
@@ -383,7 +380,6 @@ namespace GridKit
             {{Internal::C, 1.0},
              {Internal::G, 1.0},
              {Internal::Q, 1.2812656647316965},
-             {Internal::PGV, 0.9971118867476669},
              {Internal::H, 1.6511654364800423}},
             "effective dam head");
         success *= scalarMatches(effective_fixture.pmech(), 0.045, "preserved pmech value");
@@ -393,17 +389,20 @@ namespace GridKit
         success *= (effective_fixture.evaluate() == 0);
         success *= allResidualsZero(effective_fixture.hygov);
 
+        // A large filter state saturates the desired-gate rate target at
+        // -sign(XF) * Velm.
         struct ResponseLimitCase
         {
           const char* label;
           Params      limit_parameter;
           RealT       limit;
           RealT       rate;
+          RealT       filter;
         };
 
         const std::array<ResponseLimitCase, 2> response_limit_cases{{
-            {"expanded upper response limit", Params::Gmax, 0.5, 0.1},
-            {"expanded lower response limit", Params::Gmin, 0.7, -0.1},
+            {"expanded upper response limit", Params::Gmax, 0.5, 0.15, -0.5},
+            {"expanded lower response limit", Params::Gmin, 0.7, -0.15, 0.5},
         }};
 
         for (const auto& test_case : response_limit_cases)
@@ -431,7 +430,7 @@ namespace GridKit
           // configured limit and initialized gate.
           setState(fixture.hygov,
                    {{Internal::C, 0.5 * (test_case.limit + gate)},
-                    {Internal::RC, test_case.rate}});
+                    {Internal::XF, test_case.filter}});
           setDerivative(fixture.hygov, {{Internal::C, 0.0}});
           success                   *= (fixture.evaluate() == 0);
           const RealT response_rate  = static_cast<RealT>(
@@ -461,8 +460,9 @@ namespace GridKit
         success                                  *= (effective_fixture.evaluate() == 0);
         success                                  *= allResidualsZero(effective_fixture.hygov);
 
+        // A negative filter state saturates the rate target at +Velm = 0.5.
         setState(effective_fixture.hygov,
-                 {{Internal::C, 0.75}, {Internal::RC, 0.2}});
+                 {{Internal::C, 0.75}, {Internal::XF, -0.5}});
         setDerivative(effective_fixture.hygov, {{Internal::C, 0.0}});
         success                    *= (effective_fixture.evaluate() == 0);
         const RealT preserved_rate  = static_cast<RealT>(
@@ -484,7 +484,7 @@ namespace GridKit
         success *= allResidualsZero(effective_fixture.hygov);
 
         setState(effective_fixture.hygov,
-                 {{Internal::C, 0.75}, {Internal::RC, 0.2}});
+                 {{Internal::C, 0.75}, {Internal::XF, -0.5}});
         setDerivative(effective_fixture.hygov, {{Internal::C, 0.0}});
         success *= (effective_fixture.evaluate() == 0);
         success *= scalarMatches(
@@ -650,7 +650,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// A fixed numerical answer key for all 12 HYGOV residual rows. The
+      /// A fixed numerical answer key for all seven HYGOV residual rows. The
       /// expected values are literals, not a second implementation of HYGOV.
       TestOutcome residualEquations()
       {
@@ -663,18 +663,16 @@ namespace GridKit
         setAnswerKeyState(fixture.hygov);
         success *= (fixture.evaluate() == 0);
 
+        // The inputs and state give a deadbanded speed of 0.0183514666467982894,
+        // a gate-curve power of 0.50399999996839657, and an unsaturated
+        // desired-gate rate target of 0.11405258700099272.
         const std::array<InternalRow, Utilities::enum_size<Internal>()> expected{{
-            {Internal::XN, -0.07785714285714286},
-            {Internal::XF, -0.7300000000000001},
-            {Internal::C, 0.06},
+            {Internal::XN, -0.07546323810942979},
+            {Internal::XF, -0.10687866661699576},
+            {Internal::C, 0.08405258700099272},
             {Internal::G, 0.1233333333333334},
             {Internal::Q, 0.011538461538461414},
-            {Internal::OMEGADB, 0.0033514666467982894},
-            {Internal::EF, 0.5863},
-            {Internal::FC, -0.7405000000000002},
-            {Internal::RC, 0.029996890386450745},
-            {Internal::PGV, -0.04600000003160343},
-            {Internal::H, -0.033299999999999885},
+            {Internal::H, -0.08760208003567888},
             {Internal::PMECH, -0.012679999999999934},
         }};
 
@@ -691,78 +689,86 @@ namespace GridKit
         TestStatus success = true;
         const auto data    = makeResidualData();
 
-        // Exercise both sides and the interior of the type-1 +/-0.01 deadband.
+        // Exercise both sides and the interior of the type-1 +/-0.01 deadband,
+        // observed as the deadbanded speed over Tnp = 1.4 in the lead-lag row.
         const std::array<ResidualCase, 3> deadband_cases{{
             {"speed deadband below the band",
              {{External::speed, -0.05}},
-             {{Internal::OMEGADB, 0.0}},
              {},
-             {{Internal::OMEGADB, -0.049996641662021946}}},
+             {},
+             {{Internal::XN, -0.049996641662021946 / 1.4}}},
             {"speed deadband inside the band",
              {{External::speed, 0.004}},
-             {{Internal::OMEGADB, 0.0}},
              {},
-             {{Internal::OMEGADB, 0.0009004582873718001}}},
+             {},
+             {{Internal::XN, 0.0009004582873718001 / 1.4}}},
             {"speed deadband above the band",
              {{External::speed, 0.05}},
-             {{Internal::OMEGADB, 0.0}},
              {},
-             {{Internal::OMEGADB, 0.049996641662021946}}},
+             {},
+             {{Internal::XN, 0.049996641662021946 / 1.4}}},
         }};
         success *= runResidualCases(data, 0.4, deadband_cases);
 
+        // An auxiliary-power step drives the governor error at the base ratio
+        // 2, so the desired-gate derivative target is 2 * paux / (Tf * Rtemp)
+        // = 25 * paux; the desired gate follows its velocity-limited value.
         const std::array<ResidualCase, 3> gate_velocity_cases{{
             {"gate velocity below the rate limit",
+             {{External::paux, -0.024}},
              {},
-             {{Internal::FC, -0.6}, {Internal::RC, 0.0}},
              {},
-             {{Internal::RC, -0.15}}},
+             {{Internal::C, -0.15}}},
             {"gate velocity inside the rate limit",
+             {{External::paux, 0.002}},
              {},
-             {{Internal::FC, 0.05}, {Internal::RC, 0.0}},
              {},
-             {{Internal::RC, 0.04999999999984272}}},
+             {{Internal::C, 0.04999999999984272}}},
             {"gate velocity above the rate limit",
+             {{External::paux, 0.024}},
              {},
-             {{Internal::FC, 0.6}, {Internal::RC, 0.0}},
              {},
-             {{Internal::RC, 0.15000000000000002}}},
+             {{Internal::C, 0.15000000000000002}}},
         }};
         success *= runResidualCases(data, 0.4, gate_velocity_cases);
 
+        // A +/-0.06 auxiliary step saturates the rate target at +/-Velm even
+        // with the permanent-droop feedback of the displaced desired gate.
         const std::array<ResidualCase, 4> gate_antiwindup_cases{{
             {"Gmax blocks an outward desired-gate rate",
-             {},
-             {{Internal::C, 1.2}, {Internal::RC, 0.2}},
+             {{External::paux, 0.06}},
+             {{Internal::C, 1.2}},
              {{Internal::C, 0.0}},
              {{Internal::C, 0.0}}},
             {"Gmin blocks an outward desired-gate rate",
-             {},
-             {{Internal::C, -0.2}, {Internal::RC, -0.2}},
+             {{External::paux, -0.06}},
+             {{Internal::C, -0.2}},
              {{Internal::C, 0.0}},
              {{Internal::C, 0.0}}},
             {"Gmax admits a restoring desired-gate rate",
-             {},
-             {{Internal::C, 1.2}, {Internal::RC, -0.2}},
+             {{External::paux, -0.06}},
+             {{Internal::C, 1.2}},
              {{Internal::C, 0.0}},
-             {{Internal::C, -0.2}}},
+             {{Internal::C, -0.15}}},
             {"Gmin admits a restoring desired-gate rate",
-             {},
-             {{Internal::C, -0.2}, {Internal::RC, 0.2}},
+             {{External::paux, 0.06}},
+             {{Internal::C, -0.2}},
              {{Internal::C, 0.0}},
-             {{Internal::C, 0.2}}},
+             {{Internal::C, 0.15}}},
         }};
         success *= runResidualCases(data, 0.4, gate_antiwindup_cases);
 
         // At alpha = 1, a blocked desired-gate row has derivative coefficient
-        // -1 and no RC dependence, independently of either Jacobian backend.
+        // -1 and no sensitivity to anything that forms the rate target,
+        // independently of either Jacobian backend.
         {
           using DepVar = DependencyTracking::Variable;
 
           Fixture<DepVar> blocked(data);
           blocked.attachAllInputs();
-          success *= blocked.initialize(0.4);
-          setState(blocked.hygov, {{Internal::C, 1.2}, {Internal::RC, 0.2}});
+          success                       *= blocked.initialize(0.4);
+          blocked.input(External::paux)  = 0.06;
+          setState(blocked.hygov, {{Internal::C, 1.2}});
           setDerivative(blocked.hygov, {{Internal::C, 0.0}});
           numberVariables(blocked);
           success *= (blocked.evaluate() == 0);
@@ -770,9 +776,13 @@ namespace GridKit
           const auto& dependencies =
               blocked.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)].getDependencies();
           const DepVar::DependencyMap expected{{
-              {2 * static_cast<size_t>(Internal::C), 0.0},      // @todo Remove these
-              {2 * static_cast<size_t>(Internal::C) + 1, -1.0}, // @todo Remove these
-              {2 * static_cast<size_t>(Internal::RC), 0.0},     // @todo Remove these
+              {2 * static_cast<size_t>(Internal::XN), 0.0},                        // @todo Remove these
+              {2 * static_cast<size_t>(Internal::XF), 0.0},                        // @todo Remove these
+              {2 * static_cast<size_t>(Internal::C), 0.0},                         // @todo Remove these
+              {2 * static_cast<size_t>(Internal::C) + 1, -1.0},                    // @todo Remove these
+              {2 * static_cast<size_t>(blocked.inputIndex(External::speed)), 0.0}, // @todo Remove these
+              {2 * static_cast<size_t>(blocked.inputIndex(External::pref)), 0.0},  // @todo Remove these
+              {2 * static_cast<size_t>(blocked.inputIndex(External::paux)), 0.0},  // @todo Remove these
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -787,32 +797,34 @@ namespace GridKit
         TestStatus success = true;
         const auto data    = makeResidualData();
 
+        // With no flow and a unit head, the head row reads the squared
+        // gate-curve power.
         const std::array<ResidualCase, 5> gate_power_cases{{
             {"gate-power curve segment 1",
              {},
-             {{Internal::G, 0.1}, {Internal::PGV, 0.0}},
+             {{Internal::G, 0.1}, {Internal::Q, 0.0}, {Internal::H, 1.0}},
              {},
-             {{Internal::PGV, 0.07500000000021236}}},
+             {{Internal::H, 0.07500000000021236 * 0.07500000000021236}}},
             {"gate-power curve segment 2",
              {},
-             {{Internal::G, 0.3}, {Internal::PGV, 0.0}},
+             {{Internal::G, 0.3}, {Internal::Q, 0.0}, {Internal::H, 1.0}},
              {},
-             {{Internal::PGV, 0.28500000000007075}}},
+             {{Internal::H, 0.28500000000007075 * 0.28500000000007075}}},
             {"gate-power curve segment 3",
              {},
-             {{Internal::G, 0.5}, {Internal::PGV, 0.0}},
+             {{Internal::G, 0.5}, {Internal::Q, 0.0}, {Internal::H, 1.0}},
              {},
-             {{Internal::PGV, 0.5399999999999371}}},
+             {{Internal::H, 0.5399999999999371 * 0.5399999999999371}}},
             {"gate-power curve segment 4",
              {},
-             {{Internal::G, 0.7}, {Internal::PGV, 0.0}},
+             {{Internal::G, 0.7}, {Internal::Q, 0.0}, {Internal::H, 1.0}},
              {},
-             {{Internal::PGV, 0.7549999999999292}}},
+             {{Internal::H, 0.7549999999999292 * 0.7549999999999292}}},
             {"gate-power curve segment 5",
              {},
-             {{Internal::G, 0.9}, {Internal::PGV, 0.0}},
+             {{Internal::G, 0.9}, {Internal::Q, 0.0}, {Internal::H, 1.0}},
              {},
-             {{Internal::PGV, 0.9249999999998506}}},
+             {{Internal::H, 0.9249999999998506 * 0.9249999999998506}}},
         }};
         success *= runResidualCases(data, 0.4, gate_power_cases);
 
@@ -821,9 +833,10 @@ namespace GridKit
         const std::array<ResidualCase, 2> turbine_cases{{
             {"water column",
              {},
-             {{Internal::Q, 0.61}, {Internal::H, 0.9}, {Internal::PGV, 0.55}},
+             {{Internal::G, 0.5}, {Internal::Q, 0.61}, {Internal::H, 0.9}},
              {{Internal::Q, 0.05}},
-             {{Internal::Q, 0.18076923076923068}, {Internal::H, -0.09984999999999994}}},
+             {{Internal::Q, 0.18076923076923068},
+              {Internal::H, -0.61 * 0.61 + 0.9 * 0.5399999999999371 * 0.5399999999999371}}},
             {"turbine damping",
              {{External::speed, 0.05}},
              {{Internal::G, 0.6},
@@ -879,7 +892,7 @@ namespace GridKit
 #ifdef GRIDKIT_ENABLE_ENZYME
       /// Every Enzyme CSR row must match dependency tracking at gates inside
       /// each curve segment and at each breakpoint, and both paths must
-      /// carry the PGV row's gate dependence.
+      /// carry the head row's gate dependence through the gate curve.
       TestOutcome jacobian()
       {
         TestStatus success = true;
@@ -904,10 +917,10 @@ namespace GridKit
             }
           }
 
-          // Guard the required PGV/G dependency even if both paths agree.
+          // Guard the required H/G dependency even if both paths agree.
           success *= jacobianContains(
-              dependency_jacobian, Internal::PGV, Internal::G, "dependency-tracking");
-          success *= jacobianContains(enzyme_jacobian, Internal::PGV, Internal::G, "Enzyme");
+              dependency_jacobian, Internal::H, Internal::G, "dependency-tracking");
+          success *= jacobianContains(enzyme_jacobian, Internal::H, Internal::G, "Enzyme");
         }
 
         return success.report(__func__);
@@ -929,7 +942,7 @@ namespace GridKit
 
       /// Failure-report names for the internal rows, ordered as `Internal`.
       static constexpr std::array<const char*, Utilities::enum_size<Internal>()> kRowNames{
-          {"XN", "XF", "C", "G", "Q", "OMEGADB", "EF", "FC", "RC", "PGV", "H", "PMECH"}};
+          {"XN", "XF", "C", "G", "Q", "H", "PMECH"}};
 
       struct ResidualCase
       {
@@ -1185,15 +1198,10 @@ namespace GridKit
       {
         setState(hygov,
                  {{Internal::XN, 0.11},
-                  {Internal::XF, 0.23},
+                  {Internal::XF, 0.69},
                   {Internal::C, 0.52},
                   {Internal::G, 0.47},
                   {Internal::Q, 0.61},
-                  {Internal::OMEGADB, 0.015},
-                  {Internal::EF, 0.08},
-                  {Internal::FC, 0.12},
-                  {Internal::RC, 0.09},
-                  {Internal::PGV, 0.55},
                   {Internal::H, 1.12},
                   {Internal::PMECH, 0.33}});
         setDerivative(hygov,

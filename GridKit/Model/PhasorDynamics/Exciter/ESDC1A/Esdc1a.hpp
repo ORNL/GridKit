@@ -27,7 +27,13 @@ namespace GridKit
 
     namespace Exciter
     {
-      /// Internal variables of an `Esdc1a`.
+      /**
+       * @brief Internal variables of an `Esdc1a`.
+       *
+       * The lead-lag output, high-value gate, saturation, and exciter feedback
+       * drive are explicit functions of these and the inputs, and are
+       * evaluated by `evaluateAlgebraicState`.
+       */
       enum class Esdc1aInternalVariables : size_t
       {
         EFDP, ///< \f$E_{\mathrm{fd}}'\f$ Differential exciter field-voltage state [p.u.]
@@ -36,10 +42,6 @@ namespace GridKit
         VF,   ///< \f$V_F\f$ Differential stabilizing feedback state [p.u.]
         XLL,  ///< \f$x_{\mathrm{LL}}\f$ Differential input lead-lag denominator state [p.u.]
         EV,   ///< \f$e_V\f$ Algebraic voltage-error summing output [p.u.]
-        VLL,  ///< \f$V_{\mathrm{LL}}\f$ Algebraic input lead-lag output [p.u.]
-        VHV,  ///< \f$V_{\mathrm{HV}}\f$ Algebraic high-value gate output [p.u.]
-        SE,   ///< \f$s_e\f$ Scaled-quadratic saturation contribution [p.u.]
-        VFE,  ///< \f$V_{\mathrm{FE}}\f$ Algebraic exciter feedback drive [p.u.]
         EFD,  ///< \f$E_{\mathrm{fd}}\f$ Algebraic field-voltage output [p.u.]
       };
 
@@ -119,6 +121,19 @@ namespace GridKit
             const ScalarT* wb,
             const ScalarT* ws,
             ScalarT*       f);
+
+        /// The exciter's algebraic quantities, evaluated from its states and inputs
+        struct AlgebraicState
+        {
+          ScalarT vll; ///< \f$V_{\mathrm{LL}}\f$ Input lead-lag output [p.u.]
+          ScalarT vhv; ///< \f$V_{\mathrm{HV}}\f$ High-value gate output [p.u.]
+          ScalarT se;  ///< \f$s_e\f$ Scaled-quadratic saturation contribution [p.u.]
+          ScalarT vfe; ///< \f$V_{\mathrm{FE}}\f$ Exciter feedback drive [p.u.]
+        };
+
+        __attribute__((always_inline)) inline AlgebraicState evaluateAlgebraicState(
+            const ScalarT* y,
+            const ScalarT* ws) const;
 
       private:
         void initializeParameters(const ModelDataT& data);

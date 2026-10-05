@@ -262,18 +262,13 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::initialize()
       {
-        const auto XN      = static_cast<size_t>(HygovInternalVariables::XN);
-        const auto XF      = static_cast<size_t>(HygovInternalVariables::XF);
-        const auto C       = static_cast<size_t>(HygovInternalVariables::C);
-        const auto G       = static_cast<size_t>(HygovInternalVariables::G);
-        const auto Q       = static_cast<size_t>(HygovInternalVariables::Q);
-        const auto OMEGADB = static_cast<size_t>(HygovInternalVariables::OMEGADB);
-        const auto EF      = static_cast<size_t>(HygovInternalVariables::EF);
-        const auto FC      = static_cast<size_t>(HygovInternalVariables::FC);
-        const auto RC      = static_cast<size_t>(HygovInternalVariables::RC);
-        const auto PGV     = static_cast<size_t>(HygovInternalVariables::PGV);
-        const auto H       = static_cast<size_t>(HygovInternalVariables::H);
-        const auto PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
+        const auto XN    = static_cast<size_t>(HygovInternalVariables::XN);
+        const auto XF    = static_cast<size_t>(HygovInternalVariables::XF);
+        const auto C     = static_cast<size_t>(HygovInternalVariables::C);
+        const auto G     = static_cast<size_t>(HygovInternalVariables::G);
+        const auto Q     = static_cast<size_t>(HygovInternalVariables::Q);
+        const auto H     = static_cast<size_t>(HygovInternalVariables::H);
+        const auto PMECH = static_cast<size_t>(HygovInternalVariables::PMECH);
 
         bool ret = verify() == 0;
         if (!ret)
@@ -384,17 +379,12 @@ namespace GridKit
           return 1;
         }
 
-        y[XN]      = xn0;
-        y[XF]      = ZERO<RealT>;
-        y[C]       = gate0;
-        y[G]       = gate0;
-        y[Q]       = q0;
-        y[OMEGADB] = omegadb0;
-        y[EF]      = ZERO<RealT>;
-        y[FC]      = ZERO<RealT>;
-        y[RC]      = ZERO<RealT>;
-        y[PGV]     = pgv0;
-        y[H]       = h0;
+        y[XN] = xn0;
+        y[XF] = ZERO<RealT>;
+        y[C]  = gate0;
+        y[G]  = gate0;
+        y[Q]  = q0;
+        y[H]  = h0;
 
         Gmin_response_ = Gmin_response;
         Gmax_response_ = Gmax_response;
@@ -538,8 +528,8 @@ namespace GridKit
       /**
        * @brief Internal residual
        *
-       * Evaluates the five governor states and the seven algebraic rows
-       * documented in the model README. The body is kept free of branches
+       * Evaluates the five governor states and the head and
+       * mechanical-power algebraic rows documented in the model README. The body is kept free of branches
        * and loops so that sparse automatic differentiation resolves a fixed
        * structure; the gate curve enters as a fixed sum of smooth linear
        * segments.
@@ -560,35 +550,25 @@ namespace GridKit
           const ScalarT*                  ws,
           ScalarT*                        f)
       {
-        const auto XN      = static_cast<size_t>(HygovInternalVariables::XN);
-        const auto XF      = static_cast<size_t>(HygovInternalVariables::XF);
-        const auto C       = static_cast<size_t>(HygovInternalVariables::C);
-        const auto G       = static_cast<size_t>(HygovInternalVariables::G);
-        const auto Q       = static_cast<size_t>(HygovInternalVariables::Q);
-        const auto OMEGADB = static_cast<size_t>(HygovInternalVariables::OMEGADB);
-        const auto EF      = static_cast<size_t>(HygovInternalVariables::EF);
-        const auto FC      = static_cast<size_t>(HygovInternalVariables::FC);
-        const auto RC      = static_cast<size_t>(HygovInternalVariables::RC);
-        const auto PGV     = static_cast<size_t>(HygovInternalVariables::PGV);
-        const auto H       = static_cast<size_t>(HygovInternalVariables::H);
-        const auto PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
+        const auto XN    = static_cast<size_t>(HygovInternalVariables::XN);
+        const auto XF    = static_cast<size_t>(HygovInternalVariables::XF);
+        const auto C     = static_cast<size_t>(HygovInternalVariables::C);
+        const auto G     = static_cast<size_t>(HygovInternalVariables::G);
+        const auto Q     = static_cast<size_t>(HygovInternalVariables::Q);
+        const auto H     = static_cast<size_t>(HygovInternalVariables::H);
+        const auto PMECH = static_cast<size_t>(HygovInternalVariables::PMECH);
 
         const auto OMEGA = static_cast<size_t>(HygovExternalVariables::OMEGA);
         const auto PREF  = static_cast<size_t>(HygovExternalVariables::PREF);
         const auto PAUX  = static_cast<size_t>(HygovExternalVariables::PAUX);
 
-        const ScalarT xn      = y[XN];
-        const ScalarT xf      = y[XF];
-        const ScalarT c       = y[C];
-        const ScalarT g       = y[G];
-        const ScalarT q       = y[Q];
-        const ScalarT omegadb = y[OMEGADB];
-        const ScalarT ef      = y[EF];
-        const ScalarT fc      = y[FC];
-        const ScalarT rc      = y[RC];
-        const ScalarT pgv     = y[PGV];
-        const ScalarT head    = y[H];
-        const ScalarT pmech   = y[PMECH];
+        const ScalarT xn    = y[XN];
+        const ScalarT xf    = y[XF];
+        const ScalarT c     = y[C];
+        const ScalarT g     = y[G];
+        const ScalarT q     = y[Q];
+        const ScalarT head  = y[H];
+        const ScalarT pmech = y[PMECH];
 
         const ScalarT xn_dot = yp[XN];
         const ScalarT xf_dot = yp[XF];
@@ -600,20 +580,22 @@ namespace GridKit
         const ScalarT pref  = ws[PREF];
         const ScalarT paux  = ws[PAUX];
 
-        const ScalarT yomega = xn + leadlag_gain_ * (omegadb - xn);
+        // Deadbanded speed, governor error, desired-gate rate targets, and
+        // gate-curve power, evaluated rather than solved for
+        const ScalarT omegadb = Math::deadband1(omega, -db1_, db1_);
+        const ScalarT yomega  = xn + leadlag_gain_ * (omegadb - xn);
+        const ScalarT ef      = this->toComponentBase(pref + paux) - yomega - Rperm_ * c;
+        const ScalarT fc      = (xf / Tr_ + (ef - xf) / Tf_) / Rtemp_;
+        const ScalarT rc      = Math::clamp(fc, -Velm_, Velm_);
+        const ScalarT pgv     = gatePower(g);
 
-        f[XN]      = -xn_dot + (omegadb - xn) / Tnp_;
-        f[XF]      = -xf_dot + (ef - xf) / Tf_;
-        f[C]       = -c_dot + Math::antiwindup(c, rc, Gmin_response_, Gmax_response_);
-        f[G]       = -g_dot + (c - g) / Tg_;
-        f[Q]       = -q_dot + (Hdam_eff_ - head) / Tw_;
-        f[OMEGADB] = -omegadb + Math::deadband1(omega, -db1_, db1_);
-        f[EF]      = -ef + this->toComponentBase(pref + paux) - yomega - Rperm_ * c;
-        f[FC]      = -Rtemp_ * fc + xf / Tr_ + (ef - xf) / Tf_;
-        f[RC]      = -rc + Math::clamp(fc, -Velm_, Velm_);
-        f[PGV]     = -pgv + gatePower(g);
-        f[H]       = -q * q + head * pgv * pgv;
-        f[PMECH]   = -this->toComponentBase(pmech) + At_ * head * (q - Qnl_) - Dturb_ * omega * g;
+        f[XN]    = -xn_dot + (omegadb - xn) / Tnp_;
+        f[XF]    = -xf_dot + (ef - xf) / Tf_;
+        f[C]     = -c_dot + Math::antiwindup(c, rc, Gmin_response_, Gmax_response_);
+        f[G]     = -g_dot + (c - g) / Tg_;
+        f[Q]     = -q_dot + (Hdam_eff_ - head) / Tw_;
+        f[H]     = -q * q + head * pgv * pgv;
+        f[PMECH] = -this->toComponentBase(pmech) + At_ * head * (q - Qnl_) - Dturb_ * omega * g;
 
         return 0;
       }
@@ -866,7 +848,8 @@ namespace GridKit
        * @brief Steady component-base mechanical power at a gate and dam head
        *
        * At the steady state the head equals the given dam head and the flow
-       * follows the gate curve, so the PGV, H, and PMECH rows collapse to
+       * follows the gate curve, so the gate-curve power and the H and PMECH
+       * rows collapse to
        * @f[
        *   P_{\mathrm{m}}(g,H_{\mathrm{dam}})
        *     = A_t H_{\mathrm{dam}}

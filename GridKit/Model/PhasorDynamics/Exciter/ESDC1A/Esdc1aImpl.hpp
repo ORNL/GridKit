@@ -244,10 +244,6 @@ namespace GridKit
         const auto VF   = static_cast<size_t>(Esdc1aInternalVariables::VF);
         const auto XLL  = static_cast<size_t>(Esdc1aInternalVariables::XLL);
         const auto EV   = static_cast<size_t>(Esdc1aInternalVariables::EV);
-        const auto VLL  = static_cast<size_t>(Esdc1aInternalVariables::VLL);
-        const auto VHV  = static_cast<size_t>(Esdc1aInternalVariables::VHV);
-        const auto SE   = static_cast<size_t>(Esdc1aInternalVariables::SE);
-        const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
         const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
         bool ret = verify() == 0;
@@ -372,10 +368,6 @@ namespace GridKit
         y[VF]   = ZERO<RealT>;
         y[XLL]  = xll0;
         y[EV]   = ev0;
-        y[VLL]  = vll0;
-        y[VHV]  = vhv0;
-        y[SE]   = se0;
-        y[VFE]  = vfe0;
         y[EFD]  = efd0;
 
         omega_set_ = static_cast<RealT>(omega0);
@@ -518,8 +510,8 @@ namespace GridKit
       /**
        * @brief Evaluate the ESDC1A internal residual.
        *
-       * Evaluates the five exciter states and the six algebraic equations
-       * documented in the model README. The body is kept free of branches
+       * Evaluates the five exciter states and the voltage-error and
+       * field-voltage algebraic equations documented in the model README. The body is kept free of branches
        * and loops so sparse automatic differentiation resolves a fixed
        * structure; the three selector decisions enter as multiplicative
        * masks set by setDerivedParameters().
@@ -547,10 +539,6 @@ namespace GridKit
         const auto VF   = static_cast<size_t>(Esdc1aInternalVariables::VF);
         const auto XLL  = static_cast<size_t>(Esdc1aInternalVariables::XLL);
         const auto EV   = static_cast<size_t>(Esdc1aInternalVariables::EV);
-        const auto VLL  = static_cast<size_t>(Esdc1aInternalVariables::VLL);
-        const auto VHV  = static_cast<size_t>(Esdc1aInternalVariables::VHV);
-        const auto SE   = static_cast<size_t>(Esdc1aInternalVariables::SE);
-        const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
         const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
         const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
@@ -564,10 +552,6 @@ namespace GridKit
         const ScalarT vf   = y[VF];
         const ScalarT xll  = y[XLL];
         const ScalarT ev   = y[EV];
-        const ScalarT vll  = y[VLL];
-        const ScalarT vhv  = y[VHV];
-        const ScalarT se   = y[SE];
-        const ScalarT vfe  = y[VFE];
         const ScalarT efd  = y[EFD];
 
         const ScalarT efdp_dot = yp[EFDP];
@@ -581,27 +565,61 @@ namespace GridKit
         const ScalarT vs    = ws[VS];
         const ScalarT vuel  = ws[VUEL];
 
+        // Lead-lag output, gate, saturation, and feedback drive, evaluated
+        // rather than solved for
+        const AlgebraicState s = evaluateAlgebraicState(y, ws);
+
         const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
-        const ScalarT vfe_target        = Ke_eff_ * efdp + se;
-        const ScalarT efdp_rate         = (vr - vfe) / Te_;
+        const ScalarT efdp_rate         = (vr - s.vfe) / Te_;
         const ScalarT limited_efdp_rate = awmin(efdp, efdp_rate, ZERO<RealT>);
 
         f[EFDP] = -efdp_dot + (ONE<RealT> - lim_on_) * efdp_rate
                   + lim_on_ * limited_efdp_rate;
         f[VC]  = -vc_dot + (ec - vc) / Tr_;
-        f[VR]  = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
-        f[VF]  = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
+        f[VR]  = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * s.vhv, Vrmin_, Vrmax_) / Ta_;
+        f[VF]  = -vf_dot + (-vf + Kf_ * (vr - s.vfe) / Te_) / Tf1_;
         f[XLL] = -xll_dot + (ev - xll) / Tb_;
         f[EV]  = -ev + ev_target;
-        f[VLL] = -vll + xll + (Tc_ / Tb_) * (ev - xll);
-        f[VHV] = -vhv + uel_on_ * vll
-                 + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
-        f[SE]  = -se + SB_ * Math::qramp(efdp - SA_);
-        f[VFE] = -vfe + vfe_target;
         f[EFD] = -efd + (ONE<RealT> + spd_on_ * omega) * efdp;
 
         return 0;
+      }
+
+      /**
+       * @brief Evaluate the exciter's algebraic quantities
+       *
+       * The input lead-lag output, the high-value gate, the saturation
+       * contribution, and the exciter feedback drive form an explicit chain
+       * over the states and the UEL input, so they are evaluated rather than
+       * solved for.
+       *
+       * @param[in] y Internal variables in Esdc1aInternalVariables order.
+       * @param[in] ws Signal values in Esdc1aExternalVariables order.
+       * @return The algebraic quantities.
+       */
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline typename Esdc1a<scalar_type, index_type>::AlgebraicState
+      Esdc1a<scalar_type, index_type>::evaluateAlgebraicState(
+          const ScalarT* y,
+          const ScalarT* ws) const
+      {
+        const auto EFDP = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
+        const auto XLL  = static_cast<size_t>(Esdc1aInternalVariables::XLL);
+        const auto EV   = static_cast<size_t>(Esdc1aInternalVariables::EV);
+        const auto VUEL = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+
+        const ScalarT efdp = y[EFDP];
+        const ScalarT xll  = y[XLL];
+        const ScalarT ev   = y[EV];
+        const ScalarT vuel = ws[VUEL];
+
+        AlgebraicState s;
+        s.vll = xll + (Tc_ / Tb_) * (ev - xll);
+        s.vhv = uel_on_ * s.vll + (ONE<RealT> - uel_on_) * Math::max(s.vll, vuel);
+        s.se  = SB_ * Math::qramp(efdp - SA_);
+        s.vfe = Ke_eff_ * efdp + s.se;
+        return s;
       }
 
       //
@@ -763,9 +781,9 @@ namespace GridKit
         monitor_->set(Variable::vf, [this]
                       { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VF)]; });
         monitor_->set(Variable::se, [this]
-                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::SE)]; });
+                      { return evaluateAlgebraicState(y_.getData(), ws_.getData()).se; });
         monitor_->set(Variable::vfe, [this]
-                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VFE)]; });
+                      { return evaluateAlgebraicState(y_.getData(), ws_.getData()).vfe; });
       }
 
       /**

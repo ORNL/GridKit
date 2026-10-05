@@ -253,28 +253,15 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::initialize()
       {
-        const auto VMEAS  = static_cast<size_t>(RepcaInternalVariables::VMEAS);
-        const auto QMEAS  = static_cast<size_t>(RepcaInternalVariables::QMEAS);
-        const auto XQPI   = static_cast<size_t>(RepcaInternalVariables::XQPI);
-        const auto XQLAG  = static_cast<size_t>(RepcaInternalVariables::XQLAG);
-        const auto PMEAS  = static_cast<size_t>(RepcaInternalVariables::PMEAS);
-        const auto XPPI   = static_cast<size_t>(RepcaInternalVariables::XPPI);
-        const auto PREF   = static_cast<size_t>(RepcaInternalVariables::PREF);
-        const auto V      = static_cast<size_t>(RepcaInternalVariables::V);
-        const auto VLDC   = static_cast<size_t>(RepcaInternalVariables::VLDC);
-        const auto VDROOP = static_cast<size_t>(RepcaInternalVariables::VDROOP);
-        const auto VCTRL  = static_cast<size_t>(RepcaInternalVariables::VCTRL);
-        const auto SFRZ   = static_cast<size_t>(RepcaInternalVariables::SFRZ);
-        const auto ERQ    = static_cast<size_t>(RepcaInternalVariables::ERQ);
-        const auto ERQDB  = static_cast<size_t>(RepcaInternalVariables::ERQDB);
-        const auto ERQLIM = static_cast<size_t>(RepcaInternalVariables::ERQLIM);
-        const auto QPI    = static_cast<size_t>(RepcaInternalVariables::QPI);
-        const auto QEXT   = static_cast<size_t>(RepcaInternalVariables::QEXT);
-        const auto EF     = static_cast<size_t>(RepcaInternalVariables::EF);
-        const auto EP     = static_cast<size_t>(RepcaInternalVariables::EP);
-        const auto EPLIM  = static_cast<size_t>(RepcaInternalVariables::EPLIM);
-        const auto PPI    = static_cast<size_t>(RepcaInternalVariables::PPI);
-        const auto PEXT   = static_cast<size_t>(RepcaInternalVariables::PEXT);
+        const auto VMEAS = static_cast<size_t>(RepcaInternalVariables::VMEAS);
+        const auto QMEAS = static_cast<size_t>(RepcaInternalVariables::QMEAS);
+        const auto XQPI  = static_cast<size_t>(RepcaInternalVariables::XQPI);
+        const auto XQLAG = static_cast<size_t>(RepcaInternalVariables::XQLAG);
+        const auto PMEAS = static_cast<size_t>(RepcaInternalVariables::PMEAS);
+        const auto XPPI  = static_cast<size_t>(RepcaInternalVariables::XPPI);
+        const auto PREF  = static_cast<size_t>(RepcaInternalVariables::PREF);
+        const auto QEXT  = static_cast<size_t>(RepcaInternalVariables::QEXT);
+        const auto PEXT  = static_cast<size_t>(RepcaInternalVariables::PEXT);
 
         if (!allocated_)
         {
@@ -465,28 +452,15 @@ namespace GridKit
           return 1;
         }
 
-        y[VMEAS]  = vmeas0;
-        y[QMEAS]  = qmeas0;
-        y[XQPI]   = xqpi0;
-        y[XQLAG]  = xqlag0;
-        y[PMEAS]  = pmeas0;
-        y[XPPI]   = xppi0;
-        y[PREF]   = pref0;
-        y[V]      = v0;
-        y[VLDC]   = vldc0;
-        y[VDROOP] = vdroop0;
-        y[VCTRL]  = vctrl0;
-        y[SFRZ]   = sfrz0;
-        y[ERQ]    = erq0;
-        y[ERQDB]  = erqdb0;
-        y[ERQLIM] = erqlim0;
-        y[QPI]    = qpi0;
-        y[QEXT]   = qext0_system;
-        y[EF]     = ef0;
-        y[EP]     = ep0;
-        y[EPLIM]  = eplim0;
-        y[PPI]    = ppi0;
-        y[PEXT]   = pext_output0;
+        y[VMEAS] = vmeas0;
+        y[QMEAS] = qmeas0;
+        y[XQPI]  = xqpi0;
+        y[XQLAG] = xqlag0;
+        y[PMEAS] = pmeas0;
+        y[XPPI]  = xppi0;
+        y[PREF]  = pref0;
+        y[QEXT]  = qext0_system;
+        y[PEXT]  = pext_output0;
 
         const bool q_adjusted = qmin != Qmin_ || qmax != Qmax_;
         const bool p_adjusted = pmin != Pmin_ || pmax != Pmax_;
@@ -683,7 +657,8 @@ namespace GridKit
       /**
        * @brief Evaluate the REPCA internal residual
        *
-       * Evaluates seven differential and fifteen algebraic rows in enum order.
+       * Evaluates seven differential and two algebraic output rows in enum
+       * order.
        * Precomputed mode masks keep the differentiated path branch- and
        * loop-free with a fixed dependency structure.
        *
@@ -711,20 +686,7 @@ namespace GridKit
         const auto PMEAS      = static_cast<size_t>(RepcaInternalVariables::PMEAS);
         const auto XPPI       = static_cast<size_t>(RepcaInternalVariables::XPPI);
         const auto PREF_STATE = static_cast<size_t>(RepcaInternalVariables::PREF);
-        const auto V          = static_cast<size_t>(RepcaInternalVariables::V);
-        const auto VLDC       = static_cast<size_t>(RepcaInternalVariables::VLDC);
-        const auto VDROOP     = static_cast<size_t>(RepcaInternalVariables::VDROOP);
-        const auto VCTRL      = static_cast<size_t>(RepcaInternalVariables::VCTRL);
-        const auto SFRZ       = static_cast<size_t>(RepcaInternalVariables::SFRZ);
-        const auto ERQ        = static_cast<size_t>(RepcaInternalVariables::ERQ);
-        const auto ERQDB      = static_cast<size_t>(RepcaInternalVariables::ERQDB);
-        const auto ERQLIM     = static_cast<size_t>(RepcaInternalVariables::ERQLIM);
-        const auto QPI        = static_cast<size_t>(RepcaInternalVariables::QPI);
         const auto QEXT       = static_cast<size_t>(RepcaInternalVariables::QEXT);
-        const auto EF         = static_cast<size_t>(RepcaInternalVariables::EF);
-        const auto EP         = static_cast<size_t>(RepcaInternalVariables::EP);
-        const auto EPLIM      = static_cast<size_t>(RepcaInternalVariables::EPLIM);
-        const auto PPI        = static_cast<size_t>(RepcaInternalVariables::PPI);
         const auto PEXT       = static_cast<size_t>(RepcaInternalVariables::PEXT);
 
         const auto IR         = static_cast<size_t>(RepcaExternalVariables::IR);
@@ -737,28 +699,15 @@ namespace GridKit
         const auto QREF       = static_cast<size_t>(RepcaExternalVariables::QREF);
         const auto FREQREF    = static_cast<size_t>(RepcaExternalVariables::FREQREF);
 
-        const ScalarT vmeas  = y[VMEAS];
-        const ScalarT qmeas  = y[QMEAS];
-        const ScalarT xqpi   = y[XQPI];
-        const ScalarT xqlag  = y[XQLAG];
-        const ScalarT pmeas  = y[PMEAS];
-        const ScalarT xppi   = y[XPPI];
-        const ScalarT pref   = y[PREF_STATE];
-        const ScalarT v      = y[V];
-        const ScalarT vldc   = y[VLDC];
-        const ScalarT vdroop = y[VDROOP];
-        const ScalarT vctrl  = y[VCTRL];
-        const ScalarT sfrz   = y[SFRZ];
-        const ScalarT erq    = y[ERQ];
-        const ScalarT erqdb  = y[ERQDB];
-        const ScalarT erqlim = y[ERQLIM];
-        const ScalarT qpi    = y[QPI];
-        const ScalarT qext   = this->toComponentBase(y[QEXT]);
-        const ScalarT ef     = y[EF];
-        const ScalarT ep     = y[EP];
-        const ScalarT eplim  = y[EPLIM];
-        const ScalarT ppi    = y[PPI];
-        const ScalarT pext   = this->toComponentBase(y[PEXT]);
+        const ScalarT vmeas = y[VMEAS];
+        const ScalarT qmeas = y[QMEAS];
+        const ScalarT xqpi  = y[XQPI];
+        const ScalarT xqlag = y[XQLAG];
+        const ScalarT pmeas = y[PMEAS];
+        const ScalarT xppi  = y[XPPI];
+        const ScalarT pref  = y[PREF_STATE];
+        const ScalarT qext  = this->toComponentBase(y[QEXT]);
+        const ScalarT pext  = this->toComponentBase(y[PEXT]);
 
         const ScalarT vmeas_dot = yp[VMEAS];
         const ScalarT qmeas_dot = yp[QMEAS];
@@ -783,7 +732,23 @@ namespace GridKit
 
         const ScalarT vldc_r = vr - Rc_ * ir + Xc_ * ii;
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
+
+        // Measured voltages, the reactive and active error chains, and the PI
+        // outputs, evaluated rather than solved for
+        const ScalarT v      = std::sqrt(vr * vr + vi * vi);
+        const ScalarT vldc   = std::sqrt(vldc_r * vldc_r + vldc_i * vldc_i);
+        const ScalarT vdroop = v + Kc_ * q;
+        const ScalarT vctrl  = vcomp_on_ * vldc + vcomp_off_ * vdroop;
+        const ScalarT sfrz   = Math::above(v, Vfrz_);
+        const ScalarT erq    = ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
+        const ScalarT erqdb  = Math::deadband2(erq, dbdlow_, dbdupper_);
+        const ScalarT erqlim = Math::clamp(erqdb, emin_, emax_);
+        const ScalarT qpi    = Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
+        const ScalarT ef     = Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
         const ScalarT pfreq  = droop(ef, Ddn_, Dup_);
+        const ScalarT ep     = pref_in - pmeas + pfreq;
+        const ScalarT eplim  = Math::clamp(ep, femin_, femax_);
+        const ScalarT ppi    = Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
 
         f[VMEAS]      = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
         f[QMEAS]      = -qmeas_dot + (q - qmeas) / Tfltr_;
@@ -792,23 +757,8 @@ namespace GridKit
         f[PMEAS]      = -pmeas_dot + (p - pmeas) / Tp_;
         f[XPPI]       = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
         f[PREF_STATE] = -pref_dot + (ppi - pref) / Tlag_;
-
-        f[V]      = -v * v + vr * vr + vi * vi;
-        f[VLDC]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
-        f[VDROOP] = -vdroop + v + Kc_ * q;
-        f[VCTRL]  = -vctrl + vcomp_on_ * vldc + vcomp_off_ * vdroop;
-        f[SFRZ]   = -sfrz + Math::above(v, Vfrz_);
-        f[ERQ]    = -erq + ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
-        f[ERQDB]  = -erqdb + Math::deadband2(erq, dbdlow_, dbdupper_);
-        f[ERQLIM] = -erqlim + Math::clamp(erqdb, emin_, emax_);
-        f[QPI]    = -qpi + Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
-        f[QEXT]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
-
-        f[EF]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
-        f[EP]    = -ep + pref_in - pmeas + pfreq;
-        f[EPLIM] = -eplim + Math::clamp(ep, femin_, femax_);
-        f[PPI]   = -ppi + Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
-        f[PEXT]  = -pext + freq_on_ * pref;
+        f[QEXT]       = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
+        f[PEXT]       = -pext + freq_on_ * pref;
 
         return 0;
       }
