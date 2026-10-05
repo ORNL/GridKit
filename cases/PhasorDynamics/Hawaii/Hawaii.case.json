@@ -6826,18 +6826,6 @@
         "Se2": 0.33000001311302185,
         "Ispdlim": 0.0
       }
-    },
-    {
-      "class": "BusFault",
-      "ports": {
-        "bus": 1
-      },
-      "id": "fault_1",
-      "params": {
-        "state0": false,
-        "R": 0.0,
-        "X": 0.01
-      }
     }
   ]
 }

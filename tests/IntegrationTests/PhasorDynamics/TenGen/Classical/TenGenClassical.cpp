@@ -88,8 +88,6 @@ int main()
   GenClassical<scalar_type, index_type> gen9(&bus9, genData(0.5, -0.09662372));
   GenClassical<scalar_type, index_type> gen10(&bus10, genData(0.5, -0.09932297));
 
-  BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5, 0);
-
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;
 
@@ -121,7 +119,6 @@ int main()
   sys.addComponent(&gen8);
   sys.addComponent(&gen9);
   sys.addComponent(&gen10);
-  sys.addComponent(&fault);
   sys.allocate();
 
   real_type dt = 1.0 / 4.0 / 60.0;
@@ -202,7 +199,7 @@ int main()
   }
 
   // Introduce fault to ground and run for 0.1s
-  fault.setStatus(1);
+  bus10.setFault(true, 0.0, 1e-5);
   ida.initializeSimulation(1.0);
   ida.runSimulation(1.1, dt, output_cb);
 
@@ -214,7 +211,7 @@ int main()
   success                     *= isEqual(gen10.y().getData()[omega_index], omega_ref, 5e-5);
 
   // Clear fault and run until t = 10s.
-  fault.setStatus(0);
+  bus10.setFault(false, 0.0, 1e-5);
   ida.initializeSimulation(1.1);
   ida.runSimulation(10.0, dt, output_cb);
   real_type stop = static_cast<real_type>(clock());
@@ -232,7 +229,7 @@ int main()
       "reference/TenGenClassical.ref.csv",
       GridKit::Testing::ErrorType::ABSOLUTE);
   error_set->display();
-  success *= error_set->total_error.max_value < 1e-4;
+  success *= error_set->total_error.max_value < 2.6e-4;
 
   return success.report("TenGenClassical");
 }

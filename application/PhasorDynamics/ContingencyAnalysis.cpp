@@ -7,7 +7,7 @@
 #include <omp.h>
 #endif
 
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -59,10 +59,10 @@ TestStatus runStudy(StudyData study_data)
     switch (event.type)
     {
     case EventType::FAULT_ON:
-      sys.getBusFault(event.element_id)->setStatus(true);
+      sys.getBus(event.bus)->setFault(true, event.R, event.X);
       break;
     case EventType::FAULT_OFF:
-      sys.getBusFault(event.element_id)->setStatus(false);
+      sys.getBus(event.bus)->setFault(false, event.R, event.X);
       break;
     }
 
@@ -81,10 +81,10 @@ TestStatus runStudy(StudyData study_data)
 
 TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
 {
-  // Change id in schedule to current fault id
+  // Change bus in schedule to current fault bus
   for (auto& event : study_data.events)
   {
-    event.element_id = fault_id;
+    event.bus = study_data.model_data.bus[fault_id].bus_id;
   }
 
   // Make distinct output files
@@ -109,7 +109,7 @@ TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
 
 void runStudySerial(const StudyData& study_data, std::vector<TestStatus>& stat_vec)
 {
-  for (std::size_t i = 0; i < study_data.model_data.bus_fault.size(); ++i)
+  for (std::size_t i = 0; i < study_data.model_data.bus.size(); ++i)
   {
     auto stat   = singleFaultStudy(i, study_data);
     stat_vec[i] = stat;
@@ -119,7 +119,7 @@ void runStudySerial(const StudyData& study_data, std::vector<TestStatus>& stat_v
 #ifdef GRIDKIT_ENABLE_THREADS
 void runStudyAsync(const StudyData& study_data, std::vector<TestStatus>& stat_vec)
 {
-  auto n_faults = study_data.model_data.bus_fault.size();
+  auto n_faults = study_data.model_data.bus.size();
 
   std::vector<std::future<TestStatus>> futures;
   futures.reserve(n_faults);
@@ -140,7 +140,7 @@ void runStudyAsync(const StudyData& study_data, std::vector<TestStatus>& stat_ve
 #ifdef _OPENMP
 void runStudyOpenMP(const StudyData& study_data, std::vector<TestStatus>& stat_vec)
 {
-  auto n_faults = study_data.model_data.bus_fault.size();
+  auto n_faults = study_data.model_data.bus.size();
 #pragma omp parallel for
   for (std::size_t i = 0; i < n_faults; ++i)
   {
@@ -161,7 +161,7 @@ int runApplication(int argc, const char* argv[])
 
   const auto start = Clock::now();
 
-  auto faults   = study_data.model_data.bus_fault;
+  auto faults   = study_data.model_data.bus;
   auto stat_vec = std::vector<TestStatus>(faults.size(), true);
 
   // Use std::async if threads are available (so far, std::async has out-performed OpenMP)
@@ -186,7 +186,7 @@ int runApplication(int argc, const char* argv[])
     if (!stat_vec[i])
     {
       Log::error() << "Study failed for fault: "
-                   << faults[i].disambiguation_string << '\n';
+                   << faults[i].name << '\n';
     }
   }
 

@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -58,10 +58,10 @@ int runApplication(int argc, const char* argv[])
     switch (event.type)
     {
     case EventType::FAULT_ON:
-      sys.getBusFault(event.element_id)->setStatus(true);
+      sys.getBus(event.bus)->setFault(true, event.R, event.X);
       break;
     case EventType::FAULT_OFF:
-      sys.getBusFault(event.element_id)->setStatus(false);
+      sys.getBus(event.bus)->setFault(false, event.R, event.X);
       break;
     }
 

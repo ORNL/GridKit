@@ -4,7 +4,6 @@
 #include <sstream>
 #include <string>
 
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
@@ -256,11 +255,9 @@ int main(int argc, const char* argv[])
   // client.runSimulation(0.0, 1.0, dt);
 
   // // Introduce fault and run for the next 0.1s
-  // sys.getBusFault(0)->setStatus(true);
   // client.runSimulation(1.0, 1.1, dt);
 
   // // Clear the fault and run until t = 10s.
-  // sys.getBusFault(0)->setStatus(false);
   // client.runSimulation(1.1, 10.0, dt);
 
   return 0;

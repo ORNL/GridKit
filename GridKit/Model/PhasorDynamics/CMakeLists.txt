@@ -40,7 +40,6 @@ target_link_libraries(
 
 add_subdirectory(Branch)
 add_subdirectory(Bus)
-add_subdirectory(BusFault)
 add_subdirectory(Controller)
 add_subdirectory(Converter)
 add_subdirectory(Exciter)

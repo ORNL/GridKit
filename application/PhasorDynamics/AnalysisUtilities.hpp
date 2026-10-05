@@ -11,6 +11,7 @@
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -41,8 +42,12 @@ namespace GridKit
       double      time;
       /// Event type
       Type        type;
-      /// ID of element used in event (e.g., bus fault id)
-      std::size_t element_id;
+      /// Faulted bus
+      std::size_t bus;
+      /// Fault resistance [p.u.]
+      double      R{0.0};
+      /// Fault reactance [p.u.]
+      double      X{0.0};
     };
 
     /**
@@ -130,7 +135,7 @@ namespace GridKit
       {
         auto& event = c.events.emplace_back();
         raw_event.at("time").get_to(event.time);
-        raw_event.at("element_id").get_to(event.element_id);
+        event.bus = raw_event.value("bus", INVALID_INDEX<std::size_t>);
 
         auto type_str   = raw_event.at("type").get<std::string>();
         using EventType = SystemEvent::Type;
@@ -140,6 +145,11 @@ namespace GridKit
           Log::error() << "Unable to parse event type \"" << type_str << "\"\n";
         }
         event.type = type_wrap.value();
+        if (event.type == EventType::FAULT_ON)
+        {
+          raw_event.at("R").get_to(event.R);
+          raw_event.at("X").get_to(event.X);
+        }
       }
 
       if (j.contains("output_file"))

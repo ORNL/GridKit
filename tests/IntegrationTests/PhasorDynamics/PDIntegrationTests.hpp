@@ -2,8 +2,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
@@ -209,24 +208,13 @@ namespace GridKit
           success *= al.parameters.at(Param::X) == bl.parameters.at(Param::X);
         }
 
-        success *= a.bus_fault.size() == b.bus_fault.size();
-        for (std::size_t i = 0; i < a.bus_fault.size(); ++i)
-        {
-          using Param = BusFaultParameters;
-
-          const auto& af = a.bus_fault[i];
-          const auto& bf = b.bus_fault[i];
-
-          success *= af.buses.at(BusFaultBuses::bus) == bf.buses.at(BusFaultBuses::bus);
-          success *= af.parameters.at(Param::R) == bf.parameters.at(Param::R);
-          success *= af.parameters.at(Param::X) == bf.parameters.at(Param::X);
-          success *= af.parameters.at(Param::state0) == bf.parameters.at(Param::state0);
-        }
-
         return success;
       }
 
       std::unique_ptr<ErrorSet> runSimulation(SystemModelDataT&  system_data,
+                                              IdxT               fault_bus,
+                                              RealT              R,
+                                              RealT              X,
                                               const std::string& ref_file)
       {
         system_data.monitor_sink.emplace_back(VariableMonitorFormat::CSV, "mon.csv");
@@ -235,8 +223,8 @@ namespace GridKit
         SystemModel<RealT, IdxT> sys(system_data);
         sys.allocate();
 
-        // Get access to the fault
-        auto* fault = sys.getBusFault(0);
+        // Get access to the faulted bus
+        auto* bus = sys.getBus(fault_bus);
 
         // Set time step to 1/4 of a 60Hz cycle
         real_type dt = 1.0 / 4.0 / 60.0;
@@ -252,12 +240,12 @@ namespace GridKit
         ida.runSimulation(1.0, dt);
 
         // Introduce fault and run for the next 0.1s
-        fault->setStatus(true);
+        bus->setFault(true, R, X);
         ida.initializeSimulation(1.0);
         ida.runSimulation(1.1, dt);
 
         // Clear the fault and run until t = 10s.
-        fault->setStatus(false);
+        bus->setFault(false, R, X);
         ida.initializeSimulation(1.1);
         ida.runSimulation(10.0, dt);
 
@@ -318,18 +306,12 @@ namespace GridKit
         set_data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
         set_data.genrou[0].monitored_variables.insert(GenrouVar::speed);
 
-        set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
-
         std::string      in_file   = "TwoBusBasic/TwoBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
 
         auto success = compare(set_data, file_data);
 
-        auto error_set = runSimulation(set_data, "TwoBusBasic/reference/TwoBusBasic.ref.csv");
+        auto error_set = runSimulation(set_data, 0, 0.0, 1e-3, "TwoBusBasic/reference/TwoBusBasic.ref.csv");
 
         RealT error_V_allowed = 2.01e-4;
         RealT error_w_allowed = 1e-4;
@@ -378,12 +360,6 @@ namespace GridKit
         set_data.branch[0].parameters[BranchParameters::X] = 0.1;
         set_data.branch[0].parameters[BranchParameters::G] = 0.0;
         set_data.branch[0].parameters[BranchParameters::B] = 0.0;
-
-        set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
         set_data.genrou.resize(1);
         set_data.genrou[0].buses[GenrouBuses::bus]                    = 0;
@@ -485,12 +461,6 @@ namespace GridKit
         set_data.branch[0].parameters[BranchParameters::X] = 0.1;
         set_data.branch[0].parameters[BranchParameters::G] = 0.0;
         set_data.branch[0].parameters[BranchParameters::B] = 0.0;
-
-        set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
         set_data.genrou.resize(1);
         set_data.genrou[0].buses[GenrouBuses::bus]                    = 0;
@@ -629,12 +599,6 @@ namespace GridKit
         set_data.loadz[0].parameters[LoadZParameters::R] = 0.4447197839297772;
         set_data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
 
-        set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 2;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
-
         std::string      in_file   = "ThreeBusBasic/ThreeBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
 
@@ -709,12 +673,6 @@ namespace GridKit
         set_data.loadz[0].buses[LoadZBuses::bus]         = 2;
         set_data.loadz[0].parameters[LoadZParameters::R] = 0.4447197839297772;
         set_data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
-
-        set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 2;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
         std::string      in_file   = "ThreeBusClassical/ThreeBusClassical.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
