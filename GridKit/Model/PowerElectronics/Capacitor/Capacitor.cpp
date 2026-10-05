@@ -73,7 +73,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Evaluate the resisdual of the Capcitor
+     * @brief Evaluate the residual of the Capacitor
      *
      */
     template <class ScalarT, typename IdxT>

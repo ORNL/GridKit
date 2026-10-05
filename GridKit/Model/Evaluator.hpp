@@ -144,7 +144,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Is the Jacobian defined. Used in IDA to determine wether DQ is used or not
+       * @brief Is the Jacobian defined. Used in IDA to determine whether DQ is used or not
        *
        * @return true
        * @return false

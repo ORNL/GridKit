@@ -81,7 +81,7 @@ namespace GridKit
       bool owns_gpu_sparsity_pattern_{false}; ///< for row/col data
       bool owns_gpu_values_{false};           ///< for nonzero values
 
-      IdxT* map_to_sorted_ = {nullptr}; ///< map from orginal to sorted
+      IdxT* map_to_sorted_ = {nullptr}; ///< map from original to sorted
       IdxT* map_to_dedup_  = {nullptr}; ///< map from sorted to deduplicated
 
       MemoryManager mem_; ///< Device memory manager object

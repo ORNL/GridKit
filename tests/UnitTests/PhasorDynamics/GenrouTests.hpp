@@ -90,7 +90,7 @@ namespace GridKit
        * initialized model should have residual equal to zero within machine
        * precision.
        *
-       * @return TestOutcome - wheter test was successful
+       * @return TestOutcome - whether test was successful
        */
       TestOutcome residual()
       {

@@ -21,7 +21,7 @@ namespace GridKit
      * @brief Implementation of a line or off-nominal transformer branch between two buses.
      *
      * The model is implemented in Cartesian coordinates. Positive current
-     * direction is into the busses.
+     * direction is into the buses.
      *
      */
     template <typename scalar_type, typename index_type>

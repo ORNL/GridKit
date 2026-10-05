@@ -140,8 +140,8 @@ namespace GridKit
       RealT ratio;  ///< Transformer off nominal turns ratio
       RealT angle;  ///< Transformer phase shift angle [deg], positive ⇒ delay
       IdxT  status; ///< Initial service status: 1=in-service, 0=out-of-service
-      RealT angmin; ///< Minimum anngle difference af - at [deg]
-      RealT angmax; ///< Maximum anngle difference af - at [deg]
+      RealT angmin; ///< Minimum angle difference af - at [deg]
+      RealT angmax; ///< Maximum angle difference af - at [deg]
 
       inline std::string str() const
       {

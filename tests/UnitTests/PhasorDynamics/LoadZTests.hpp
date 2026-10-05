@@ -121,7 +121,7 @@ namespace GridKit
         output_stream << "Sparse Csr Matrix: Load DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
-        // Compare model Jacobian wih dependencies computed analytically
+        // Compare model Jacobian with dependencies computed analytically
         auto ref                = analyticalJacobian(R, X);
         auto model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)
@@ -206,7 +206,7 @@ namespace GridKit
         output_stream << "Sparse Csr Matrix: Load Enzyme Jacobian\n";
         model_jacobian->print(output_stream);
 
-        // Compare model Jacobian wih dependencies computed analytically
+        // Compare model Jacobian with dependencies computed analytically
         std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian(R, X);
         std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)

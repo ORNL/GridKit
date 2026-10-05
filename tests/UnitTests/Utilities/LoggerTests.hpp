@@ -65,7 +65,7 @@ namespace GridKit
        *
        * This method tests streaming messages to `Logger::error()` data
        * stream. The method streams messages to all available output streams,
-       * however only mesages streamed to the error stream should be logged.
+       * however only messages streamed to the error stream should be logged.
        */
       TestOutcome errorOutput()
       {
@@ -98,7 +98,7 @@ namespace GridKit
        *
        * This method tests streaming messages to `Logger::error()` data
        * stream. The method streams messages to all available output streams,
-       * however only mesages streamed to the error and warning streams should
+       * however only messages streamed to the error and warning streams should
        * be logged.
        */
       TestOutcome warningOutput()
@@ -130,7 +130,7 @@ namespace GridKit
        *
        * This method tests streaming messages to `Logger::error()` data
        * stream. The method streams messages to all available output streams,
-       * however only mesages streamed to the error, warning, and result summary
+       * however only messages streamed to the error, warning, and result summary
        * streams should be logged.
        */
       TestOutcome summaryOutput()

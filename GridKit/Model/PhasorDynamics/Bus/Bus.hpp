@@ -128,7 +128,7 @@ namespace GridKit
        * @brief Initialize DependencyTracking variable numbers.
        *
        * @note Assigns even indices to y and odd indices to yp.
-       *       Should be called in intialize(), after variables have been set (and updated as needed).
+       *       Should be called in initialize(), after variables have been set (and updated as needed).
        */
       int initializeDependencyTrackingVariableNumbers()
         requires std::is_same_v<ScalarT, DependencyTracking::Variable>

@@ -96,7 +96,7 @@ P_{r} =  \left(g + \frac{G}{2}\right) |V_{r}|^2 + [-g \cos(\theta_s - \theta_r) 
 Q_{r} = -\left(b + \frac{B}{2}\right) |V_{r}|^2 + [ g \sin(\theta_s - \theta_r) + b \cos(\theta_s - \theta_r)] |V_{s}| |V_{r}|
 ```
 
-These quantities are treated as _loads_ and are substracted from $P$ and $Q$ residuals computed on the respective buses.
+These quantities are treated as _loads_ and are subtracted from $P$ and $Q$ residuals computed on the respective buses.
 
 ## Branch Model
 
@@ -108,7 +108,7 @@ The branch model can be created by adding the ideal transformer in series with t
 
 Figure 2: Branch equivalent circuit
 
-The branch admitance matrix is then:
+The branch admittance matrix is then:
 
 ```math
 \mathbf{Y}_{BR}=

@@ -22,7 +22,7 @@ static int test(index_type Nsize, real_type test_tolerance, bool error_tol = fal
  * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness.
  *
  * @param argc unused
- * @param argv unsued
+ * @param argv unused
  * @return int
  */
 int main(int /* argc */, char const** /* argv */)
@@ -48,7 +48,7 @@ int main(int /* argc */, char const** /* argv */)
 /**
  * @brief Tests network of distributed generators.
  *
- * @param Nsize - The number of DG line load cobinations to generate for scale
+ * @param Nsize - The number of DG line load combinations to generate for scale
  * @param error_tol - The tolerance for the model to meet to pass
  * @param debug_output - Enable debug output
  * @param use_DAE_keys - Choice between using DAE or ODE keys
@@ -91,7 +91,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   ScaleMicrogridNetwork<double, size_t> network(Nsize);
   assembleSystem(network, *sys_model);
 
-  // allocate all the intial conditions
+  // allocate all the initial conditions
   sys_model->allocate();
 
   if (debug_output)
@@ -102,7 +102,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   auto* y  = sys_model->y().getData();
   auto* yp = sys_model->yp().getData();
 
-  // Create initial points for states. Every state is to specified to the zero intially
+  // Create initial points for states. Every state is to specified to the zero initially
   for (index_type i = 0; i < sys_model->size(); i++)
   {
     y[i]  = 0.0;
@@ -119,7 +119,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     yp[13 * i - 1 + 6] = (params.Kpc_ * params.Kpv_ * params.Vn_) / params.Lf_;
   }
 
-  // since the intial P_com = 0, the set the intial vector to the reference frame
+  // since the initial P_com = 0, the set the initial vector to the reference frame
   y[network.dg_signal.getNodeConnection(0).idx_] = network.DGParam_list[0].wb_;
 
   sys_model->y().setDataUpdated();
@@ -131,7 +131,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   const auto* fres_data = fres.getData();
   if (debug_output)
   {
-    std::cout << "Verify initial resisdual is zero: {\n";
+    std::cout << "Verify initial residual is zero: {\n";
     for (index_type i = 0; i < fres.getSize(); i++)
     {
       std::cout << i << " : " << fres_data[i] << "\n";

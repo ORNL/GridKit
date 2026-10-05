@@ -165,7 +165,7 @@ namespace GridKit
         const IdxT* map_to_sorted = jac.getMapToSorted();
         const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
 
-        // Build a mappping from original COO index to CSR index
+        // Build a mapping from original COO index to CSR index
         map_to_csr_ = new IdxT[static_cast<size_t>(nnz_dup)];
         for (IdxT i = 0; i < nnz_dup; ++i)
         {

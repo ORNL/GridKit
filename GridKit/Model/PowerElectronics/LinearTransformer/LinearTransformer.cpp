@@ -86,7 +86,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Computes the component resisdual
+     * @brief Computes the component residual
      */
     template <class ScalarT, typename IdxT>
     int LinearTransformer<ScalarT, IdxT>::evaluateInternalResidual()

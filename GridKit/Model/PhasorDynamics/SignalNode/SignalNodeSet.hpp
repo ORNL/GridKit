@@ -19,7 +19,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Manage a collection of signal nodes specifed for a system model
+     * @brief Manage a collection of signal nodes specified for a system model
      *
      * This class manages the memory and access of signal nodes for a
      * SystemModel. A SignalNode can be accessed either by id or name.

@@ -73,7 +73,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Evaluate resisdual of component
+     * @brief Evaluate residual of component
      */
     template <class ScalarT, typename IdxT>
     int VoltageSource<ScalarT, IdxT>::evaluateInternalResidual()
@@ -87,7 +87,7 @@ namespace GridKit
     {
       // input
       *f_ext_[0] += -y_int_[0];
-      // ouput
+      // output
       *f_ext_[1] += y_int_[0];
       return 0;
     }

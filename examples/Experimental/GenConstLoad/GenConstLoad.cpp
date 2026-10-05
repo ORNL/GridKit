@@ -101,7 +101,7 @@ int main()
   if (status == Ipopt::Solve_Succeeded)
   {
     // Print result
-    std::cout << "\nSucess: The problem solved in "
+    std::cout << "\nSuccess: The problem solved in "
               << ipoptApp->Statistics()->IterationCount()
               << " iterations!\n";
     std::cout << "Optimal value: T2 = "

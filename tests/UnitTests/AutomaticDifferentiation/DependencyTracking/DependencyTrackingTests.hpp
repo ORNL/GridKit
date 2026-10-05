@@ -45,7 +45,7 @@ namespace GridKit
         // The residualFunction computes f
         residualFunction(f, x, p);
 
-        // Check dependenices of f[0] (depends on x[0] and x[1])
+        // Check dependencies of f[0] (depends on x[0] and x[1])
         {
           const DependencyTracking::Variable::DependencyMap& dependencies =
               (f[0]).getDependencies();

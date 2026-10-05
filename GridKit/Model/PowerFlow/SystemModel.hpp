@@ -120,7 +120,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Assume that jacobian is not avalible
+     * @brief Assume that jacobian is not available
      *
      * @return true
      * @return false
@@ -143,7 +143,7 @@ namespace GridKit
      * Also, generators may write to control devices (e.g. governors,
      * exciters, etc.) during the initialization.
      *
-     * @todo Implement writting to system vectors in a thread-safe way.
+     * @todo Implement writing to system vectors in a thread-safe way.
      */
     int initialize()
     {
@@ -347,7 +347,7 @@ namespace GridKit
      * residuals are computed. Buses own residuals for active and
      * power P and Q, but the contributions to these residuals come
      * from components. Buses assign their residual values, while components
-     * add to those values by in-place adition. This is why bus residuals
+     * add to those values by in-place addition. This is why bus residuals
      * need to be computed first.
      *
      * @todo Here, components write to local values, which are then copied

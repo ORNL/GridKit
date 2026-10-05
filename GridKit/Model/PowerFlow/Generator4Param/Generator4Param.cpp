@@ -89,7 +89,7 @@ namespace GridKit
     // Compute initial guess for the generator current phase
     const ScalarT phi = theta() - delta - atan(Q0_ / P0_);
 
-    // Compute initial gueses for generator currents and potentials in d-q frame
+    // Compute initial guesses for generator currents and potentials in d-q frame
     const ScalarT Id = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * std::sin(phi);
     const ScalarT Iq = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * std::cos(phi);
     const ScalarT Ed = V() * std::sin(theta() - delta) + Rs_ * Id + Xqp_ * Iq;

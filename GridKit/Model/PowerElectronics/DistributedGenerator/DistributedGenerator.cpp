@@ -98,7 +98,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Contributes to the resisdual of the Distributed Generator
+     * @brief Contributes to the residual of the Distributed Generator
      *
      */
     template <class ScalarT, typename IdxT>
@@ -111,7 +111,7 @@ namespace GridKit
       ScalarT vbd_in = std::cos(delta) * *y_ext_[1] + std::sin(delta) * *y_ext_[2];
       ScalarT vbq_in = -std::sin(delta) * *y_ext_[1] + std::cos(delta) * *y_ext_[2];
 
-      // ### Internal Componenets ##
+      // ### Internal Components ##
       // P and Q equations
       f_int_[0] = -yp_int_[0] + wc_ * (y_int_[8] * y_int_[10] + y_int_[9] * y_int_[11] - y_int_[0]);
       f_int_[1] = -yp_int_[1] + wc_ * (-y_int_[8] * y_int_[11] + y_int_[9] * y_int_[10] - y_int_[1]);

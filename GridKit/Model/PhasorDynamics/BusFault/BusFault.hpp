@@ -118,7 +118,7 @@ namespace GridKit
       bool  status_{false};
       IdxT  bus_id_{0};
 
-      /* Derivied parameters */
+      /* Derived parameters */
       RealT B_;
       RealT G_;
 

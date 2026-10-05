@@ -26,7 +26,7 @@ namespace GridKit
         {
           // Reserve space for the dense blocks.
           // The size of the buffer is the sum of maximum capacities of the blocks.
-          // Enyme will compute the appropriate nnz from sparsification.
+          // Enzyme will compute the appropriate nnz from sparsification.
           auto size        = static_cast<size_t>(size_);
           auto bus_size    = static_cast<size_t>(bus_->size());
           auto signal_size = static_cast<size_t>(ws_.getSize());

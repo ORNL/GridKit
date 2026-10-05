@@ -84,7 +84,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Contributes to the resisdual
+     * @brief Contributes to the residual
      *
      */
     template <class ScalarT, typename IdxT>

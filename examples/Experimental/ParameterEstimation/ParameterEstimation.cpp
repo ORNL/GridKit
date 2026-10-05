@@ -111,12 +111,12 @@ int main()
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);
-  std::cout << "\n\nProblem formulated as dynamic objective optimiztion ...\n";
+  std::cout << "\n\nProblem formulated as dynamic objective optimization ...\n";
 
   if (status == Ipopt::Solve_Succeeded)
   {
     // Print result
-    std::cout << "\nSucess:\n The problem solved in "
+    std::cout << "\nSuccess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
               << " Optimal value of H = " << param[0] << "\n"
               << " The final value of the objective function G(H) = "
@@ -139,12 +139,12 @@ int main()
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);
-  std::cout << "\n\nProblem formulated as dynamic constraint optimiztion ...\n";
+  std::cout << "\n\nProblem formulated as dynamic constraint optimization ...\n";
 
   if (status == Ipopt::Solve_Succeeded)
   {
     // Print result
-    std::cout << "\nSucess:\n The problem solved in "
+    std::cout << "\nSuccess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
               << " Optimal value of H = " << param[0] << "\n"
               << " The final value of the objective function G(H) = "

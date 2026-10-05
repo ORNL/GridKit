@@ -372,7 +372,7 @@ namespace AnalysisManager
        */
       const ErrorNorm<ScalarT, IdxT>*                       err_norm_;
       /**
-       * @brief The memory space where linear algebra operations hsould be done in.
+       * @brief The memory space where linear algebra operations should be done in.
        *
        */
       GridKit::memory::MemorySpace                          memspace_;
@@ -480,7 +480,7 @@ namespace AnalysisManager
          */
         std::unique_ptr<State> mass_;
         /**
-         * @brief Estimated error produced by a step in a method with an empbedded error estimator.
+         * @brief Estimated error produced by a step in a method with an embedded error estimator.
          *
          * @see `Tableau::e`
          *

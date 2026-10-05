@@ -86,7 +86,7 @@ constexpr double V2_ref     = 1.08281;  // [p.u.]
 constexpr double theta3_ref = 1.46241;  // [deg]
 
 /**
- * Testing the monlithic case via the class MiniGrid
+ * Testing the monolithic case via the class MiniGrid
  * @return returns 0 if pass o.w. fails
  */
 int monolithicCase()

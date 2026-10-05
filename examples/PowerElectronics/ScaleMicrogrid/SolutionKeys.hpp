@@ -6,7 +6,7 @@
  *
  * Data generated with Matlab ode23tb solver with tolerances set to
  * abs_tol = 1e-12 and rel_tol = 1e-12 for the ODE derivation of the model.
- * No index reduction was preformed to get to the ODE model.
+ * No index reduction was performed to get to the ODE model.
  *
  * @note This file is only to be included in ScaleMicrogrid.cpp. It has no
  * use anywhere else.

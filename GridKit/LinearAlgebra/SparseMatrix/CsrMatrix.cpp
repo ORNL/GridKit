@@ -396,7 +396,7 @@ namespace GridKit
     }
 
     /**
-     * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
+     * @brief update matrix values using the _new_values_ provided either as HOST or as DEVICE array.
      *
      * This function will copy the data (not just assign a pointer) and allocate if needed.
      * It also sets ownership and update flags.
@@ -479,7 +479,7 @@ namespace GridKit
     }
 
     /**
-     * @brief updata matrix values using the _new_values_ provided either as
+     * @brief update matrix values using the _new_values_ provided either as
      * HOST or as DEVICE array.
      *
      * This function only assigns a pointer, but does not copy. It sets update

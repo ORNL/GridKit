@@ -415,7 +415,7 @@ namespace GridKit
               const size_t jac_col = static_cast<size_t>(col / 2);
 
               // For counting purposes, there is no need to distinguish odd and even indices.
-              // Attempt to insert the colum into the row and increment nnz for new entries.
+              // Attempt to insert the column into the row and increment nnz for new entries.
               if (row_map.insert({jac_col, RealT{}}).second)
               {
                 ++nnz;
@@ -508,7 +508,7 @@ namespace GridKit
        * @brief Initialize DependencyTracking variable numbers.
        *
        * @note Assigns even indices to y and odd indices to yp.
-       *       Should be called in intialize(), after variables have been set (and updated as needed).
+       *       Should be called in initialize(), after variables have been set (and updated as needed).
        */
       int initializeDependencyTrackingVariableNumbers()
         requires std::is_same_v<ScalarT, DependencyTracking::Variable>

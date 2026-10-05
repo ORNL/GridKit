@@ -82,7 +82,7 @@ namespace GridKit
 
   public:
     //
-    // Public inline accesor functions
+    // Public inline accessor functions
     //
 
     ScalarT& V()

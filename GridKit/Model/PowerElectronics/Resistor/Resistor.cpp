@@ -69,7 +69,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Computes the resistors resisdual
+     * @brief Computes the resistors residual
      *
      */
     template <class ScalarT, typename IdxT>
@@ -83,7 +83,7 @@ namespace GridKit
     {
       // input
       *f_ext_[0] += (*y_ext_[0] - *y_ext_[1]) / R_;
-      // ouput
+      // output
       *f_ext_[1] += (*y_ext_[1] - *y_ext_[0]) / R_;
       return 0;
     }

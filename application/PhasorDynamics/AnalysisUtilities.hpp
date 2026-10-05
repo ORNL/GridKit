@@ -92,7 +92,7 @@ namespace GridKit
     inline constexpr double DEFAULT_VERIFICATION_TOL = 1.0e-4;
 
     /**
-     * @brief JSON parser implemntation for `StudyData`
+     * @brief JSON parser implementation for `StudyData`
      */
     void from_json(const json& j, StudyData& c)
     {

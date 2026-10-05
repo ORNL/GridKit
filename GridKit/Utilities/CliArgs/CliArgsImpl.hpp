@@ -34,7 +34,7 @@ namespace GridKit
     struct CliArgsImpl
     {
       ///@{
-      /// @brief Implmentation of CliArgs
+      /// @brief Implementation of CliArgs
       CliArgsImpl(std::initializer_list<Option> args);
 
       void parseArgs(int argc, const char* argv[]);
@@ -423,7 +423,7 @@ namespace GridKit
             // If line starts with space, but second character
             // is not space, remove the leading space.
             // We don't remove double spaces because those
-            // might be intentianal.
+            // might be intentional.
             if ((*lineBegin == ' ') && ((lineBegin + 1 < parEnd) && (*(lineBegin + 1) != ' ')))
             {
               ++lineBegin;
