@@ -1,0 +1,326 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "TenGenPartitionedB",
+    "case_description": "Partition B: G6-G10, load at bus 8 and fault at bus 10; interface at bus 6.",
+    "case_comments": ""
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "buses": [
+    {
+      "number": 6,
+      "class": "Bus",
+      "name": "6",
+      "init": {
+        "Vr": 0.9995033494191425,
+        "Vi": -0.031512767252582605
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 7,
+      "class": "Bus",
+      "name": "7",
+      "init": {
+        "Vr": 0.9993629774338149,
+        "Vi": -0.03568808393036145
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 8,
+      "class": "Bus",
+      "name": "8",
+      "init": {
+        "Vr": 0.999098410269389,
+        "Vi": -0.042454288324972125
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 9,
+      "class": "Bus",
+      "name": "9",
+      "init": {
+        "Vr": 0.9993055137188649,
+        "Vi": -0.037262450953683156
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 10,
+      "class": "Bus",
+      "name": "10",
+      "init": {
+        "Vr": 0.9993989950118779,
+        "Vi": -0.03466480591678674
+      },
+      "params": {
+        "kv": 138.0
+      }
+    }
+  ],
+  "signals": [
+    {
+      "signal_id": 1,
+      "name": "vr"
+    },
+    {
+      "signal_id": 2,
+      "name": "vi"
+    },
+    {
+      "signal_id": 3,
+      "name": "ir"
+    },
+    {
+      "signal_id": 4,
+      "name": "ii"
+    }
+  ],
+  "devices": [
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 6,
+        "bus2": 7
+      },
+      "id": "branch_6_7",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 7,
+        "bus2": 8
+      },
+      "id": "branch_7_8",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 8,
+        "bus2": 9
+      },
+      "id": "branch_8_9",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 9,
+        "bus2": 10
+      },
+      "id": "branch_9_10",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "LoadZ",
+      "ports": {
+        "bus": 8
+      },
+      "id": "load_8",
+      "params": {
+        "R": 0.3536067892503536,
+        "X": 0.03536067892503537
+      }
+    },
+    {
+      "class": "BusFault",
+      "ports": {
+        "bus": 10
+      },
+      "id": "fault_10",
+      "params": {
+        "R": 0.0,
+        "X": 1e-05,
+        "state0": false
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 6
+      },
+      "id": "genrou_6",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.15134790206448281,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 7
+      },
+      "id": "genrou_7",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.09366955086518002,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 8
+      },
+      "id": "genrou_8",
+      "params": {
+        "p0": 0.5,
+        "q0": 0.7472849584822872,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 9
+      },
+      "id": "genrou_9",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.09662454343813737,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 10
+      },
+      "id": "genrou_10",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.09932435015102124,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "BusToSignalAdapter",
+      "ports": {
+        "bus": 6,
+        "vr": 1,
+        "vi": 2,
+        "ir": 3,
+        "ii": 4
+      },
+      "id": "interface",
+      "params": {}
+    }
+  ]
+}

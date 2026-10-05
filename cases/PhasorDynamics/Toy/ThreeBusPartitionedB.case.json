@@ -1,0 +1,87 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "ThreeBusPartitionedB",
+    "case_description": "Partition B: GENROU G2; current input at bus 2.",
+    "case_comments": ""
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "buses": [
+    {
+      "number": 2,
+      "class": "Bus",
+      "name": "2",
+      "init": {
+        "Vr": 1.059855349000975,
+        "Vi": -0.017511116298558976
+      },
+      "params": {
+        "kv": 138.0
+      }
+    }
+  ],
+  "signals": [
+    {
+      "signal_id": 1,
+      "name": "vr"
+    },
+    {
+      "signal_id": 2,
+      "name": "vi"
+    },
+    {
+      "signal_id": 3,
+      "name": "ir"
+    },
+    {
+      "signal_id": 4,
+      "name": "ii"
+    }
+  ],
+  "devices": [
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 2
+      },
+      "id": "genrou_2_1",
+      "params": {
+        "p0": 0.5,
+        "q0": 0.053788033396777464,
+        "H": 2.7,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 1.9,
+        "Xdp": 0.17,
+        "Xdpp": 0.15,
+        "Xq": 0.4,
+        "Xqp": 0.35,
+        "Xqpp": 0.15,
+        "Xl": 0.14999,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "BusToSignalAdapter",
+      "ports": {
+        "bus": 2,
+        "vr": 1,
+        "vi": 2,
+        "ir": 3,
+        "ii": 4
+      },
+      "id": "interface",
+      "params": {}
+    }
+  ]
+}

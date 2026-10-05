@@ -1,0 +1,577 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "TenGenPartitioned",
+    "case_description": "Ten finite GENROU machines with local loads in two areas; intact reference.",
+    "case_comments": "Initial voltage magnitudes are 1 pu; G2-G10 generate 0.5 pu each. Loads at buses 3 and 8 consume 2.0/0.2 and 2.8/0.28 pu P/Q. G1 balances network losses."
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "buses": [
+    {
+      "number": 1,
+      "class": "Bus",
+      "name": "1",
+      "init": {
+        "Vr": 1.0,
+        "Vi": 0.0
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 2,
+      "class": "Bus",
+      "name": "2",
+      "init": {
+        "Vr": 0.9999987415518259,
+        "Vi": -0.0015864724278994644
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 3,
+      "class": "Bus",
+      "name": "3",
+      "init": {
+        "Vr": 0.9999833480850802,
+        "Vi": -0.005770923024392419
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 4,
+      "class": "Bus",
+      "name": "4",
+      "init": {
+        "Vr": 0.9999976836816402,
+        "Vi": -0.0021523548393191623
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 5,
+      "class": "Bus",
+      "name": "5",
+      "init": {
+        "Vr": 0.9999993588893152,
+        "Vi": -0.0011323519587109372
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 6,
+      "class": "Bus",
+      "name": "6",
+      "init": {
+        "Vr": 0.9995033494191425,
+        "Vi": -0.031512767252582605
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 7,
+      "class": "Bus",
+      "name": "7",
+      "init": {
+        "Vr": 0.9993629774338149,
+        "Vi": -0.03568808393036145
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 8,
+      "class": "Bus",
+      "name": "8",
+      "init": {
+        "Vr": 0.999098410269389,
+        "Vi": -0.042454288324972125
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 9,
+      "class": "Bus",
+      "name": "9",
+      "init": {
+        "Vr": 0.9993055137188649,
+        "Vi": -0.037262450953683156
+      },
+      "params": {
+        "kv": 138.0
+      }
+    },
+    {
+      "number": 10,
+      "class": "Bus",
+      "name": "10",
+      "init": {
+        "Vr": 0.9993989950118779,
+        "Vi": -0.03466480591678674
+      },
+      "params": {
+        "kv": 138.0
+      }
+    }
+  ],
+  "devices": [
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 1,
+        "bus2": 2
+      },
+      "id": "branch_1_2",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 2,
+        "bus2": 3
+      },
+      "id": "branch_2_3",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 3,
+        "bus2": 4
+      },
+      "id": "branch_3_4",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 4,
+        "bus2": 5
+      },
+      "id": "branch_4_5",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 5,
+        "bus2": 6
+      },
+      "id": "branch_5_6",
+      "params": {
+        "R": 0.001,
+        "X": 0.1,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 6,
+        "bus2": 7
+      },
+      "id": "branch_6_7",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 7,
+        "bus2": 8
+      },
+      "id": "branch_7_8",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 8,
+        "bus2": 9
+      },
+      "id": "branch_8_9",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 9,
+        "bus2": 10
+      },
+      "id": "branch_9_10",
+      "params": {
+        "R": 0.001,
+        "X": 0.005,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "LoadZ",
+      "ports": {
+        "bus": 3
+      },
+      "id": "load_3",
+      "params": {
+        "R": 0.49504950495049505,
+        "X": 0.04950495049504951
+      }
+    },
+    {
+      "class": "LoadZ",
+      "ports": {
+        "bus": 8
+      },
+      "id": "load_8",
+      "params": {
+        "R": 0.3536067892503536,
+        "X": 0.03536067892503537
+      }
+    },
+    {
+      "class": "BusFault",
+      "ports": {
+        "bus": 10
+      },
+      "id": "fault_10",
+      "params": {
+        "R": 0.0,
+        "X": 1e-05,
+        "state0": false
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 1
+      },
+      "id": "genrou_1",
+      "params": {
+        "p0": 0.3051392533719782,
+        "q0": -0.06077616103957307,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 2
+      },
+      "id": "genrou_2",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.09799732398986531,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 3
+      },
+      "id": "genrou_3",
+      "params": {
+        "p0": 0.5,
+        "q0": 0.5030604104972711,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 4
+      },
+      "id": "genrou_4",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.09858653500976325,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 5
+      },
+      "id": "genrou_5",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.03755306377005824,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 6
+      },
+      "id": "genrou_6",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.15134790206448281,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 7
+      },
+      "id": "genrou_7",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.09366955086518002,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 8
+      },
+      "id": "genrou_8",
+      "params": {
+        "p0": 0.5,
+        "q0": 0.7472849584822872,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 9
+      },
+      "id": "genrou_9",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.09662454343813737,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 10
+      },
+      "id": "genrou_10",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.09932435015102124,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.1,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 100.0
+      }
+    }
+  ]
+}
