@@ -56,8 +56,10 @@ namespace AnalysisManager
       void initializeSimulation(RealT t0);
       void runSimulation(RealT tf, RealT dt_monitor = 0);
 
-      long numSteps() const;
-      long numRejectedSteps() const;
+      long  numSteps() const;
+      long  numRejectedSteps() const;
+      /// Wall time spent advancing a partition, in seconds.
+      RealT partitionTime(std::size_t partition) const;
 
     private:
       using InputT = GridKit::Model::Input<ScalarT>;
@@ -81,7 +83,8 @@ namespace AnalysisManager
         SUNStepper             stepper{}; ///< The solver over its own state
         SUNStepper             block{};   ///< The solver over block `index`, given to ARKODE
         sunindextype           index{};
-        RealT                  time{}; ///< Time of the state in its block
+        RealT                  time{};    ///< Time of the state in its block
+        RealT                  seconds{}; ///< Wall time spent advancing it
         std::vector<CouplingT> couplings;
         std::vector<Link>      links;
       };
