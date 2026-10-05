@@ -6,6 +6,7 @@
 - Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.
 - Removed `BusToSignalAdapter`. Prefer `BusSignalVoltageOut` or `BusSignalVoltageIn`.
 - Added `Bus::setFault` to apply or clear a fault to ground directly at a bus.
+- Added `enable` and `disable` solver events that put a branch in or out of service.
 
 ## v0.2
 

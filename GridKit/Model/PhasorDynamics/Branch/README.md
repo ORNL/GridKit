@@ -94,12 +94,15 @@ The off-nominal transformer transformation uses bus 1 as the tap side:
 \end{aligned}
 ```
 
-The magnetizing and line shunts are added outside the transformation:
+The magnetizing and line shunts are added outside the transformation, and the
+service status $u$ scales the whole branch:
 
 ```math
 \begin{aligned}
   \mathbf{Y}
     &=
+    u
+    \left(
     \mathbf{M}^{\dagger}
     \mathbf{Y}_0
     \mathbf{M}
@@ -107,6 +110,7 @@ The magnetizing and line shunts are added outside the transformation:
     \mathbf{Y}_\mathrm{mag}
     +
     \mathbf{Y}_\mathrm{sh}
+    \right)
 \end{aligned}
 ```
 
