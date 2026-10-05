@@ -1,11 +1,10 @@
 # Partitioned ACTIVSg10k
 
 This study uses sixteen regional IDA solvers with multicolor Gauss-Seidel
-coupling. The sixteen regions form four colors of five, four, three, and four
-regions, so up to five OpenMP workers advance regions at once. IDA settings
-match the DOE monolithic study. It includes the same fault at 1 s and clearing
-at 1.15 s as the monolithic validation study. Build with
-`GridKit_ENABLE_OPENMP=ON`.
+coupling on 8 OpenMP workers; set `partition.threads` to the number of
+performance cores. IDA settings match the DOE monolithic study. It includes the
+same fault at 1 s and clearing at 1.15 s as the monolithic validation study.
+Build with `GridKit_ENABLE_OPENMP=ON`.
 
 From the repository root, build and run the monolithic reference followed by
 the partitioned study:

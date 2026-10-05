@@ -367,6 +367,13 @@ namespace AnalysisManager
       suppress_alg_ = true;
       checkOutput(IDASetSuppressAlg(solver_, SUNTRUE), "IDASetSuppressAlg");
 
+      // Every stage ends at a stop time, which clips IDA's step and shifts cj;
+      // keep the Jacobian across such shifts (IDA's default is 0.25). Staler
+      // Jacobians leave interface variables too loosely converged for the
+      // coupling tolerance (0.9 fails ACTIVSg70k at 1e-4).
+      static constexpr RealT STAGE_DELTA_CJ = 0.5;
+      checkOutput(IDASetDeltaCjLSetup(solver_, STAGE_DELTA_CJ), "IDASetDeltaCjLSetup");
+
       SUNStepper stepper{};
       checkOutput(SUNStepper_Create(context_, &stepper), "SUNStepper_Create");
       checkOutput(SUNStepper_SetContent(stepper, this), "SUNStepper_SetContent");
@@ -385,27 +392,34 @@ namespace AnalysisManager
       return *static_cast<Ida*>(content);
     }
 
-    /// Resetting to the state last returned keeps IDA's history; any other state restarts it.
+    /**
+     * Resetting to the state last returned keeps IDA's history. Resetting to the
+     * model's own state restarts from it and the model's derivatives, which the
+     * caller keeps consistent; any other state restarts with its consistent
+     * derivatives computed.
+     */
     template <class ScalarT, typename IdxT>
     SUNErrCode Ida<ScalarT, IdxT>::stepperReset(SUNStepper stepper, sunrealtype t, N_Vector y)
     {
-      auto& ida = stepperContent(stepper);
-      if (ida.history_valid_ && t == ida.history_time_)
+      auto&       ida   = stepperContent(stepper);
+      const auto* reset = N_VGetArrayPointer(y);
+      const auto  size  = N_VGetLength(y);
+      if (ida.history_valid_ && t == ida.history_time_
+          && std::equal(reset, reset + size, N_VGetArrayPointer(ida.yy_)))
       {
-        const auto* current = N_VGetArrayPointer(ida.yy_);
-        const auto* reset   = N_VGetArrayPointer(y);
-        if (std::equal(reset, reset + N_VGetLength(y), current))
-        {
-          return SUN_SUCCESS;
-        }
+        return SUN_SUCCESS;
       }
-      ida.history_valid_ = false;
+      ida.history_valid_          = false;
+      ida.needs_consistent_state_ = !std::equal(reset, reset + size, ida.model_->y().getData());
       N_VScale(1.0, y, ida.yy_);
+      if (!ida.needs_consistent_state_)
+      {
+        copyVec(ida.model_->yp(), ida.yp_);
+      }
       if (IDAReInit(ida.solver_, t, ida.yy_, ida.yp_) != IDA_SUCCESS)
       {
         return SUN_ERR_OP_FAIL;
       }
-      ida.needs_consistent_state_ = true;
       return SUN_SUCCESS;
     }
 
