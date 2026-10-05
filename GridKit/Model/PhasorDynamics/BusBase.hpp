@@ -239,6 +239,13 @@ namespace GridKit
 
       virtual int setBusID(IdxT) = 0;
 
+      /// Apply (status true) or clear a fault to ground with impedance R + jX.
+      virtual int setFault(bool /* status */, RealT /* R */, RealT /* X */)
+      {
+        Log::error() << "Faults are not supported by this bus type\n";
+        return 1;
+      }
+
       virtual const IdxT busID() const
       {
         return bus_id_;

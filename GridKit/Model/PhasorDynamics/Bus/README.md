@@ -69,12 +69,12 @@ None.
 
 #### Algebraic
 
-Let $\mathcal{D}$ denote the set of components connected to the bus.
+Let $\mathcal{D}$ denote the set of components connected to the bus, and let $G_f$, $B_f$ be the conductance and susceptance of a fault applied to the Bus, respectively, with $G_f + jB_f = 1/(R_f + jX_f)$, both zero when no fault is applied.
 
 ```math
 \begin{aligned}
-0 &= \sum_{d \in \mathcal{D}} I_{r,d} \\
-0 &= \sum_{d \in \mathcal{D}} I_{i,d}
+0 &= -(G_f V_r - B_f V_i) + \sum_{d \in \mathcal{D}} I_{r,d} \\
+0 &= -(B_f V_r + G_f V_i) + \sum_{d \in \mathcal{D}} I_{i,d}
 \end{aligned}
 ```
 

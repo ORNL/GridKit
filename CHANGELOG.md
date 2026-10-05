@@ -4,6 +4,7 @@
 
 - Added `BusSignalVoltageOut` bus model with voltage signal outlets and current signal inlets.
 - Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.
+- Added `Bus::setFault` to apply or clear a fault to ground directly at a bus.
 
 ## v0.2
 

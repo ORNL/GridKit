@@ -136,6 +136,32 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Apply or clear a fault to ground
+     *
+     * @param[in] status - true applies the fault, false clears it
+     * @param[in] R - fault resistance [p.u.]
+     * @param[in] X - fault reactance [p.u.]
+     */
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::setFault(bool status, RealT R, RealT X)
+    {
+      if (status && !(ZERO<RealT> < R * R + X * X))
+      {
+        Log::error() << "Bus: fault impedance R + jX must be nonzero\n";
+        return 1;
+      }
+
+      fault_g_ = 0.0;
+      fault_b_ = 0.0;
+      if (status)
+      {
+        fault_g_ = R / (X * X + R * R);
+        fault_b_ = -X / (X * X + R * R);
+      }
+      return 0;
+    }
+
     /*!
      * @brief Bus variables are algebraic.
      */
@@ -193,7 +219,7 @@ namespace GridKit
     }
 
     /*!
-     * @brief PQ bus does not compute residuals, so here we just reset residual values.
+     * @brief Reset the current balance to the fault current.
      *
      * @warning This implementation assumes bus residuals are always evaluated
      * _before_ component model residuals.
@@ -204,8 +230,8 @@ namespace GridKit
     {
       auto* f = f_.getData();
 
-      f[0] = 0.0;
-      f[1] = 0.0;
+      f[0] = -(fault_g_ * Vr() - fault_b_ * Vi());
+      f[1] = -(fault_b_ * Vr() + fault_g_ * Vi());
       f_.setDataUpdated();
       return 0;
     }
