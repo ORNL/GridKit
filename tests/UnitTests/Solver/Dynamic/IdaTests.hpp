@@ -691,6 +691,65 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome sunStepper()
+      {
+        using RealT = typename ScalarTraits<ScalarT>::RealT;
+
+        TestStatus  success = true;
+        const RealT tol     = 1.0e-7;
+
+        Model::ForcedEvaluator<ScalarT, IdxT> model;
+        Ida<ScalarT, IdxT>                    ida(&model);
+        ida.setTolerance(1.0e-9, 1.0e-11);
+        ida.configureSimulation();
+
+        SUNContext context{};
+        SUNContext_Create(SUN_COMM_NULL, &context);
+        N_Vector   y       = N_VNew_Serial(2, context);
+        SUNStepper stepper = ida.createSUNStepper();
+        auto*      state   = N_VGetArrayPointer(y);
+        RealT      t       = 0.0;
+
+        // Reset solves z = x + u; Evolve publishes the accepted y and y' to the model.
+        N_VConst(0.0, y);
+        SUNStepper_Reset(stepper, 0.0, y);
+        SUNStepper_SetStopTime(stepper, 0.5);
+        success *= SUNStepper_Evolve(stepper, 0.5, y, &t) == 0;
+        success *= isEqual(state[0], 0.5, tol);
+        success *= isEqual(state[1], 1.5, tol);
+        success *= isEqual(model.yp().getData()[0], 1.0, tol);
+
+        // Resetting to the returned state keeps IDA's history; the new input
+        // enters through the corrector.
+        const auto steps = ida.getStats().num_steps_;
+        model.setInput(-2.0);
+        SUNStepper_Reset(stepper, t, y);
+        success *= ida.getStats().num_steps_ == steps;
+        SUNStepper_SetStopTime(stepper, 1.0);
+        success *= SUNStepper_Evolve(stepper, 1.0, y, &t) == 0;
+        success *= isEqual(state[0], -0.5, tol);
+        success *= isEqual(state[1], -2.5, tol);
+
+        // Any other state restarts IDA.
+        state[0] = 0.25;
+        SUNStepper_Reset(stepper, t, y);
+        success *= ida.getStats().num_steps_ == 0;
+
+        // A consistent state keeps x exactly and solves z and x' for the input.
+        model.y().getData()[0] = 0.3;
+        model.y().setDataUpdated();
+        success *= ida.computeConsistentState(1.0, 1.5) == 0;
+        success *= model.y().getData()[0] == 0.3;
+        success *= isEqual(model.y().getData()[1], -1.7, tol);
+        success *= isEqual(model.yp().getData()[0], -2.0, tol);
+
+        SUNStepper_Destroy(&stepper);
+        N_VDestroy(y);
+        SUNContext_Free(&context);
+
+        return success.report(__func__);
+      }
+
       TestOutcome fixedStep()
       {
         const unsigned n_steps = 32;

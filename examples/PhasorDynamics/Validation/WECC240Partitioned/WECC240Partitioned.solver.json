@@ -12,8 +12,8 @@
         { "time": 1.0, "type": "fault_on", "element_id": 0 },
         { "time": 1.15, "type": "fault_off", "element_id": 0 }
     ],
-    "reference_file": "../WECC240/reference/WECC240.omega.ref.csv",
+    "reference_file": "../WECC240/WECC240.omega.csv",
     "error_type": "relative",
-    "error_tolerance": 1e-2,
+    "error_tolerance": 5.1e-3,
     "abs_err_threshold": 1e-6
 }
