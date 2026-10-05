@@ -12,6 +12,7 @@ int main()
   result += test.composer();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();
+  result += test.partitionedResidual();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
