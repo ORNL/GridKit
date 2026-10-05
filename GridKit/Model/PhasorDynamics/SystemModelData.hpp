@@ -130,6 +130,36 @@ namespace GridKit
     };
 
     /**
+     * @brief Visit each device list with its case-format device class
+     *
+     * @param[in] data  - System model data, const or mutable
+     * @param[in] visit - Called as `visit(device_class, devices)`
+     */
+    template <typename SystemModelDataT, typename VisitorT>
+    void forEachDeviceList(SystemModelDataT& data, VisitorT&& visit)
+    {
+      visit("Branch", data.branch);
+      visit("BusFault", data.bus_fault);
+      visit("Regca", data.regca);
+      visit("Reecb", data.reecb);
+      visit("Repca", data.repca);
+      visit("Genrou", data.genrou);
+      visit("Gensal", data.gensal);
+      visit("GenClassical", data.genclassical);
+      visit("LoadZ", data.loadz);
+      visit("LoadZIP", data.loadzip);
+      visit("Tgov1", data.gov);
+      visit("Esdc1a", data.esdc1a);
+      visit("GastPti", data.gastpti);
+      visit("Hygov", data.hygov);
+      visit("Ieeet1", data.exciter);
+      visit("SexsPti", data.sexspti);
+      visit("Ieeest", data.stabilizer);
+      visit("ConstantSignalSource", data.constant_source);
+      visit("FunctionSignalSource", data.function_source);
+    }
+
+    /**
      * @brief Generate system model data from a JSON input file
      */
     SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);

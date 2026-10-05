@@ -108,6 +108,9 @@ namespace GridKit
       BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id);
 
     private:
+      template <typename DeviceT>
+      void addDevices(const std::vector<typename DeviceT::ModelDataT>& device_data);
+
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;

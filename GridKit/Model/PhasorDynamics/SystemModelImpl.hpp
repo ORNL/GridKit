@@ -65,246 +65,30 @@ namespace GridKit
         addBus(bus);
       }
 
-      // Add REGCA converters
-      for (const auto& regcadata : data.regca)
-      {
-        IdxT bus_index = 0;
-        if (regcadata.buses.contains(RegcaBuses::bus))
-        {
-          bus_index = regcadata.buses.at(RegcaBuses::bus);
-        }
-
-        auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
-        regca->getPorts().connect(regcadata, signal_nodes_);
-
-        addComponent(regca);
-      }
-
-      // Add branches
-      for (const auto& branchdata : data.branch)
-      {
-        IdxT bus1_index = 0;
-        if (branchdata.buses.contains(BranchBuses::bus1))
-        {
-          bus1_index = branchdata.buses.at(BranchBuses::bus1);
-        }
-
-        IdxT bus2_index = 0;
-        if (branchdata.buses.contains(BranchBuses::bus2))
-        {
-          bus2_index = branchdata.buses.at(BranchBuses::bus2);
-        }
-
-        auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index),
-                                                 getBus(bus2_index),
-                                                 branchdata);
-        addComponent(branch);
-      }
-
-      // Add loads
-      /// @todo Add loads to JSON parser
-      for (const auto& loaddata : data.loadz)
-      {
-        IdxT bus_index = 0;
-        if (loaddata.buses.contains(LoadZBuses::bus))
-        {
-          bus_index = loaddata.buses.at(LoadZBuses::bus);
-        }
-        auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
-        addComponent(load);
-      }
-
-      // Add zip loads
-      /// @todo Add zip loads to JSON parser
-      for (const auto& loadzipdata : data.loadzip)
-      {
-        IdxT bus_index = 0;
-        if (loadzipdata.buses.contains(LoadZIPBuses::bus))
-        {
-          bus_index = loadzipdata.buses.at(LoadZIPBuses::bus);
-        }
-        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
-                                                   loadzipdata);
-        addComponent(loadzip);
-      }
-
-      // Add GENROU generators
-      for (const auto& gendata : data.genrou)
-      {
-        IdxT bus_index = 0;
-        if (gendata.buses.contains(GenrouBuses::bus))
-        {
-          bus_index = gendata.buses.at(GenrouBuses::bus);
-        }
-        auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
-        addComponent(gen);
-      }
-
-      // Add GENSAL generators
-      for (const auto& gendata : data.gensal)
-      {
-        IdxT bus_index = 0;
-        if (gendata.buses.contains(GensalBuses::bus))
-        {
-          bus_index = gendata.buses.at(GensalBuses::bus);
-        }
-
-        auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
-        addComponent(gen);
-      }
-
-      // Add classical generators
-      for (const auto& gendata : data.genclassical)
-      {
-        IdxT bus_index = 0;
-        if (gendata.buses.contains(GenClassicalBuses::bus))
-        {
-          bus_index = gendata.buses.at(GenClassicalBuses::bus);
-        }
-        auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
-        addComponent(gen);
-      }
-
-      // Add REECB after its current-command and feedback producers because
-      // components initialize in insertion order.
-      for (const auto& reecbdata : data.reecb)
-      {
-        BusT* bus = nullptr;
-        if (reecbdata.buses.contains(ReecbBuses::bus))
-        {
-          bus = getBus(reecbdata.buses.at(ReecbBuses::bus));
-        }
-
-        auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
-        reecb->getPorts().connect(reecbdata, signal_nodes_);
-
-        addComponent(reecb);
-      }
-
-      // Add Tgov1 governors
-      for (const auto& govdata : data.gov)
-      {
-        auto* gov = new Tgov1<ScalarT, IdxT>(govdata);
-        gov->getPorts().connect(govdata, signal_nodes_);
-
-        addComponent(gov);
-      }
-
-      // Add GASTPTI governors
-      for (const auto& gastptidata : data.gastpti)
-      {
-        auto* gastpti = new GastPti<ScalarT, IdxT>(gastptidata);
-        gastpti->getPorts().connect(gastptidata, signal_nodes_);
-
-        addComponent(gastpti);
-      }
-
-      // Add HYGOV governors
-      for (const auto& hygovdata : data.hygov)
-      {
-        auto* hygov = new Hygov<ScalarT, IdxT>(hygovdata);
-        hygov->getPorts().connect(hygovdata, signal_nodes_);
-
-        addComponent(hygov);
-      }
-
-      // Add IEEEST stabilizers before exciters that consume their output during
-      // initialization.
-      for (const auto& stabdata : data.stabilizer)
-      {
-        auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-        stabilizer->getPorts().connect(stabdata, signal_nodes_);
-        addComponent(stabilizer);
-      }
-
-      for (const auto& excitedata : data.exciter)
-      {
-        IdxT bus_index = 0;
-        if (excitedata.buses.contains(Ieeet1Buses::bus))
-        {
-          bus_index = excitedata.buses.at(Ieeet1Buses::bus);
-        }
-
-        auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
-        addComponent(exciter);
-      }
-
-      for (const auto& excitedata : data.esdc1a)
-      {
-        BusT* bus = nullptr;
-        if (excitedata.buses.contains(Esdc1aBuses::bus))
-        {
-          bus = getBus(excitedata.buses.at(Esdc1aBuses::bus));
-        }
-
-        auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
-        addComponent(exciter);
-      }
-
-      for (const auto& excitedata : data.sexspti)
-      {
-        IdxT bus_index = 0;
-        if (excitedata.buses.contains(SexsPtiBuses::bus))
-        {
-          bus_index = excitedata.buses.at(SexsPtiBuses::bus);
-        }
-
-        auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
-        addComponent(exciter);
-      }
-
-      // Add REPCA plant controllers after the signal producers they read at
-      // initialization
-      for (const auto& repcadata : data.repca)
-      {
-        BusT* bus = nullptr;
-        if (repcadata.buses.contains(RepcaBuses::bus))
-        {
-          bus = getBus(repcadata.buses.at(RepcaBuses::bus));
-        }
-
-        auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
-        repca->getPorts().connect(repcadata, signal_nodes_);
-
-        addComponent(repca);
-      }
-
-      // Add constant signal sources
-      for (const auto& srcdata : data.constant_source)
-      {
-        auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
-        source->getPorts().connect(srcdata, signal_nodes_);
-        addComponent(source);
-      }
-
-      // Add constant signal sources
-      for (const auto& srcdata : data.function_source)
-      {
-        auto* source = new FunctionSignalSource<ScalarT, IdxT>(srcdata);
-        source->getPorts().connect(srcdata, signal_nodes_);
-        addComponent(source);
-      }
-
-      // Add faults
-      for (const auto& faultdata : data.bus_fault)
-      {
-        IdxT bus_index = 0;
-        if (faultdata.buses.contains(BusFaultBuses::bus))
-        {
-          bus_index = faultdata.buses.at(BusFaultBuses::bus);
-        }
-        auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
-        addFault(fault);
-      }
+      // Components initialize in insertion order, so each producer precedes
+      // the consumers that read it during initialization.
+      addDevices<Regca<ScalarT, IdxT>>(data.regca);
+      addDevices<Branch<ScalarT, IdxT>>(data.branch);
+      addDevices<LoadZ<ScalarT, IdxT>>(data.loadz);
+      addDevices<LoadZIP<ScalarT, IdxT>>(data.loadzip);
+      addDevices<Genrou<ScalarT, IdxT>>(data.genrou);
+      addDevices<Gensal<ScalarT, IdxT>>(data.gensal);
+      addDevices<GenClassical<ScalarT, IdxT>>(data.genclassical);
+      // REECB follows its current-command and feedback producers.
+      addDevices<Reecb<ScalarT, IdxT>>(data.reecb);
+      addDevices<Tgov1<ScalarT, IdxT>>(data.gov);
+      addDevices<GastPti<ScalarT, IdxT>>(data.gastpti);
+      addDevices<Hygov<ScalarT, IdxT>>(data.hygov);
+      // IEEEST precedes the exciters that read its output.
+      addDevices<Ieeest<ScalarT, IdxT>>(data.stabilizer);
+      addDevices<Ieeet1<ScalarT, IdxT>>(data.exciter);
+      addDevices<Esdc1a<ScalarT, IdxT>>(data.esdc1a);
+      addDevices<SexsPti<ScalarT, IdxT>>(data.sexspti);
+      // REPCA follows the signal producers it reads.
+      addDevices<Repca<ScalarT, IdxT>>(data.repca);
+      addDevices<ConstantSignalSource<ScalarT, IdxT>>(data.constant_source);
+      addDevices<FunctionSignalSource<ScalarT, IdxT>>(data.function_source);
+      addDevices<BusFault<ScalarT, IdxT>>(data.bus_fault);
 
       for (const auto& sink : data.monitor_sink)
       {
@@ -769,6 +553,58 @@ namespace GridKit
       IdxT gridkit_fault_id                    = static_cast<IdxT>(gridkit_fault_indices_.size());
       gridkit_fault_indices_[gridkit_fault_id] = gridkit_component_id;
       addComponent(component);
+    }
+
+    /**
+     * @brief Construct, connect, and add one device per data entry
+     *
+     * The device constructor takes one bus per enumerator of its `Buses`
+     * enum, followed by its model data.
+     *
+     * @throws std::out_of_range if the data omits a bus or names an unknown one.
+     */
+    template <typename scalar_type, typename index_type>
+    template <typename DeviceT>
+    void SystemModel<scalar_type, index_type>::addDevices(
+        const std::vector<typename DeviceT::ModelDataT>& device_data)
+    {
+      using BusesT = typename DeviceT::ModelDataT::Buses;
+
+      constexpr std::size_t bus_count = Utilities::enum_size<BusesT>();
+      static_assert(bus_count <= 2, "Devices attach to at most two buses");
+
+      for (const auto& data : device_data)
+      {
+        DeviceT* device = nullptr;
+        if constexpr (bus_count == 0)
+        {
+          device = new DeviceT(data);
+        }
+        else if constexpr (bus_count == 1)
+        {
+          device = new DeviceT(getBus(data.buses.at(BusesT::bus)), data);
+        }
+        else
+        {
+          device = new DeviceT(getBus(data.buses.at(BusesT::bus1)),
+                               getBus(data.buses.at(BusesT::bus2)),
+                               data);
+        }
+
+        if constexpr (requires { device->getPorts(); })
+        {
+          device->getPorts().connect(data, signal_nodes_);
+        }
+
+        if constexpr (std::is_same_v<DeviceT, BusFault<ScalarT, IdxT>>)
+        {
+          addFault(device);
+        }
+        else
+        {
+          addComponent(device);
+        }
+      }
     }
 
     /**

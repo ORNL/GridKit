@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <string_view>
 
 #include <nlohmann/json.hpp>
 
@@ -89,122 +90,21 @@ namespace GridKit
       /// Gets all components
       for (auto& raw_component : j.at("devices"))
       {
-        auto kind = raw_component.at("class").get<std::string>();
-        if (kind == "Branch")
-        {
-          typename SystemModelData<RealT, IdxT>::BranchDataT branch;
-          raw_component.get_to(branch);
-          sm.branch.push_back(branch);
-        }
-        else if (kind == "Genrou")
-        {
-          typename SystemModelData<RealT, IdxT>::GenrouDataT genrou;
-          raw_component.get_to(genrou);
-          sm.genrou.push_back(genrou);
-        }
-        else if (kind == "Gensal")
-        {
-          typename SystemModelData<RealT, IdxT>::GensalDataT gensal;
-          raw_component.get_to(gensal);
-          sm.gensal.push_back(gensal);
-        }
-        else if (kind == "GenClassical")
-        {
-          typename SystemModelData<RealT, IdxT>::GenClassicalDataT gen_classical;
-          raw_component.get_to(gen_classical);
-          sm.genclassical.push_back(gen_classical);
-        }
-        else if (kind == "LoadZ")
-        {
-          typename SystemModelData<RealT, IdxT>::LoadZDataT loadz;
-          raw_component.get_to(loadz);
-          sm.loadz.push_back(loadz);
-        }
-        else if (kind == "LoadZIP")
-        {
-          typename SystemModelData<RealT, IdxT>::LoadZIPDataT loadzip;
-          raw_component.get_to(loadzip);
-          sm.loadzip.push_back(loadzip);
-        }
-        else if (kind == "Regca")
-        {
-          typename SystemModelData<RealT, IdxT>::RegcaDataT regca;
-          raw_component.get_to(regca);
-          sm.regca.push_back(regca);
-        }
-        else if (kind == "Reecb")
-        {
-          typename SystemModelData<RealT, IdxT>::ReecbDataT reecb;
-          raw_component.get_to(reecb);
-          sm.reecb.push_back(reecb);
-        }
-        else if (kind == "Repca")
-        {
-          typename SystemModelData<RealT, IdxT>::RepcaDataT repca;
-          raw_component.get_to(repca);
-          sm.repca.push_back(repca);
-        }
-        else if (kind == "Tgov1")
-        {
-          typename SystemModelData<RealT, IdxT>::Tgov1DataT gov;
-          raw_component.get_to(gov);
-          sm.gov.push_back(gov);
-        }
-        else if (kind == "GastPti")
-        {
-          typename SystemModelData<RealT, IdxT>::GastPtiDataT gastpti;
-          raw_component.get_to(gastpti);
-          sm.gastpti.push_back(gastpti);
-        }
-        else if (kind == "Hygov")
-        {
-          typename SystemModelData<RealT, IdxT>::HygovDataT hygov;
-          raw_component.get_to(hygov);
-          sm.hygov.push_back(hygov);
-        }
-        else if (kind == "Ieeet1")
-        {
-          typename SystemModelData<RealT, IdxT>::Ieeet1DataT exciter;
-          raw_component.get_to(exciter);
-          sm.exciter.push_back(exciter);
-        }
-        else if (kind == "Esdc1a")
-        {
-          typename SystemModelData<RealT, IdxT>::Esdc1aDataT exciter;
-          raw_component.get_to(exciter);
-          sm.esdc1a.push_back(exciter);
-        }
-        else if (kind == "SexsPti")
-        {
-          typename SystemModelData<RealT, IdxT>::SexsPtiDataT exciter;
-          raw_component.get_to(exciter);
-          sm.sexspti.push_back(exciter);
-        }
-        else if (kind == "Ieeest")
-        {
-          typename SystemModelData<RealT, IdxT>::IeeestDataT stabilizer;
-          raw_component.get_to(stabilizer);
-          sm.stabilizer.push_back(stabilizer);
-        }
-        else if (kind == "ConstantSignalSource")
-        {
-          typename SystemModelData<RealT, IdxT>::ConstantSourceT source;
-          raw_component.get_to(source);
-          sm.constant_source.push_back(source);
-        }
-        else if (kind == "FunctionSignalSource")
-        {
-          typename SystemModelData<RealT, IdxT>::FunctionSourceT source;
-          raw_component.get_to(source);
-          sm.function_source.push_back(source);
-        }
-        else if (kind == "BusFault")
-        {
-          typename SystemModelData<RealT, IdxT>::BusFaultDataT bus_fault;
-          raw_component.get_to(bus_fault);
-          sm.bus_fault.push_back(bus_fault);
-        }
-        else
+        const auto kind   = raw_component.at("class").get<std::string>();
+        bool       parsed = false;
+
+        forEachDeviceList(sm,
+                          [&](std::string_view device_class, auto& devices)
+                          {
+                            if (kind != device_class)
+                            {
+                              return;
+                            }
+                            raw_component.get_to(devices.emplace_back());
+                            parsed = true;
+                          });
+
+        if (!parsed)
         {
           Log::error() << "\n\tInvalid device class: \"" << kind << "\". "
                        << "\n\tSee the \"devices\" list in your JSON file."

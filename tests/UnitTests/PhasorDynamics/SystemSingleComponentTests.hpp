@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <stdexcept>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -179,13 +180,9 @@ namespace GridKit
         missing_bus_data.bus[0].bus_id = static_cast<IdxT>(0);
         missing_bus_data.esdc1a[0].buses.clear();
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data);
-        const auto                                 previous_verbosity = Log::verbosity();
-        // Suppress the expected missing-bus configuration error below.
-        // Use EVERYTHING to inspect the diagnostic.
-        Log::setVerbosity(Log::Verbosity::NONE);
-        success *= missing_bus_system.verify() > 0;
-        Log::setVerbosity(previous_verbosity);
+        success *= throws<std::out_of_range>(
+            [&]()
+            { PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data); });
 
         return success.report(__func__);
       }
