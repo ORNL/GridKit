@@ -184,6 +184,19 @@ namespace GridKit
       return ret;
     }
 
+    /// Put the branch in or out of service; out of service, it injects no current.
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::setEnabled(bool enabled)
+    {
+      enabled_ = ZERO<RealT>;
+      if (enabled)
+      {
+        enabled_ = ONE<RealT>;
+      }
+      setDerivedParams();
+      return 0;
+    }
+
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
         const RealT   G,
@@ -514,6 +527,16 @@ namespace GridKit
 
       g22_ = g_diag - RealT{0.5} * G_;
       b22_ = b_diag - RealT{0.5} * B_;
+
+      // An out-of-service branch has zero admittance
+      g11_ *= enabled_;
+      b11_ *= enabled_;
+      g12_ *= enabled_;
+      b12_ *= enabled_;
+      g21_ *= enabled_;
+      b21_ *= enabled_;
+      g22_ *= enabled_;
+      b22_ *= enabled_;
     }
 
   } // namespace PhasorDynamics

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
@@ -21,6 +22,9 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     class BusBase;
+
+    template <typename scalar_type, typename index_type>
+    class Branch;
 
     template <typename scalar_type, typename index_type>
     class SignalNode;
@@ -98,9 +102,10 @@ namespace GridKit
 
       void setSystemBase(RealT freq_system_base, RealT va_system_base);
 
-      BusT*        getBus(IdxT bus_id);
-      SignalNodeT* getSignalNode(IdxT signal_id);
-      ComponentT*  getComponent(IdxT gridkit_component_id);
+      BusT*                    getBus(IdxT bus_id);
+      SignalNodeT*             getSignalNode(IdxT signal_id);
+      ComponentT*              getComponent(IdxT gridkit_component_id);
+      Branch<ScalarT, IdxT>*   getBranch(const std::string& id);
 
     private:
       std::vector<BusT*>       buses_;
@@ -108,6 +113,8 @@ namespace GridKit
       std::vector<ComponentT*> components_;
 
       std::map<IdxT, IdxT> gridkit_bus_indices_; ///< Map between gridkit_bus_id and bus_id
+
+      std::map<std::string, IdxT> gridkit_branch_indices_; ///< Map between branch id and gridkit_component_id
 
       bool owns_components_{false};
 
