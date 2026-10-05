@@ -90,6 +90,23 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        auto bus     = BusT(1.0, 0.0);
+        auto adapter = AdapterT(&bus);
+        bus.allocate();
+        adapter.allocate();
+
+        success *= (adapter.evaluateJacobian() == 0);
+
+        const auto* jacobian  = adapter.getCooJacobian();
+        success              *= (jacobian != nullptr && jacobian->getNnz() == 0);
+
+        return success.report(__func__);
+      }
     };
 
   } // namespace Testing

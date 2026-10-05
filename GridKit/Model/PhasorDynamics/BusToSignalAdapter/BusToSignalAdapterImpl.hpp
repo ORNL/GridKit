@@ -186,7 +186,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusToSignalAdapter<scalar_type, index_type>::evaluateJacobian()
     {
-      return 0;
+      return this->constructCoo();
     }
 
   } // namespace PhasorDynamics

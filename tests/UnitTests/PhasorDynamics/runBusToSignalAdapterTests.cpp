@@ -10,6 +10,7 @@ int main()
 
   result += test.constructor();
   result += test.residual();
+  result += test.jacobian();
 
   return result.summary();
 }
