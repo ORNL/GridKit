@@ -18,7 +18,9 @@ if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
       PUBLIC
       SUNDIALS::idas
       PUBLIC
-      SUNDIALS::arkode
+      SUNDIALS::kinsol
+      PUBLIC
+      SUNDIALS::arkode # SUNAdaptController_PI
       PUBLIC
       SUNDIALS::sunlinsolklu
       PUBLIC
@@ -41,7 +43,9 @@ else()
       PUBLIC
       SUNDIALS::idas
       PUBLIC
-      SUNDIALS::arkode
+      SUNDIALS::kinsol
+      PUBLIC
+      SUNDIALS::arkode # SUNAdaptController_PI
       PUBLIC
       GridKit::definitions
       PUBLIC

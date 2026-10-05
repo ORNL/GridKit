@@ -3,7 +3,7 @@
     "partition": {
         "file": "WECC240.partition.json",
         "dt": 0.0010416666666666667,
-        "tol": 1e-3
+        "tol": 1e-6
     },
     "output_file": "WECC240Partitioned.omega.csv",
     "dt_monitor": 0.004166666666666667,
@@ -19,6 +19,6 @@
     ],
     "reference_file": "../WECC240/WECC240.omega.csv",
     "error_type": "relative",
-    "error_tolerance": 7.1e-4,
+    "error_tolerance": 1.7e-4,
     "abs_err_threshold": 1e-6
 }

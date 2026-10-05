@@ -40,12 +40,19 @@ initial macro step), and optional `tol` (endpoint prediction mismatch relative
 to `1 + |input|`; default 0 uses fixed steps).
 
 Regions are advanced by multicolor Gauss-Seidel: regions that share no tie
-branch form a color, and the colors advance in turn. A region's boundary inputs
-ramp toward regions already advanced in the step and extrapolate the others.
-Complete macro steps are accepted or rejected together, and input slopes reset
-at events.
+branch form a color, and coupled regions advance in color order. A region starts
+as soon as the coupled regions before it finish. Its boundary inputs ramp toward
+regions already advanced in the step and extrapolate the others. Complete macro
+steps are accepted or rejected together, and input slopes reset at events. A
+rejected step restarts each region from its accepted state. Consistent coupling
+at the start and after events uses Anderson-accelerated Gauss-Seidel sweeps
+(KINSOL).
 
-`threads` (default 1) sets how many regions of one color advance at once; values
-above 1 need a build configured with `-DGridKit_ENABLE_OPENMP=ON`. Results do not
-depend on `threads`. The reported `Complete in` duration is elapsed wall time,
+Output at `dt_monitor` comes from each region's interpolant, so it does not
+limit the macro step; `tol` alone sets it.
+
+`threads` (default 1) sets how many regions advance at once; values above 1
+need a build configured with `-DGridKit_ENABLE_OPENMP=ON`. Results do not depend
+on `threads`. Regional solves are memory-bound, so more threads than physical
+performance cores slow a run down. The reported `Complete in` duration is elapsed wall time,
 excluding setup.
