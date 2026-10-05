@@ -199,6 +199,10 @@ target_link_libraries(
   GridKit::testing)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
                ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasicBad.json COPYONLY)
+foreach(_file WECC240.case.json WECC240.partition.json)
+  configure_file(${PROJECT_SOURCE_DIR}/cases/PhasorDynamics/WECC240/${_file}
+                 ${CMAKE_CURRENT_BINARY_DIR}/${_file} COPYONLY)
+endforeach()
 
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(

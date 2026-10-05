@@ -16,6 +16,8 @@
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/PartitionData.hpp>
+#include <GridKit/Model/PhasorDynamics/PartitionedSystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -377,6 +379,41 @@ namespace GridKit
         Log::setVerbosity(previous_verbosity);
 
         return status.report(__func__);
+      }
+
+      /// Each partition, with its tie branches' far ends at their case
+      /// voltages, reproduces the unpartitioned bus residuals at the initial state.
+      TestOutcome partitionedResidual()
+      {
+        using namespace std::filesystem;
+        using namespace GridKit::PhasorDynamics;
+
+        TestStatus                             success = true;
+        const auto                             data    = parseSystemModelData(current_path() / "WECC240.case.json");
+        SystemModel<double, size_t>            system(data);
+        PartitionedSystemModel<double, size_t> partitioned(data, parsePartitionData(current_path() / "WECC240.partition.json"));
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        system.evaluateResidual();
+        for (IdxT p = 0; p < partitioned.numPartitions(); ++p)
+        {
+          auto& partition  = partitioned.getPartition(p);
+          success         *= partition.allocate() == 0;
+          success         *= partition.initialize() == 0;
+          partition.evaluateResidual();
+        }
+        for (const auto& bus : data.bus)
+        {
+          const auto* expected = system.getBus(bus.bus_id)->getResidual().getData();
+          const auto* actual   = partitioned.getBus(bus.bus_id)->getResidual().getData();
+          for (IdxT i = 0; i < system.getBus(bus.bus_id)->size(); ++i)
+          {
+            success *= isEqual(actual[i], expected[i]);
+          }
+        }
+
+        return success.report(__func__);
       }
 
       /**

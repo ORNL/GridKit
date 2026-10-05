@@ -130,6 +130,36 @@ namespace GridKit
     };
 
     /**
+     * @brief Visit each device group, as a member pointer, in the order
+     * SystemModel constructs components.
+     *
+     * Component IDs are positions in this order.
+     */
+    template <typename DataT, typename Visitor>
+    void forEachDeviceGroup(Visitor&& visit)
+    {
+      visit(&DataT::regca);
+      visit(&DataT::branch);
+      visit(&DataT::loadz);
+      visit(&DataT::loadzip);
+      visit(&DataT::genrou);
+      visit(&DataT::gensal);
+      visit(&DataT::genclassical);
+      visit(&DataT::reecb);
+      visit(&DataT::gov);
+      visit(&DataT::gastpti);
+      visit(&DataT::hygov);
+      visit(&DataT::stabilizer);
+      visit(&DataT::exciter);
+      visit(&DataT::esdc1a);
+      visit(&DataT::sexspti);
+      visit(&DataT::repca);
+      visit(&DataT::constant_source);
+      visit(&DataT::function_source);
+      visit(&DataT::bus_fault);
+    }
+
+    /**
      * @brief Generate system model data from a JSON input file
      */
     SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);
