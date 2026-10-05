@@ -15,6 +15,7 @@ int main()
   result += test.piecewiseConstantInput();
   result += test.sunStepper();
   result += test.fixedStep();
+  result += test.changingPivots();
   result += test.suppressAlgebraicErrors();
   result += test.consistentICType();
 
