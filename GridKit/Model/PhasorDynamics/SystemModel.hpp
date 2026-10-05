@@ -103,6 +103,9 @@ namespace GridKit
       ComponentT*  getComponent(IdxT gridkit_component_id);
 
     private:
+      template <typename DeviceT>
+      void addDevices(const std::vector<typename DeviceT::ModelDataT>& device_data);
+
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
