@@ -13,6 +13,7 @@ int main()
   result += test.monitorActivityIsCached();
   result += test.dtMonitorSuppressesEpsilonFinalStep();
   result += test.piecewiseConstantInput();
+  result += test.sunStepper();
   result += test.fixedStep();
   result += test.suppressAlgebraicErrors();
   result += test.consistentICType();

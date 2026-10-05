@@ -6,3 +6,4 @@ add_test(
   NAME WECC240_validation
   COMMAND DynamicSimulation WECC240.solver.json
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(WECC240_validation PROPERTIES FIXTURES_SETUP WECC240_output)

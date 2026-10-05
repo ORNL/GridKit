@@ -6,3 +6,5 @@ add_test(
   NAME WECC240Partitioned_validation
   COMMAND DynamicSimulation WECC240Partitioned.solver.json
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+# Compares against the monolithic run, itself validated against PowerWorld.
+set_tests_properties(WECC240Partitioned_validation PROPERTIES FIXTURES_REQUIRED WECC240_output)
