@@ -1,6 +1,11 @@
+add_executable(idasim idasim.cpp)
 add_executable(cosim cosim.cpp)
 add_executable(PartitionMicrogrid PartitionMicrogrid.cpp)
 add_executable(PartitionScaleMicrogrid PartitionScaleMicrogrid.cpp)
+
+target_link_libraries(
+  idasim GridKit::solvers_dyn 
+         power_elec_microgrid_network)
 
 target_link_libraries(
   cosim

@@ -57,12 +57,6 @@ struct Hires
     bus.tag()[0] = true;
     bus.tag()[1] = true;
     system->tagDifferentiable();
-    std::cout << "size tag " << bus_comp->tag()[0] << " " << bus_comp->tag()[1] << std::endl;
-
-    for (auto i : system->tag())
-    {
-      std::cout << "tag " << i << std::endl;
-    }
 
     // Initial state: y = (1, 0, 0, 0, 0, 0, 0, 0.0057) in HIRES numbering
     double* y  = system->y().getData();
@@ -136,7 +130,7 @@ std::vector<double> solveCosim(int n_steps)
   }
 
   size_t num_iterations = 1;
-  size_t num_stages     = 4;
+  size_t num_stages     = 2;
 
   auto* cosim = new Cosim(num_iterations, num_stages);
   cosim->addSubsystems(partition1);
@@ -158,7 +152,7 @@ int main()
 {
   const std::vector<double> ref = solveMonolithic();
 
-  const std::vector<int> step_counts = {200}; // {10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5000};
+  const std::vector<int> step_counts = {10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5000};
   std::vector<double>    errors;
 
   for (int n : step_counts)

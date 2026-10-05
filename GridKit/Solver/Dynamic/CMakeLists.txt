@@ -52,7 +52,7 @@ if(GRIDKIT_ENABLE_RESOLVE)
             Native/StepControl.hpp
             Native/StepController.hpp
     LINK_LIBRARIES
-      PRIVATE
+      PUBLIC
       ReSolve::ReSolve
       PUBLIC
       GridKit::dense_vector

@@ -27,6 +27,15 @@ using System    = GridKit::PowerElectronicsModel<double, int>;
 template <typename ScalarT>
 std::vector<ScalarT> linspace(ScalarT start, ScalarT end, std::size_t num_points);
 
+
+struct GenDataIndex {
+  bool refframe;
+  int idx_y8;
+  int idx_y9;
+  int idx_y10;
+  int idx_y11;
+  int idx_y12;
+};
 /*
  * Verify partitioned residual and Jacobian evaluation against the
  *        monolithic microgrid model.
@@ -52,6 +61,22 @@ int main()
   assembleSystem(network, *system);
   system->allocate();
 
+  std::vector<GenDataIndex> genData(5);
+
+//Identify the location for the variables need to compute P and Q for each generator
+  for(int i=0; i < 5; i++)
+  {
+    auto* gen  = network.generators[i];
+    auto& gendata = genData[i];
+
+    gendata.refframe = (i == 0);
+    gendata.idx_y8   = gen->getNodeConnection(8);
+    gendata.idx_y9   = gen->getNodeConnection(9);
+    gendata.idx_y10  = gen->getNodeConnection(10);
+    gendata.idx_y11  = gen->getNodeConnection(11);
+    gendata.idx_y12  = gendata.refframe? -1:gen->getNodeConnection(12);
+  }
+
   // Generator parameters used to construct the initial conditions.
   const auto& parms1 = network.DGParam_list[0];
   const auto& parms2 = network.DGParam_list[2];
@@ -70,63 +95,48 @@ int main()
 
   // Create initial derivatives specifics generated in MATLAB
   // DGs 1
-  yp[2]      = parms1.Vn_;
-  yp[4]      = parms1.Kpv_ * parms1.Vn_;
-  yp[6]      = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
-  yp[12 + 2] = parms1.Vn_;
-  yp[12 + 4] = parms1.Kpv_ * parms1.Vn_;
-  yp[12 + 6] = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
-  for (size_t i = 2; i < 4; i++)
+  for (int i = 0; i < 2 * N_size; ++i)
   {
-    yp[13 * i - 1 + 2] = parms2.Vn_;
-    yp[13 * i - 1 + 4] = parms2.Kpv_ * parms2.Vn_;
-    yp[13 * i - 1 + 6] = (parms2.Kpc_ * parms2.Kpv_ * parms2.Vn_) / parms2.Lf_;
+    const auto& params = network.DGParam_list[i];
+
+    yp[13 * i - 1 + 2] = params.Vn_;
+    yp[13 * i - 1 + 4] = params.Kpv_ * params.Vn_;
+    yp[13 * i - 1 + 6] = (params.Kpc_ * params.Kpv_ * params.Vn_) / params.Lf_;
   }
 
-  // since the intial P_com = 0
-  y[network.dg_signal.getNodeConnection(0).idx_] = parms1.wb_;
+  // Initial P_com = 0, so initialize the reference-frame frequency.
+  y[network.dg_signal.getNodeConnection(0).idx_] = network.DGParam_list[0].wb_;
 
   system->y().setDataUpdated();
   system->yp().setDataUpdated();
-
-  system->initialize();
-  system->evaluateResidual();
-
-  system->updateTime(0.0, 1.0e-8);
-  system->evaluateJacobian();
-  system->tagDifferentiable();
-
-  auto* ida_ic = new AnalysisManager::Sundials::Ida<double, int>(system);
-
-  ida_ic->setTolerance(1.0e-8);
-  ida_ic->setMaxSteps(5000);
-  ida_ic->configureSimulation();
-  ida_ic->getDefaultInitialCondition();
-  ida_ic->initializeSimulation(0.0, true);
-  // ida_ic->runSimulation(0.0001);
-
-  delete ida_ic;
 
   // --------------------------------------------------------------------------------
   // Create 2 Partitions and  a Partition interfaces to split to network
   // --------------------------------------------------------------------------------
   std::vector<Subsystem*> subsystems;
-  partitionNetwork(network, subsystems, 48);
+  partitionNetwork(network, subsystems, 1000);
 
   // ---------------------------------------------------------------------------
   // cosim
   // ---------------------------------------------------------------------------
+  constexpr std::size_t max_iterations = 1;
+  constexpr std::size_t num_stages     = 1;
 
-  std::vector<double> time_points  = linspace(0.0, 0.01, 10);
-  std::vector<double> time_points1 = linspace(0.01, 1.0, 10);
+  constexpr std::size_t num_intervals_1 = 140;
+  constexpr std::size_t num_intervals_2 = 0;
+  // Intervals to use
+  // 15 30
+  // 20 40
+  // 25 50
+  // 30 60
+  // 35 70
 
-  time_points.insert(time_points.end(), time_points1.begin() + 1, time_points1.end());
+  std::vector<double> time_points  = linspace(0.0, 1.0, num_intervals_1 + 1);
+  // std::vector<double> time_points1 = linspace(0.01, 1.0, num_intervals_2 + 1);
 
-  // std::vector<double> time_points_b = linspace(1.0, 1.01, 50);
-  // std::vector<double> time_points2  = linspace(1.01, 2.0, 40);
-  // time_points_b.insert(time_points_b.end(), time_points2.begin() + 1, time_points2.end());
+  // time_points.insert(time_points.end(), time_points1.begin() + 1, time_points1.end());
 
-  auto* cosim = new AnalysisManager::MultiStageCosimulation<double, int>(2, 4);
+  auto* cosim = new AnalysisManager::MultiStageCosimulation<double, int>(max_iterations, num_stages);
 
   for (auto* partition : subsystems)
   {
@@ -135,33 +145,15 @@ int main()
 
   cosim->allocate();
   cosim->initializeSimulation(time_points, &system->y(), &system->yp());
-  const auto t_start = std::chrono::steady_clock::now();
 
-  std::ofstream output("cosim_solution.csv");
+  const std::string filename = "cosim_solution_stages_" + std::to_string(num_stages) +
+                               "_iterations_" + std::to_string(max_iterations) +
+                               "_intervals_" + std::to_string(num_intervals_1) +
+                               "_" + std::to_string(num_intervals_2) + ".csv";
+
+  std::ofstream output(filename);
 
   output << std::setprecision(16);
-
-  // Header
-  output << "time";
-
-  for (int i = 0; i < cosim->y().getSize() && i < 500; ++i)
-  {
-    output << ",y" << i;
-  }
-
-  output << '\n';
-
-  // Initial condition
-  const auto* y_initial = cosim->y().getData(GridKit::memory::HOST);
-
-  output << time_points.front();
-
-  for (int i = 0; i < cosim->y().getSize() && i < 500; ++i)
-  {
-    output << ',' << y_initial[i];
-  }
-
-  output << '\n';
 
   auto out_cb = [&](const auto time, const auto& state) -> void
   {
@@ -169,57 +161,60 @@ int main()
 
     output << time;
 
-    for (int i = 0; i < state.getSize() && i < 500; ++i)
+    for (int i = 0; i < static_cast<int>(genData.size()); ++i)
     {
-      output << ',' << state_data[i];
+    const auto& gendata = genData[i];
+
+    const auto y8  = state_data[gendata.idx_y8];
+    const auto y9  = state_data[gendata.idx_y9];
+    const auto y10 = state_data[gendata.idx_y10];
+    const auto y11 = state_data[gendata.idx_y11];
+
+    const auto delta = gendata.refframe ? 0.0 : state_data[gendata.idx_y12];
+    const auto P     = y8 * y10 + y9 * y11;
+    const auto Q     = -y8 * y11 + y9 * y10;
+
+    output << ";   " << delta
+           << ", "   << P
+           << ", "   << Q;
     }
 
     output << '\n';
   };
 
+  out_cb(0.0, system->y());
   // Run co-simulation and write the solution at every macro step.
+  
+
+  const auto t_start = std::chrono::steady_clock::now(); 
+
   cosim->runSimulation(out_cb);
 
-  // network.loads[0]->setResistance(3.0);
-  // network.loads[0]->setInductance(6.4e-3);
+  const auto t_end = std::chrono::steady_clock::now();
+  const double elapsed_s = std::chrono::duration<double>(t_end - t_start).count();
 
-  // network.loads[2]->setResistance(2.0);
-  // network.loads[2]->setInductance(3.2e-3);
-
-  // cosim->initializeSimulation(time_points_b, &cosim->y(), &cosim->yp());
-  // cosim->runSimulation(out_cb);
+  output << "\n# Metadata\n";
+  output << "# solver: MultiStage Cosim\n";
+  output << "# num_stages: "      << num_stages << '\n';
+  output << "# max_iterations: "  << max_iterations << '\n';
+  output << "# num_intervals_1: " << num_intervals_1 << '\n';
+  output << "# num_intervals_2: " << num_intervals_2 << '\n';
+  output << "# num_macro_steps: " << time_points.size() - 1 << '\n';
+  output << "# runtime_seconds: " << elapsed_s << '\n';
 
   output.close();
-
-  const auto t_end = std::chrono::steady_clock::now();
-
-  const double elapsed_s = std::chrono::duration<double>(t_end - t_start).count();
 
   std::cout << "\nCosimulation runtime: " << elapsed_s << " s  ("
             << time_points.size() - 1 << " macro steps, "
             << 1e3 * elapsed_s / static_cast<double>(time_points.size() - 1)
             << " ms/step)\n";
 
-  // auto* y_data = cosim->y().getData(GridKit::memory::HOST);
-
-  // std::cout << "\nFinal solution: y = [";
-
-  // for (int i = 0; i < cosim->y().getSize(); ++i)
-  // {
-  //   std::cout << y_data[i];
-
-  //   if (i + 1 < cosim->y().getSize())
-  //   {
-  //     std::cout << "\n";
-  //   }
-  // }
-
-  // std::cout << "]\n";
-
   // ---------------------------------------------------------------------------
   // Clean up
   // ---------------------------------------------------------------------------
+
   delete system;
+  delete cosim;
   for (auto* partition : subsystems)
   {
     delete partition;
