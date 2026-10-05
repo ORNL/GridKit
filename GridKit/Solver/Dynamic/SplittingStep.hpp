@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -15,17 +16,13 @@ namespace AnalysisManager
   namespace Sundials
   {
     /**
-     * @brief Lie–Trotter splitting of coupled models (ARKODE SplittingStep).
+     * @brief Multicolor Gauss-Seidel splitting of coupled partitions (ARKODE SplittingStep).
      *
-     * The state is a ManyVector with one block per partition. Each partition's
-     * integrator advances its own block. Its coupling inputs ramp over the
-     * stage: toward the new value of a partition already advanced, or at the
-     * last rate of one not yet advanced. Outputs are each partition's accepted
-     * state with the inputs it was solved with.
-     *
-     * With a coupling tolerance, a step is accepted only if no coupling input
-     * changed by more than the tolerance during it, and a SUNDIALS PI
-     * controller sizes the next step from that change.
+     * Partitions that share no coupling form a color. ARKODE advances the
+     * colors in turn, and a color advances its partitions concurrently. Inputs
+     * ramp toward partitions already advanced and extrapolate the others. A
+     * SUNDIALS PI controller bounds the endpoint prediction mismatch. Output
+     * follows acceptance of the complete step.
      */
     template <class ScalarT, typename IdxT>
     class SplittingStep
@@ -41,12 +38,15 @@ namespace AnalysisManager
       SplittingStep(const SplittingStep&)            = delete;
       SplittingStep& operator=(const SplittingStep&) = delete;
 
-      /// The solver and its model must outlive this object.
-      void addPartition(SolverT& solver, std::vector<CouplingT> couplings);
+      /// The solver, its model, and its private context must outlive this object.
+      void addPartition(SolverT& solver, std::vector<CouplingT> couplings, SUNContext context);
+
+      /// Partitions of one color advance on up to this many threads (OpenMP builds).
+      void setNumThreads(int count);
 
       /// Step size; with a coupling tolerance, the first step after each initialization.
       void setFixedStep(RealT step);
-      /// Largest change of a coupling input within a step, relative to 1 + |input| (0: fixed steps).
+      /// Endpoint prediction mismatch relative to 1 + |input| (0: fixed steps).
       void setCouplingTolerance(RealT tolerance);
       /// Consistent-coupling tolerances, as for Ida (abs_tol <= 0: each variable's own).
       void setTolerance(RealT rel_tol, RealT abs_tol);
@@ -80,8 +80,8 @@ namespace AnalysisManager
       struct Partition
       {
         SolverT*               solver{};
+        SUNContext             context{}; ///< Borrowed from the regional solver
         SUNStepper             stepper{}; ///< The solver over its own state
-        SUNStepper             block{};   ///< The solver over block `index`, given to ARKODE
         sunindextype           index{};
         RealT                  time{};    ///< Time of the state in its block
         RealT                  seconds{}; ///< Wall time spent advancing it
@@ -89,19 +89,34 @@ namespace AnalysisManager
         std::vector<Link>      links;
       };
 
-      static Partition& content(SUNStepper block);
-      static RealT      value(const Link& link, N_Vector y);
-      static void       couple(const Partition& partition, N_Vector y, RealT t);
-      static SUNErrCode resetBlock(SUNStepper block, sunrealtype t, N_Vector y);
-      static int        evolveBlock(SUNStepper block, sunrealtype tout, N_Vector y, sunrealtype* tret);
-      static SUNErrCode setBlockStopTime(SUNStepper block, sunrealtype tstop);
-      static SUNErrCode setBlockStepDirection(SUNStepper block, sunrealtype direction);
+      /// Partitions that share no coupling; one ARKODE partition
+      struct Color
+      {
+        std::vector<Partition*> partitions;
+        SUNStepper              stepper{};
+        int                     threads{1};
+        std::exception_ptr      failure; ///< Rethrown by advance(), since ARKODE is C
+      };
 
-      RealT couplingMismatch(N_Vector y, RealT rel_tol, RealT abs_tol) const;
+      static Color& content(SUNStepper stepper);
+      static RealT  value(const Link& link, N_Vector y);
+      static void   couple(const Partition& partition, N_Vector y, RealT t);
+      static int    evolvePartition(Partition& partition, sunrealtype tout, N_Vector y, sunrealtype* tret);
+      template <class Function>
+      static std::exception_ptr concurrently(const Color& color, Function&& function);
+      static SUNErrCode         resetColor(SUNStepper stepper, sunrealtype t, N_Vector y);
+      static int                evolveColor(SUNStepper stepper, sunrealtype tout, N_Vector y, sunrealtype* tret);
+      static SUNErrCode         setColorStopTime(SUNStepper stepper, sunrealtype tstop);
+      static SUNErrCode         setColorStepDirection(SUNStepper stepper, sunrealtype direction);
+
+      void  colorPartitions();
+      RealT couplingMismatch(N_Vector y, RealT t, RealT rel_tol, RealT abs_tol) const;
       void  advance(RealT tout);
 
+      int                                     num_threads_{1};
       SUNContext                              context_{};
       std::vector<std::unique_ptr<Partition>> partitions_;
+      std::vector<std::unique_ptr<Color>>     colors_; ///< In ARKODE's order
       std::vector<N_Vector>                   blocks_; ///< Owned; the ManyVector does not own them
       N_Vector                                y_{};
       N_Vector                                y_saved_{}; ///< Step start, restored on rejection

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -20,6 +21,9 @@ namespace GridKit
     {
       using SystemT = PhasorDynamics::SystemModel<ScalarT, IdxT>;
       using RealT   = typename SystemT::RealT;
+
+      /// Bus currents sum in a different order once tie branches leave a partition (measured 763 eps).
+      static constexpr RealT TOLERANCE = 1000 * std::numeric_limits<RealT>::epsilon();
 
     public:
       /// The partitions reproduce the intact case's residual at a perturbed
@@ -114,7 +118,7 @@ namespace GridKit
         const auto* fb   = b.getResidual().getData();
         for (IdxT i = 0; i < a.size(); ++i)
         {
-          if (!isEqual(fb[i], fa[i]))
+          if (!isEqual(fb[i], fa[i], TOLERANCE))
           {
             same = false;
           }

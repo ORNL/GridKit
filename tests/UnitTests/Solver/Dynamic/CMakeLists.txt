@@ -7,6 +7,11 @@ if(TARGET SUNDIALS::idas)
   add_test(NAME IDATest COMMAND $<TARGET_FILE:test_ida>)
 
   install(TARGETS test_ida RUNTIME DESTINATION bin)
+
+  add_executable(test_splitting_step runSplittingStepTests.cpp)
+  target_link_libraries(test_splitting_step GridKit::solvers_dyn GridKit::testing)
+  add_test(NAME SplittingStepTest COMMAND $<TARGET_FILE:test_splitting_step>)
+  install(TARGETS test_splitting_step RUNTIME DESTINATION bin)
 endif()
 
 if(GRIDKIT_ENABLE_RESOLVE)

@@ -60,6 +60,11 @@ namespace AnalysisManager
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
 
+      SUNContext context() const noexcept
+      {
+        return context_;
+      }
+
       SUNStepper createSUNStepper() override;
       int        computeConsistentState(RealT t, RealT tout) override;
 

@@ -6,6 +6,8 @@
 
 #include "Logger.hpp"
 
+#include <mutex>
+
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Utilities/Colors.hpp>
 
@@ -20,6 +22,35 @@ namespace GridKit
     /// @brief Default verbosity is to print error and warning messages
     Logger::Verbosity Logger::verbosity_ = Logger::WARNINGS;
 #endif
+
+    thread_local std::ostream* Logger::thread_output_ = nullptr;
+
+    Logger::ScopedOutput::ScopedOutput()
+      : previous_(thread_output_)
+    {
+      thread_output_ = &buffer_;
+    }
+
+    Logger::ScopedOutput::~ScopedOutput()
+    {
+      thread_output_ = previous_;
+      if (!buffer_.view().empty())
+      {
+        static std::mutex     mutex;
+        const std::lock_guard lock(mutex);
+        *(previous_ ? previous_ : logger_) << buffer_.view();
+      }
+    }
+
+    std::ostream& Logger::stream(Verbosity level)
+    {
+      if (thread_output_)
+      {
+        static thread_local std::ostream discard(nullptr);
+        return level <= verbosity_ ? *thread_output_ : discard;
+      }
+      return *output_streams_[level];
+    }
 
     /// @brief Default output is standard output
     std::ostream* Logger::logger_ = &std::cout;
@@ -115,8 +146,8 @@ namespace GridKit
     std::ostream& Logger::error()
     {
       using namespace Colors;
-      *(output_streams_[ERRORS]) << "[" << RED << "ERROR" << CLEAR << "] ";
-      return *(output_streams_[ERRORS]);
+      stream(ERRORS) << "[" << RED << "ERROR" << CLEAR << "] ";
+      return stream(ERRORS);
     }
 
     /**
@@ -129,8 +160,8 @@ namespace GridKit
     std::ostream& Logger::warning()
     {
       using namespace Colors;
-      *(output_streams_[WARNINGS]) << "[" << YELLOW << "WARNING" << CLEAR << "] ";
-      return *(output_streams_[WARNINGS]);
+      stream(WARNINGS) << "[" << YELLOW << "WARNING" << CLEAR << "] ";
+      return stream(WARNINGS);
     }
 
     /**
@@ -142,8 +173,8 @@ namespace GridKit
      */
     std::ostream& Logger::summary()
     {
-      *(output_streams_[SUMMARY]) << "[SUMMARY] ";
-      return *(output_streams_[SUMMARY]);
+      stream(SUMMARY) << "[SUMMARY] ";
+      return stream(SUMMARY);
     }
 
     /**
@@ -156,8 +187,8 @@ namespace GridKit
      */
     std::ostream& Logger::misc()
     {
-      *(output_streams_[EVERYTHING]) << "[MESSAGE] ";
-      return *(output_streams_[EVERYTHING]);
+      stream(EVERYTHING) << "[MESSAGE] ";
+      return stream(EVERYTHING);
     }
 
     /**

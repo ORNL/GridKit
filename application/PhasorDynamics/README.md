@@ -4,6 +4,7 @@
 
    Name                | Value
  ----------------------|-------------------------------------------------------
+  `partition`          | Optional partitioned integration settings (see below)
   `system_model_file`  | Path to the system model file[^1]
   `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
   `tmax`               | A floating-point value for max time
@@ -33,3 +34,20 @@ Each event group describes a system event that occurs at a given time point
   `bus`              | Number of the faulted bus (omitted for `ContingencyAnalysis`, which faults every bus in turn using the same `R` and `X`)
   `R`                | Fault resistance in per unit (required for "fault_on")
   `X`                | Fault reactance in per unit (required for "fault_on")
+
+## Partitioned integration
+
+`partition` contains `file` (a bus assignment `.partition.json`), `dt` (the
+initial macro step), and optional `tol` (endpoint prediction mismatch relative
+to `1 + |input|`; default 0 uses fixed steps).
+
+Regions are advanced by multicolor Gauss-Seidel: regions that share no tie
+branch form a color, and the colors advance in turn. A region's boundary inputs
+ramp toward regions already advanced in the step and extrapolate the others.
+Complete macro steps are accepted or rejected together, and input slopes reset
+at events.
+
+`threads` (default 1) sets how many regions of one color advance at once; values
+above 1 need a build configured with `-DGridKit_ENABLE_OPENMP=ON`. Results do not
+depend on `threads`. The reported `Complete in` duration is elapsed wall time,
+excluding setup.
