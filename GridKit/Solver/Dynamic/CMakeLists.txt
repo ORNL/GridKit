@@ -8,13 +8,17 @@
 if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
   gridkit_add_library(
     solvers_dyn
-    SOURCES Ida.cpp
-    HEADERS Ida.hpp DynamicSolver.hpp
+    SOURCES Ida.cpp SplittingStep.cpp
+    HEADERS Ida.hpp SplittingStep.hpp DynamicSolver.hpp
     LINK_LIBRARIES
       PUBLIC
       SUNDIALS::nvecserial
       PUBLIC
+      SUNDIALS::nvecmanyvector
+      PUBLIC
       SUNDIALS::idas
+      PUBLIC
+      SUNDIALS::arkode
       PUBLIC
       SUNDIALS::sunlinsolklu
       PUBLIC
@@ -27,13 +31,17 @@ if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
 else()
   gridkit_add_library(
     solvers_dyn
-    SOURCES Ida.cpp
-    HEADERS Ida.hpp DynamicSolver.hpp
+    SOURCES Ida.cpp SplittingStep.cpp
+    HEADERS Ida.hpp SplittingStep.hpp DynamicSolver.hpp
     LINK_LIBRARIES
       PUBLIC
       SUNDIALS::nvecserial
       PUBLIC
+      SUNDIALS::nvecmanyvector
+      PUBLIC
       SUNDIALS::idas
+      PUBLIC
+      SUNDIALS::arkode
       PUBLIC
       GridKit::definitions
       PUBLIC

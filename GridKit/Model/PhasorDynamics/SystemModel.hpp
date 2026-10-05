@@ -105,6 +105,17 @@ namespace GridKit
       SignalNodeT* getSignalNode(IdxT signal_id);
       ComponentT*  getComponent(IdxT gridkit_component_id);
 
+      /// Bus with this ID, or nullptr if the system does not contain it.
+      BusT* findBus(IdxT bus_id) const;
+
+      /**
+       * @brief Buses this system reads but does not solve for (BusInfinite).
+       *
+       * Their voltages are the system's inputs; the currents its components
+       * inject into them (Ir, Ii) are its outputs to the rest of a network.
+       */
+      std::vector<BusT*> externalBuses() const;
+
     private:
       void assembleNetworkAdmittance();
       bool ensureAdmittanceCurrent();

@@ -275,16 +275,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::getStepCount(RealT tf, RealT dt) const
     {
-      if (dt <= 0.0)
-      {
-        return 1;
-      }
-
-      const RealT n_est   = (tf - t_init_) / dt;
-      const RealT epsilon = std::numeric_limits<RealT>::epsilon()
-                            * std::max({std::abs(t_init_), std::abs(tf), RealT(1.0)})
-                            / dt;
-      return static_cast<int>(std::ceil(n_est - epsilon));
+      return monitorStepCount(t_init_, tf, dt);
     }
 
     /**
@@ -296,7 +287,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
     {
-      return step == nsteps ? tf : std::fma((RealT) step, dt_monitor, t_init_);
+      return monitorTime(t_init_, tf, dt_monitor, step, nsteps);
     }
 
     /**
@@ -329,6 +320,122 @@ namespace AnalysisManager
     }
 
     /**
+     * @brief Make the model's algebraic variables and derivatives consistent
+     * at t, keeping its differential variables fixed (IDA_YA_YDP_INIT).
+     *
+     * Reads the state from the model and writes the consistent state back.
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::computeConsistentState(RealT t, RealT tout)
+    {
+      copyVec(model_->y(), yy_);
+      checkOutput(IDAReInit(solver_, t, yy_, yp_), "IDAReInit");
+      checkOutput(IDACalcIC(solver_, IDA_YA_YDP_INIT, tout), "IDACalcIC");
+      checkOutput(IDAGetConsistentIC(solver_, yy_, yp_), "IDAGetConsistentIC");
+      updateModelState(t);
+      history_valid_ = false;
+      return 0;
+    }
+
+    /// The integrator as a SUNStepper over the model state. Inputs jump between
+    /// partition stages, so algebraic variables are left out of the error test.
+    template <class ScalarT, typename IdxT>
+    SUNStepper Ida<ScalarT, IdxT>::createSUNStepper()
+    {
+      suppress_alg_ = true;
+      checkOutput(IDASetSuppressAlg(solver_, SUNTRUE), "IDASetSuppressAlg");
+
+      SUNStepper stepper{};
+      checkOutput(SUNStepper_Create(context_, &stepper), "SUNStepper_Create");
+      checkOutput(SUNStepper_SetContent(stepper, this), "SUNStepper_SetContent");
+      checkOutput(SUNStepper_SetResetFn(stepper, stepperReset), "SUNStepper_SetResetFn");
+      checkOutput(SUNStepper_SetEvolveFn(stepper, stepperEvolve), "SUNStepper_SetEvolveFn");
+      checkOutput(SUNStepper_SetStopTimeFn(stepper, stepperSetStopTime), "SUNStepper_SetStopTimeFn");
+      checkOutput(SUNStepper_SetStepDirectionFn(stepper, stepperSetStepDirection), "SUNStepper_SetStepDirectionFn");
+      return stepper;
+    }
+
+    template <class ScalarT, typename IdxT>
+    Ida<ScalarT, IdxT>& Ida<ScalarT, IdxT>::stepperContent(SUNStepper stepper)
+    {
+      void* content = nullptr;
+      SUNStepper_GetContent(stepper, &content);
+      return *static_cast<Ida*>(content);
+    }
+
+    /// Resetting to the state last returned keeps IDA's history; any other state restarts it.
+    template <class ScalarT, typename IdxT>
+    SUNErrCode Ida<ScalarT, IdxT>::stepperReset(SUNStepper stepper, sunrealtype t, N_Vector y)
+    {
+      auto& ida = stepperContent(stepper);
+      if (ida.history_valid_ && t == ida.history_time_)
+      {
+        const auto* current = N_VGetArrayPointer(ida.yy_);
+        const auto* reset   = N_VGetArrayPointer(y);
+        if (std::equal(reset, reset + N_VGetLength(y), current))
+        {
+          return SUN_SUCCESS;
+        }
+      }
+      ida.history_valid_ = false;
+      N_VScale(1.0, y, ida.yy_);
+      if (IDAReInit(ida.solver_, t, ida.yy_, ida.yp_) != IDA_SUCCESS)
+      {
+        return SUN_ERR_OP_FAIL;
+      }
+      ida.needs_consistent_state_ = true;
+      return SUN_SUCCESS;
+    }
+
+    /// Returns 0, or the negative IDA flag (fatal under the SUNStepper_Evolve contract).
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::stepperEvolve(SUNStepper stepper, sunrealtype tout, N_Vector y, sunrealtype* tret)
+    {
+      auto& ida    = stepperContent(stepper);
+      int   retval = IDA_SUCCESS;
+      if (ida.needs_consistent_state_)
+      {
+        retval                      = IDACalcIC(ida.solver_, IDA_YA_YDP_INIT, tout);
+        ida.needs_consistent_state_ = false;
+      }
+      if (retval == IDA_SUCCESS)
+      {
+        retval = IDASolve(ida.solver_, tout, tret, ida.yy_, ida.yp_, IDA_NORMAL);
+      }
+      SUNStepper_SetLastFlag(stepper, retval);
+      if (retval < 0)
+      {
+        return retval;
+      }
+      ida.history_valid_ = true;
+      ida.history_time_  = *tret;
+      ida.updateModelState(*tret);
+      N_VScale(1.0, ida.yy_, y);
+      return 0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    SUNErrCode Ida<ScalarT, IdxT>::stepperSetStopTime(SUNStepper stepper, sunrealtype tstop)
+    {
+      if (IDASetStopTime(stepperContent(stepper).solver_, tstop) != IDA_SUCCESS)
+      {
+        return SUN_ERR_OP_FAIL;
+      }
+      return SUN_SUCCESS;
+    }
+
+    template <class ScalarT, typename IdxT>
+    SUNErrCode Ida<ScalarT, IdxT>::stepperSetStepDirection(SUNStepper, sunrealtype direction)
+    {
+      // A stiff DAE flow cannot run backward; this also rejects splittings above order 2.
+      if (direction < 0)
+      {
+        return SUN_ERR_ARG_OUTOFRANGE;
+      }
+      return SUN_SUCCESS;
+    }
+
+    /**
      * @brief Run the IDA solver and optionally produce monitor output every `dt_monitor`.
      *
      * Intermediate `dt_monitor` targets are skipped, and one solve runs from the
@@ -343,7 +450,7 @@ namespace AnalysisManager
       int        retval          = 0;
       const bool monitoring      = model_->monitoring();
       const bool output_required = monitoring || step_callback.has_value();
-      const int  nsteps          = getStepCount(tf, dt_monitor);
+      const int  nsteps          = monitorStepCount(t_init_, tf, dt_monitor);
 
       for (int i = 1; i <= nsteps; i++)
       {
@@ -353,7 +460,7 @@ namespace AnalysisManager
           continue;
         }
 
-        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
+        const RealT tout = monitorTime(t_init_, tf, dt_monitor, i, nsteps);
         RealT       tret;
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
@@ -490,11 +597,11 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, RealT dt_monitor)
     {
       int retval = 0;
-      int nsteps = getStepCount(tf, dt_monitor);
+      int nsteps = monitorStepCount(t_init_, tf, dt_monitor);
 
       for (int i = 1; i <= nsteps; i++)
       {
-        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
+        const RealT tout = monitorTime(t_init_, tf, dt_monitor, i, nsteps);
         RealT       tret;
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
@@ -678,11 +785,11 @@ namespace AnalysisManager
     {
       int retval = 0;
       int ncheck;
-      int nsteps = getStepCount(tf, dt_monitor);
+      int nsteps = monitorStepCount(t_init_, tf, dt_monitor);
 
       for (int i = 1; i <= nsteps; i++)
       {
-        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
+        const RealT tout = monitorTime(t_init_, tf, dt_monitor, i, nsteps);
         RealT       tret;
         retval = IDASolveF(solver_, tout, &tret, yy_, yp_, IDA_NORMAL, &ncheck);
         checkOutput(retval, "IDASolveF");

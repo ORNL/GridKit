@@ -60,6 +60,9 @@ namespace AnalysisManager
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
 
+      SUNStepper createSUNStepper() override;
+      int        computeConsistentState(RealT t, RealT tout) override;
+
       int configureSimulation();
       int configureLinearSolver();
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
@@ -196,8 +199,14 @@ namespace AnalysisManager
                                   void*    user_data);
 
       RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
-      int   getIDAConsistentICType() const;
-      void  updateModelState(RealT t);
+      int  getIDAConsistentICType() const;
+      void updateModelState(RealT t);
+
+      static Ida&       stepperContent(SUNStepper stepper);
+      static SUNErrCode stepperReset(SUNStepper stepper, sunrealtype t, N_Vector y);
+      static int        stepperEvolve(SUNStepper stepper, sunrealtype tout, N_Vector y, sunrealtype* tret);
+      static SUNErrCode stepperSetStopTime(SUNStepper stepper, sunrealtype tstop);
+      static SUNErrCode stepperSetStepDirection(SUNStepper stepper, sunrealtype direction);
 
     private:
       static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
@@ -210,6 +219,10 @@ namespace AnalysisManager
       SUNLinearSolver linearSolverB_{};
 
       RealT t_init_{};
+
+      bool  needs_consistent_state_{false}; ///< Set by the stepper's Reset
+      bool  history_valid_{false};          ///< IDA's history ends at the stepper's last output
+      RealT history_time_{};                ///< Time of the stepper's last output
 
       N_Vector yy_{};  ///< Solution vector
       N_Vector yp_{};  ///< Solution derivatives vector
