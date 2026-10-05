@@ -5,6 +5,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -46,12 +47,24 @@ namespace GridKit
     };
 
     /**
+     * @brief Partitioned integration (Lie–Trotter splitting with ARKODE SplittingStep)
+     */
+    struct PartitionStudyData
+    {
+      fs::path file;  ///< .partition.json, relative to the study file
+      double   dt{};  ///< Splitting step, or the first step when adapting
+      double   tol{}; ///< Largest coupling change per step (0: fixed steps)
+    };
+
+    /**
      * @brief Data defined in JSON file for parameterized study
      */
     struct StudyData
     {
       /// path to system model JSON file
       fs::path                                       system_model_file;
+      /// partitioned integration, if requested
+      std::optional<PartitionStudyData>              partition;
       /// monitor output time step size, or 0 for no intermediate monitoring
       double                                         dt_monitor;
       /// max time
@@ -99,6 +112,14 @@ namespace GridKit
       using namespace magic_enum;
 
       j.at("system_model_file").get_to(c.system_model_file);
+      if (j.contains("partition"))
+      {
+        const auto& partition = j.at("partition");
+        c.partition.emplace();
+        partition.at("file").get_to(c.partition->file);
+        partition.at("dt").get_to(c.partition->dt);
+        c.partition->tol = partition.value("tol", 0.0);
+      }
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
       c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
@@ -219,6 +240,10 @@ namespace GridKit
       {
         data.system_model_file = loc / data.system_model_file;
       }
+      if (data.partition && !data.partition->file.is_absolute())
+      {
+        data.partition->file = loc / data.partition->file;
+      }
       if (!data.reference_file.empty())
       {
         if (!data.reference_file.is_absolute())
@@ -272,6 +297,23 @@ namespace GridKit
       }
 
       return data;
+    }
+
+    /**
+     * @brief Run the study's events and outputs with any solver offering
+     * initializeSimulation(t) and runSimulation(tf, dt_monitor).
+     */
+    template <class SolverT, class SetFault>
+    void runStudy(const StudyData& study, SolverT& solver, SetFault&& set_fault)
+    {
+      solver.initializeSimulation(0.0);
+      for (const auto& event : study.events)
+      {
+        solver.runSimulation(event.time, study.dt_monitor);
+        set_fault(event.element_id, event.type == SystemEvent::Type::FAULT_ON);
+        solver.initializeSimulation(event.time);
+      }
+      solver.runSimulation(study.tmax, study.dt_monitor);
     }
 
     void checkCommandLine(int argc, const std::string& appName)

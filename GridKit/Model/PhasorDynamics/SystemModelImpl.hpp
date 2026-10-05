@@ -970,6 +970,33 @@ namespace GridKit
       return buses_[gridkit_bus_id];
     }
 
+    template <typename scalar_type, typename index_type>
+    SystemModel<scalar_type, index_type>::BusT*
+    SystemModel<scalar_type, index_type>::findBus(IdxT bus_id) const
+    {
+      const auto found = gridkit_bus_indices_.find(bus_id);
+      if (found == gridkit_bus_indices_.end())
+      {
+        return nullptr;
+      }
+      return buses_[found->second];
+    }
+
+    template <typename scalar_type, typename index_type>
+    std::vector<typename SystemModel<scalar_type, index_type>::BusT*>
+    SystemModel<scalar_type, index_type>::externalBuses() const
+    {
+      std::vector<BusT*> external;
+      for (auto* bus : buses_)
+      {
+        if (bus->BusType() == BusT::BusTypeT::SLACK)
+        {
+          external.push_back(bus);
+        }
+      }
+      return external;
+    }
+
     /**
      * @brief Return pointer to a signal
      *

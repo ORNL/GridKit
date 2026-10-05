@@ -1,10 +1,15 @@
 #include <exception>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <vector>
 
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/PartitionData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Solver/Dynamic/SplittingStep.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
@@ -18,6 +23,96 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
+using SystemT = SystemModel<scalar_type, index_type>;
+using IdaT    = Ida<scalar_type, index_type>;
+
+/// Apply the study's IDA options and configure the solver.
+void configure(IdaT& ida, const StudyData& study)
+{
+  ida.setTolerance(study.rel_tol, study.abs_tol);
+  ida.setFixedStep(study.dt_fixed);
+  ida.setMaxSteps(study.max_steps);
+  ida.setMaxOrder(study.max_order);
+  ida.setConsistentICType(study.consistent_ic_type);
+  ida.configureSimulation();
+}
+
+/// Returns the simulation time in seconds, excluding setup.
+real_type runMonolithic(const StudyData& study)
+{
+  SystemT system(study.model_data);
+  system.allocate();
+
+  IdaT ida(&system);
+  configure(ida, study);
+
+  const real_type start = static_cast<real_type>(clock());
+  runStudy(study, ida, [&](std::size_t fault, bool on)
+           { system.getBusFault(fault)->setStatus(on); });
+  const real_type stop = static_cast<real_type>(clock());
+
+  system.stopMonitor();
+  return (stop - start) / CLOCKS_PER_SEC;
+}
+
+/// Returns the simulation time in seconds, excluding setup.
+real_type runPartitioned(const StudyData& study)
+{
+  const auto parts = partitionSystemModelData(study.model_data, parsePartitionData(study.partition->file));
+
+  std::vector<std::unique_ptr<SystemT>> systems;
+  std::vector<std::unique_ptr<IdaT>>    solvers;
+  for (const auto& data : parts.partitions)
+  {
+    auto& system = *systems.emplace_back(std::make_unique<SystemT>(data));
+    system.allocate();
+    configure(*solvers.emplace_back(std::make_unique<IdaT>(&system)), study);
+  }
+
+  SplittingStep<scalar_type, index_type> splitting; // destroyed before the partitions it integrates
+  const auto                             couplings = connectPartitions(systems);
+  for (std::size_t p = 0; p < systems.size(); ++p)
+  {
+    splitting.addPartition(*solvers[p], couplings[p]);
+  }
+  splitting.setFixedStep(study.partition->dt);
+  splitting.setCouplingTolerance(study.partition->tol);
+  splitting.setTolerance(study.rel_tol, study.abs_tol);
+
+  // One output in the intact case's column order, through the case's sinks.
+  real_type                                            time = 0.0;
+  GridKit::Model::VariableMonitorController<real_type> output(time);
+  for (const auto& bus : study.model_data.bus)
+  {
+    output.addMonitor(systems[parts.bus_partition.at(bus.bus_id)]->getBus(bus.bus_id)->getMonitor());
+  }
+  for (const auto& [p, id] : parts.components)
+  {
+    output.addMonitor(systems[p]->getComponent(id)->getMonitor());
+  }
+  for (const auto& sink : study.model_data.monitor_sink)
+  {
+    output.addSink(sink);
+  }
+  output.start();
+  splitting.setOutput([&](real_type t)
+                      {
+    time = t;
+    output.print(); });
+  splitting.configureSimulation();
+
+  const real_type start = static_cast<real_type>(clock());
+  runStudy(study, splitting, [&](std::size_t fault, bool on)
+           {
+    const auto& [p, id] = parts.faults.at(fault);
+    systems[p]->getBusFault(id)->setStatus(on); });
+  const real_type stop = static_cast<real_type>(clock());
+
+  output.stop();
+  Log::summary() << "Splitting steps: " << splitting.numSteps() << " (rejected " << splitting.numRejectedSteps() << ")\n";
+  return (stop - start) / CLOCKS_PER_SEC;
+}
+
 int runApplication(int argc, const char* argv[])
 {
   // Print summaries, such as the run time, without lowering a higher verbosity
@@ -27,61 +122,21 @@ int runApplication(int argc, const char* argv[])
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
 
-  // Instantiate system
-  SystemModel<scalar_type, index_type> sys(study.model_data);
-  sys.allocate();
-
-  // Set up simulation
-  Ida<scalar_type, index_type> ida(&sys);
-  ida.setTolerance(study.rel_tol, study.abs_tol);
-  ida.setFixedStep(study.dt_fixed);
-  ida.setMaxSteps(study.max_steps);
-  ida.setMaxOrder(study.max_order);
-  ida.setConsistentICType(study.consistent_ic_type);
-  ida.configureSimulation();
-
-  // Start timer
-  real_type start = static_cast<real_type>(clock());
-
-  using EventType = SystemEvent::Type;
-
-  // Initialize simulation for first run
-  auto      dt_monitor = study.dt_monitor;
-  real_type final_time = study.tmax;
-  ida.initializeSimulation(0.0);
-  for (const auto& event : study.events)
+  real_type elapsed = 0.0;
+  if (study.partition)
   {
-    // Run to event time
-    ida.runSimulation(event.time, dt_monitor);
-
-    // Set up run for event (to start at event time)
-    switch (event.type)
-    {
-    case EventType::FAULT_ON:
-      sys.getBusFault(event.element_id)->setStatus(true);
-      break;
-    case EventType::FAULT_OFF:
-      sys.getBusFault(event.element_id)->setStatus(false);
-      break;
-    }
-
-    // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time);
+    elapsed = runPartitioned(study);
   }
-
-  // Run to final time
-  ida.runSimulation(final_time, dt_monitor);
-
-  real_type stop = static_cast<real_type>(clock());
-
-  // Stop the variable monitor
-  sys.stopMonitor();
+  else
+  {
+    elapsed = runMonolithic(study);
+  }
 
   // Generate aggregate errors comparing variable output to reference solution
   TestStatus status = checkErrors(study);
 
   // Report run time
-  Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+  Log::summary() << "Complete in " << elapsed << " seconds\n";
 
   return status.get();
 }

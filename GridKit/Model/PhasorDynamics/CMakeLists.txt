@@ -63,8 +63,8 @@ endif()
 
 gridkit_add_library(
   phasor_dynamics_systemmodel
-  SOURCES ${_system_model_source} SystemModelData.cpp
-  HEADERS NetworkAdmittance.hpp SystemModel.hpp SystemModelData.hpp
+  SOURCES ${_system_model_source} SystemModelData.cpp PartitionData.cpp
+  HEADERS NetworkAdmittance.hpp SystemModel.hpp SystemModelData.hpp PartitionData.hpp
   LINK_LIBRARIES
     PUBLIC
     GridKit::phasor_dynamics_core
