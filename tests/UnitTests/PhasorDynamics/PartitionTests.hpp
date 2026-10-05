@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/PartitionData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -54,11 +54,11 @@ namespace GridKit
           const auto& [p, local] = parts.components[id];
           copyState(*intact.getComponent(id), *systems[p]->getComponent(local));
         }
-        for (IdxT fault = 0; fault < parts.faults.size(); ++fault)
+        for (const auto& bus : data.bus)
         {
-          const auto& [p, local] = parts.faults[fault];
-          intact.getBusFault(fault)->setStatus(true);
-          systems[p]->getBusFault(local)->setStatus(true);
+          const auto partition = parts.bus_partition.at(bus.bus_id);
+          success *= intact.getBus(bus.bus_id)->setFault(true, RealT{0.0}, RealT{0.01}) == 0;
+          success *= systems[partition]->getBus(bus.bus_id)->setFault(true, RealT{0.0}, RealT{0.01}) == 0;
         }
         for (const auto& couplings : PhasorDynamics::connectPartitions(systems))
         {
