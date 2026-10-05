@@ -110,6 +110,11 @@ real_type runPartitioned(const StudyData& study)
 
   output.stop();
   Log::summary() << "Splitting steps: " << splitting.numSteps() << " (rejected " << splitting.numRejectedSteps() << ")\n";
+  for (std::size_t p = 0; p < systems.size(); ++p)
+  {
+    Log::summary() << "Partition " << p + 1 << ": " << systems[p]->size() << " variables, "
+                   << splitting.partitionTime(p) << " seconds\n";
+  }
   return (stop - start) / CLOCKS_PER_SEC;
 }
 

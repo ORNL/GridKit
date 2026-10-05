@@ -1,6 +1,7 @@
 #include "SplittingStep.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <limits>
 #include <map>
@@ -146,6 +147,12 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
+    typename SplittingStep<ScalarT, IdxT>::RealT SplittingStep<ScalarT, IdxT>::partitionTime(std::size_t partition) const
+    {
+      return partitions_.at(partition)->seconds;
+    }
+
+    template <class ScalarT, typename IdxT>
     typename SplittingStep<ScalarT, IdxT>::Partition& SplittingStep<ScalarT, IdxT>::content(SUNStepper block)
     {
       void* content = nullptr;
@@ -191,9 +198,11 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int SplittingStep<ScalarT, IdxT>::evolveBlock(SUNStepper block, sunrealtype tout, N_Vector y, sunrealtype* tret)
     {
-      auto&     partition = content(block);
-      const int flag      = SUNStepper_Evolve(partition.stepper, tout, N_VGetSubvector_ManyVector(y, partition.index), tret);
-      partition.time      = *tret;
+      auto&      partition  = content(block);
+      const auto start      = std::chrono::steady_clock::now();
+      const int  flag       = SUNStepper_Evolve(partition.stepper, tout, N_VGetSubvector_ManyVector(y, partition.index), tret);
+      partition.seconds    += std::chrono::duration<RealT>(std::chrono::steady_clock::now() - start).count();
+      partition.time        = *tret;
       return flag;
     }
 
