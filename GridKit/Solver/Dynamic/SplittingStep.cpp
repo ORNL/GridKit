@@ -535,15 +535,18 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void SplittingStep<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor)
     {
+      // Without output, monitor times would only shorten steps.
+      if (!output_)
+      {
+        advance(tf);
+        return;
+      }
       const RealT t0     = t_;
       const int   nsteps = monitorStepCount(t0, tf, dt_monitor);
       for (int i = 1; i <= nsteps; ++i)
       {
         advance(monitorTime(t0, tf, dt_monitor, i, nsteps));
-        if (output_)
-        {
-          output_(t_);
-        }
+        output_(t_);
       }
     }
 

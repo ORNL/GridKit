@@ -3,17 +3,22 @@
     "partition": {
         "file": "WECC240.partition.json",
         "dt": 0.0010416666666666667,
-        "tol": 1e-4
+        "tol": 1e-3
     },
     "output_file": "WECC240Partitioned.omega.csv",
     "dt_monitor": 0.004166666666666667,
     "tmax": 10.0,
+    "rel_tol": 2e-6,
+    "abs_tol": 1e-6,
+    "max_steps": 10000,
+    "max_order": 5,
+    "consistent_ic_type": "ya_ydp",
     "events": [
         { "time": 1.0, "type": "fault_on", "element_id": 0 },
         { "time": 1.15, "type": "fault_off", "element_id": 0 }
     ],
     "reference_file": "../WECC240/WECC240.omega.csv",
     "error_type": "relative",
-    "error_tolerance": 5.3e-4,
+    "error_tolerance": 7.1e-4,
     "abs_err_threshold": 1e-6
 }

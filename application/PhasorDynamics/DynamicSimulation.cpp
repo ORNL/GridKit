@@ -97,10 +97,13 @@ real_type runPartitioned(const StudyData& study)
     output.addSink(sink);
   }
   output.start();
-  splitting.setOutput([&](real_type t)
-                      {
-    time = t;
-    output.print(); });
+  if (!output.empty() && output.hasSinks())
+  {
+    splitting.setOutput([&](real_type t)
+                        {
+      time = t;
+      output.print(); });
+  }
   splitting.configureSimulation();
 
   const auto start = std::chrono::steady_clock::now();
