@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <GridKit/Model/Coupling.hpp>
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 
@@ -66,8 +66,8 @@ namespace GridKit
             auto* bus = source->findBus(external->busID());
             if (bus != nullptr && bus->size() > 0)
             {
-              couplings[p].push_back({source.get(), bus->getVariableIndices()[0], &external->Vr()});
-              couplings[p].push_back({source.get(), bus->getVariableIndices()[1], &external->Vi()});
+              couplings[p].push_back({source.get(), bus->getVariableIndices()[0], &external->VrInput()});
+              couplings[p].push_back({source.get(), bus->getVariableIndices()[1], &external->ViInput()});
             }
           }
         }

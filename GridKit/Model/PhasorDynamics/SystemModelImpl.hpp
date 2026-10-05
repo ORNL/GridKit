@@ -867,6 +867,24 @@ namespace GridKit
     }
 
     /**
+     * @brief Update time
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::updateTime(RealT t, RealT a)
+    {
+      ComponentT::updateTime(t, a);
+      for (const auto& bus : external_buses_)
+      {
+        bus->updateTime(t, a);
+      }
+      for (auto* source : function_sources_)
+      {
+        source->updateTime(t, a);
+      }
+    }
+
+    /**
      * @brief Add bus
      *
      * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
@@ -878,22 +896,13 @@ namespace GridKit
       IdxT gridkit_bus_id                = static_cast<IdxT>(buses_.size());
       gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
       buses_.push_back(bus);
+      if (auto* external = dynamic_cast<BusInfiniteT*>(bus))
+      {
+        external_buses_.push_back(external);
+      }
       allocated_                = false;
       network_admittance_ready_ = false;
       initialization_succeeded_ = false;
-    }
-
-    /**
-     * @brief Update shared time and refresh time-dependent source outputs.
-     */
-    template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::updateTime(RealT t, RealT a)
-    {
-      ComponentT::updateTime(t, a);
-      for (auto* source : function_sources_)
-      {
-        source->updateTime(t, a);
-      }
     }
 
     /**
@@ -983,18 +992,10 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    std::vector<typename SystemModel<scalar_type, index_type>::BusT*>
+    const std::vector<typename SystemModel<scalar_type, index_type>::BusInfiniteT*>&
     SystemModel<scalar_type, index_type>::externalBuses() const
     {
-      std::vector<BusT*> external;
-      for (auto* bus : buses_)
-      {
-        if (bus->BusType() == BusT::BusTypeT::SLACK)
-        {
-          external.push_back(bus);
-        }
-      }
-      return external;
+      return external_buses_;
     }
 
     /**

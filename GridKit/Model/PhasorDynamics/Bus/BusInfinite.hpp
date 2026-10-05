@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <GridKit/Model/Coupling.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 
 namespace GridKit
@@ -36,6 +37,7 @@ namespace GridKit
       using MonitorT   = typename BusBase<ScalarT, IdxT>::MonitorT;
       using ModelDataT = BusData<RealT, IdxT>;
       using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
+      using InputT     = Model::Input<ScalarT>;
 
       using BusBase<scalar_type, index_type>::Vr;
       using BusBase<scalar_type, index_type>::Vi;
@@ -60,6 +62,23 @@ namespace GridKit
         return BusTypeT::SLACK;
       }
 
+      /// The prescribed voltage follows these inputs in time.
+      InputT& VrInput()
+      {
+        return vr_input_;
+      }
+
+      InputT& ViInput()
+      {
+        return vi_input_;
+      }
+
+      void updateTime(RealT t, RealT /* a */) override final
+      {
+        Vr_ = vr_input_.at(t);
+        Vi_ = vi_input_.at(t);
+      }
+
     protected:
       int refreshTerminals() override final;
 
@@ -68,6 +87,9 @@ namespace GridKit
       ScalarT Vi_{0.0};
       ScalarT Ir_{0.0};
       ScalarT Ii_{0.0};
+
+      InputT vr_input_{};
+      InputT vi_input_{};
 
       ScalarT VrB_{0.0};
       ScalarT ViB_{0.0};

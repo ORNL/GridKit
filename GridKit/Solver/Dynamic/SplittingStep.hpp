@@ -18,8 +18,9 @@ namespace AnalysisManager
      * @brief Lie–Trotter splitting of coupled models (ARKODE SplittingStep).
      *
      * The state is a ManyVector with one block per partition. Each partition's
-     * integrator advances its own block, reading its coupling inputs from the
-     * other blocks when its stage starts. Outputs are each partition's accepted
+     * integrator advances its own block. Its coupling inputs ramp over the
+     * stage: toward the new value of a partition already advanced, or at the
+     * last rate of one not yet advanced. Outputs are each partition's accepted
      * state with the inputs it was solved with.
      *
      * With a coupling tolerance, a step is accepted only if no coupling input
@@ -59,12 +60,19 @@ namespace AnalysisManager
       long numRejectedSteps() const;
 
     private:
-      struct Input
+      using InputT = GridKit::Model::Input<ScalarT>;
+
+      struct Partition;
+
+      /// A coupling resolved to its source partition
+      struct Link
       {
-        sunindextype block;
-        IdxT         index;
-        ScalarT*     value;
-        RealT        abs_tol; ///< The source variable's own absolute tolerance
+        const Partition* source;
+        IdxT             index;
+        InputT*          input;
+        RealT            abs_tol; ///< The source variable's own absolute tolerance
+        RealT            start{}; ///< Source value at the step start
+        RealT            rate{};  ///< Source rate over the last step
       };
 
       struct Partition
@@ -73,12 +81,14 @@ namespace AnalysisManager
         SUNStepper             stepper{}; ///< The solver over its own state
         SUNStepper             block{};   ///< The solver over block `index`, given to ARKODE
         sunindextype           index{};
+        RealT                  time{}; ///< Time of the state in its block
         std::vector<CouplingT> couplings;
-        std::vector<Input>     inputs;
+        std::vector<Link>      links;
       };
 
       static Partition& content(SUNStepper block);
-      static void       couple(const Partition& partition, N_Vector y);
+      static RealT      value(const Link& link, N_Vector y);
+      static void       couple(const Partition& partition, N_Vector y, RealT t);
       static SUNErrCode resetBlock(SUNStepper block, sunrealtype t, N_Vector y);
       static int        evolveBlock(SUNStepper block, sunrealtype tout, N_Vector y, sunrealtype* tret);
       static SUNErrCode setBlockStopTime(SUNStepper block, sunrealtype tstop);

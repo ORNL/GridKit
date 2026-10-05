@@ -154,11 +154,27 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void SplittingStep<ScalarT, IdxT>::couple(const Partition& partition, N_Vector y)
+    typename SplittingStep<ScalarT, IdxT>::RealT SplittingStep<ScalarT, IdxT>::value(const Link& link, N_Vector y)
     {
-      for (const auto& input : partition.inputs)
+      return N_VGetSubvectorArrayPointer_ManyVector(y, link.source->index)[link.index];
+    }
+
+    /// Inputs over a stage from t: a source already past t is interpolated to
+    /// its new value; one still at t is extrapolated at its last rate.
+    template <class ScalarT, typename IdxT>
+    void SplittingStep<ScalarT, IdxT>::couple(const Partition& partition, N_Vector y, RealT t)
+    {
+      for (const auto& link : partition.links)
       {
-        *input.value = N_VGetSubvectorArrayPointer_ManyVector(y, input.block)[input.index];
+        const RealT current = value(link, y);
+        link.input->value   = current;
+        link.input->rate    = link.rate;
+        link.input->start   = t;
+        if (link.source->time > t)
+        {
+          link.input->value = link.start;
+          link.input->rate  = (current - link.start) / (link.source->time - t);
+        }
       }
     }
 
@@ -168,15 +184,17 @@ namespace AnalysisManager
     SUNErrCode SplittingStep<ScalarT, IdxT>::resetBlock(SUNStepper block, sunrealtype t, N_Vector y)
     {
       const auto& partition = content(block);
-      couple(partition, y);
+      couple(partition, y, t);
       return SUNStepper_Reset(partition.stepper, t, N_VGetSubvector_ManyVector(y, partition.index));
     }
 
     template <class ScalarT, typename IdxT>
     int SplittingStep<ScalarT, IdxT>::evolveBlock(SUNStepper block, sunrealtype tout, N_Vector y, sunrealtype* tret)
     {
-      const auto& partition = content(block);
-      return SUNStepper_Evolve(partition.stepper, tout, N_VGetSubvector_ManyVector(y, partition.index), tret);
+      auto&     partition = content(block);
+      const int flag      = SUNStepper_Evolve(partition.stepper, tout, N_VGetSubvector_ManyVector(y, partition.index), tret);
+      partition.time      = *tret;
+      return flag;
     }
 
     template <class ScalarT, typename IdxT>
@@ -203,12 +221,12 @@ namespace AnalysisManager
         throw std::invalid_argument("SplittingStep: the step must be positive");
       }
 
-      std::map<const EvaluatorT*, sunindextype> block_of;
-      std::vector<SUNStepper>                   steppers;
+      std::map<const EvaluatorT*, const Partition*> partition_of;
+      std::vector<SUNStepper>                       steppers;
       for (const auto& partition : partitions_)
       {
         auto& model = *partition->solver->getModel();
-        if (!block_of.emplace(&model, partition->index).second)
+        if (!partition_of.emplace(&model, partition.get()).second)
         {
           throw std::invalid_argument("SplittingStep: a model is added twice");
         }
@@ -218,15 +236,15 @@ namespace AnalysisManager
         steppers.push_back(partition->block);
       }
 
-      std::set<ScalarT*> values;
+      std::set<InputT*> inputs;
       for (const auto& partition : partitions_)
       {
         for (const auto& coupling : partition->couplings)
         {
-          const auto source = block_of.find(coupling.source);
-          if (source == block_of.end()
-              || static_cast<sunindextype>(coupling.index) >= N_VGetLength(blocks_[static_cast<std::size_t>(source->second)])
-              || coupling.value == nullptr || !values.insert(coupling.value).second)
+          const auto source = partition_of.find(coupling.source);
+          if (source == partition_of.end()
+              || static_cast<sunindextype>(coupling.index) >= N_VGetLength(blocks_[static_cast<std::size_t>(source->second->index)])
+              || coupling.input == nullptr || !inputs.insert(coupling.input).second)
           {
             throw std::invalid_argument("SplittingStep: a coupling needs a registered source, an index in it, and its own input");
           }
@@ -235,7 +253,7 @@ namespace AnalysisManager
           {
             abs_tol = coupling.source->absoluteTolerance().getData()[coupling.index];
           }
-          partition->inputs.push_back({source->second, coupling.index, coupling.value, abs_tol});
+          partition->links.push_back({source->second, coupling.index, coupling.input, abs_tol});
         }
       }
 
@@ -260,15 +278,15 @@ namespace AnalysisManager
       RealT mismatch = 0.0;
       for (const auto& partition : partitions_)
       {
-        for (const auto& input : partition->inputs)
+        for (const auto& link : partition->links)
         {
-          const RealT source = N_VGetSubvectorArrayPointer_ManyVector(y, input.block)[input.index];
+          const RealT source = value(link, y);
           RealT       weight = abs_tol + rel_tol * std::abs(source);
           if (abs_tol <= 0.0)
           {
-            weight = input.abs_tol + rel_tol * std::abs(source);
+            weight = link.abs_tol + rel_tol * std::abs(source);
           }
-          const RealT change = std::abs(*input.value - source) / weight;
+          const RealT change = std::abs(link.input->at(t_) - source) / weight;
           if (!std::isfinite(change))
           {
             throw std::runtime_error("SplittingStep: coupling value is not finite");
@@ -288,12 +306,23 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void SplittingStep<ScalarT, IdxT>::initializeSimulation(RealT t0)
     {
+      // Inputs may jump here (an event), so no rate carries over.
+      t_ = t0;
+      for (auto& partition : partitions_)
+      {
+        partition->time = t0;
+        for (auto& link : partition->links)
+        {
+          link.rate = 0.0;
+        }
+      }
+
       RealT mismatch = std::numeric_limits<RealT>::infinity();
       for (int sweep = 0; sweep < MAX_SWEEPS && mismatch > 1.0; ++sweep)
       {
         for (const auto& partition : partitions_)
         {
-          couple(*partition, y_);
+          couple(*partition, y_, t0);
           auto& model = *partition->solver->getModel();
           auto* block = N_VGetSubvectorArrayPointer_ManyVector(y_, partition->index);
           std::copy_n(block, model.size(), model.y().getData());
@@ -309,8 +338,14 @@ namespace AnalysisManager
                                  + " (mismatch " + std::to_string(mismatch) + ")");
       }
 
+      for (auto& partition : partitions_)
+      {
+        for (auto& link : partition->links)
+        {
+          link.start = value(link, y_);
+        }
+      }
       check(ARKodeReset(arkode_, t0, y_), "ARKodeReset");
-      t_    = t0;
       step_ = first_step_;
       if (controller_)
       {
@@ -357,10 +392,10 @@ namespace AnalysisManager
 
         if (controller_)
         {
-          // Inputs still hold what each partition read when its stage began.
+          // How far each partition's inputs ended from their sources; O(h^2) once rates are known.
           const RealT error = couplingMismatch(y_, coupling_tol_, coupling_tol_);
           RealT       next  = h;
-          check(SUNAdaptController_EstimateStep(controller_, h, 0, error, &next), "SUNAdaptController_EstimateStep");
+          check(SUNAdaptController_EstimateStep(controller_, h, 1, error, &next), "SUNAdaptController_EstimateStep");
           if (error > 1.0)
           {
             if (++rejections == MAX_REJECTIONS)
@@ -369,6 +404,10 @@ namespace AnalysisManager
             }
             N_VScale(1.0, y_saved_, y_);
             t_ = t_start;
+            for (auto& partition : partitions_)
+            {
+              partition->time = t_start;
+            }
             check(ARKodeReset(arkode_, t_, y_), "ARKodeReset");
             step_ = std::clamp(SAFETY * next, ETAMIN * h, ETAMXF * h);
             ++rejected_steps_;
@@ -378,6 +417,15 @@ namespace AnalysisManager
           // Bound growth from the intended step: one shortened to reach tout does not limit the next.
           step_      = std::clamp(SAFETY * next, ETAMIN * step_, GROWTH * step_);
           rejections = 0;
+        }
+        for (auto& partition : partitions_)
+        {
+          for (auto& link : partition->links)
+          {
+            const RealT current = value(link, y_);
+            link.rate           = (current - link.start) / (t_ - t_start);
+            link.start          = current;
+          }
         }
         ++steps_;
       }

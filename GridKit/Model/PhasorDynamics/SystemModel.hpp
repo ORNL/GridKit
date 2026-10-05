@@ -32,6 +32,9 @@ namespace GridKit
     class FunctionSignalSource;
 
     template <typename scalar_type, typename index_type>
+    class BusInfinite;
+
+    template <typename scalar_type, typename index_type>
     class SignalNode;
 
     /**
@@ -68,6 +71,7 @@ namespace GridKit
       using CsrMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using BusT           = BusBase<ScalarT, IdxT>;
+      using BusInfiniteT   = BusInfinite<ScalarT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
       using ComponentT     = Component<ScalarT, IdxT>;
@@ -97,6 +101,7 @@ namespace GridKit
       int setAbsoluteTolerance(RealT rel_tol) override;
       int evaluateResidual() override;
       int evaluateJacobian() override;
+
       void updateTime(RealT t, RealT a) override;
 
       void addBus(BusT* bus);
@@ -119,7 +124,7 @@ namespace GridKit
        * Their voltages are the system's inputs; the currents its components
        * inject into them (Ir, Ii) are its outputs to the rest of a network.
        */
-      std::vector<BusT*> externalBuses() const;
+      const std::vector<BusInfiniteT*>& externalBuses() const;
 
     private:
       void assembleNetworkAdmittance();
@@ -127,9 +132,10 @@ namespace GridKit
       void buildJacobianStructure();
       void snapshotConstantJacobian();
 
-      std::vector<BusT*>       buses_;
-      SignalNodeSetT           signal_nodes_;
-      std::vector<ComponentT*> components_;
+      std::vector<BusT*>         buses_;
+      std::vector<BusInfiniteT*> external_buses_;
+      SignalNodeSetT             signal_nodes_;
+      std::vector<ComponentT*>   components_;
       /// Non-owning sources whose outputs must be refreshed when time changes.
       std::vector<FunctionSignalSource<ScalarT, IdxT>*> function_sources_;
 

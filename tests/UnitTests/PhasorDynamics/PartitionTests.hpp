@@ -60,13 +60,15 @@ namespace GridKit
         {
           for (const auto& coupling : couplings)
           {
-            *coupling.value = coupling.source->y().getData()[coupling.index];
+            coupling.input->value = coupling.source->y().getData()[coupling.index];
           }
         }
 
+        intact.updateTime(0.0, 0.0);
         intact.evaluateResidual();
         for (auto& system : systems)
         {
+          system->updateTime(0.0, 0.0);
           system->evaluateResidual();
         }
 

@@ -14,6 +14,6 @@
     ],
     "reference_file": "../WECC240/WECC240.omega.csv",
     "error_type": "relative",
-    "error_tolerance": 5.1e-3,
+    "error_tolerance": 3.7e-4,
     "abs_err_threshold": 1e-6
 }
