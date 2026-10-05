@@ -34,19 +34,22 @@ namespace GridKit
   {
     namespace Converter
     {
-      /// Internal variables of a `Regca`
+      /**
+       * @brief Internal variables of a `Regca`
+       *
+       * The terminal voltage magnitude, the HVRCM current, and the LVPL
+       * ceiling are explicit functions of these and the terminal voltage, and
+       * are evaluated inline in the residual.
+       */
       enum class RegcaInternalVariables : size_t
       {
-        VM,      ///< \f$V_M\f$ Filtered terminal voltage
-        IQ,      ///< \f$I_q\f$ Reactive-current state on component base
-        IP,      ///< \f$I_p\f$ Active-current state on component base
-        VT,      ///< \f$V_T\f$ Terminal voltage magnitude
-        IR,      ///< \f$I_\mathrm{r}\f$ Branch-current real component on system base
-        II,      ///< \f$I_\mathrm{i}\f$ Branch-current imaginary component on system base
-        IQEXTRA, ///< \f$I_q^\mathrm{extra}\f$ Extra inductive current from HVRCM on component base
-        IL,      ///< \f$I_L\f$ LVPL upper-limit current curve on component base
-        PBR,     ///< \f$P^\mathrm{br}\f$ Branch active power on system base
-        QBR,     ///< \f$Q^\mathrm{br}\f$ Branch reactive power on system base
+        VM,  ///< \f$V_M\f$ Filtered terminal voltage
+        IQ,  ///< \f$I_q\f$ Reactive-current state on component base
+        IP,  ///< \f$I_p\f$ Active-current state on component base
+        IR,  ///< \f$I_\mathrm{r}\f$ Branch-current real component on system base
+        II,  ///< \f$I_\mathrm{i}\f$ Branch-current imaginary component on system base
+        PBR, ///< \f$P^\mathrm{br}\f$ Branch active power on system base
+        QBR, ///< \f$Q^\mathrm{br}\f$ Branch reactive power on system base
       };
 
       /// External variables of a `Regca`

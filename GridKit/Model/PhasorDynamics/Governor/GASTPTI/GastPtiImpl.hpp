@@ -249,12 +249,12 @@ namespace GridKit
        * @brief Initialize GASTPTI from the seeded mechanical-power port
        *
        * Reads the required system-base `pmech` seed and optional speed input,
-       * resolves the response limits and valve mask, and seats every
-       * algebraic row. For an active response interval, it inverts the smooth
+       * resolves the response limits and valve mask, and publishes the
+       * reference. For an active response interval, it inverts the smooth
        * low-value selector so its output reproduces the initialized flow; this
        * requires a positive temperature margin. A collapsed response interval
-       * holds the valve at its initial position, so its algebraic selector is
-       * seated without that active-flow constraint.
+       * holds the valve at its initial position without that active-flow
+       * constraint.
        * Every seed, candidate, response bound, and mask is checked before
        * state, response limits, latches, derivatives, or attached signals are
        * modified.
@@ -272,9 +272,6 @@ namespace GridKit
         const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
         const auto XFLOW  = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
         const auto XTEMP  = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
-        const auto VLOAD  = static_cast<size_t>(GastPtiInternalVariables::VLOAD);
-        const auto VTEMP  = static_cast<size_t>(GastPtiInternalVariables::VTEMP);
-        const auto VLV    = static_cast<size_t>(GastPtiInternalVariables::VLV);
         const auto PMECH  = static_cast<size_t>(GastPtiInternalVariables::PMECH);
 
         if (!allocated_)
@@ -338,7 +335,6 @@ namespace GridKit
 
         const bool valve_active = Vmin_response < Vmax_response;
         RealT      vload0       = xflow0;
-        RealT      vlv0         = ZERO<RealT>;
         if (valve_active)
         {
           const RealT margin = vtemp0 - xflow0;
@@ -353,22 +349,15 @@ namespace GridKit
           // initial fuel flow. This stable form avoids subtracting two large,
           // nearly equal values when the temperature margin is large.
           vload0 = xflow0 + (margin - iramp(margin));
-          vlv0   = xflow0;
-        }
-        else
-        {
-          // A fixed valve does not require the selector output to equal xflow.
-          // Seat the selector and reference equations at the operating point.
-          vlv0 = static_cast<RealT>(Math::min(vload0, vtemp0));
         }
 
         const RealT pref_component0 = vload0 + omega0 / R_;
         const RealT pref0           = this->toSystemBase(pref_component0);
-        if (!std::isfinite(vload0) || !std::isfinite(vlv0)
+        if (!std::isfinite(vload0)
             || !std::isfinite(pref_component0) || !std::isfinite(pref0))
         {
           Log::error()
-              << "GastPti: initial selector, load-demand, and reference candidates must be finite\n";
+              << "GastPti: initial load-demand and reference candidates must be finite\n";
           return 1;
         }
 
@@ -383,9 +372,6 @@ namespace GridKit
         y[XVALVE] = static_cast<ScalarT>(xflow0);
         y[XFLOW]  = static_cast<ScalarT>(xflow0);
         y[XTEMP]  = static_cast<ScalarT>(xflow0);
-        y[VLOAD]  = static_cast<ScalarT>(vload0);
-        y[VTEMP]  = static_cast<ScalarT>(vtemp0);
-        y[VLV]    = static_cast<ScalarT>(vlv0);
 
         pref_set_ = static_cast<RealT>(pref0);
         if (auto pref_port = ports_.in.template port<GastPtiSignalInputs::pref>())
@@ -442,16 +428,35 @@ namespace GridKit
       }
 
       /**
-       * @brief Evaluate the seven GASTPTI-owned residual rows
+       * @brief Evaluate the four GASTPTI-owned residual rows
        *
        * Refreshes the signal interface buffers and evaluates the internal
        * residual. GASTPTI attaches to no bus, so there is no bus interface to
-       * refresh. An unattached reference port falls back to the value latched
-       * by initialize(); an unattached speed port reads zero deviation.
+       * refresh.
        *
        */
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::evaluateResidual()
+      {
+        updateSignals();
+
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+
+        evaluateInternalResidual(y, yp, nullptr, ws_.getData(), f);
+        f_.setDataUpdated();
+        return 0;
+      }
+
+      /**
+       * @brief Refresh the signal interface buffers
+       *
+       * An unattached reference port falls back to the value latched by
+       * initialize(); an unattached speed port reads zero deviation.
+       */
+      template <typename scalar_type, typename index_type>
+      void GastPti<scalar_type, index_type>::updateSignals()
       {
         const auto OMEGA = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
         const auto PREF  = static_cast<size_t>(GastPtiExternalVariables::PREF);
@@ -472,14 +477,6 @@ namespace GridKit
           ws[PREF]          = pref_port.readSignal();
           ws_indices_[PREF] = pref_port.signalVariableIndex();
         }
-
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-
-        evaluateInternalResidual(y, yp, nullptr, ws, f);
-        f_.setDataUpdated();
-        return 0;
       }
 
       /**
@@ -497,8 +494,8 @@ namespace GridKit
       /**
        * @brief Internal residual
        *
-       * Evaluates the three turbine states and the four algebraic rows
-       * documented in the model README. The body is kept free of branches
+       * Evaluates the three turbine states and the mechanical-power output
+       * row documented in the model README. The body is kept free of branches
        * and loops so that sparse automatic differentiation resolves a fixed
        * structure; effective valve limits and the valve mask are resolved
        * before residual evaluation.
@@ -524,22 +521,15 @@ namespace GridKit
         const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
         const auto XFLOW  = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
         const auto XTEMP  = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
-        const auto VLOAD  = static_cast<size_t>(GastPtiInternalVariables::VLOAD);
-        const auto VTEMP  = static_cast<size_t>(GastPtiInternalVariables::VTEMP);
-        const auto VLV    = static_cast<size_t>(GastPtiInternalVariables::VLV);
         const auto PMECH  = static_cast<size_t>(GastPtiInternalVariables::PMECH);
 
         const auto OMEGA = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
-        const auto PREF  = static_cast<size_t>(GastPtiExternalVariables::PREF);
 
         static_cast<void>(wb);
 
         const ScalarT xvalve = y[XVALVE];
         const ScalarT xflow  = y[XFLOW];
         const ScalarT xtemp  = y[XTEMP];
-        const ScalarT vload  = y[VLOAD];
-        const ScalarT vtemp  = y[VTEMP];
-        const ScalarT vlv    = y[VLV];
         const ScalarT pmech  = y[PMECH];
 
         const ScalarT xvalve_dot = yp[XVALVE];
@@ -547,20 +537,50 @@ namespace GridKit
         const ScalarT xtemp_dot  = yp[XTEMP];
 
         const ScalarT omega = ws[OMEGA];
-        const ScalarT pref  = this->toComponentBase(ws[PREF]);
+
+        // Fuel demands and the selector, evaluated rather than solved for
+        const AlgebraicState s = evaluateAlgebraicState(y, ws);
 
         const ScalarT valve_target =
-            Math::antiwindup(xvalve, vlv - xvalve, Vmin_response_, Vmax_response_);
+            Math::antiwindup(xvalve, s.vlv - xvalve, Vmin_response_, Vmax_response_);
 
         f[XVALVE] = -xvalve_dot + s_valve_ * valve_target / T1_;
         f[XFLOW]  = -xflow_dot + (-xflow + xvalve) / T2_;
         f[XTEMP]  = -xtemp_dot + (-xtemp + xflow) / T3_;
-        f[VLOAD]  = -omega + R_ * (pref - vload);
-        f[VTEMP]  = -vtemp + At_ + Kt_ * (At_ - xtemp);
-        f[VLV]    = -vlv + Math::min(vload, vtemp);
         f[PMECH]  = -this->toComponentBase(pmech) + xflow - Dturb_ * omega;
 
         return 0;
+      }
+
+      /**
+       * @brief Evaluate the governor's algebraic quantities
+       *
+       * The speed/load demand, the temperature-limit demand, and their smooth
+       * low-value selection form an explicit chain over the exhaust-temperature
+       * state and the inputs, so they are evaluated rather than solved for.
+       *
+       * @param[in] y Internal variables in `GastPtiInternalVariables` order.
+       * @param[in] ws External signals in `GastPtiExternalVariables` order.
+       */
+      template <typename scalar_type, typename index_type>
+      [[gnu::always_inline]] inline typename GastPti<scalar_type, index_type>::AlgebraicState
+      GastPti<scalar_type, index_type>::evaluateAlgebraicState(
+          const ScalarT* y,
+          const ScalarT* ws) const
+      {
+        const auto XTEMP = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
+        const auto OMEGA = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
+        const auto PREF  = static_cast<size_t>(GastPtiExternalVariables::PREF);
+
+        const ScalarT xtemp = y[XTEMP];
+        const ScalarT omega = ws[OMEGA];
+        const ScalarT pref  = this->toComponentBase(ws[PREF]);
+
+        AlgebraicState s;
+        s.vload = pref - omega / R_;
+        s.vtemp = At_ + Kt_ * (At_ - xtemp);
+        s.vlv   = Math::min(s.vload, s.vtemp);
+        return s;
       }
 
       //
@@ -695,9 +715,13 @@ namespace GridKit
         monitor_->set(Variable::xtemp, [this]
                       { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::XTEMP)]; });
         monitor_->set(Variable::vload, [this]
-                      { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::VLOAD)]; });
+                      {
+                        updateSignals();
+                        return evaluateAlgebraicState(y_.getData(), ws_.getData()).vload; });
         monitor_->set(Variable::vtemp, [this]
-                      { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::VTEMP)]; });
+                      {
+                        updateSignals();
+                        return evaluateAlgebraicState(y_.getData(), ws_.getData()).vtemp; });
       }
 
       /**

@@ -27,31 +27,24 @@ namespace GridKit
 
     namespace Controller
     {
-      /// Internal variables of `Repca`.
+      /**
+       * @brief Internal variables of `Repca`.
+       *
+       * The measured voltages, the error, deadband, and limiter chain, and the
+       * PI outputs are explicit functions of these and the inputs, and are
+       * evaluated inline in the residual.
+       */
       enum class RepcaInternalVariables : size_t
       {
-        VMEAS,  ///< \f$V^\mathrm{meas}\f$ Differential filtered regulated voltage [p.u.]
-        QMEAS,  ///< \f$Q^\mathrm{meas}\f$ Differential filtered reactive power on component base [p.u.]
-        XQPI,   ///< \f$x_Q^\mathrm{PI}\f$ Differential reactive-power PI state on component base [p.u.]
-        XQLAG,  ///< \f$x_Q^\mathrm{lag}\f$ Differential reactive-command lead-lag state on component base [p.u.]
-        PMEAS,  ///< \f$P^\mathrm{meas}\f$ Differential filtered active power on component base [p.u.]
-        XPPI,   ///< \f$x_P^\mathrm{PI}\f$ Differential active-power PI state on component base [p.u.]
-        PREF,   ///< \f$P^\mathrm{ref}\f$ Differential active-power command lag state on component base [p.u.]
-        V,      ///< \f$V\f$ Algebraic regulated-bus voltage magnitude [p.u.]
-        VLDC,   ///< \f$V^\mathrm{ldc}\f$ Algebraic line-drop compensated voltage magnitude [p.u.]
-        VDROOP, ///< \f$V^\mathrm{droop}\f$ Algebraic reactive-droop-compensated voltage [p.u.]
-        VCTRL,  ///< \f$V^\mathrm{ctrl}\f$ Algebraic selected voltage-measurement input [p.u.]
-        SFRZ,   ///< \f$s_\mathrm{frz}\f$ Algebraic reactive-power PI voltage-enable gate [-]
-        ERQ,    ///< \f$e_\mathrm{RQ}\f$ Algebraic selected reactive-loop error [p.u.]
-        ERQDB,  ///< \f$e_\mathrm{RQ}^\mathrm{db}\f$ Algebraic deadbanded reactive-loop error [p.u.]
-        ERQLIM, ///< \f$e_\mathrm{RQ}^\mathrm{lim}\f$ Algebraic limited reactive-loop error [p.u.]
-        QPI,    ///< \f$Q^\mathrm{PI}\f$ Algebraic reactive-power PI output on component base [p.u.]
-        QEXT,   ///< \f$Q^\mathrm{ext}\f$ Algebraic reactive-power command on system base [p.u.]
-        EF,     ///< \f$e_f\f$ Algebraic frequency error after deadband [p.u.]
-        EP,     ///< \f$e_P\f$ Algebraic active-power control error on component base [p.u.]
-        EPLIM,  ///< \f$e_P^\mathrm{lim}\f$ Algebraic limited active-power control error on component base [p.u.]
-        PPI,    ///< \f$P^\mathrm{PI}\f$ Algebraic active-power PI output on component base [p.u.]
-        PEXT,   ///< \f$P^\mathrm{ext}\f$ Algebraic active-power command on system base [p.u.]
+        VMEAS, ///< \f$V^\mathrm{meas}\f$ Differential filtered regulated voltage [p.u.]
+        QMEAS, ///< \f$Q^\mathrm{meas}\f$ Differential filtered reactive power on component base [p.u.]
+        XQPI,  ///< \f$x_Q^\mathrm{PI}\f$ Differential reactive-power PI state on component base [p.u.]
+        XQLAG, ///< \f$x_Q^\mathrm{lag}\f$ Differential reactive-command lead-lag state on component base [p.u.]
+        PMEAS, ///< \f$P^\mathrm{meas}\f$ Differential filtered active power on component base [p.u.]
+        XPPI,  ///< \f$x_P^\mathrm{PI}\f$ Differential active-power PI state on component base [p.u.]
+        PREF,  ///< \f$P^\mathrm{ref}\f$ Differential active-power command lag state on component base [p.u.]
+        QEXT,  ///< \f$Q^\mathrm{ext}\f$ Algebraic reactive-power command on system base [p.u.]
+        PEXT,  ///< \f$P^\mathrm{ext}\f$ Algebraic active-power command on system base [p.u.]
       };
 
       /// External variables of `Repca`.

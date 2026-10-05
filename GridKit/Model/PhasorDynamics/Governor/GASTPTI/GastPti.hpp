@@ -21,15 +21,17 @@ namespace GridKit
   {
     namespace Governor
     {
-      /// Internal variables and residual rows of a `GastPti`.
+      /**
+       * @brief Internal variables and residual rows of a `GastPti`.
+       *
+       * The fuel demands and the low-value selector are explicit functions of
+       * these and the inputs, and are evaluated by `evaluateAlgebraicState`.
+       */
       enum class GastPtiInternalVariables : size_t
       {
         XVALVE, ///< \f$x_V\f$ Differential fuel-valve state on component base [p.u.]
         XFLOW,  ///< \f$x_F\f$ Differential fuel-flow state on component base [p.u.]
         XTEMP,  ///< \f$x_T\f$ Differential exhaust-temperature feedback state on component base [p.u.]
-        VLOAD,  ///< \f$V_D\f$ Algebraic speed/load fuel demand on component base [p.u.]
-        VTEMP,  ///< \f$V_T\f$ Algebraic temperature-limit demand on component base [p.u.]
-        VLV,    ///< \f$V\f$ Algebraic smooth low-value selector output on component base [p.u.]
         PMECH,  ///< \f$P_{\text{m}}\f$ Algebraic mechanical-power output on system base [p.u.]
       };
 
@@ -109,7 +111,20 @@ namespace GridKit
             const ScalarT* ws,
             ScalarT*       f);
 
+        /// The governor's algebraic quantities, evaluated from its states and inputs
+        struct AlgebraicState
+        {
+          ScalarT vload; ///< \f$V_D\f$ Speed/load fuel demand on component base [p.u.]
+          ScalarT vtemp; ///< \f$V_T\f$ Temperature-limit demand on component base [p.u.]
+          ScalarT vlv;   ///< \f$V\f$ Smooth low-value selector output on component base [p.u.]
+        };
+
+        [[gnu::always_inline]] inline AlgebraicState evaluateAlgebraicState(
+            const ScalarT* y,
+            const ScalarT* ws) const;
+
       private:
+        void updateSignals();
         void loadRealParameter(const ModelDataT& data,
                                GastPtiParameters parameter,
                                RealT&            target,

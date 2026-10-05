@@ -33,7 +33,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 5;
+      size_ = 4;
       setDerivedParams();
     }
 
@@ -95,13 +95,13 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return this->toSystemBase(y_.getData()[3]); });
+                    { return this->toSystemBase(y_.getData()[2]); });
       monitor_->set(Variable::ii, [this]
-                    { return this->toSystemBase(y_.getData()[4]); });
+                    { return this->toSystemBase(y_.getData()[3]); });
       monitor_->set(Variable::p, [this]
-                    { return this->toSystemBase(Vr() * y_.getData()[3] + Vi() * y_.getData()[4]); });
+                    { return this->toSystemBase(Vr() * y_.getData()[2] + Vi() * y_.getData()[3]); });
       monitor_->set(Variable::q, [this]
-                    { return this->toSystemBase(Vi() * y_.getData()[3] - Vr() * y_.getData()[4]); });
+                    { return this->toSystemBase(Vi() * y_.getData()[2] - Vr() * y_.getData()[3]); });
       monitor_->set(Variable::delta, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
@@ -215,9 +215,8 @@ namespace GridKit
 
       y[0] = delta;
       y[1] = omega;
-      y[2] = Te;
-      y[3] = ir;
-      y[4] = ii;
+      y[2] = ir;
+      y[3] = ii;
 
       // Convert Te to system base for governor PM signal.
       pmech_set_ = static_cast<RealT>(this->toSystemBase(Te));
@@ -296,9 +295,8 @@ namespace GridKit
       // Set variable aliases for better readability.
       const ScalarT delta = y[0];
       const ScalarT omega = y[1];
-      const ScalarT telec = y[2];
-      const ScalarT ir    = y[3];
-      const ScalarT ii    = y[4];
+      const ScalarT ir    = y[2];
+      const ScalarT ii    = y[3];
 
       // Set derivative aliases for better readability
       const ScalarT delta_dot = yp[0];
@@ -314,14 +312,16 @@ namespace GridKit
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
+      // Electrical torque, evaluated rather than solved for
+      const ScalarT telec = G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
+
       // GenClassical differential equations
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
       // GenClassical algebraic equations
-      f[2] = telec - (G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
-      f[3] = ir - (efd * (G_ * std::cos(delta) - B_ * std::sin(delta)) - G_ * vr + B_ * vi);
-      f[4] = ii - (efd * (B_ * std::cos(delta) + G_ * std::sin(delta)) - B_ * vr - G_ * vi);
+      f[2] = ir - (efd * (G_ * std::cos(delta) - B_ * std::sin(delta)) - G_ * vr + B_ * vi);
+      f[3] = ii - (efd * (B_ * std::cos(delta) + G_ * std::sin(delta)) - B_ * vr - G_ * vi);
 
       return 0;
     }
@@ -337,8 +337,8 @@ namespace GridKit
         [[maybe_unused]] const ScalarT* wb,
         ScalarT*                        h)
     {
-      const ScalarT ir = y[3];
-      const ScalarT ii = y[4];
+      const ScalarT ir = y[2];
+      const ScalarT ii = y[3];
       h[0]             = this->toSystemBase(ir);
       h[1]             = this->toSystemBase(ii);
 

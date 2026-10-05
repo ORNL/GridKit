@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
@@ -229,11 +230,13 @@ namespace GridKit
         y[index(Vars::PREF)]  -= 0.004;
         floored.repca.y().setDataUpdated();
         success *= (floored.repca.evaluateResidual() == 0);
+        // The PMEAS step also raises the active error, which the PI output
+        // passes to the command lag: (0.004 + Kpg * 0.003) / 0.001.
         const std::array<VariableValue, 4> floored_residuals{{
             {Vars::VMEAS, 1.0},
             {Vars::QMEAS, 2.0},
             {Vars::PMEAS, 3.0},
-            {Vars::PREF, 4.0},
+            {Vars::PREF, 9.1},
         }};
         success *= residualsMatch(floored.repca,
                                   floored_residuals,
@@ -263,20 +266,7 @@ namespace GridKit
             {Vars::PMEAS, 0.8},
             {Vars::XPPI, 0.9},
             {Vars::PREF, 0.9},
-            {Vars::V, 1.0},
-            {Vars::VLDC, 0.984002032518226},
-            {Vars::VDROOP, 1.08},
-            {Vars::VCTRL, 0.984002032518226},
-            {Vars::SFRZ, 1.0},
-            {Vars::ERQ, 0.0},
-            {Vars::ERQDB, 0.0},
-            {Vars::ERQLIM, 0.0},
-            {Vars::QPI, 0.5},
             {Vars::QEXT, 0.25},
-            {Vars::EF, 0.0},
-            {Vars::EP, 0.0},
-            {Vars::EPLIM, 0.0},
-            {Vars::PPI, 0.9},
             {Vars::PEXT, 0.45},
         }};
         success *= stateMatches(fixture.repca, initial_state, "initialization");
@@ -411,11 +401,9 @@ namespace GridKit
           success *= scenario.initialize(0.25, 0.45);
           success *= (scenario.repca.evaluateResidual() == 0);
 
-          const std::array<VariableValue, 5> expected_state{{
+          const std::array<VariableValue, 3> expected_state{{
               {Vars::VMEAS, test_case.voltage},
-              {Vars::VCTRL, test_case.voltage},
               {Vars::PREF, test_case.pref},
-              {Vars::PPI, test_case.pref},
               {Vars::PEXT, test_case.pext},
           }};
           success *= stateMatches(scenario.repca,
@@ -503,14 +491,13 @@ namespace GridKit
         reactive_aw_data.parameters[Params::dbdupper] = 0.03;
         reactive_aw_data.parameters[Params::emin]     = 0.0;
 
+        // The published reference reproduces the selected reactive error,
+        // whose deadbanded value takes the -0.1 offset branch of the limiter
+        // inverse below emin = 0.
         const std::array<bool, 2>                    voltage_reference_values{{false, true}};
         const std::array<std::pair<RealT, RealT>, 2> voltage_cases{{
             {0.8, 0.6},
             {0.2, 0.0},
-        }};
-        const std::array<VariableValue, 2>           asymmetric_reactive_state{{
-            {Vars::ERQDB, -0.1},
-            {Vars::ERQLIM, 0.0},
         }};
         for (const bool voltage_reference : voltage_reference_values)
         {
@@ -523,12 +510,13 @@ namespace GridKit
                                                  voltage.second);
             asymmetric_reactive.attachAllInputs();
             setInitializationInputs(asymmetric_reactive);
-            success *= asymmetric_reactive.initialize(0.25, 0.45);
-            success *= (asymmetric_reactive.repca.evaluateResidual() == 0);
-            success *= stateMatches(asymmetric_reactive.repca,
-                                    asymmetric_reactive_state,
-                                    "asymmetric reactive initialization");
-            success *= allResidualsWithinInitTolerance(asymmetric_reactive.repca);
+            success                    *= asymmetric_reactive.initialize(0.25, 0.45);
+            success                    *= (asymmetric_reactive.repca.evaluateResidual() == 0);
+            const RealT reactive_error  = reactiveError(asymmetric_reactive, voltage_reference);
+            success                    *= scalarMatches(Math::deadband2(reactive_error, -0.02, 0.03),
+                                     -0.1,
+                                     "asymmetric reactive initialization");
+            success                    *= allResidualsWithinInitTolerance(asymmetric_reactive.repca);
           }
         }
 
@@ -553,14 +541,7 @@ namespace GridKit
           setInitializationInputs(asymmetric_active);
           success *= asymmetric_active.initialize(0.25, 0.45);
           success *= (asymmetric_active.repca.evaluateResidual() == 0);
-          const std::array<VariableValue, 3> lower_active_state{{
-              {Vars::EF, 0.0},
-              {Vars::EP, -0.1},
-              {Vars::EPLIM, 0.0},
-          }};
-          success *= stateMatches(asymmetric_active.repca,
-                                  lower_active_state,
-                                  "lower active-error boundary");
+          // The published plant reference carries the -0.1 lower-boundary error.
           success *= scalarMatches(asymmetric_active.input(Ext::freqref),
                                    0.995,
                                    "asymmetric frequency reference");
@@ -579,14 +560,7 @@ namespace GridKit
           setInitializationInputs(asymmetric_active);
           success *= asymmetric_active.initialize(0.25, 0.45);
           success *= (asymmetric_active.repca.evaluateResidual() == 0);
-          const std::array<VariableValue, 3> upper_active_state{{
-              {Vars::EF, 0.0},
-              {Vars::EP, 0.1},
-              {Vars::EPLIM, 0.0},
-          }};
-          success *= stateMatches(asymmetric_active.repca,
-                                  upper_active_state,
-                                  "upper active-error boundary");
+          // The published plant reference carries the 0.1 upper-boundary error.
           success *= scalarMatches(asymmetric_active.input(Ext::freqref),
                                    0.985,
                                    "asymmetric frequency reference");
@@ -632,13 +606,11 @@ namespace GridKit
           setInitializationInputs(qmax_pmin_boundary);
           success *= qmax_pmin_boundary.initialize(0.75, 0.0);
           success *= (qmax_pmin_boundary.repca.evaluateResidual() == 0);
-          const std::array<VariableValue, 8> qmax_pmin_state{{
-              {Vars::QPI, 1.5},
+          const std::array<VariableValue, 6> qmax_pmin_state{{
               {Vars::XQLAG, 1.5},
               {Vars::XQPI, 1.6},
               {Vars::QEXT, 0.75},
               {Vars::PREF, 0.0},
-              {Vars::PPI, 0.0},
               {Vars::XPPI, -0.1},
               {Vars::PEXT, 0.0},
           }};
@@ -653,13 +625,11 @@ namespace GridKit
           setInitializationInputs(qmin_pmax_boundary);
           success *= qmin_pmax_boundary.initialize(-0.4, 1.0);
           success *= (qmin_pmax_boundary.repca.evaluateResidual() == 0);
-          const std::array<VariableValue, 8> qmin_pmax_state{{
-              {Vars::QPI, -0.8},
+          const std::array<VariableValue, 6> qmin_pmax_state{{
               {Vars::XQLAG, -0.8},
               {Vars::XQPI, -0.9},
               {Vars::QEXT, -0.4},
               {Vars::PREF, 2.0},
-              {Vars::PPI, 2.0},
               {Vars::XPPI, 2.1},
               {Vars::PEXT, 1.0},
           }};
@@ -674,14 +644,12 @@ namespace GridKit
           setInitializationInputs(collapsed_limits);
           success *= collapsed_limits.initialize(0.25, 0.45);
           success *= (collapsed_limits.repca.evaluateResidual() == 0);
-          const std::array<VariableValue, 8> collapsed_state{{
+          const std::array<VariableValue, 6> collapsed_state{{
               {Vars::XQPI, 0.5},
               {Vars::XQLAG, 0.5},
-              {Vars::QPI, 0.5},
               {Vars::QEXT, 0.25},
               {Vars::XPPI, 0.9},
               {Vars::PREF, 0.9},
-              {Vars::PPI, 0.9},
               {Vars::PEXT, 0.45},
           }};
           success *= stateMatches(collapsed_limits.repca,
@@ -699,11 +667,13 @@ namespace GridKit
           RealT       expected;
         };
 
+        // At rest the reactive lag holds the PI output and the command lag
+        // holds the active PI output.
         const std::array<LimitCase, 4> limit_cases{{
-            {"adjusted Qmin", -0.5, 0.45, Vars::QPI, -1.0},
-            {"adjusted Qmax", 0.9, 0.45, Vars::QPI, 1.8},
-            {"adjusted Pmin", 0.25, -0.1, Vars::PPI, -0.2},
-            {"adjusted Pmax", 0.25, 1.1, Vars::PPI, 2.2},
+            {"adjusted Qmin", -0.5, 0.45, Vars::XQLAG, -1.0},
+            {"adjusted Qmax", 0.9, 0.45, Vars::XQLAG, 1.8},
+            {"adjusted Pmin", 0.25, -0.1, Vars::PREF, -0.2},
+            {"adjusted Pmax", 0.25, 1.1, Vars::PREF, 2.2},
         }};
 
         for (const auto& test_case : limit_cases)
@@ -730,14 +700,15 @@ namespace GridKit
           success *= disabled_frequency.initialize(0.25, 0.45);
           success *= stateMatches(disabled_frequency.repca,
                                   {{Vars::PREF, 0.8},
-                                   {Vars::PPI, 0.8},
                                    {Vars::PEXT, 0.0}},
                                   "measured-power limit");
           success *= (disabled_frequency.repca.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(disabled_frequency.repca);
 
-          setState(disabled_frequency.repca,
-                   {{Vars::PPI, 0.65}, {Vars::EPLIM, 0.1}});
+          // A 0.05 system-base reference step is a 0.1 active error; the PI
+          // state then places its output at 0.65 inside the 0.8 limit.
+          disabled_frequency.input(Ext::pref) += 0.05;
+          setState(disabled_frequency.repca, {{Vars::XPPI, 0.48}});
           setDerivative(disabled_frequency.repca, {{Vars::XPPI, 0.0}});
           success *= (disabled_frequency.repca.evaluateResidual() == 0);
           success *= residualsMatch(disabled_frequency.repca,
@@ -749,30 +720,32 @@ namespace GridKit
           Fixture<ScalarT> adjusted(data, 0.8, 0.6);
           adjusted.attachAllInputs();
           setInitializationInputs(adjusted);
-          success *= adjusted.initialize(1.0, 1.25);
+          success                    *= adjusted.initialize(1.0, 1.25);
+          const RealT published_vref  = adjusted.input(Ext::vref);
+          const RealT published_pref  = adjusted.input(Ext::pref);
 
-          setState(adjusted.repca,
-                   {{Vars::QPI, 1.75},
-                    {Vars::ERQLIM, 0.1},
-                    {Vars::SFRZ, 1.0},
-                    {Vars::PPI, 2.25},
-                    {Vars::EPLIM, 0.1}});
+          // Reference steps give 0.2 reactive and active errors; the PI states
+          // place the outputs at 1.75 and 2.25, inside the adjusted limits.
+          adjusted.input(Ext::vref) = published_vref + 0.22;
+          adjusted.input(Ext::pref) = published_pref + 0.1;
+          setState(adjusted.repca, {{Vars::XQPI, 1.35}, {Vars::XPPI, 1.91}});
           setDerivative(adjusted.repca, {{Vars::XQPI, 0.0}, {Vars::XPPI, 0.0}});
           success *= (adjusted.repca.evaluateResidual() == 0);
           success *= residualsMatch(adjusted.repca,
-                                    {{Vars::XQPI, 0.3}, {Vars::XPPI, 0.18}},
+                                    {{Vars::XQPI, 0.6}, {Vars::XPPI, 0.36}},
                                     "adjusted antiwindup limits");
 
+          // With no error, the lags read the PI outputs the adjusted limits pass.
+          adjusted.input(Ext::vref) = published_vref;
+          adjusted.input(Ext::pref) = published_pref;
           setState(adjusted.repca,
-                   {{Vars::QPI, 0.0},
-                    {Vars::ERQLIM, 0.0},
-                    {Vars::XQPI, 1.75},
-                    {Vars::PPI, 0.0},
-                    {Vars::EPLIM, 0.0},
-                    {Vars::XPPI, 2.25}});
+                   {{Vars::XQPI, 1.75},
+                    {Vars::XQLAG, 0.0},
+                    {Vars::XPPI, 2.25},
+                    {Vars::PREF, 0.0}});
           success *= (adjusted.repca.evaluateResidual() == 0);
           success *= residualsMatch(adjusted.repca,
-                                    {{Vars::QPI, 1.75}, {Vars::PPI, 2.25}},
+                                    {{Vars::XQLAG, 0.7}, {Vars::PREF, 4.5}},
                                     "adjusted command limits");
         }
 
@@ -793,28 +766,18 @@ namespace GridKit
         setAnswerKeyState(fixture.repca);
         success *= (fixture.repca.evaluateResidual() == 0);
 
+        // The state and inputs evaluate to V = 1, VLDC = 0.987, SFRZ = 1,
+        // ERQ = 0.33, ERQLIM = 0.3, QPI = 0.05, EF = 0.2, EP = EPLIM = 0.05,
+        // and PPI = 1.
         const std::array<VariableValue, Utilities::enum_size<Vars>()> expected_residuals{{
-            {Vars::VMEAS, 0.4},
+            {Vars::VMEAS, 1.235},
             {Vars::QMEAS, 0.45},
-            {Vars::XQPI, 0.3},
-            {Vars::XQLAG, 0.46},
+            {Vars::XQPI, 0.6},
+            {Vars::XQLAG, 0.44},
             {Vars::PMEAS, 0.5},
-            {Vars::XPPI, -0.3},
-            {Vars::PREF, 0.4},
-            {Vars::V, -1.28},
-            {Vars::VLDC, 0.028},
-            {Vars::VDROOP, 0.1},
-            {Vars::VCTRL, 0.05},
-            {Vars::SFRZ, 0.5},
-            {Vars::ERQ, -0.63},
-            {Vars::ERQDB, 0.75},
-            {Vars::ERQLIM, -0.35},
-            {Vars::QPI, -0.05},
-            {Vars::QEXT, -1.345},
-            {Vars::EF, -0.015},
-            {Vars::EP, -0.4},
-            {Vars::EPLIM, 1.1},
-            {Vars::PPI, 0.1},
+            {Vars::XPPI, 0.69},
+            {Vars::PREF, 0.6},
+            {Vars::QEXT, -1.355},
             {Vars::PEXT, 0.05},
         }};
 
@@ -843,20 +806,22 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        // The selected voltage reaches the filter row and the selected error
+        // reaches the PI integrator row as Ki times the limited error.
         struct FlagCase
         {
           const char* label;
           bool        voltage_compensation;
           bool        voltage_reference;
-          RealT       vctrl;
-          RealT       erq;
+          RealT       vmeas_rate;
+          RealT       integrator_rate;
         };
 
         const std::array<FlagCase, 4> flag_cases{{
-            {"droop/reactive-reference", false, false, 0.08, 0.30},
-            {"droop/voltage-reference", false, true, 0.08, 0.10},
-            {"line-drop/reactive-reference", true, false, -0.08, 0.30},
-            {"line-drop/voltage-reference", true, true, -0.08, 0.10},
+            {"droop/reactive-reference", false, false, 1.75, 1.11},
+            {"droop/voltage-reference", false, true, 1.75, 0.51},
+            {"line-drop/reactive-reference", true, false, 0.685, 1.11},
+            {"line-drop/voltage-reference", true, true, 0.685, 0.51},
         }};
         for (const auto& test_case : flag_cases)
         {
@@ -864,38 +829,36 @@ namespace GridKit
           data.parameters[Params::VcompFlag] = test_case.voltage_compensation;
           data.parameters[Params::RefFlag]   = test_case.voltage_reference;
 
-          Fixture<ScalarT> fixture(data);
+          Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
           fixture.attachAllInputs();
           setAnswerKeyInputs(fixture);
           fixture.input(Ext::vref) = 1.05;
-          fixture.input(Ext::qref) = 0.20;
+          fixture.input(Ext::qref) = 0.25;
 
           success *= fixture.prepare(0.0, 0.0);
           setState(fixture.repca,
-                   {{Vars::VMEAS, 0.95},
+                   {{Vars::VMEAS, 0.85},
                     {Vars::QMEAS, 0.10},
-                    {Vars::VLDC, 0.92},
-                    {Vars::VDROOP, 1.08},
-                    {Vars::VCTRL, 1.0},
-                    {Vars::ERQ, 0.0}});
+                    {Vars::XQPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
 
           const std::array<VariableValue, 2> expected_residuals{{
-              {Vars::VCTRL, test_case.vctrl},
-              {Vars::ERQ, test_case.erq},
+              {Vars::VMEAS, test_case.vmeas_rate},
+              {Vars::XQPI, test_case.integrator_rate},
           }};
           success *= residualsMatch(fixture.repca,
                                     expected_residuals,
                                     test_case.label);
         }
 
-        Fixture<ScalarT> fixture(makeResidualData());
+        Fixture<ScalarT> fixture(makeResidualData(), kStateVr, kStateVi);
         fixture.attachAllInputs();
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
 
         // A voltage of zero must clear the freeze threshold by the same
-        // margin the enabled probe clears it, so the threshold is raised.
+        // margin the enabled probe clears it, so the threshold is raised. A
+        // 0.2 limited error drives the integrator at 0.6 when enabled.
         {
           auto freeze_data                     = makeResidualData();
           freeze_data.parameters[Params::Vfrz] = 0.8;
@@ -907,81 +870,106 @@ namespace GridKit
 
           const std::array<DrivenCase, 2> freeze_cases{{
               {0.0, 0.0},
-              {1.6, 1.0},
+              {1.6, 0.6},
           }};
           for (const auto& test_case : freeze_cases)
           {
-            setState(freeze.repca, {{Vars::V, test_case.input}, {Vars::SFRZ, 0.0}});
+            freeze.bus.Vr() = test_case.input;
+            freeze.bus.Vi() = 0.0;
+            freeze.bus.y().setDataUpdated();
+            setState(freeze.repca, {{Vars::VMEAS, 0.82}, {Vars::XQPI, 0.0}});
             success *= (freeze.repca.evaluateResidual() == 0);
             success *= residualsMatch(freeze.repca,
-                                      {{Vars::SFRZ, test_case.expected}},
+                                      {{Vars::XQPI, test_case.expected}},
                                       "freeze gate");
           }
         }
 
         // The interior probe sits at the midpoint of the band, where the
-        // smooth deadband cancels exactly.
+        // smooth deadband cancels exactly. The deadbanded error passes the
+        // error limit and reaches the integrator as Ki * erqdb.
         const std::array<DrivenCase, 3> deadband_cases{{
-            {-0.82, -0.8},
+            {-0.27, -0.75},
             {0.005, 0.0},
-            {0.83, 0.8},
+            {0.28, 0.75},
         }};
         for (const auto& test_case : deadband_cases)
         {
-          setState(fixture.repca, {{Vars::ERQ, test_case.input}, {Vars::ERQDB, 0.0}});
+          setState(fixture.repca,
+                   {{Vars::VMEAS, 1.05 - test_case.input}, {Vars::XQPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
-                                    {{Vars::ERQDB, test_case.expected}},
+                                    {{Vars::XQPI, test_case.expected}},
                                     "reactive-power deadband");
         }
 
-        const std::array<DrivenCase, 3> error_limit_cases{{
-            {-1.5, -0.7},
-            {0.05, 0.05},
-            {1.6, 0.8},
-        }};
-        for (const auto& test_case : error_limit_cases)
+        // With Kp = 0 the PI output holds at XQPI, so the integrator reads Ki
+        // times the limited error. Inputs are reactive errors beyond the band.
         {
-          setState(fixture.repca, {{Vars::ERQDB, test_case.input}, {Vars::ERQLIM, 0.0}});
-          success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::ERQLIM, test_case.expected}},
-                                    "reactive-power error limit");
+          auto limit_data                   = makeResidualData();
+          limit_data.parameters[Params::Kp] = 0.0;
+
+          Fixture<ScalarT> limit(limit_data, kStateVr, kStateVi);
+          limit.attachAllInputs();
+          setAnswerKeyInputs(limit);
+          success *= limit.prepare(0.0, 0.0);
+
+          const std::array<DrivenCase, 3> error_limit_cases{{
+              {-1.52, -2.1},
+              {0.33, 0.9},
+              {1.63, 2.4},
+          }};
+          for (const auto& test_case : error_limit_cases)
+          {
+            setState(limit.repca,
+                     {{Vars::VMEAS, 1.05 - test_case.input}, {Vars::XQPI, 0.05}});
+            success *= (limit.repca.evaluateResidual() == 0);
+            success *= residualsMatch(limit.repca,
+                                      {{Vars::XQPI, test_case.expected}},
+                                      "reactive-power error limit");
+          }
         }
 
+        // With no error, the reactive lag reads the limited PI output.
         const std::array<DrivenCase, 3> command_limit_cases{{
-            {-1.6, -0.8},
-            {0.05, 0.05},
-            {1.7, 0.9},
+            {-1.6, -0.32},
+            {0.05, 0.02},
+            {1.7, 0.36},
         }};
         for (const auto& test_case : command_limit_cases)
         {
           setState(fixture.repca,
-                   {{Vars::XQPI, test_case.input},
-                    {Vars::ERQLIM, 0.0},
-                    {Vars::QPI, 0.0}});
+                   {{Vars::VMEAS, 1.045},
+                    {Vars::XQPI, test_case.input},
+                    {Vars::XQLAG, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
-                                    {{Vars::QPI, test_case.expected}},
+                                    {{Vars::XQLAG, test_case.expected}},
                                     "reactive-power command limit");
         }
 
-        // Saturated probes sit beyond their limit by a margin, so a blocked
-        // gate contributes nothing and an admitted gate passes the full rate.
+        // The integrator gate sees the limited output. Inside the limits it
+        // passes the full rate; a saturated output passes restoring motion
+        // fully and, sitting on the gate midpoint, outward motion at half
+        // weight. Cases give the unlimited PI input and the limited error.
         const std::array<AntiWindupCase, 6> antiwindup_cases{{
-            {-1.6, -0.4, 0.0},
+            {-1.6, -0.4, -0.6},
             {-1.6, 0.4, 1.2},
             {0.05, -0.4, -1.2},
             {0.05, 0.4, 1.2},
             {1.7, -0.4, -1.2},
-            {1.7, 0.4, 0.0},
+            {1.7, 0.4, 0.6},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
+          RealT band_edge = -0.02;
+          if (test_case.error > 0.0)
+          {
+            band_edge = 0.03;
+          }
           setState(fixture.repca,
-                   {{Vars::QPI, test_case.output},
-                    {Vars::ERQLIM, test_case.error},
-                    {Vars::SFRZ, 1.0}});
+                   {{Vars::VMEAS, 1.05 - (test_case.error + band_edge)},
+                    {Vars::XQPI, test_case.output - 2.0 * test_case.error}});
           setDerivative(fixture.repca, {{Vars::XQPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
@@ -990,8 +978,9 @@ namespace GridKit
         }
 
         setState(fixture.repca,
-                 {{Vars::XQLAG, 0.14},
-                  {Vars::QPI, 0.27},
+                 {{Vars::VMEAS, 1.045},
+                  {Vars::XQPI, 0.27},
+                  {Vars::XQLAG, 0.14},
                   {Vars::QEXT, 0.20}});
         setDerivative(fixture.repca, {{Vars::XQLAG, -0.04}});
         success *= (fixture.repca.evaluateResidual() == 0);
@@ -1003,33 +992,35 @@ namespace GridKit
                                   lead_lag_residuals,
                                   "reactive-command lead-lag");
 
-        // The command sits beyond Qmax with the error driving further out,
-        // so the blocked gate leaves the PI state with no sensitivity to the
-        // gate, the error, or the command.
+        // A regulated voltage far below Vfrz freezes the integrator, leaving
+        // it with no sensitivity to the error chain or the voltage.
         {
-          Fixture<DependencyTracking::Variable> blocked(makeResidualData());
-          blocked.attachAllInputs();
-          setAnswerKeyInputs(blocked);
-          success *= blocked.prepare(0.0, 0.0);
-          setState(blocked.repca,
-                   {{Vars::QPI, 1.7}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
-          setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
-          numberVariables(blocked);
-          blocked.repca.updateTime(0.0, 1.0);
-          success *= (blocked.repca.evaluateResidual() == 0);
+          Fixture<DependencyTracking::Variable> frozen(makeResidualData(), 0.1, 0.0);
+          frozen.attachAllInputs();
+          setAnswerKeyInputs(frozen);
+          success *= frozen.prepare(0.0, 0.0);
+          setState(frozen.repca, {{Vars::VMEAS, 0.72}, {Vars::XQPI, -0.55}});
+          setDerivative(frozen.repca, {{Vars::XQPI, 0.0}});
+          numberVariables(frozen);
+          frozen.repca.updateTime(0.0, 1.0);
+          success *= (frozen.repca.evaluateResidual() == 0);
 
           const DependencyTracking::Variable::DependencyMap expected{
-              {2 * index(Vars::XQPI) + 1, -1.0}, // @todo Remove these
-              {2 * index(Vars::SFRZ), 0.0},      // @todo Remove these
-              {2 * index(Vars::ERQLIM), 0.0},    // @todo Remove these
-              {2 * index(Vars::QPI), 0.0},       // @todo Remove these
+              {2 * index(Vars::VMEAS), 0.0},               // @todo Remove these
+              {2 * index(Vars::QMEAS), 0.0},               // @todo Remove these
+              {2 * index(Vars::XQPI), 0.0},                // @todo Remove these
+              {2 * index(Vars::XQPI) + 1, -1.0},           // @todo Remove these
+              {2 * kBusVrColumn, 0.0},                     // @todo Remove these
+              {2 * kBusViColumn, 0.0},                     // @todo Remove these
+              {2 * externalColumn(index(Ext::vref)), 0.0}, // @todo Remove these
+              {2 * externalColumn(index(Ext::qref)), 0.0}, // @todo Remove these
           };
 
           success *= jacobianRowMatches(
-              blocked.repca.getResidual().getData()[index(Vars::XQPI)].getDependencies(),
+              frozen.repca.getResidual().getData()[index(Vars::XQPI)].getDependencies(),
               expected,
               index(Vars::XQPI),
-              "blocked reactive-power antiwindup",
+              "frozen reactive-power integrator",
               kTol);
         }
 
@@ -1070,90 +1061,98 @@ namespace GridKit
         Fixture<ScalarT> fixture(makeResidualData());
         fixture.attachAllInputs();
         setAnswerKeyInputs(fixture);
-        success *= fixture.prepare(0.0, 0.0);
+        success                  *= fixture.prepare(0.0, 0.0);
+        fixture.input(Ext::freq)  = 1.0;
 
         // The interior probe sits at the midpoint of the band, where the
-        // smooth deadband cancels exactly.
-        const std::array<DrivenCase, 3> frequency_deadband_cases{{
-            {-0.81, -0.8},
-            {0.0025, 0.0},
-            {0.815, 0.8},
+        // smooth deadband cancels exactly. The deadbanded frequency error
+        // passes the down (Ddn = 2) or up (Dup = 1) droop, adds to a 0.05
+        // power error, and reaches the integrator as Kig times the result.
+        const std::array<DrivenCase, 3> frequency_cases{{
+            {-0.21, -0.63},
+            {0.0025, 0.09},
+            {0.315, 0.63},
         }};
-        for (const auto& test_case : frequency_deadband_cases)
+        fixture.input(Ext::pref) = 0.175;
+        for (const auto& test_case : frequency_cases)
         {
-          fixture.input(Ext::freq)    = 1.0;
           fixture.input(Ext::freqref) = 1.0 + test_case.input;
-          setState(fixture.repca, {{Vars::EF, 0.0}});
+          setState(fixture.repca, {{Vars::PMEAS, 0.3}, {Vars::XPPI, 1.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
-                                    {{Vars::EF, test_case.expected}},
-                                    "frequency deadband");
+                                    {{Vars::XPPI, test_case.expected}},
+                                    "frequency deadband and droop");
         }
 
-        const std::array<DrivenCase, 3> droop_cases{{
-            {-0.9, -1.8},
-            {0.0, 0.0},
-            {0.9, 0.9},
-        }};
-        fixture.input(Ext::pref) = 0.2;
-        for (const auto& test_case : droop_cases)
+        // The remaining probes hold the frequency error at the deadband
+        // midpoint and set the power error through the plant reference.
+        fixture.input(Ext::freqref) = 1.0025;
+
+        // With Kpg = 0 the PI output holds at XPPI, so the integrator reads
+        // Kig times the limited power error.
         {
-          setState(fixture.repca,
-                   {{Vars::EF, test_case.input},
-                    {Vars::EP, 0.0},
-                    {Vars::PMEAS, 0.4}});
-          success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::EP, test_case.expected}},
-                                    "frequency droop");
+          auto limit_data                    = makeResidualData();
+          limit_data.parameters[Params::Kpg] = 0.0;
+
+          Fixture<ScalarT> limit(limit_data);
+          limit.attachAllInputs();
+          setAnswerKeyInputs(limit);
+          success                   *= limit.prepare(0.0, 0.0);
+          limit.input(Ext::freq)     = 1.0;
+          limit.input(Ext::freqref)  = 1.0025;
+
+          const std::array<DrivenCase, 3> error_limit_cases{{
+              {-1.3, -0.9},
+              {0.05, 0.09},
+              {1.4, 1.08},
+          }};
+          for (const auto& test_case : error_limit_cases)
+          {
+            limit.input(Ext::pref) = 0.5 * (0.4 + test_case.input);
+            setState(limit.repca, {{Vars::PMEAS, 0.4}, {Vars::XPPI, 1.0}});
+            success *= (limit.repca.evaluateResidual() == 0);
+            success *= residualsMatch(limit.repca,
+                                      {{Vars::XPPI, test_case.expected}},
+                                      "active-power error limit");
+          }
         }
 
-        const std::array<DrivenCase, 3> error_limit_cases{{
-            {-1.3, -0.5},
-            {0.05, 0.05},
-            {1.4, 0.6},
-        }};
-        for (const auto& test_case : error_limit_cases)
-        {
-          setState(fixture.repca, {{Vars::EP, test_case.input}, {Vars::EPLIM, 0.0}});
-          success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::EPLIM, test_case.expected}},
-                                    "active-power error limit");
-        }
-
+        // With no power error, the command lag reads the limited PI output.
         const std::array<DrivenCase, 3> command_limit_cases{{
             {-0.8, 0.0},
-            {1.0, 1.0},
-            {2.8, 2.0},
+            {1.0, 2.0},
+            {2.8, 4.0},
         }};
+        fixture.input(Ext::pref) = 0.2;
         for (const auto& test_case : command_limit_cases)
         {
           setState(fixture.repca,
-                   {{Vars::XPPI, test_case.input},
-                    {Vars::EPLIM, 0.0},
-                    {Vars::PPI, 0.0}});
+                   {{Vars::PMEAS, 0.4},
+                    {Vars::XPPI, test_case.input},
+                    {Vars::PREF, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
-                                    {{Vars::PPI, test_case.expected}},
+                                    {{Vars::PREF, test_case.expected}},
                                     "active-power command limit");
         }
 
-        // Saturated probes sit beyond their limit by a margin, so a blocked
-        // gate contributes nothing and an admitted gate passes the full rate.
+        // The integrator gate sees the limited output: full rate inside the
+        // limits, full restoring and half outward rate at saturation. Cases
+        // give the unlimited PI input and the limited power error.
         const std::array<AntiWindupCase, 6> antiwindup_cases{{
-            {-0.8, -0.5, 0.0},
-            {-0.8, 0.5, 0.9},
-            {1.0, -0.5, -0.9},
-            {1.0, 0.5, 0.9},
-            {2.8, -0.5, -0.9},
-            {2.8, 0.5, 0.0},
+            {-0.8, -0.3, -0.27},
+            {-0.8, 0.3, 0.54},
+            {1.0, -0.3, -0.54},
+            {1.0, 0.3, 0.54},
+            {2.8, -0.3, -0.54},
+            {2.8, 0.3, 0.27},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
+          fixture.input(Ext::pref) = 0.5 * (0.4 + test_case.error);
           setState(fixture.repca,
-                   {{Vars::PPI, test_case.output},
-                    {Vars::EPLIM, test_case.error}});
+                   {{Vars::PMEAS, 0.4},
+                    {Vars::XPPI, test_case.output - 1.7 * test_case.error}});
           setDerivative(fixture.repca, {{Vars::XPPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
@@ -1161,7 +1160,9 @@ namespace GridKit
                                     "active-power antiwindup");
         }
 
-        setState(fixture.repca, {{Vars::PPI, 0.66}, {Vars::PREF, 0.60}});
+        fixture.input(Ext::pref) = 0.2;
+        setState(fixture.repca,
+                 {{Vars::PMEAS, 0.4}, {Vars::XPPI, 0.66}, {Vars::PREF, 0.60}});
         setDerivative(fixture.repca, {{Vars::PREF, 0.05}});
         success *= (fixture.repca.evaluateResidual() == 0);
         success *= residualsMatch(fixture.repca,
@@ -1191,13 +1192,13 @@ namespace GridKit
                        {Vars::PREF, 0.8}});
         success *= (fixture.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 7> expected_residuals{{
-            {Vars::VMEAS, 0.3},
+            {Vars::VMEAS, 1.135},
             {Vars::QMEAS, 0.35},
-            {Vars::XQPI, 0.2},
-            {Vars::XQLAG, 0.36},
+            {Vars::XQPI, 0.5},
+            {Vars::XQLAG, 0.34},
             {Vars::PMEAS, 0.4},
-            {Vars::XPPI, -0.4},
-            {Vars::PREF, 0.3},
+            {Vars::XPPI, 0.59},
+            {Vars::PREF, 0.5},
         }};
         success *= residualsMatch(fixture.repca,
                                   expected_residuals,
@@ -1446,8 +1447,8 @@ namespace GridKit
         PhasorDynamics::Controller::Repca<T, IdxT> repca;
       };
 
-      static constexpr RealT kStateVr      = 0.9;
-      static constexpr RealT kStateVi      = 0.4;
+      static constexpr RealT kStateVr      = 0.6;
+      static constexpr RealT kStateVi      = 0.8;
       static constexpr RealT kNonunitAlpha = 2.5;
 
       static constexpr size_t kBusVrColumn        = Utilities::enum_size<Vars>();
@@ -1578,18 +1579,21 @@ namespace GridKit
         fixture.input(Ext::freq) = static_cast<T>(0.99);
       }
 
+      /// On the unit terminal (0.6, 0.8), the branch current drops the
+      /// compensated voltage along the terminal phasor to 0.987, and both the
+      /// voltage and reactive references sit 0.33 above their measurements.
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(Ext::ir)      = static_cast<T>(1.0);
-        fixture.input(Ext::ii)      = static_cast<T>(2.0);
+        fixture.input(Ext::ir)      = static_cast<T>(0.18);
+        fixture.input(Ext::ii)      = static_cast<T>(-0.01);
         fixture.input(Ext::p)       = static_cast<T>(0.35);
         fixture.input(Ext::q)       = static_cast<T>(0.25);
-        fixture.input(Ext::freq)    = static_cast<T>(0.2);
+        fixture.input(Ext::freq)    = static_cast<T>(1.0);
         fixture.input(Ext::vref)    = static_cast<T>(1.05);
-        fixture.input(Ext::pref)    = static_cast<T>(0.55);
-        fixture.input(Ext::qref)    = static_cast<T>(0.3);
-        fixture.input(Ext::freqref) = static_cast<T>(1.0);
+        fixture.input(Ext::pref)    = static_cast<T>(0.075);
+        fixture.input(Ext::qref)    = static_cast<T>(0.39);
+        fixture.input(Ext::freqref) = static_cast<T>(1.215);
       }
 
       template <typename T>
@@ -1599,27 +1603,14 @@ namespace GridKit
         // every clamp that must pass its input through sits at the midpoint
         // of its limits, so each row carries its ideal value.
         setState(repca,
-                 {{Vars::VMEAS, 0.85},
+                 {{Vars::VMEAS, 0.72},
                   {Vars::QMEAS, 0.45},
-                  {Vars::XQPI, -0.75},
+                  {Vars::XQPI, -0.55},
                   {Vars::XQLAG, -0.05},
                   {Vars::PMEAS, 0.3},
-                  {Vars::XPPI, 1.85},
+                  {Vars::XPPI, 0.915},
                   {Vars::PREF, 0.35},
-                  {Vars::V, 1.5},
-                  {Vars::VLDC, 1.0},
-                  {Vars::VDROOP, 1.6},
-                  {Vars::VCTRL, 0.95},
-                  {Vars::SFRZ, 0.5},
-                  {Vars::ERQ, 0.83},
-                  {Vars::ERQDB, 0.05},
-                  {Vars::ERQLIM, 0.4},
-                  {Vars::QPI, 0.1},
                   {Vars::QEXT, 0.25},
-                  {Vars::EF, 0.8},
-                  {Vars::EP, 2.0},
-                  {Vars::EPLIM, -0.5},
-                  {Vars::PPI, 0.9},
                   {Vars::PEXT, 0.15}});
         setDerivative(repca,
                       {{Vars::VMEAS, 0.1},
@@ -1865,20 +1856,7 @@ namespace GridKit
             "PMEAS",
             "XPPI",
             "PREF",
-            "V",
-            "VLDC",
-            "VDROOP",
-            "VCTRL",
-            "SFRZ",
-            "ERQ",
-            "ERQDB",
-            "ERQLIM",
-            "QPI",
             "QEXT",
-            "EF",
-            "EP",
-            "EPLIM",
-            "PPI",
             "PEXT",
         }};
         return names[index(variable)];
@@ -2161,50 +2139,51 @@ namespace GridKit
         return success;
       }
 
+      /// Each row includes the structural entries of every input its
+      /// evaluated chain reads, with zero value where a mode mask or a
+      /// saturated smooth gate removes the sensitivity.
       std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobian() const
       {
         return {
-            {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
+            {{index(Vars::VMEAS), -6.0},
+             {kBusVrColumn, 3.0},
+             {kBusViColumn, 4.0},
+             {externalColumn(index(Ext::ir)), -0.36},
+             {externalColumn(index(Ext::ii)), 0.02},
+             {externalColumn(index(Ext::q)), 0.0}},
             {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::q)), 10.0}},
-            {{index(Vars::XQPI), -1.0},
-             {index(Vars::SFRZ), 1.2},
-             {index(Vars::ERQLIM), 1.5},
-             {index(Vars::QPI), 0.0}},
-            {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
-            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::p)), 5.0}},
-            {{index(Vars::XPPI), -1.0},
-             {index(Vars::EPLIM), 1.8},
-             {index(Vars::PPI), 0.0}},
-            {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
-            {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
-            {{index(Vars::VLDC), -2.0},
-             {kBusVrColumn, 1.96},
-             {kBusViColumn, 0.52},
-             {externalColumn(index(Ext::ir)), -0.1096},
-             {externalColumn(index(Ext::ii)), 0.0968}},
-            {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::q)), 0.8}},
-            {{index(Vars::VLDC), 1.0},
-             {index(Vars::VDROOP), 0.0},
-             {index(Vars::VCTRL), -1.0}},
-            {{index(Vars::V), 0.0}, {index(Vars::SFRZ), -1.0}},
-            {{index(Vars::VMEAS), -1.0},
+            {{index(Vars::VMEAS), -3.0},
              {index(Vars::QMEAS), 0.0},
-             {index(Vars::ERQ), -1.0},
-             {externalColumn(index(Ext::vref)), 1.0},
+             {index(Vars::XQPI), -1.0},
+             {kBusVrColumn, 0.0},
+             {kBusViColumn, 0.0},
+             {externalColumn(index(Ext::vref)), 3.0},
              {externalColumn(index(Ext::qref)), 0.0}},
-            {{index(Vars::ERQ), 1.0}, {index(Vars::ERQDB), -1.0}},
-            {{index(Vars::ERQDB), 1.0}, {index(Vars::ERQLIM), -1.0}},
-            {{index(Vars::XQPI), 1.0}, {index(Vars::ERQLIM), 2.0}, {index(Vars::QPI), -1.0}},
-            {{index(Vars::XQLAG), 2.3}, {index(Vars::QPI), 0.2}, {index(Vars::QEXT), -5.0}},
-            {{index(Vars::EF), -1.0},
-             {externalColumn(index(Ext::freq)), -1.0},
-             {externalColumn(index(Ext::freqref)), 1.0}},
-            {{index(Vars::PMEAS), -1.0},
-             {index(Vars::EF), 1.0},
-             {index(Vars::EP), -1.0},
-             {externalColumn(index(Ext::pref)), 2.0}},
-            {{index(Vars::EP), 0.0}, {index(Vars::EPLIM), -1.0}},
-            {{index(Vars::XPPI), 1.0}, {index(Vars::EPLIM), 1.7}, {index(Vars::PPI), -1.0}},
+            {{index(Vars::VMEAS), -0.8},
+             {index(Vars::QMEAS), 0.0},
+             {index(Vars::XQPI), 0.4},
+             {index(Vars::XQLAG), -1.4},
+             {externalColumn(index(Ext::vref)), 0.8},
+             {externalColumn(index(Ext::qref)), 0.0}},
+            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::p)), 5.0}},
+            {{index(Vars::PMEAS), -1.8},
+             {index(Vars::XPPI), -1.0},
+             {externalColumn(index(Ext::freq)), -1.8},
+             {externalColumn(index(Ext::pref)), 3.6},
+             {externalColumn(index(Ext::freqref)), 1.8}},
+            {{index(Vars::PMEAS), -3.4},
+             {index(Vars::XPPI), 2.0},
+             {index(Vars::PREF), -3.0},
+             {externalColumn(index(Ext::freq)), -3.4},
+             {externalColumn(index(Ext::pref)), 6.8},
+             {externalColumn(index(Ext::freqref)), 3.4}},
+            {{index(Vars::VMEAS), -0.4},
+             {index(Vars::QMEAS), 0.0},
+             {index(Vars::XQPI), 0.2},
+             {index(Vars::XQLAG), 2.3},
+             {index(Vars::QEXT), -5.0},
+             {externalColumn(index(Ext::vref)), 0.4},
+             {externalColumn(index(Ext::qref)), 0.0}},
             {{index(Vars::PREF), 1.0}, {index(Vars::PEXT), -2.0}},
         };
       }
@@ -2212,17 +2191,39 @@ namespace GridKit
       std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobianAllFlagsOff() const
       {
         auto expected                = expectedJacobian();
-        expected[index(Vars::VCTRL)] = {
-            {index(Vars::VLDC), 0.0},
-            {index(Vars::VDROOP), 1.0},
-            {index(Vars::VCTRL), -1.0},
+        expected[index(Vars::VMEAS)] = {
+            {index(Vars::VMEAS), -6.0},
+            {kBusVrColumn, 3.0},
+            {kBusViColumn, 4.0},
+            {externalColumn(index(Ext::ir)), 0.0},
+            {externalColumn(index(Ext::ii)), 0.0},
+            {externalColumn(index(Ext::q)), 4.0},
         };
-        expected[index(Vars::ERQ)] = {
+        expected[index(Vars::XQPI)] = {
             {index(Vars::VMEAS), 0.0},
-            {index(Vars::QMEAS), -1.0},
-            {index(Vars::ERQ), -1.0},
+            {index(Vars::QMEAS), -3.0},
+            {index(Vars::XQPI), -1.0},
+            {kBusVrColumn, 0.0},
+            {kBusViColumn, 0.0},
             {externalColumn(index(Ext::vref)), 0.0},
-            {externalColumn(index(Ext::qref)), 2.0},
+            {externalColumn(index(Ext::qref)), 6.0},
+        };
+        expected[index(Vars::XQLAG)] = {
+            {index(Vars::VMEAS), 0.0},
+            {index(Vars::QMEAS), -0.8},
+            {index(Vars::XQPI), 0.4},
+            {index(Vars::XQLAG), -1.4},
+            {externalColumn(index(Ext::vref)), 0.0},
+            {externalColumn(index(Ext::qref)), 1.6},
+        };
+        expected[index(Vars::QEXT)] = {
+            {index(Vars::VMEAS), 0.0},
+            {index(Vars::QMEAS), -0.4},
+            {index(Vars::XQPI), 0.2},
+            {index(Vars::XQLAG), 2.3},
+            {index(Vars::QEXT), -5.0},
+            {externalColumn(index(Ext::vref)), 0.0},
+            {externalColumn(index(Ext::qref)), 0.8},
         };
         expected[index(Vars::PEXT)] = {
             {index(Vars::PREF), 0.0},
@@ -2282,6 +2283,18 @@ namespace GridKit
           }
         }
         return success;
+      }
+
+      /// The reactive error the published reference reproduces at rest, on
+      /// the component base (makeInitializationData() halves the power base).
+      RealT reactiveError(Fixture<ScalarT>& fixture, bool voltage_reference) const
+      {
+        const auto* y = fixture.repca.y().getData();
+        if (voltage_reference)
+        {
+          return fixture.input(Ext::vref) - y[index(Vars::VMEAS)];
+        }
+        return 2.0 * fixture.input(Ext::qref) - y[index(Vars::QMEAS)];
       }
 
       /// @todo Remove and setup the test to not rely on explicit variable numbering

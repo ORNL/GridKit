@@ -23,7 +23,6 @@ namespace GridKit
     {
       DELTA, ///< \f$\delta\f$ rotor angle
       OMEGA, ///< \f$\omega\f$ speed deviation
-      TE,    ///< \f$T_e\f$ electrical torque
       IR,    ///< \f$I_r\f$ network real current
       II,    ///< \f$I_i\f$ network imaginary current
     };

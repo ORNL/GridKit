@@ -22,7 +22,13 @@ namespace GridKit
   {
     namespace Exciter
     {
-      /// Internal variables of a `Ieeet1`
+      /**
+       * @brief Internal variables of a `Ieeet1`
+       *
+       * The four differential states, the terminal voltage error, and the Efd
+       * output. Feedback voltage, exciter control voltage, and saturation are
+       * explicit functions of these and are evaluated inline in the residual.
+       */
       enum class Ieeet1InternalVariables : size_t
       {
         VTS,  ///< Sensed term voltage
@@ -30,10 +36,7 @@ namespace GridKit
         EFDP, ///< Efd (pre multiplication)
         VFX,  ///< Exciter feedback
         VTR,  ///< Terminal voltage error
-        VF,   ///< Feedback voltage
-        VE,   ///< Exciter control voltage
         EFD,  ///< Efd
-        KSAT, ///< \f$E_{\mathrm{fd}}'S(E_{\mathrm{fd}}')\f$ Scaled-quadratic saturation contribution
       };
 
       /// External variables of a `Ieeet1`

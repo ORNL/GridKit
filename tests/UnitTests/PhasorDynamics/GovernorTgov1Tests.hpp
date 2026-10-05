@@ -288,7 +288,9 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(busdata, gendata);
 
         /// Compare DependencyTracking dependencies to Enzyme's
-        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
+        // The two machines initialize Te one ulp apart (FMA contraction), which
+        // puts the valve on its limit at slightly different points; measured 20 eps.
+        auto tol = 32 * std::numeric_limits<RealT>::epsilon();
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
           success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));

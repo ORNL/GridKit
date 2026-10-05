@@ -12,15 +12,15 @@ namespace GridKit
     /**
      * @brief Constructor for a zip load
      *
-     * System sizes:
-     * - Number of equations = 2
-     * - Number of independent variables = 2
+     * Model size:
+     * - Number of equations = 0
+     * - Number of internal variables = 0
      */
     template <typename scalar_type, typename index_type>
     LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus)
       : bus_(bus)
     {
-      size_ = 2;
+      size_ = 0;
       setDerivedParams();
     }
 
@@ -32,7 +32,7 @@ namespace GridKit
         alphaI_(alphaI),
         alphaP_(alphaP)
     {
-      size_ = 2;
+      size_ = 0;
       setDerivedParams();
     }
 
@@ -44,7 +44,7 @@ namespace GridKit
     {
       initializeParameters(data);
       initializeMonitor();
-      size_ = 2;
+      size_ = 0;
     }
 
     template <typename scalar_type, typename index_type>
@@ -144,23 +144,6 @@ namespace GridKit
       Vnom_ = vm0;
       setDerivedParams();
 
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
-
-      // The ZIP factor is one at the anchor voltage
-      y[0]  = -G_ * vr - B_ * vi;
-      y[1]  = -G_ * vi + B_ * vr;
-      yp[0] = 0.0;
-      yp[1] = 0.0;
-      y_.setDataUpdated();
-      yp_.setDataUpdated();
-
-      // For DependencyTracking::Variable, set variable numbers
-      if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
-      {
-        this->initializeDependencyTrackingVariableNumbers();
-      }
-
       return 0;
     }
 
@@ -170,8 +153,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
       return 0;
     }
 
@@ -200,15 +181,20 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int LoadZIP<scalar_type, index_type>::evaluateBusResidual(
-        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
+        const ScalarT*                  wb,
         ScalarT*                        h)
     {
-      const ScalarT Ir = y[0];
-      const ScalarT Ii = y[1];
-      h[0]             = Ir;
-      h[1]             = Ii;
+      const ScalarT Vr    = wb[0];
+      const ScalarT Vi    = wb[1];
+      const RealT   Vnom2 = Vnom_ * Vnom_;
+      const ScalarT V2    = Vr * Vr + Vi * Vi;
+      const ScalarT V     = std::sqrt(V2);
+      const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
+
+      h[0] = -(G_ * Vr + B_ * Vi) * zip;
+      h[1] = -(G_ * Vi - B_ * Vr) * zip;
 
       return 0;
     }
@@ -224,47 +210,30 @@ namespace GridKit
       wb[0]    = Vr();
       wb[1]    = Vi();
 
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      auto*       f  = f_.getData();
-      auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, f);
-      evaluateBusResidual(y, yp, wb, h);
+      auto* h = h_.getData();
+      evaluateBusResidual(y_.getData(), yp_.getData(), wb, h);
       Ir() += h[0];
       Ii() += h[1];
       if (bus_->size() > 0)
       {
         bus_->getResidual().setDataUpdated();
       }
-      f_.setDataUpdated();
 
       return 0;
     }
 
     /**
-     * @brief Internal residual
+     * @brief Terminal current injected at the present bus voltage
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZIP<scalar_type, index_type>::evaluateInternalResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        f)
+    void LoadZIP<scalar_type, index_type>::terminalCurrent(ScalarT& ir, ScalarT& ii)
     {
-      const ScalarT Vr    = wb[0];
-      const ScalarT Vi    = wb[1];
-      const ScalarT Ir    = y[0];
-      const ScalarT Ii    = y[1];
-      const RealT   Vnom2 = Vnom_ * Vnom_;
-      const ScalarT V2    = Vr * Vr + Vi * Vi;
-      const ScalarT V     = std::sqrt(V2);
-      const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
-
-      f[0] = Ir + (G_ * Vr + B_ * Vi) * zip;
-      f[1] = Ii + (G_ * Vi - B_ * Vr) * zip;
-
-      return 0;
+      const ScalarT wb[2] = {Vr(), Vi()};
+      ScalarT       h[2];
+      evaluateBusResidual(y_.getData(), yp_.getData(), wb, h);
+      ir = h[0];
+      ii = h[1];
     }
 
     /**
@@ -293,15 +262,35 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
 
       monitor_->set(Variable::ir, [this]
-                    { return y_.getData()[0]; });
+                    {
+                      ScalarT ir;
+                      ScalarT ii;
+                      terminalCurrent(ir, ii);
+                      return ir; });
       monitor_->set(Variable::ii, [this]
-                    { return y_.getData()[1]; });
+                    {
+                      ScalarT ir;
+                      ScalarT ii;
+                      terminalCurrent(ir, ii);
+                      return ii; });
       monitor_->set(Variable::im, [this]
-                    { return std::sqrt(y_.getData()[0] * y_.getData()[0] + y_.getData()[1] * y_.getData()[1]); });
+                    {
+                      ScalarT ir;
+                      ScalarT ii;
+                      terminalCurrent(ir, ii);
+                      return std::sqrt(ir * ir + ii * ii); });
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; });
+                    {
+                      ScalarT ir;
+                      ScalarT ii;
+                      terminalCurrent(ir, ii);
+                      return Vr() * ir + Vi() * ii; });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; });
+                    {
+                      ScalarT ir;
+                      ScalarT ii;
+                      terminalCurrent(ir, ii);
+                      return Vi() * ir - Vr() * ii; });
     }
 
   } // namespace PhasorDynamics
