@@ -56,6 +56,14 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_relay_overcurrent runOvercurrentRelayTests.cpp)
+target_link_libraries(
+  test_phasor_relay_overcurrent
+  GridKit::definitions
+  GridKit::phasor_dynamics_relay_overcurrent
+  GridKit::phasor_dynamics_relay_overcurrent_dependency_tracking
+  GridKit::testing)
+
 add_executable(test_phasor_loadz runLoadZTests.cpp)
 target_link_libraries(
   test_phasor_loadz
@@ -230,6 +238,7 @@ add_test(NAME PhasorDynamicsBusSignalVoltageOutTest COMMAND test_phasor_bus_sign
 add_test(NAME PhasorDynamicsBusSignalVoltageInTest COMMAND test_phasor_bus_signal_voltage_in)
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsBranchBreakersTest COMMAND test_phasor_branch_breakers)
+add_test(NAME PhasorDynamicsRelayOvercurrentTest COMMAND test_phasor_relay_overcurrent)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
 add_test(NAME PhasorDynamicsGovernorGastPtiTest COMMAND test_phasor_governor_gastpti)
@@ -259,6 +268,7 @@ install(
           test_phasor_bus_signal_voltage_in
           test_phasor_branch
           test_phasor_branch_breakers
+          test_phasor_relay_overcurrent
           test_phasor_loadz
           test_phasor_loadzip
           test_phasor_genrou

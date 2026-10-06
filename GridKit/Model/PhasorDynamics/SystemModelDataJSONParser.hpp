@@ -192,6 +192,12 @@ namespace GridKit
           raw_component.get_to(stabilizer);
           sm.stabilizer.push_back(stabilizer);
         }
+        else if (kind == "OvercurrentRelay")
+        {
+          typename SystemModelData<RealT, IdxT>::OvercurrentRelayDataT relay;
+          raw_component.get_to(relay);
+          sm.overcurrent.push_back(relay);
+        }
         else if (kind == "ConstantSignalSource")
         {
           typename SystemModelData<RealT, IdxT>::ConstantSourceT source;

@@ -21,6 +21,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/Relay/OvercurrentRelay/OvercurrentRelayData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSourceData.hpp>
@@ -63,6 +64,7 @@ namespace GridKit
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadZDataT        = LoadZData<RealT, IdxT>;
       using LoadZIPDataT      = LoadZIPData<RealT, IdxT>;
+      using OvercurrentRelayDataT = Relay::OvercurrentRelayData<RealT, IdxT>;
       using ConstantSourceT   = ConstantSignalSourceData<RealT, IdxT>;
       using FunctionSourceT   = FunctionSignalSourceData<RealT, IdxT>;
       using SignalDataT       = SignalNodeData<RealT, IdxT>;
@@ -124,6 +126,7 @@ namespace GridKit
       std::vector<Ieeet1DataT>       exciter;         ///< Exciters within the model
       std::vector<SexsPtiDataT>      sexspti;         ///< SEXS-PTI exciters within the model
       std::vector<IeeestDataT>       stabilizer;      ///< Stabilizers within the model
+      std::vector<OvercurrentRelayDataT> overcurrent; ///< Overcurrent relays within the model
       std::vector<ConstantSourceT>   constant_source; ///< Constant signal sources within the model
       std::vector<FunctionSourceT>   function_source; ///< Function signal sources within the model
       std::vector<SignalDataT>       signal;          ///< Signal nodes

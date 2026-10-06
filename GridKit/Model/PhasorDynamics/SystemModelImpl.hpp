@@ -46,6 +46,7 @@ namespace GridKit
       using namespace Stabilizer;
       using namespace Controller;
       using namespace Converter;
+      using namespace Relay;
 
       owns_components_ = true;
 
@@ -123,6 +124,14 @@ namespace GridKit
                                                          branchdata);
         branch->getPorts().connect(branchdata, signal_nodes_);
         addComponent(branch);
+      }
+
+      // Add overcurrent relays after the branches whose currents they read
+      for (const auto& relaydata : data.overcurrent)
+      {
+        auto* relay = new OvercurrentRelay<ScalarT, IdxT>(relaydata);
+        relay->getPorts().connect(relaydata, signal_nodes_);
+        addComponent(relay);
       }
 
       // Add loads

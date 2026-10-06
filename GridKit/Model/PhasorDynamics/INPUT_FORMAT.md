@@ -161,6 +161,7 @@ are specified:
   [Esdc1a](Exciter/ESDC1A/README.md) | the ESDC1A exciter model
   [SexsPti](Exciter/SEXS-PTI/README.md) | the SEXS-PTI simplified exciter model
   [Ieeest](Stabilizer/IEEEST/README.md) | the IEEEST stabilizer model
+  [OvercurrentRelay](Relay/OvercurrentRelay/README.md) | definite-time overcurrent relay with lockout
   [ConstantSignalSource](SignalSource/README.md) | Constant complex signal source
 
 ## Example File for a 2-Bus System

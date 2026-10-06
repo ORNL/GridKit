@@ -18,6 +18,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
+#include <GridKit/Model/PhasorDynamics/Relay/OvercurrentRelay/OvercurrentRelay.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSource.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSource.hpp>
