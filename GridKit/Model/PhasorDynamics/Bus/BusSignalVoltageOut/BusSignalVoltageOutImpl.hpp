@@ -131,7 +131,7 @@ namespace GridKit
     Model::ConfigurationChecks BusSignalVoltageOut<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks;
-      auto check_input = [&]<BusSignalInputs input>(const char* name)
+      auto                       check_input = [&]<BusSignalInputs input>(const char* name)
       {
         const auto& port = ports_.in.template port<input>();
         checks.check(port.connected(), std::string("BusSignalVoltageOut: ") + name + " signal inlet is not connected");
@@ -148,8 +148,8 @@ namespace GridKit
           checks.check(port.linked(), std::string("BusSignalVoltageOut: ") + name + " signal attached but not linked; connect before allocate()");
         }
       };
-      check_input.template operator()<BusSignalInputs::ir>("ir");
-      check_input.template operator()<BusSignalInputs::ii>("ii");
+      check_input.template  operator()<BusSignalInputs::ir>("ir");
+      check_input.template  operator()<BusSignalInputs::ii>("ii");
       check_output.template operator()<BusSignalOutputs::vr>("vr");
       check_output.template operator()<BusSignalOutputs::vi>("vi");
       return checks;
