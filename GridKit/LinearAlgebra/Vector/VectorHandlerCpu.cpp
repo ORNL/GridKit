@@ -85,7 +85,7 @@ namespace GridKit
      * @brief Compute the infinity norm of the component-wise scaled error
      *
      * \f[\max_i \frac{|e_i|}{Atol_i + Rtol \max(|y_i|, |y_{p,i}|)}.\f]
-     * 
+     *
      * This scaling factor is standard in ODE solvers and can be found on page
      * 167 of https://doi.org/10.1007/978-3-540-78862-1. When this norm is less
      * than 1, the error is considered acceptable.
@@ -125,7 +125,7 @@ namespace GridKit
      *
      * \f[\sqrt{\frac{1}{N}\sum_i
      * \left(\frac{e_i}{Atol_i + Rtol \max(|y_i|, |y_{p,i}|)}\right)^2}.\f]
-     * 
+     *
      * This scaling factor is standard in ODE solvers and can be found on page
      * 167 of https://doi.org/10.1007/978-3-540-78862-1. When this norm is less
      * than 1, the error is considered acceptable.
