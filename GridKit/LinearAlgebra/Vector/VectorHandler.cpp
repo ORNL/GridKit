@@ -108,7 +108,7 @@ namespace GridKit
       case memory::HOST:
         return cpuImpl_.weightedInfNorm(error, state, previous_state, absolute_tolerance, relative_tolerance);
       case memory::DEVICE:
-        out::error() << "VectorHandler::weightedInfNorm - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::weightedInfNorm - DEVICE memory space not yet supported\n";
         return static_cast<ScalarT>(NAN);
       }
       return static_cast<ScalarT>(NAN);
@@ -145,7 +145,7 @@ namespace GridKit
       case memory::HOST:
         return cpuImpl_.weightedRmsNorm(error, state, previous_state, absolute_tolerance, relative_tolerance);
       case memory::DEVICE:
-        out::error() << "VectorHandler::weightedRmsNorm - DEVICE memory space not yet supported\n";
+        Log::error() << "VectorHandler::weightedRmsNorm - DEVICE memory space not yet supported\n";
         return static_cast<ScalarT>(NAN);
       }
       return static_cast<ScalarT>(NAN);
