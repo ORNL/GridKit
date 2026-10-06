@@ -13,6 +13,11 @@ contributions are oriented entering the adjacent buses.
   bus 1; both shunts are added outside the $\mathbf{M}$ transformation.
 - The branch has no solver-owned variables; it contributes current residuals
   directly to the connected buses.
+- Taking a branch out of service can leave bus voltages unconstrained and make
+  the system Jacobian singular. This can happen when an outage leaves a bus
+  with no other current contributions, or a floating island of series branches
+  without shunts. An island with generators may still be solvable. The model
+  does not detect or handle these singular cases.
 
 ## Model Parameters
 
