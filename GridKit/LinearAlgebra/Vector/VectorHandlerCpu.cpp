@@ -12,6 +12,19 @@ namespace GridKit
   {
     using Log = GridKit::Utilities::Logger;
 
+    namespace
+    {
+      template <typename ScalarT>
+      ScalarT computeErrorScale(ScalarT absolute_tolerance,
+                                ScalarT relative_tolerance,
+                                ScalarT state,
+                                ScalarT previous_state)
+      {
+        return absolute_tolerance
+               + relative_tolerance * std::max(std::abs(state), std::abs(previous_state));
+      }
+    } // namespace
+
     /**
      * @brief dot product of two vectors i.e, a = x^Ty
      *
@@ -113,8 +126,10 @@ namespace GridKit
 
       for (IdxT i = 0; i < error->getSize(); ++i)
       {
-        const ScalarT scale = absolute_tolerance_data[i]
-                              + relative_tolerance * std::max(std::abs(state_data[i]), std::abs(previous_state_data[i]));
+        const ScalarT scale = computeErrorScale(absolute_tolerance_data[i],
+                                                relative_tolerance,
+                                                state_data[i],
+                                                previous_state_data[i]);
         norm = std::max(norm, std::abs(error_data[i]) / scale);
       }
       return norm;
@@ -153,8 +168,10 @@ namespace GridKit
 
       for (IdxT i = 0; i < error->getSize(); ++i)
       {
-        const ScalarT scale = absolute_tolerance_data[i]
-                              + relative_tolerance * std::max(std::abs(state_data[i]), std::abs(previous_state_data[i]));
+        const ScalarT scale        = computeErrorScale(absolute_tolerance_data[i],
+                                                       relative_tolerance,
+                                                       state_data[i],
+                                                       previous_state_data[i]);
         const ScalarT scaled_error  = error_data[i] / scale;
         squared_norm               += scaled_error * scaled_error;
       }
