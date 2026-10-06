@@ -8,6 +8,7 @@
 - Added `Bus::setFault` to apply or clear a fault to ground directly at a bus.
 - Removed the `BusFault` class in favor of `Bus::setFault`.
 - Added `enable` and `disable` solver events that put a branch in or out of service.
+- Added the `BranchBreakers` branch model with `trip` and `reset` breaker signals.
 
 ## v0.2
 

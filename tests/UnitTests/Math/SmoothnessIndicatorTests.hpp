@@ -345,6 +345,26 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      TestOutcome latch()
+      {
+        TestStatus success = true;
+
+        const ScalarT zero = scalar(0.0);
+        const ScalarT one  = scalar(1.0);
+        const ScalarT x    = scalar(0.3);
+        const ScalarT tol  = scalar(kRoundoffTolerance);
+
+        // Bistable at rest, set drives toward one, full reset has priority.
+        success *= within(Math::latch(zero, zero, zero), zero, tol);
+        success *= within(Math::latch(one, zero, zero), zero, tol);
+        success *= within(Math::latch(x, one, zero), one - x, tol);
+        success *= within(Math::latch(x, one, one), -x, tol);
+        success *= (Math::latch(scalar(0.49), zero, zero) < zero);
+        success *= (Math::latch(scalar(0.51), zero, zero) > zero);
+
+        return success.report(__func__);
+      }
     };
 
   } // namespace Testing

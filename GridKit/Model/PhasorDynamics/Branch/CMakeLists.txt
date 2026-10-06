@@ -41,3 +41,5 @@ target_link_libraries(
 target_link_libraries(
   phasor_dynamics_components_dependency_tracking
   INTERFACE GridKit::phasor_dynamics_branch_dependency_tracking)
+
+add_subdirectory(BranchBreakers)

@@ -96,6 +96,12 @@ namespace GridKit
           raw_component.get_to(branch);
           sm.branch.push_back(branch);
         }
+        else if (kind == "BranchBreakers")
+        {
+          typename SystemModelData<RealT, IdxT>::BranchBreakersDataT branch_breakers;
+          raw_component.get_to(branch_breakers);
+          sm.branch_breakers.push_back(branch_breakers);
+        }
         else if (kind == "Genrou")
         {
           typename SystemModelData<RealT, IdxT>::GenrouDataT genrou;

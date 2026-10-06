@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <GridKit/Model/PhasorDynamics/Branch/BranchBreakers/BranchBreakersData.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
@@ -43,6 +44,7 @@ namespace GridKit
       using RealT             = real_type;
       using IdxT              = index_type;
       using BranchDataT       = BranchData<RealT, IdxT>;
+      using BranchBreakersDataT = BranchBreakersData<RealT, IdxT>;
       using BusDataT          = BusData<RealT, IdxT>;
       using RegcaDataT        = Converter::RegcaData<RealT, IdxT>;
       using ReecbDataT        = Controller::ReecbData<RealT, IdxT>;
@@ -103,6 +105,7 @@ namespace GridKit
       /// - Consolidate components to allow writing to them using the enum as the argument
       std::vector<BusDataT>          bus;             ///< Buses within the model
       std::vector<BranchDataT>       branch;          ///< Branches within the model
+      std::vector<BranchBreakersDataT> branch_breakers; ///< Breaker-terminated branches within the model
       std::vector<RegcaDataT>        regca;           ///< REGCA converter instances within the model
       std::vector<ReecbDataT>        reecb;           ///< REECB electrical controllers within the model
       std::vector<RepcaDataT>        repca;           ///< REPCA plant controllers within the model

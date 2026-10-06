@@ -144,6 +144,7 @@ We implement an approximation to $\text{ReQU}$ using the logistic function.
 | Inside | `inside` | Interior pulse indicator |
 | Outside | `outside` | Outside-band indicator |
 | Antiwindup | `antiwindup` | Anti-windup limited derivative |
+| Latch | `latch` | Set-reset memory rate |
 
 ### Maximum
 
@@ -364,3 +365,19 @@ The limits satisfy $\ell\le u$.
     &\approx \phi(x,f)\,f
 \end{aligned}
 ```
+
+### Latch
+
+The drives satisfy $a,b\in[0,1]$, and the scale satisfies $\mu\gt 4$.
+
+```math
+\begin{aligned}
+  \text{latch}(x,a,b)
+    &= (1-b)\left[a+(1-a)H(x-1/2)\right]-x \\[0pt]
+    &\approx (1-b)\left[a+(1-a)\sigma(x-1/2)\right]-x
+\end{aligned}
+```
+
+Here $x$ is the stored state, $a$ the set drive, and $b$ the reset drive.
+Full reset has priority. With both drives zero, the stable states lie on
+either side of $1/2$ and approach zero and one as $\mu$ increases.
