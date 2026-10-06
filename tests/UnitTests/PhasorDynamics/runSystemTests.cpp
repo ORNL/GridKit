@@ -14,6 +14,7 @@ int main()
   result += test.modelVectorsAliasSystemStorage();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
+  result += test.isolatedBusJacobian();
 #endif
 
   result += test.allocationError();

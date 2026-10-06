@@ -36,8 +36,8 @@ namespace GridKit
       {
         FAULT_ON,
         FAULT_OFF,
-        ENABLE,
-        DISABLE
+        IN_SERVICE,
+        OUT_OF_SERVICE
       };
 
       /// Time event takes place
@@ -46,7 +46,7 @@ namespace GridKit
       Type        type;
       /// ID of element used in event (e.g., bus fault id)
       std::size_t element_id;
-      /// Case-file `id` of the device to enable or disable
+      /// Case-file `id` of the branch to put in or out of service
       std::string device;
     };
 

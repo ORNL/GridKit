@@ -234,5 +234,15 @@ int main()
   error_set->display();
   success *= error_set->total_error.max_value < 1e-4;
 
+  // Check that the generator-supported island remains solvable.
+  success *= branch56.setInService(false) == 0;
+  success *= ida.initializeSimulation(10.0) == 0;
+  success *= ida.runSimulation(10.1) == 0;
+  success *= sys.evaluateResidual() == 0;
+  for (index_type i = 0; i < sys.size(); ++i)
+  {
+    success *= isEqual(sys.getResidual().getData()[i], real_type{0.0}, 1e-5);
+  }
+
   return success.report("TenGenClassical");
 }

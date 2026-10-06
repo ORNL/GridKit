@@ -68,8 +68,8 @@ TestStatus runStudy(StudyData study_data)
     case EventType::IN_SERVICE:
       sys.getBranch(event.device)->setInService(true);
       break;
-    case EventType::DISABLE:
-      sys.getBranch(event.device)->setEnabled(false);
+    case EventType::OUT_OF_SERVICE:
+      sys.getBranch(event.device)->setInService(false);
       break;
     }
 
