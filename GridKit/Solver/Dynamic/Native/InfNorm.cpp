@@ -22,9 +22,9 @@ namespace AnalysisManager
      * @see `Rosenbrock::errorEstimate()`
      */
     template <class ScalarT, typename IdxT>
-    InfNorm<ScalarT, IdxT>::RealT InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const
+    typename InfNorm<ScalarT, IdxT>::RealT InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const
     {
-      return handler.weightedInfNorm(&err, &y, &yprev, params_.abs_tol_.get(), params_.rel_tol_, memspace);
+      return handler.weightedInfNorm(&err, &y, &yprev, abs_tol_.get(), rel_tol_, memspace);
     }
 
     template class InfNorm<double, int>;
