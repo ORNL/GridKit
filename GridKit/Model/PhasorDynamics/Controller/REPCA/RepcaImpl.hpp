@@ -351,7 +351,7 @@ namespace GridKit
           return 1;
         }
         const ScalarT xqpi0      = qpi_input0 - Kp_ * erqlim0;
-        const ScalarT q_aw_rate0 = Math::antiwindup(qpi0, Ki_ * erqlim0, qmin, qmax);
+        const ScalarT q_aw_rate0 = Math::antiwindup(qpi_input0, Ki_ * erqlim0, qmin, qmax);
         const ScalarT xqpi_rate0 = sfrz0 * q_aw_rate0;
         if (!is_finite(q_aw_rate0) || !is_finite(xqpi_rate0)
             || std::abs(static_cast<RealT>(xqpi_rate0)) > INITIALIZATION_TOLERANCE)
@@ -384,7 +384,7 @@ namespace GridKit
           return 1;
         }
         const ScalarT xppi0      = ppi_input0 - Kpg_ * eplim0;
-        const ScalarT p_aw_rate0 = Math::antiwindup(ppi0, Kig_ * eplim0, pmin, pmax);
+        const ScalarT p_aw_rate0 = Math::antiwindup(ppi_input0, Kig_ * eplim0, pmin, pmax);
         if (!is_finite(p_aw_rate0)
             || std::abs(static_cast<RealT>(p_aw_rate0)) > INITIALIZATION_TOLERANCE)
         {
@@ -735,27 +735,29 @@ namespace GridKit
 
         // Measured voltages, the reactive and active error chains, and the PI
         // outputs, evaluated rather than solved for
-        const ScalarT v      = std::sqrt(vr * vr + vi * vi);
-        const ScalarT vldc   = std::sqrt(vldc_r * vldc_r + vldc_i * vldc_i);
-        const ScalarT vdroop = v + Kc_ * q;
-        const ScalarT vctrl  = vcomp_on_ * vldc + vcomp_off_ * vdroop;
-        const ScalarT sfrz   = Math::above(v, Vfrz_);
-        const ScalarT erq    = ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
-        const ScalarT erqdb  = Math::deadband2(erq, dbdlow_, dbdupper_);
-        const ScalarT erqlim = Math::clamp(erqdb, emin_, emax_);
-        const ScalarT qpi    = Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
-        const ScalarT ef     = Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
-        const ScalarT pfreq  = droop(ef, Ddn_, Dup_);
-        const ScalarT ep     = pref_in - pmeas + pfreq;
-        const ScalarT eplim  = Math::clamp(ep, femin_, femax_);
-        const ScalarT ppi    = Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
+        const ScalarT v         = std::sqrt(vr * vr + vi * vi);
+        const ScalarT vldc      = std::sqrt(vldc_r * vldc_r + vldc_i * vldc_i);
+        const ScalarT vdroop    = v + Kc_ * q;
+        const ScalarT vctrl     = vcomp_on_ * vldc + vcomp_off_ * vdroop;
+        const ScalarT sfrz      = Math::above(v, Vfrz_);
+        const ScalarT erq       = ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
+        const ScalarT erqdb     = Math::deadband2(erq, dbdlow_, dbdupper_);
+        const ScalarT erqlim    = Math::clamp(erqdb, emin_, emax_);
+        const ScalarT qpi_input = Kp_ * erqlim + xqpi;
+        const ScalarT qpi       = Math::clamp(qpi_input, Qmin_, Qmax_);
+        const ScalarT ef        = Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
+        const ScalarT pfreq     = droop(ef, Ddn_, Dup_);
+        const ScalarT ep        = pref_in - pmeas + pfreq;
+        const ScalarT eplim     = Math::clamp(ep, femin_, femax_);
+        const ScalarT ppi_input = Kpg_ * eplim + xppi;
+        const ScalarT ppi       = Math::clamp(ppi_input, Pmin_, Pmax_);
 
         f[VMEAS]      = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
         f[QMEAS]      = -qmeas_dot + (q - qmeas) / Tfltr_;
-        f[XQPI]       = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
+        f[XQPI]       = -xqpi_dot + sfrz * Math::antiwindup(qpi_input, Ki_ * erqlim, Qmin_, Qmax_);
         f[XQLAG]      = -xqlag_dot + (qpi - xqlag) / Tfv_;
         f[PMEAS]      = -pmeas_dot + (p - pmeas) / Tp_;
-        f[XPPI]       = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
+        f[XPPI]       = -xppi_dot + Math::antiwindup(ppi_input, Kig_ * eplim, Pmin_, Pmax_);
         f[PREF_STATE] = -pref_dot + (ppi - pref) / Tlag_;
         f[QEXT]       = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
         f[PEXT]       = -pext + freq_on_ * pref;
