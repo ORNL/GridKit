@@ -1,0 +1,10 @@
+{
+    "system_model_file": "ThreeBusRelay.case.json",
+    "output_file": "ThreeBusRelay.csv",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.1, "type": "fault_off", "element_id": 0 }
+    ]
+}

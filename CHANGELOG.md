@@ -9,6 +9,7 @@
 - Removed the `BusFault` class in favor of `Bus::setFault`.
 - Added `enable` and `disable` solver events that put a branch in or out of service.
 - Added the `BranchBreakers` branch model with `trip` and `reset` breaker signals.
+- Added the `OvercurrentRelay` model with a latched `trip` signal.
 
 ## v0.2
 
