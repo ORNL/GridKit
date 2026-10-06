@@ -67,8 +67,8 @@ TestStatus runStudy(StudyData study_data)
     case EventType::FAULT_OFF:
       ret = sys.getBus(event.bus)->clearFault();
       break;
-    case EventType::ENABLE:
-      sys.getBranch(event.device)->setEnabled(true);
+    case EventType::IN_SERVICE:
+      sys.getBranch(event.device)->setInService(true);
       break;
     case EventType::DISABLE:
       sys.getBranch(event.device)->setEnabled(false);
