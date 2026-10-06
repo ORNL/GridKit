@@ -110,7 +110,8 @@ namespace GridKit
 
         Fixture<ScalarT> fixture(zero_time);
         success *= fixture.initialize();
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.bus.evaluateResidual() == 0);
+        success *= (fixture.regca.evaluateResidual() == 0);
         success *= allResidualsZero(fixture.regca);
 
         Log::setVerbosity(previous_verbosity);
@@ -141,7 +142,8 @@ namespace GridKit
         fixture.regca.getPorts().out.template port<Data::SignalOutputs::pbranch>().connect(&pbranch_node);
 
         success *= fixture.initialize();
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.bus.evaluateResidual() == 0);
+        success *= (fixture.regca.evaluateResidual() == 0);
 
         // P0/Q0 and branch currents remain on system base; current-command
         // signals convert the 50 MVA component-base states back to system base.
@@ -172,7 +174,8 @@ namespace GridKit
 
         Fixture<ScalarT> latched(latch_data);
         success *= latched.initialize();
-        success *= (latched.evaluate() == 0);
+        success *= (latched.bus.evaluateResidual() == 0);
+        success *= (latched.regca.evaluateResidual() == 0);
         success *= allResidualsZero(latched.regca);
 
         auto* latched_y  = latched.regca.y().getData();
@@ -182,7 +185,8 @@ namespace GridKit
         latched_y[index(Vars::IP)] -= 0.1;  // arbitrary current displacement
         latched_y[index(Vars::IQ)] -= 0.06; // arbitrary current displacement
         latched.regca.y().setDataUpdated();
-        success *= (latched.evaluate() == 0);
+        success *= (latched.bus.evaluateResidual() == 0);
+        success *= (latched.regca.evaluateResidual() == 0);
 
         // The latched commands restore both displaced states at their ideal
         // interior first-order rates.
@@ -253,7 +257,8 @@ namespace GridKit
 
           Fixture<ScalarT> fixture(data, kVa1);
           success *= fixture.initialize();
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
           success *= allResidualsZero(fixture.regca);
 
           const auto* y  = fixture.regca.y().getData();
@@ -271,7 +276,8 @@ namespace GridKit
 
           Fixture<ScalarT> fixture(data, vm);
           success *= fixture.initialize();
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
           success *= allResidualsZero(fixture.regca);
 
           const auto* y = fixture.regca.y().getData();
@@ -293,7 +299,8 @@ namespace GridKit
 
           Fixture<ScalarT> fixture(data);
           success *= fixture.initialize();
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
           success *= allResidualsZero(fixture.regca);
 
           const auto* y = fixture.regca.y().getData();
@@ -316,7 +323,8 @@ namespace GridKit
 
           Fixture<ScalarT> fixture(data, vm);
           success *= fixture.initialize();
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
           success *= allResidualsZero(fixture.regca);
 
           const auto* y = fixture.regca.y().getData();
@@ -348,7 +356,8 @@ namespace GridKit
         fixture.iqcmd = kStateIqcmd;
 
         setResidualState(fixture.regca);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.bus.evaluateResidual() == 0);
+        success *= (fixture.regca.evaluateResidual() == 0);
 
         struct ExpectedResidual
         {
@@ -426,7 +435,8 @@ namespace GridKit
             y[index(Vars::IP)] = test_case.current;
             fixture.regca.y().setDataUpdated();
 
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.bus.evaluateResidual() == 0);
+            success *= (fixture.regca.evaluateResidual() == 0);
 
             const auto* f  = fixture.regca.getResidual().getData();
             success       *= scalarMatches(f[index(Vars::IP)],
@@ -469,7 +479,8 @@ namespace GridKit
           y[index(Vars::IL)] = 0.4;
           fixture.regca.y().setDataUpdated();
 
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
           success       *= scalarMatches(f[index(Vars::IP)],
@@ -494,7 +505,8 @@ namespace GridKit
           y[index(Vars::VT)] = 0.3;
           fixture.regca.y().setDataUpdated();
 
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
           success       *= scalarMatches(f[index(Vars::IP)],
@@ -515,7 +527,8 @@ namespace GridKit
           y[index(Vars::IP)] = 1.3;
           fixture.regca.y().setDataUpdated();
 
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
           success       *= scalarMatches(f[index(Vars::IP)],
@@ -560,7 +573,8 @@ namespace GridKit
           success *= fixture.initialize();
 
           fixture.iqcmd  = test_case.command;
-          success       *= (fixture.evaluate() == 0);
+          success       *= (fixture.bus.evaluateResidual() == 0);
+          success       *= (fixture.regca.evaluateResidual() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
           success       *= scalarMatches(f[index(Vars::IQ)], test_case.expected_rate, test_case.label);
@@ -584,7 +598,8 @@ namespace GridKit
 
           Fixture<ScalarT> fixture(data, terminal_voltage);
           success *= fixture.initialize();
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
           success *= allResidualsZero(fixture.regca);
 
           const auto* y              = fixture.regca.y().getData();
@@ -606,7 +621,8 @@ namespace GridKit
 
             Fixture<ScalarT> fixture(data, kHvrcmVoltageLimit);
             success *= fixture.initialize();
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.bus.evaluateResidual() == 0);
+            success *= (fixture.regca.evaluateResidual() == 0);
             success *= allResidualsZero(fixture.regca);
 
             const auto* y  = fixture.regca.y().getData();
@@ -626,7 +642,8 @@ namespace GridKit
             y[index(Vars::VT)]      = voltage;
             y[index(Vars::IQEXTRA)] = extra_current;
             fixture.regca.y().setDataUpdated();
-            success *= (fixture.evaluate() == 0);
+            success *= (fixture.bus.evaluateResidual() == 0);
+            success *= (fixture.regca.evaluateResidual() == 0);
             return fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)];
           };
 
@@ -654,7 +671,8 @@ namespace GridKit
           fixture.regca.y().setDataUpdated();
           numberVariables(fixture);
 
-          success *= (fixture.evaluate() == 0);
+          success *= (fixture.bus.evaluateResidual() == 0);
+          success *= (fixture.regca.evaluateResidual() == 0);
 
           const auto& dependencies =
               fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)].getDependencies();
@@ -779,18 +797,6 @@ namespace GridKit
             return false;
           }
           return true;
-        }
-
-        /// Zeroes the bus injection, then accumulates regca into it. The
-        /// ordering the models require.
-        int evaluate()
-        {
-          const int bus_status = bus.evaluateResidual();
-          if (bus_status != 0)
-          {
-            return bus_status;
-          }
-          return regca.evaluateResidual();
         }
 
         PhasorDynamics::Bus<T, IdxT>              bus;
@@ -1029,7 +1035,8 @@ namespace GridKit
         numberVariables(fixture);
         fixture.regca.updateTime(0.0, 1.0);
 
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.bus.evaluateResidual() == 0);
+        success *= (fixture.regca.evaluateResidual() == 0);
         success *= (fixture.regca.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.regca.getCsrJacobian());
@@ -1059,7 +1066,8 @@ namespace GridKit
         setJacobianState(fixture.regca, current);
         fixture.regca.updateTime(0.0, 1.0);
 
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.bus.evaluateResidual() == 0);
+        success *= (fixture.regca.evaluateResidual() == 0);
         success *= (fixture.regca.evaluateJacobian() == 0);
         success *= (fixture.regca.constructCsr() == 0);
 
