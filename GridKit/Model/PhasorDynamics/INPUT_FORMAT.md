@@ -144,6 +144,7 @@ are specified:
   Device class | Description
   -------------|------------
   [Branch](Branch/README.md) | algebraic pi model for a line or off-nominal transformer branch
+  [BranchBreakers](Branch/BranchBreakers/README.md) | Branch with a latched circuit breaker at each terminal
   [BusFault](BusFault/README.md) | simple impedance-based fault at a bus
   [LoadZ](Load/LoadZ/README.md) | Constant-impedance load model
   [LoadZIP](Load/LoadZIP/README.md) | ZIP load model

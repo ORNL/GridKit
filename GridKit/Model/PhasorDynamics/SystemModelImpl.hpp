@@ -103,6 +103,28 @@ namespace GridKit
         addComponent(branch);
       }
 
+      // Add breaker-terminated branches
+      for (const auto& branchdata : data.branch_breakers)
+      {
+        IdxT bus1_index = 0;
+        if (branchdata.buses.contains(BranchBreakersBuses::bus1))
+        {
+          bus1_index = branchdata.buses.at(BranchBreakersBuses::bus1);
+        }
+
+        IdxT bus2_index = 0;
+        if (branchdata.buses.contains(BranchBreakersBuses::bus2))
+        {
+          bus2_index = branchdata.buses.at(BranchBreakersBuses::bus2);
+        }
+
+        auto* branch = new BranchBreakers<ScalarT, IdxT>(getBus(bus1_index),
+                                                         getBus(bus2_index),
+                                                         branchdata);
+        branch->getPorts().connect(branchdata, signal_nodes_);
+        addComponent(branch);
+      }
+
       // Add loads
       /// @todo Add loads to JSON parser
       for (const auto& loaddata : data.loadz)

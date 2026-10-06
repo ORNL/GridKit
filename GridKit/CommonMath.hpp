@@ -391,5 +391,30 @@ namespace GridKit
     {
       return indicator(x, f, limit_min, limit_max) * f;
     }
+
+    /**
+     * @brief Smooth set-reset latch rate
+     *
+     * Stable states lie near zero and one; full reset has priority.
+     * Requires MU > 4 so that x = 1/2 is the unstable point.
+     *
+     * @tparam ScalarT - Scalar data type
+     * @tparam SetT - Set drive data type
+     * @tparam ResetT - Reset drive data type
+     *
+     * @param[in] x - Stored state in [0, 1]
+     * @param[in] set - Set drive in [0, 1]
+     * @param[in] reset - Reset drive in [0, 1]
+     * @return Latch rate; scale by an inverse time constant
+     */
+    template <class ScalarT, typename SetT, typename ResetT>
+    __attribute__((always_inline)) inline ScalarT latch(
+        const ScalarT x,
+        const SetT    set,
+        const ResetT  reset)
+    {
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      return (ONE<RealT> - reset) * (set + (ONE<RealT> - set) * sigmoid(x - HALF<RealT>)) - x;
+    }
   } // namespace Math
 } // namespace GridKit
