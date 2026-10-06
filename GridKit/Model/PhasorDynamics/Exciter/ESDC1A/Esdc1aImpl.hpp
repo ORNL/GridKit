@@ -7,13 +7,13 @@
 #pragma once
 
 #include <algorithm>
-#include <atomic>
-#include <variant>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <variant>
 
 #include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/ParameterReader.hpp>

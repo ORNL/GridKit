@@ -44,7 +44,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // This test triggers error messages on purpose; silence them.
+        // Keep expected invalid-configuration diagnostics quiet.
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::NONE);
 
@@ -83,7 +83,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // This test triggers error messages on purpose; silence them.
+        // Keep expected invalid-configuration diagnostics quiet.
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::NONE);
 
@@ -200,7 +200,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // This test triggers error messages on purpose; silence them.
+        // Keep expected invalid-configuration diagnostics quiet.
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::NONE);
 
