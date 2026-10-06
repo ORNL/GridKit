@@ -20,13 +20,13 @@ namespace AnalysisManager
      * @return The weighted RMS norm.
      */
     template <class ScalarT, typename IdxT>
-    RmsNorm<ScalarT, IdxT>::RealT RmsNorm<ScalarT, IdxT>::errorNorm(State&                                                err,
-                                                                    State&                                                y,
-                                                                    State&                                                yprev,
-                                                                    GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler,
-                                                                    GridKit::memory::MemorySpace                          memspace) const
+    typename RmsNorm<ScalarT, IdxT>::RealT RmsNorm<ScalarT, IdxT>::errorNorm(State&                                                err,
+                                                                             State&                                                y,
+                                                                             State&                                                yprev,
+                                                                             GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler,
+                                                                             GridKit::memory::MemorySpace                          memspace) const
     {
-      return handler.weightedRmsNorm(&err, &y, &yprev, params_.abs_tol_.get(), params_.rel_tol_, memspace);
+      return handler.weightedRmsNorm(&err, &y, &yprev, abs_tol_.get(), rel_tol_, memspace);
     }
 
     template class RmsNorm<double, int>;
