@@ -9,8 +9,7 @@ The bus stores no voltage of its own and has no unknowns and no equations.
 
 - Signal ports must be connected before `allocate()` is called. The signal outlets
   are linked to the current sums in `allocate()`.
-- Both voltage inlets are mandatory. `verify()` logs each problem and
-  throws if a voltage inlet is not connected or not linked, or if a
+- Both voltage inlets are mandatory. `verify()` returns configuration errors if a voltage inlet is not connected or not linked, or if a
   connected outlet is not linked. Reading the voltage through an unlinked inlet
   throws. No default voltage is ever used.
 - The current sums are complete only after all attached components have

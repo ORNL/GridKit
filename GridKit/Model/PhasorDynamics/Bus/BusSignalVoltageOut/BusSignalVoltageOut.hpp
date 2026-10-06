@@ -65,14 +65,14 @@ namespace GridKit
       BusSignalVoltageOut(const ModelDataT& data);
       virtual ~BusSignalVoltageOut();
 
-      virtual int setBusID(IdxT) override final;
-      virtual int allocate() override final;
+      virtual int                        setBusID(IdxT) override final;
+      virtual int                        allocate() override final;
       virtual Model::ConfigurationChecks verify() const override final;
-      virtual int tagDifferentiable() override final;
-      virtual int setAbsoluteTolerance(RealT rel_tol) override final;
-      virtual int initialize() override final;
-      virtual int evaluateResidual() override final;
-      virtual int evaluateJacobian() override final;
+      virtual int                        tagDifferentiable() override final;
+      virtual int                        setAbsoluteTolerance(RealT rel_tol) override final;
+      virtual int                        initialize() override final;
+      virtual int                        evaluateResidual() override final;
+      virtual int                        evaluateJacobian() override final;
 
       virtual BusTypeT BusType() const override final
       {
