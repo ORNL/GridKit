@@ -17,6 +17,22 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_bus_signal_voltage_out runBusSignalVoltageOutTests.cpp)
+target_link_libraries(
+  test_phasor_bus_signal_voltage_out
+  GridKit::definitions
+  GridKit::phasor_dynamics_bus
+  GridKit::phasor_dynamics_bus_dependency_tracking
+  GridKit::testing)
+
+add_executable(test_phasor_bus_signal_voltage_in runBusSignalVoltageInTests.cpp)
+target_link_libraries(
+  test_phasor_bus_signal_voltage_in
+  GridKit::definitions
+  GridKit::phasor_dynamics_bus
+  GridKit::phasor_dynamics_bus_dependency_tracking
+  GridKit::testing)
+
 add_executable(test_phasor_bustosignaladapter runBusToSignalAdapterTests.cpp)
 target_link_libraries(
   test_phasor_bustosignaladapter
@@ -205,6 +221,8 @@ target_link_libraries(
 
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBusFaultTest COMMAND test_phasor_bus_fault)
+add_test(NAME PhasorDynamicsBusSignalVoltageOutTest COMMAND test_phasor_bus_signal_voltage_out)
+add_test(NAME PhasorDynamicsBusSignalVoltageInTest COMMAND test_phasor_bus_signal_voltage_in)
 add_test(NAME PhasorDynamicsBusToSignalAdapterTest COMMAND test_phasor_bustosignaladapter)
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
@@ -232,6 +250,8 @@ add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_componen
 install(
   TARGETS test_phasor_bus
           test_phasor_bus_fault
+          test_phasor_bus_signal_voltage_out
+          test_phasor_bus_signal_voltage_in
           test_phasor_bustosignaladapter
           test_phasor_branch
           test_phasor_loadz
