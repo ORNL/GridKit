@@ -19,7 +19,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     class InfNorm : public ErrorNorm<ScalarT, IdxT>
     {
-      using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+      using State = ErrorNorm<ScalarT, IdxT>::State;
       using RealT = ErrorNorm<ScalarT, IdxT>::RealT;
 
     public:
