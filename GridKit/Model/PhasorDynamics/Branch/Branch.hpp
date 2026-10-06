@@ -74,7 +74,7 @@ namespace GridKit
       virtual int evaluateJacobian() override final;
       virtual int verify() const override final;
 
-      int setEnabled(bool enabled);
+      int setInService(bool in_service);
 
       void setR(RealT R)
       {

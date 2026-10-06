@@ -102,10 +102,10 @@ namespace GridKit
 
       void setSystemBase(RealT freq_system_base, RealT va_system_base);
 
-      BusT*                    getBus(IdxT bus_id);
-      SignalNodeT*             getSignalNode(IdxT signal_id);
-      ComponentT*              getComponent(IdxT gridkit_component_id);
-      Branch<ScalarT, IdxT>*   getBranch(const std::string& id);
+      BusT*                  getBus(IdxT bus_id);
+      SignalNodeT*           getSignalNode(IdxT signal_id);
+      ComponentT*            getComponent(IdxT gridkit_component_id);
+      Branch<ScalarT, IdxT>* getBranch(const std::string& id);
 
     private:
       std::vector<BusT*>       buses_;
