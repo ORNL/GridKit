@@ -11,6 +11,7 @@ REECA is a WECC renewable energy electrical control model for inverter-coupled r
 
 ## Notes
 
+- The anti-windup gates read the unlimited PI outputs $K_{\mathrm{qp}} e_Q + x_{\mathrm{PIQ}}$ and $K_{\mathrm{vp}} e_{\mathrm{PIV}} + x_{\mathrm{PIV}}$ because the smooth `clamp` never reaches its limit, so gating the limited outputs would halve outward integration instead of holding the integrator at the non-windup limit.[^non-windup-limit]
 - Internal electrical quantities and current commands are on model base unless otherwise stated.
 - Optional signal inputs default to their documented constant values when omitted.
 
@@ -240,7 +241,7 @@ For readability, define:
     -\dot x_{\mathrm{PIQ}}
     + (1 - s_{\mathrm{dip}})
     \text{antiwindup}\!(
-      V_{\mathrm{PIQ}},
+      K_{\mathrm{qp}} e_Q + x_{\mathrm{PIQ}},
       f_{\mathrm{PIQ}};
       V^{\min},
       V^{\max}
@@ -249,7 +250,7 @@ For readability, define:
     -\dot x_{\mathrm{PIV}}
     + (1 - s_{\mathrm{dip}})
     \text{antiwindup}\!(
-      I_{\mathrm{qbase}},
+      K_{\mathrm{vp}} e_{\mathrm{PIV}} + x_{\mathrm{PIV}},
       f_{\mathrm{PIV}};
       -I_{\mathrm{q}}^{\max},
       I_{\mathrm{q}}^{\max}
@@ -405,3 +406,6 @@ Monitor         | Units  | Description                         | Note
 `iqv`           | [p.u.] | Reactive-current injection candidate | Converter base
 `vqctrl`        | [p.u.] | Reactive-power control PI output    |
 `iqbase`        | [p.u.] | Base reactive-current command       | Converter base
+
+[^non-windup-limit]: [WECC M&VWG, *WECC Second Generation Wind Turbine Models*](https://transmission.bpa.gov/business/operations/GridModeling/WECC%20Second%20Generation%20Wind%20Turbine%20Models%20012314.pdf),
+    January 2014, footnote 2 on pp. 3-6 and 3-7.

@@ -12,6 +12,10 @@ scaling.
 
 ## Notes
 
+- The outer-regulator anti-windup gate reads the unlimited output
+  $K_{\mathrm{pr}}e_V + x_R$ because the smooth `clamp` never reaches its limit,
+  so gating the limited $V_R$ would halve outward integration instead of holding
+  the integrator at the non-windup limit.[^non-windup-limit]
 - Internal voltage and current signals are on model base unless otherwise stated.
 - The rectifier loading block $F_{\mathrm{ex}}=f(I_N)$ is the source
   controlled-rectifier loading curve from Fig. 1; it is not a CommonMath helper.
@@ -152,7 +156,7 @@ Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`
   0 &=
     -\dot x_R
     + \text{antiwindup}\!(
-        V_R,
+        K_{\mathrm{pr}}e_V + x_R,
         K_{\mathrm{ir}}e_V;
         V_R^{\min},
         V_R^{\max}
@@ -257,3 +261,7 @@ Monitor         | Units  | Description                         | Note
 `vb`            | [p.u.] | Rectifier source multiplier         | $V_B$
 `in`            | [p.u.] | Normalized exciter loading current  | $I_N$
 `fex`           | [p.u.] | Rectifier loading factor            | $F_{\mathrm{ex}}$
+
+[^non-windup-limit]: [Cui et al., *On the Modeling and Simulation of Anti-Windup Proportional-Integral Controller*](https://arxiv.org/abs/2005.05430),
+    2020, Eq. (1): the IEEE Std 421.5-2016 non-windup PI limit tests the
+    unlimited output, here $K_{\mathrm{pr}}e_V + x_R$.

@@ -7,13 +7,20 @@ resources.
 > GridKit does not yet apply the associated generator's Governor Response Limits
 > modes `Down Only` and `Fixed` to REPCA.
 
-## Notes
-
 > [!NOTE]
 > `freq` is optional because the regulated bus does not yet expose a frequency
 > signal. With frequency control and nonzero droop enabled, omitting it holds
 > frequency at 1.0 p.u. and logs a warning. `freq` and `freqref` use absolute
 > per-unit frequency.
+
+## Notes
+
+- The anti-windup gates read the unlimited PI outputs $u_Q^\mathrm{PI}$ and
+  $u_P^\mathrm{PI}$ because the smooth `clamp` never reaches its limit, so gating
+  the limited output would halve outward integration instead of holding the
+  integrator at the non-windup limit.[^non-windup-limit]
+
+
 
 ## Block Diagram
 
@@ -154,11 +161,13 @@ $s_\mathrm{frz}$         | [-]    | Smooth reactive-power PI voltage-enable gate
 $e_\mathrm{RQ}$          | [p.u.] | Selected reactive-loop error        |
 $e_\mathrm{RQ}^\mathrm{db}$    | [p.u.] | Deadbanded reactive-loop error      |
 $e_\mathrm{RQ}^\mathrm{lim}$   | [p.u.] | Limited reactive-loop error         |
+$u_Q^\mathrm{PI}$        | [p.u.] | Unlimited reactive-power PI output  | Component base
 $Q^\mathrm{PI}$          | [p.u.] | Reactive-power PI output            | Component base
 $Q^\mathrm{ext}$         | [p.u.] | Reactive-power command output       | System base
 $e_f$                     | [p.u.] | Frequency error after deadband      |
 $e_P$                     | [p.u.] | Active-power control error          | Component base
 $e_P^\mathrm{lim}$       | [p.u.] | Limited active-power control error  | Component base
+$u_P^\mathrm{PI}$        | [p.u.] | Unlimited active-power PI output    | Component base
 $P^\mathrm{PI}$          | [p.u.] | Active-power PI output              | Component base
 $P^\mathrm{ext}$         | [p.u.] | Active-power command output         | System base
 
@@ -196,10 +205,10 @@ Smooth functions: [`above`](../../../../CommonMath.md#above), [`antiwindup`](../
 \begin{aligned}
   0 &= -\dot{V}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (V^\mathrm{ctrl} - V^\mathrm{meas}) \\
   0 &= -\dot{Q}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (k_\mathrm{base}Q - Q^\mathrm{meas}) \\
-  0 &= -\dot{x}_Q^\mathrm{PI} + s_\mathrm{frz}\, \text{antiwindup}(Q^\mathrm{PI}, K_\mathrm{i}e_\mathrm{RQ}^\mathrm{lim};\,Q^{\min}, Q^{\max}) \\
+  0 &= -\dot{x}_Q^\mathrm{PI} + s_\mathrm{frz}\, \text{antiwindup}(u_Q^\mathrm{PI}, K_\mathrm{i}e_\mathrm{RQ}^\mathrm{lim};\,Q^{\min}, Q^{\max}) \\
   0 &= -\dot{x}_Q^\mathrm{lag} + \dfrac{1}{T_\mathrm{fv}} (Q^\mathrm{PI} - x_Q^\mathrm{lag}) \\
   0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}} (k_\mathrm{base}P - P^\mathrm{meas}) \\
-  0 &= -\dot{x}_P^\mathrm{PI} + \text{antiwindup}(P^\mathrm{PI}, K_\mathrm{ig}e_P^\mathrm{lim};\,P^{\min}, P^{\max}) \\
+  0 &= -\dot{x}_P^\mathrm{PI} + \text{antiwindup}(u_P^\mathrm{PI}, K_\mathrm{ig}e_P^\mathrm{lim};\,P^{\min}, P^{\max}) \\
   0 &= -\dot{P}^\mathrm{ref} + \dfrac{1}{T_\mathrm{lag}} (P^\mathrm{PI} - P^\mathrm{ref})
 \end{aligned}
 ```
@@ -216,12 +225,14 @@ Smooth functions: [`above`](../../../../CommonMath.md#above), [`antiwindup`](../
   0 &= -e_\mathrm{RQ} + s_\mathrm{ref}(V^\mathrm{ref} - V^\mathrm{meas}) + s_\mathrm{ref}^\mathrm{off} (k_\mathrm{base}Q^\mathrm{ref} - Q^\mathrm{meas}) \\
   0 &= -e_\mathrm{RQ}^\mathrm{db} + \text{deadband2}(e_\mathrm{RQ};\,D_\mathrm{bd1},D_\mathrm{bd2}) \\
   0 &= -e_\mathrm{RQ}^\mathrm{lim} + \text{clamp}(e_\mathrm{RQ}^\mathrm{db};\,e^{\min},e^{\max}) \\
-  0 &= -Q^\mathrm{PI} + \text{clamp}(K_\mathrm{p}e_\mathrm{RQ}^\mathrm{lim}+x_Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
+  0 &= -u_Q^\mathrm{PI} + K_\mathrm{p}e_\mathrm{RQ}^\mathrm{lim} + x_Q^\mathrm{PI} \\
+  0 &= -Q^\mathrm{PI} + \text{clamp}(u_Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
   0 &= -T_\mathrm{fv} (k_\mathrm{base}Q^\mathrm{ext}-x_Q^\mathrm{lag}) + T_\mathrm{ft} (Q^\mathrm{PI}-x_Q^\mathrm{lag}) \\
   0 &= -e_f + \text{deadband2}(f^\mathrm{ref}-f;\,D_\mathrm{bd1}^{f},D_\mathrm{bd2}^{f}) \\
   0 &= -e_P + k_\mathrm{base}P_\mathrm{plant}^\mathrm{ref} - P^\mathrm{meas} + \text{droop}(e_f;D_\mathrm{dn},D_\mathrm{up}) \\
   0 &= -e_P^\mathrm{lim} + \text{clamp}(e_P;\,e_P^{\min},e_P^{\max}) \\
-  0 &= -P^\mathrm{PI} + \text{clamp}(K_\mathrm{pg}e_P^\mathrm{lim}+x_P^\mathrm{PI};\,P^{\min},P^{\max}) \\
+  0 &= -u_P^\mathrm{PI} + K_\mathrm{pg}e_P^\mathrm{lim} + x_P^\mathrm{PI} \\
+  0 &= -P^\mathrm{PI} + \text{clamp}(u_P^\mathrm{PI};\,P^{\min},P^{\max}) \\
   0 &= -k_\mathrm{base}P^\mathrm{ext} + s_\mathrm{freq}P^\mathrm{ref}
 \end{aligned}
 ```
@@ -342,3 +353,6 @@ $\text{droop}(0;D_\mathrm{dn},D_\mathrm{up})=0$.
 [^frequency-measurement]: Background for phase-derived, filtered frequency
     measurement: [PSCAD Frequency/Phase/Magnitude Meter](https://www.pscad.com/webhelp-pscad-v5.1.0-ol/Master_Library_Models/Meters/Frequency_Phase_Magnitude_Meter.htm) and
     [Ting et al., *Evaluating Methods for Measuring Grid Frequency in Low-Inertia Power Systems*](https://research-hub.nlr.gov/en/publications/evaluating-methods-for-measuring-grid-frequency-in-low-inertia-po-3/).
+
+[^non-windup-limit]: [WECC M&VWG, *WECC Second Generation Wind Turbine Models*](https://transmission.bpa.gov/business/operations/GridModeling/WECC%20Second%20Generation%20Wind%20Turbine%20Models%20012314.pdf),
+    January 2014, footnote 2 on pp. 3-6 and 3-7.

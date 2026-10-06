@@ -948,17 +948,17 @@ namespace GridKit
                                     "reactive-power command limit");
         }
 
-        // The integrator gate sees the limited output. Inside the limits it
-        // passes the full rate; a saturated output passes restoring motion
-        // fully and, sitting on the gate midpoint, outward motion at half
-        // weight. Cases give the unlimited PI input and the limited error.
+        // The integrator gate sees the unlimited PI input. Inside the limits
+        // it passes the full rate; beyond a limit it passes restoring motion
+        // and blocks outward motion. Cases give the unlimited PI input and the
+        // limited error.
         const std::array<AntiWindupCase, 6> antiwindup_cases{{
-            {-1.6, -0.4, -0.6},
+            {-1.6, -0.4, 0.0},
             {-1.6, 0.4, 1.2},
             {0.05, -0.4, -1.2},
             {0.05, 0.4, 1.2},
             {1.7, -0.4, -1.2},
-            {1.7, 0.4, 0.6},
+            {1.7, 0.4, 0.0},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
@@ -1136,16 +1136,17 @@ namespace GridKit
                                     "active-power command limit");
         }
 
-        // The integrator gate sees the limited output: full rate inside the
-        // limits, full restoring and half outward rate at saturation. Cases
-        // give the unlimited PI input and the limited power error.
+        // The integrator gate sees the unlimited PI input: full rate inside
+        // the limits, restoring motion passed and outward motion blocked
+        // beyond them. Cases give the unlimited PI input and the limited power
+        // error.
         const std::array<AntiWindupCase, 6> antiwindup_cases{{
-            {-0.8, -0.3, -0.27},
+            {-0.8, -0.3, 0.0},
             {-0.8, 0.3, 0.54},
             {1.0, -0.3, -0.54},
             {1.0, 0.3, 0.54},
             {2.8, -0.3, -0.54},
-            {2.8, 0.3, 0.27},
+            {2.8, 0.3, 0.0},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
