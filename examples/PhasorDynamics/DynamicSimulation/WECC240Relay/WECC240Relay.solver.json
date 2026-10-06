@@ -1,0 +1,9 @@
+{
+    "system_model_file": "WECC240Relay.case.json",
+    "output_file": "WECC240Relay.csv",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 1 }
+    ]
+}
