@@ -21,7 +21,7 @@ namespace GridKit::Testing
     using Norm       = AnalysisManager::NativeDynamicSolver::RmsNorm<double, int>;
     using State      = LinearAlgebra::Vector<double, int>;
 
-    static Norm::Parameters makeNormParameters()
+    static std::unique_ptr<State> makeAbsoluteTolerance()
     {
       auto absolute_tolerance = std::make_unique<State>(Model::TrigonometricDaeEvaluator<double, int>::SIZE);
       if (absolute_tolerance->allocate(memory::HOST) != 0
@@ -29,10 +29,7 @@ namespace GridKit::Testing
       {
         throw std::runtime_error("Failed to initialize implicit trapezoidal test tolerances");
       }
-      return Norm::Parameters{
-          .abs_tol_ = std::move(absolute_tolerance),
-          .rel_tol_ = 1e-10,
-      };
+      return absolute_tolerance;
     }
 
     struct Fixture
@@ -40,7 +37,7 @@ namespace GridKit::Testing
       Fixture()
         : resolve_solver(&workspace, "klu", "klu", "klu"),
           linear_solver(resolve_solver),
-          error_norm(makeNormParameters()),
+          error_norm(makeAbsoluteTolerance(), 1e-10),
           integrator(&model, linear_solver, vector_handler, &error_norm)
       {
         model.allocate();
