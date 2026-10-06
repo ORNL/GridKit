@@ -12,4 +12,8 @@ The complete dynamics of this case are modeled in GridKit.
 
 This case was validated against PowerWorld. The comparison results are provided [here](../../../examples/PhasorDynamics/Validation/WECC240/README.md).
 
+[WECC240Relay](WECC240Relay.case.json) splits the JOHN DAY-GARRISON 500 kV line at mid-line bus 9001
+into two `BranchBreakers` sections protected by `OvercurrentRelay` models. It is used by the
+[relay line-trip example](../../../examples/PhasorDynamics/DynamicSimulation/WECC240Relay/README.md).
+
 [^1]: [National Laboratory of the Rockies Test Case Repository](https://www.nlr.gov/grid/test-case-repository).
