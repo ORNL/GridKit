@@ -155,7 +155,6 @@ Symbol                          | Units  | Description                          
 --------------------------------|--------|---------------------------------------------------|---------------------------------------------
 $V$                             | [p.u.] | Regularized terminal-voltage magnitude            | Positive branch
 $V_\mathrm{safe}^\mathrm{meas}$ | [p.u.] | Measured voltage used by power and divider blocks | Smooth lower bound
-$s_f$                           | [-]    | Frequency-input voltage gate                      | Source switch at 0.7 p.u.
 $\Delta P$                      | [p.u.] | Active-power washout output                       | Source label: `dP`
 $\Delta Q$                      | [p.u.] | Reactive-power washout output                     | Source label: `dQ`
 $u_P$                           | [p.u.] | Active-power lead–lag input                       | Reference, droop, and washout sum
@@ -164,10 +163,6 @@ $P^\mathrm{ctrl}$               | [p.u.] | Active-power lead–lag output       
 $Q^\mathrm{ctrl}$               | [p.u.] | Reactive-power lead–lag output                    | Source label: `Qctrl`
 $I_p^\mathrm{v}$                | [p.u.] | Limited voltage-dependent active current          | Source label: `Ipv`
 $I_q^\mathrm{v}$                | [p.u.] | Limited voltage-dependent reactive current        | Source label: `Iqv`
-$s_\mathrm{D}$                  | [-]    | Committed-delay gate                              |
-$s_\mathrm{C}$                  | [-]    | Ceased-load gate                                  |
-$s_\mathrm{R}$                  | [-]    | Reconnection-release gate                         |
-$s_\mathrm{H}$                  | [-]    | First-cessation gate                              |
 $F^\mathrm{on}$                 | [-]    | Connected-load multiplier                         | Source label: `FracOn`
 $I_r$                           | [p.u.] | Terminal current, real component                  | System base; added to connected bus residual
 $I_i$                           | [p.u.] | Terminal current, imaginary component             | System base; added to connected bus residual
@@ -196,41 +191,30 @@ The power references $P^\mathrm{ref}, Q^\mathrm{ref}$, extra current
 $I_q^\mathrm{extra}$, and voltage anchor $V_\mathrm{nom}^\mathrm{safe}$ are
 fixed under [Internal Initialization](#internal-initialization).
 
-Define the history gates and clock rates. At finite $\mu$, timer qualification
-and reconnection fractions approximate the source logic.[^timers]
+For readability, define the memory gates, qualification gates, and reconnection
+fraction:[^timers]
 
 ```math
 \begin{aligned}
-  s_c^V &= \sigma(V_\mathrm{cease} - V^\mathrm{meas}) \\
-  s_r^V &= \sigma(V^\mathrm{meas} - V_\mathrm{recon}) \\
+  s_k &= \sigma(x_k - 1/2), \qquad k \in \{\mathrm{D}, \mathrm{C}, \mathrm{R}, \mathrm{H}\} \\
+  s_c^\mathrm{run} &= (1 - s_\mathrm{C})[1 - \sigma(x_\mathrm{D} - 3/4)]
+    \sigma(V_\mathrm{cease} - V^\mathrm{meas}) \\
+  s_r^\mathrm{run} &= s_\mathrm{C}(1 - s_\mathrm{D})s_\mathrm{H}
+    \sigma(V^\mathrm{meas} - V_\mathrm{recon})\sigma(1 - t_a/\tau) \\
   s_j^\mathrm{done} &= \begin{cases}
     \sigma(t_j/T_j - 1) & T_j > 0 \\
     1 & T_j = 0
   \end{cases}, \qquad
   (j, T_j) \in \{(c, T_\mathrm{cease}), (d, T_\mathrm{delay}), (r, T_\mathrm{recon})\} \\
-  s_\mathrm{reset} &= \sigma(1 - t_a/\tau) \\
   r^\mathrm{recon} &= \begin{cases}
     \text{clamp}(t_a/T_\mathrm{ramp};\,0, 1) & T_\mathrm{ramp} > 0 \\
     1 & T_\mathrm{ramp} = 0
-  \end{cases} \\
-  s_c^\mathrm{run} &= (1 - s_\mathrm{C})[1 - \sigma(x_\mathrm{D} - 3/4)]s_c^V \\
-  s_d^\mathrm{run} &= s_\mathrm{D} \\
-  s_r^\mathrm{run} &= s_\mathrm{C}(1 - s_\mathrm{D})s_\mathrm{H}s_r^V s_\mathrm{reset} \\
-  s_\mathrm{D}^\mathrm{set} &= s_c^\mathrm{run} s_c^\mathrm{done} \\
-  s_\mathrm{C}^\mathrm{set} &= s_\mathrm{D} s_d^\mathrm{done} \\
-  s_\mathrm{R}^\mathrm{set} &= s_r^\mathrm{run} s_r^\mathrm{done} \\
-  f_j &= \begin{cases}
-    s_j^\mathrm{run} - \dfrac{1}{\tau} (1 - s_j^\mathrm{run})t_j & T_j > 0 \\
-    -\dfrac{1}{\tau} t_j & T_j = 0
-  \end{cases}, \qquad j \in \{c, d, r\} \\
-  f_a &= \begin{cases}
-    s_\mathrm{R}(1 - s_\mathrm{C})(1 - s_\mathrm{D})
-      [1 - \sigma(t_a/T_\mathrm{ramp} - 1)]
-      - \dfrac{1}{\tau} s_\mathrm{C}t_a & T_\mathrm{ramp} > 0 \\
-    -\dfrac{1}{\tau} t_a & T_\mathrm{ramp} = 0
   \end{cases}
 \end{aligned}
 ```
+
+At finite $\mu$, timer qualification and reconnection fractions approximate
+the source logic.
 
 ### Internal Equations
 
@@ -242,18 +226,35 @@ and reconnection fractions approximate the source logic.[^timers]
   0 &= -\dot{x}_Q^\mathrm{lag} + \dfrac{1}{T_\mathrm{bq}} (u_Q - x_Q^\mathrm{lag}) \\
   0 &= -\dot{x}_P^\mathrm{wo} + \dfrac{1}{T_\mathrm{vp}} (V - x_P^\mathrm{wo}) \\
   0 &= -\dot{x}_Q^\mathrm{wo} + \dfrac{1}{T_\mathrm{vq}} (V - x_Q^\mathrm{wo}) \\
-  0 &= -\dot{\Delta f}^\mathrm{meas} + \dfrac{1}{T_\mathrm{f}} (s_f(f - 1) - \Delta f^\mathrm{meas}) \\
+  0 &= -\dot{\Delta f}^\mathrm{meas} + \dfrac{1}{T_\mathrm{f}} (\text{above}(V;\,0.7)(f - 1) - \Delta f^\mathrm{meas}) \\
   0 &= -\dot{V}^\mathrm{meas} + \dfrac{1}{T_\mathrm{v}} (V - V^\mathrm{meas}) \\
   0 &= -\dot{I}_p + \dfrac{1}{T_\mathrm{t}} (F^\mathrm{on}I_p^\mathrm{v} - I_p) \\
   0 &= -\dot{I}_q + \dfrac{1}{T_\mathrm{t}} (F^\mathrm{on}(I_q^\mathrm{v} + I_q^\mathrm{extra}) - I_q) \\
-  0 &= -\dot{x}_\mathrm{D} + \dfrac{1}{\tau} (s_\mathrm{cease}\,\text{latch}(x_\mathrm{D}, s_\mathrm{D}^\mathrm{set}, s_\mathrm{C})) \\
-  0 &= -\dot{x}_\mathrm{C} + \dfrac{1}{\tau} (s_\mathrm{cease}\,\text{latch}(x_\mathrm{C}, s_\mathrm{C}^\mathrm{set}, s_\mathrm{R})) \\
-  0 &= -\dot{x}_\mathrm{R} + \dfrac{1}{\tau} (s_\mathrm{cease}\,\text{latch}(x_\mathrm{R}, s_\mathrm{R}^\mathrm{set}, s_\mathrm{D})) \\
+  0 &= -\dot{x}_\mathrm{D} + \dfrac{1}{\tau} (s_\mathrm{cease}\,\text{latch}(x_\mathrm{D}, s_c^\mathrm{run}s_c^\mathrm{done}, s_\mathrm{C})) \\
+  0 &= -\dot{x}_\mathrm{C} + \dfrac{1}{\tau} (s_\mathrm{cease}\,\text{latch}(x_\mathrm{C}, s_\mathrm{D}s_d^\mathrm{done}, s_\mathrm{R})) \\
+  0 &= -\dot{x}_\mathrm{R} + \dfrac{1}{\tau} (s_\mathrm{cease}\,\text{latch}(x_\mathrm{R}, s_r^\mathrm{run}s_r^\mathrm{done}, s_\mathrm{D})) \\
   0 &= -\dot{x}_\mathrm{H} + \dfrac{1}{\tau} (s_\mathrm{cease}\,\text{latch}(x_\mathrm{H}, s_\mathrm{C}, 0)) \\
-  0 &= -\dot{t}_c + s_\mathrm{cease} f_c \\
-  0 &= -\dot{t}_d + s_\mathrm{cease} f_d \\
-  0 &= -\dot{t}_r + s_\mathrm{cease} f_r \\
-  0 &= -\dot{t}_a + s_\mathrm{cease} f_a
+  0 &= -\dot{t}_c + s_\mathrm{cease}
+    \begin{cases}
+      s_c^\mathrm{run} - \dfrac{1}{\tau} (1 - s_c^\mathrm{run})t_c & T_\mathrm{cease} > 0 \\
+      -\dfrac{1}{\tau} t_c & T_\mathrm{cease} = 0
+    \end{cases} \\
+  0 &= -\dot{t}_d + s_\mathrm{cease}
+    \begin{cases}
+      s_\mathrm{D} - \dfrac{1}{\tau} (1 - s_\mathrm{D})t_d & T_\mathrm{delay} > 0 \\
+      -\dfrac{1}{\tau} t_d & T_\mathrm{delay} = 0
+    \end{cases} \\
+  0 &= -\dot{t}_r + s_\mathrm{cease}
+    \begin{cases}
+      s_r^\mathrm{run} - \dfrac{1}{\tau} (1 - s_r^\mathrm{run})t_r & T_\mathrm{recon} > 0 \\
+      -\dfrac{1}{\tau} t_r & T_\mathrm{recon} = 0
+    \end{cases} \\
+  0 &= -\dot{t}_a + s_\mathrm{cease}
+    \begin{cases}
+      s_\mathrm{R}(1 - s_\mathrm{C})(1 - s_\mathrm{D})[1 - \sigma(t_a/T_\mathrm{ramp} - 1)]
+        - \dfrac{1}{\tau} s_\mathrm{C}t_a & T_\mathrm{ramp} > 0 \\
+      -\dfrac{1}{\tau} t_a & T_\mathrm{ramp} = 0
+    \end{cases}
 \end{aligned}
 ```
 
@@ -263,7 +264,6 @@ and reconnection fractions approximate the source logic.[^timers]
 \begin{aligned}
   0 &= -V^2 + V_r^2 + V_i^2 + \epsilon_V^2 \\
   0 &= -V_\mathrm{safe}^\mathrm{meas} + \text{max}(V^\mathrm{meas}, V^{\min}) \\
-  0 &= -s_f + \text{above}(V;\,0.7) \\
   0 &= -\Delta P + \dfrac{K_\mathrm{vp}}{T_\mathrm{vp}} (V - x_P^\mathrm{wo}) \\
   0 &= -\Delta Q + \dfrac{K_\mathrm{vq}}{T_\mathrm{vq}} (V - x_Q^\mathrm{wo}) \\
   0 &= -u_P + P^\mathrm{ref} + \Delta P
@@ -277,10 +277,6 @@ and reconnection fractions approximate the source logic.[^timers]
   0 &= -I_q^\mathrm{v} + \text{clamp}(\dfrac{Q^\mathrm{ctrl}}{V_\mathrm{safe}^\mathrm{meas}}
     (\dfrac{V_\mathrm{safe}^\mathrm{meas}}{V_\mathrm{nom}^\mathrm{safe}})^{n_Q};\,
     I_q^{\min}, I_q^{\max}) \\
-  0 &= -s_\mathrm{D} + \sigma(x_\mathrm{D} - 1/2) \\
-  0 &= -s_\mathrm{C} + \sigma(x_\mathrm{C} - 1/2) \\
-  0 &= -s_\mathrm{R} + \sigma(x_\mathrm{R} - 1/2) \\
-  0 &= -s_\mathrm{H} + \sigma(x_\mathrm{H} - 1/2) \\
   0 &= -F^\mathrm{on} + F^{\min}
     + F_\mathrm{cease}[(1 - s_\mathrm{H}) + s_\mathrm{H}(1 - s_\mathrm{C})F_\mathrm{recon}r^\mathrm{recon}] \\
   0 &= -k_\mathrm{base}V I_r - V_r I_p - V_i I_q \\
@@ -330,12 +326,10 @@ CommonMath clamp `iclamp`.
   V_\mathrm{nom} &\leftarrow \sqrt{V_r^2 + V_i^2} \\
   V, V^\mathrm{meas}, x_P^\mathrm{wo}, x_Q^\mathrm{wo} &\leftarrow \sqrt{V_r^2 + V_i^2 + \epsilon_V^2} \\
   V_\mathrm{safe}^\mathrm{meas}, V_\mathrm{nom}^\mathrm{safe} &\leftarrow \text{max}(V, V^{\min}) \\
-  s_f &\leftarrow \text{above}(V;\,0.7) \\
-  \Delta f^\mathrm{meas} &\leftarrow s_f(f - 1) \\
+  \Delta f^\mathrm{meas} &\leftarrow \text{above}(V;\,0.7)(f - 1) \\
   \Delta P, \Delta Q &\leftarrow 0 \\
   x_\mathrm{D}, x_\mathrm{C}, x_\mathrm{R}, x_\mathrm{H} &\leftarrow 0 \\
   t_c, t_d, t_r, t_a &\leftarrow 0 \\
-  s_\mathrm{D}, s_\mathrm{C}, s_\mathrm{R}, s_\mathrm{H} &\leftarrow \sigma(-1/2) \\
   F^\mathrm{on} &\leftarrow F^{\min}
     + F_\mathrm{cease}[(1 - s_\mathrm{H}) + s_\mathrm{H}(1 - s_\mathrm{C})F_\mathrm{recon}r^\mathrm{recon}] \\
   I_p &\leftarrow \dfrac{k_\mathrm{base}P_\mathrm{nom}V}{V_\mathrm{nom}^2} \\
