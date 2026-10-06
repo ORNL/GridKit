@@ -82,14 +82,21 @@ namespace GridKit
     }
 
     /**
-     * @brief Compute the weighted infinity error norm in one pass over HOST data.
+     * @brief Compute the infinity norm of the component-wise scaled error
      *
-     * @param[in] error Error vector.
-     * @param[in] state Current state.
-     * @param[in] previous_state Previous state.
-     * @param[in] absolute_tolerance Component-wise absolute tolerance.
-     * @param[in] relative_tolerance Relative tolerance.
-     * @return The weighted infinity norm.
+     * \f[\max_i \frac{|e_i|}{Atol_i + Rtol \max(|y_i|, |y_{p,i}|)}.\f]
+     * 
+     * This scaling factor is standard in ODE solvers and can be found on page
+     * 167 of https://doi.org/10.1007/978-3-540-78862-1. When this norm is less
+     * than 1, the error is considered acceptable.
+     *
+     * @param[in] error Error vector \f(e\f).
+     * @param[in] state Current state \f(y\f).
+     * @param[in] previous_state Previous state \f(y_p\f).
+     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(Atol\f).
+     * @param[in] relative_tolerance Relative tolerance \f(Rtol\f).
+     * @param[in] memspace Memory space in which to perform the reduction.
+     * @return The weighted infinity norm
      */
     template <typename ScalarT, typename IdxT>
     ScalarT VectorHandlerCpu<ScalarT, IdxT>::weightedInfNorm(Vector<ScalarT, IdxT>* error,
@@ -114,14 +121,22 @@ namespace GridKit
     }
 
     /**
-     * @brief Compute the weighted root-mean-square error norm in one pass over HOST data.
+     * @brief Compute the root-mean-square norm of the component-wise scaled error
      *
-     * @param[in] error Error vector.
-     * @param[in] state Current state.
-     * @param[in] previous_state Previous state.
-     * @param[in] absolute_tolerance Component-wise absolute tolerance.
-     * @param[in] relative_tolerance Relative tolerance.
-     * @return The weighted RMS norm.
+     * \f[\sqrt{\frac{1}{N}\sum_i
+     * \left(\frac{e_i}{Atol_i + Rtol \max(|y_i|, |y_{p,i}|)}\right)^2}.\f]
+     * 
+     * This scaling factor is standard in ODE solvers and can be found on page
+     * 167 of https://doi.org/10.1007/978-3-540-78862-1. When this norm is less
+     * than 1, the error is considered acceptable.
+     *
+     * @param[in] error Error vector \f(e\f).
+     * @param[in] state Current state \f(y\f).
+     * @param[in] previous_state Previous state \f(y_p\f).
+     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(Atol\f).
+     * @param[in] relative_tolerance Relative tolerance \f(Rtol\f).
+     * @param[in] memspace Memory space in which to perform the reduction.
+     * @return The weighted RMS norm
      */
     template <typename ScalarT, typename IdxT>
     ScalarT VectorHandlerCpu<ScalarT, IdxT>::weightedRmsNorm(Vector<ScalarT, IdxT>* error,

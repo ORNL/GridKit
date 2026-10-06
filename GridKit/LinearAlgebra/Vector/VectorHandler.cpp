@@ -81,13 +81,17 @@ namespace GridKit
     /**
      * @brief Compute the infinity norm of the component-wise scaled error
      *
-     * \f[\max_i \frac{|e_i|}{a_i + r\max(|y_i|, |y_{p,i}|)}.\f]
+     * \f[\max_i \frac{|e_i|}{Atol_i + Rtol \max(|y_i|, |y_{p,i}|)}.\f]
+     * 
+     * This scaling factor is standard in ODE solvers and can be found on page
+     * 167 of https://doi.org/10.1007/978-3-540-78862-1. When this norm is less
+     * than 1, the error is considered acceptable.
      *
      * @param[in] error Error vector \f(e\f).
      * @param[in] state Current state \f(y\f).
      * @param[in] previous_state Previous state \f(y_p\f).
-     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(a\f).
-     * @param[in] relative_tolerance Relative tolerance \f(r\f).
+     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(Atol\f).
+     * @param[in] relative_tolerance Relative tolerance \f(Rtol\f).
      * @param[in] memspace Memory space in which to perform the reduction.
      * @return The weighted infinity norm
      */
@@ -114,13 +118,17 @@ namespace GridKit
      * @brief Compute the root-mean-square norm of the component-wise scaled error
      *
      * \f[\sqrt{\frac{1}{N}\sum_i
-     * \left(\frac{e_i}{a_i + r\max(|y_i|, |y_{p,i}|)}\right)^2}.\f]
+     * \left(\frac{e_i}{Atol_i + Rtol \max(|y_i|, |y_{p,i}|)}\right)^2}.\f]
+     * 
+     * This scaling factor is standard in ODE solvers and can be found on page
+     * 167 of https://doi.org/10.1007/978-3-540-78862-1. When this norm is less
+     * than 1, the error is considered acceptable.
      *
      * @param[in] error Error vector \f(e\f).
      * @param[in] state Current state \f(y\f).
      * @param[in] previous_state Previous state \f(y_p\f).
-     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(a\f).
-     * @param[in] relative_tolerance Relative tolerance \f(r\f).
+     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(Atol\f).
+     * @param[in] relative_tolerance Relative tolerance \f(Rtol\f).
      * @param[in] memspace Memory space in which to perform the reduction.
      * @return The weighted RMS norm
      */
