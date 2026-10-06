@@ -130,7 +130,7 @@ namespace GridKit
                                                 relative_tolerance,
                                                 state_data[i],
                                                 previous_state_data[i]);
-        norm = std::max(norm, std::abs(error_data[i]) / scale);
+        norm                = std::max(norm, std::abs(error_data[i]) / scale);
       }
       return norm;
     }
@@ -168,10 +168,10 @@ namespace GridKit
 
       for (IdxT i = 0; i < error->getSize(); ++i)
       {
-        const ScalarT scale        = computeErrorScale(absolute_tolerance_data[i],
-                                                       relative_tolerance,
-                                                       state_data[i],
-                                                       previous_state_data[i]);
+        const ScalarT scale         = computeErrorScale(absolute_tolerance_data[i],
+                                                relative_tolerance,
+                                                state_data[i],
+                                                previous_state_data[i]);
         const ScalarT scaled_error  = error_data[i] / scale;
         squared_norm               += scaled_error * scaled_error;
       }

@@ -34,7 +34,7 @@ namespace AnalysisManager
        * @todo Allow this method to fail, since it will likely involve linear algebra calls.
        */
       virtual RealT errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const = 0;
-    
+
       virtual ~ErrorNorm() = default;
     };
   } // namespace NativeDynamicSolver
