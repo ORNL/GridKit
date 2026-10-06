@@ -29,6 +29,6 @@ Each event group describes a system event that occurs at a given time point
    Name              | Value
  --------------------|-------------------------------------------------------
   `time`             | A floating point value for time event occurs
-  `type`             | Event type (one of { "fault_on", "fault_off", "enable", "disable" })
-  `element_id`       | An integer value referencing the element associated with the event (e.g., bus fault id)
+  `type`             | Event type (one of { "fault_on", "fault_off", "in_service", "out_of_service" })
+`element_id`       | An integer value referencing the element associated with the event (e.g., bus fault id)
   `device`           | `id` of the branch to put in service ("enable") or take out of service ("disable")
