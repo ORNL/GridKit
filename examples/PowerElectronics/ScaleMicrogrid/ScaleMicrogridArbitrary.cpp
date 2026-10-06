@@ -50,7 +50,7 @@ int main(int argc, char const* argv[])
 /**
  * @brief Tests network of distributed generators.
  *
- * @param[in] N_size - The number of DG line load cobinations to generate for scale
+ * @param[in] N_size - The number of DG line load combinations to generate for scale
  * @return int returns 0 if successful, >0 otherwise
  */
 int printMicrogridSystems(index_type N_size)

@@ -865,7 +865,7 @@ namespace AnalysisManager
      * Uses a number of interpolation nodes equal to the order. Since \f(y_0\f) and \f(y_1\f) are interpolation
      * nodes, this method will only access \ref dense_coeff_ if the method's order is greater than 2.
      *
-     * The inteporlation is calculated as
+     * The interpolation is calculated as
      *
      * \f[y(\theta) = (1 - \theta) y_0 + \theta \left(y_1 + (1 - \theta) \sum_{i = 1}^{p-2} \theta^{i-1} \hat{y}_i\right),\f]
      *

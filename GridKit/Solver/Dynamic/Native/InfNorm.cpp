@@ -20,7 +20,7 @@ namespace AnalysisManager
      * @param y \f(y_1\f) in the above formula.
      * @param yprev \f(y_0\f) in the above formula.
      * @param handler The handler to be used for performing linear algebra operations.
-     * @param memspace The memory space to be used for performing linear lagebra operations.
+     * @param memspace The memory space to be used for performing linear algebra operations.
      * @see `Rosenbrock::errorEstimate()`
      */
     template <class ScalarT, typename IdxT>

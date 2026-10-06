@@ -102,7 +102,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Compute the resisdual of the component.
+     * @brief Compute the residual of the component.
      *
      * @todo not finished
      */

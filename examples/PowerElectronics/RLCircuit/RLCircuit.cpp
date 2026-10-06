@@ -79,7 +79,7 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel.initialize();
   sysmodel.evaluateResidual();
 
-  std::cout << "Verify initial resisdual is zero: {";
+  std::cout << "Verify initial residual is zero: {";
   auto& residual = sysmodel.getResidual();
   for (std::size_t i = 0; i < residual.getSize(); ++i)
   {

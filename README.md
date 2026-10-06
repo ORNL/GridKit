@@ -2,7 +2,7 @@
 
 The objective of GridKit™ is to provide a modeling framework for power
 systems simulations and analysis that can support multiple advanced
-analysys methods, such as dynamic constrained optimization and partitioned
+analysis methods, such as dynamic constrained optimization and partitioned
 numerical integrators for systems of differential and algebraic equations.
 While target applications are power grids, the methodology and the
 framework could be used in other areas without major modifications.

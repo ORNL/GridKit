@@ -62,7 +62,7 @@ namespace GridKit
       alpha_ = a;
     }
 
-    // Inline accesor functions
+    // Inline accessor functions
     ScalarT& V()
     {
       return bus_->V();

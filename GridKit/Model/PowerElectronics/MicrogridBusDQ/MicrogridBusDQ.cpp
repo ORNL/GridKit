@@ -84,7 +84,7 @@ namespace GridKit
      * This model has "Virtual resistors". The voltage of the bus divided by its virtual resistance.
      * The components are external to allow for outside components to add inductances to the terms.
      *
-     * refernce to equations in class header
+     * reference to equations in class header
      *
      */
     template <class ScalarT, typename IdxT>

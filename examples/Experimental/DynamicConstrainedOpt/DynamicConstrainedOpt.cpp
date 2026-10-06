@@ -107,7 +107,7 @@ int main()
   if (status == Ipopt::Solve_Succeeded)
   {
     // Print result
-    std::cout << "\nSucess:\n The problem solved in "
+    std::cout << "\nSuccess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
               << " Optimal value of Pm = " << param[0] << "\n"
               << " The final value of the objective function G(Pm) = "
@@ -135,7 +135,7 @@ int main()
   if (status == Ipopt::Solve_Succeeded)
   {
     // Print result
-    std::cout << "\nSucess:\n The problem solved in "
+    std::cout << "\nSuccess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
               << " Optimal value of Pm = " << param[0] << "\n"
               << " The final value of the objective function G(Pm) = "

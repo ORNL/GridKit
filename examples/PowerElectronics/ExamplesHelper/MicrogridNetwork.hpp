@@ -153,7 +153,7 @@ struct ScaleMicrogridNetwork
     }
 
     // load parms
-    // Only the first load has the same paramaters.
+    // Only the first load has the same parameters.
     ScalarT rload1 = 3.0;
     ScalarT Lload1 = 2.0 / (2.0 * M_PI * 50.0);
     ScalarT rload2 = 2.0;

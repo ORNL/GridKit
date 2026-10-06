@@ -200,7 +200,7 @@ namespace GridKit
       RealT S12_{0.0};
       RealT mva_base_{100.0};
 
-      /* Derivied parameters */
+      /* Derived parameters */
       RealT   SA_;
       RealT   SB_;
       RealT   Xd1_;

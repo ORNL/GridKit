@@ -540,7 +540,7 @@ namespace GridKit
      * @todo Implement writing to system vectors in a thread-safe way.
      *
      * @note Currently assuming each component stores variables contiguously in memory and
-     * that these are simply concateneted in the global system.
+     * that these are simply concatenated in the global system.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
@@ -688,7 +688,7 @@ namespace GridKit
      * residuals are computed. Buses own residuals for currents
      * Ir and Ii, but the contributions to these residuals come
      * from components. Buses assign their residual values, while components
-     * add to those values by in-place adition. This is why (for now) bus
+     * add to those values by in-place addition. This is why (for now) bus
      * residuals need to be computed first.
      */
     template <typename scalar_type, typename index_type>
@@ -826,7 +826,7 @@ namespace GridKit
     SystemModel<scalar_type, index_type>::ComponentT*
     SystemModel<scalar_type, index_type>::getComponent(IdxT gridkit_component_id)
     {
-      // gridkit_component_id_ is set by System model and guarantied to be unique
+      // gridkit_component_id_ is set by System model and guaranteed to be unique
       return components_[gridkit_component_id];
     }
 

@@ -84,7 +84,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Will check if each component has jacobian avalible. If one doesn't have it, return false.
+       * @brief Will check if each component has jacobian available. If one doesn't have it, return false.
        *
        *
        * @return true if all components have jacobian
@@ -266,7 +266,7 @@ namespace GridKit
         const IdxT* map_to_sorted = jac.getMapToSorted();
         const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
 
-        // Build a mappping from original COO index to CSR index
+        // Build a mapping from original COO index to CSR index
         map_to_csr_ = new IdxT[nnz_dup];
         for (IdxT i = 0; i < nnz_dup; ++i)
         {
@@ -278,7 +278,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Set intial y and y' of each component
+       * @brief Set initial y and y' of each component
        *
        * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
        */
@@ -377,7 +377,7 @@ namespace GridKit
 
         // Update system residual vector
 
-        // Evaluate component internal residuals - this is embarassingly parallel
+        // Evaluate component internal residuals - this is embarrassingly parallel
         for (component_type* component : components_)
         {
           if (int err_code = component->evaluateInternalResidual())

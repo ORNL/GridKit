@@ -111,7 +111,7 @@ namespace GridKit
       RealT R_{0.1};
       RealT X_{0.01};
 
-      /* Derivied parameters */
+      /* Derived parameters */
       RealT b_;
       RealT g_;
 

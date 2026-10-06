@@ -45,7 +45,7 @@ int runApplication(int argc, const char* argv[])
 
   using EventType = SystemEvent::Type;
 
-  // Initilize simultation for first run
+  // Initialize simulation for first run
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
   ida.initializeSimulation(0.0);

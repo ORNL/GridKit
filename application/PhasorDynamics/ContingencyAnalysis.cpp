@@ -45,7 +45,7 @@ TestStatus runStudy(StudyData study_data)
 
   using EventType = SystemEvent::Type;
 
-  // Initilize simultation for first run
+  // Initialize simulation for first run
   real_type dt_monitor = study_data.dt_monitor;
   real_type final_time = study_data.tmax;
   ida.initializeSimulation(0.0, false);

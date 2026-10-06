@@ -200,7 +200,7 @@ namespace GridKit
       }
 
       /**
-       * @note Cannot be marked final, since it is overriden to recurse in the system model.
+       * @note Cannot be marked final, since it is overridden to recurse in the system model.
        */
       void updateTime(RealT t, RealT a) override
       {
@@ -716,7 +716,7 @@ namespace GridKit
       /**
        * An array of (input) pointers to state values for external variables.
        * \note The size of this array is equal to \ref size_, allowing you to index it with the index
-       * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
+       * of the variable in question (i.e. consistent with \ref extern_indices_). Therefore, accessing
        * and dereferencing the pointer in an internal variable index is undefined behavior.
        * \see setExternalConnectionNodes()
        */
@@ -724,7 +724,7 @@ namespace GridKit
       /**
        * An array of (input) pointers to derivative values for external variables.
        * \note The size of this array is equal to \ref size_, allowing you to index it with the index
-       * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
+       * of the variable in question (i.e. consistent with \ref extern_indices_). Therefore, accessing
        * and dereferencing the pointer in an internal variable index is undefined behavior.
        * \see setExternalConnectionNodes()
        */
@@ -732,7 +732,7 @@ namespace GridKit
       /**
        * An array of (output) pointers to residuals for external variables.
        * \note The size of this array is equal to \ref size_, allowing you to index it with the index
-       * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
+       * of the variable in question (i.e. consistent with \ref extern_indices_). Therefore, accessing
        * and dereferencing the pointer in an internal variable index is undefined behavior.
        * \see setExternalConnectionNodes()
        */

@@ -63,7 +63,7 @@ namespace GridKit
     s                         = std::regex_replace(s, std::regex("%.+"), nothing);
   }
 
-  // Retrive MATPOWER component from assignment line.
+  // Retrieve MATPOWER component from assignment line.
   //
   // For example, the string "   mpc.bus =  [ ... ] % Some comment" will
   // return the value "bus".

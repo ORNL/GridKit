@@ -46,7 +46,7 @@ namespace GridKit
        * @pre \ref setupSolver must be called first and every time the data of the matrix changes.
        * @return int An error code, or 0 if none.
        *
-       * @todo The data of the `rhs` parameter doesn't change, but we can't mark as cosntant because ReSolve currently requires
+       * @todo The data of the `rhs` parameter doesn't change, but we can't mark as constant because ReSolve currently requires
        * a non-`const` pointer for vectors, even if it will only read from that vector. In the future this might change, so this
        * can be updated to be `const`.
        */

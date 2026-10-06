@@ -59,7 +59,7 @@ int main(int /* argc */, char const** /* argv */)
     yp[13 * i - 1 + 6] = (parms2.Kpc_ * parms2.Kpv_ * parms2.Vn_) / parms2.Lf_;
   }
 
-  // since the intial P_com = 0
+  // since the initial P_com = 0
   y[network.dg_signal.getNodeConnection(0).idx_] = parms1.wb_;
 
   sysmodel->y().setDataUpdated();
@@ -68,12 +68,12 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel->initialize();
   sysmodel->evaluateResidual();
 
-  // Optional debuging output
+  // Optional debugging output
   if (debug_output)
   {
     auto&       fres      = sysmodel->getResidual();
     const auto* fres_data = fres.getData();
-    std::cout << "Verify initial resisdual is zero: {\n";
+    std::cout << "Verify initial residual is zero: {\n";
     for (size_t i = 0; i < fres.getSize(); i++)
     {
       std::cout << i << " :" << fres_data[i] << "\n";
@@ -84,7 +84,7 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel->updateTime(0.0, 1.0e-8);
   sysmodel->evaluateJacobian();
 
-  // Optional debuging output
+  // Optional debugging output
   if (debug_output)
   {
     std::cout << "Initial Jacobian with alpha:\n";
@@ -103,7 +103,7 @@ int main(int /* argc */, char const** /* argv */)
     all_internal_diff = all_internal_diff && sysmodel->tag()[i];
     if (!sysmodel->tag()[i])
     {
-      std::cout << "Unexepected algebraic-tagged internal variable found in index " << i << '\n';
+      std::cout << "Unexpected algebraic-tagged internal variable found in index " << i << '\n';
     }
   }
 
@@ -112,7 +112,7 @@ int main(int /* argc */, char const** /* argv */)
     all_external_alg = all_external_alg && !sysmodel->tag()[i];
     if (sysmodel->tag()[i])
     {
-      std::cout << "Unexepected differential-tagged external variable found in index " << i << '\n';
+      std::cout << "Unexpected differential-tagged external variable found in index " << i << '\n';
     }
   }
 
@@ -219,7 +219,7 @@ int main(int /* argc */, char const** /* argv */)
       3.604108939430972e+02,
       -3.492842627398574e+01};
 
-  std::cout << "Testing Migrogrid ...\n";
+  std::cout << "Testing Microgrid ...\n";
   double error_allowed = 1e-4;
   double max_error     = 0.0;
   for (size_t i = 0; i < true_vec.size(); i++)

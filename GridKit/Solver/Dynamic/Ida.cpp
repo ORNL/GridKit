@@ -67,7 +67,7 @@ namespace AnalysisManager
       yp_ = N_VClone(yy_);
       checkAllocation((void*) yp_, "N_VClone");
 
-      // get intial conditions
+      // get initial conditions
       this->getDefaultInitialCondition();
 
       // Create vectors to store restart initial condition
@@ -346,7 +346,7 @@ namespace AnalysisManager
 
         if (step_callback.has_value() || model_->monitoring())
         {
-          // The callback may try to observe upated values in the model, so we
+          // The callback may try to observe updated values in the model, so we
           // should update them here (At this point, the model's values are one
           // internal integrator step out of date)
           updateModelState(tret);
@@ -409,7 +409,7 @@ namespace AnalysisManager
       // Set tolerances and error control for quadratures
       setQuadratureTolerance(solver_, quadrature_rel_tol_, quadrature_abs_tol_override_);
 
-      // Include quadrature in eror checking
+      // Include quadrature in error checking
       retval = IDASetQuadErrCon(solver_, SUNTRUE);
       checkOutput(retval, "IDASetQuadErrCon");
 
