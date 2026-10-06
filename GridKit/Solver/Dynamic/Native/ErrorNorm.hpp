@@ -15,6 +15,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     class ErrorNorm
     {
+    protected:
       using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
