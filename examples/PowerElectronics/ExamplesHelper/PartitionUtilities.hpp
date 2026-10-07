@@ -53,12 +53,12 @@ void partitionNetwork(
 
   subsystems.resize(num_partitions);
 
-  IdxT q = num_ibrs / num_partitions;
-  IdxT r = num_ibrs % num_partitions;
+  const size_t q = num_ibrs / num_partitions;
+  const size_t r = num_ibrs % num_partitions;
 
-  IdxT partition_begin = 0;
+  size_t partition_begin = 0;
 
-  for (IdxT j = 0; j < num_partitions; j++)
+  for (size_t j = 0; j < num_partitions; j++)
   {
     auto* partition = new GridKit::SubsystemModel<ScalarT, IdxT>(true);
 
@@ -72,11 +72,11 @@ void partitionNetwork(
     // Each partition receives q IBRs, and the first r partitions receive
     // one additional IBR to account for any remainder. The partition spans
     // [partition_begin, partition_end).
-    const IdxT partition_size = q + ((j < r) ? 1 : 0);
-    const IdxT partition_end  = partition_begin + partition_size;
+    const size_t partition_size = q + ((j < r) ? 1 : 0);
+    const size_t partition_end  = partition_begin + partition_size;
 
     // Add all components belonging to this partition.
-    for (IdxT i = partition_begin; i < partition_end; ++i)
+    for (size_t i = partition_begin; i < partition_end; ++i)
     {
       partition->addComponent(network.generators[i]);
       partition->addComponent(network.busesDQ[i]);
@@ -102,7 +102,7 @@ void partitionNetwork(
     if (partition_end < num_ibrs)
     {
 
-      const IdxT boundary_line_index = partition_end - 1;
+      const size_t boundary_line_index = partition_end - 1;
 
       auto* bus_interface = new GridKit::PowerElectronics::BusPartitionInterface<ScalarT, IdxT>(
           &network.buses[boundary_line_index],

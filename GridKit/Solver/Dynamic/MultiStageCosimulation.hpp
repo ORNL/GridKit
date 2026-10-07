@@ -18,6 +18,7 @@
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Solver/Dynamic/Native/AdaptiveStep.hpp>
@@ -39,6 +40,7 @@ namespace AnalysisManager
     using State          = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
     using RealT          = typename GridKit::ScalarTraits<ScalarT>::RealT;
     using Interpolant    = GridKit::LagrangeInterpolant<ScalarT, IdxT>;
+    using System         = GridKit::PowerElectronicsModel<ScalarT, IdxT>;
     using Subsystem      = GridKit::SubsystemModel<ScalarT, IdxT>;
     using MemorySpace    = GridKit::memory::MemorySpace;
     using CouplingMatrix = std::vector<std::shared_ptr<State>>;
@@ -46,8 +48,8 @@ namespace AnalysisManager
 
   public:
     MultiStageCosimulation(
-        size_t      max_iterations = 2,
-        size_t      num_stages     = 4,
+        size_t      max_iterations = 1,
+        size_t      num_stages     = 1,
         MemorySpace memspace       = MemorySpace::HOST);
 
     ~MultiStageCosimulation();
@@ -60,6 +62,10 @@ namespace AnalysisManager
 
     int runSimulation(std::optional<std::function<void(const RealT t, const State&)>> step_callback = {});
 
+    int zeroOrderHold(
+        RealT t0,
+        RealT dt);
+
     State& y()
     {
       return *y_;
@@ -68,6 +74,26 @@ namespace AnalysisManager
     State& yp()
     {
       return *yp_;
+    }
+
+    void maxNormReport(const ScalarT* r, size_t n, const char* label)
+    {
+      double max_abs = 0.0;
+      size_t argmax  = 0;
+      double l2      = 0.0;
+      for (size_t i = 0; i < n; ++i)
+      {
+        const double a  = std::abs(static_cast<double>(r[i]));
+        l2             += a * a;
+        if (a > max_abs)
+        {
+          max_abs = a;
+          argmax  = i;
+        }
+      }
+      std::cout << label << "  max|F| = " << max_abs
+                << " at index " << argmax
+                << "   ||F||_2 = " << std::sqrt(l2) << '\n';
     }
 
   private:
@@ -175,5 +201,9 @@ namespace AnalysisManager
     std::vector<std::vector<std::unique_ptr<Interpolant>>> interpolants_y_;
 
     std::vector<std::vector<std::unique_ptr<Interpolant>>> interpolants_yp_;
+
+    System* mono_system;
+
+    std::unique_ptr<IdaSolver> mono_solver;
   };
 } // namespace AnalysisManager

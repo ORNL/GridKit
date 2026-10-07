@@ -5,7 +5,6 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
-#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -71,8 +70,8 @@ namespace AnalysisManager
       auto* partition = partitions_[p];
 
       partition->allocate();
-      const auto coupling_size  = partition->getExternSize();
-      const auto partition_size = partition->getInternalSize();
+      const auto extern_size = partition->getExternSize();
+      const auto intern_size = partition->getInternalSize();
 
       // One coupling state per stage (index 0 = start of step).
       coupling_mat_y_[p].resize(num_stages_ + 1);
@@ -80,11 +79,11 @@ namespace AnalysisManager
 
       for (size_t stage = 0; stage <= num_stages_; ++stage)
       {
-        coupling_mat_y_[p][stage] = std::make_shared<State>(coupling_size);
+        coupling_mat_y_[p][stage] = std::make_shared<State>(extern_size);
         coupling_mat_y_[p][stage]->allocate(memspace_);
         coupling_mat_y_[p][stage]->setToZero(memspace_);
 
-        coupling_mat_yp_[p][stage] = std::make_shared<State>(coupling_size);
+        coupling_mat_yp_[p][stage] = std::make_shared<State>(extern_size);
         coupling_mat_yp_[p][stage]->allocate(memspace_);
         coupling_mat_yp_[p][stage]->setToZero(memspace_);
       }
@@ -102,7 +101,7 @@ namespace AnalysisManager
         interpolants_yp_[p][stage] = std::make_unique<Interpolant>(cols_yp, static_cast<RealT>(0), static_cast<RealT>(1), GridKit::NodeType::Chebyshev, memspace_);
       }
 
-      global_size += static_cast<IdxT>(partition_size);
+      global_size += static_cast<IdxT>(intern_size);
 
       ida_solvers_[p] = std::make_unique<IdaSolver>(partitions_[p]);
     }
@@ -167,7 +166,7 @@ namespace AnalysisManager
     for (size_t p = 0; p < num_partitions_; ++p)
     {
       ida_solvers_[p]->setMaxSteps(100000);
-      ida_solvers_[p]->setTolerance(1e-4);
+      ida_solvers_[p]->setTolerance(1e-7);
       ida_solvers_[p]->configureSimulation();
     }
 
@@ -182,11 +181,11 @@ namespace AnalysisManager
       const RealT t  = time_points_[t_idx];
       const RealT dt = time_points_[t_idx + 1] - time_points_[t_idx];
 
-      curr_stages_y_[0] = y_;
-      next_stages_y_[0] = y_;
+      curr_stages_y_[0]->copyFromExternal(*y_, memspace_);
+      next_stages_y_[0]->copyFromExternal(*y_, memspace_);
 
-      curr_stages_yp_[0] = yp_;
-      next_stages_yp_[0] = yp_;
+      curr_stages_yp_[0]->copyFromExternal(*yp_, memspace_);
+      next_stages_yp_[0]->copyFromExternal(*yp_, memspace_);
 
       for (size_t curr_stage = 1; curr_stage <= num_stages_; ++curr_stage)
       {
@@ -201,6 +200,8 @@ namespace AnalysisManager
       std::cout << "Time point: " << time_points_[t_idx + 1] << std::endl;
       y_->copyFromExternal(*curr_stages_y_.back(), memspace_);
       yp_->copyFromExternal(*curr_stages_yp_.back(), memspace_);
+
+      std::cout << "Finised steps" << std::endl;
 
       if (step_callback)
       {
@@ -307,7 +308,7 @@ namespace AnalysisManager
 // Per-stage setup (not per-iteration): rescale this stage's prebuilt
 // interpolants to the current time interval. Node locations and weights
 // are already computed; this only stores t0 and dt.
-#pragma omp parallel for 
+#pragma omp parallel for
     for (size_t p = 0; p < num_partitions_; ++p)
     {
       interpolants_y_[p][curr_stage]->setTimeInterval(t0, dt);
@@ -374,7 +375,7 @@ namespace AnalysisManager
 
     ScalarT t = output_times[0];
 
-    solver->configureSimulation();
+    solver->getDefaultInitialCondition();
     solver->initializeSimulation(t, true);
 
     for (size_t time_idx = 1; time_idx < output_times.size(); time_idx++)

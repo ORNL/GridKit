@@ -31,9 +31,9 @@ int main(int /* argc */, char const** /* argv */)
   bool      debug_out = false;
   real_type tol       = SCALE_MICROGRID_ERROR_TOL;
 
-  retval += test(2, tol, debug_out);
-  retval += test(4, tol, debug_out);
-  retval += test(8, tol, debug_out);
+  // retval += test(2, tol, debug_out);
+  // retval += test(4, tol, debug_out);
+  retval += test(5000, tol, debug_out);
   if (retval > 0)
   {
     std::cout << "Some tests fail!!\n";
@@ -114,9 +114,12 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   {
     const auto& params = network.DGParam_list[i];
 
-    yp[13 * i - 1 + 2] = params.Vn_;
-    yp[13 * i - 1 + 4] = params.Kpv_ * params.Vn_;
-    yp[13 * i - 1 + 6] = (params.Kpc_ * params.Kpv_ * params.Vn_) / params.Lf_;
+    const index_type offset = (i == 0) ? 0 : 13 * i - 1;
+
+    yp[offset + 2] = params.Vn_;
+    yp[offset + 4] = params.Kpv_ * params.Vn_;
+    yp[offset + 6] =
+        (params.Kpc_ * params.Kpv_ * params.Vn_) / params.Lf_;
   }
 
   // since the intial P_com = 0, the set the intial vector to the reference frame
@@ -125,18 +128,59 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   sys_model->y().setDataUpdated();
   sys_model->yp().setDataUpdated();
 
+  sys_model->updateTime(0.0, 0.0);
+  sys_model->evaluateResidual();
+
+  const auto* residual = sys_model->getResidual().getData();
+
+  double max_residual = 0.0;
+  int    max_index    = -1;
+
+  for (int i = 0; i < sys_model->size(); ++i)
+  {
+    const double value = std::abs(residual[i]);
+
+    if (value > max_residual)
+    {
+      max_residual = value;
+      max_index    = i;
+    }
+  }
+
+  std::cout << "Initial sys_model consistency:\n"
+            << "  max|F| = " << max_residual << '\n'
+            << "  index  = " << max_index << '\n';
+
   sys_model->initialize();
   sys_model->evaluateResidual();
   auto&       fres      = sys_model->getResidual();
   const auto* fres_data = fres.getData();
-  if (debug_output)
+  if (true)
   {
-    std::cout << "Verify initial resisdual is zero: {\n";
-    for (index_type i = 0; i < fres.getSize(); i++)
+    real_type  max_residual = 0.0;
+    index_type max_index    = 0;
+
+    std::cout << "Nonzero initial residuals: {\n";
+
+    for (index_type i = 0; i < fres.getSize(); ++i)
     {
-      std::cout << i << " : " << fres_data[i] << "\n";
+      const real_type abs_residual = std::abs(fres_data[i]);
+
+      if (abs_residual > 0.0)
+      {
+        std::cout << i << " : " << fres_data[i] << "\n";
+      }
+
+      if (abs_residual > max_residual)
+      {
+        max_residual = abs_residual;
+        max_index    = i;
+      }
     }
+
     std::cout << "}\n";
+    std::cout << "Max residual norm: " << max_residual << "\n";
+    std::cout << "Max residual index: " << max_index << "\n";
   }
 
   sys_model->updateTime(0.0, 1.0e-8);

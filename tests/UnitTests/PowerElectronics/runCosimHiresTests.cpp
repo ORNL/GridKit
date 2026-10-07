@@ -56,7 +56,6 @@ struct Hires
 
     bus.tag()[0] = true;
     bus.tag()[1] = true;
-    system->tagDifferentiable();
 
     // Initial state: y = (1, 0, 0, 0, 0, 0, 0, 0.0057) in HIRES numbering
     double* y  = system->y().getData();
@@ -130,7 +129,7 @@ std::vector<double> solveCosim(int n_steps)
   }
 
   size_t num_iterations = 1;
-  size_t num_stages     = 2;
+  size_t num_stages     = 4;
 
   auto* cosim = new Cosim(num_iterations, num_stages);
   cosim->addSubsystems(partition1);
