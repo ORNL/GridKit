@@ -47,6 +47,7 @@ namespace GridKit
       virtual ~Bus();
 
       virtual int setBusID(IdxT) override final;
+      virtual int setFault(bool status, RealT R, RealT X) override final;
       virtual int allocate() override final;
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
@@ -160,6 +161,10 @@ namespace GridKit
     private:
       ScalarT Vr0_{0.0};
       ScalarT Vi0_{0.0};
+
+      /* Fault admittance */
+      RealT fault_g_{0.0};
+      RealT fault_b_{0.0};
     };
 
   } // namespace PhasorDynamics

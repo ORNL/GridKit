@@ -5,7 +5,11 @@
 
 add_executable(test_phasor_bus runBusTests.cpp)
 target_link_libraries(
-  test_phasor_bus GridKit::phasor_dynamics_bus GridKit::testing)
+  test_phasor_bus
+  GridKit::definitions
+  GridKit::phasor_dynamics_bus
+  GridKit::phasor_dynamics_bus_dependency_tracking
+  GridKit::testing)
 
 add_executable(test_phasor_bus_fault runBusFaultTests.cpp)
 target_link_libraries(

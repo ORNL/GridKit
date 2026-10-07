@@ -13,7 +13,7 @@ namespace GridKit
     /**
      * @brief Jacobian evaluation experimental.
      *
-     * This sets values to 0, and these remain unchanged. It is needed to get
+     * This sets values to the fault admittance, zero when cleared. It is needed to get
      * the indices into the list of entries that will later be deduplicated.
      * Contributions to bus Jacobians from other components are stored in those components.
      *
@@ -36,14 +36,15 @@ namespace GridKit
         J_cols_buffer_[1] = variable_indices_.at(1);
         J_cols_buffer_[2] = variable_indices_.at(0);
         J_cols_buffer_[3] = variable_indices_.at(1);
-        J_vals_buffer_[0] = 0.0;
-        J_vals_buffer_[1] = 0.0;
-        J_vals_buffer_[2] = 0.0;
-        J_vals_buffer_[3] = 0.0;
 
         nnz_ = 4;
         this->constructCoo();
       }
+
+      J_vals_buffer_[0] = -fault_g_;
+      J_vals_buffer_[1] = fault_b_;
+      J_vals_buffer_[2] = -fault_b_;
+      J_vals_buffer_[3] = -fault_g_;
       return 0;
     }
 
