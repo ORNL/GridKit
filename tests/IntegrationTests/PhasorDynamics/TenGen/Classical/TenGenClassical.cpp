@@ -211,7 +211,7 @@ int main()
   success                     *= isEqual(gen10.y().getData()[omega_index], omega_ref, 5e-5);
 
   // Clear fault and run until t = 10s.
-  bus10.setFault(false, 0.0, 1e-5);
+  bus10.clearFault();
   ida.initializeSimulation(1.1);
   ida.runSimulation(10.0, dt, output_cb);
   real_type stop = static_cast<real_type>(clock());
