@@ -5,7 +5,8 @@
 - Added `BusSignalVoltageOut` bus model with voltage signal outlets and current signal inlets.
 - Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.
 - Removed `BusToSignalAdapter`. Prefer `BusSignalVoltageOut` or `BusSignalVoltageIn`.
-- Replaced the `BusFault` device class with `Bus::setFault`; solver events now specify the faulted bus and fault impedance.
+- Added `Bus::setFault` to apply or clear a fault to ground directly at a bus.
+- Removed the `BusFault` class in favor of `Bus::setFault`.
 
 ## v0.2
 
