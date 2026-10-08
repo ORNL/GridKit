@@ -7,7 +7,6 @@
 #pragma once
 
 #include <GridKit/Constants.hpp>
-#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageOut/BusSignalVoltageOutData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 
@@ -59,8 +58,7 @@ namespace GridKit
       using MonitorT     = typename BusBase<ScalarT, IdxT>::MonitorT;
       using ModelDataT   = BusData<RealT, IdxT>;
       using BusTypeT     = typename BusData<RealT, IdxT>::BusType;
-      using SignalDataT  = BusSignalVoltageOutData<RealT, IdxT>;
-      using SignalPortsT = SignalPorts<ScalarT, SignalDataT>;
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
 
       BusSignalVoltageOut();
       BusSignalVoltageOut(ScalarT Vr, ScalarT Vi);

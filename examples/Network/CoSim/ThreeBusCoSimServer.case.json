@@ -19,7 +19,9 @@
     "buses": [
         {
             "number": 1,
-            "class": "BusInfinite",
+            "class": "SignalVoltageIn",
+            "ports_in": {"vr": 3, "vi": 4},
+            "ports_out": {"ir": 1, "ii": 2},
             "name": "1",
             "init": {
                 "Vr": 1.06,
@@ -58,10 +60,10 @@
         }
     ],
     "signals": [
-        { "signal_id": 1, "name": "vr"},
-        { "signal_id": 2, "name": "vi"},
-        { "signal_id": 3, "name": "ir"},
-        { "signal_id": 4, "name": "ii"}
+        { "signal_id": 1, "name": "ir"},
+        { "signal_id": 2, "name": "ii"},
+        { "signal_id": 3, "name": "vr"},
+        { "signal_id": 4, "name": "vi"}
     ],
     "devices": [
         {
@@ -158,12 +160,6 @@
             "mon": [
                 "speed"
             ]
-        },
-        {
-            "class": "BusToSignalAdapter",
-            "ports": {"bus":1, "ir_out":1, "ii_out":2, "vr_in":3, "vi_out":4},
-            "id": "adapt3",
-            "params": {}
         }
     ]
 }

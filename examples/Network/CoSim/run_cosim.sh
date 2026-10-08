@@ -1,13 +1,14 @@
 #!/usr/bin/env sh
 
-readonly _cosim_dir=$(dirname $(realpath $0))
+readonly _cosim_dir=$(dirname "$(realpath "$0")")
 
-cd ${_cosim_dir}
+cd "${_cosim_dir}" || exit 1
+_exit_code=0
 
-./CoSimServer -c 'ThreeBusCoSimServer.case.json' -b 1 &
+./CoSimServer -c "${1:-ThreeBusCoSimServer.case.json}" -b 1 &
 _srv_pid=$!
 
-./CoSimClient -c 'ThreeBusCoSimClient.case.json' -b 2
+./CoSimClient -c "${2:-ThreeBusCoSimClient.case.json}" -b 2
 if [ $? -ne 0 ]; then
     _exit_code=1
 fi

@@ -19,7 +19,9 @@
     "buses": [
         {
             "number": 1,
-            "class": "Bus",
+            "class": "SignalVoltageOut",
+            "ports_in": {"ir": 1, "ii": 2},
+            "ports_out": {"vr": 3, "vi": 4},
             "name": "1",
             "init": {
                 "Vr": 1.0599558398065716,
@@ -75,12 +77,6 @@
                 "R": 0.1,
                 "X": 0.0
             }
-        },
-        {
-            "class": "BusToSignalAdapter",
-            "ports": {"bus":1, "vr_out":3, "vi_out":4, "ir_in":1, "ii_in":2},
-            "id": "adapt3",
-            "params": {}
         },
         {
             "class": "FunctionSignalSource",

@@ -10,11 +10,9 @@ set(_install_headers
     BusFactory.hpp
     BusInfinite.hpp)
 
-set(_bus_signal_voltage_out_headers BusSignalVoltageOut/BusSignalVoltageOut.hpp
-                                    BusSignalVoltageOut/BusSignalVoltageOutData.hpp)
+set(_bus_signal_voltage_out_headers BusSignalVoltageOut/BusSignalVoltageOut.hpp)
 
-set(_bus_signal_voltage_in_headers BusSignalVoltageIn/BusSignalVoltageIn.hpp
-                                   BusSignalVoltageIn/BusSignalVoltageInData.hpp)
+set(_bus_signal_voltage_in_headers BusSignalVoltageIn/BusSignalVoltageIn.hpp)
 
 if(GRIDKIT_ENABLE_ENZYME)
   set(_bus_sources

@@ -1,3 +1,5 @@
+#include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -71,7 +73,7 @@ public:
     sr_in_->link(&sr_, &sr_idx_);
     si_in_->link(&si_, &si_idx_);
 
-    socket_.connect("tcp://0.0.0.0:5556");
+    socket_.connect("tcp://0.0.0.0:8800");
     Log::summary() << "CLIENT: Established connection with server\n";
   }
 
@@ -157,7 +159,7 @@ public:
     tf_ = tf;
     dt_ = dt;
 
-    ida_.initializeSimulation(ti_);
+    ida_.initializeSimulation(ti_, false);
 
     nsteps_ = ida_.getStepCount(tf_, dt_);
 
@@ -167,7 +169,10 @@ public:
     {
       for (step_ = 1; step_ <= nsteps_; step_++)
       {
-        ida_.runSimulationStep(tf_, dt_, step_, nsteps_);
+        const RealT t      = std::fma(static_cast<RealT>(step_ - 1), dt_, ti_);
+        const RealT target = step_ == nsteps_ ? tf_ : std::fma(static_cast<RealT>(step_), dt_, ti_);
+        ida_.initializeSimulation(t);
+        ida_.runSimulationStep(target, dt_, 1, 1);
         exchange(CoSim::Status::STEP);
       }
     }

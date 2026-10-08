@@ -1,4 +1,6 @@
 
+#include "Ida.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
@@ -11,8 +13,6 @@
 
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-
-#include "Ida.hpp"
 
 namespace AnalysisManager
 {

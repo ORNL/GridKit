@@ -1,3 +1,5 @@
+#include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -69,6 +71,7 @@ public:
       si_out_(si_out),
       sr_in_(sr_in),
       si_in_(si_in),
+      sys_(sys),
       ida_(&sys),
       ctx_{},
       socket_(ctx_, zmq::socket_type::rep)
@@ -76,7 +79,7 @@ public:
     sr_in_->link(&sr_, &sr_idx_);
     si_in_->link(&si_, &si_idx_);
 
-    socket_.bind("tcp://0.0.0.0:5556");
+    socket_.bind("tcp://0.0.0.0:8800");
   }
 
   /**
@@ -95,9 +98,6 @@ public:
   void start()
   {
     Log::summary() << "SERVER: Start simulation loop\n";
-    ida_.setTolerance(1.0e-5, 1.0e-7);
-    ida_.configureSimulation();
-
     CoSim::Status status;
 
     do
@@ -124,13 +124,20 @@ public:
         if (status == CoSim::Status::INIT)
         {
           iss >> ti_ >> tf_ >> dt_ >> nsteps_ >> sr_ >> si_;
+          sys_.allocate();
+          ida_.setTolerance(1.0e-5, 1.0e-7);
+          ida_.configureSimulation();
           ida_.initializeSimulation(ti_);
         }
         else if (status == CoSim::Status::STEP)
         {
           iss >> step_ >> sr_ >> si_;
-          ida_.runSimulationStep(tf_, dt_, step_, nsteps_);
+          const RealT t      = std::fma(static_cast<RealT>(step_ - 1), dt_, ti_);
+          const RealT target = step_ == nsteps_ ? tf_ : std::fma(static_cast<RealT>(step_), dt_, ti_);
+          ida_.initializeSimulation(t);
+          ida_.runSimulationStep(target, dt_, 1, 1);
         }
+        sys_.evaluateResidual();
       }
       catch (const std::exception& e)
       {
@@ -176,6 +183,8 @@ private:
   /// dummy index for signal id
   IdxT         si_idx_{GridKit::INVALID_INDEX<IdxT>};
 
+  SystemModelT& sys_;
+
   /// Ida solver
   IdaT ida_;
 
@@ -216,8 +225,6 @@ int main(int argc, const char* argv[])
                                            sys.getSignalNode(2),
                                            sys.getSignalNode(3),
                                            sys.getSignalNode(4));
-  sys.allocate();
-
   server.start();
 
   return 0;

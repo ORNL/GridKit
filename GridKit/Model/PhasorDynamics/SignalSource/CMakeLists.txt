@@ -1,4 +1,8 @@
-set(_install_headers ConstantSignalSource.hpp ConstantSignalSourceData.hpp)
+set(_install_headers
+    ConstantSignalSource.hpp
+    ConstantSignalSourceData.hpp
+    FunctionSignalSource.hpp
+    FunctionSignalSourceData.hpp)
 
 gridkit_add_library(
   phasor_dynamics_signalsource

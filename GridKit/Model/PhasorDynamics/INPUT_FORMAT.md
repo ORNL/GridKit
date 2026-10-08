@@ -145,7 +145,6 @@ are specified:
   -------------|------------
   [Branch](Branch/README.md) | algebraic pi model for a line or off-nominal transformer branch
   [BusFault](BusFault/README.md) | simple impedance-based fault at a bus
-  [BusToSignalAdapter](BusToSignalAdapter/README.md) | signal adapter component for a bus
   [LoadZ](Load/LoadZ/README.md) | Constant-impedance load model
   [LoadZIP](Load/LoadZIP/README.md) | ZIP load model
   [Genrou](SynchronousMachine/GENROU/README.md) | 6th order machine model

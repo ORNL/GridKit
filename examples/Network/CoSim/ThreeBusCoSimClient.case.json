@@ -32,7 +32,9 @@
         },
         {
             "number": 2,
-            "class": "BusInfinite",
+            "class": "SignalVoltageOut",
+            "ports_in": {"ir": 3, "ii": 4},
+            "ports_out": {"vr": 1, "vi": 2},
             "name": "2",
             "init": {
                 "Vr": 1.0599558398065716,
@@ -158,12 +160,6 @@
             "mon": [
                 "speed"
             ]
-        },
-        {
-            "class": "BusToSignalAdapter",
-            "ports": {"bus":2, "vr_out":1, "vi_out":2, "ir_in":3, "ii_in":4},
-            "id": "adapt3",
-            "params": {}
         }
     ]
 }

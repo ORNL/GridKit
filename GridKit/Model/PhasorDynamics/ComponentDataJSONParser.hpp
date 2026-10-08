@@ -58,7 +58,7 @@ namespace GridKit
           //       handles std::variant out of the box
           if (raw_parameter.value().is_string())
           {
-            auto str = raw_parameter.value().template get<std::string>();
+            auto str                  = raw_parameter.value().template get<std::string>();
             c.parameters[key.value()] = raw_parameter.value().template get<std::string>();
           }
           else if (raw_parameter.value().is_boolean())
