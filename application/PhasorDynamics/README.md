@@ -30,6 +30,6 @@ Each event group describes a system event that occurs at a given time point
  --------------------|-------------------------------------------------------
   `time`             | A floating point value for time event occurs
   `type`             | Event type (one of { "fault_on", "fault_off" })
-  `bus`              | Number of the faulted bus (omitted for `ContingencyAnalysis`, which faults every bus in turn)
+  `bus`              | Number of the faulted bus (omitted for `ContingencyAnalysis`, which faults every bus in turn using the same `R` and `X`)
   `R`                | Fault resistance in per unit (required for "fault_on")
   `X`                | Fault reactance in per unit (required for "fault_on")
