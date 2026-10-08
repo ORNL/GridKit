@@ -245,7 +245,7 @@ namespace GridKit
         ida.runSimulation(1.1, dt);
 
         // Clear the fault and run until t = 10s.
-        bus->setFault(false, R, X);
+        bus->clearFault();
         ida.initializeSimulation(1.1);
         ida.runSimulation(10.0, dt);
 
