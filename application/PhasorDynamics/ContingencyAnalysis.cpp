@@ -56,14 +56,24 @@ TestStatus runStudy(StudyData study_data)
     ida.runSimulation(event.time, dt_monitor);
 
     // Set up run for event (to start at event time)
+    auto* bus = sys.getBus(event.bus);
+    int   ret = 0;
+
     switch (event.type)
     {
     case EventType::FAULT_ON:
-      sys.getBus(event.bus)->setFault(true, event.R, event.X);
+      ret = bus->setFault(true, event.R, event.X);
       break;
     case EventType::FAULT_OFF:
-      sys.getBus(event.bus)->setFault(false, event.R, event.X);
+      ret = bus->clearFault();
       break;
+    }
+
+    if (ret != 0)
+    {
+      Log::error() << "Fault event failed for bus " << event.bus
+                   << " at time " << event.time << '\n';
+      return {false};
     }
 
     // Re-initialize simulation at event time

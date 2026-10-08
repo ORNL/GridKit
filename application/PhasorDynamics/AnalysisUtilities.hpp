@@ -28,6 +28,8 @@ namespace GridKit
     /**
      * @brief Describes an event that is used to modify the simulation at the
      * given time point
+     *
+     * ContingencyAnalysis repeats this event at each bus with the same R and X.
      */
     struct SystemEvent
     {
