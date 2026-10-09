@@ -5,43 +5,28 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
+set(_dynamic_solver_sources Ida.cpp Partitioned.cpp)
+set(_dynamic_solver_headers Ida.hpp Partitioned.hpp DynamicSolver.hpp)
+set(_dynamic_solver_libraries
+    PUBLIC SUNDIALS::nvecserial
+    PUBLIC SUNDIALS::nvecmanyvector
+    PUBLIC SUNDIALS::idas
+    PUBLIC SUNDIALS::arkode
+    PUBLIC SUNDIALS::sunlinsolspgmr
+    PUBLIC GridKit::definitions
+    PUBLIC GridKit::utilities_logger
+    PUBLIC GridKit::sparse_matrix
+    GridKit::dense_vector)
+
 if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
-  gridkit_add_library(
-    solvers_dyn
-    SOURCES Ida.cpp
-    HEADERS Ida.hpp DynamicSolver.hpp
-    LINK_LIBRARIES
-      PUBLIC
-      SUNDIALS::nvecserial
-      PUBLIC
-      SUNDIALS::idas
-      PUBLIC
-      SUNDIALS::sunlinsolklu
-      PUBLIC
-      GridKit::definitions
-      PUBLIC
-      GridKit::utilities_logger
-      PUBLIC
-      GridKit::sparse_matrix
-      GridKit::dense_vector)
-else()
-  gridkit_add_library(
-    solvers_dyn
-    SOURCES Ida.cpp
-    HEADERS Ida.hpp DynamicSolver.hpp
-    LINK_LIBRARIES
-      PUBLIC
-      SUNDIALS::nvecserial
-      PUBLIC
-      SUNDIALS::idas
-      PUBLIC
-      GridKit::definitions
-      PUBLIC
-      GridKit::utilities_logger
-      PUBLIC
-      GridKit::sparse_matrix
-      GridKit::dense_vector)
+  list(APPEND _dynamic_solver_libraries PUBLIC SUNDIALS::sunlinsolklu)
 endif()
+
+gridkit_add_library(
+  solvers_dyn
+  SOURCES ${_dynamic_solver_sources}
+  HEADERS ${_dynamic_solver_headers}
+  LINK_LIBRARIES ${_dynamic_solver_libraries})
 
 if(GRIDKIT_ENABLE_RESOLVE)
   gridkit_add_library(
