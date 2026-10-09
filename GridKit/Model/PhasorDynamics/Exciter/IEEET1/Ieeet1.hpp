@@ -154,6 +154,10 @@ namespace GridKit
         void initModelParams(const ModelDataT& data);
         void setDerivedParameters();
 
+        /// Refresh one signal input and its global variable index.
+        template <Ieeet1SignalInputs input, Ieeet1ExternalVariables variable>
+        void readSignal(const ScalarT& fallback);
+
         /// Associate variable getter functions with enum values
         void initializeMonitor();
       };

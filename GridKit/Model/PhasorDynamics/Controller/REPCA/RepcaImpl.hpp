@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <format>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -927,7 +928,7 @@ namespace GridKit
         {
           if (value < ZERO<RealT>)
           {
-            throw std::invalid_argument(std::string("Repca: ") + name + " must be non-negative");
+            throw std::invalid_argument(std::format("Repca: {} must be non-negative", name));
           }
         }
 
