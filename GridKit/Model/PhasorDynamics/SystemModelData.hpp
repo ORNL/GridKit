@@ -135,6 +135,5 @@ namespace GridKit
     SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);
     SystemModelData<double, size_t> parseSystemModelData(std::istream&& stream);
     SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& filePath);
-    SystemModelData<double, size_t> parseSystemModelData(const std::string& fileName);
   } // namespace PhasorDynamics
 } // namespace GridKit
