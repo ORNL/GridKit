@@ -1,4 +1,5 @@
 #include <cassert>
+#include <format>
 #include <iostream>
 #include <string>
 
@@ -520,7 +521,7 @@ namespace GridKit
         const auto component_checks = component->verify();
         for (const auto& error : component_checks.errors())
         {
-          checks.fail("component " + std::to_string(component->getGridKitComponentID()) + ": " + error);
+          checks.fail(std::format("component {}: {}", component->getGridKitComponentID(), error));
         }
       }
 

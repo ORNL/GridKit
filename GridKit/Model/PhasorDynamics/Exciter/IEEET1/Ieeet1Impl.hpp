@@ -411,6 +411,18 @@ namespace GridKit
         return 0;
       }
 
+      template <typename scalar_type, typename index_type>
+      template <Ieeet1SignalInputs input, Ieeet1ExternalVariables variable>
+      void Ieeet1<scalar_type, index_type>::readSignal(const ScalarT& fallback)
+      {
+        constexpr auto index = static_cast<size_t>(variable);
+        const auto&    port  = ports_.in.template port<input>();
+
+        ws_.getData()[index] = port.readOrDefault(fallback);
+        ws_indices_[index]   = port ? port.signalVariableIndex()
+                                    : INVALID_INDEX<IdxT>;
+      }
+
       /**
        * @brief Residual evaluation
        *
@@ -418,47 +430,19 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::evaluateResidual()
       {
-        const auto OMEGA = static_cast<size_t>(Ieeet1ExternalVariables::OMEGA);
-        const auto VREF  = static_cast<size_t>(Ieeet1ExternalVariables::VREF);
-        const auto VS    = static_cast<size_t>(Ieeet1ExternalVariables::VS);
-        const auto VUEL  = static_cast<size_t>(Ieeet1ExternalVariables::VUEL);
-        const auto VOEL  = static_cast<size_t>(Ieeet1ExternalVariables::VOEL);
+        using Input    = Ieeet1SignalInputs;
+        using Variable = Ieeet1ExternalVariables;
 
         auto* ws = ws_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
-        ws[OMEGA] = omega_set_;
-        ws[VREF]  = vref_set_;
-        ws[VS]    = vs_set_;
-        ws[VUEL]  = vuel_set_;
-        ws[VOEL]  = voel_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (auto port = ports_.in.template port<Ieeet1SignalInputs::speed>())
-        {
-          ws[OMEGA]          = port.readSignal();
-          ws_indices_[OMEGA] = port.signalVariableIndex();
-        }
-        if (auto port = ports_.in.template port<Ieeet1SignalInputs::vref>())
-        {
-          ws[VREF]          = port.readSignal();
-          ws_indices_[VREF] = port.signalVariableIndex();
-        }
-        if (auto port = ports_.in.template port<Ieeet1SignalInputs::vs>())
-        {
-          ws[VS]          = port.readSignal();
-          ws_indices_[VS] = port.signalVariableIndex();
-        }
-        if (auto port = ports_.in.template port<Ieeet1SignalInputs::vuel>())
-        {
-          ws[VUEL]          = port.readSignal();
-          ws_indices_[VUEL] = port.signalVariableIndex();
-        }
-        if (auto port = ports_.in.template port<Ieeet1SignalInputs::voel>())
-        {
-          ws[VOEL]          = port.readSignal();
-          ws_indices_[VOEL] = port.signalVariableIndex();
-        }
+        readSignal<Input::speed, Variable::OMEGA>(omega_set_);
+        readSignal<Input::vref, Variable::VREF>(vref_set_);
+        readSignal<Input::vs, Variable::VS>(vs_set_);
+        readSignal<Input::vuel, Variable::VUEL>(vuel_set_);
+        readSignal<Input::voel, Variable::VOEL>(voel_set_);
 
         // Bus voltages
         auto* wb = wb_.getData();
