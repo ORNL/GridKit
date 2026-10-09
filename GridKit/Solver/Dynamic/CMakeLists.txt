@@ -8,18 +8,30 @@
 set(_dynamic_solver_sources Ida.cpp Partitioned.cpp)
 set(_dynamic_solver_headers Ida.hpp Partitioned.hpp DynamicSolver.hpp)
 set(_dynamic_solver_libraries
-    PUBLIC SUNDIALS::nvecserial
-    PUBLIC SUNDIALS::nvecmanyvector
-    PUBLIC SUNDIALS::idas
-    PUBLIC SUNDIALS::arkode
-    PUBLIC SUNDIALS::sunlinsolspgmr
-    PUBLIC GridKit::definitions
-    PUBLIC GridKit::utilities_logger
-    PUBLIC GridKit::sparse_matrix
+    PUBLIC
+    SUNDIALS::nvecserial
+    PUBLIC
+    SUNDIALS::nvecmanyvector
+    PUBLIC
+    SUNDIALS::idas
+    PUBLIC
+    SUNDIALS::arkode
+    PUBLIC
+    SUNDIALS::sunlinsolspgmr
+    PUBLIC
+    GridKit::definitions
+    PUBLIC
+    GridKit::utilities_logger
+    PUBLIC
+    GridKit::sparse_matrix
     GridKit::dense_vector)
 
 if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
-  list(APPEND _dynamic_solver_libraries PUBLIC SUNDIALS::sunlinsolklu)
+  list(
+    APPEND
+    _dynamic_solver_libraries
+    PUBLIC
+    SUNDIALS::sunlinsolklu)
 endif()
 
 gridkit_add_library(
