@@ -362,11 +362,9 @@ namespace GridKit
        */
       TestOutcome signalError()
       {
-        using namespace std::filesystem;
         using namespace GridKit::PhasorDynamics;
-        auto input_file = current_path() / "ThreeBusBasicBad.json";
-        auto data       = parseSystemModelData(input_file);
-        auto sys        = SystemModel<double, size_t>(data);
+        auto data = parseSystemModelData("ThreeBusBasicBad.json");
+        auto sys  = SystemModel<double, size_t>(data);
 
         TestStatus status{true};
         const auto previous_verbosity = Log::verbosity();
