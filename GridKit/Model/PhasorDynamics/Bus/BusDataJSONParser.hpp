@@ -62,6 +62,14 @@ namespace GridKit
       {
         bd.bus_type = BusData<RealT, IdxT>::BusType::SLACK;
       }
+      else if (string_class == "SignalVoltageIn")
+      {
+        bd.bus_type = BusData<RealT, IdxT>::BusType::SIGNAL_VOLTAGE_IN;
+      }
+      else if (string_class == "SignalVoltageOut")
+      {
+        bd.bus_type = BusData<RealT, IdxT>::BusType::SIGNAL_VOLTAGE_OUT;
+      }
       else
       {
         Log::error() << "\n\tInvalid bus class: \"" << string_class << "\"."
@@ -104,6 +112,36 @@ namespace GridKit
           Log::error() << "\n\tBus parameter \"" << raw_parameter.key()
                        << "\" has no value." << error_context.str()
                        << std::endl;
+        }
+      }
+
+      using SignalInputs = typename BusData<RealT, IdxT>::SignalInputs;
+      if (j.contains("ports_in"))
+      {
+        for (auto& raw_input : j.at("ports_in").items())
+        {
+          auto input = Utilities::enum_cast<SignalInputs>(raw_input.key());
+          if (input.has_value()
+              && static_cast<size_t>(input.value())
+                     < Utilities::enum_size<SignalInputs>())
+          {
+            raw_input.value().get_to(bd.signal_inputs[input.value()]);
+          }
+        }
+      }
+
+      using SignalOutputs = typename BusData<RealT, IdxT>::SignalOutputs;
+      if (j.contains("ports_out"))
+      {
+        for (auto& raw_output : j.at("ports_out").items())
+        {
+          auto output = Utilities::enum_cast<SignalOutputs>(raw_output.key());
+          if (output.has_value()
+              && static_cast<size_t>(output.value())
+                     < Utilities::enum_size<SignalOutputs>())
+          {
+            raw_output.value().get_to(bd.signal_outputs[output.value()]);
+          }
         }
       }
 

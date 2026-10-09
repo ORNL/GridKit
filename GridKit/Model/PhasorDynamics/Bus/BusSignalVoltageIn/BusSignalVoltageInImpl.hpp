@@ -92,11 +92,11 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
-      if (auto ir_port = ports_.out.template port<BusSignalVoltageInOutputs::ir>())
+      if (auto ir_port = ports_.out.template port<BusSignalOutputs::ir>())
       {
         ir_port.link(&Ir_, &ir_index_);
       }
-      if (auto ii_port = ports_.out.template port<BusSignalVoltageInOutputs::ii>())
+      if (auto ii_port = ports_.out.template port<BusSignalOutputs::ii>())
       {
         ii_port.link(&Ii_, &ii_index_);
       }
@@ -122,7 +122,7 @@ namespace GridKit
     {
       int errors = 0;
 
-      auto check_input = [&]<BusSignalVoltageInInputs input>(const char* name)
+      auto check_input = [&]<BusSignalInputs input>(const char* name)
       {
         const auto& port = ports_.in.template port<input>();
         if (!port.connected())
@@ -138,7 +138,7 @@ namespace GridKit
         }
       };
 
-      auto check_output = [&]<BusSignalVoltageInOutputs output>(const char* name)
+      auto check_output = [&]<BusSignalOutputs output>(const char* name)
       {
         const auto& port = ports_.out.template port<output>();
         if (port.connected() && !port.linked())
@@ -149,10 +149,10 @@ namespace GridKit
         }
       };
 
-      check_input.template  operator()<BusSignalVoltageInInputs::vr>("Vr");
-      check_input.template  operator()<BusSignalVoltageInInputs::vi>("Vi");
-      check_output.template operator()<BusSignalVoltageInOutputs::ir>("Ir");
-      check_output.template operator()<BusSignalVoltageInOutputs::ii>("Ii");
+      check_input.template  operator()<BusSignalInputs::vr>("Vr");
+      check_input.template  operator()<BusSignalInputs::vi>("Vi");
+      check_output.template operator()<BusSignalOutputs::ir>("Ir");
+      check_output.template operator()<BusSignalOutputs::ii>("Ii");
 
       if (errors > 0)
       {

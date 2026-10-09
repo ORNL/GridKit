@@ -2,8 +2,8 @@
     "header": {
         "format_version": 0.2,
         "format_revision": 0,
-        "case_name": "ThreeBusCoSimClient",
-        "case_description": "3-bus test case sending voltage and receiving current",
+        "case_name": "CoSimClient",
+        "case_description": "Simple case sending voltage and receiving current",
         "case_comments": "None"
     },
     "params": {
@@ -12,14 +12,14 @@
     },
     "monitors": [
         {
-            "file_name": "mon.csv",
+            "file_name": "client_mon.csv",
             "format":"csv"
         }
     ],
     "buses": [
         {
             "number": 1,
-            "class": "BusInfinite",
+            "class": "Bus",
             "name": "1",
             "init": {
                 "Vr": 1.06,
@@ -32,24 +32,13 @@
         },
         {
             "number": 2,
-            "class": "Bus",
+            "class": "SignalVoltageOut",
+            "ports_in": {"ir": 3, "ii": 4},
+            "ports_out": {"vr": 1, "vi": 2},
             "name": "2",
             "init": {
                 "Vr": 1.0599558398065716,
                 "Vi": -0.009675621941024773
-            },
-            "params": {"kv": 138.0},
-            "mon": [
-                "Vm"
-            ]
-        },
-        {
-            "number": 3,
-            "class": "Bus",
-            "name": "3",
-            "init": {
-                "Vr": 0.9610827543495831,
-                "Vi": -0.13122476630506485
             },
             "params": {"kv": 138.0},
             "mon": [
@@ -79,62 +68,11 @@
             }
         },
         {
-            "class": "Branch",
-            "ports": {
-                "bus1": 1,
-                "bus2": 3
-            },
-            "id": "BR_0_2",
-            "params": {
-                "R": 0.06,
-                "X": 0.15,
-                "G": 0.0,
-                "B": 0.12
-            }
-        },
-        {
-            "class": "Branch",
-            "ports": {
-                "bus1": 2,
-                "bus2": 3
-            },
-            "id": "BR_1_2",
-            "params": {
-                "R": 0.08,
-                "X": 0.27,
-                "G": 0.0,
-                "B": 0.45
-            }
-        },
-        {
-            "class": "LoadZ",
-            "ports": {
-                "bus": 3
-            },
-            "id": "load_2_0",
-            "params": {
-                "R": 0.4447197839297772,
-                "X": 0.20330047265361242
-            }
-        },
-        {
-            "class": "BusFault",
-            "ports": {
-                "bus": 3
-            },
-            "id": "bus_fault_2",
-            "params": {
-                "R": 0.0,
-                "X": 1e-5,
-                "state0": false
-            }
-        },
-        {
             "class": "Genrou",
             "ports": {
-                "bus": 2
+                "bus": 1
             },
-            "id": "genrou_2_1",
+            "id": "genrou_1_1",
             "params": {
                 "p0": 0.5,
                 "q0": -0.07588,
@@ -158,12 +96,6 @@
             "mon": [
                 "speed"
             ]
-        },
-        {
-            "class": "BusToSignalAdapter",
-            "ports": {"bus":1, "vr":1, "vi":2, "ir":3, "ii":4},
-            "id": "adapt3",
-            "params": {}
         }
     ]
 }

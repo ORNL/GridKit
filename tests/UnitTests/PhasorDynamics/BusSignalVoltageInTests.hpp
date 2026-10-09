@@ -7,7 +7,6 @@
 #include <GridKit/Constants.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
-#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageInData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -27,8 +26,8 @@ namespace GridKit
       using BusT      = PhasorDynamics::BusSignalVoltageIn<ScalarT, IdxT>;
       using BusTypeT  = typename BusT::BusTypeT;
       using SignalT   = PhasorDynamics::SignalNode<ScalarT, IdxT>;
-      using SignalIn  = PhasorDynamics::BusSignalVoltageInInputs;
-      using SignalOut = PhasorDynamics::BusSignalVoltageInOutputs;
+      using SignalIn  = PhasorDynamics::BusSignalInputs;
+      using SignalOut = PhasorDynamics::BusSignalOutputs;
 
       BusSignalVoltageInTests()  = default;
       ~BusSignalVoltageInTests() = default;

@@ -111,11 +111,11 @@ namespace GridKit
       }
 
       // Publish bus voltage on the signal outlets
-      if (auto vr_port = ports_.out.template port<BusSignalVoltageOutOutputs::vr>())
+      if (auto vr_port = ports_.out.template port<BusSignalOutputs::vr>())
       {
         vr_port.link(&y_.getData()[0], &(this->getVariableIndex(0)));
       }
-      if (auto vi_port = ports_.out.template port<BusSignalVoltageOutOutputs::vi>())
+      if (auto vi_port = ports_.out.template port<BusSignalOutputs::vi>())
       {
         vi_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
       }
@@ -141,7 +141,7 @@ namespace GridKit
     {
       int errors = 0;
 
-      auto check_input = [&]<BusSignalVoltageOutInputs input>(const char* name)
+      auto check_input = [&]<BusSignalInputs input>(const char* name)
       {
         const auto& port = ports_.in.template port<input>();
         if (!port.connected())
@@ -157,7 +157,7 @@ namespace GridKit
         }
       };
 
-      auto check_output = [&]<BusSignalVoltageOutOutputs output>(const char* name)
+      auto check_output = [&]<BusSignalOutputs output>(const char* name)
       {
         const auto& port = ports_.out.template port<output>();
         if (port.connected() && !port.linked())
@@ -168,10 +168,10 @@ namespace GridKit
         }
       };
 
-      check_input.template  operator()<BusSignalVoltageOutInputs::ir>("Ir");
-      check_input.template  operator()<BusSignalVoltageOutInputs::ii>("Ii");
-      check_output.template operator()<BusSignalVoltageOutOutputs::vr>("Vr");
-      check_output.template operator()<BusSignalVoltageOutOutputs::vi>("Vi");
+      check_input.template  operator()<BusSignalInputs::ir>("Ir");
+      check_input.template  operator()<BusSignalInputs::ii>("Ii");
+      check_output.template operator()<BusSignalOutputs::vr>("Vr");
+      check_output.template operator()<BusSignalOutputs::vi>("Vi");
 
       if (errors > 0)
       {
@@ -259,8 +259,8 @@ namespace GridKit
     {
       auto* f = f_.getData();
 
-      f[0] = ports_.in.template port<BusSignalVoltageOutInputs::ir>().readSignal();
-      f[1] = ports_.in.template port<BusSignalVoltageOutInputs::ii>().readSignal();
+      f[0] = ports_.in.template port<BusSignalInputs::ir>().readSignal();
+      f[1] = ports_.in.template port<BusSignalInputs::ii>().readSignal();
 
       f_.setDataUpdated();
       return 0;

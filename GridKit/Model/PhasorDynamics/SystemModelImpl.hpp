@@ -3,6 +3,8 @@
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageOut/BusSignalVoltageOut.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
@@ -50,31 +52,17 @@ namespace GridKit
       // Store parsed system bases before constructing data-driven components.
       this->setSystemBase(data.freq_base, data.va_base);
 
-      // Add electrical buses
-      for (const auto& busdata : data.bus)
-      {
-        BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata);
-        addBus(bus);
-      }
-
       // Add signal nodes
       for (const auto& signaldata : data.signal)
       {
         signal_nodes_.add(signaldata);
       }
 
-      // Add bus-to-signal adapters
-      for (const auto& adapterdata : data.adapter)
+      // Add electrical buses
+      for (const auto& busdata : data.bus)
       {
-        IdxT bus_index = 0;
-        if (adapterdata.buses.contains(BusToSignalAdapterBuses::bus))
-        {
-          bus_index = adapterdata.buses.at(BusToSignalAdapterBuses::bus);
-        }
-
-        auto* adapter = new BusToSignalAdapter<ScalarT, IdxT>(getBus(bus_index), adapterdata);
-        adapter->getPorts().connect(adapterdata, signal_nodes_);
-        addComponent(adapter);
+        BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata, signal_nodes_);
+        addBus(bus);
       }
 
       // Add REGCA converters
@@ -294,6 +282,14 @@ namespace GridKit
       for (const auto& srcdata : data.constant_source)
       {
         auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
+        source->getPorts().connect(srcdata, signal_nodes_);
+        addComponent(source);
+      }
+
+      // Add constant signal sources
+      for (const auto& srcdata : data.function_source)
+      {
+        auto* source = new FunctionSignalSource<ScalarT, IdxT>(srcdata);
         source->getPorts().connect(srcdata, signal_nodes_);
         addComponent(source);
       }

@@ -10,7 +10,6 @@
 #include <utility>
 
 #include <GridKit/Constants.hpp>
-#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageInData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 
@@ -60,8 +59,7 @@ namespace GridKit
       using MonitorT     = typename BusBase<ScalarT, IdxT>::MonitorT;
       using ModelDataT   = BusData<RealT, IdxT>;
       using BusTypeT     = typename BusData<RealT, IdxT>::BusType;
-      using SignalDataT  = BusSignalVoltageInData<RealT, IdxT>;
-      using SignalPortsT = SignalPorts<ScalarT, SignalDataT>;
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
 
       BusSignalVoltageIn();
       /// Initial voltage arguments are ignored; the voltage comes from signals.
@@ -97,7 +95,7 @@ namespace GridKit
 
       virtual const ScalarT& Vr() const override final
       {
-        return readVoltage<BusSignalVoltageInInputs::vr>("vr");
+        return readVoltage<BusSignalInputs::vr>("vr");
       }
 
       /**
@@ -112,7 +110,7 @@ namespace GridKit
 
       virtual const ScalarT& Vi() const override final
       {
-        return readVoltage<BusSignalVoltageInInputs::vi>("vi");
+        return readVoltage<BusSignalInputs::vi>("vi");
       }
 
       virtual ScalarT& Ir() override final
@@ -147,7 +145,7 @@ namespace GridKit
 
     private:
       /// Read a voltage inlet, throwing if it has no linked signal.
-      template <BusSignalVoltageInInputs input>
+      template <BusSignalInputs input>
       const ScalarT& readVoltage(const char* name) const
       {
         const auto& port = ports_.in.template port<input>();

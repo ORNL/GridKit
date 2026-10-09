@@ -29,8 +29,8 @@ namespace GridKit
     {
       constexpr IdxT num_bus_entries = 4;
 
-      const auto& ir_port = ports_.in.template port<BusSignalVoltageOutInputs::ir>();
-      const auto& ii_port = ports_.in.template port<BusSignalVoltageOutInputs::ii>();
+      const auto& ir_port = ports_.in.template port<BusSignalInputs::ir>();
+      const auto& ii_port = ports_.in.template port<BusSignalInputs::ii>();
 
       if (J_rows_buffer_ == nullptr)
       {
