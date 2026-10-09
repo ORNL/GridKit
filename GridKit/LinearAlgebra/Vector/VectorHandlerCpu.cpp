@@ -12,6 +12,19 @@ namespace GridKit
   {
     using Log = GridKit::Utilities::Logger;
 
+    namespace
+    {
+      template <typename ScalarT>
+      ScalarT computeErrorScale(ScalarT absolute_tolerance,
+                                ScalarT relative_tolerance,
+                                ScalarT state,
+                                ScalarT previous_state)
+      {
+        return absolute_tolerance
+               + relative_tolerance * std::max(std::abs(state), std::abs(previous_state));
+      }
+    } // namespace
+
     /**
      * @brief dot product of two vectors i.e, a = x^Ty
      *
@@ -79,6 +92,90 @@ namespace GridKit
         }
       }
       return vecmax;
+    }
+
+    /**
+     * @brief Compute the infinity norm of the component-wise scaled error
+     *
+     * \f[\max_i \frac{|e_i|}{Atol_i + Rtol \max(|y_i|, |y_{p,i}|)}.\f]
+     *
+     * This scaling factor is standard in ODE solvers and can be found on page
+     * 167 of https://doi.org/10.1007/978-3-540-78862-1. When this norm is less
+     * than 1, the error is considered acceptable.
+     *
+     * @param[in] error Error vector \f(e\f).
+     * @param[in] state Current state \f(y\f).
+     * @param[in] previous_state Previous state \f(y_p\f).
+     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(Atol\f).
+     * @param[in] relative_tolerance Relative tolerance \f(Rtol\f).
+     * @param[in] memspace Memory space in which to perform the reduction.
+     * @return The weighted infinity norm
+     */
+    template <typename ScalarT, typename IdxT>
+    ScalarT VectorHandlerCpu<ScalarT, IdxT>::weightedInfNorm(Vector<ScalarT, IdxT>* error,
+                                                             Vector<ScalarT, IdxT>* state,
+                                                             Vector<ScalarT, IdxT>* previous_state,
+                                                             Vector<ScalarT, IdxT>* absolute_tolerance,
+                                                             ScalarT                relative_tolerance)
+    {
+      const ScalarT* error_data              = error->getData(memory::HOST);
+      const ScalarT* state_data              = state->getData(memory::HOST);
+      const ScalarT* previous_state_data     = previous_state->getData(memory::HOST);
+      const ScalarT* absolute_tolerance_data = absolute_tolerance->getData(memory::HOST);
+      ScalarT        norm                    = 0;
+
+      for (IdxT i = 0; i < error->getSize(); ++i)
+      {
+        const ScalarT scale = computeErrorScale(absolute_tolerance_data[i],
+                                                relative_tolerance,
+                                                state_data[i],
+                                                previous_state_data[i]);
+        norm                = std::max(norm, std::abs(error_data[i]) / scale);
+      }
+      return norm;
+    }
+
+    /**
+     * @brief Compute the root-mean-square norm of the component-wise scaled error
+     *
+     * \f[\sqrt{\frac{1}{N}\sum_i
+     * \left(\frac{e_i}{Atol_i + Rtol \max(|y_i|, |y_{p,i}|)}\right)^2}.\f]
+     *
+     * This scaling factor is standard in ODE solvers and can be found on page
+     * 167 of https://doi.org/10.1007/978-3-540-78862-1. When this norm is less
+     * than 1, the error is considered acceptable.
+     *
+     * @param[in] error Error vector \f(e\f).
+     * @param[in] state Current state \f(y\f).
+     * @param[in] previous_state Previous state \f(y_p\f).
+     * @param[in] absolute_tolerance Component-wise absolute tolerance \f(Atol\f).
+     * @param[in] relative_tolerance Relative tolerance \f(Rtol\f).
+     * @param[in] memspace Memory space in which to perform the reduction.
+     * @return The weighted RMS norm
+     */
+    template <typename ScalarT, typename IdxT>
+    ScalarT VectorHandlerCpu<ScalarT, IdxT>::weightedRmsNorm(Vector<ScalarT, IdxT>* error,
+                                                             Vector<ScalarT, IdxT>* state,
+                                                             Vector<ScalarT, IdxT>* previous_state,
+                                                             Vector<ScalarT, IdxT>* absolute_tolerance,
+                                                             ScalarT                relative_tolerance)
+    {
+      const ScalarT* error_data              = error->getData(memory::HOST);
+      const ScalarT* state_data              = state->getData(memory::HOST);
+      const ScalarT* previous_state_data     = previous_state->getData(memory::HOST);
+      const ScalarT* absolute_tolerance_data = absolute_tolerance->getData(memory::HOST);
+      ScalarT        squared_norm            = 0;
+
+      for (IdxT i = 0; i < error->getSize(); ++i)
+      {
+        const ScalarT scale         = computeErrorScale(absolute_tolerance_data[i],
+                                                relative_tolerance,
+                                                state_data[i],
+                                                previous_state_data[i]);
+        const ScalarT scaled_error  = error_data[i] / scale;
+        squared_norm               += scaled_error * scaled_error;
+      }
+      return std::sqrt(squared_norm / static_cast<ScalarT>(error->getSize()));
     }
 
     /**

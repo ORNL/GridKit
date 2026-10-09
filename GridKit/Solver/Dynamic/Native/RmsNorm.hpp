@@ -11,15 +11,11 @@ namespace AnalysisManager
 {
   namespace NativeDynamicSolver
   {
-
     /**
-     * @brief Infinity norm of component-wise tolerance-scaled errors.
-     *
-     * This norm requires the estimated error in every component to meet its
-     * absolute and relative tolerance.
+     * @brief Root-mean-square norm of component-wise tolerance-scaled errors.
      */
     template <class ScalarT, typename IdxT>
-    class InfNorm : public ErrorNorm<ScalarT, IdxT>
+    class RmsNorm : public ErrorNorm<ScalarT, IdxT>
     {
       using State = typename ErrorNorm<ScalarT, IdxT>::State;
       using RealT = typename ErrorNorm<ScalarT, IdxT>::RealT;
@@ -29,21 +25,21 @@ namespace AnalysisManager
 
     public:
       /**
-       * @brief Construct an infinity norm that owns the supplied absolute-tolerance vector.
+       * @brief Construct an RMS norm that owns the supplied absolute-tolerance vector.
        *
        * @param abs_tol Component-wise absolute tolerances.
        * @param rel_tol Relative tolerance applied to the larger magnitude of the current and previous states.
        */
-      InfNorm(std::unique_ptr<State> abs_tol, RealT rel_tol)
+      RmsNorm(std::unique_ptr<State> abs_tol, RealT rel_tol)
         : abs_tol_(std::move(abs_tol)),
           rel_tol_(rel_tol)
       {
         if (!abs_tol_)
-          throw std::invalid_argument("InfNorm requires an absolute-tolerance vector");
+          throw std::invalid_argument("RmsNorm requires an absolute-tolerance vector");
       }
 
       /**
-       * @brief Compute the tolerance-scaled infinity norm through the supplied vector handler.
+       * @brief Compute the tolerance-scaled RMS norm through the supplied vector handler.
        */
       RealT errorNorm(State&                                                err,
                       State&                                                y,
@@ -51,6 +47,5 @@ namespace AnalysisManager
                       GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler,
                       GridKit::memory::MemorySpace                          memspace) const final;
     };
-
   } // namespace NativeDynamicSolver
 } // namespace AnalysisManager
