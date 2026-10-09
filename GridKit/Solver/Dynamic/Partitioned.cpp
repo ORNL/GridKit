@@ -22,9 +22,9 @@ namespace AnalysisManager
     std::string PartitionedStats::report() const
     {
       static constexpr int label_width = 39;
-      static constexpr int 
-      stat_width  = 12;
-      std::stringstream    out;
+      static constexpr int
+                        stat_width = 12;
+      std::stringstream out;
       out << std::setw(label_width) << "Outer steps" << " : "
           << std::setw(stat_width) << num_steps_ << '\n'
           << std::setw(label_width) << "Component residual evaluations" << " : "
@@ -774,8 +774,8 @@ namespace AnalysisManager
       }
       const RealT estimate = (tf - t_init_) / dt_monitor;
       const RealT epsilon  = std::numeric_limits<RealT>::epsilon()
-                             * std::max({std::abs(t_init_), std::abs(tf), RealT(1.0)})
-                             / dt_monitor;
+                            * std::max({std::abs(t_init_), std::abs(tf), RealT(1.0)})
+                            / dt_monitor;
       return static_cast<int>(std::ceil(estimate - epsilon));
     }
 
