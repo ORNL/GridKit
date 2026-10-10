@@ -50,10 +50,8 @@ namespace GridKit
         using Component<scalar_type, index_type>::time_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
-        using Component<scalar_type, index_type>::h_;
+        using Component<scalar_type, index_type>::y_ext_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -82,6 +80,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT) override final;
+        int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
 
         // Still to be implemented
@@ -94,7 +93,7 @@ namespace GridKit
 
       public:
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+            const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         // Input parameters
@@ -115,6 +114,7 @@ namespace GridKit
 
         // Parameter initialization function
         void initializeParameters(const ModelDataT& data);
+        void gatherExternalVariables();
         void setDerivedParams();
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
