@@ -63,7 +63,7 @@ namespace GridKit
                          const ScalarT* wb,
                          ScalarT*       f)
         {
-          model->evaluateInternalResidual(y, yp, wb, f);
+          model->evaluateInternalResidualKernel(y, yp, wb, f);
         }
       };
 
@@ -91,7 +91,7 @@ namespace GridKit
                          const ScalarT* ws,
                          ScalarT*       f)
         {
-          model->evaluateInternalResidual(y, yp, wb, ws, f);
+          model->evaluateInternalResidualKernel(y, yp, wb, ws, f);
         }
       };
 

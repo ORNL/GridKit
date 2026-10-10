@@ -63,6 +63,26 @@ namespace GridKit
 
       virtual int verify() const = 0;
 
+      /**
+       * @brief Evaluate this component's internal residual.
+       *
+       * The default preserves the existing single-phase residual evaluation
+       * for components that have not yet separated internal and external
+       * residuals.
+       */
+      virtual int evaluateInternalResidual()
+      {
+        return this->evaluateResidual();
+      }
+
+      /**
+       * @brief Evaluate contributions to residuals owned elsewhere.
+       */
+      virtual int evaluateExternalResidual()
+      {
+        return 0;
+      }
+
       IdxT size() override final
       {
         return size_;
