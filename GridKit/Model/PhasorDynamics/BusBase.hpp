@@ -246,6 +246,12 @@ namespace GridKit
         return 1;
       }
 
+      /// Clear a fault to ground.
+      int clearFault()
+      {
+        return setFault(false, 0.0, 0.0);
+      }
+
       virtual const IdxT busID() const
       {
         return bus_id_;

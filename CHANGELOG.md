@@ -6,6 +6,7 @@
 - Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.
 - Removed `BusToSignalAdapter`. Prefer `BusSignalVoltageOut` or `BusSignalVoltageIn`.
 - Added `Bus::setFault` to apply or clear a fault to ground directly at a bus.
+- Removed the `BusFault` class in favor of `Bus::setFault`.
 
 ## v0.2
 

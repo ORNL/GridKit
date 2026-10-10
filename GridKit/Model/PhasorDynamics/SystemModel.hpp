@@ -23,9 +23,6 @@ namespace GridKit
     class BusBase;
 
     template <typename scalar_type, typename index_type>
-    class BusFault;
-
-    template <typename scalar_type, typename index_type>
     class SignalNode;
 
     /**
@@ -98,22 +95,19 @@ namespace GridKit
 
       void addBus(BusT* bus);
       void addComponent(ComponentT* component);
-      void addFault(ComponentT* component);
 
       void setSystemBase(RealT freq_system_base, RealT va_system_base);
 
-      BusT*                    getBus(IdxT bus_id);
-      SignalNodeT*             getSignalNode(IdxT signal_id);
-      ComponentT*              getComponent(IdxT gridkit_component_id);
-      BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id);
+      BusT*        getBus(IdxT bus_id);
+      SignalNodeT* getSignalNode(IdxT signal_id);
+      ComponentT*  getComponent(IdxT gridkit_component_id);
 
     private:
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
 
-      std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
-      std::map<IdxT, IdxT> gridkit_fault_indices_; ///< Map between fault_id and component_id
+      std::map<IdxT, IdxT> gridkit_bus_indices_; ///< Map between gridkit_bus_id and bus_id
 
       bool owns_components_{false};
 

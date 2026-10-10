@@ -198,12 +198,6 @@ namespace GridKit
           raw_component.get_to(source);
           sm.function_source.push_back(source);
         }
-        else if (kind == "BusFault")
-        {
-          typename SystemModelData<RealT, IdxT>::BusFaultDataT bus_fault;
-          raw_component.get_to(bus_fault);
-          sm.bus_fault.push_back(bus_fault);
-        }
         else
         {
           Log::error() << "\n\tInvalid device class: \"" << kind << "\". "

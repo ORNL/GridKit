@@ -104,7 +104,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Fault current applied and cleared through setFault
+      /// Fault current applied and cleared
       TestOutcome fault()
       {
         TestStatus success = true;
@@ -126,7 +126,7 @@ namespace GridKit
         success *= isEqual(bus.Ir(), current.real());
         success *= isEqual(bus.Ii(), current.imag());
 
-        success *= bus.setFault(false, R, X) == 0;
+        success *= bus.clearFault() == 0;
         bus.evaluateResidual();
         success *= isEqual(bus.Ir(), 0.0);
         success *= isEqual(bus.Ii(), 0.0);
@@ -137,6 +137,7 @@ namespace GridKit
         // An infinite bus cannot be faulted
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus_inf;
         success *= bus_inf.setFault(true, R, X) != 0;
+        success *= bus_inf.clearFault() != 0;
 
         return success.report(__func__);
       }
@@ -197,8 +198,8 @@ namespace GridKit
         }
 
         // Clearing the fault keeps the same entries with zero values
-        const IdxT nnz = jacobian->getNnz();
-        bus.setFault(false, R, X);
+        const IdxT nnz  = jacobian->getNnz();
+        success        *= bus.clearFault() == 0;
         bus.evaluateResidual();
         bus.evaluateJacobian();
         success *= bus.nnz() == nnz;

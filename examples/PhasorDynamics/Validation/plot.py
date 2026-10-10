@@ -56,11 +56,9 @@ def fault(solver, case):
     off = next((event for event in solver["events"] if event["type"] == "fault_off"), None)
     if on is None or off is None:
         raise ValueError("Solver JSON must contain fault_on and fault_off events")
-    devices = [device for device in case["devices"] if device["class"] == "BusFault"]
-    device = devices[on["element_id"]]
-    bus = next(bus for bus in case["buses"] if bus["number"] == device["ports"]["bus"])
-    resistance = device["params"]["R"]
-    reactance = device["params"]["X"]
+    bus = next(bus for bus in case["buses"] if bus["number"] == on["bus"])
+    resistance = on["R"]
+    reactance = on["X"]
     return on["time"], off["time"], (
         f"bus {bus['number']}  {bus['name'].strip()}  ({bus['params']['kv']:g} kV)",
         f"{on['time']:g}–{off['time']:g} s  ({(off['time'] - on['time']) * 1e3:g} ms)",

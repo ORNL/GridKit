@@ -10,7 +10,6 @@ int main()
 
   result += test.branch();
   result += test.bus();
-  result += test.busFault();
   result += test.ieeet1();
   result += test.esdc1a();
   result += test.load();

@@ -8,7 +8,6 @@
 Input Format <INPUT_FORMAT>
 Branch <Branch/README>
 Bus <Bus/README>
-BusFault <BusFault/README>
 Controller <Controller/README>
 Converter <Converter/README>
 Exciter <Exciter/README>
