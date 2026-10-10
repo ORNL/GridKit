@@ -3,6 +3,7 @@
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -43,6 +44,8 @@ namespace GridKit
       using ModelDataT = LoadZIPData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
 
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+
       LoadZIP(BusT* bus);
       LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP);
       LoadZIP(BusT* bus, const ModelDataT& data);
@@ -62,6 +65,11 @@ namespace GridKit
       }
 
     public:
+      SignalPortsT& getPorts()
+      {
+        return ports_;
+      }
+
       void setPnom(RealT Pnom)
       {
         Pnom_ = Pnom;
@@ -120,6 +128,8 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      SignalPortsT ports_;
+
       BusT* bus_{nullptr};
       RealT Pnom_{0};
       RealT Qnom_{0};

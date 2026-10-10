@@ -50,6 +50,8 @@ namespace GridKit
     enum class GensalSignalOutputs : size_t
     {
       speed, ///< \f$\omega\f$ Unique ID of the signal receiving speed deviation
+      ir,    ///< \f$I_r\f$ Real terminal current
+      ii,    ///< \f$I_i\f$ Imaginary terminal current
     };
 
     /// Variables able to be monitored for a Gensal generator model
