@@ -59,7 +59,7 @@ namespace GridKit
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> empty(&bus);
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
         success *= (empty.getMonitor() == nullptr);
-        success *= (empty.verify() > 0);
+        success *= (!empty.verify().passed());
 
         Fixture<ScalarT> configured(makeData());
         success *= (configured.esdc1a.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
@@ -74,7 +74,7 @@ namespace GridKit
 
         // A model without the required efd output assignment is rejected.
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> unassigned(&bus, makeData());
-        success *= (unassigned.verify() > 0);
+        success *= (!unassigned.verify().passed());
 
         success *= invalidParameterCase(Params::Ka, 0.0);
         success *= invalidParameterCase(Params::Ta, -0.1);
@@ -120,26 +120,26 @@ namespace GridKit
         reversed_saturation.parameters[Params::E2]  = 2.8;
         reversed_saturation.parameters[Params::Se2] = 0.08;
         Fixture<ScalarT> reversed_saturation_fixture(reversed_saturation);
-        success *= (reversed_saturation_fixture.esdc1a.verify() == 0);
+        success *= (reversed_saturation_fixture.esdc1a.verify().passed());
 
         auto crossed_ascending                    = makeData();
         crossed_ascending.parameters[Params::Se1] = 0.33;
         crossed_ascending.parameters[Params::Se2] = 0.08;
         Fixture<ScalarT> crossed_ascending_fixture(crossed_ascending);
-        success *= (crossed_ascending_fixture.esdc1a.verify() > 0);
+        success *= (!crossed_ascending_fixture.esdc1a.verify().passed());
 
         auto crossed_descending                   = makeData();
         crossed_descending.parameters[Params::E1] = 3.7;
         crossed_descending.parameters[Params::E2] = 2.8;
         Fixture<ScalarT> crossed_descending_fixture(crossed_descending);
-        success *= (crossed_descending_fixture.esdc1a.verify() > 0);
+        success *= (!crossed_descending_fixture.esdc1a.verify().passed());
 
         // Integer JSON values are accepted for real parameters; booleans are
         // not numeric.
         auto integer_real                   = makeData();
         integer_real.parameters[Params::Ka] = static_cast<IdxT>(40);
         Fixture<ScalarT> integer_real_fixture(integer_real);
-        success *= (integer_real_fixture.esdc1a.verify() == 0);
+        success *= (integer_real_fixture.esdc1a.verify().passed());
         success *= invalidParameterCase(Params::Ka, true);
 
         // Binary selectors accept JSON booleans only.
@@ -148,7 +148,7 @@ namespace GridKit
         boolean_switches.parameters[Params::exclim] = false;
         Fixture<ScalarT> boolean_switch_fixture(boolean_switches);
         boolean_switch_fixture.attachAllInputs();
-        success *= (boolean_switch_fixture.esdc1a.verify() == 0);
+        success *= (boolean_switch_fixture.esdc1a.verify().passed());
 
         for (const Params flag : {Params::Spdmlt, Params::exclim})
         {
@@ -164,12 +164,12 @@ namespace GridKit
         auto speed_required                       = makeData();
         speed_required.parameters[Params::Spdmlt] = true;
         Fixture<ScalarT> speed_required_fixture(speed_required);
-        success *= (speed_required_fixture.esdc1a.verify() > 0);
+        success *= (!speed_required_fixture.esdc1a.verify().passed());
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>      busless_efd_node;
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> busless(nullptr, makeData());
         busless.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&busless_efd_node);
-        success *= (busless.verify() > 0);
+        success *= (!busless.verify().passed());
 
         success *= unlinkedSignalRejected<External::speed>();
         success *= unlinkedSignalRejected<External::vref>();
@@ -940,7 +940,7 @@ namespace GridKit
         bool prepare(RealT efd)
         {
           const bool success = (bus.allocate() == 0) && (esdc1a.allocate() == 0)
-                               && (esdc1a.verify() == 0) && (bus.initialize() == 0);
+                               && (esdc1a.verify().passed()) && (bus.initialize() == 0);
           if (!success)
           {
             std::cout << "ESDC1A fixture preparation failed\n";
@@ -1193,8 +1193,15 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        Fixture<ScalarT> fixture(data);
-        return fixture.esdc1a.verify() > 0;
+        try
+        {
+          Fixture<ScalarT> fixture(data);
+          return !fixture.esdc1a.verify().passed();
+        }
+        catch (const std::invalid_argument&)
+        {
+          return true;
+        }
       }
 
       template <External variable>
@@ -1203,7 +1210,7 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
         Fixture<ScalarT>                          fixture(makeData());
         fixture.esdc1a.getPorts().in.template port<variable>().connect(&unlinked_node);
-        return fixture.esdc1a.verify() > 0;
+        return !fixture.esdc1a.verify().passed();
       }
 
       template <typename VectorT>

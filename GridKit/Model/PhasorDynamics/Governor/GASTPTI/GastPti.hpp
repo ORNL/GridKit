@@ -86,14 +86,14 @@ namespace GridKit
         explicit GastPti(const ModelDataT& data);
         ~GastPti();
 
-        int setGridKitComponentID(IdxT component_id) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int                        setGridKitComponentID(IdxT component_id) override final;
+        int                        allocate() override final;
+        Model::ConfigurationChecks verify() const override final;
+        int                        initialize() override final;
+        int                        tagDifferentiable() override final;
+        int                        setAbsoluteTolerance(RealT rel_tol) override final;
+        int                        evaluateResidual() override final;
+        int                        evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -110,10 +110,6 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        void loadRealParameter(const ModelDataT& data,
-                               GastPtiParameters parameter,
-                               RealT&            target,
-                               const char*       name);
         bool floorTimeConstant(RealT& value, const char* name);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
@@ -124,20 +120,18 @@ namespace GridKit
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
 
-        RealT R_{static_cast<RealT>(0.05)};
-        RealT T1_{static_cast<RealT>(0.4)};
-        RealT T2_{static_cast<RealT>(0.1)};
-        RealT T3_{static_cast<RealT>(3.0)};
-        RealT At_{ONE<RealT>};
-        RealT Kt_{static_cast<RealT>(2.0)};
-        RealT Vmax_{ONE<RealT>};
-        RealT Vmin_{ZERO<RealT>};
-        RealT Dturb_{ZERO<RealT>};
-        RealT Vmin_response_{ZERO<RealT>};
-        RealT Vmax_response_{ONE<RealT>};
-        RealT s_valve_{ONE<RealT>};
-
-        IdxT    parameter_error_count_{0};
+        RealT   R_{static_cast<RealT>(0.05)};
+        RealT   T1_{static_cast<RealT>(0.4)};
+        RealT   T2_{static_cast<RealT>(0.1)};
+        RealT   T3_{static_cast<RealT>(3.0)};
+        RealT   At_{ONE<RealT>};
+        RealT   Kt_{static_cast<RealT>(2.0)};
+        RealT   Vmax_{ONE<RealT>};
+        RealT   Vmin_{ZERO<RealT>};
+        RealT   Dturb_{ZERO<RealT>};
+        RealT   Vmin_response_{ZERO<RealT>};
+        RealT   Vmax_response_{ONE<RealT>};
+        RealT   s_valve_{ONE<RealT>};
         ScalarT pref_set_{0};
 
         SignalPortsT              ports_;

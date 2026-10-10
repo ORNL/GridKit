@@ -85,14 +85,14 @@ namespace GridKit
         Ieeet1(BusT* bus, const ModelDataT& data);
         ~Ieeet1();
 
-        int setGridKitComponentID(IdxT) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int                        setGridKitComponentID(IdxT) override final;
+        int                        allocate() override final;
+        Model::ConfigurationChecks verify() const override final;
+        int                        initialize() override final;
+        int                        tagDifferentiable() override final;
+        int                        setAbsoluteTolerance(RealT rel_tol) override final;
+        int                        evaluateResidual() override final;
+        int                        evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -153,6 +153,10 @@ namespace GridKit
         // Parameter initialization function
         void initModelParams(const ModelDataT& data);
         void setDerivedParameters();
+
+        /// Refresh one signal input and its global variable index.
+        template <Ieeet1SignalInputs input, Ieeet1ExternalVariables variable>
+        void readSignal(const ScalarT& fallback);
 
         /// Associate variable getter functions with enum values
         void initializeMonitor();

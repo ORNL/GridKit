@@ -34,6 +34,16 @@ namespace GridKit
         return this->signal_node_->getVariableIndex();
       }
 
+      /// Read the connected signal, or the fallback when disconnected.
+      ScalarT readOrDefault(ScalarT fallback) const
+      {
+        if (this->connected())
+        {
+          return readSignal();
+        }
+        return fallback;
+      }
+
       /// Write a value to the connected signal node.
       ///
       /// @warning Use only during initialization as this violates assumptions.

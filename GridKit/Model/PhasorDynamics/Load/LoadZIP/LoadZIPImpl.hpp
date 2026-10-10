@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
@@ -56,25 +58,12 @@ namespace GridKit
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::Pnom))
-      {
-        Pnom_ = std::get<RealT>(data.parameters.at(Parameter::Pnom));
-      }
 
-      if (data.parameters.contains(Parameter::Qnom))
-      {
-        Qnom_ = std::get<RealT>(data.parameters.at(Parameter::Qnom));
-      }
-
-      if (data.parameters.contains(Parameter::alphaI))
-      {
-        alphaI_ = std::get<RealT>(data.parameters.at(Parameter::alphaI));
-      }
-
-      if (data.parameters.contains(Parameter::alphaP))
-      {
-        alphaP_ = std::get<RealT>(data.parameters.at(Parameter::alphaP));
-      }
+      Model::ParameterReader reader(data, "LoadZIP");
+      reader.loadReal(Parameter::Pnom, Pnom_);
+      reader.loadReal(Parameter::Qnom, Qnom_);
+      reader.loadReal(Parameter::alphaI, alphaI_);
+      reader.loadReal(Parameter::alphaP, alphaP_);
 
       setDerivedParams();
     }

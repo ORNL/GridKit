@@ -119,14 +119,14 @@ namespace GridKit
         Repca(BusT* bus, const ModelDataT& data);
         ~Repca();
 
-        int setGridKitComponentID(IdxT component_id) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int                        setGridKitComponentID(IdxT component_id) override final;
+        int                        allocate() override final;
+        Model::ConfigurationChecks verify() const override final;
+        int                        initialize() override final;
+        int                        tagDifferentiable() override final;
+        int                        setAbsoluteTolerance(RealT rel_tol) override final;
+        int                        evaluateResidual() override final;
+        int                        evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -197,8 +197,6 @@ namespace GridKit
         RealT Pmax_{static_cast<RealT>(2.0)};
         RealT Pmin_{ZERO<RealT>};
         RealT Tlag_{static_cast<RealT>(3.0)};
-
-        IdxT  parameter_error_count_{0};
         RealT vcomp_on_{ONE<RealT>};
         RealT vcomp_off_{ZERO<RealT>};
         RealT ref_on_{ONE<RealT>};

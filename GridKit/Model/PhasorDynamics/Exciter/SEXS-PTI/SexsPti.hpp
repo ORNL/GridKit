@@ -72,14 +72,14 @@ namespace GridKit
         SexsPti(BusT* bus, const ModelDataT& data);
         ~SexsPti();
 
-        int setGridKitComponentID(IdxT) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int                        setGridKitComponentID(IdxT) override final;
+        int                        allocate() override final;
+        Model::ConfigurationChecks verify() const override final;
+        int                        initialize() override final;
+        int                        tagDifferentiable() override final;
+        int                        setAbsoluteTolerance(RealT rel_tol) override final;
+        int                        evaluateResidual() override final;
+        int                        evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -100,8 +100,6 @@ namespace GridKit
         RealT K_{0};
         RealT Efdmax_{0};
         RealT Efdmin_{0};
-
-        int missing_param_count_{0};
 
         // Runtime connection masks keep the summing junction Enzyme sparse-solvable
         RealT uel_on_{0};

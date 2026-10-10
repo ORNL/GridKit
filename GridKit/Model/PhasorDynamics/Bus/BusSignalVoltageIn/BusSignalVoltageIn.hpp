@@ -24,7 +24,7 @@ namespace GridKit
      * components _Vr_ and _Vi_ are read directly from signal inlets
      * `vr` and `vi` whenever Vr() or Vi() is called; the bus stores no
      * voltage of its own and never modifies it. Both voltage inlets are
-     * mandatory: verify() logs an error and throws for an inlet that is not
+     * mandatory: verify() reports an error for an inlet that is not
      * connected to a linked signal, and reading the voltage through an
      * unlinked inlet throws. No default voltage is ever used. The bus has
      * no unknowns and no equations (size() == 0, like @ref BusInfinite).
@@ -68,14 +68,14 @@ namespace GridKit
       BusSignalVoltageIn(const ModelDataT& data);
       virtual ~BusSignalVoltageIn();
 
-      virtual int setBusID(IdxT) override final;
-      virtual int allocate() override final;
-      virtual int verify() const override final;
-      virtual int tagDifferentiable() override final;
-      virtual int setAbsoluteTolerance(RealT rel_tol) override final;
-      virtual int initialize() override final;
-      virtual int evaluateResidual() override final;
-      virtual int evaluateJacobian() override final;
+      virtual int                        setBusID(IdxT) override final;
+      virtual int                        allocate() override final;
+      virtual Model::ConfigurationChecks verify() const override final;
+      virtual int                        tagDifferentiable() override final;
+      virtual int                        setAbsoluteTolerance(RealT rel_tol) override final;
+      virtual int                        initialize() override final;
+      virtual int                        evaluateResidual() override final;
+      virtual int                        evaluateJacobian() override final;
 
       virtual BusTypeT BusType() const override final
       {

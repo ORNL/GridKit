@@ -33,19 +33,11 @@ namespace GridKit
       BusSignalVoltageOutTests()  = default;
       ~BusSignalVoltageOutTests() = default;
 
-      /// True if verify() throws, as it must for a misconnected bus
+      /// Invalid configurations are reported without throwing.
       template <typename BusLike>
-      static bool verifyThrows(const BusLike& bus)
+      static bool verifyFails(const BusLike& bus)
       {
-        try
-        {
-          bus.verify();
-        }
-        catch (const std::runtime_error&)
-        {
-          return true;
-        }
-        return false;
+        return !bus.verify().passed();
       }
 
       /// Constructor, allocation, and initialization checks
@@ -117,7 +109,7 @@ namespace GridKit
         bus.setVariableIndex(1, vi_index);
         bus.initialize();
 
-        success *= (bus.verify() == 0);
+        success *= bus.verify().passed();
         success *= vr_node.linked();
         success *= vi_node.linked();
         success *= isEqual(vr_node.read(), Vr);
@@ -153,7 +145,7 @@ namespace GridKit
           bus.initialize();
           const auto previous_verbosity = Log::verbosity();
           Log::setVerbosity(Log::Verbosity::NONE); // expected errors
-          success *= verifyThrows(bus);
+          success *= verifyFails(bus);
           Log::setVerbosity(previous_verbosity);
         }
 
@@ -167,7 +159,7 @@ namespace GridKit
         bus.getPorts().in.template port<SignalIn::ii>().connect(&ii_node);
         bus.allocate();
         bus.initialize();
-        success *= (bus.verify() == 0);
+        success *= bus.verify().passed();
 
         bus.evaluateResidual();
         success *= isEqual(bus.Ir(), Ir);
@@ -191,12 +183,12 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// verify() throws for current inlets that are unconnected or unlinked
+      /// verify() reports errors for current inlets that are unconnected or unlinked
       TestOutcome verifyUnlinked()
       {
         TestStatus success = true;
 
-        // This test triggers error messages on purpose; silence them.
+        // Keep expected invalid-configuration diagnostics quiet.
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::NONE);
 
@@ -209,17 +201,17 @@ namespace GridKit
         bus.allocate();
         bus.initialize();
 
-        success *= verifyThrows(bus);
+        success *= verifyFails(bus);
 
         ScalarT Ir{0.1};
         IdxT    ir_index{0};
         ir_node.link(&Ir, &ir_index);
-        success *= verifyThrows(bus);
+        success *= verifyFails(bus);
 
         ScalarT Ii{0.2};
         IdxT    ii_index{1};
         ii_node.link(&Ii, &ii_index);
-        success *= (bus.verify() == 0);
+        success *= bus.verify().passed();
 
         Log::setVerbosity(previous_verbosity);
 

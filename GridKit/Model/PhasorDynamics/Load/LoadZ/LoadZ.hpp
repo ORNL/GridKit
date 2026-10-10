@@ -56,9 +56,9 @@ namespace GridKit
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
 
-      virtual int verify() const override final
+      virtual Model::ConfigurationChecks verify() const override final
       {
-        return 0;
+        return {};
       }
 
     public:
