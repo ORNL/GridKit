@@ -46,14 +46,14 @@ namespace GridKit
       FunctionSignalSource(const ModelDataT& data);
       ~FunctionSignalSource();
 
-      int setGridKitComponentID(IdxT) override final;
-      int allocate() override final;
+      int                        setGridKitComponentID(IdxT) override final;
+      int                        allocate() override final;
       Model::ConfigurationChecks verify() const override final;
-      int initialize() override final;
-      int tagDifferentiable() override final;
-      int setAbsoluteTolerance(RealT) override final;
-      int evaluateResidual() override final;
-      int evaluateJacobian() override final;
+      int                        initialize() override final;
+      int                        tagDifferentiable() override final;
+      int                        setAbsoluteTolerance(RealT) override final;
+      int                        evaluateResidual() override final;
+      int                        evaluateJacobian() override final;
 
       void updateTime(RealT t, RealT a) override;
 
