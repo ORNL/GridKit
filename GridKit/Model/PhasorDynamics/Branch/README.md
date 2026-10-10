@@ -13,6 +13,11 @@ contributions are oriented entering the adjacent buses.
   bus 1; both shunts are added outside the $\mathbf{M}$ transformation.
 - The branch has no solver-owned variables; it contributes current residuals
   directly to the connected buses.
+- Taking a branch out of service can leave bus voltages unconstrained and make
+  the system Jacobian singular. This can happen when an outage leaves a bus
+  with no other current contributions, or a floating island of series branches
+  without shunts. An island with generators may still be solvable. The model
+  does not detect or handle these singular cases.
 
 ## Model Parameters
 
@@ -94,12 +99,15 @@ The off-nominal transformer transformation uses bus 1 as the tap side:
 \end{aligned}
 ```
 
-The magnetizing and line shunts are added outside the transformation:
+The magnetizing and line shunts are added outside the transformation, and the
+service status $u$ scales the whole branch:
 
 ```math
 \begin{aligned}
   \mathbf{Y}
     &=
+    u
+    \left(
     \mathbf{M}^{\dagger}
     \mathbf{Y}_0
     \mathbf{M}
@@ -107,6 +115,7 @@ The magnetizing and line shunts are added outside the transformation:
     \mathbf{Y}_\mathrm{mag}
     +
     \mathbf{Y}_\mathrm{sh}
+    \right)
 \end{aligned}
 ```
 

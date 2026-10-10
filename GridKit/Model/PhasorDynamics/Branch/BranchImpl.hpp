@@ -184,6 +184,19 @@ namespace GridKit
       return ret;
     }
 
+    /// Put the branch in or out of service; out of service, it injects no current.
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::setInService(bool in_service)
+    {
+      in_service_ = ZERO<RealT>;
+      if (in_service)
+      {
+        in_service_ = ONE<RealT>;
+      }
+      setDerivedParams();
+      return 0;
+    }
+
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
         const RealT   G,
@@ -296,6 +309,9 @@ namespace GridKit
     /**
      * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
      *
+     * Out-of-service branches retain bus voltages but contribute no current.
+     * Empty isolated buses and floating series-only islands can make the
+     * system Jacobian singular; generator-supported islands need not do so.
      */
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::evaluateResidual()
@@ -514,6 +530,16 @@ namespace GridKit
 
       g22_ = g_diag - RealT{0.5} * G_;
       b22_ = b_diag - RealT{0.5} * B_;
+
+      // An out-of-service branch has zero admittance
+      g11_ *= in_service_;
+      b11_ *= in_service_;
+      g12_ *= in_service_;
+      b12_ *= in_service_;
+      g21_ *= in_service_;
+      b21_ *= in_service_;
+      g22_ *= in_service_;
+      b22_ *= in_service_;
     }
 
   } // namespace PhasorDynamics

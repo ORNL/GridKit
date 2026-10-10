@@ -11,6 +11,7 @@
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -34,7 +35,9 @@ namespace GridKit
       enum class Type
       {
         FAULT_ON,
-        FAULT_OFF
+        FAULT_OFF,
+        IN_SERVICE,
+        OUT_OF_SERVICE
       };
 
       /// Time event takes place
@@ -43,6 +46,8 @@ namespace GridKit
       Type        type;
       /// ID of element used in event (e.g., bus fault id)
       std::size_t element_id;
+      /// Case-file `id` of the branch to put in or out of service
+      std::string device;
     };
 
     /**
@@ -130,7 +135,8 @@ namespace GridKit
       {
         auto& event = c.events.emplace_back();
         raw_event.at("time").get_to(event.time);
-        raw_event.at("element_id").get_to(event.element_id);
+        event.element_id = raw_event.value("element_id", INVALID_INDEX<std::size_t>);
+        event.device     = raw_event.value("device", std::string{});
 
         auto type_str   = raw_event.at("type").get<std::string>();
         using EventType = SystemEvent::Type;

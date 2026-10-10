@@ -222,6 +222,44 @@ namespace GridKit
         return success.report(__func__);
       }
 
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome isolatedBusJacobian()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> source(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus(1.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&source, &bus, 0.1, 0.2, 0.0, 0.0);
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        system.addBus(&source);
+        system.addBus(&bus);
+        system.addComponent(&branch);
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.evaluateJacobian() == 0;
+
+        const IdxT nnz  = system.getCsrJacobian()->getNnz();
+        success        *= system.size() == 2;
+        success        *= nnz > 0;
+
+        success *= branch.setInService(false) == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= isEqual(bus.Ir(), ScalarT{0.0});
+        success *= isEqual(bus.Ii(), ScalarT{0.0});
+
+        // Both voltage variables remain, but their KCL rows are identically zero.
+        auto* jacobian  = system.getCsrJacobian();
+        success        *= jacobian->getNnz() == nnz;
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          success *= isEqual(jacobian->getValues()[i], RealT{0.0});
+        }
+
+        return success.report(__func__);
+      }
+#endif
+
       TestOutcome reallocateAfterTopologyChange()
       {
         TestStatus success = true;

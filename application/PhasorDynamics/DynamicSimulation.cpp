@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -62,6 +63,12 @@ int runApplication(int argc, const char* argv[])
       break;
     case EventType::FAULT_OFF:
       sys.getBusFault(event.element_id)->setStatus(false);
+      break;
+    case EventType::IN_SERVICE:
+      sys.getBranch(event.device)->setInService(true);
+      break;
+    case EventType::OUT_OF_SERVICE:
+      sys.getBranch(event.device)->setInService(false);
       break;
     }
 
