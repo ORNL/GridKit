@@ -2,6 +2,7 @@ add_executable(DynamicSimulation DynamicSimulation.cpp)
 target_link_libraries(
   DynamicSimulation
   PUBLIC GridKit::phasor_dynamics_systemmodel
+         GridKit::model_state_data
          GridKit::solvers_dyn
          GridKit::Utilities
          GridKit::testing)
@@ -13,6 +14,7 @@ add_executable(ContingencyAnalysis ContingencyAnalysis.cpp)
 target_link_libraries(
   ContingencyAnalysis
   PUBLIC GridKit::phasor_dynamics_systemmodel
+         GridKit::model_state_data
          GridKit::solvers_dyn
          GridKit::Utilities
          GridKit::testing)

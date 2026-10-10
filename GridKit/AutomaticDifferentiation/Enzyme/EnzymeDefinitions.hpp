@@ -48,6 +48,15 @@ namespace GridKit
        */
       template <typename T, typename... model_type>
       extern T __enzyme_fwddiff(void*, model_type...) noexcept;
+
+      /**
+       * @brief Enzyme reverse-mode template for GridKit models
+       *
+       * @tparam T - return type
+       * @tparam model_type - model type
+       */
+      template <typename T, typename... model_type>
+      extern T __enzyme_autodiff(void*, model_type...) noexcept;
     } // namespace Sparse
   } // namespace Enzyme
 } // namespace GridKit

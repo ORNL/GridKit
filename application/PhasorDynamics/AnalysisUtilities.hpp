@@ -16,6 +16,8 @@
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
+#include "StateUtilities.hpp"
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -52,6 +54,8 @@ namespace GridKit
     {
       /// path to system model JSON file
       fs::path                                       system_model_file;
+      /// path to state JSON file, or empty to use the case operating point
+      fs::path                                       state_file;
       /// monitor output time step size, or 0 for no intermediate monitoring
       double                                         dt_monitor;
       /// max time
@@ -99,6 +103,10 @@ namespace GridKit
       using namespace magic_enum;
 
       j.at("system_model_file").get_to(c.system_model_file);
+      if (j.contains("state_file"))
+      {
+        j.at("state_file").get_to(c.state_file);
+      }
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
       c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
@@ -227,8 +235,17 @@ namespace GridKit
         }
       }
 
+      if (!data.state_file.empty() && !data.state_file.is_absolute())
+      {
+        data.state_file = loc / data.state_file;
+      }
+
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
+      if (!data.state_file.empty())
+      {
+        applyState(data.model_data, Model::parseStateData(data.state_file));
+      }
       std::string model_output_file;
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)

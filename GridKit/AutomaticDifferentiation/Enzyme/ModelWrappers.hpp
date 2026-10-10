@@ -26,7 +26,9 @@ namespace GridKit
         BusResidual11, //< Special case for branches that are connected to two buses
         BusResidual12, //< Special case for branches that are connected to two buses
         BusResidual21, //< Special case for branches that are connected to two buses
-        BusResidual22  //< Special case for branches that are connected to two buses
+        BusResidual22, //< Special case for branches that are connected to two buses
+        Objective,     //< Optimization objective, `objective(x)`
+        Constraints    //< Optimization constraints, `constraints(x, g)`
       };
 
       /**
@@ -223,6 +225,46 @@ namespace GridKit
                          ScalarT*       h)
         {
           model->evaluateBusResidual22(y, yp, wb, h);
+        }
+      };
+
+      /**
+       * @brief Wrapper partial template specialization for an optimization objective
+       *
+       */
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::Objective>
+      {
+        using ScalarT = typename ModelT::ScalarT;
+
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] x - Local variables
+         * @return Objective contribution
+         */
+        __attribute__((always_inline)) inline static ScalarT eval(const ModelT* model, const ScalarT* x)
+        {
+          return model->objective(x);
+        }
+      };
+
+      /**
+       * @brief Wrapper partial template specialization for optimization constraints
+       *
+       */
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::Constraints>
+      {
+        using ScalarT = typename ModelT::ScalarT;
+
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] x - Local variables
+         * @param[out] g - Local constraints
+         */
+        __attribute__((always_inline)) inline static void eval(const ModelT* model, const ScalarT* x, ScalarT* g)
+        {
+          model->constraints(x, g);
         }
       };
     } // namespace Sparse
