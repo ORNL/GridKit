@@ -7,10 +7,9 @@
  */
 
 #pragma once
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -64,13 +63,16 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT      = scalar_type;
-      using IdxT         = index_type;
-      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename Component<ScalarT, IdxT>::RealT;
 
       using ModelDataT   = GenClassicalData<RealT, IdxT>;
       using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT     = Model::VariableMonitor<GenClassical, GenClassicalData>;
+
+      using InternalVariablesT = GenClassicalInternalVariables;
+      using ExternalVariablesT = GenClassicalExternalVariables;
 
       GenClassical();
       GenClassical(RealT p0, RealT q0, RealT H, RealT D, RealT Ra, RealT Xdp);
@@ -130,7 +132,7 @@ namespace GridKit
       /* Identification */
 
       /// Component signal ports
-      SignalPortsT ports_;
+      SignalPortsT                                                                ports_;
       ComponentSignals<ScalarT, IdxT, NoVariables, GenClassicalExternalVariables> signals_;
 
       /* Initial terminal conditions */

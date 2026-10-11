@@ -4,7 +4,7 @@
  * @brief Enzyme sparse Jacobian for the HYGOV governor model.
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
+#include <GridKit/AutomaticDifferentiation/Enzyme/Jacobian.hpp>
 
 #include "HygovImpl.hpp"
 
@@ -14,64 +14,45 @@ namespace GridKit
   {
     namespace Governor
     {
+      /**
+       * @brief Jacobian evaluation for the Enzyme build.
+       *
+       * @return int - error code, 0 = success
+       */
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::evaluateJacobian()
       {
         gatherExternalVariables();
 
+        const auto n     = static_cast<size_t>(size_);
+        const auto n_ext = static_cast<size_t>(y_ext_.getSize());
+
         if (J_rows_buffer_ == nullptr)
         {
-          auto size        = static_cast<size_t>(size_);
-          auto buffer_size = 2 * size * size + size * static_cast<size_t>(y_ext_.getSize());
-          J_rows_buffer_   = new IdxT[buffer_size];
-          J_cols_buffer_   = new IdxT[buffer_size];
-          J_vals_buffer_   = new RealT[buffer_size];
+          // Each (row, column) of [f | f_ext] x [y | y_ext] is stored at most once.
+          const auto buffer_size = (n + n_ext) * (n + n_ext);
+          J_rows_buffer_         = new IdxT[buffer_size];
+          J_cols_buffer_         = new IdxT[buffer_size];
+          J_vals_buffer_         = new RealT[buffer_size];
         }
-
-        using ModelT = GridKit::PhasorDynamics::Governor::Hygov<scalar_type, index_type>;
-        using Fn     = GridKit::Enzyme::Sparse::MemberFunctions;
 
         nnz_ = 0;
 
-        GridKit::Enzyme::Sparse::DfDy<ModelT, Fn::InternalResidual>::eval(this,
-                                                                          static_cast<size_t>(f_.getSize()),
-                                                                          static_cast<size_t>(y_.getSize()),
-                                                                          (this->getResidualIndices()).data(),
-                                                                          (this->getVariableIndices()).data(),
-                                                                          y_.getData(),
-                                                                          yp_.getData(),
-                                                                          y_ext_.getData(),
-                                                                          J_rows_buffer_,
-                                                                          J_cols_buffer_,
-                                                                          J_vals_buffer_,
-                                                                          nnz_);
-
-        GridKit::Enzyme::Sparse::DfDyp<ModelT, Fn::InternalResidual>::eval(this,
-                                                                           static_cast<size_t>(f_.getSize()),
-                                                                           static_cast<size_t>(y_.getSize()),
-                                                                           (this->getResidualIndices()).data(),
-                                                                           (this->getVariableIndices()).data(),
-                                                                           y_.getData(),
-                                                                           yp_.getData(),
-                                                                           y_ext_.getData(),
-                                                                           alpha_,
-                                                                           J_rows_buffer_,
-                                                                           J_cols_buffer_,
-                                                                           J_vals_buffer_,
-                                                                           nnz_);
-
-        GridKit::Enzyme::Sparse::DfDyExt<ModelT, Fn::InternalResidual>::eval(this,
-                                                                             static_cast<size_t>(f_.getSize()),
-                                                                             static_cast<size_t>(y_ext_.getSize()),
-                                                                             (this->getResidualIndices()).data(),
-                                                                             variable_indices_ext_.data(),
-                                                                             y_.getData(),
-                                                                             yp_.getData(),
-                                                                             y_ext_.getData(),
-                                                                             J_rows_buffer_,
-                                                                             J_cols_buffer_,
-                                                                             J_vals_buffer_,
-                                                                             nnz_);
+        GridKit::Enzyme::Sparse::Jacobian<Hygov>::eval(this,
+                                                       n,
+                                                       n_ext,
+                                                       y_.getData(),
+                                                       yp_.getData(),
+                                                       y_ext_.getData(),
+                                                       alpha_,
+                                                       residual_indices_.data(),
+                                                       variable_indices_.data(),
+                                                       residual_indices_ext_.data(),
+                                                       variable_indices_ext_.data(),
+                                                       J_rows_buffer_,
+                                                       J_cols_buffer_,
+                                                       J_vals_buffer_,
+                                                       nnz_);
 
         this->constructCoo();
 

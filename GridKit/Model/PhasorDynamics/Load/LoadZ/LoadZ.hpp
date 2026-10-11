@@ -1,8 +1,7 @@
 #pragma once
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
@@ -10,6 +9,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Internal variables of a `LoadZ`
+    enum class LoadZInternalVariables : size_t
+    {
+      IR, ///< \f$I_r\f$ Current injected into the bus, real component
+      II, ///< \f$I_i\f$ Current injected into the bus, imaginary component
+    };
+
     /// External variables of a `LoadZ`
     enum class LoadZExternalVariables : size_t
     {
@@ -51,6 +57,9 @@ namespace GridKit
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = LoadZData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
+
+      using InternalVariablesT = LoadZInternalVariables;
+      using ExternalVariablesT = LoadZExternalVariables;
 
       LoadZ();
       LoadZ(RealT R, RealT X);

@@ -56,6 +56,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::yp_;
         using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::variable_indices_ext_;
+        using Component<scalar_type, index_type>::residual_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -71,6 +72,9 @@ namespace GridKit
         using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<Ieeest, IeeestData>;
+
+        using InternalVariablesT = IeeestInternalVariables;
+        using ExternalVariablesT = IeeestExternalVariables;
 
         Ieeest();
         Ieeest(const ModelDataT& data);

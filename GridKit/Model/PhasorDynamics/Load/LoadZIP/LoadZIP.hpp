@@ -1,8 +1,7 @@
 #pragma once
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
@@ -10,6 +9,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Internal variables of a `LoadZIP`
+    enum class LoadZIPInternalVariables : size_t
+    {
+      IR, ///< \f$I_r\f$ Current injected into the bus, real component
+      II, ///< \f$I_i\f$ Current injected into the bus, imaginary component
+    };
+
     /// External variables of a `LoadZIP`
     enum class LoadZIPExternalVariables : size_t
     {
@@ -51,6 +57,9 @@ namespace GridKit
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = LoadZIPData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
+
+      using InternalVariablesT = LoadZIPInternalVariables;
+      using ExternalVariablesT = LoadZIPExternalVariables;
 
       LoadZIP();
       LoadZIP(RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP);

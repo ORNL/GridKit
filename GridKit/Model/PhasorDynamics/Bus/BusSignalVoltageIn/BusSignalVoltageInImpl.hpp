@@ -257,8 +257,11 @@ namespace GridKit
         [[maybe_unused]] const ScalarT* y_ext,
         ScalarT*                        f)
     {
-      f[0] = -y[0];
-      f[1] = -y[1];
+      const auto IR = static_cast<size_t>(BusSignalVoltageInInternalVariables::IR);
+      const auto II = static_cast<size_t>(BusSignalVoltageInInternalVariables::II);
+
+      f[IR] = -y[IR];
+      f[II] = -y[II];
 
       return 0;
     }

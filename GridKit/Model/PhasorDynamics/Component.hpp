@@ -88,6 +88,16 @@ namespace GridKit
       }
 
       /**
+       * @brief External residual kernel of a component that contributes to
+       * no rows owned elsewhere.
+       */
+      __attribute__((always_inline)) inline int evaluateExternalResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*)
+      {
+        return 0;
+      }
+
+      /**
        * @brief Add this component's external contributions to the root
        * residual vector.
        *

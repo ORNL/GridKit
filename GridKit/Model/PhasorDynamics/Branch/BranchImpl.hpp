@@ -209,6 +209,21 @@ namespace GridKit
     }
 
     /**
+     * @brief Internal residual
+     *
+     * The branch owns no rows.
+     */
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateInternalResidual(
+        [[maybe_unused]] const ScalarT* y,
+        [[maybe_unused]] const ScalarT* yp,
+        [[maybe_unused]] const ScalarT* y_ext,
+        [[maybe_unused]] ScalarT*       f)
+    {
+      return 0;
+    }
+
+    /**
      * @brief External residual contributions to both terminal buses.
      *
      */

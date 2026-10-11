@@ -16,6 +16,9 @@ int main()
   result += test.offNominalResidual();
   result += test.jacobian();
   result += test.offNominalJacobian();
+#ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.enzymeJacobian();
+#endif
 
   return result.summary();
 }

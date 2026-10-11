@@ -397,7 +397,7 @@ namespace GridKit
         bus.initialize();
         gen.initialize();
 
-        gen.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
+        gen.updateTime(0.0, 0.5); // Non-unit alpha verifies the scaling of the d/dy' term
 
         bus.evaluateResidual();
         gen.evaluateResidual();
@@ -455,7 +455,7 @@ namespace GridKit
         bus.initialize();
         gen.initialize();
 
-        gen.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
+        gen.updateTime(0.0, 0.5); // Non-unit alpha verifies the scaling of the d/dy' term
 
         bus.evaluateResidual();
         gen.evaluateResidual();

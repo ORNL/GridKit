@@ -17,6 +17,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Internal variables of a `BusSignalVoltageIn`
+    enum class BusSignalVoltageInInternalVariables : size_t
+    {
+      IR, ///< \f$I_r\f$ Boundary current, real component
+      II, ///< \f$I_i\f$ Boundary current, imaginary component
+    };
+
     /*!
      * @brief Bus whose voltage is set by input signals.
      *
@@ -50,6 +57,10 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::abs_tol_;
       using BusBase<scalar_type, index_type>::variable_indices_;
       using BusBase<scalar_type, index_type>::residual_indices_;
+      using BusBase<scalar_type, index_type>::variable_indices_ext_;
+      using BusBase<scalar_type, index_type>::residual_indices_ext_;
+      using BusBase<scalar_type, index_type>::y_ext_;
+      using BusBase<scalar_type, index_type>::alpha_;
       using BusBase<scalar_type, index_type>::coo_jac_;
       using BusBase<scalar_type, index_type>::J_rows_buffer_;
       using BusBase<scalar_type, index_type>::J_cols_buffer_;
@@ -67,6 +78,9 @@ namespace GridKit
       using ModelDataT   = BusData<RealT, IdxT>;
       using BusTypeT     = typename BusData<RealT, IdxT>::BusType;
       using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+
+      using InternalVariablesT = BusSignalVoltageInInternalVariables;
+      using ExternalVariablesT = BusExternalVariables;
 
       BusSignalVoltageIn();
       /// Initial voltage arguments are ignored; the voltage comes from signals.

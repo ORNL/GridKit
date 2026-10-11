@@ -52,6 +52,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::yp_;
         using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::variable_indices_ext_;
+        using Component<scalar_type, index_type>::residual_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -68,6 +69,9 @@ namespace GridKit
         using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
         using SignalNodeT    = SignalNodeSetT::SignalNodeT;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
+
+        using InternalVariablesT = Tgov1InternalVariables;
+        using ExternalVariablesT = Tgov1ExternalVariables;
 
         Tgov1();
         Tgov1(SignalNodeT*, SignalNodeT*);

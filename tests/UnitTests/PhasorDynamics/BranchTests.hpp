@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -10,6 +11,7 @@
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -235,6 +237,67 @@ namespace GridKit
         return success.report(__func__);
       }
 
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome enzymeJacobian()
+      {
+        // Verifies the Enzyme Jacobian against the analytical derivatives.
+        TestStatus success = true;
+
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
+
+        ScalarT Vr1{10.0}; ///< Bus-1 real voltage
+        ScalarT Vi1{20.0}; ///< Bus-1 imaginary voltage
+        ScalarT Vr2{30.0}; ///< Bus-2 real voltage
+        ScalarT Vi2{40.0}; ///< Bus-2 imaginary voltage
+
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        PhasorDynamics::Branch<ScalarT, IdxT>     branch(R, X, G, B);
+        wireBranch(bus1, bus2, branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
+
+        bus1.allocate();
+        bus2.allocate();
+
+        // Number bus-2 after bus-1, matching the analytical variable numbers
+        for (IdxT i = 0; i < bus2.size(); ++i)
+        {
+          bus2.setVariableIndex(i, i + bus1.size());
+          bus2.setResidualIndex(i, i + bus1.size());
+        }
+
+        bus1.initialize();
+        bus2.initialize();
+
+        branch.allocate();
+        branch.evaluateResidual();
+        branch.evaluateJacobian();
+        branch.constructCsr();
+
+        std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian(R, X, G, B);
+        std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCsr(branch.getCsrJacobian());
+
+        success *= (model_dependencies.size() == ref.size());
+        if (model_dependencies.size() != ref.size())
+        {
+          return success.report(__func__);
+        }
+
+        for (size_t i = 0; i < ref.size(); ++i)
+        {
+          success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));
+        }
+
+        return success.report(__func__);
+      }
+#endif
+
       TestOutcome offNominalJacobian()
       {
         TestStatus success = true;
@@ -362,8 +425,8 @@ namespace GridKit
         // Verifies invalid branch parameters are rejected.
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
-        PhasorDynamics::Bus<ScalarT, IdxT> bus2(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus1(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus2(1.0, 0.0);
         PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr, bus1_vi, bus2_vr, bus2_vi;
 
         PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(0.0, 0.1, 0.0, 0.0);

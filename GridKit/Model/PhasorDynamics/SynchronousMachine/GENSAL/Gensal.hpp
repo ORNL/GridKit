@@ -6,10 +6,9 @@
  */
 
 #pragma once
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -73,15 +72,18 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT        = scalar_type;
-      using IdxT           = index_type;
-      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename Component<ScalarT, IdxT>::RealT;
 
       using ModelDataT     = GensalData<RealT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT       = Model::VariableMonitor<Gensal, GensalData>;
+
+      using InternalVariablesT = GensalInternalVariables;
+      using ExternalVariablesT = GensalExternalVariables;
 
       Gensal(const ModelDataT& data);
       ~Gensal();
@@ -105,7 +107,10 @@ namespace GridKit
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
-      auto& getSignals() { return signals_; }
+      auto& getSignals()
+      {
+        return signals_;
+      }
 
     private:
       void initializeParameters(const ModelDataT& data);
@@ -134,7 +139,7 @@ namespace GridKit
       /* Identification */
 
       /* Component ports */
-      SignalPortsT ports_;
+      SignalPortsT                                                                      ports_;
       ComponentSignals<ScalarT, IdxT, GensalInternalVariables, GensalExternalVariables> signals_;
 
       /* Initial terminal conditions */

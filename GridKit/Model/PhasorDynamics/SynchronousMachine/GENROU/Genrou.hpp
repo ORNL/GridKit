@@ -7,10 +7,9 @@
  */
 
 #pragma once
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
@@ -77,15 +76,18 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT        = scalar_type;
-      using IdxT           = index_type;
-      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename Component<ScalarT, IdxT>::RealT;
 
       using ModelDataT     = GenrouData<RealT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT       = Model::VariableMonitor<Genrou, GenrouData>;
+
+      using InternalVariablesT = GenrouInternalVariables;
+      using ExternalVariablesT = GenrouExternalVariables;
 
       Genrou();
       Genrou(SignalNodeT*      omega,
@@ -135,7 +137,10 @@ namespace GridKit
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
-      auto& getSignals() { return signals_; }
+      auto& getSignals()
+      {
+        return signals_;
+      }
 
     private:
       void initializeParameters(const ModelDataT& data);
@@ -165,7 +170,7 @@ namespace GridKit
       IdxT bus_id_{0};
 
       /* Component ports */
-      SignalPortsT ports_;
+      SignalPortsT                                                                      ports_;
       ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
 
       /* Initial terminal conditions */

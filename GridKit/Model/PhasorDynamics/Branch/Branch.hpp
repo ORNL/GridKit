@@ -7,11 +7,10 @@
  *
  */
 #pragma once
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -63,6 +62,9 @@ namespace GridKit
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = BranchData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
+
+      using InternalVariablesT = NoVariables;
+      using ExternalVariablesT = BranchExternalVariables;
 
       Branch();
       Branch(RealT R,
@@ -168,6 +170,8 @@ namespace GridKit
       }
 
     public:
+      __attribute__((always_inline)) inline int evaluateInternalResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 

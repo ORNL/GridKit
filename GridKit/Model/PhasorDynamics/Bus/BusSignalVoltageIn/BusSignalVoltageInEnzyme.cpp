@@ -3,7 +3,7 @@
  * @author Slaven Peles (peless@ornl.gov)
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
+#include <GridKit/AutomaticDifferentiation/Enzyme/Jacobian.hpp>
 
 #include "BusSignalVoltageInImpl.hpp"
 
@@ -14,39 +14,42 @@ namespace GridKit
     /**
      * @brief Jacobian evaluation for the Enzyme build.
      *
-     * The residual is algebraic, so only df/dy is evaluated.
+     * The bus has no external variables.
      *
-     * @return int - error code
+     * @return int - error code, 0 = success
      */
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageIn<scalar_type, index_type>::evaluateJacobian()
     {
+      const auto n     = static_cast<size_t>(size_);
+      const auto n_ext = static_cast<size_t>(y_ext_.getSize());
+
       if (J_rows_buffer_ == nullptr)
       {
-        // The size of the buffer is the maximum capacity of the dense block.
-        // Enzyme will compute the appropriate nnz from sparsification.
-        auto size        = static_cast<size_t>(size_);
-        auto buffer_size = size * size;
-        J_rows_buffer_   = new IdxT[buffer_size];
-        J_cols_buffer_   = new IdxT[buffer_size];
-        J_vals_buffer_   = new RealT[buffer_size];
+        // Each (row, column) of [f | f_ext] x [y | y_ext] is stored at most once.
+        const auto buffer_size = (n + n_ext) * (n + n_ext);
+        J_rows_buffer_         = new IdxT[buffer_size];
+        J_cols_buffer_         = new IdxT[buffer_size];
+        J_vals_buffer_         = new RealT[buffer_size];
       }
 
       nnz_ = 0;
 
-      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::BusSignalVoltageIn<ScalarT, IdxT>,
-                                    GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual>::eval(this,
-                                                                                                      static_cast<size_t>(f_.getSize()),
-                                                                                                      static_cast<size_t>(y_.getSize()),
-                                                                                                      (this->getResidualIndices()).data(),
-                                                                                                      (this->getVariableIndices()).data(),
-                                                                                                      y_.getData(),
-                                                                                                      yp_.getData(),
-                                                                                                      nullptr,
-                                                                                                      J_rows_buffer_,
-                                                                                                      J_cols_buffer_,
-                                                                                                      J_vals_buffer_,
-                                                                                                      nnz_);
+      GridKit::Enzyme::Sparse::Jacobian<BusSignalVoltageIn>::eval(this,
+                                                                  n,
+                                                                  n_ext,
+                                                                  y_.getData(),
+                                                                  yp_.getData(),
+                                                                  nullptr,
+                                                                  alpha_,
+                                                                  residual_indices_.data(),
+                                                                  variable_indices_.data(),
+                                                                  residual_indices_ext_.data(),
+                                                                  variable_indices_ext_.data(),
+                                                                  J_rows_buffer_,
+                                                                  J_cols_buffer_,
+                                                                  J_vals_buffer_,
+                                                                  nnz_);
 
       this->constructCoo();
 

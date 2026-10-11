@@ -8,10 +8,9 @@
  */
 
 #pragma once
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
@@ -64,6 +63,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::yp_;
         using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::variable_indices_ext_;
+        using Component<scalar_type, index_type>::residual_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -72,14 +72,17 @@ namespace GridKit
         using Component<scalar_type, index_type>::allocated_;
 
       public:
-        using ScalarT        = scalar_type;
-        using IdxT           = index_type;
-        using RealT          = typename Component<ScalarT, IdxT>::RealT;
+        using ScalarT = scalar_type;
+        using IdxT    = index_type;
+        using RealT   = typename Component<ScalarT, IdxT>::RealT;
 
         using ModelDataT     = Ieeet1Data<RealT, IdxT>;
         using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
+
+        using InternalVariablesT = Ieeet1InternalVariables;
+        using ExternalVariablesT = Ieeet1ExternalVariables;
 
         Ieeet1();
         Ieeet1(const ModelDataT& data);
@@ -105,7 +108,11 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       public:
-      auto& getSignals() { return signals_; }
+        auto& getSignals()
+        {
+          return signals_;
+        }
+
       private:
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
@@ -144,7 +151,7 @@ namespace GridKit
         ScalarT voel_set_{0};
 
         /// Component ports
-        SignalPortsT ports_;
+        SignalPortsT                                                                      ports_;
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
 
         /// Variable monitor

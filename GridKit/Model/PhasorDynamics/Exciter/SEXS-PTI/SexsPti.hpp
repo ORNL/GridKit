@@ -5,10 +5,9 @@
  */
 
 #pragma once
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -53,6 +52,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::yp_;
         using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::variable_indices_ext_;
+        using Component<scalar_type, index_type>::residual_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -61,14 +61,17 @@ namespace GridKit
         using Component<scalar_type, index_type>::allocated_;
 
       public:
-        using ScalarT        = scalar_type;
-        using IdxT           = index_type;
-        using RealT          = typename Component<ScalarT, IdxT>::RealT;
+        using ScalarT = scalar_type;
+        using IdxT    = index_type;
+        using RealT   = typename Component<ScalarT, IdxT>::RealT;
 
         using ModelDataT     = SexsPtiData<RealT, IdxT>;
         using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<SexsPti, SexsPtiData>;
+
+        using InternalVariablesT = SexsPtiInternalVariables;
+        using ExternalVariablesT = SexsPtiExternalVariables;
 
         SexsPti();
         SexsPti(const ModelDataT& data);
@@ -94,7 +97,11 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       public:
-      auto& getSignals() { return signals_; }
+        auto& getSignals()
+        {
+          return signals_;
+        }
+
       private:
         RealT Ta_{0};
         RealT Tb_{0};
@@ -114,7 +121,7 @@ namespace GridKit
         ScalarT vuel_set_{0};
         ScalarT voel_set_{0};
 
-        SignalPortsT ports_;
+        SignalPortsT                                                                        ports_;
         ComponentSignals<ScalarT, IdxT, SexsPtiInternalVariables, SexsPtiExternalVariables> signals_;
 
         std::unique_ptr<MonitorT> monitor_;
