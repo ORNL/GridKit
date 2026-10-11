@@ -10,7 +10,6 @@
 #include <atomic>
 #include <variant>
 
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -33,12 +32,9 @@ namespace GridKit
        * The model is sized but left unconfigured. Every parameter keeps its
        * documented default, and no monitor is created. verify() rejects the
        * model until an `efd` output node is assigned.
-       *
-       * @param[in] bus Terminal bus the exciter measures.
        */
       template <typename scalar_type, typename index_type>
-      Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus)
-        : bus_(bus)
+      Esdc1a<scalar_type, index_type>::Esdc1a()
       {
         size_ = static_cast<IdxT>(Utilities::enum_size<Esdc1aInternalVariables>());
         setDerivedParameters();
@@ -47,13 +43,11 @@ namespace GridKit
       /**
        * @brief Construct an ESDC1A exciter from model data
        *
-       * @param[in] bus Terminal bus the exciter measures.
        * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Esdc1a<scalar_type, index_type>::Esdc1a(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -84,8 +78,7 @@ namespace GridKit
       /**
        * @brief Allocate the model vectors and wire the field-voltage output
        *
-       * Sizes the state, residual, bus-interface, and signal-interface
-       * buffers, seeds the identity index maps, and points an assigned `efd`
+       * Sizes the state, residual, and external-variable buffers, seeds the identity index maps, and points an assigned `efd`
        * node at the internal field-voltage state. That node aliases ESDC1A
        * storage from here on, which is how initialize() reads the seed a
        * machine model wrote. Repeated calls reuse the allocated vectors.
@@ -107,13 +100,7 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.resize(2);
-        wb_.setToZero();
-
-        const auto signal_size = Utilities::enum_size<Esdc1aExternalVariables>();
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<Esdc1aExternalVariables>()));
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -156,11 +143,8 @@ namespace GridKit
           }
         };
 
-        if (bus_ == nullptr)
-        {
-          Log::error() << "Esdc1a: bus pointer is null\n";
-          ret += 1;
-        }
+        check(ports_.terminal_vr[Esdc1aBuses::bus].connected(), "bus terminal vr is not connected");
+        check(ports_.terminal_vi[Esdc1aBuses::bus].connected(), "bus terminal vi is not connected");
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
@@ -444,61 +428,77 @@ namespace GridKit
       }
 
       /**
-       * @brief Residuals of system equations
+       * @brief Gather external variables and index maps.
        *
-       * Refreshes the bus and signal interface buffers and evaluates the
-       * internal residual. ESDC1A injects no current, so there is no bus
-       * residual. An unattached input port falls back to the value latched
-       * by initialize().
-       *
-       * @return Zero on success.
+       * Unattached signal inputs retain the values latched by initialize().
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::evaluateResidual()
+      void Esdc1a<scalar_type, index_type>::gatherExternalVariables()
       {
+        auto* y_ext = y_ext_.getData();
+
+        const auto VREAL = static_cast<size_t>(Esdc1aExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(Esdc1aExternalVariables::VIMAG);
         const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
         const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
         const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
         const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
-        auto* ws = ws_.getData();
+        // Bus voltages are read only; the exciter injects no current.
+        ports_.terminal_vr[Esdc1aBuses::bus].gather(y_ext[VREAL], variable_indices_ext_[VREAL]);
+        ports_.terminal_vi[Esdc1aBuses::bus].gather(y_ext[VIMAG], variable_indices_ext_[VIMAG]);
 
-        ws[OMEGA] = omega_set_;
-        ws[VREF]  = vref_set_;
-        ws[VS]    = vs_set_;
-        ws[VUEL]  = vuel_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        y_ext[OMEGA]                 = omega_set_;
+        y_ext[VREF]                  = vref_set_;
+        y_ext[VS]                    = vs_set_;
+        y_ext[VUEL]                  = vuel_set_;
+        variable_indices_ext_[OMEGA] = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VREF]  = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VS]    = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VUEL]  = INVALID_INDEX<IdxT>;
 
         if (auto omega_port = ports_.in.template port<Esdc1aSignalInputs::speed>())
         {
-          ws[OMEGA]          = omega_port.readSignal();
-          ws_indices_[OMEGA] = omega_port.signalVariableIndex();
+          y_ext[OMEGA] =
+              omega_port.readSignal();
+          variable_indices_ext_[OMEGA] =
+              omega_port.signalVariableIndex();
         }
         if (auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>())
         {
-          ws[VREF]          = vref_port.readSignal();
-          ws_indices_[VREF] = vref_port.signalVariableIndex();
+          y_ext[VREF] =
+              vref_port.readSignal();
+          variable_indices_ext_[VREF] =
+              vref_port.signalVariableIndex();
         }
         if (auto vs_port = ports_.in.template port<Esdc1aSignalInputs::vs>())
         {
-          ws[VS]          = vs_port.readSignal();
-          ws_indices_[VS] = vs_port.signalVariableIndex();
+          y_ext[VS] = vs_port.readSignal();
+          variable_indices_ext_[VS] =
+              vs_port.signalVariableIndex();
         }
         if (auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>())
         {
-          ws[VUEL]          = vuel_port.readSignal();
-          ws_indices_[VUEL] = vuel_port.signalVariableIndex();
+          y_ext[VUEL] =
+              vuel_port.readSignal();
+          variable_indices_ext_[VUEL] =
+              vuel_port.signalVariableIndex();
         }
+      }
 
-        auto* wb = wb_.getData();
-        wb[0]    = Vr();
-        wb[1]    = Vi();
+      /**
+       * @brief Evaluate the internal ESDC1A residual equations.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, wb, ws, f);
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
         f_.setDataUpdated();
         return 0;
       }
@@ -526,9 +526,8 @@ namespace GridKit
        *
        * @param[in] y Internal variables in Esdc1aInternalVariables order.
        * @param[in] yp Internal derivatives in the same enum order.
-       * @param[in] wb Terminal-bus \f$(V_{\mathrm{r}},V_{\mathrm{i}})\f$
-       *               voltage components.
-       * @param[in] ws Signal values in Esdc1aExternalVariables order.
+       * @param[in] y_ext Terminal-bus voltage components and signal values in
+       *                  Esdc1aExternalVariables order.
        * @param[out] f Residuals in Esdc1aInternalVariables order.
        * @return Zero on success.
        */
@@ -537,8 +536,7 @@ namespace GridKit
       Esdc1a<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         const auto EFDP = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
@@ -553,6 +551,8 @@ namespace GridKit
         const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
         const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
+        const auto VREAL = static_cast<size_t>(Esdc1aExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(Esdc1aExternalVariables::VIMAG);
         const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
         const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
         const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
@@ -576,12 +576,13 @@ namespace GridKit
         const ScalarT vf_dot   = yp[VF];
         const ScalarT xll_dot  = yp[XLL];
 
-        const ScalarT omega = ws[OMEGA];
-        const ScalarT vref  = ws[VREF];
-        const ScalarT vs    = ws[VS];
-        const ScalarT vuel  = ws[VUEL];
+        const ScalarT omega = y_ext[OMEGA];
+        const ScalarT vref  = y_ext[VREF];
+        const ScalarT vs    = y_ext[VS];
+        const ScalarT vuel  = y_ext[VUEL];
 
-        const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
+        const ScalarT ec = std::sqrt(
+            y_ext[VREAL] * y_ext[VREAL] + y_ext[VIMAG] * y_ext[VIMAG]);
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
         const ScalarT vfe_target        = Ke_eff_ * efdp + se;
         const ScalarT efdp_rate         = (vr - vfe) / Te_;
@@ -904,28 +905,6 @@ namespace GridKit
       {
         const RealT mu = Math::MU<RealT>;
         return ramp_output + std::log(-std::expm1(-mu * ramp_output)) / mu;
-      }
-
-      /**
-       * @brief Access the terminal-bus real voltage component.
-       *
-       * @return Reference to the bus variable.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Esdc1a<scalar_type, index_type>::Vr()
-      {
-        return bus_->Vr();
-      }
-
-      /**
-       * @brief Access the terminal-bus imaginary voltage component.
-       *
-       * @return Reference to the bus variable.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Esdc1a<scalar_type, index_type>::Vi()
-      {
-        return bus_->Vi();
       }
 
     } // namespace Exciter

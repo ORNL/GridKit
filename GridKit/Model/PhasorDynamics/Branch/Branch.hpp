@@ -7,16 +7,24 @@
  *
  */
 #pragma once
-
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a `Branch`
+    enum class BranchExternalVariables : size_t
+    {
+      VR1, ///< \f$V_{r1}\f$
+      VI1, ///< \f$V_{i1}\f$
+      VR2, ///< \f$V_{r2}\f$
+      VI2, ///< \f$V_{i2}\f$
+    };
+
     /**
      * @brief Implementation of a line or off-nominal transformer branch between two buses.
      *
@@ -36,8 +44,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::tag_;
       using Component<scalar_type, index_type>::f_;
-      using Component<scalar_type, index_type>::wb_;
-      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::y_ext_;
+      using Component<scalar_type, index_type>::variable_indices_ext_;
+      using Component<scalar_type, index_type>::residual_indices_ext_;
+      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -46,23 +56,21 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = BranchData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using ModelDataT   = BranchData<RealT, IdxT>;
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+      using MonitorT     = Model::VariableMonitor<Branch, BranchData>;
 
-      Branch(BusT* bus1, BusT* bus2);
-      Branch(BusT* bus1,
-             BusT* bus2,
-             RealT R,
+      Branch();
+      Branch(RealT R,
              RealT X,
              RealT G,
              RealT B,
              RealT tap   = 1.0,
              RealT phase = 0.0);
-      Branch(BusT* bus1, BusT* bus2, const ModelDataT& data);
+      Branch(const ModelDataT& data);
       virtual ~Branch();
 
       virtual int setGridKitComponentID(IdxT) override final;
@@ -70,9 +78,15 @@ namespace GridKit
       virtual int initialize() override final;
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
-      virtual int evaluateResidual() override final;
+      virtual int evaluateInternalResidual() override final;
+      virtual int evaluateExternalResidual() override final;
       virtual int evaluateJacobian() override final;
       virtual int verify() const override final;
+
+      SignalPortsT& getPorts()
+      {
+        return ports_;
+      }
 
       void setR(RealT R)
       {
@@ -115,6 +129,7 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
+      void gatherExternalVariables();
       void setDerivedParams();
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
@@ -129,64 +144,31 @@ namespace GridKit
                                                                                   ScalarT&      Ir,
                                                                                   ScalarT&      Ii);
 
-      static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(const RealT    G,
-                                                                                const RealT    B,
-                                                                                const ScalarT* wb,
-                                                                                ScalarT*       h);
-
-      ScalarT& Vr1()
+      ScalarT Vr1() const
       {
-        return bus1_->Vr();
+        return ports_.terminal_vr[BranchBuses::bus1].readSignal();
       }
 
-      ScalarT& Vi1()
+      ScalarT Vi1() const
       {
-        return bus1_->Vi();
+        return ports_.terminal_vi[BranchBuses::bus1].readSignal();
       }
 
-      ScalarT& Ir1()
+      ScalarT Vr2() const
       {
-        return bus1_->Ir();
+        return ports_.terminal_vr[BranchBuses::bus2].readSignal();
       }
 
-      ScalarT& Ii1()
+      ScalarT Vi2() const
       {
-        return bus1_->Ii();
-      }
-
-      ScalarT& Vr2()
-      {
-        return bus2_->Vr();
-      }
-
-      ScalarT& Vi2()
-      {
-        return bus2_->Vi();
-      }
-
-      ScalarT& Ir2()
-      {
-        return bus2_->Ir();
-      }
-
-      ScalarT& Ii2()
-      {
-        return bus2_->Ii();
+        return ports_.terminal_vi[BranchBuses::bus2].readSignal();
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateBusResidual11(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual12(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual21(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual22(
+      __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus1_;
-      BusT* bus2_;
       RealT R_{0.0};
       RealT X_{0.0};
       RealT G_{0.0};
@@ -197,6 +179,9 @@ namespace GridKit
       RealT phase_{0.0};
       IdxT  bus1_id_{0};
       IdxT  bus2_id_{0};
+
+      /// Signal ports
+      SignalPortsT ports_;
 
       RealT g11_{0.0};
       RealT b11_{0.0};

@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <iostream>
 
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -20,19 +20,15 @@ namespace GridKit
      * - Number of independent variables = 2
      */
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus)
-      : bus_(bus)
+    LoadZ<scalar_type, index_type>::LoadZ()
     {
       size_ = 2;
       setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus,
-                                          RealT R,
-                                          RealT X)
-      : bus_(bus),
-        R_(R),
+    LoadZ<scalar_type, index_type>::LoadZ(RealT R, RealT X)
+      : R_(R),
         X_(X)
     {
       size_ = 2;
@@ -40,10 +36,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT*             bus,
-                                          const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    LoadZ<scalar_type, index_type>::LoadZ(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
       if (data.parameters.contains(Parameter::R))
@@ -102,8 +96,7 @@ namespace GridKit
       }
 
       // Resize coupling data
-      wb_.resize(2);
-      h_.resize(2);
+      this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<LoadZExternalVariables>()));
 
       allocated_ = true;
       return 0;
@@ -173,20 +166,23 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus residual
+     * @brief External residual
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateExternalResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+        [[maybe_unused]] const ScalarT* y_ext,
+        ScalarT*                        f_ext)
     {
+      const auto VR = static_cast<size_t>(LoadZExternalVariables::VR);
+      const auto VI = static_cast<size_t>(LoadZExternalVariables::VI);
+
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
-      h[0]             = Ir;
-      h[1]             = Ii;
+      f_ext[VR]        = Ir;
+      f_ext[VI]        = Ii;
 
       return 0;
     }
@@ -199,11 +195,14 @@ namespace GridKit
     __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateInternalResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
+        const ScalarT*                  y_ext,
         ScalarT*                        f)
     {
-      const ScalarT Vr = wb[0];
-      const ScalarT Vi = wb[1];
+      const auto VR = static_cast<size_t>(LoadZExternalVariables::VR);
+      const auto VI = static_cast<size_t>(LoadZExternalVariables::VI);
+
+      const ScalarT Vr = y_ext[VR];
+      const ScalarT Vi = y_ext[VI];
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
       f[0]             = Ir + g_ * Vr - b_ * Vi;
@@ -213,29 +212,50 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution of the load is pushed to the bus.
+     * @brief Gather external variables and index maps.
      *
      */
     template <typename scalar_type, typename index_type>
-    int LoadZ<scalar_type, index_type>::evaluateResidual()
+    void LoadZ<scalar_type, index_type>::gatherExternalVariables()
     {
-      auto* wb = wb_.getData();
-      wb[0]    = Vr();
-      wb[1]    = Vi();
+      const auto VR = static_cast<size_t>(LoadZExternalVariables::VR);
+      const auto VI = static_cast<size_t>(LoadZExternalVariables::VI);
+
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
+
+      ports_.terminal_vr[LoadZBuses::bus].gather(y_ext[VR], columns[VR], rows[VR]);
+      ports_.terminal_vi[LoadZBuses::bus].gather(y_ext[VI], columns[VI], rows[VI]);
+    }
+
+    template <typename scalar_type, typename index_type>
+    int LoadZ<scalar_type, index_type>::evaluateInternalResidual()
+    {
+      gatherExternalVariables();
 
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
-      auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, f);
-      evaluateBusResidual(y, yp, wb, h);
-      Ir() += h[0];
-      Ii() += h[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
+      evaluateInternalResidual(y, yp, y_ext_.getData(), f);
       f_.setDataUpdated();
+
+      return 0;
+    }
+
+    /**
+     * @brief External residual contributions to rows owned by the bus.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int LoadZ<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      auto* y_ext = y_ext_.getData();
+      auto* f_ext = f_ext_.getData();
+
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      evaluateExternalResidual(y, yp, y_ext, f_ext);
 
       return 0;
     }

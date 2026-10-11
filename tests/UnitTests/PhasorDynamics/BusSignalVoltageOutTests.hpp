@@ -79,7 +79,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Signal outlets publish the bus voltage and its variable indices
+      /// Signal outlets publish the bus voltage, its variable indices, and
+      /// the residual indices that receive injections
       TestOutcome voltageOutputs()
       {
         TestStatus success = true;
@@ -124,6 +125,8 @@ namespace GridKit
         success *= isEqual(vi_node.read(), Vi);
         success *= (vr_node.getVariableIndex() == vr_index);
         success *= (vi_node.getVariableIndex() == vi_index);
+        success *= (vr_node.getResidualIndex() == bus.getResidualIndex(0));
+        success *= (vi_node.getResidualIndex() == bus.getResidualIndex(1));
 
         // Signal follows the live bus voltage
         bus.Vr()  = 1.17;
@@ -169,7 +172,7 @@ namespace GridKit
         bus.initialize();
         success *= (bus.verify() == 0);
 
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
         success *= isEqual(bus.getResidual().getData()[0], Ir);
@@ -184,7 +187,7 @@ namespace GridKit
         // Re-evaluating resets and re-reads the signals
         Ir = 0.55;
         Ii = -1.25;
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
 
@@ -257,7 +260,7 @@ namespace GridKit
         bus.setVariableIndex(0, 3);
         bus.setVariableIndex(1, 4);
         bus.initialize();
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<DependencyTracking::Variable, IdxT>&>(bus).evaluateInternalResidual();
         bus.evaluateJacobian();
 
         const auto* f = bus.getResidual().getData();
@@ -300,7 +303,7 @@ namespace GridKit
           bus.setResidualIndex(i, i + var_offset);
         }
         bus.initialize();
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         bus.evaluateJacobian();
 
         auto* jac  = bus.getCooJacobian();

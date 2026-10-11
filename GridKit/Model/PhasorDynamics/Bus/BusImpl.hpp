@@ -79,24 +79,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    Bus<scalar_type, index_type>::~Bus()
-    {
-      if (J_rows_buffer_ != nullptr)
-      {
-        delete[] J_rows_buffer_;
-        delete[] J_cols_buffer_;
-        delete[] J_vals_buffer_;
-        J_rows_buffer_ = nullptr;
-        J_cols_buffer_ = nullptr;
-        J_vals_buffer_ = nullptr;
-      }
-
-      if (coo_jac_ != nullptr)
-      {
-        delete coo_jac_;
-        coo_jac_ = nullptr;
-      }
-    }
+    Bus<scalar_type, index_type>::~Bus() = default;
 
     /*!
      * @brief Allocate bus storage and index maps.
@@ -120,6 +103,16 @@ namespace GridKit
       {
         this->setVariableIndex(j, j);
         this->setResidualIndex(j, j);
+      }
+
+      // Publish the bus voltage with the rows that receive injections
+      if (auto vr_port = ports_.out.template port<BusSignalOutputs::vr>())
+      {
+        vr_port.link(&y_.getData()[0], &this->getVariableIndex(0), &this->getResidualIndex(0));
+      }
+      if (auto vi_port = ports_.out.template port<BusSignalOutputs::vi>())
+      {
+        vi_port.link(&y_.getData()[1], &this->getVariableIndex(1), &this->getResidualIndex(1));
       }
 
       allocated_ = true;
@@ -219,14 +212,14 @@ namespace GridKit
     }
 
     /*!
-     * @brief Reset the current balance to the fault current.
+     * @brief Assign the bus current balance rows.
      *
-     * @warning This implementation assumes bus residuals are always evaluated
-     * _before_ component model residuals.
-     *
+     * The bus owns the KCL rows and assigns the fault current; connected
+     * components accumulate their current contributions in the external
+     * residual phase.
      */
     template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::evaluateResidual()
+    int Bus<scalar_type, index_type>::evaluateInternalResidual()
     {
       auto* f = f_.getData();
 
@@ -235,5 +228,6 @@ namespace GridKit
       f_.setDataUpdated();
       return 0;
     }
+
   } // namespace PhasorDynamics
 } // namespace GridKit

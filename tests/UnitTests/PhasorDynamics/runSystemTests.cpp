@@ -10,6 +10,10 @@ int main()
 
   result += test.constructor();
   result += test.composer();
+  result += test.signalVoltageInAssembly();
+  result += test.indexRouting();
+  result += test.nestedSystem();
+  result += test.nestedTwin();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();
 #ifdef GRIDKIT_ENABLE_ENZYME

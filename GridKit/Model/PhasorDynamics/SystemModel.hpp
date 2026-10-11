@@ -53,6 +53,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::csr_jac_;
       using Component<scalar_type, index_type>::map_to_csr_;
       using Component<scalar_type, index_type>::allocated_;
+      using Component<scalar_type, index_type>::bound_;
 
     public:
       using ScalarT        = scalar_type;
@@ -86,12 +87,23 @@ namespace GridKit
       bool monitoring() const override;
       void printMonitoredVariables() const override;
 
-      int tagDifferentiable() override;
-      int setAbsoluteTolerance(RealT rel_tol) override;
-      int evaluateResidual() override;
-      int evaluateJacobian() override;
+      int  tagDifferentiable() override;
+      int  setAbsoluteTolerance(RealT rel_tol) override;
+      int  evaluateInternalResidual() override;
+      int  evaluateExternalResidual() override;
+      int  scatterExternalResidual(ScalarT* f_root) override;
+      int  evaluateResidual() override;
+      int  fillJacobian() override;
+      IdxT jacobianNnz() override;
+      int  scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter) override;
+      int  scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter) override;
+      int  evaluateJacobian() override;
+      void collectMonitors(MonitorT& controller) override;
 
       void updateTime(RealT t, RealT a) override;
+
+      int setVariableIndex(IdxT local_index, IdxT global_index) override;
+      int setResidualIndex(IdxT local_index, IdxT global_index) override;
 
       void addBus(BusT* bus);
       void addComponent(ComponentT* component);
@@ -103,11 +115,23 @@ namespace GridKit
       ComponentT*  getComponent(IdxT gridkit_component_id);
 
     private:
-      std::vector<BusT*>       buses_;
+      size_t findOwningComponent(IdxT local_index) const;
+
+      template <typename ModelT>
+      void connectTerminals(ModelT& model, const typename ModelT::ModelDataT& data);
+
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
 
-      std::map<IdxT, IdxT> gridkit_bus_indices_; ///< Map between gridkit_bus_id and bus_id
+      /// Offset of each component's slice in the system vectors, parallel to
+      /// components_. Populated during allocate().
+      std::vector<IdxT> component_offsets_;
+
+      /// Non-owning bus lookup for composer wiring and diagnostics. Buses are
+      /// owned and evaluated as ordinary members of components_.
+      std::vector<BusT*> bus_lookup_;
+
+      std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
 
       bool owns_components_{false};
 

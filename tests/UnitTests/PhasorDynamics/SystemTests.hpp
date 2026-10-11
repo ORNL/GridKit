@@ -13,8 +13,10 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -87,7 +89,7 @@ namespace GridKit
           return 0;
         }
 
-        int evaluateResidual() override final
+        int evaluateInternalResidual() override final
         {
           return 0;
         }
@@ -162,11 +164,13 @@ namespace GridKit
         const ScalarT Ir1{15.0};  ///< Solution: real current entering bus-1
         const ScalarT Ii1{-20.0}; ///< Solution: imaginary current entering bus-1
 
-        auto* bus0 = system->getBus(0);
-        auto* bus1 = system->getBus(1);
+        // Components are stored in insertion order and the composer adds the
+        // two buses before the branch.
+        auto* branch = system->getComponent(2);
+        auto* bus1   = system->getBus(1);
 
-        success *= isEqual(bus0->Ir(), Ir0);
-        success *= isEqual(bus0->Ii(), Ii0);
+        success *= isEqual(branch->getExternalResidual()[0], Ir0);
+        success *= isEqual(branch->getExternalResidual()[1], Ii0);
         success *= isEqual(bus1->Ir(), Ir1);
         success *= isEqual(bus1->Ii(), Ii1);
 
@@ -206,17 +210,378 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
         system.addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus1_vr);
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus1_vi);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus2_vr);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus2_vi);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(R, X, G, B);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vi);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vi);
         system.addComponent(&branch);
 
         system.allocate();
         system.initialize();
         system.evaluateResidual();
 
-        success *= isEqual(bus1.Ir(), Ir1);
-        success *= isEqual(bus1.Ii(), Ii1);
+        success *= isEqual(branch.getExternalResidual()[0], Ir1);
+        success *= isEqual(branch.getExternalResidual()[1], Ii1);
         success *= isEqual(bus2.Ir(), Ir2);
         success *= isEqual(bus2.Ii(), Ii2);
+
+        system.evaluateResidual();
+
+        success *= isEqual(branch.getExternalResidual()[0], Ir1);
+        success *= isEqual(branch.getExternalResidual()[1], Ii1);
+        success *= isEqual(bus2.Ir(), Ir2);
+        success *= isEqual(bus2.Ii(), Ii2);
+
+        return success.report(__func__);
+      }
+
+      /// A load on a bus whose voltage comes from signals: the system adds the
+      /// load current into the bus rows, and the `ir`/`ii` outlets publish the
+      /// boundary currents as system variables.
+      TestOutcome signalVoltageInAssembly()
+      {
+        TestStatus success = true;
+
+        using SignalIn  = PhasorDynamics::BusSignalInputs;
+        using SignalOut = PhasorDynamics::BusSignalOutputs;
+
+        // Voltage arrives from outside the system, so it has no column.
+        ScalarT Vr{1.06};
+        ScalarT Vi{-0.01};
+        IdxT    vr_index{INVALID_INDEX<IdxT>};
+        IdxT    vi_index{INVALID_INDEX<IdxT>};
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_inlet;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_inlet;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ir_outlet;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ii_outlet;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus_vi;
+        vr_inlet.link(&Vr, &vr_index);
+        vi_inlet.link(&Vi, &vi_index);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT>        system;
+        PhasorDynamics::BusSignalVoltageIn<ScalarT, IdxT> bus;
+        PhasorDynamics::LoadZ<ScalarT, IdxT>              load(0.1, 0.0);
+
+        bus.getPorts().in.template port<SignalIn::vr>().connect(&vr_inlet);
+        bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_inlet);
+        bus.getPorts().out.template port<SignalOut::ir>().connect(&ir_outlet);
+        bus.getPorts().out.template port<SignalOut::ii>().connect(&ii_outlet);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus_vr);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus_vi);
+        load.getPorts().terminal_vr[PhasorDynamics::LoadZBuses::bus].connect(&bus_vr);
+        load.getPorts().terminal_vi[PhasorDynamics::LoadZBuses::bus].connect(&bus_vi);
+
+        system.addBus(&bus);
+        system.addComponent(&load);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.evaluateResidual() == 0;
+
+        success *= ir_outlet.getVariableIndex() == bus.getVariableIndex(0);
+        success *= ii_outlet.getVariableIndex() == bus.getVariableIndex(1);
+
+        // With zero boundary current, each bus row holds the load injection.
+        const auto* f       = system.getResidual().getData();
+        const auto  ir_row  = static_cast<size_t>(bus.getResidualIndex(0));
+        const auto  ii_row  = static_cast<size_t>(bus.getResidualIndex(1));
+        const auto  Ir      = load.getExternalResidual()[0];
+        const auto  Ii      = load.getExternalResidual()[1];
+        success            *= !isEqual(Ir, 0.0);
+        success            *= isEqual(f[ir_row], Ir);
+        success            *= isEqual(f[ii_row], Ii);
+
+        // The consistent boundary current zeroes the rows and is published.
+        bus.Ir()  = Ir;
+        bus.Ii()  = Ii;
+        success  *= system.evaluateResidual() == 0;
+        success  *= isEqual(f[ir_row], 0.0);
+        success  *= isEqual(f[ii_row], 0.0);
+        success  *= isEqual(ir_outlet.read(), Ir);
+        success  *= isEqual(ii_outlet.read(), Ii);
+
+        return success.report(__func__);
+      }
+
+      /// Global index writes on the system route to the owning component
+      TestOutcome indexRouting()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus1(10.0, 20.0);
+        system.addBus(&bus1);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        system.addBus(&bus2);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus1_vr);
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus1_vi);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus2_vr);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus2_vi);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(2.0, 4.0, 0.2, 1.2);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vi);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vi);
+        system.addComponent(&branch);
+
+        system.allocate();
+
+        // Bus-2 owns both system variables and allocate() default-maps them
+        // to the local index.
+        success *= (bus2.getVariableIndex(0) == 0);
+        success *= (bus2_vr.getVariableIndex() == 0);
+
+        // A parent model reassigns global indices through the system setters.
+        for (IdxT j = 0; j < system.size(); ++j)
+        {
+          system.setVariableIndex(j, j + 100);
+          system.setResidualIndex(j, j + 200);
+        }
+
+        // Routed writes land in the owning component's index map ...
+        success *= (bus2.getVariableIndex(0) == 100);
+        success *= (bus2.getVariableIndex(1) == 101);
+        success *= (bus2.getResidualIndex(0) == 200);
+        success *= (bus2.getResidualIndex(1) == 201);
+
+        // ... where the published signal nodes point ...
+        success *= (bus2_vr.getVariableIndex() == 100);
+        success *= (bus2_vi.getVariableIndex() == 101);
+        success *= (bus2_vr.getResidualIndex() == 200);
+        success *= (bus2_vi.getResidualIndex() == 201);
+
+        // ... and consumers gather them through their attached signals.
+        success *= (branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].signalVariableIndex() == 100);
+        success *= (branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].signalVariableIndex() == 101);
+        success *= (branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].signalResidualIndex() == 200);
+        success *= (branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].signalResidualIndex() == 201);
+
+        // The system's own index map mirrors the assignment.
+        success *= (system.getVariableIndex(0) == 100);
+        success *= (system.getResidualIndex(1) == 201);
+
+        // Constant slack voltages carry no solver indices before or after.
+        success *= (bus1_vr.getVariableIndex() == INVALID_INDEX<IdxT>);
+        success *= (branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].signalVariableIndex() == INVALID_INDEX<IdxT>);
+
+        return success.report(__func__);
+      }
+
+      /// A system model binds into a parent system like any other component
+      TestOutcome nestedSystem()
+      {
+        TestStatus success = true;
+
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
+
+        const ScalarT Ir1{17.0};  ///< Solution: real current entering bus-1
+        const ScalarT Ii1{-10.0}; ///< Solution: imaginary current entering bus-1
+        const ScalarT Ir2{15.0};  ///< Solution: real current entering bus-2
+        const ScalarT Ii2{-20.0}; ///< Solution: imaginary current entering bus-2
+
+        // The root system owns the slack bus; a nested system owns the PQ
+        // bus and the branch.
+        PhasorDynamics::SystemModel<ScalarT, IdxT> root;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> nested;
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus1(10.0, 20.0);
+        root.addBus(&bus1);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        nested.addBus(&bus2);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus1_vr);
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus1_vi);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus2_vr);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus2_vi);
+
+        // The branch lives in the nested system and connects buses across
+        // system levels.
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(R, X, G, B);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vi);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vi);
+        nested.addComponent(&branch);
+
+        root.addComponent(&nested);
+
+        root.allocate();
+        root.initialize();
+        root.evaluateResidual();
+
+        success *= isEqual(branch.getExternalResidual()[0], Ir1);
+        success *= isEqual(branch.getExternalResidual()[1], Ii1);
+        success *= isEqual(bus2.Ir(), Ir2);
+        success *= isEqual(bus2.Ii(), Ii2);
+
+        // The nested system's variables live in root storage.
+        success *= isEqual(root.y().getData()[0], 30.0);
+        success *= isEqual(root.y().getData()[1], 40.0);
+
+        // A bound system is not evaluated standalone.
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress the expected bound-system error below.
+        // Use EVERYTHING to inspect the diagnostic.
+        Log::setVerbosity(Log::Verbosity::NONE);
+        success *= (nested.evaluateResidual() != 0);
+        Log::setVerbosity(previous_verbosity);
+
+        return success.report(__func__);
+      }
+
+      /// A nested system at nonzero offset matches its flat twin
+      TestOutcome nestedTwin()
+      {
+        TestStatus success = true;
+
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
+
+        // Both systems hold a slack bus and two PQ buses in the same
+        // variable order; the twin nests the second PQ bus and its branch.
+        auto build = [&](PhasorDynamics::SystemModel<ScalarT, IdxT>& head,
+                         PhasorDynamics::SystemModel<ScalarT, IdxT>& tail,
+                         PhasorDynamics::BusInfinite<ScalarT, IdxT>& bus1,
+                         PhasorDynamics::Bus<ScalarT, IdxT>&         bus2,
+                         PhasorDynamics::Bus<ScalarT, IdxT>&         bus3,
+                         PhasorDynamics::Branch<ScalarT, IdxT>&      branch12,
+                         PhasorDynamics::Branch<ScalarT, IdxT>&      branch23,
+                         PhasorDynamics::SignalNode<ScalarT, IdxT>*  nodes)
+        {
+          head.addBus(&bus1);
+          head.addBus(&bus2);
+
+          bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&nodes[0]);
+          bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&nodes[1]);
+          bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&nodes[2]);
+          bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&nodes[3]);
+          bus3.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&nodes[4]);
+          bus3.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&nodes[5]);
+
+          branch12.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].connect(&nodes[0]);
+          branch12.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus1].connect(&nodes[1]);
+          branch12.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].connect(&nodes[2]);
+          branch12.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].connect(&nodes[3]);
+          head.addComponent(&branch12);
+
+          branch23.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].connect(&nodes[2]);
+          branch23.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus1].connect(&nodes[3]);
+          branch23.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].connect(&nodes[4]);
+          branch23.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].connect(&nodes[5]);
+          tail.addBus(&bus3);
+          tail.addComponent(&branch23);
+        };
+
+        // Flat reference: tail IS the head, so every component is direct.
+        PhasorDynamics::SystemModel<ScalarT, IdxT> flat;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> fbus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         fbus2(30.0, 40.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         fbus3(25.0, 35.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      fbranch12(R, X, G, B);
+        PhasorDynamics::Branch<ScalarT, IdxT>      fbranch23(R, X, G, B);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  fnodes[6];
+        build(flat, flat, fbus1, fbus2, fbus3, fbranch12, fbranch23, fnodes);
+
+        // Hierarchical twin: bus-3 and branch 2-3 nest at offset 2.
+        PhasorDynamics::SystemModel<ScalarT, IdxT> root;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> nested;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> nbus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         nbus2(30.0, 40.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         nbus3(25.0, 35.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      nbranch12(R, X, G, B);
+        PhasorDynamics::Branch<ScalarT, IdxT>      nbranch23(R, X, G, B);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  nnodes[6];
+        build(root, nested, nbus1, nbus2, nbus3, nbranch12, nbranch23, nnodes);
+        root.addComponent(&nested);
+
+        flat.allocate();
+        flat.initialize();
+        flat.evaluateResidual();
+        flat.tagDifferentiable();
+
+        root.allocate();
+        root.initialize();
+        root.evaluateResidual();
+        root.tagDifferentiable();
+
+        success *= (root.size() == flat.size());
+
+        // States, residuals, and tags match entry for entry.
+        for (IdxT j = 0; j < flat.size(); ++j)
+        {
+          success *= isEqual(root.y().getData()[j], flat.y().getData()[j]);
+          success *= isEqual(root.getResidual().getData()[j], flat.getResidual().getData()[j]);
+          success *= (root.tag()[j] == flat.tag()[j]);
+        }
+
+        // The nested system's own tag vector is indexed locally.
+        for (IdxT j = 0; j < nested.size(); ++j)
+        {
+          success *= (nested.tag()[j] == flat.tag()[2 + j]);
+        }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        // Jacobians assemble to the same CSR matrix. Allocation primed the
+        // pattern, so these evaluations exercise the refill path.
+        flat.evaluateJacobian();
+        root.evaluateJacobian();
+
+        auto* flat_jac = flat.getCsrJacobian();
+        auto* root_jac = root.getCsrJacobian();
+
+        success *= (flat_jac != nullptr && root_jac != nullptr);
+        if (flat_jac != nullptr && root_jac != nullptr)
+        {
+          success *= (root_jac->getNnz() == flat_jac->getNnz());
+          for (IdxT i = 0; i < flat.size() + 1; ++i)
+          {
+            success *= (root_jac->getRowData()[i] == flat_jac->getRowData()[i]);
+          }
+          for (IdxT i = 0; i < flat_jac->getNnz(); ++i)
+          {
+            success *= (root_jac->getColData()[i] == flat_jac->getColData()[i]);
+            success *= isEqual(root_jac->getValues()[i], flat_jac->getValues()[i]);
+          }
+        }
+#endif
+
+        // A bound system is not assembled standalone.
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress the expected bound-system error below.
+        // Use EVERYTHING to inspect the diagnostic.
+        Log::setVerbosity(Log::Verbosity::NONE);
+        success *= (nested.evaluateJacobian() != 0);
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }
@@ -228,7 +593,14 @@ namespace GridKit
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus1);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus1_vi;
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load;
+
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus1_vr);
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus1_vi);
+        load.getPorts().terminal_vr[PhasorDynamics::LoadZBuses::bus].connect(&bus1_vr);
+        load.getPorts().terminal_vi[PhasorDynamics::LoadZBuses::bus].connect(&bus1_vi);
 
         system.addBus(&bus1);
         system.addComponent(&load);
@@ -252,7 +624,16 @@ namespace GridKit
         }
 #endif
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus2_vr);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus2_vi);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch;
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vi);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vi);
         system.addComponent(&branch);
         success *= system.allocate() == 0;
         success *= system.evaluateJacobian() == 0;
@@ -279,8 +660,23 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 2.0);
         PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
-        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, 1.0, 1.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus2_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus1_vi;
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch;
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(1.0, 1.0);
+
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus1_vr);
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus1_vi);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus2_vr);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus2_vi);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vi);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vi);
+        load.getPorts().terminal_vr[PhasorDynamics::LoadZBuses::bus].connect(&bus2_vr);
+        load.getPorts().terminal_vi[PhasorDynamics::LoadZBuses::bus].connect(&bus2_vi);
 
         system.addBus(&bus1);
         system.addBus(&infinite_bus);

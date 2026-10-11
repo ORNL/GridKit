@@ -23,6 +23,20 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class LoadZIPTests
     {
+      template <typename T>
+      struct BusConnection
+      {
+        PhasorDynamics::SignalNode<T, IdxT> vr, vi;
+
+        BusConnection(PhasorDynamics::BusBase<T, IdxT>& bus, PhasorDynamics::LoadZIP<T, IdxT>& model)
+        {
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr);
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi);
+          model.getPorts().terminal_vr[PhasorDynamics::LoadZIPBuses::bus].connect(&vr);
+          model.getPorts().terminal_vi[PhasorDynamics::LoadZIPBuses::bus].connect(&vi);
+        }
+      };
+
     public:
       using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       using DataT = PhasorDynamics::LoadZIPData<RealT, IdxT>;
@@ -34,10 +48,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-
         PhasorDynamics::Component<ScalarT, IdxT>* load =
-            new PhasorDynamics::LoadZIP<ScalarT, IdxT>(bus);
+            new PhasorDynamics::LoadZIP<ScalarT, IdxT>();
 
         success *= (load != nullptr);
 
@@ -47,11 +59,9 @@ namespace GridKit
         }
 
         auto                                      data = makeData();
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>    monitored_load(bus, data);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>    monitored_load(data);
         PhasorDynamics::Component<ScalarT, IdxT>& monitored_component  = monitored_load;
         success                                                       *= (monitored_component.getMonitor() != nullptr);
-
-        delete bus;
 
         return success.report(__func__);
       }
@@ -61,7 +71,8 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(2.0, 0.5, 0.2, 0.4);
+        BusConnection<ScalarT>                     load_connection(bus, load);
 
         bus.allocate();
         load.allocate();
@@ -89,7 +100,8 @@ namespace GridKit
         const RealT Qnom{0.5};
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.2, 0.9);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, Pnom, Qnom, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(Pnom, Qnom, 0.2, 0.4);
+        BusConnection<ScalarT>                     load_connection(bus, load);
 
         bus.allocate();
         load.allocate();
@@ -129,7 +141,8 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(2.0, 0.5, 0.2, 0.4);
+        BusConnection<ScalarT>                     load_connection(bus, load);
 
         bus.allocate();
         load.allocate();
@@ -147,8 +160,8 @@ namespace GridKit
         const auto* f  = load.getResidual().getData();
         success       *= isEqual(f[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
         success       *= isEqual(f[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
-        success       *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
-        success       *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
+        success       *= isEqual(load.getExternalResidual()[0], static_cast<ScalarT>(-3.2), tol_);
+        success       *= isEqual(load.getExternalResidual()[1], static_cast<ScalarT>(-2.6), tol_);
 
         return success.report(__func__);
       }
@@ -159,7 +172,8 @@ namespace GridKit
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
         auto                                       data = makeData();
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, data);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(data);
+        BusConnection<ScalarT>                     load_connection(bus, load);
 
         bus.allocate();
         load.allocate();
@@ -222,7 +236,8 @@ namespace GridKit
         DependencyTracking::Variable Vi{0.4};
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(&bus, Pnom, Qnom, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(Pnom, Qnom, alphaI, alphaP);
+        BusConnection<DependencyTracking::Variable>                 load_connection(bus, load);
 
         bus.allocate();
         load.allocate();
@@ -256,7 +271,8 @@ namespace GridKit
         ScalarT Vi{0.4};
 
         PhasorDynamics::Bus<ScalarT, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, Pnom, Qnom, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(Pnom, Qnom, alphaI, alphaP);
+        BusConnection<ScalarT>                 load_connection(bus, load);
 
         bus.allocate();
         load.allocate();

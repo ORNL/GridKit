@@ -54,9 +54,11 @@ namespace GridKit
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        // verify() only checks that the bus voltages are attached.
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi;
 
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> empty(&bus);
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> empty;
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
         success *= (empty.getMonitor() == nullptr);
         success *= (empty.verify() > 0);
@@ -73,7 +75,9 @@ namespace GridKit
         success *= defaultsMatchDocumentedValues();
 
         // A model without the required efd output assignment is rejected.
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> unassigned(&bus, makeData());
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> unassigned(makeData());
+        unassigned.getPorts().terminal_vr[Terminal::bus].connect(&vr);
+        unassigned.getPorts().terminal_vi[Terminal::bus].connect(&vi);
         success *= (unassigned.verify() > 0);
 
         success *= invalidParameterCase(Params::Ka, 0.0);
@@ -166,10 +170,10 @@ namespace GridKit
         Fixture<ScalarT> speed_required_fixture(speed_required);
         success *= (speed_required_fixture.esdc1a.verify() > 0);
 
-        PhasorDynamics::SignalNode<ScalarT, IdxT>      busless_efd_node;
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> busless(nullptr, makeData());
-        busless.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&busless_efd_node);
-        success *= (busless.verify() > 0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      unattached_efd_node;
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> unattached(makeData());
+        unattached.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&unattached_efd_node);
+        success *= (unattached.verify() > 0);
 
         success *= unlinkedSignalRejected<External::speed>();
         success *= unlinkedSignalRejected<External::vref>();
@@ -872,6 +876,7 @@ namespace GridKit
       using Mon      = typename Data::MonitorableVariables;
       using Internal = typename Esdc1aT::InternalVariablesT;
       using External = typename Data::SignalInputs;
+      using Terminal = PhasorDynamics::Exciter::Esdc1aBuses;
 
       using InternalRow  = std::pair<Internal, RealT>;
       using InternalRows = std::vector<InternalRow>;
@@ -893,12 +898,18 @@ namespace GridKit
             input_nodes_{};
 
         PhasorDynamics::SignalNode<T, IdxT> efd_node_;
+        PhasorDynamics::SignalNode<T, IdxT> vr_node_;
+        PhasorDynamics::SignalNode<T, IdxT> vi_node_;
 
       public:
         explicit Fixture(const Data& data, RealT vr = 0.8, RealT vi = 0.6)
           : bus(static_cast<T>(vr), static_cast<T>(vi)),
-            esdc1a(&bus, data)
+            esdc1a(data)
         {
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_node_);
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_node_);
+          esdc1a.getPorts().terminal_vr[PhasorDynamics::Exciter::Esdc1aBuses::bus].connect(&vr_node_);
+          esdc1a.getPorts().terminal_vi[PhasorDynamics::Exciter::Esdc1aBuses::bus].connect(&vi_node_);
           esdc1a.getPorts().out.template port<Data::SignalOutputs::efd>().connect(&efd_node_);
         }
 

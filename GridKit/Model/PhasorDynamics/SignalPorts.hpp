@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/ModelData.hpp>
 #include <GridKit/Model/PhasorDynamics/PortGroup.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalIn.hpp>
@@ -23,6 +24,7 @@ namespace GridKit
       using ScalarT        = scalar_type;
       using ModelDataT     = model_data_type;
       using IdxT           = ModelDataT::IdxT;
+      using BusesEnumT     = ModelDataT::Buses;
       using SignalInEnumT  = ModelDataT::SignalInputs;
       using SignalOutEnumT = ModelDataT::SignalOutputs;
       using SignalInT      = SignalIn<ScalarT, IdxT>;
@@ -32,7 +34,19 @@ namespace GridKit
       PortGroup<SignalInT, SignalInEnumT>   in;
       PortGroup<SignalOutT, SignalOutEnumT> out;
 
+      /// Terminal bus voltages, which also carry the bus residual rows
+      PortGroup<SignalInT, BusesEnumT> terminal_vr;
+      PortGroup<SignalInT, BusesEnumT> terminal_vi;
+
       SignalPorts() = default;
+
+      /// Connect a terminal to the voltage published by a bus.
+      template <typename BusPortsT>
+      void connectTerminal(BusesEnumT terminal, const BusPortsT& bus)
+      {
+        terminal_vr[terminal].connect(bus.out[BusSignalOutputs::vr].node());
+        terminal_vi[terminal].connect(bus.out[BusSignalOutputs::vi].node());
+      }
 
       /// Connect this component's ports using the signal IDs in its model data.
       void connect(const ModelDataT& data, SignalNodeSetT& signal_nodes)

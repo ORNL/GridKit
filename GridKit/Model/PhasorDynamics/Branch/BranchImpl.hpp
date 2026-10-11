@@ -13,8 +13,8 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -28,10 +28,8 @@ namespace GridKit
      * - Number of internal variables = 0
      */
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2)
-      : bus1_(bus1),
-        bus2_(bus2),
-        R_(0.0),
+    Branch<scalar_type, index_type>::Branch()
+      : R_(0.0),
         X_(0.01),
         G_(0.0),
         B_(0.0),
@@ -47,8 +45,6 @@ namespace GridKit
     /**
      * @brief Construct a new Branch
      *
-     * @param bus1 - pointer to bus-1
-     * @param bus2 - pointer to bus-2
      * @param R - line series resistance
      * @param X - line series reactance
      * @param G - total line shunt conductance
@@ -57,17 +53,13 @@ namespace GridKit
      * @param phase - phase shift angle in radians
      */
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1,
-                                            BusT* bus2,
-                                            RealT R,
+    Branch<scalar_type, index_type>::Branch(RealT R,
                                             RealT X,
                                             RealT G,
                                             RealT B,
                                             RealT tap,
                                             RealT phase)
-      : bus1_(bus1),
-        bus2_(bus2),
-        R_(R),
+      : R_(R),
         X_(X),
         G_(G),
         B_(B),
@@ -81,10 +73,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2, const ModelDataT& data)
-      : bus1_(bus1),
-        bus2_(bus2),
-        monitor_(std::make_unique<MonitorT>(data))
+    Branch<scalar_type, index_type>::Branch(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -127,8 +117,7 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
-      wb_.resize(2);
-      h_.resize(2);
+      this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<BranchExternalVariables>()));
 
       allocated_ = true;
       return 0;
@@ -167,8 +156,10 @@ namespace GridKit
         }
       };
 
-      check(bus1_ != nullptr, "bus1 pointer is null");
-      check(bus2_ != nullptr, "bus2 pointer is null");
+      check(ports_.terminal_vr[BranchBuses::bus1].connected(), "bus1 terminal vr is not connected");
+      check(ports_.terminal_vi[BranchBuses::bus1].connected(), "bus1 terminal vi is not connected");
+      check(ports_.terminal_vr[BranchBuses::bus2].connected(), "bus2 terminal vr is not connected");
+      check(ports_.terminal_vi[BranchBuses::bus2].connected(), "bus2 terminal vi is not connected");
 
       check(std::isfinite(R_), "R must be finite");
       check(std::isfinite(X_), "X must be finite");
@@ -197,20 +188,6 @@ namespace GridKit
       Ii += B * Vr + G * Vi;
     }
 
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
-        const RealT    G,
-        const RealT    B,
-        const ScalarT* wb,
-        ScalarT*       h)
-    {
-      const ScalarT Vr = wb[0];
-      const ScalarT Vi = wb[1];
-
-      h[0] = G * Vr - B * Vi;
-      h[1] = B * Vr + G * Vi;
-    }
-
     /**
      * @brief Compute the absolute tolerance for each variable in the model
      *
@@ -230,97 +207,81 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus 1 residual contribution from bus 1 variables
+     * @brief External residual contributions to both terminal buses.
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual11(
+    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateExternalResidual(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+        const ScalarT*                  y_ext,
+        ScalarT*                        f_ext)
     {
-      evaluateAdmittanceBlock(g11_, b11_, wb, h);
+      const auto VR1 = static_cast<size_t>(BranchExternalVariables::VR1);
+      const auto VI1 = static_cast<size_t>(BranchExternalVariables::VI1);
+      const auto VR2 = static_cast<size_t>(BranchExternalVariables::VR2);
+      const auto VI2 = static_cast<size_t>(BranchExternalVariables::VI2);
+
+      const ScalarT Vr1 = y_ext[VR1];
+      const ScalarT Vi1 = y_ext[VI1];
+      const ScalarT Vr2 = y_ext[VR2];
+      const ScalarT Vi2 = y_ext[VI2];
+
+      f_ext[VR1] = (g11_ * Vr1 - b11_ * Vi1) + (g12_ * Vr2 - b12_ * Vi2);
+      f_ext[VI1] = (b11_ * Vr1 + g11_ * Vi1) + (b12_ * Vr2 + g12_ * Vi2);
+      f_ext[VR2] = (g21_ * Vr1 - b21_ * Vi1) + (g22_ * Vr2 - b22_ * Vi2);
+      f_ext[VI2] = (b21_ * Vr1 + g21_ * Vi1) + (b22_ * Vr2 + g22_ * Vi2);
 
       return 0;
     }
 
     /**
-     * @brief Bus 1 residual contribution from bus 2 variables
+     * @brief The branch owns no internal residual equations; this phase
+     * only gathers the terminal voltages for the external phase.
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual12(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+    int Branch<scalar_type, index_type>::evaluateInternalResidual()
     {
-      evaluateAdmittanceBlock(g12_, b12_, wb, h);
-
+      gatherExternalVariables();
       return 0;
     }
 
     /**
-     * @brief Bus 2 residual contribution from bus 1 variables
+     * @brief Gather external variables and index maps.
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual21(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+    void Branch<scalar_type, index_type>::gatherExternalVariables()
     {
-      evaluateAdmittanceBlock(g21_, b21_, wb, h);
+      const auto VR1 = static_cast<size_t>(BranchExternalVariables::VR1);
+      const auto VI1 = static_cast<size_t>(BranchExternalVariables::VI1);
+      const auto VR2 = static_cast<size_t>(BranchExternalVariables::VR2);
+      const auto VI2 = static_cast<size_t>(BranchExternalVariables::VI2);
 
-      return 0;
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
+
+      ports_.terminal_vr[BranchBuses::bus1].gather(y_ext[VR1], columns[VR1], rows[VR1]);
+      ports_.terminal_vi[BranchBuses::bus1].gather(y_ext[VI1], columns[VI1], rows[VI1]);
+      ports_.terminal_vr[BranchBuses::bus2].gather(y_ext[VR2], columns[VR2], rows[VR2]);
+      ports_.terminal_vi[BranchBuses::bus2].gather(y_ext[VI2], columns[VI2], rows[VI2]);
     }
 
     /**
-     * @brief Bus 2 residual contribution from bus 2 variables
+     * @brief External residual contributions to rows owned by the two terminal buses.
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual22(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+    int Branch<scalar_type, index_type>::evaluateExternalResidual()
     {
-      evaluateAdmittanceBlock(g22_, b22_, wb, h);
+      auto* y_ext = y_ext_.getData();
+      auto* f_ext = f_ext_.getData();
 
-      return 0;
-    }
-
-    /**
-     * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateResidual()
-    {
-      ScalarT ir1{0.0};
-      ScalarT ii1{0.0};
-      ScalarT ir2{0.0};
-      ScalarT ii2{0.0};
-
-      terminalCurrent1(ir1, ii1);
-      terminalCurrent2(ir2, ii2);
-
-      Ir1() += ir1;
-      Ii1() += ii1;
-      Ir2() += ir2;
-      Ii2() += ii2;
-
-      if (bus1_->size() > 0)
-      {
-        bus1_->getResidual().setDataUpdated();
-      }
-      if (bus2_->size() > 0)
-      {
-        bus2_->getResidual().setDataUpdated();
-      }
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      evaluateExternalResidual(y, yp, y_ext, f_ext);
 
       return 0;
     }

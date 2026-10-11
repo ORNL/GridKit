@@ -55,9 +55,7 @@ namespace GridKit
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-
-        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> empty(&bus);
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> empty;
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (empty.getMonitor() == nullptr);
 
@@ -229,9 +227,9 @@ namespace GridKit
           }
         }
 
-        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> busless(nullptr, makeData());
-        busless.setSystemBase(kNominalFrequency, kSystemBaseVa);
-        success *= (busless.verify() > 0);
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> unattached(makeData());
+        unattached.setSystemBase(kNominalFrequency, kSystemBaseVa);
+        success *= (unattached.verify() > 0);
 
         success *= unlinkedSignalRejected<Ext::pe>();
         success *= unlinkedSignalRejected<Ext::qgen>();
@@ -1817,6 +1815,8 @@ namespace GridKit
 
         PhasorDynamics::SignalNode<T, IdxT> iqcmd_node_;
         PhasorDynamics::SignalNode<T, IdxT> ipcmd_node_;
+        PhasorDynamics::SignalNode<T, IdxT> vr_node_;
+        PhasorDynamics::SignalNode<T, IdxT> vi_node_;
         bool                                commands_assigned_{true};
 
       public:
@@ -1827,8 +1827,12 @@ namespace GridKit
                          bool        assign_commands = true)
           : commands_assigned_(assign_commands),
             bus(static_cast<T>(vr), static_cast<T>(vi)),
-            reecb(&bus, data)
+            reecb(data)
         {
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_node_);
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_node_);
+          reecb.getPorts().terminal_vr[PhasorDynamics::Controller::ReecbBuses::bus].connect(&vr_node_);
+          reecb.getPorts().terminal_vi[PhasorDynamics::Controller::ReecbBuses::bus].connect(&vi_node_);
           reecb.setSystemBase(kNominalFrequency, system_va_base);
           if (commands_assigned_)
           {

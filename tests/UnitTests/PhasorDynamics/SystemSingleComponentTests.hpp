@@ -1,6 +1,7 @@
 #include <iomanip>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -35,7 +36,20 @@ namespace GridKit
         system->addBus(&bus1);
         system->addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus1_vr);
+        bus1.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus1_vi);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&bus2_vr);
+        bus2.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&bus2_vi);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch;
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus1].connect(&bus1_vi);
+        branch.getPorts().terminal_vr[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vr);
+        branch.getPorts().terminal_vi[PhasorDynamics::BranchBuses::bus2].connect(&bus2_vi);
         system->addComponent(&branch);
 
         success *= system->allocate() == 0;
@@ -81,12 +95,19 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+
         const auto previous_verbosity = Log::verbosity();
         // Suppress the expected time-constant-floor warning from the default parameters.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter;
         Log::setVerbosity(previous_verbosity);
+        exciter.getPorts().terminal_vr[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vr_signal);
+        exciter.getPorts().terminal_vi[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vi_signal);
         system->addComponent(&exciter);
 
         success *= system->allocate() == 0;
@@ -175,7 +196,14 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load;
+        load.getPorts().terminal_vr[PhasorDynamics::LoadZBuses::bus].connect(&vr_signal);
+        load.getPorts().terminal_vi[PhasorDynamics::LoadZBuses::bus].connect(&vi_signal);
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -199,7 +227,14 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.0, 0.0);
         system->addBus(&bus);
 
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load;
+        load.getPorts().terminal_vr[PhasorDynamics::LoadZIPBuses::bus].connect(&vr_signal);
+        load.getPorts().terminal_vi[PhasorDynamics::LoadZIPBuses::bus].connect(&vi_signal);
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -365,7 +400,14 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen;
+        gen.getPorts().terminal_vr[PhasorDynamics::GenrouBuses::bus].connect(&vr_signal);
+        gen.getPorts().terminal_vi[PhasorDynamics::GenrouBuses::bus].connect(&vi_signal);
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;
@@ -389,8 +431,15 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+
         PhasorDynamics::GenClassicalData<RealT, IdxT> data;
-        PhasorDynamics::GenClassical<ScalarT, IdxT>   gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT>   gen(data);
+        gen.getPorts().terminal_vr[PhasorDynamics::GenClassicalBuses::bus].connect(&vr_signal);
+        gen.getPorts().terminal_vi[PhasorDynamics::GenClassicalBuses::bus].connect(&vi_signal);
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;

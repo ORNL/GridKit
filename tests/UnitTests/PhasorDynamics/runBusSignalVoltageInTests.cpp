@@ -13,6 +13,9 @@ int main()
   result += test.currentOutputs();
   result += test.verifyUnlinked();
   result += test.dependencyTracking();
+#ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.jacobian();
+#endif
 
   return result.summary();
 }

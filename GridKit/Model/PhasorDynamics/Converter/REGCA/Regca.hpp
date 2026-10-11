@@ -21,9 +21,6 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename scalar_type, typename index_type>
     class SignalNode;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -52,6 +49,8 @@ namespace GridKit
       /// External variables of a `Regca`
       enum class RegcaExternalVariables : size_t
       {
+        VR,    ///< \f$V_\mathrm{r}\f$ Terminal-bus real voltage
+        VI,    ///< \f$V_\mathrm{i}\f$ Terminal-bus imaginary voltage
         IPCMD, ///< \f$I_p^\mathrm{cmd}\f$ Active-current command on system base
         IQCMD, ///< \f$I_q^\mathrm{cmd}\f$ Reactive-current command on system base
       };
@@ -70,26 +69,25 @@ namespace GridKit
         using Component<scalar_type, index_type>::allocated_;
         using Component<scalar_type, index_type>::abs_tol_;
         using Component<scalar_type, index_type>::f_;
-        using Component<scalar_type, index_type>::h_;
+        using Component<scalar_type, index_type>::f_ext_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
         using Component<scalar_type, index_type>::nnz_;
         using Component<scalar_type, index_type>::residual_indices_;
+        using Component<scalar_type, index_type>::residual_indices_ext_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
         using Component<scalar_type, index_type>::variable_indices_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::yp_;
 
       public:
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
-        using BusT               = BusBase<ScalarT, IdxT>;
         using SignalT            = SignalNode<ScalarT, IdxT>;
         using ModelDataT         = RegcaData<RealT, IdxT>;
         using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
@@ -98,8 +96,8 @@ namespace GridKit
         using InternalVariablesT = RegcaInternalVariables;
         using ExternalVariablesT = RegcaExternalVariables;
 
-        Regca(BusT* bus);
-        Regca(BusT* bus, const ModelDataT& data);
+        Regca();
+        Regca(const ModelDataT& data);
         ~Regca();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -108,7 +106,8 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
+        int evaluateInternalResidual() override final;
+        int evaluateExternalResidual() override final;
         int evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
@@ -119,15 +118,16 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT* y, const ScalarT* yp, const ScalarT* wb, const ScalarT* ws, ScalarT* f);
+            const ScalarT* y, const ScalarT* yp, const ScalarT* y_ext, ScalarT* f);
 
-        __attribute__((always_inline)) inline int evaluateBusResidual(
-            const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* h);
+        __attribute__((always_inline)) inline int evaluateExternalResidual(
+            const ScalarT* y, const ScalarT* yp, const ScalarT* y_ext, ScalarT* f_ext);
 
       private:
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
+        void gatherExternalVariables();
 
         /**
          * @brief Smooth approximation of the REGCA `rrpwr` rate limiter.
@@ -189,16 +189,19 @@ namespace GridKit
                        * gap_rate;
         }
 
-        ScalarT& Vr();
-        ScalarT& Vi();
-        ScalarT& Ir();
-        ScalarT& Ii();
+        ScalarT Vr() const
+        {
+          return ports_.terminal_vr[RegcaBuses::bus].readSignal();
+        }
+
+        ScalarT Vi() const
+        {
+          return ports_.terminal_vi[RegcaBuses::bus].readSignal();
+        }
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static constexpr RealT KL_                   = static_cast<RealT>(100.0);
         static void            logTimeConstantWarning();
-
-        BusT* bus_{nullptr};
 
         // Input parameters
         RealT p0_{0};

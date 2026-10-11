@@ -17,13 +17,13 @@ namespace GridKit
     /*!
      * @brief Constructor for a bus whose voltage is set by input signals.
      *
-     * - Number of equations = 0 (size_)
-     * - Number of variables = 0 (size_)
+     * - Number of equations = 2 (size_)
+     * - Number of variables = 2 (size_)
      */
     template <typename scalar_type, typename index_type>
     BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn()
     {
-      size_ = 0;
+      size_ = 2;
     }
 
     /*!
@@ -35,7 +35,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(ScalarT /* Vr */, ScalarT /* Vi */)
     {
-      size_ = 0;
+      size_ = 2;
     }
 
     /**
@@ -50,7 +50,7 @@ namespace GridKit
     BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(const ModelDataT& data)
     {
       bus_id_        = data.bus_id;
-      size_          = 0;
+      size_          = 2;
       monitor_       = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
       using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::Vr, [this]
@@ -64,21 +64,14 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageIn<scalar_type, index_type>::~BusSignalVoltageIn()
-    {
-      if (coo_jac_ != nullptr)
-      {
-        delete coo_jac_;
-        coo_jac_ = nullptr;
-      }
-    }
+    BusSignalVoltageIn<scalar_type, index_type>::~BusSignalVoltageIn() = default;
 
     /*!
-     * @brief Allocate (empty) bus storage and link output signals.
+     * @brief Allocate the boundary-current storage and link output signals.
      *
-     * Signal outlets `ir` and `ii` are linked to the current sums here, so
-     * they have to be connected before this method is called. The current
-     * sums are not system variables, so the linked indices are invalid.
+     * Signal outlets `ir` and `ii` are linked to the boundary currents and
+     * their (system) variable indices here, so they have to be connected
+     * before this method is called.
      */
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageIn<scalar_type, index_type>::allocate()
@@ -89,16 +82,25 @@ namespace GridKit
       }
       auto size = static_cast<std::size_t>(size_);
 
+      tag_.resize(size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
+      // Default variable and residual index mapping to local index
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
+
       if (auto ir_port = ports_.out.template port<BusSignalOutputs::ir>())
       {
-        ir_port.link(&Ir_, &ir_index_);
+        ir_port.link(&y_.getData()[0], &(this->getVariableIndex(0)));
       }
       if (auto ii_port = ports_.out.template port<BusSignalOutputs::ii>())
       {
-        ii_port.link(&Ii_, &ii_index_);
+        ii_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
       }
 
       allocated_ = true;
@@ -172,66 +174,96 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief No variables to tag.
+    /*!
+     * @brief Boundary currents are algebraic.
      */
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageIn<scalar_type, index_type>::tagDifferentiable()
     {
+      tag_[0] = false;
+      tag_[1] = false;
       return 0;
     }
 
     /**
-     * @brief No variables, nothing to set.
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @return int 0 if successful, non-zero otherwise.
      */
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageIn<scalar_type, index_type>::setAbsoluteTolerance(RealT)
+    int BusSignalVoltageIn<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 
     /*!
-     * @brief Reset current sums. The voltage is owned by the signal sources.
+     * @brief Publish the bus voltage and zero the boundary currents.
+     *
+     * Outlets `vr` and `vi` relay the value and column of the voltage inlets,
+     * which are linked only after every signal producer is allocated, so they
+     * are published here rather than in allocate(). The boundary currents
+     * start at zero; a consistent-initialization pass resolves them.
      */
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageIn<scalar_type, index_type>::initialize()
     {
-      Ir_ = 0.0;
-      Ii_ = 0.0;
-      return 0;
-    }
+      if (auto vr_port = ports_.out.template port<BusSignalOutputs::vr>())
+      {
+        vr_port.link(ports_.in.template port<BusSignalInputs::vr>(), &this->getResidualIndex(0));
+      }
+      if (auto vi_port = ports_.out.template port<BusSignalOutputs::vi>())
+      {
+        vi_port.link(ports_.in.template port<BusSignalInputs::vi>(), &this->getResidualIndex(1));
+      }
 
-    /*!
-     * @brief Reset current sums to zero.
-     *
-     * Components attached to the bus accumulate their injections into Ir()
-     * and Ii() afterwards. The voltage needs no update here: Vr() and Vi()
-     * read the input signals directly.
-     *
-     * @warning This implementation assumes bus residuals are always evaluated
-     * _before_ component model residuals.
-     */
-    template <typename scalar_type, typename index_type>
-    int BusSignalVoltageIn<scalar_type, index_type>::evaluateResidual()
-    {
-      Ir_ = 0.0;
-      Ii_ = 0.0;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
+      y[0]  = 0.0;
+      y[1]  = 0.0;
+      yp[0] = 0.0;
+      yp[1] = 0.0;
+
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+
+      // For DependencyTracking::Variable, set variable numbers
+      if constexpr (std::is_same_v<ScalarT, DependencyTracking::Variable>)
+      {
+        this->initializeDependencyTrackingVariableNumbers();
+      }
+
       return 0;
     }
 
     /**
-     * @brief There is no Jacobian for a bus without variables.
+     * @brief Internal residual
      *
-     * @return int - error code
+     * Attached components add their injections to these rows, so each
+     * residual is the injection sum minus the boundary current.
      */
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageIn<scalar_type, index_type>::evaluateJacobian()
+    __attribute__((always_inline)) inline int BusSignalVoltageIn<scalar_type, index_type>::evaluateInternalResidual(
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        [[maybe_unused]] const ScalarT* y_ext,
+        ScalarT*                        f)
     {
-      if (coo_jac_ == nullptr)
-      {
-        nnz_     = 0;
-        coo_jac_ = new CooMatrixT(0, 0, 0);
-      }
+      f[0] = -y[0];
+      f[1] = -y[1];
+
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageIn<scalar_type, index_type>::evaluateInternalResidual()
+    {
+      evaluateInternalResidual(y_.getData(), yp_.getData(), nullptr, f_.getData());
+      f_.setDataUpdated();
+
       return 0;
     }
   } // namespace PhasorDynamics

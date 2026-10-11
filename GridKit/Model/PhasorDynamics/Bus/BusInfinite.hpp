@@ -27,6 +27,7 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::coo_jac_;
       using BusBase<scalar_type, index_type>::monitor_;
       using BusBase<scalar_type, index_type>::allocated_;
+      using BusBase<scalar_type, index_type>::ports_;
 
     public:
       using ScalarT    = scalar_type;
@@ -47,7 +48,7 @@ namespace GridKit
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
       virtual int initialize() override final;
-      virtual int evaluateResidual() override final;
+      virtual int evaluateInternalResidual() override final;
       virtual int evaluateJacobian() override final;
 
       virtual BusTypeT BusType() const override final
@@ -105,6 +106,10 @@ namespace GridKit
       ScalarT ViB_{0.0};
       ScalarT IrB_{0.0};
       ScalarT IiB_{0.0};
+
+      // Placeholders for variable indices
+      IdxT vr_index_{INVALID_INDEX<IdxT>};
+      IdxT vi_index_{INVALID_INDEX<IdxT>};
     };
 
   } // namespace PhasorDynamics

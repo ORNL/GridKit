@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
@@ -58,23 +60,27 @@ namespace GridKit
         signal_nodes_.add(signaldata);
       }
 
-      // Add electrical buses
+      // Add electrical buses. Each bus publishes its voltage on outlets `vr`
+      // and `vi`, connected here to unnamed nodes unless the bus data names them.
       for (const auto& busdata : data.bus)
       {
         BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata, signal_nodes_);
+        for (auto output : {BusSignalOutputs::vr, BusSignalOutputs::vi})
+        {
+          auto& port = bus->getPorts().out[output];
+          if (!port.connected())
+          {
+            port.connect(signal_nodes_.add());
+          }
+        }
         addBus(bus);
       }
 
       // Add REGCA converters
       for (const auto& regcadata : data.regca)
       {
-        IdxT bus_index = 0;
-        if (regcadata.buses.contains(RegcaBuses::bus))
-        {
-          bus_index = regcadata.buses.at(RegcaBuses::bus);
-        }
-
-        auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
+        auto* regca = new Regca<ScalarT, IdxT>(regcadata);
+        connectTerminals(*regca, regcadata);
         regca->getPorts().connect(regcadata, signal_nodes_);
 
         addComponent(regca);
@@ -83,21 +89,8 @@ namespace GridKit
       // Add branches
       for (const auto& branchdata : data.branch)
       {
-        IdxT bus1_index = 0;
-        if (branchdata.buses.contains(BranchBuses::bus1))
-        {
-          bus1_index = branchdata.buses.at(BranchBuses::bus1);
-        }
-
-        IdxT bus2_index = 0;
-        if (branchdata.buses.contains(BranchBuses::bus2))
-        {
-          bus2_index = branchdata.buses.at(BranchBuses::bus2);
-        }
-
-        auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index),
-                                                 getBus(bus2_index),
-                                                 branchdata);
+        auto* branch = new Branch<ScalarT, IdxT>(branchdata);
+        connectTerminals(*branch, branchdata);
         addComponent(branch);
       }
 
@@ -105,12 +98,8 @@ namespace GridKit
       /// @todo Add loads to JSON parser
       for (const auto& loaddata : data.loadz)
       {
-        IdxT bus_index = 0;
-        if (loaddata.buses.contains(LoadZBuses::bus))
-        {
-          bus_index = loaddata.buses.at(LoadZBuses::bus);
-        }
-        auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
+        auto* load = new LoadZ<ScalarT, IdxT>(loaddata);
+        connectTerminals(*load, loaddata);
         addComponent(load);
       }
 
@@ -118,25 +107,16 @@ namespace GridKit
       /// @todo Add zip loads to JSON parser
       for (const auto& loadzipdata : data.loadzip)
       {
-        IdxT bus_index = 0;
-        if (loadzipdata.buses.contains(LoadZIPBuses::bus))
-        {
-          bus_index = loadzipdata.buses.at(LoadZIPBuses::bus);
-        }
-        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
-                                                   loadzipdata);
+        auto* loadzip = new LoadZIP<ScalarT, IdxT>(loadzipdata);
+        connectTerminals(*loadzip, loadzipdata);
         addComponent(loadzip);
       }
 
       // Add GENROU generators
       for (const auto& gendata : data.genrou)
       {
-        IdxT bus_index = 0;
-        if (gendata.buses.contains(GenrouBuses::bus))
-        {
-          bus_index = gendata.buses.at(GenrouBuses::bus);
-        }
-        auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
+        auto* gen = new Genrou<ScalarT, IdxT>(gendata);
+        connectTerminals(*gen, gendata);
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -144,13 +124,8 @@ namespace GridKit
       // Add GENSAL generators
       for (const auto& gendata : data.gensal)
       {
-        IdxT bus_index = 0;
-        if (gendata.buses.contains(GensalBuses::bus))
-        {
-          bus_index = gendata.buses.at(GensalBuses::bus);
-        }
-
-        auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
+        auto* gen = new Gensal<ScalarT, IdxT>(gendata);
+        connectTerminals(*gen, gendata);
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -158,12 +133,8 @@ namespace GridKit
       // Add classical generators
       for (const auto& gendata : data.genclassical)
       {
-        IdxT bus_index = 0;
-        if (gendata.buses.contains(GenClassicalBuses::bus))
-        {
-          bus_index = gendata.buses.at(GenClassicalBuses::bus);
-        }
-        auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
+        auto* gen = new GenClassical<ScalarT, IdxT>(gendata);
+        connectTerminals(*gen, gendata);
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -172,13 +143,8 @@ namespace GridKit
       // components initialize in insertion order.
       for (const auto& reecbdata : data.reecb)
       {
-        BusT* bus = nullptr;
-        if (reecbdata.buses.contains(ReecbBuses::bus))
-        {
-          bus = getBus(reecbdata.buses.at(ReecbBuses::bus));
-        }
-
-        auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
+        auto* reecb = new Reecb<ScalarT, IdxT>(reecbdata);
+        connectTerminals(*reecb, reecbdata);
         reecb->getPorts().connect(reecbdata, signal_nodes_);
 
         addComponent(reecb);
@@ -222,13 +188,8 @@ namespace GridKit
 
       for (const auto& excitedata : data.exciter)
       {
-        IdxT bus_index = 0;
-        if (excitedata.buses.contains(Ieeet1Buses::bus))
-        {
-          bus_index = excitedata.buses.at(Ieeet1Buses::bus);
-        }
-
-        auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter = new Ieeet1<ScalarT, IdxT>(excitedata);
+        connectTerminals(*exciter, excitedata);
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -236,13 +197,8 @@ namespace GridKit
 
       for (const auto& excitedata : data.esdc1a)
       {
-        BusT* bus = nullptr;
-        if (excitedata.buses.contains(Esdc1aBuses::bus))
-        {
-          bus = getBus(excitedata.buses.at(Esdc1aBuses::bus));
-        }
-
-        auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
+        auto* exciter = new Esdc1a<ScalarT, IdxT>(excitedata);
+        connectTerminals(*exciter, excitedata);
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -250,13 +206,8 @@ namespace GridKit
 
       for (const auto& excitedata : data.sexspti)
       {
-        IdxT bus_index = 0;
-        if (excitedata.buses.contains(SexsPtiBuses::bus))
-        {
-          bus_index = excitedata.buses.at(SexsPtiBuses::bus);
-        }
-
-        auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter = new SexsPti<ScalarT, IdxT>(excitedata);
+        connectTerminals(*exciter, excitedata);
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -266,13 +217,8 @@ namespace GridKit
       // initialization
       for (const auto& repcadata : data.repca)
       {
-        BusT* bus = nullptr;
-        if (repcadata.buses.contains(RepcaBuses::bus))
-        {
-          bus = getBus(repcadata.buses.at(RepcaBuses::bus));
-        }
-
-        auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
+        auto* repca = new Repca<ScalarT, IdxT>(repcadata);
+        connectTerminals(*repca, repcadata);
         repca->getPorts().connect(repcadata, signal_nodes_);
 
         addComponent(repca);
@@ -315,19 +261,14 @@ namespace GridKit
         {
           delete component;
         }
-
-        for (auto bus : buses_)
-        {
-          delete bus;
-        }
       }
     }
 
     /**
      * @brief Set component ID
      *
-     * @note Should default to 0. Nested system models are not currently
-     * supported.
+     * @note Defaults to 0 for a root model; a parent model assigns the ID
+     * of a nested system like any other component.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
@@ -337,15 +278,64 @@ namespace GridKit
     }
 
     /**
-     * @brief Allocate system storage and bind buses and components to it.
+     * @brief Find the component that owns a system-local variable index.
      *
-     * First sum the bus and component sizes, then allocate the system vectors
-     * and bind each bus and component to its portion of those vectors.
+     * Component offsets are monotonically increasing, so the owner is the
+     * last component whose offset is not past the index. Zero-size
+     * components share their successor's offset and are never selected.
      *
-     * @pre Buses and components with nonzero size are unallocated or already
-     * bound to external system storage.
+     * @pre allocate() has populated component_offsets_ and
+     * 0 <= local_index < size().
+     */
+    template <typename scalar_type, typename index_type>
+    size_t SystemModel<scalar_type, index_type>::findOwningComponent(IdxT local_index) const
+    {
+      auto it = std::upper_bound(component_offsets_.begin(), component_offsets_.end(), local_index);
+      return static_cast<size_t>(std::distance(component_offsets_.begin(), it)) - 1;
+    }
+
+    /**
+     * @brief Assign a global variable index to a system-local variable.
      *
-     * @note System model composition is flat; nested systems are not supported.
+     * The write is routed to the component that owns the variable, so the
+     * global index lands in the component's index-map slot, where published
+     * signal nodes point. The system's own index map is kept in sync.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::setVariableIndex(IdxT local_index, IdxT global_index)
+    {
+      ComponentT::setVariableIndex(local_index, global_index);
+      const size_t c = findOwningComponent(local_index);
+      return components_[c]->setVariableIndex(local_index - component_offsets_[c], global_index);
+    }
+
+    /**
+     * @brief Assign a global residual index to a system-local residual.
+     *
+     * The write is routed to the component that owns the residual, so the
+     * global index lands in the component's index-map slot, where published
+     * signal nodes point. The system's own index map is kept in sync.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::setResidualIndex(IdxT local_index, IdxT global_index)
+    {
+      ComponentT::setResidualIndex(local_index, global_index);
+      const size_t c = findOwningComponent(local_index);
+      return components_[c]->setResidualIndex(local_index - component_offsets_[c], global_index);
+    }
+
+    /**
+     * @brief Allocate system storage and bind components to it.
+     *
+     * First sum the component sizes, then allocate the system vectors and
+     * bind each component to its portion of those vectors.
+     *
+     * @pre Components with nonzero size are unallocated or already bound to
+     * external system storage.
+     *
+     * @note System models compose hierarchically: a nested system binds to
+     * its parent's storage and allocates like any other component. Residual
+     * assembly and Jacobian priming run only on the root model.
      *
      * @throws std::runtime_error if storage allocation, child binding, model
      * verification, or initialization for sparse Jacobian discovery fails.
@@ -354,11 +344,6 @@ namespace GridKit
     int SystemModel<scalar_type, index_type>::allocate()
     {
       size_ = 0;
-
-      for (const auto& bus : buses_)
-      {
-        size_ += bus->size();
-      }
 
       for (const auto& component : components_)
       {
@@ -392,41 +377,14 @@ namespace GridKit
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 
-      // Default variable and residual index mapping to local index
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
+      component_offsets_.clear();
 
       IdxT offset = 0;
 
-      for (const auto& bus : buses_)
-      {
-        const int bind_status = bus->bind(y_, yp_, f_, abs_tol_, offset);
-        if (bind_status != 0)
-        {
-          Log::error() << "Failed to bind bus vectors to system storage\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-
-        if (bus->allocate() != 0)
-        {
-          Log::error() << "Failed to allocate bus data\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          bus->setVariableIndex(j, offset + j);
-          bus->setResidualIndex(j, offset + j);
-        }
-
-        offset += bus->size();
-      }
-
       for (const auto& component : components_)
       {
+        component_offsets_.push_back(offset);
+
         const int bind_status = component->bind(y_, yp_, f_, abs_tol_, offset);
         if (bind_status != 0)
         {
@@ -440,12 +398,6 @@ namespace GridKit
           throw std::runtime_error("SystemModel allocation failed");
         }
 
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          component->setVariableIndex(j, offset + j);
-          component->setResidualIndex(j, offset + j);
-        }
-
         offset += component->size();
       }
 
@@ -453,6 +405,16 @@ namespace GridKit
       {
         Log::error() << "Bound vector sizes do not match the system size\n";
         throw std::runtime_error("SystemModel allocation failed");
+      }
+
+      // Default variable and residual index mapping to local index. The
+      // routed writes land in the owning component's index-map slots, where
+      // published signal nodes point. A parent model can reassign global
+      // indices later through the same setters.
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
       }
 
       // Verify component configuration
@@ -468,7 +430,7 @@ namespace GridKit
       // monitor startup.
       // @todo Replace with a sparsity analysis that sets the NNZ and allocates
       // the Jacobian without needing the Jacobian values.
-      if (hasJacobian())
+      if (!bound_ && hasJacobian())
       {
         const int status = initialize();
         if (status != 0)
@@ -481,8 +443,11 @@ namespace GridKit
         evaluateJacobian();
       }
 
-      initializeMonitor();
-      startMonitor();
+      if (!bound_)
+      {
+        initializeMonitor();
+        startMonitor();
+      }
 
       allocated_ = true;
       return 0;
@@ -509,14 +474,12 @@ namespace GridKit
     }
 
     /**
-     * @brief Initialize buses first, then all the other components.
+     * @brief Initialize all components in insertion order.
      *
      * @pre All buses and components must be allocated at this point.
-     * @pre Bus variables are written before component variables in the
-     * system variable vector.
      *
-     * Buses must be initialized before other components, because other
-     * components may write to buses during the initialization.
+     * Components read their terminal bus voltages during initialization,
+     * so a bus must be added before the components attached to it.
      *
      * Also, generators may write to control devices (e.g. governors,
      * exciters, etc.) during the initialization.
@@ -530,12 +493,6 @@ namespace GridKit
     int SystemModel<scalar_type, index_type>::initialize()
     {
       int status = 0;
-
-      for (const auto& bus : buses_)
-      {
-        status += bus->initialize();
-      }
-
       for (const auto& component : components_)
       {
         status += component->initialize();
@@ -554,28 +511,25 @@ namespace GridKit
     }
 
     /**
-     * @brief Add monitors from buses and components and start monitor
+     * @brief Forward the monitor controller to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::collectMonitors(MonitorT& controller)
+    {
+      for (const auto& component : components_)
+      {
+        component->collectMonitors(controller);
+      }
+    }
+
+    /**
+     * @brief Register every monitor in the component tree with this model's
+     * controller.
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::initializeMonitor()
     {
-      for (const auto* bus : buses_)
-      {
-        auto* mon = bus->getMonitor();
-        if (mon && !mon->empty())
-        {
-          monitor_->addMonitor(mon);
-        }
-      }
-
-      for (const auto* component : components_)
-      {
-        auto* mon = component->getMonitor();
-        if (mon && !mon->empty())
-        {
-          monitor_->addMonitor(mon);
-        }
-      }
+      this->collectMonitors(*monitor_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -612,22 +566,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::tagDifferentiable()
     {
-      // Set initial values for global solution vectors
-      for (const auto& bus : buses_)
+      // Copy component tags into this model's tag vector. Local storage is
+      // indexed locally; global indices live only in the routed index maps.
+      for (size_t c = 0; c < components_.size(); ++c)
       {
-        bus->tagDifferentiable();
-        for (IdxT j = 0; j < bus->size(); ++j)
+        components_[c]->tagDifferentiable();
+        for (IdxT j = 0; j < components_[c]->size(); ++j)
         {
-          tag_[bus->getVariableIndex(j)] = bus->tag()[j];
-        }
-      }
-
-      for (const auto& component : components_)
-      {
-        component->tagDifferentiable();
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          tag_[component->getVariableIndex(j)] = component->tag()[j];
+          tag_[static_cast<size_t>(component_offsets_[c] + j)] = components_[c]->tag()[j];
         }
       }
 
@@ -647,11 +593,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      for (const auto& bus : buses_)
-      {
-        bus->setAbsoluteTolerance(rel_tol);
-      }
-
       for (const auto& component : components_)
       {
         component->setAbsoluteTolerance(rel_tol);
@@ -663,32 +604,140 @@ namespace GridKit
     }
 
     /**
-     * @brief Compute system residual vector
+     * @brief Compute the residuals each bus and component owns.
      *
-     * Buses and components read and write their bound system-vector slices
-     * directly.
-     *
-     * @warning Residuals must be computed for buses, before component
-     * residuals are computed. Buses own residuals for currents
-     * Ir and Ii, but the contributions to these residuals come
-     * from components. Buses assign their residual values, while components
-     * add to those values by in-place addition. This is why (for now) bus
-     * residuals need to be computed first.
+     * Components read and write their bound system-vector slices directly.
+     * Every owned residual row, including the bus current balance rows, is
+     * assigned here before external contributions accumulate in phase two.
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateResidual()
+    int SystemModel<scalar_type, index_type>::evaluateInternalResidual()
     {
-      for (const auto& bus : buses_)
+      for (const auto& component : components_)
       {
-        bus->evaluateResidual();
+        component->evaluateInternalResidual();
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Fill component contributions to residuals owned elsewhere,
+     * e.g. bus current balances.
+     *
+     * Every component fills its external residual buffer; composite
+     * children recurse. Contributions are not scattered here; the root
+     * model assembles them in evaluateResidual().
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      for (const auto& component : components_)
+      {
+        component->evaluateExternalResidual();
       }
 
       for (const auto& component : components_)
       {
-        component->evaluateResidual();
+        component->getResidual().setDataUpdated();
       }
 
+      return 0;
+    }
+
+    /**
+     * @brief Forward the root residual vector to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::scatterExternalResidual(ScalarT* f_root)
+    {
+      for (const auto& component : components_)
+      {
+        component->scatterExternalResidual(f_root);
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Compute system residual vector
+     *
+     * Internal residuals assign every owned entry of the residual vector,
+     * external residuals fill the component contribution buffers, and the
+     * scatter assembles every contribution at its global row. Only a root
+     * model assembles; a bound system is evaluated by its root.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateResidual()
+    {
+      if (bound_)
+      {
+        Log::error() << "A bound system model is evaluated by its root model\n";
+        return 1;
+      }
+
+      evaluateInternalResidual();
+      evaluateExternalResidual();
+      this->scatterExternalResidual(f_.getData());
+
       f_.setDataUpdated();
+
+      return 0;
+    }
+
+    /**
+     * @brief Refresh Jacobian entries throughout the component tree.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::fillJacobian()
+    {
+      for (const auto& component : components_)
+      {
+        component->fillJacobian();
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Raw COO entry count of the component tree.
+     */
+    template <typename scalar_type, typename index_type>
+    index_type SystemModel<scalar_type, index_type>::jacobianNnz()
+    {
+      IdxT nnz_dup = 0;
+      for (const auto& component : components_)
+      {
+        nnz_dup += component->jacobianNnz();
+      }
+
+      return nnz_dup;
+    }
+
+    /**
+     * @brief Forward the root COO arrays to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter)
+    {
+      for (const auto& component : components_)
+      {
+        component->scatterJacobian(rows, cols, vals, counter);
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Forward the root CSR values and map to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter)
+    {
+      for (const auto& component : components_)
+      {
+        component->scatterJacobianValues(vals_csr, map_to_csr, counter);
+      }
 
       return 0;
     }
@@ -711,16 +760,17 @@ namespace GridKit
     /**
      * @brief Add bus
      *
-     * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
+     * Register the bus for ID lookup and add it to the system as an ordinary
+     * component.
      *
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::addBus(BusT* bus)
     {
-      IdxT gridkit_bus_id                = static_cast<IdxT>(buses_.size());
+      IdxT gridkit_bus_id                = static_cast<IdxT>(bus_lookup_.size());
       gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
-      buses_.push_back(bus);
-      allocated_ = false;
+      bus_lookup_.push_back(bus);
+      addComponent(bus);
     }
 
     /**
@@ -740,7 +790,11 @@ namespace GridKit
       component->setSystemBase(this->freq_system_base_,
                                this->va_system_base_);
       components_.push_back(component);
-      allocated_ = false;
+
+      // Keep the size current so a parent model can read it before this
+      // model allocates. allocate() recomputes and checks the sum.
+      size_      += component->size();
+      allocated_  = false;
     }
 
     /**
@@ -771,8 +825,24 @@ namespace GridKit
     {
       // Should fail if user-provided bus_id is incorrect
       IdxT gridkit_bus_id = gridkit_bus_indices_.at(bus_id);
-      assert((buses_[gridkit_bus_id])->busID() == bus_id);
-      return buses_[gridkit_bus_id];
+      assert((bus_lookup_[gridkit_bus_id])->busID() == bus_id);
+      return bus_lookup_[gridkit_bus_id];
+    }
+
+    /**
+     * @brief Connect the bus terminals of a component to the buses named in
+     * its data
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    template <typename ModelT>
+    void SystemModel<scalar_type, index_type>::connectTerminals(
+        ModelT& model, const typename ModelT::ModelDataT& data)
+    {
+      for (const auto& [terminal, bus_id] : data.buses)
+      {
+        model.getPorts().connectTerminal(terminal, getBus(bus_id)->getPorts());
+      }
     }
 
     /**

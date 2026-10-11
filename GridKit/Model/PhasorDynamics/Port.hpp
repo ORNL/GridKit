@@ -50,6 +50,12 @@ namespace GridKit
         return connected() ? signal_node_->linked() : false;
       }
 
+      /// The connected signal node, or `nullptr` if none is connected.
+      SignalNodeT* node() const noexcept
+      {
+        return signal_node_;
+      }
+
     protected:
       virtual void assign([[maybe_unused]] SignalNodeT*) const
       {

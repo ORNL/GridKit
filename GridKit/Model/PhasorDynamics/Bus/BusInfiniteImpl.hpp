@@ -78,14 +78,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    BusInfinite<scalar_type, index_type>::~BusInfinite()
-    {
-      if (coo_jac_ != nullptr)
-      {
-        delete coo_jac_;
-        coo_jac_ = nullptr;
-      }
-    }
+    BusInfinite<scalar_type, index_type>::~BusInfinite() = default;
 
     /**
      * @brief Set the bus ID
@@ -111,6 +104,17 @@ namespace GridKit
 
       variable_indices_.resize(size);
       residual_indices_.resize(size);
+
+      // Publish the bus voltage. It is constant, so it carries no solver
+      // indices.
+      if (auto vr_port = ports_.out.template port<BusSignalOutputs::vr>())
+      {
+        vr_port.link(&Vr_, &vr_index_);
+      }
+      if (auto vi_port = ports_.out.template port<BusSignalOutputs::vi>())
+      {
+        vi_port.link(&Vi_, &vi_index_);
+      }
 
       allocated_ = true;
       return 0;
@@ -153,19 +157,13 @@ namespace GridKit
     }
 
     /*!
-     * @brief Reset slack currents to zero.
+     * @brief Reset the slack current accumulators.
      *
-     * Infinite bus does not compute residuals, so here we just reset
-     * current values to zero. Components connected to the infinite bus
-     * will add their currents to Ir_ and Ii_. The resultant will be slack
-     * current that the infinite bus has to pick up.
-     *
-     * @warning This implementation assumes bus residuals are always evaluated
-     * _before_ component model residuals.
-     *
+     * The infinite bus owns no solver rows. The dummy current accumulators
+     * only serve diagnostics and are reset here.
      */
     template <typename scalar_type, typename index_type>
-    int BusInfinite<scalar_type, index_type>::evaluateResidual()
+    int BusInfinite<scalar_type, index_type>::evaluateInternalResidual()
     {
       Ir_ = 0.0;
       Ii_ = 0.0;

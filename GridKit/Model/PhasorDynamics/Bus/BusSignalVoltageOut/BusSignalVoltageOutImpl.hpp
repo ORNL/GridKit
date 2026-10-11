@@ -63,24 +63,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageOut<scalar_type, index_type>::~BusSignalVoltageOut()
-    {
-      if (J_rows_buffer_ != nullptr)
-      {
-        delete[] J_rows_buffer_;
-        delete[] J_cols_buffer_;
-        delete[] J_vals_buffer_;
-        J_rows_buffer_ = nullptr;
-        J_cols_buffer_ = nullptr;
-        J_vals_buffer_ = nullptr;
-      }
-
-      if (coo_jac_ != nullptr)
-      {
-        delete coo_jac_;
-        coo_jac_ = nullptr;
-      }
-    }
+    BusSignalVoltageOut<scalar_type, index_type>::~BusSignalVoltageOut() = default;
 
     /*!
      * @brief Allocate bus storage and index maps, and link output signals.
@@ -110,14 +93,14 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Publish bus voltage on the signal outlets
+      // Publish the bus voltage with the rows that receive injections
       if (auto vr_port = ports_.out.template port<BusSignalOutputs::vr>())
       {
-        vr_port.link(&y_.getData()[0], &(this->getVariableIndex(0)));
+        vr_port.link(&y_.getData()[0], &(this->getVariableIndex(0)), &(this->getResidualIndex(0)));
       }
       if (auto vi_port = ports_.out.template port<BusSignalOutputs::vi>())
       {
-        vi_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
+        vi_port.link(&y_.getData()[1], &(this->getVariableIndex(1)), &(this->getResidualIndex(1)));
       }
 
       allocated_ = true;
@@ -248,14 +231,11 @@ namespace GridKit
      * Residuals f[0] and f[1] are set to the values read from the `ir` and
      * `ii` signal inlets, respectively. Both inlets are mandatory; verify()
      * throws if either is not connected to a linked signal, and no default
-     * value is used here. Components attached to the bus add their currents
-     * afterwards.
-     *
-     * @warning This implementation assumes bus residuals are always evaluated
-     * _before_ component model residuals.
+     * value is used here. The system adds the currents of attached
+     * components to these rows.
      */
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageOut<scalar_type, index_type>::evaluateResidual()
+    int BusSignalVoltageOut<scalar_type, index_type>::evaluateInternalResidual()
     {
       auto* f = f_.getData();
 

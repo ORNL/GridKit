@@ -35,9 +35,15 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(3.0, 4.0);
-        auto                               data    = makeTestData();
-        auto*                              exciter = new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+        auto  data    = makeTestData();
+        auto* exciter = new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(data);
+        exciter->getPorts().terminal_vr[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vr_signal);
+        exciter->getPorts().terminal_vi[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vi_signal);
 
         success *= (exciter != nullptr);
         success *= (exciter->size() == 9);
@@ -54,8 +60,14 @@ namespace GridKit
 
         auto data = makeTestData();
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        exciter.getPorts().terminal_vr[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vr_signal);
+        exciter.getPorts().terminal_vi[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vi_signal);
 
         bus.allocate();
         exciter.allocate();
@@ -97,11 +109,17 @@ namespace GridKit
         data.parameters[Params::Se1] = 0.0;
         data.parameters[Params::Se2] = 0.0;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
-        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
-        ScalarT                                        efd_value{0.0};
-        IdxT                                           efd_index = INVALID_INDEX<IdxT>;
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        exciter.getPorts().terminal_vr[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vr_signal);
+        exciter.getPorts().terminal_vi[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vi_signal);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> efd_node;
+        ScalarT                                   efd_value{0.0};
+        IdxT                                      efd_index = INVALID_INDEX<IdxT>;
 
         efd_node.link(&efd_value, &efd_index);
         exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
@@ -194,8 +212,14 @@ namespace GridKit
         auto data                    = makeTestData();
         data.parameters[Params::Se1] = -0.1;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        exciter.getPorts().terminal_vr[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vr_signal);
+        exciter.getPorts().terminal_vi[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vi_signal);
 
         bus.allocate();
         exciter.allocate();
@@ -213,19 +237,24 @@ namespace GridKit
         auto data = makeTestData();
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
-        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT>      vref_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT>      vuel_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT>      voel_node;
-        ScalarT                                        efd_value{0.0};
-        ScalarT                                        vref_value{0.0};
-        ScalarT                                        vuel_value{-0.4};
-        ScalarT                                        voel_value{0.2};
-        IdxT                                           efd_index  = INVALID_INDEX<IdxT>;
-        IdxT                                           vref_index = 11;
-        IdxT                                           vuel_index = 12;
-        IdxT                                           voel_index = 13;
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      vr_signal, vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+        exciter.getPorts().terminal_vr[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vr_signal);
+        exciter.getPorts().terminal_vi[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vi_signal);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> efd_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vref_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vuel_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> voel_node;
+        ScalarT                                   efd_value{0.0};
+        ScalarT                                   vref_value{0.0};
+        ScalarT                                   vuel_value{-0.4};
+        ScalarT                                   voel_value{0.2};
+        IdxT                                      efd_index  = INVALID_INDEX<IdxT>;
+        IdxT                                      vref_index = 11;
+        IdxT                                      vuel_index = 12;
+        IdxT                                      voel_index = 13;
 
         efd_node.link(&efd_value, &efd_index);
         vref_node.link(&vref_value, &vref_index);
@@ -295,10 +324,16 @@ namespace GridKit
       {
         auto data = makeTestData();
 
-        DependencyTracking::Variable                                        Vr1{3.0};
-        DependencyTracking::Variable                                        Vi1{4.0};
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(Vr1, Vi1);
-        PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT> exciter(&bus, data);
+        DependencyTracking::Variable                                   Vr1{3.0};
+        DependencyTracking::Variable                                   Vi1{4.0};
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT> exciter(data);
+        exciter.getPorts().terminal_vr[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vr_signal);
+        exciter.getPorts().terminal_vi[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vi_signal);
 
         bus.allocate();
         exciter.allocate();
@@ -331,8 +366,14 @@ namespace GridKit
       {
         auto data = makeTestData();
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_signal);
+        bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        exciter.getPorts().terminal_vr[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vr_signal);
+        exciter.getPorts().terminal_vi[PhasorDynamics::Exciter::Ieeet1Buses::bus].connect(&vi_signal);
 
         bus.allocate();
         exciter.allocate();

@@ -34,6 +34,27 @@ namespace GridKit
         return this->signal_node_->getVariableIndex();
       }
 
+      /// Retrieve the residual index of the connected signal node.
+      IdxT signalResidualIndex() const
+      {
+        assert(this->connected());
+        return this->signal_node_->getResidualIndex();
+      }
+
+      /// Copy the signal value and its variable index.
+      void gather(ScalarT& value, IdxT& variable_index) const
+      {
+        value          = readSignal();
+        variable_index = signalVariableIndex();
+      }
+
+      /// Copy the signal value, its variable index, and its residual index.
+      void gather(ScalarT& value, IdxT& variable_index, IdxT& residual_index) const
+      {
+        gather(value, variable_index);
+        residual_index = signalResidualIndex();
+      }
+
       /// Write a value to the connected signal node.
       ///
       /// @warning Use only during initialization as this violates assumptions.

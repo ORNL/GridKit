@@ -42,18 +42,22 @@ namespace GridKit
           std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
 
       /// Construction, the monitor, and every verify() error class: missing
-      /// and invalid parameters, a null bus, and an unlinked command port.
+      /// and invalid parameters, unattached terminal voltages, and an
+      /// unlinked command port.
       TestOutcome validation()
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        // verify() only checks that the terminal voltages are attached.
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi;
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(&bus);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal;
         success *= (minimal.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (minimal.getMonitor() == nullptr);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(&bus, makeData());
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(makeData());
+        attachTerminal(configured, vr, vi);
         success *= (configured.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify() == 0);
@@ -68,37 +72,42 @@ namespace GridKit
         {
           auto data = makeData();
           data.parameters.erase(parameter);
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing(&bus, data);
+          PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing(data);
+          attachTerminal(missing, vr, vi);
           success *= (missing.verify() > 0);
         }
 
         auto bad_switch                   = makeData();
         bad_switch.parameters[Params::sL] = static_cast<IdxT>(2);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(&bus, bad_switch);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(bad_switch);
+        attachTerminal(bad_switch_model, vr, vi);
         success *= (bad_switch_model.verify() > 0);
 
-        success *= invalidParameterCase(bus, Params::mva, 0.0);
-        success *= invalidParameterCase(bus, Params::IL1, -0.1);
-        success *= invalidParameterCase(bus, Params::VL1, 0.3);
-        success *= invalidParameterCase(bus, Params::VA1, 0.3);
+        success *= invalidParameterCase(vr, vi, Params::mva, 0.0);
+        success *= invalidParameterCase(vr, vi, Params::IL1, -0.1);
+        success *= invalidParameterCase(vr, vi, Params::VL1, 0.3);
+        success *= invalidParameterCase(vr, vi, Params::VA1, 0.3);
 
         // Vhvmax must lie strictly above VA1: reject equality and reversed ordering.
-        success *= invalidParameterCase(bus, Params::Vhvmax, kVa1);
-        success *= invalidParameterCase(bus, Params::Vhvmax, HALF<RealT> * kVa1);
+        success *= invalidParameterCase(vr, vi, Params::Vhvmax, kVa1);
+        success *= invalidParameterCase(vr, vi, Params::Vhvmax, HALF<RealT> * kVa1);
 
         // Khv is optional, finite, and non-negative.
-        success *= invalidParameterCase(bus, Params::Khv, -0.1);
-        success *= invalidParameterCase(bus,
+        success *= invalidParameterCase(vr, vi, Params::Khv, -0.1);
+        success *= invalidParameterCase(vr,
+                                        vi,
                                         Params::Khv,
                                         std::numeric_limits<RealT>::infinity());
 
-        // A null bus and an attached command with no linked source count as
-        // configuration errors on the same footing as bad parameters.
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> busless(nullptr, makeData());
-        success *= (busless.verify() > 0);
+        // Unattached terminal voltages and an attached command with no linked
+        // source count as configuration errors on the same footing as bad
+        // parameters.
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> unattached(makeData());
+        success *= (unattached.verify() > 0);
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>       unlinked_node;
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> unlinked(&bus, makeData());
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> unlinked(makeData());
+        attachTerminal(unlinked, vr, vi);
         unlinked.getPorts().in.template port<Data::SignalInputs::ipcmd>().connect(&unlinked_node);
         success *= (unlinked.verify() > 0);
 
@@ -158,9 +167,9 @@ namespace GridKit
         success *= scalarMatches(fixture.iqcmd, 0.5 * y[index(Vars::IQ)], "published iqcmd base conversion");
         success *= scalarMatches(pbranch_node.read(), 0.4, "pbranch signal");
 
-        // The accumulated bus injection is the system-base branch current.
-        success *= scalarMatches(fixture.bus.Ir(), 0.26, "bus real injection");
-        success *= scalarMatches(fixture.bus.Ii(), 0.32, "bus imaginary injection");
+        // The bus injection is the system-base branch current.
+        success *= scalarMatches(fixture.regca.getExternalResidual()[0], 0.26, "bus real injection");
+        success *= scalarMatches(fixture.regca.getExternalResidual()[1], 0.32, "bus imaginary injection");
 
         success *= allResidualsZero(fixture.regca);
 
@@ -717,23 +726,28 @@ namespace GridKit
 #endif
 
     private:
-      using Params = PhasorDynamics::Converter::RegcaParameters;
-      using Vars   = PhasorDynamics::Converter::RegcaInternalVariables;
-      using Data   = PhasorDynamics::Converter::RegcaData<RealT, IdxT>;
-      using Ext    = typename Data::SignalInputs;
+      using Params   = PhasorDynamics::Converter::RegcaParameters;
+      using Vars     = PhasorDynamics::Converter::RegcaInternalVariables;
+      using Data     = PhasorDynamics::Converter::RegcaData<RealT, IdxT>;
+      using Ext      = typename Data::SignalInputs;
+      using Terminal = PhasorDynamics::Converter::RegcaBuses;
 
-      /// Owns a terminal bus, the model under test, and its two command
-      /// signals. Copying would dangle the bus pointer regca holds, so the
-      /// fixture is pinned.
+      /// Owns a terminal bus, its voltage nodes, the model under test, and
+      /// its two command signals. Copying would dangle the node pointers
+      /// regca and the bus hold, so the fixture is pinned.
       template <typename T>
       struct Fixture
       {
         explicit Fixture(const Data& data, RealT vr = 1.0, RealT vi = 0.0)
           : bus(static_cast<T>(vr), static_cast<T>(vi)),
-            regca(&bus, data),
+            regca(data),
             ipcmd_index(regca.size() + bus.size()),
             iqcmd_index(ipcmd_index + 1)
         {
+          // The bus publishes its voltage through these nodes in allocate().
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr_node);
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi_node);
+          attachTerminal(regca, vr_node, vi_node);
         }
 
         Fixture(const Fixture&)            = delete;
@@ -781,8 +795,8 @@ namespace GridKit
           return true;
         }
 
-        /// Zeroes the bus injection, then accumulates regca into it. The
-        /// ordering the models require.
+        /// Evaluates the bus, then regca. The injection regca contributes to
+        /// the bus is held in its external residual.
         int evaluate()
         {
           const int bus_status = bus.evaluateResidual();
@@ -793,6 +807,8 @@ namespace GridKit
           return regca.evaluateResidual();
         }
 
+        PhasorDynamics::SignalNode<T, IdxT>       vr_node;
+        PhasorDynamics::SignalNode<T, IdxT>       vi_node;
         PhasorDynamics::Bus<T, IdxT>              bus;
         PhasorDynamics::Converter::Regca<T, IdxT> regca;
 
@@ -808,6 +824,16 @@ namespace GridKit
       static size_t index(Vars variable)
       {
         return static_cast<size_t>(variable);
+      }
+
+      /// Attaches regca to the voltage nodes of its terminal bus.
+      template <typename T>
+      static void attachTerminal(PhasorDynamics::Converter::Regca<T, IdxT>& regca,
+                                 PhasorDynamics::SignalNode<T, IdxT>&       vr,
+                                 PhasorDynamics::SignalNode<T, IdxT>&       vi)
+      {
+        regca.getPorts().terminal_vr[Terminal::bus].connect(&vr);
+        regca.getPorts().terminal_vi[Terminal::bus].connect(&vi);
       }
 
       // Bus and command values shared by the residual and Jacobian fixtures.
@@ -949,11 +975,15 @@ namespace GridKit
         fixture.bus.y().setDataUpdated();
       }
 
-      bool invalidParameterCase(PhasorDynamics::Bus<ScalarT, IdxT>& bus, Params param, RealT value)
+      bool invalidParameterCase(PhasorDynamics::SignalNode<ScalarT, IdxT>& vr,
+                                PhasorDynamics::SignalNode<ScalarT, IdxT>& vi,
+                                Params                                     param,
+                                RealT                                      value)
       {
         auto data              = makeData();
         data.parameters[param] = value;
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(data);
+        attachTerminal(model, vr, vi);
         return model.verify() > 0;
       }
 

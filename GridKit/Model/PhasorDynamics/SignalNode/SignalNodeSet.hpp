@@ -58,6 +58,16 @@ namespace GridKit
       }
 
       /**
+       * @brief Create a new node without an id or a name
+       */
+      SignalNodeT* add()
+      {
+        auto node = new SignalNodeT();
+        signal_nodes_.push_back(node);
+        return node;
+      }
+
+      /**
        * @brief Access a SignalNode using its id
        */
       SignalNodeT* operator[](IdxT signal_id)

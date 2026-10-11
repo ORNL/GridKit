@@ -35,6 +35,20 @@ namespace GridKit
       using GenClassicalDataT       = PhasorDynamics::GenClassicalData<RealT, IdxT>;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
+      template <typename T>
+      struct BusConnection
+      {
+        PhasorDynamics::SignalNode<T, IdxT> vr, vi;
+
+        BusConnection(PhasorDynamics::BusBase<T, IdxT>& bus, PhasorDynamics::GenClassical<T, IdxT>& model)
+        {
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&vr);
+          bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&vi);
+          model.getPorts().terminal_vr[PhasorDynamics::GenClassicalBuses::bus].connect(&vr);
+          model.getPorts().terminal_vi[PhasorDynamics::GenClassicalBuses::bus].connect(&vi);
+        }
+      };
+
       static GenClassicalDataT makeGenClassicalData()
       {
         using Parameter = typename GenClassicalDataT::Parameters;
@@ -62,11 +76,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus  = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-        auto  data = makeGenClassicalData();
+        auto data = makeGenClassicalData();
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::GenClassical<ScalarT, IdxT>(bus, data);
+            new PhasorDynamics::GenClassical<ScalarT, IdxT>(data);
 
         success *= (machine != nullptr);
 
@@ -74,7 +87,6 @@ namespace GridKit
         {
           delete machine;
         }
-        delete bus;
 
         return success.report(__func__);
       }
@@ -105,7 +117,8 @@ namespace GridKit
         };
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 1.0);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(data);
+        BusConnection<ScalarT>                      connection(bus, gen);
 
         bus.allocate();
         bus.initialize();
@@ -145,7 +158,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
         auto                                        data = makeGenClassicalData();
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(data);
+        BusConnection<ScalarT>                      connection(bus, gen);
 
         bus.allocate();
         bus.initialize();
@@ -187,7 +201,8 @@ namespace GridKit
         data.parameters[Parameter::Xdp] = RealT{0.2};
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 1.0);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(data);
+        BusConnection<ScalarT>                      connection(bus, gen);
 
         bus.allocate();
         bus.initialize();
@@ -220,7 +235,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
         auto                                        data = makeGenClassicalData();
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(data);
+        BusConnection<ScalarT>                      connection(bus, gen);
 
         bus.allocate();
         bus.initialize();
@@ -259,7 +275,8 @@ namespace GridKit
         data.monitored_variables.insert(Variable::p);
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(data);
+        BusConnection<ScalarT>                      connection(bus, gen);
 
         bus.allocate();
         bus.initialize();
@@ -310,7 +327,8 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT>   speed;
         PhasorDynamics::SignalNode<ScalarT, IdxT>   pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>   efd;
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(data);
+        BusConnection<ScalarT>                      connection(bus, gen);
 
         ScalarT pmech_value{0.0};
         ScalarT efd_value{0.0};
@@ -370,7 +388,8 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 1.0);
         PhasorDynamics::SignalNode<ScalarT, IdxT>   pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>   efd;
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(data);
+        BusConnection<ScalarT>                      connection(bus, gen);
 
         ScalarT pmech_value{1.0};
         ScalarT efd_value{2.0};
@@ -455,7 +474,8 @@ namespace GridKit
         DependencyTracking::Variable                                     Vi1{1.0};
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>          bus(Vr1, Vi1);
         auto                                                             data = makeGenClassicalData();
-        PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(data);
+        BusConnection<DependencyTracking::Variable>                      connection(bus, gen);
 
         bus.allocate();
         gen.allocate();
@@ -489,7 +509,8 @@ namespace GridKit
         ScalarT                                     Vi1{1.0};
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         auto                                        data = makeGenClassicalData();
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(data);
+        BusConnection<ScalarT>                      connection(bus, gen);
 
         bus.allocate();
         gen.allocate();

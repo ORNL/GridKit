@@ -1,14 +1,20 @@
 #pragma once
-
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a `LoadZ`
+    enum class LoadZExternalVariables : size_t
+    {
+      VR, ///< \f$V_r\f$
+      VI, ///< \f$V_i\f$
+    };
+
     /*!
      * @brief Implementation of a constant load.
      *
@@ -25,8 +31,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::abs_tol_;
       using Component<scalar_type, index_type>::tag_;
-      using Component<scalar_type, index_type>::wb_;
-      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::y_ext_;
+      using Component<scalar_type, index_type>::variable_indices_ext_;
+      using Component<scalar_type, index_type>::residual_indices_ext_;
+      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -36,16 +44,16 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = LoadZData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using ModelDataT   = LoadZData<RealT, IdxT>;
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+      using MonitorT     = Model::VariableMonitor<LoadZ, LoadZData>;
 
-      LoadZ(BusT* bus);
-      LoadZ(BusT* bus, RealT R, RealT X);
-      LoadZ(BusT* bus, const ModelDataT& data);
+      LoadZ();
+      LoadZ(RealT R, RealT X);
+      LoadZ(const ModelDataT& data);
       virtual ~LoadZ();
 
       virtual int setGridKitComponentID(IdxT) override final;
@@ -53,12 +61,29 @@ namespace GridKit
       virtual int initialize() override final;
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
-      virtual int evaluateResidual() override final;
+      virtual int evaluateInternalResidual() override final;
+      virtual int evaluateExternalResidual() override final;
       virtual int evaluateJacobian() override final;
 
       virtual int verify() const override final
       {
-        return 0;
+        int error_count = 0;
+        if (!ports_.terminal_vr[LoadZBuses::bus].connected())
+        {
+          Log::error() << "LoadZ: bus terminal vr is not connected\n";
+          ++error_count;
+        }
+        if (!ports_.terminal_vi[LoadZBuses::bus].connected())
+        {
+          Log::error() << "LoadZ: bus terminal vi is not connected\n";
+          ++error_count;
+        }
+        return error_count;
+      }
+
+      SignalPortsT& getPorts()
+      {
+        return ports_;
       }
 
     public:
@@ -76,38 +101,28 @@ namespace GridKit
 
     private:
       void initializeMonitor();
+      void gatherExternalVariables();
       void setDerivedParams();
 
-      ScalarT& Vr()
+      ScalarT Vr() const
       {
-        return bus_->Vr();
+        return ports_.terminal_vr[LoadZBuses::bus].readSignal();
       }
 
-      ScalarT& Vi()
+      ScalarT Vi() const
       {
-        return bus_->Vi();
-      }
-
-      ScalarT& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      ScalarT& Ii()
-      {
-        return bus_->Ii();
+        return ports_.terminal_vi[LoadZBuses::bus].readSignal();
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
     public:
-      __attribute__((always_inline)) inline int evaluateBusResidual(
+      __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateInternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus_{nullptr};
       RealT R_{0.1};
       RealT X_{0.01};
 
@@ -116,6 +131,9 @@ namespace GridKit
       RealT g_;
 
       std::unique_ptr<MonitorT> monitor_;
+
+      /// Signal ports
+      SignalPortsT ports_;
     };
 
   } // namespace PhasorDynamics

@@ -1,10 +1,12 @@
 #pragma once
-
+#include <span>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -62,6 +64,142 @@ namespace GridKit
       }
 
       virtual int verify() const = 0;
+
+      /**
+       * @brief Evaluate this component's residual buffers standalone.
+       *
+       * Owned rows are assigned first, then external contributions are
+       * filled. Contributions are not scattered; a composite model that
+       * owns global storage assembles them through
+       * scatterExternalResidual().
+       */
+      virtual int evaluateResidual() override
+      {
+        evaluateInternalResidual();
+        evaluateExternalResidual();
+        return 0;
+      }
+
+      virtual int evaluateInternalResidual() = 0;
+
+      virtual int evaluateExternalResidual()
+      {
+        return 0;
+      }
+
+      /**
+       * @brief Add this component's external contributions to the root
+       * residual vector.
+       *
+       * Rows map through the external residual index map. Entries mapped
+       * to INVALID_INDEX, e.g. constant voltage rows, are dropped. A
+       * composite model forwards the call to its children.
+       */
+      virtual int scatterExternalResidual(ScalarT* f_root)
+      {
+        if (residual_indices_ext_.empty())
+        {
+          return 0;
+        }
+
+        const auto* f_ext = f_ext_.getData();
+        for (size_t i = 0; i < residual_indices_ext_.size(); ++i)
+        {
+          if (residual_indices_ext_[i] != INVALID_INDEX<IdxT>)
+          {
+            f_root[static_cast<size_t>(residual_indices_ext_[i])] += f_ext[i];
+          }
+        }
+        return 0;
+      }
+
+      /**
+       * @brief Refresh this component's Jacobian entries.
+       *
+       * A leaf's standalone Jacobian evaluation is exactly its entry
+       * refresh; a composite model recurses instead.
+       */
+      virtual int fillJacobian()
+      {
+        return this->evaluateJacobian();
+      }
+
+      /**
+       * @brief Raw COO entry count of this component's subtree.
+       */
+      virtual IdxT jacobianNnz()
+      {
+        if (coo_jac_ == nullptr)
+        {
+          Log::warning() << "A component has returned a nullptr Jacobian.\n";
+          return 0;
+        }
+        return coo_jac_->getNnz();
+      }
+
+      /**
+       * @brief Append this subtree's COO triplets to the root arrays.
+       *
+       * Entries carry global indices. A composite model forwards the call
+       * to its children.
+       */
+      virtual int scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter)
+      {
+        if (coo_jac_ == nullptr)
+        {
+          Log::warning() << "A component has returned a nullptr Jacobian.\n";
+          return 0;
+        }
+        const IdxT*  entry_rows = coo_jac_->getRowData();
+        const IdxT*  entry_cols = coo_jac_->getColData();
+        const RealT* entry_vals = coo_jac_->getValues();
+        for (IdxT i = 0; i < coo_jac_->getNnz(); ++i)
+        {
+          rows[counter] = entry_rows[i];
+          cols[counter] = entry_cols[i];
+          vals[counter] = entry_vals[i];
+          counter++;
+        }
+        return 0;
+      }
+
+      /**
+       * @brief Add this subtree's COO values into CSR storage through the
+       * root map.
+       *
+       * The map is positional in scatter order, so the traversal must match
+       * the scatterJacobian() call that built it. A composite model
+       * forwards the call to its children.
+       */
+      virtual int scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter)
+      {
+        if (coo_jac_ == nullptr)
+        {
+          return 0;
+        }
+        const RealT* entry_vals = coo_jac_->getValues();
+        for (IdxT i = 0; i < coo_jac_->getNnz(); ++i)
+        {
+          vals_csr[map_to_csr[counter]] += entry_vals[i];
+          counter++;
+        }
+        return 0;
+      }
+
+      /**
+       * @brief Register this subtree's variable monitors with a controller.
+       *
+       * A composite model forwards the call to its children, so the root
+       * controller sees every monitor at any depth.
+       */
+      virtual void collectMonitors(Model::VariableMonitorController<ScalarT>& controller)
+      {
+        const auto* mon = this->getMonitor();
+        if (mon != nullptr && !mon->empty())
+        {
+          controller.addMonitor(mon);
+        }
+      }
 
       IdxT size() override final
       {
@@ -185,10 +323,11 @@ namespace GridKit
         }
 
         allocated_ = true;
+        bound_     = true;
         return 0;
       }
 
-      int setVariableIndex(IdxT local_index, IdxT global_index)
+      virtual int setVariableIndex(IdxT local_index, IdxT global_index)
       {
         variable_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
@@ -204,7 +343,7 @@ namespace GridKit
         return variable_indices_;
       }
 
-      int setResidualIndex(IdxT local_index, IdxT global_index)
+      virtual int setResidualIndex(IdxT local_index, IdxT global_index)
       {
         residual_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
@@ -218,6 +357,16 @@ namespace GridKit
       const std::vector<IdxT>& getResidualIndices() const
       {
         return residual_indices_;
+      }
+
+      std::span<const ScalarT> getExternalResidual() const
+      {
+        return {f_ext_.getData(), static_cast<size_t>(f_ext_.getSize())};
+      }
+
+      const std::vector<IdxT>& getExternalResidualIndices() const
+      {
+        return residual_indices_ext_;
       }
 
       CsrMatrixT* getCsrJacobian() const override
@@ -306,6 +455,23 @@ namespace GridKit
         yp_.resize(n);
         f_.resize(n);
         abs_tol_.resize(n);
+      }
+
+      /**
+       * @brief Allocate this component's external variable vectors.
+       *
+       * Entry k of each vector describes external variable k: its value, its
+       * global column, and the global row that receives f_ext_[k]. Entries
+       * left at INVALID_INDEX are dropped from the residual and Jacobian.
+       */
+      void allocateExternalVectors(IdxT n)
+      {
+        y_ext_.resize(n);
+        y_ext_.setToZero();
+        f_ext_.resize(n);
+        f_ext_.setToZero();
+        variable_indices_ext_.assign(static_cast<size_t>(n), INVALID_INDEX<IdxT>);
+        residual_indices_ext_.assign(static_cast<size_t>(n), INVALID_INDEX<IdxT>);
       }
 
       /**
@@ -537,15 +703,20 @@ namespace GridKit
       IdxT              nnz_{0};
       /// Global (system-level) variable indices
       std::vector<IdxT> variable_indices_;
+      std::vector<IdxT> variable_indices_ext_;
       /// Global (system-level) residual indices
       std::vector<IdxT> residual_indices_;
+      std::vector<IdxT> residual_indices_ext_;
 
       VectorT           y_;
+      VectorT           y_ext_;
       VectorT           yp_;
       std::vector<bool> tag_;
       VectorT           abs_tol_;
       VectorT           f_;
+      VectorT           f_ext_;
       bool              allocated_{false};
+      bool              bound_{false};
 
       std::vector<ScalarT> g_;
 
@@ -570,15 +741,6 @@ namespace GridKit
       std::vector<ScalarT> param_lo_{};
 
       IdxT gridkit_component_id_{0};
-
-      /// Bus interface values seen by the internal residual
-      VectorT           wb_;
-      /// External residual equations vector
-      VectorT           h_;
-      /// External signal values seen by the internal residual
-      VectorT           ws_;
-      /// Global indices of attached external signals
-      std::vector<IdxT> ws_indices_;
 
       RealT time_;
       RealT alpha_;

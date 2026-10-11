@@ -10,7 +10,6 @@
 #include <memory>
 #include <optional>
 
-#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
@@ -21,9 +20,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
     namespace Controller
     {
       /// Internal variables and residual rows of a `Reecb`.
@@ -53,9 +49,11 @@ namespace GridKit
         IPCMD,  ///< \f$I_p^\mathrm{cmd}\f$ Algebraic active-current command output on system base [p.u.]
       };
 
-      /// External signal variables read or initialized by a `Reecb`.
+      /// External variables read by a `Reecb`.
       enum class ReecbExternalVariables : size_t
       {
+        VR,     ///< \f$V_\mathrm{r}\f$ Terminal-bus real voltage [p.u.]
+        VI,     ///< \f$V_\mathrm{i}\f$ Terminal-bus imaginary voltage [p.u.]
         PE,     ///< \f$P_e\f$ Optional Known active-power feedback input on system base [p.u.]
         QGEN,   ///< \f$Q^\mathrm{gen}\f$ Optional Known reactive-power feedback input on system base [p.u.]
         QEXT,   ///< \f$Q^\mathrm{ext}\f$ Optional Unknown Volt/VAr reference input: system-base reactive power [p.u.], or the terminal-voltage reference [p.u.] when \f$s_Q=1\f$ and \f$s_V=0\f$
@@ -88,17 +86,15 @@ namespace GridKit
         using Component<scalar_type, index_type>::va_component_base_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::yp_;
 
       public:
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
-        using BusT               = BusBase<ScalarT, IdxT>;
         using ModelDataT         = ReecbData<RealT, IdxT>;
         using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
         using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
@@ -110,8 +106,8 @@ namespace GridKit
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
-        Reecb(BusT* bus);
-        Reecb(BusT* bus, const ModelDataT& data);
+        Reecb();
+        Reecb(const ModelDataT& data);
         ~Reecb();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -120,7 +116,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
+        int evaluateInternalResidual() override final;
         int evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
@@ -133,8 +129,7 @@ namespace GridKit
         [[gnu::always_inline]] inline int evaluateInternalResidual(
             const ScalarT* y,
             const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
+            const ScalarT* y_ext,
             ScalarT*       f);
 
       private:
@@ -142,6 +137,8 @@ namespace GridKit
         /// initialization tolerance [p.u. current squared].
         static constexpr RealT CURRENT_CIRCLE_KNEE =
             INITIALIZATION_TOLERANCE / Math::MU<RealT>;
+
+        void gatherExternalVariables();
 
         struct InitialPoint;
 
@@ -190,15 +187,20 @@ namespace GridKit
         static RealT logOneMinusExp(RealT x);
         bool         iclamp(RealT output, RealT lower, RealT upper, RealT& input) const;
 
-        ScalarT& Vr();
-        ScalarT& Vi();
+        ScalarT Vr() const
+        {
+          return ports_.terminal_vr[ReecbBuses::bus].readSignal();
+        }
+
+        ScalarT Vi() const
+        {
+          return ports_.terminal_vi[ReecbBuses::bus].readSignal();
+        }
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
 
         static constexpr RealT VMEAS_MINIMUM = static_cast<RealT>(0.01);
-
-        BusT* bus_{nullptr};
 
         // Input parameters
         bool  PfFlag_{false};

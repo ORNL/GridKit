@@ -8,7 +8,6 @@
 
 #include <iostream>
 
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -25,16 +24,14 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       template <typename scalar_type, typename index_type>
-      SexsPti<scalar_type, index_type>::SexsPti(BusT* bus)
-        : bus_(bus)
+      SexsPti<scalar_type, index_type>::SexsPti()
       {
         size_ = 3;
       }
 
       template <typename scalar_type, typename index_type>
-      SexsPti<scalar_type, index_type>::SexsPti(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      SexsPti<scalar_type, index_type>::SexsPti(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initModelParams(data);
         initializeMonitor();
@@ -74,12 +71,7 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        wb_.resize(2);
-
-        const auto signal_size = Utilities::enum_size<SexsPtiExternalVariables>();
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<SexsPtiExternalVariables>()));
 
         if (auto efd_port = ports_.out.template port<SexsPtiSignalOutputs::efd>())
         {
@@ -95,9 +87,14 @@ namespace GridKit
       {
         int ret = missing_param_count_;
 
-        if (bus_ == nullptr)
+        if (!ports_.terminal_vr[SexsPtiBuses::bus].connected())
         {
-          Log::error() << "SexsPti: bus pointer is null\n";
+          Log::error() << "SexsPti: bus terminal vr is not connected\n";
+          ret += 1;
+        }
+        if (!ports_.terminal_vi[SexsPtiBuses::bus].connected())
+        {
+          Log::error() << "SexsPti: bus terminal vi is not connected\n";
           ret += 1;
         }
         if (Ta_ < 0.0)
@@ -190,8 +187,8 @@ namespace GridKit
           oel_on_ = ONE<RealT>;
         }
 
-        ScalarT vreal = bus_->Vr();
-        ScalarT vimag = bus_->Vi();
+        ScalarT vreal = ports_.terminal_vr[SexsPtiBuses::bus].readSignal();
+        ScalarT vimag = ports_.terminal_vi[SexsPtiBuses::bus].readSignal();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
         ScalarT vtr   = efd0 / K_;
         ScalarT vr    = (Ta_ - Tb_) * vtr;
@@ -261,14 +258,15 @@ namespace GridKit
       __attribute__((always_inline)) inline int SexsPti<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
-        const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
-        const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);
-        const auto VUEL = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
-        const auto VOEL = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
+        const auto VREAL = static_cast<size_t>(SexsPtiExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(SexsPtiExternalVariables::VIMAG);
+        const auto VREF  = static_cast<size_t>(SexsPtiExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(SexsPtiExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
+        const auto VOEL  = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
 
         ScalarT vr      = y[0];
         ScalarT efd     = y[1];
@@ -276,11 +274,11 @@ namespace GridKit
         ScalarT vr_dot  = yp[0];
         ScalarT efd_dot = yp[1];
 
-        ScalarT Ec   = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
-        ScalarT vref = ws[VREF];
-        ScalarT vs   = ws[VS];
-        ScalarT vuel = ws[VUEL];
-        ScalarT voel = ws[VOEL];
+        ScalarT Ec   = std::sqrt(y_ext[VREAL] * y_ext[VREAL] + y_ext[VIMAG] * y_ext[VIMAG]);
+        ScalarT vref = y_ext[VREF];
+        ScalarT vs   = y_ext[VS];
+        ScalarT vuel = y_ext[VUEL];
+        ScalarT voel = y_ext[VOEL];
 
         ScalarT func = (-efd + (K_ / Tb_) * (-vr + Ta_ * vtr)) / Te_;
 
@@ -291,22 +289,26 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Gather external variables and index maps.
+       *
+       */
       template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::evaluateResidual()
+      void SexsPti<scalar_type, index_type>::gatherExternalVariables()
       {
-        auto* ws = ws_.getData();
+        auto* y_ext = y_ext_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
         auto read_signal = [&]<SexsPtiSignalInputs      input,
                                SexsPtiExternalVariables variable>(const ScalarT& latched)
         {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
+          const auto index             = static_cast<size_t>(variable);
+          y_ext[index]                 = latched;
+          variable_indices_ext_[index] = INVALID_INDEX<IdxT>;
           if (auto port = ports_.in.template port<input>())
           {
-            ws[index]          = port.readSignal();
-            ws_indices_[index] = port.signalVariableIndex();
+            y_ext[index]                 = port.readSignal();
+            variable_indices_ext_[index] = port.signalVariableIndex();
           }
         };
 
@@ -319,14 +321,22 @@ namespace GridKit
         read_signal.template operator()<SexsPtiSignalInputs::voel,
                                         SexsPtiExternalVariables::VOEL>(voel_set_);
 
-        auto* wb = wb_.getData();
-        wb[0]    = bus_->Vr();
-        wb[1]    = bus_->Vi();
+        // Bus voltages are read only; the exciter injects no current.
+        const auto VREAL = static_cast<size_t>(SexsPtiExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(SexsPtiExternalVariables::VIMAG);
+        ports_.terminal_vr[SexsPtiBuses::bus].gather(y_ext[VREAL], variable_indices_ext_[VREAL]);
+        ports_.terminal_vi[SexsPtiBuses::bus].gather(y_ext[VIMAG], variable_indices_ext_[VIMAG]);
+      }
+
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb, ws, f);
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
 
         f_.setDataUpdated();
 

@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
@@ -26,9 +25,8 @@ namespace GridKit
      * - Number of optimization parameters = 0
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus)
-      : bus_(bus),
-        bus_id_(0),
+    Genrou<scalar_type, index_type>::Genrou()
+      : bus_id_(0),
         p0_(0.),
         q0_(0.),
         H_(3.),
@@ -57,8 +55,7 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus,
-                                            RealT p0,
+    Genrou<scalar_type, index_type>::Genrou(RealT p0,
                                             RealT q0,
                                             RealT H,
                                             RealT D,
@@ -76,8 +73,7 @@ namespace GridKit
                                             RealT Xl,
                                             RealT S10,
                                             RealT S12)
-      : bus_(bus),
-        bus_id_(0),
+      : bus_id_(0),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -106,10 +102,8 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT*             bus,
-                                            const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    Genrou<scalar_type, index_type>::Genrou(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -122,9 +116,8 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalNodeT* omega, SignalNodeT* pmech, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    Genrou<scalar_type, index_type>::Genrou(SignalNodeT* omega, SignalNodeT* pmech, const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       ports_.in.template port<GenrouSignalInputs::pmech>().connect(pmech);
       ports_.out.template port<GenrouSignalOutputs::speed>().connect(omega);
@@ -139,9 +132,8 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalNodeT* omega, SignalNodeT* pmech, SignalNodeT* efd, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    Genrou<scalar_type, index_type>::Genrou(SignalNodeT* omega, SignalNodeT* pmech, SignalNodeT* efd, const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       ports_.in.template port<GenrouSignalInputs::pmech>().connect(pmech);
       ports_.in.template port<GenrouSignalInputs::efd>().connect(efd);
@@ -325,15 +317,8 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Resize bus data
-      wb_.resize(2);
-      h_.resize(2);
-
-      // Resize signal variable data
-      ws_.resize(2);
-      ws_indices_.resize(2);
-      ws_indices_[0] = INVALID_INDEX<IdxT>;
-      ws_indices_[1] = INVALID_INDEX<IdxT>;
+      // Resize coupling data
+      this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<GenrouExternalVariables>()));
 
       // Set output signals
       if (auto speed_port = ports_.out.template port<GenrouSignalOutputs::speed>())
@@ -506,8 +491,7 @@ namespace GridKit
     __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateInternalResidual(
         const ScalarT* y,
         const ScalarT* yp,
-        const ScalarT* wb,
-        const ScalarT* ws,
+        const ScalarT* y_ext,
         ScalarT*       f)
     {
       /* Read variables */
@@ -537,13 +521,18 @@ namespace GridKit
       ScalarT psiqp_dot = yp[4];
       ScalarT Edp_dot   = yp[5];
 
+      const auto VR  = static_cast<size_t>(GenrouExternalVariables::VR);
+      const auto VI  = static_cast<size_t>(GenrouExternalVariables::VI);
+      const auto PM  = static_cast<size_t>(GenrouExternalVariables::PM);
+      const auto EFD = static_cast<size_t>(GenrouExternalVariables::EFD);
+
       // Set coupling variable aliases
-      ScalarT vr = wb[0];
-      ScalarT vi = wb[1];
+      ScalarT vr = y_ext[VR];
+      ScalarT vi = y_ext[VI];
 
       // Set signal variable aliases
-      ScalarT pmech = this->toComponentBase(ws[0]);
-      ScalarT efd   = ws[1];
+      ScalarT pmech = this->toComponentBase(y_ext[PM]);
+      ScalarT efd   = y_ext[EFD];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
@@ -572,73 +561,97 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus residual
+     * @brief External residual
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateExternalResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+        [[maybe_unused]] const ScalarT* y_ext,
+        ScalarT*                        f_ext)
     {
       ScalarT ir = y[15];
       ScalarT ii = y[16];
 
+      const auto VR = static_cast<size_t>(GenrouExternalVariables::VR);
+      const auto VI = static_cast<size_t>(GenrouExternalVariables::VI);
+
       // Convert current injection to system base for the network.
-      h[0] = this->toSystemBase(ir);
-      h[1] = this->toSystemBase(ii);
+      f_ext[VR] = this->toSystemBase(ir);
+      f_ext[VI] = this->toSystemBase(ii);
 
       return 0;
     }
 
     /**
-     * \brief Residual evaluation and contribution to the connected bus
+     * @brief Gather external variables and index maps.
      *
      */
     template <typename scalar_type, typename index_type>
-    int Genrou<scalar_type, index_type>::evaluateResidual()
+    void Genrou<scalar_type, index_type>::gatherExternalVariables()
     {
-      auto* ws = ws_.getData();
+      const auto VR  = static_cast<size_t>(GenrouExternalVariables::VR);
+      const auto VI  = static_cast<size_t>(GenrouExternalVariables::VI);
+      const auto PM  = static_cast<size_t>(GenrouExternalVariables::PM);
+      const auto EFD = static_cast<size_t>(GenrouExternalVariables::EFD);
+
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
+
+      // Bus voltages
+      ports_.terminal_vr[GenrouBuses::bus].gather(y_ext[VR], columns[VR], rows[VR]);
+      ports_.terminal_vi[GenrouBuses::bus].gather(y_ext[VI], columns[VI], rows[VI]);
 
       // Mechanical Power
-      ws[0] = pmech_set_;
+      y_ext[PM] = pmech_set_;
       if (auto pmech_port = ports_.in.template port<GenrouSignalInputs::pmech>())
       {
-        ws[0]          = pmech_port.readSignal();
-        ws_indices_[0] = pmech_port.signalVariableIndex();
+        y_ext[PM]   = pmech_port.readSignal();
+        columns[PM] = pmech_port.signalVariableIndex();
       }
 
       // Exciter Efield
-      ws[1] = efd_set_;
+      y_ext[EFD] = efd_set_;
       if (auto efd_port = ports_.in.template port<GenrouSignalInputs::efd>())
       {
-        ws[1]          = efd_port.readSignal();
-        ws_indices_[1] = efd_port.signalVariableIndex();
+        y_ext[EFD]   = efd_port.readSignal();
+        columns[EFD] = efd_port.signalVariableIndex();
       }
+    }
 
-      // Bus voltages
-      auto* wb = wb_.getData();
-      wb[0]    = Vr();
-      wb[1]    = Vi();
+    /**
+     * \brief Internal residual for the generator model.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int Genrou<scalar_type, index_type>::evaluateInternalResidual()
+    {
+      gatherExternalVariables();
 
-      // Residual evaluation
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
-      auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, ws, f);
-      evaluateBusResidual(y, yp, wb, h);
-
-      // Genrou contribution to bus algebraic equations
-      Ir() += h[0];
-      Ii() += h[1];
-
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
+      evaluateInternalResidual(y, yp, y_ext_.getData(), f);
       f_.setDataUpdated();
+
+      return 0;
+    }
+
+    /**
+     * \brief External residual contributions to rows owned by the bus.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int Genrou<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      auto* y_ext = y_ext_.getData();
+      auto* f_ext = f_ext_.getData();
+
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      evaluateExternalResidual(y, yp, y_ext, f_ext);
 
       return 0;
     }

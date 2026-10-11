@@ -20,9 +20,6 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename scalar_type, typename index_type>
     class SignalNode;
 
     namespace Controller
@@ -57,6 +54,8 @@ namespace GridKit
       /// External variables of `Repca`.
       enum class RepcaExternalVariables : size_t
       {
+        VR,      ///< \f$V_\mathrm{r}\f$ Regulated-bus real voltage component [p.u.]
+        VI,      ///< \f$V_\mathrm{i}\f$ Regulated-bus imaginary voltage component [p.u.]
         IR,      ///< \f$I_\mathrm{r}\f$ Required branch-current real component on system base [p.u.]
         II,      ///< \f$I_\mathrm{i}\f$ Required branch-current imaginary component on system base [p.u.]
         P,       ///< \f$P\f$ Required branch active power on system base [p.u.]
@@ -94,17 +93,15 @@ namespace GridKit
         using Component<scalar_type, index_type>::va_component_base_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::yp_;
 
       public:
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
-        using BusT               = BusBase<ScalarT, IdxT>;
         using SignalT            = SignalNode<ScalarT, IdxT>;
         using ModelDataT         = RepcaData<RealT, IdxT>;
         using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
@@ -115,8 +112,8 @@ namespace GridKit
 
         static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-12);
 
-        Repca(BusT* bus);
-        Repca(BusT* bus, const ModelDataT& data);
+        Repca();
+        Repca(const ModelDataT& data);
         ~Repca();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -125,7 +122,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
+        int evaluateInternalResidual() override final;
         int evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
@@ -138,8 +135,7 @@ namespace GridKit
         [[gnu::always_inline]] inline int evaluateInternalResidual(
             const ScalarT* y,
             const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
+            const ScalarT* y_ext,
             ScalarT*       f);
 
       private:
@@ -148,6 +144,7 @@ namespace GridKit
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
+        void gatherExternalVariables();
         void setDerivedParameters();
 
         bool invertClamp(ScalarT output, RealT lower, RealT upper, ScalarT& input) const;
@@ -156,15 +153,20 @@ namespace GridKit
 
         static RealT logOneMinusExp(RealT x);
 
-        ScalarT& Vr();
-        ScalarT& Vi();
+        ScalarT Vr() const
+        {
+          return ports_.terminal_vr[RepcaBuses::bus].readSignal();
+        }
+
+        ScalarT Vi() const
+        {
+          return ports_.terminal_vi[RepcaBuses::bus].readSignal();
+        }
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
 
         static constexpr RealT INITIALIZATION_LIMIT_OFFSET = static_cast<RealT>(0.1);
-
-        BusT* bus_{nullptr};
 
         RealT mva_base_{static_cast<RealT>(100.0)};
         bool  VcompFlag_{true};

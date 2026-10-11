@@ -21,12 +21,7 @@ namespace GridKit
       enum class MemberFunctions
       {
         InternalResidual,
-        InternalResidualWithSignal,
-        BusResidual,
-        BusResidual11, //< Special case for branches that are connected to two buses
-        BusResidual12, //< Special case for branches that are connected to two buses
-        BusResidual21, //< Special case for branches that are connected to two buses
-        BusResidual22  //< Special case for branches that are connected to two buses
+        ExternalResidual
       };
 
       /**
@@ -54,25 +49,25 @@ namespace GridKit
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
-         * @param[in] wb - Bus variables
+         * @param[in] y_ext - External variables
          * @param[out] f - Internal residual
          */
         static void eval(ModelT*        model,
                          const ScalarT* y,
                          const ScalarT* yp,
-                         const ScalarT* wb,
+                         const ScalarT* y_ext,
                          ScalarT*       f)
         {
-          model->evaluateInternalResidual(y, yp, wb, f);
+          model->evaluateInternalResidual(y, yp, y_ext, f);
         }
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for InternalResidualWithSignal
+       * @brief Residual wrapper partial template specialization for ExternalResidual
        *
        */
       template <typename ModelT>
-      struct ModelWrapper<ModelT, MemberFunctions::InternalResidualWithSignal>
+      struct ModelWrapper<ModelT, MemberFunctions::ExternalResidual>
       {
         using ScalarT = typename ModelT::ScalarT;
 
@@ -80,151 +75,19 @@ namespace GridKit
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
-         * @param[in] wb - Bus variables
-         * @param[in] ws - Signal variables
-         * @param[out] f - Internal residual
+         * @param[in] y_ext - External variables
+         * @param[out] f_ext - External residual
          */
         static void eval(ModelT*        model,
                          const ScalarT* y,
                          const ScalarT* yp,
-                         const ScalarT* wb,
-                         const ScalarT* ws,
-                         ScalarT*       f)
+                         const ScalarT* y_ext,
+                         ScalarT*       f_ext)
         {
-          model->evaluateInternalResidual(y, yp, wb, ws, f);
+          model->evaluateExternalResidual(y, yp, y_ext, f_ext);
         }
       };
 
-      /**
-       * @brief Residual wrapper partial template specialization for BusResidual
-       *
-       */
-      template <typename ModelT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual>
-      {
-        using ScalarT = typename ModelT::ScalarT;
-
-        /**
-         * @param[in] model - Pointer to the model to be differentiated
-         * @param[in] y - Internal variables
-         * @param[in] yp - Internal variable derivatives
-         * @param[in] wb - Bus variables
-         * @param[out] h - Bus residual
-         */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
-        {
-          model->evaluateBusResidual(y, yp, wb, h);
-        }
-      };
-
-      /**
-       * @brief Residual wrapper partial template specialization for BusResidual11 (branch member function)
-       *
-       */
-      template <typename ModelT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual11>
-      {
-        using ScalarT = typename ModelT::ScalarT;
-
-        /**
-         * @param[in] model - Pointer to the model to be differentiated
-         * @param[in] y - Internal variables
-         * @param[in] yp - Internal variable derivatives
-         * @param[in] wb - Bus variables
-         * @param[out] h - Bus residual
-         */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
-        {
-          model->evaluateBusResidual11(y, yp, wb, h);
-        }
-      };
-
-      /**
-       * @brief Residual wrapper partial template specialization for BusResidual12 (branch member function)
-       *
-       */
-      template <typename ModelT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual12>
-      {
-        using ScalarT = typename ModelT::ScalarT;
-
-        /**
-         * @param[in] model - Pointer to the model to be differentiated
-         * @param[in] y - Internal variables
-         * @param[in] yp - Internal variable derivatives
-         * @param[in] wb - Bus variables
-         * @param[out] h - Bus residual
-         */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
-        {
-          model->evaluateBusResidual12(y, yp, wb, h);
-        }
-      };
-
-      /**
-       * @brief Residual wrapper partial template specialization for BusResidual21 (branch member function)
-       *
-       */
-      template <typename ModelT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual21>
-      {
-        using ScalarT = typename ModelT::ScalarT;
-
-        /**
-         * @param[in] model - Pointer to the model to be differentiated
-              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
-         * @param[in] y - Internal variables
-         * @param[in] yp - Internal variable derivatives
-         * @param[in] wb - Bus variables
-         * @param[out] h - Bus residual
-         */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
-        {
-          model->evaluateBusResidual21(y, yp, wb, h);
-        }
-      };
-
-      /**
-       * @brief Residual wrapper partial template specialization for BusResidual22 (branch member function)
-       *
-       */
-      template <typename ModelT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual22>
-      {
-        using ScalarT = typename ModelT::ScalarT;
-
-        /**
-         * @param[in] model - Pointer to the model to be differentiated
-         * @param[in] y - Internal variables
-         * @param[in] yp - Internal variable derivatives
-         * @param[in] wb - Bus variables
-         * @param[out] h - Bus residual
-         */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
-        {
-          model->evaluateBusResidual22(y, yp, wb, h);
-        }
-      };
     } // namespace Sparse
   } // namespace Enzyme
 } // namespace GridKit

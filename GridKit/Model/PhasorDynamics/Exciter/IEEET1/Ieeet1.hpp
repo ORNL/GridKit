@@ -8,8 +8,6 @@
  */
 
 #pragma once
-
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
@@ -61,9 +59,8 @@ namespace GridKit
         using Component<scalar_type, index_type>::time_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
+        using Component<scalar_type, index_type>::y_ext_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -72,17 +69,17 @@ namespace GridKit
         using Component<scalar_type, index_type>::allocated_;
 
       public:
-        using ScalarT        = scalar_type;
-        using IdxT           = index_type;
-        using RealT          = typename Component<ScalarT, IdxT>::RealT;
-        using BusT           = BusBase<ScalarT, IdxT>;
+        using ScalarT = scalar_type;
+        using IdxT    = index_type;
+        using RealT   = typename Component<ScalarT, IdxT>::RealT;
+
         using ModelDataT     = Ieeet1Data<RealT, IdxT>;
         using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
-        Ieeet1(BusT* bus);
-        Ieeet1(BusT* bus, const ModelDataT& data);
+        Ieeet1();
+        Ieeet1(const ModelDataT& data);
         ~Ieeet1();
 
         int setGridKitComponentID(IdxT) override final;
@@ -91,7 +88,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateResidual() override final;
+        int evaluateInternalResidual() override final;
         int evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
@@ -102,14 +99,11 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+            const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
-
-        // Signal pointers
-        BusT* bus_;
 
         // Model Input parameters
         RealT Tr_{0.0};      ///< Time constant for voltage sensing
@@ -156,6 +150,8 @@ namespace GridKit
 
         /// Associate variable getter functions with enum values
         void initializeMonitor();
+
+        void gatherExternalVariables();
       };
 
     } // namespace Exciter

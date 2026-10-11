@@ -1,14 +1,20 @@
 #pragma once
-
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a `LoadZIP`
+    enum class LoadZIPExternalVariables : size_t
+    {
+      VR, ///< \f$V_r\f$
+      VI, ///< \f$V_i\f$
+    };
+
     /*!
      * @brief Implementation of a ZIP load.
      *
@@ -25,8 +31,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::abs_tol_;
       using Component<scalar_type, index_type>::tag_;
-      using Component<scalar_type, index_type>::wb_;
-      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::y_ext_;
+      using Component<scalar_type, index_type>::variable_indices_ext_;
+      using Component<scalar_type, index_type>::residual_indices_ext_;
+      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -36,16 +44,16 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = LoadZIPData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using ModelDataT   = LoadZIPData<RealT, IdxT>;
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+      using MonitorT     = Model::VariableMonitor<LoadZIP, LoadZIPData>;
 
-      LoadZIP(BusT* bus);
-      LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP);
-      LoadZIP(BusT* bus, const ModelDataT& data);
+      LoadZIP();
+      LoadZIP(RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP);
+      LoadZIP(const ModelDataT& data);
       ~LoadZIP();
 
       int setGridKitComponentID(IdxT) override final;
@@ -53,12 +61,29 @@ namespace GridKit
       int initialize() override final;
       int tagDifferentiable() override final;
       int setAbsoluteTolerance(RealT rel_tol) override final;
-      int evaluateResidual() override final;
+      int evaluateInternalResidual() override final;
+      int evaluateExternalResidual() override final;
       int evaluateJacobian() override final;
 
       int verify() const override final
       {
-        return 0;
+        int error_count = 0;
+        if (!ports_.terminal_vr[LoadZIPBuses::bus].connected())
+        {
+          Log::error() << "LoadZIP: bus terminal vr is not connected\n";
+          ++error_count;
+        }
+        if (!ports_.terminal_vi[LoadZIPBuses::bus].connected())
+        {
+          Log::error() << "LoadZIP: bus terminal vi is not connected\n";
+          ++error_count;
+        }
+        return error_count;
+      }
+
+      SignalPortsT& getPorts()
+      {
+        return ports_;
       }
 
     public:
@@ -89,38 +114,28 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
+      void gatherExternalVariables();
       void setDerivedParams();
 
-      ScalarT& Vr()
+      ScalarT Vr() const
       {
-        return bus_->Vr();
+        return ports_.terminal_vr[LoadZIPBuses::bus].readSignal();
       }
 
-      ScalarT& Vi()
+      ScalarT Vi() const
       {
-        return bus_->Vi();
-      }
-
-      ScalarT& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      ScalarT& Ii()
-      {
-        return bus_->Ii();
+        return ports_.terminal_vi[LoadZIPBuses::bus].readSignal();
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
     public:
-      __attribute__((always_inline)) inline int evaluateBusResidual(
+      __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateInternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus_{nullptr};
       RealT Pnom_{0};
       RealT Qnom_{0};
       /// ZIP anchor voltage, derived from the bus voltage at initialization
@@ -132,6 +147,9 @@ namespace GridKit
       RealT alphaZ_{1.0};
 
       std::unique_ptr<MonitorT> monitor_;
+
+      /// Signal ports
+      SignalPortsT ports_;
     };
 
   } // namespace PhasorDynamics
