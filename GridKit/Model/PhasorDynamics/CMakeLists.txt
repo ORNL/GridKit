@@ -12,6 +12,7 @@ gridkit_add_library(
   HEADERS BusBase.hpp
           Component.hpp
           ComponentData.hpp
+          ComponentDefinition.hpp
           ComponentLibrary.hpp
           ModelData.hpp
           Port.hpp

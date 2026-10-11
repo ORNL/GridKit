@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -23,3 +25,21 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    /// Definitions of every supported component model
+    inline constexpr auto COMPONENT_DEFINITIONS = std::tie();
+
+    /// Calls `visit(definition)` once for each entry of `COMPONENT_DEFINITIONS`
+    template <typename Visitor>
+    constexpr void forEachComponentDefinition(Visitor&& visit)
+    {
+      std::apply([&](const auto&... definition)
+                 { (visit(definition), ...); },
+                 COMPONENT_DEFINITIONS);
+    }
+  } // namespace PhasorDynamics
+} // namespace GridKit
