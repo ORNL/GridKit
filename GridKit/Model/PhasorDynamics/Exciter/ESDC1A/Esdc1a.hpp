@@ -97,14 +97,15 @@ namespace GridKit
         Esdc1a(BusT* bus, const ModelDataT& data);
         ~Esdc1a();
 
-        int                        setGridKitComponentID(IdxT component_id) override final;
-        int                        allocate() override final;
+        int setGridKitComponentID(IdxT component_id) override final;
+        int allocate() override final;
+        int initialize() override final;
+        int tagDifferentiable() override final;
+        int setAbsoluteTolerance(RealT rel_tol) override final;
+        int evaluateResidual() override final;
+        int evaluateJacobian() override final;
+
         Model::ConfigurationChecks verify() const override final;
-        int                        initialize() override final;
-        int                        tagDifferentiable() override final;
-        int                        setAbsoluteTolerance(RealT rel_tol) override final;
-        int                        evaluateResidual() override final;
-        int                        evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {

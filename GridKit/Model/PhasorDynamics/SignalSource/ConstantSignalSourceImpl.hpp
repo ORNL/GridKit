@@ -1,6 +1,4 @@
 
-#include <GridKit/Model/ConfigurationChecks.hpp>
-#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSource.hpp>
@@ -44,20 +42,13 @@ namespace GridKit
     void ConstantSignalSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameters = ModelDataT::Parameters;
-
-      Model::ParameterReader reader(data, "ConstantSignalSource");
-
-      // The signal values are differentiable scalars, so each is loaded
-      // through a real intermediate.
-      RealT s_real{};
-      if (reader.loadReal(Parameters::Sr, s_real))
+      if (data.parameters.contains(Parameters::Sr))
       {
-        s_real_ = s_real;
+        s_real_ = std::get<RealT>(data.parameters.at(Parameters::Sr));
       }
-      RealT s_imag{};
-      if (reader.loadReal(Parameters::Si, s_imag))
+      if (data.parameters.contains(Parameters::Si))
       {
-        s_imag_ = s_imag;
+        s_imag_ = std::get<RealT>(data.parameters.at(Parameters::Si));
       }
     }
 

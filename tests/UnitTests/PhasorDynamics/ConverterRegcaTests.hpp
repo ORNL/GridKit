@@ -68,12 +68,14 @@ namespace GridKit
         {
           auto data = makeData();
           data.parameters.erase(parameter);
-          success *= constructionRejected<PhasorDynamics::Converter::Regca<ScalarT, IdxT>>(&bus, data);
+          PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing(&bus, data);
+          success *= (!missing.verify().passed());
         }
 
-        auto bad_switch                    = makeData();
-        bad_switch.parameters[Params::sL]  = static_cast<IdxT>(2);
-        success                           *= constructionRejected<PhasorDynamics::Converter::Regca<ScalarT, IdxT>>(&bus, bad_switch);
+        auto bad_switch                   = makeData();
+        bad_switch.parameters[Params::sL] = static_cast<IdxT>(2);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(&bus, bad_switch);
+        success *= (!bad_switch_model.verify().passed());
 
         success *= invalidParameterCase(bus, Params::mva, 0.0);
         success *= invalidParameterCase(bus, Params::IL1, -0.1);
@@ -951,15 +953,8 @@ namespace GridKit
       {
         auto data              = makeData();
         data.parameters[param] = value;
-        try
-        {
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
-          return !model.verify().passed();
-        }
-        catch (const std::invalid_argument&)
-        {
-          return true;
-        }
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
+        return !model.verify().passed();
       }
 
       bool allResidualsZero(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca) const

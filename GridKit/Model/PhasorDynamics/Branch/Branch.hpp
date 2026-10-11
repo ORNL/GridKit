@@ -65,13 +65,14 @@ namespace GridKit
       Branch(BusT* bus1, BusT* bus2, const ModelDataT& data);
       virtual ~Branch();
 
-      virtual int                        setGridKitComponentID(IdxT) override final;
-      virtual int                        allocate() override final;
-      virtual int                        initialize() override final;
-      virtual int                        tagDifferentiable() override final;
-      virtual int                        setAbsoluteTolerance(RealT rel_tol) override final;
-      virtual int                        evaluateResidual() override final;
-      virtual int                        evaluateJacobian() override final;
+      virtual int setGridKitComponentID(IdxT) override final;
+      virtual int allocate() override final;
+      virtual int initialize() override final;
+      virtual int tagDifferentiable() override final;
+      virtual int setAbsoluteTolerance(RealT rel_tol) override final;
+      virtual int evaluateResidual() override final;
+      virtual int evaluateJacobian() override final;
+
       virtual Model::ConfigurationChecks verify() const override final;
 
       int setInService(bool in_service);
@@ -120,6 +121,9 @@ namespace GridKit
       void setDerivedParams();
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
+      bool readRealParameter(const ModelDataT&               data,
+                             typename ModelDataT::Parameters parameter,
+                             RealT&                          target);
 
       static __attribute__((always_inline)) inline void addAdmittanceContribution(const RealT   G,
                                                                                   const RealT   B,
@@ -206,6 +210,8 @@ namespace GridKit
       RealT b21_{0.0};
       RealT g22_{0.0};
       RealT b22_{0.0};
+
+      int parameter_error_count_{0};
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

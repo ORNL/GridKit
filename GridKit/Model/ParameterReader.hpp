@@ -7,9 +7,11 @@
 #pragma once
 
 #include <cmath>
+#include <format>
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <variant>
 
 #include <magic_enum/magic_enum.hpp>
@@ -26,8 +28,9 @@ namespace GridKit
      * A provided value with the wrong type or a non-finite value cannot
      * produce a valid model, so every method throws std::invalid_argument
      * at the first such value; the message names the model and the
-     * parameter. An omitted optional parameter leaves the target untouched.
-     * Real parameters accept integer values.
+     * parameter. An omitted parameter leaves the target untouched, so the
+     * target's initial value is the default. Real parameters accept integer
+     * values.
      *
      * @tparam ModelDataT A model data container satisfying
      *         PhasorDynamics::ModelData.
@@ -89,22 +92,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Load a real parameter that must be provided.
-       *
-       * @param[in] key Parameter to look up.
-       * @param[out] target Stores the finite numeric value.
-       * @return true, since a missing parameter is rejected.
-       */
-      bool requireReal(ParametersT key, RealT& target) const
-      {
-        if (!parameters_.contains(key))
-        {
-          reject(key, "is required");
-        }
-        return loadReal(key, target);
-      }
-
-      /**
        * @brief Load an optional boolean switch parameter.
        *
        * @param[in] key Parameter to look up.
@@ -126,37 +113,6 @@ namespace GridKit
         }
 
         reject(key, "must be boolean");
-      }
-
-      /**
-       * @brief Load a switch parameter that must be provided. A boolean or an
-       *        integer 0/1 value is accepted.
-       *
-       * @param[in] key Parameter to look up.
-       * @param[out] target Stores the switch value.
-       * @return true, since a missing parameter is rejected.
-       */
-      bool requireSwitch(ParametersT key, bool& target) const
-      {
-        if (!parameters_.contains(key))
-        {
-          reject(key, "is required");
-        }
-
-        const auto& value = parameters_.at(key);
-        if (const auto* bool_value = std::get_if<bool>(&value))
-        {
-          target = *bool_value;
-          return true;
-        }
-        if (const auto* index_value = std::get_if<IdxT>(&value);
-            index_value && (*index_value == 0 || *index_value == 1))
-        {
-          target = (*index_value == 1);
-          return true;
-        }
-
-        reject(key, "must be bool or 0/1");
       }
 
       /**
@@ -185,11 +141,10 @@ namespace GridKit
 
     private:
       /// Reject the model data with a message naming the model and parameter.
-      [[noreturn]] void reject(ParametersT key, const char* reason) const
+      [[noreturn]] void reject(ParametersT key, std::string_view reason) const
       {
-        throw std::invalid_argument(std::string(model_) + ": parameter '"
-                                    + std::string(magic_enum::enum_name(key))
-                                    + "' " + reason);
+        throw std::invalid_argument(
+            std::format("{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason));
       }
 
       const std::map<ParametersT, std::variant<std::string, bool, RealT, IdxT>>& parameters_;

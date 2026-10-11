@@ -82,12 +82,12 @@ namespace GridKit
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> minimal(makeMinimalData());
         success *= (!minimal.verify().passed()); // required pmech assignment is absent
-        success *= (verifyData(makeData()));
+        success *= (verifyData(makeData()).passed());
         success *= defaultsMatchDocumentedValues();
 
         auto missing_trate = makeMinimalData();
         missing_trate.parameters.erase(Params::Trate);
-        success *= (!verifyData(missing_trate));
+        success *= (!verifyData(missing_trate).passed());
 
         success *= invalidParameterCase(Params::R, 0.0);
         success *= invalidParameterCase(Params::R, -0.1);
@@ -130,17 +130,17 @@ namespace GridKit
         auto equal                      = makeData();
         equal.parameters[Params::Vmin]  = 0.5;
         equal.parameters[Params::Vmax]  = 0.5;
-        success                        *= (verifyData(equal));
+        success                        *= (verifyData(equal).passed());
 
         auto reversed                      = makeData();
         reversed.parameters[Params::Vmin]  = 0.6;
         reversed.parameters[Params::Vmax]  = 0.5;
-        success                           *= (!verifyData(reversed));
+        success                           *= (!verifyData(reversed).passed());
 
         // Narrow configured limits remain valid.
         auto narrow                      = makeData();
         narrow.parameters[Params::Vmax]  = 0.01;
-        success                         *= (verifyData(narrow));
+        success                         *= (verifyData(narrow).passed());
 
         // Integer JSON values are accepted for real parameters; booleans are
         // not numeric.
@@ -1231,23 +1231,15 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        return !verifyData(data);
+        return !verifyData(data).passed();
       }
 
-      /// False when the data is rejected at construction or by verify().
-      bool verifyData(const Data& data) const
+      Model::ConfigurationChecks verifyData(const Data& data) const
       {
-        try
-        {
-          PhasorDynamics::SignalNode<ScalarT, IdxT>        pmech;
-          PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(data);
-          model.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech);
-          return model.verify().passed();
-        }
-        catch (const std::invalid_argument&)
-        {
-          return false;
-        }
+        PhasorDynamics::SignalNode<ScalarT, IdxT>        pmech;
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(data);
+        model.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech);
+        return model.verify();
       }
 
       template <External variable>

@@ -76,13 +76,14 @@ namespace GridKit
         Tgov1(const ModelDataT&);
         ~Tgov1() = default;
 
-        int                        setGridKitComponentID(IdxT) override final;
-        int                        allocate() override final;
+        int setGridKitComponentID(IdxT) override final;
+        int allocate() override final;
+        int initialize() override final;
+        int tagDifferentiable() override final;
+        int setAbsoluteTolerance(RealT) override final;
+        int evaluateResidual() override final;
+
         Model::ConfigurationChecks verify() const override final;
-        int                        initialize() override final;
-        int                        tagDifferentiable() override final;
-        int                        setAbsoluteTolerance(RealT) override final;
-        int                        evaluateResidual() override final;
 
         // Still to be implemented
         int evaluateJacobian() override final;
@@ -110,7 +111,7 @@ namespace GridKit
         // Input States (which can be parameters)
         ScalarT pref_set_{0};
 
-        /// Component ports
+        // Component ports
         SignalPortsT ports_;
 
         // Parameter initialization function
