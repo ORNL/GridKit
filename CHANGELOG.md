@@ -8,6 +8,8 @@
 - Added `Bus::setFault` to apply or clear a fault to ground directly at a bus.
 - Removed the `BusFault` class in favor of `Bus::setFault`.
 - Added `enable` and `disable` solver events that put a branch in or out of service.
+- `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
+- Added `Model::ParameterReader`
 
 ## v0.2
 

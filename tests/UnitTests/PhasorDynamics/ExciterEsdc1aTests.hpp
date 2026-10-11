@@ -6,7 +6,6 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -1194,15 +1193,12 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        try
-        {
-          Fixture<ScalarT> fixture(data);
-          return !fixture.esdc1a.verify().passed();
-        }
-        catch (const std::invalid_argument&)
-        {
-          return true;
-        }
+        return configurationRejected(
+            [&]()
+            {
+              Fixture<ScalarT> fixture(data);
+              return fixture.esdc1a.verify();
+            });
       }
 
       template <External variable>
