@@ -245,12 +245,13 @@ namespace GridKit
       }
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
+      auto wide       = ::GridKit::Model::VariableMonitorLayout::WIDE;
       data.model_data = parseSystemModelData(data.system_model_file);
       std::string model_output_file;
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
       {
-        if (sink.format == csv && sink.delim == ",")
+        if (sink.format == csv && sink.delim == "," && sink.layout == wide)
         {
           model_output_file = sink.file_name;
         }

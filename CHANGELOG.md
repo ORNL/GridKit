@@ -2,6 +2,8 @@
 
 ## v.03
 
+- Added long monitor output layout and an ACTIVSg2000 PostgreSQL example.
+- Removed unused `VariableMonitorController::addVariable`.
 - Added `BusSignalVoltageOut` bus model with voltage signal outlets and current signal inlets.
 - Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.
 - Removed `BusToSignalAdapter`. Prefer `BusSignalVoltageOut` or `BusSignalVoltageIn`.
