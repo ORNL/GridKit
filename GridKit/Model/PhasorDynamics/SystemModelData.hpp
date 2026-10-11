@@ -124,6 +124,16 @@ namespace GridKit
 
       /// Monitor sink specs
       std::vector<MonitorSinkSpec> monitor_sink;
+
+      /// Subsystem ID, unique in the hierarchy; empty for the top system
+      std::string id;
+
+      /// Hierarchy level: 0 for the top system, parent level + 1 for a subsystem
+      IdxT level{0};
+
+      /// Hierarchical subsystems; devices may use buses of this system and
+      /// its ancestors. System bases must match this system's.
+      std::vector<SystemModelData> subsystems;
     };
 
     /**

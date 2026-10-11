@@ -10,6 +10,7 @@
 - Added `enable` and `disable` solver events that put a branch in or out of service.
 - `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
 - Added `Model::ParameterReader`
+- Added hierarchical PhasorDynamics system models.
 
 ## v0.2
 
