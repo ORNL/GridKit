@@ -282,6 +282,21 @@ namespace GridKit
       }
 
     protected:
+      /**
+       * @brief Log every problem verify() reports.
+       *
+       * @return true when the configuration has no problems.
+       */
+      bool verifyAndLog() const
+      {
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
+        {
+          Log::error() << error << '\n';
+        }
+        return checks.passed();
+      }
+
       void setComponentBase(RealT va_component_base)
       {
         va_component_base_ = va_component_base;

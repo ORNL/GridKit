@@ -280,7 +280,8 @@ namespace GridKit
 
         auto missing = makeTestData();
         missing.parameters.erase(Parameter::K);
-        success *= constructionRejected<PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT>>(&bus, missing);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> missing_model(&bus, missing);
+        success *= (!missing_model.verify().passed());
 
         auto invalid                      = makeTestData();
         invalid.parameters[Parameter::Tb] = 0.0;

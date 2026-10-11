@@ -9,12 +9,9 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
-#include <stdexcept>
-#include <string>
+#include <format>
 #include <variant>
 
-#include <GridKit/Model/ConfigurationChecks.hpp>
-#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -139,7 +136,9 @@ namespace GridKit
       {
         const auto PMECH = static_cast<size_t>(GastPtiInternalVariables::PMECH);
 
-        Model::ConfigurationChecks checks;
+        Model::ConfigurationChecks checks("GastPti");
+
+        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
         checks.check(std::isfinite(R_) && R_ > ZERO<RealT>, "R must be finite and positive");
         checks.check(std::isfinite(At_) && At_ >= ZERO<RealT>,
@@ -177,17 +176,32 @@ namespace GridKit
         checks.check(ports_.out.template port<GastPtiSignalOutputs::pmech>().connected(),
                      "pmech output must be assigned");
 
-        const auto speed_port = ports_.in.template port<GastPtiSignalInputs::speed>();
-        checks.check(!speed_port.connected() || speed_port.linked(), "speed signal attached with no linked source");
-        const auto pref_port = ports_.in.template port<GastPtiSignalInputs::pref>();
-        checks.check(!pref_port.connected() || pref_port.linked(), "pref signal attached with no linked source");
+        // An attached port must resolve to writable signal storage.
+        auto check_attached_signal =
+            [&]<GastPtiSignalInputs variable>(const char* name) -> bool
+        {
+          auto port = ports_.in.template port<variable>();
 
-        const bool omega_linked =
-            ports_.in.template port<GastPtiSignalInputs::speed>().connected()
-            && ports_.in.template port<GastPtiSignalInputs::speed>().linked();
-        const bool pref_linked =
-            ports_.in.template port<GastPtiSignalInputs::pref>().connected()
-            && ports_.in.template port<GastPtiSignalInputs::pref>().linked();
+          if (port.connected())
+          {
+            if (!port.linked())
+            {
+              checks.fail(std::format("{} port attached with no linked source", name));
+            }
+            else
+            {
+              return true;
+            }
+          }
+          return false;
+        };
+
+        const auto omega_linked =
+            check_attached_signal
+                .template operator()<GastPtiSignalInputs::speed>("speed");
+        const auto        pref_linked =
+            check_attached_signal
+                .template operator()<GastPtiSignalInputs::pref>("pref");
 
         if (variable_indices_.size() == static_cast<size_t>(size_))
         {
@@ -195,14 +209,14 @@ namespace GridKit
 
           if (omega_linked)
           {
-            checks.check(ports_.in.template port<GastPtiSignalInputs::speed>().signalVariableIndex()
-                             != pmech_index,
+            auto omega = ports_.in.template port<GastPtiSignalInputs::speed>();
+            checks.check(omega.signalVariableIndex() != pmech_index,
                          "speed and pmech ports must use distinct signals");
           }
           if (pref_linked)
           {
-            checks.check(ports_.in.template port<GastPtiSignalInputs::pref>().signalVariableIndex()
-                             != pmech_index,
+            auto pref = ports_.in.template port<GastPtiSignalInputs::pref>();
+            checks.check(pref.signalVariableIndex() != pmech_index,
                          "pref and pmech ports must use distinct signals");
           }
           if (omega_linked && pref_linked)
@@ -262,13 +276,9 @@ namespace GridKit
           return 1;
         }
 
-        const auto checks = verify();
-        for (const auto& error : checks.errors())
+        if (!this->verifyAndLog())
         {
-          Log::error() << "GastPti: " << error << '\n';
-        }
-        if (!checks.passed())
-        {
+          Log::error() << "GastPti: cannot initialize with invalid configuration\n";
           return 1;
         }
 
@@ -551,6 +561,45 @@ namespace GridKit
       //
 
       /**
+       * @brief Load one optional real-valued parameter
+       *
+       * Real and integer serialized values are accepted. Any other stored
+       * type records a loading error while preserving the existing default.
+       *
+       * @param[in] data Model parameter data.
+       * @param[in] parameter Parameter key to load.
+       * @param[in,out] target Stored parameter value.
+       * @param[in] name Serialized parameter name for diagnostics.
+       */
+      template <typename scalar_type, typename index_type>
+      void GastPti<scalar_type, index_type>::loadRealParameter(
+          const ModelDataT& data,
+          GastPtiParameters parameter,
+          RealT&            target,
+          const char*       name)
+      {
+        if (!data.parameters.contains(parameter))
+        {
+          return;
+        }
+
+        const auto& value = data.parameters.at(parameter);
+        if (const auto* real_value = std::get_if<RealT>(&value))
+        {
+          target = *real_value;
+        }
+        else if (const auto* index_value = std::get_if<IdxT>(&value))
+        {
+          target = static_cast<RealT>(*index_value);
+        }
+        else
+        {
+          Log::error() << "GastPti: parameter '" << name << "' must be numeric\n";
+          ++parameter_error_count_;
+        }
+      }
+
+      /**
        * @brief Validate and floor one turbine time constant
        *
        * Invalid or nonfinite values record a parameter error and are replaced
@@ -567,7 +616,11 @@ namespace GridKit
       {
         if (!std::isfinite(value) || value < ZERO<RealT>)
         {
-          throw std::invalid_argument(std::string("GastPti: ") + name + " must be finite and non-negative");
+          Log::error() << "GastPti: " << name
+                       << " must be finite and non-negative\n";
+          ++parameter_error_count_;
+          value = TIME_CONSTANT_MINIMUM;
+          return false;
         }
 
         const bool raised = value < TIME_CONSTANT_MINIMUM;
@@ -588,21 +641,27 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        Model::ParameterReader reader(data, "GastPti");
+        parameter_error_count_ = 0;
 
-        reader.loadReal(Params::R, R_);
-        reader.loadReal(Params::T1, T1_);
-        reader.loadReal(Params::T2, T2_);
-        reader.loadReal(Params::T3, T3_);
-        reader.loadReal(Params::At, At_);
-        reader.loadReal(Params::Kt, Kt_);
-        reader.loadReal(Params::Vmax, Vmax_);
-        reader.loadReal(Params::Vmin, Vmin_);
-        reader.loadReal(Params::Dturb, Dturb_);
-        RealT trate{};
-        if (reader.requireReal(Params::Trate, trate))
+        loadRealParameter(data, Params::R, R_, "R");
+        loadRealParameter(data, Params::T1, T1_, "T1");
+        loadRealParameter(data, Params::T2, T2_, "T2");
+        loadRealParameter(data, Params::T3, T3_, "T3");
+        loadRealParameter(data, Params::At, At_, "At");
+        loadRealParameter(data, Params::Kt, Kt_, "Kt");
+        loadRealParameter(data, Params::Vmax, Vmax_, "Vmax");
+        loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
+        loadRealParameter(data, Params::Dturb, Dturb_, "Dturb");
+        if (data.parameters.contains(Params::Trate))
         {
+          RealT trate{};
+          loadRealParameter(data, Params::Trate, trate, "Trate");
           this->setComponentBase(trate * static_cast<RealT>(1.0e6));
+        }
+        else
+        {
+          Log::error() << "GastPti: missing required parameter 'Trate'\n";
+          ++parameter_error_count_;
         }
 
         setDerivedParameters();

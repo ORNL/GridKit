@@ -5,6 +5,7 @@
  */
 
 #include <cmath>
+#include <format>
 #include <stdexcept>
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
@@ -106,33 +107,46 @@ namespace GridKit
     }
 
     /**
-     * @brief Collect missing voltage/current inlet and unlinked outlet errors.
+     * @brief Check that the voltage inlets are connected and linked, and
+     * that connected outlets are linked.
+     *
+     * Both voltage inlets `vr` and `vi` are mandatory, since the bus has no
+     * voltage of its own and no default value is allowed.
+     *
+     * @return The configuration checks; passed() when valid.
      */
     template <typename scalar_type, typename index_type>
     Model::ConfigurationChecks BusSignalVoltageIn<scalar_type, index_type>::verify() const
     {
-      Model::ConfigurationChecks checks;
-      auto                       check_input = [&]<BusSignalInputs input>(const char* name)
+      Model::ConfigurationChecks checks("BusSignalVoltageIn");
+
+      auto check_input = [&]<BusSignalInputs input>(const char* name)
       {
         const auto& port = ports_.in.template port<input>();
-        checks.check(port.connected(), std::string("BusSignalVoltageIn: ") + name + " signal inlet is not connected");
-        if (port.connected())
+        if (!port.connected())
         {
-          checks.check(port.linked(), std::string("BusSignalVoltageIn: ") + name + " signal attached with no linked source");
+          checks.fail(std::format("{} signal inlet is not connected; a default voltage is not allowed", name));
+        }
+        else if (!port.linked())
+        {
+          checks.fail(std::format("{} signal attached with no linked source", name));
         }
       };
+
       auto check_output = [&]<BusSignalOutputs output>(const char* name)
       {
         const auto& port = ports_.out.template port<output>();
-        if (port.connected())
+        if (port.connected() && !port.linked())
         {
-          checks.check(port.linked(), std::string("BusSignalVoltageIn: ") + name + " signal attached but not linked; connect before allocate()");
+          checks.fail(std::format("{} signal attached but not linked; connect signal ports before allocate()", name));
         }
       };
-      check_input.template  operator()<BusSignalInputs::vr>("vr");
-      check_input.template  operator()<BusSignalInputs::vi>("vi");
-      check_output.template operator()<BusSignalOutputs::ir>("ir");
-      check_output.template operator()<BusSignalOutputs::ii>("ii");
+
+      check_input.template  operator()<BusSignalInputs::vr>("Vr");
+      check_input.template  operator()<BusSignalInputs::vi>("Vi");
+      check_output.template operator()<BusSignalOutputs::ir>("Ir");
+      check_output.template operator()<BusSignalOutputs::ii>("Ii");
+
       return checks;
     }
 

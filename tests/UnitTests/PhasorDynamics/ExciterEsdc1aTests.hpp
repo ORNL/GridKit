@@ -6,6 +6,7 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 

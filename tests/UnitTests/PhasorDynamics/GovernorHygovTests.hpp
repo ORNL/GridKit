@@ -70,7 +70,8 @@ namespace GridKit
 
         auto missing_trate_data = makeMinimalData();
         missing_trate_data.parameters.erase(Params::Trate);
-        success *= constructionRejected<Fixture<ScalarT>>(missing_trate_data);
+        Fixture<ScalarT> missing_trate(missing_trate_data);
+        success *= (!missing_trate.hygov.verify().passed());
 
         success *= (!empty.verify().passed());
 
@@ -115,7 +116,8 @@ namespace GridKit
         {
           for (const RealT value : nonfinite_values)
           {
-            success *= parameterRejected(parameter, value);
+            Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
+            success *= (!invalid_fixture.hygov.verify().passed());
           }
         }
 
@@ -148,7 +150,8 @@ namespace GridKit
 
         for (const auto& [parameter, value] : invalid_parameter_values)
         {
-          success *= parameterRejected(parameter, value);
+          Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
+          success *= (!invalid_fixture.hygov.verify().passed());
         }
 
         // A curve with no rise cannot yield a unique gate.
@@ -185,9 +188,10 @@ namespace GridKit
         Fixture<ScalarT> integer_model(integer_real);
         success *= (integer_model.hygov.verify().passed());
 
-        auto bad_numeric_type                       = makeData();
-        bad_numeric_type.parameters[Params::Trate]  = true;
-        success                                    *= constructionRejected<Fixture<ScalarT>>(bad_numeric_type);
+        auto bad_numeric_type                      = makeData();
+        bad_numeric_type.parameters[Params::Trate] = true;
+        Fixture<ScalarT> bad_numeric_model(bad_numeric_type);
+        success *= (!bad_numeric_model.hygov.verify().passed());
 
         Fixture<ScalarT> overflowing_component_base(
             makeData(),
@@ -1263,20 +1267,6 @@ namespace GridKit
           success = false;
         }
         return success;
-      }
-
-      /// True when the value is rejected at construction or by verify().
-      bool parameterRejected(Params parameter, RealT value) const
-      {
-        try
-        {
-          Fixture<ScalarT> fixture(makeData(), {{parameter, value}});
-          return !fixture.hygov.verify().passed();
-        }
-        catch (const std::invalid_argument&)
-        {
-          return true;
-        }
       }
 
       template <External variable>

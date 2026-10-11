@@ -116,7 +116,8 @@ namespace GridKit
 
         auto missing_mva_data = makeMinimalData();
         missing_mva_data.parameters.erase(Params::mva);
-        success *= constructionRejected<Fixture<ScalarT>>(missing_mva_data);
+        Fixture<ScalarT> missing_mva(missing_mva_data);
+        success *= (!missing_mva.reecb.verify().passed());
 
         // Integer JSON values are accepted for real parameters; booleans are
         // not numeric.
@@ -2294,15 +2295,8 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        try
-        {
-          Fixture<ScalarT> fixture(data);
-          return !fixture.reecb.verify().passed();
-        }
-        catch (const std::invalid_argument&)
-        {
-          return true;
-        }
+        Fixture<ScalarT> fixture(data);
+        return !fixture.reecb.verify().passed();
       }
 
       template <Ext variable>

@@ -1,7 +1,6 @@
 #include <cassert>
 #include <format>
 #include <iostream>
-#include <string>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
@@ -458,12 +457,7 @@ namespace GridKit
       }
 
       // Verify component configuration
-      const auto checks = this->verify();
-      for (const auto& error : checks.errors())
-      {
-        Log::error() << error << '\n';
-      }
-      if (!checks.passed())
+      if (!this->verifyAndLog())
       {
         throw std::runtime_error("SystemModel allocation failed");
       }
@@ -504,6 +498,7 @@ namespace GridKit
     {
       Model::ConfigurationChecks checks;
 
+      // Verify components
       for (const auto& component : components_)
       {
         const auto component_checks = component->verify();

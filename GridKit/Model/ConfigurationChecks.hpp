@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include <format>
 #include <string>
-#include <utility>
+#include <string_view>
 #include <vector>
 
 namespace GridKit
@@ -24,18 +25,26 @@ namespace GridKit
     class ConfigurationChecks
     {
     public:
-      /// Record a problem.
-      void fail(std::string message)
+      ConfigurationChecks() = default;
+
+      /// @param[in] model Model name that prefixes every recorded message.
+      explicit ConfigurationChecks(std::string_view model)
+        : prefix_(std::format("{}: ", model))
       {
-        errors_.push_back(std::move(message));
+      }
+
+      /// Record a problem.
+      void fail(std::string_view message)
+      {
+        errors_.push_back(prefix_ + std::string(message));
       }
 
       /// Record the message when the condition does not hold.
-      void check(bool condition, std::string message)
+      void check(bool condition, std::string_view message)
       {
         if (!condition)
         {
-          fail(std::move(message));
+          fail(message);
         }
       }
 
@@ -52,6 +61,7 @@ namespace GridKit
       }
 
     private:
+      std::string              prefix_;
       std::vector<std::string> errors_;
     };
   } // namespace Model

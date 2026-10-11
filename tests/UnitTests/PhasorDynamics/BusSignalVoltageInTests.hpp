@@ -32,7 +32,7 @@ namespace GridKit
       BusSignalVoltageInTests()  = default;
       ~BusSignalVoltageInTests() = default;
 
-      /// Invalid configurations are reported without throwing.
+      /// True if verify() reports a problem, as it must for a misconnected bus
       template <typename BusLike>
       static bool verifyFails(const BusLike& bus)
       {
@@ -44,7 +44,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // Keep expected invalid-configuration diagnostics quiet.
+        // This test triggers error messages on purpose; silence them.
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::NONE);
 
@@ -83,7 +83,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // Keep expected invalid-configuration diagnostics quiet.
+        // This test triggers error messages on purpose; silence them.
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::NONE);
 
@@ -102,7 +102,7 @@ namespace GridKit
         bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
         bus.allocate();
         bus.initialize();
-        success *= bus.verify().passed();
+        success *= (bus.verify().passed());
 
         // Voltage is read straight from the signals, no evaluation needed
         success *= isEqual(bus.Vr(), Vr);
@@ -169,7 +169,7 @@ namespace GridKit
 
         bus.allocate();
         bus.initialize();
-        success *= bus.verify().passed();
+        success *= (bus.verify().passed());
         success *= ir_node.linked();
         success *= ii_node.linked();
         success *= (ir_node.getVariableIndex() == INVALID_INDEX<IdxT>);
@@ -200,7 +200,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // Keep expected invalid-configuration diagnostics quiet.
+        // This test triggers error messages on purpose; silence them.
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::NONE);
 
@@ -226,7 +226,7 @@ namespace GridKit
         ScalarT Vi{0.2};
         IdxT    vi_index{1};
         vi_node.link(&Vi, &vi_index);
-        success *= bus.verify().passed();
+        success *= (bus.verify().passed());
 
         Log::setVerbosity(previous_verbosity);
 
