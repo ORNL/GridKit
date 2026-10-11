@@ -7,6 +7,8 @@
 - Removed `BusToSignalAdapter`. Prefer `BusSignalVoltageOut` or `BusSignalVoltageIn`.
 - Added `Bus::setFault` to apply or clear a fault to ground directly at a bus.
 - Removed the `BusFault` class in favor of `Bus::setFault`.
+- Added a system Jacobian test comparing Enzyme and DependencyTracking on every case in `cases/PhasorDynamics`.
+- Fixed the `ThreeBusConstantSource` case, which still used the removed `BusToSignalAdapter`.
 
 ## v0.2
 

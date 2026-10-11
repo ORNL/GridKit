@@ -1,13 +1,19 @@
-add_executable(test_pd_integration runPDIntegrationTests.cpp)
-target_link_libraries(
-  test_pd_integration
-  PRIVATE GridKit::phasor_dynamics_systemmodel GridKit::solvers_dyn GridKit::testing)
+if(TARGET SUNDIALS::idas)
+  add_executable(test_pd_integration runPDIntegrationTests.cpp)
+  target_link_libraries(
+    test_pd_integration
+    PRIVATE GridKit::phasor_dynamics_systemmodel GridKit::solvers_dyn GridKit::testing)
 
-add_test(
-  NAME PhasorDynamicsIntegrationTest
-  COMMAND test_pd_integration
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/examples/PhasorDynamics/Validation/Toy)
+  add_test(
+    NAME PhasorDynamicsIntegrationTest
+    COMMAND test_pd_integration
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/examples/PhasorDynamics/Validation/Toy)
 
-install(TARGETS test_pd_integration)
+  install(TARGETS test_pd_integration)
 
-add_subdirectory(TenGen)
+  add_subdirectory(TenGen)
+endif()
+
+if(GRIDKIT_ENABLE_ENZYME)
+  add_subdirectory(SystemJacobian)
+endif()
