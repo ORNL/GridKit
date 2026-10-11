@@ -12,6 +12,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <stdexcept>
 #include <utility>
 
 namespace GridKit
@@ -232,6 +233,17 @@ namespace GridKit
       return Detail::ThrowsHelper<TErr>{}(
           [&]()
           { func(std::forward<TArgs>(args)...); });
+    }
+
+    /// True when building a model throws std::invalid_argument or the
+    /// configuration checks it returns report a problem.
+    template <typename BuildT>
+    inline bool configurationRejected(BuildT build)
+    {
+      bool       passed = false;
+      const bool threw  = throws<std::invalid_argument>([&]()
+                                                       { passed = build().passed(); });
+      return threw || !passed;
     }
 
   } // namespace Testing

@@ -9,8 +9,6 @@
 #include <algorithm>
 #include <atomic>
 #include <format>
-#include <stdexcept>
-#include <variant>
 
 #include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/ParameterReader.hpp>
@@ -627,7 +625,7 @@ namespace GridKit
        *
        * No parameter is required; every parameter keeps the default
        * documented in the model README when omitted. A non-numeric or
-       * non-finite real, a non-Boolean switch, a non-integer selector, or a
+       * non-finite real, a non-Boolean flag, a non-integer selector, or a
        * negative lag throws std::invalid_argument. Integer JSON values are
        * accepted for real parameters.
        *
@@ -640,24 +638,24 @@ namespace GridKit
 
         Model::ParameterReader reader(data, "Esdc1a");
 
-        reader.loadReal(Params::Tr, Tr_);
+        reader.loadNonNegative(Params::Tr, Tr_);
         reader.loadReal(Params::Ka, Ka_);
-        reader.loadReal(Params::Ta, Ta_);
-        reader.loadReal(Params::Tb, Tb_);
+        reader.loadNonNegative(Params::Ta, Ta_);
+        reader.loadNonNegative(Params::Tb, Tb_);
         reader.loadReal(Params::Tc, Tc_);
         reader.loadReal(Params::Vrmax, Vrmax_);
         reader.loadReal(Params::Vrmin, Vrmin_);
         reader.loadReal(Params::Ke, Ke_);
-        reader.loadReal(Params::Te, Te_);
+        reader.loadNonNegative(Params::Te, Te_);
         reader.loadReal(Params::Kf, Kf_);
-        reader.loadReal(Params::Tf1, Tf1_);
-        reader.loadSwitch(Params::Spdmlt, Spdmlt_);
+        reader.loadNonNegative(Params::Tf1, Tf1_);
+        reader.loadBool(Params::Spdmlt, Spdmlt_);
         reader.loadReal(Params::E1, E1_);
         reader.loadReal(Params::Se1, Se1_);
         reader.loadReal(Params::E2, E2_);
         reader.loadReal(Params::Se2, Se2_);
-        reader.loadSelector(Params::UEL, UEL_);
-        reader.loadSwitch(Params::exclim, exclim_);
+        reader.loadInteger(Params::UEL, UEL_);
+        reader.loadBool(Params::exclim, exclim_);
         setDerivedParameters();
       }
 
@@ -713,23 +711,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Esdc1a<scalar_type, index_type>::setDerivedParameters()
       {
-        // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available.
-        auto check_non_negative = [&](RealT value, const char* name)
-        {
-          if (value < ZERO<RealT>)
-          {
-            throw std::invalid_argument(
-                std::format("Esdc1a: parameter '{}' must be non-negative", name));
-          }
-        };
-
-        check_non_negative(Tr_, "Tr");
-        check_non_negative(Ta_, "Ta");
-        check_non_negative(Tb_, "Tb");
-        check_non_negative(Te_, "Te");
-        check_non_negative(Tf1_, "Tf1");
-
         if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
             || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM
             || Tf1_ < TIME_CONSTANT_MINIMUM)

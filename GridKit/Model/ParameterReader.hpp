@@ -8,14 +8,13 @@
 
 #include <cmath>
 #include <format>
-#include <map>
 #include <stdexcept>
-#include <string>
 #include <string_view>
 #include <variant>
 
 #include <magic_enum/magic_enum.hpp>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/ModelData.hpp>
 
 namespace GridKit
@@ -25,12 +24,12 @@ namespace GridKit
     /**
      * @brief Reads typed parameters out of a model data container.
      *
-     * A provided value with the wrong type or a non-finite value cannot
-     * produce a valid model, so every method throws std::invalid_argument
-     * at the first such value; the message names the model and the
-     * parameter. An omitted parameter leaves the target untouched, so the
-     * target's initial value is the default. Real parameters accept integer
-     * values.
+     * A load method stores a provided value in its target and returns true.
+     * An omitted parameter leaves the target untouched, so the target's
+     * initial value is the default. A require method rejects an omitted
+     * parameter. A value of the wrong type cannot produce a valid model, so
+     * it is rejected with std::invalid_argument naming the model and the
+     * parameter. Real parameters accept integer values and must be finite.
      *
      * @tparam ModelDataT A model data container satisfying
      *         PhasorDynamics::ModelData.
@@ -53,93 +52,122 @@ namespace GridKit
       {
       }
 
-      /**
-       * @brief Load an optional real parameter. Integer values are accepted.
-       *
-       * @param[in] key Parameter to look up.
-       * @param[out] target Stores the finite numeric value when provided.
-       * @return true when the parameter was provided.
-       */
+      /// Load an optional real parameter.
       bool loadReal(ParametersT key, RealT& target) const
       {
-        if (!parameters_.contains(key))
+        const auto* value = find(key);
+        if (value == nullptr)
         {
           return false;
         }
 
-        const auto& value = parameters_.at(key);
-        RealT       parsed_value{};
-        if (const auto* real_value = std::get_if<RealT>(&value))
+        RealT real{};
+        if (const auto* real_value = std::get_if<RealT>(value))
         {
-          parsed_value = *real_value;
+          real = *real_value;
         }
-        else if (const auto* index_value = std::get_if<IdxT>(&value))
+        else if (const auto* integer_value = std::get_if<IdxT>(value))
         {
-          parsed_value = static_cast<RealT>(*index_value);
+          real = static_cast<RealT>(*integer_value);
         }
         else
         {
           reject(key, "must be numeric");
         }
 
-        if (!std::isfinite(parsed_value))
+        if (!std::isfinite(real))
         {
           reject(key, "must be finite");
         }
 
-        target = parsed_value;
+        target = real;
         return true;
       }
 
-      /**
-       * @brief Load an optional boolean switch parameter.
-       *
-       * @param[in] key Parameter to look up.
-       * @param[out] target Stores the boolean value when provided.
-       * @return true when the parameter was provided.
-       */
-      bool loadSwitch(ParametersT key, bool& target) const
+      /// Load an optional non-negative real parameter.
+      bool loadNonNegative(ParametersT key, RealT& target) const
       {
-        if (!parameters_.contains(key))
+        if (!loadReal(key, target))
         {
           return false;
         }
 
-        const auto& value = parameters_.at(key);
-        if (const auto* bool_value = std::get_if<bool>(&value))
+        if (target < ZERO<RealT>)
         {
-          target = *bool_value;
-          return true;
+          reject(key, "must be non-negative");
         }
-
-        reject(key, "must be boolean");
+        return true;
       }
 
-      /**
-       * @brief Load an optional integer selector parameter.
-       *
-       * @param[in] key Parameter to look up.
-       * @param[out] target Stores the integer value when provided.
-       * @return true when the parameter was provided.
-       */
-      bool loadSelector(ParametersT key, IdxT& target) const
+      /// Load an optional boolean parameter.
+      bool loadBool(ParametersT key, bool& target) const
       {
-        if (!parameters_.contains(key))
-        {
-          return false;
-        }
+        return loadExact(key, target, "must be boolean");
+      }
 
-        const auto& value = parameters_.at(key);
-        if (const auto* index_value = std::get_if<IdxT>(&value))
-        {
-          target = *index_value;
-          return true;
-        }
+      /// Load an optional integer parameter.
+      bool loadInteger(ParametersT key, IdxT& target) const
+      {
+        return loadExact(key, target, "must be an integer");
+      }
 
-        reject(key, "must be an integer selector");
+      /// Read a real parameter that must be provided.
+      RealT requireReal(ParametersT key) const
+      {
+        RealT real{};
+        if (!loadReal(key, real))
+        {
+          reject(key, "is required");
+        }
+        return real;
+      }
+
+      /// Read a boolean parameter that must be provided.
+      bool requireBool(ParametersT key) const
+      {
+        bool flag{};
+        if (!loadBool(key, flag))
+        {
+          reject(key, "is required");
+        }
+        return flag;
       }
 
     private:
+      using ParameterMapT = decltype(ModelDataT::parameters);
+      using ValueT        = typename ParameterMapT::mapped_type;
+
+      /// The provided value, or nullptr when the parameter is omitted.
+      const ValueT* find(ParametersT key) const
+      {
+        const auto entry = parameters_.find(key);
+        if (entry == parameters_.end())
+        {
+          return nullptr;
+        }
+        return &entry->second;
+      }
+
+      /// Load an optional parameter that must hold exactly a T.
+      template <typename T>
+      bool loadExact(ParametersT key, T& target, std::string_view reason) const
+      {
+        const auto* value = find(key);
+        if (value == nullptr)
+        {
+          return false;
+        }
+
+        const auto* exact_value = std::get_if<T>(value);
+        if (exact_value == nullptr)
+        {
+          reject(key, reason);
+        }
+
+        target = *exact_value;
+        return true;
+      }
+
       /// Reject the model data with a message naming the model and parameter.
       [[noreturn]] void reject(ParametersT key, std::string_view reason) const
       {
@@ -147,8 +175,8 @@ namespace GridKit
             std::format("{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason));
       }
 
-      const std::map<ParametersT, std::variant<std::string, bool, RealT, IdxT>>& parameters_;
-      const char*                                                                model_;
+      const ParameterMapT& parameters_;
+      const char*          model_;
     };
   } // namespace Model
 } // namespace GridKit
