@@ -126,6 +126,12 @@ namespace GridKit
           raw_component.get_to(loadzip);
           sm.loadzip.push_back(loadzip);
         }
+        else if (kind == "Perc1")
+        {
+          typename SystemModelData<RealT, IdxT>::Perc1DataT perc1;
+          raw_component.get_to(perc1);
+          sm.perc1.push_back(perc1);
+        }
         else if (kind == "Regca")
         {
           typename SystemModelData<RealT, IdxT>::RegcaDataT regca;

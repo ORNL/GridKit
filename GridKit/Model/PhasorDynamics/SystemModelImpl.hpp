@@ -128,6 +128,19 @@ namespace GridKit
         addComponent(loadzip);
       }
 
+      // Add PERC1 loads
+      for (const auto& perc1data : data.perc1)
+      {
+        IdxT bus_index = 0;
+        if (perc1data.buses.contains(Perc1Buses::bus))
+        {
+          bus_index = perc1data.buses.at(Perc1Buses::bus);
+        }
+        auto* perc1 = new Perc1<ScalarT, IdxT>(getBus(bus_index), perc1data);
+        perc1->getPorts().connect(perc1data, signal_nodes_);
+        addComponent(perc1);
+      }
+
       // Add GENROU generators
       for (const auto& gendata : data.genrou)
       {

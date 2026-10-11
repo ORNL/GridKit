@@ -4,6 +4,8 @@ PERC1 is a power-electronic load model with voltage and frequency response,
 current limits, and load cessation and reconnection for aggregated
 devices.[^powerworld][^background]
 
+The JSON device class is `Perc1`.
+
 ## Notes
 
 Internal power and current quantities use component base. Terminal currents
@@ -299,11 +301,14 @@ Use the positive branch $V \ge \epsilon_V$.
 
 Initialization starts from power-flow consumption with no prior cessation.
 If $P_\mathrm{nom} = Q_\mathrm{nom} = 0$, the load contributes no current.
-Otherwise, select [LoadZ](../LoadZ/README.md) when $P_\mathrm{nom} = 0$ or the
-initial voltage magnitude $V_\mathrm{nom}$ is below $V_\mathrm{cease}$.[^powerworld]
+Otherwise, use the constant-impedance equations of [LoadZ](../LoadZ/README.md)
+when $P_\mathrm{nom} = 0$ or the initial voltage magnitude $V_\mathrm{nom}$ is below $V_\mathrm{cease}$.[^powerworld]
 Set $R = V_\mathrm{nom}^2 P_\mathrm{nom}/(P_\mathrm{nom}^2 + Q_\mathrm{nom}^2)$
 and $X = V_\mathrm{nom}^2 Q_\mathrm{nom}/(P_\mathrm{nom}^2 + Q_\mathrm{nom}^2)$.
-For the remaining operating points, initialize PERC1 as follows.
+The implementation retains the same variable layout in this fallback, freezes
+the differential states, and reports zero for the unused component-base
+current monitors. `fracon` remains one. The fallback is fixed until the next
+initialization. For the remaining operating points, initialize PERC1 as follows.
 
 ### Input Initialization
 

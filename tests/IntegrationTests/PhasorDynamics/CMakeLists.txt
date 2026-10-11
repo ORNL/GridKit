@@ -11,3 +11,5 @@ add_test(
 install(TARGETS test_pd_integration)
 
 add_subdirectory(TenGen)
+
+add_subdirectory(Perc1)

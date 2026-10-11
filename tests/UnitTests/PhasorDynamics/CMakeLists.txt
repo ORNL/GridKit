@@ -56,6 +56,14 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_load_perc1 runLoadPerc1Tests.cpp)
+target_link_libraries(
+  test_phasor_load_perc1
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::phasor_dynamics_load_perc1_dependency_tracking
+  GridKit::phasor_dynamics_bus_dependency_tracking
+  GridKit::testing)
+
 add_executable(test_phasor_genrou runGenrouTests.cpp)
 target_link_libraries(
   test_phasor_genrou
@@ -223,6 +231,7 @@ add_test(NAME PhasorDynamicsStabilizerIeeestTest COMMAND test_phasor_stabilizer_
 add_test(NAME PhasorDynamicsGenClassicalTest COMMAND test_phasor_gen_classical)
 add_test(NAME PhasorDynamicsLoadZTest COMMAND test_phasor_loadz)
 add_test(NAME PhasorDynamicsLoadZIPTest COMMAND test_phasor_loadzip)
+add_test(NAME PhasorDynamicsLoadPerc1Test COMMAND test_phasor_load_perc1)
 add_test(
   NAME PhasorDynamicsSystemTest
   COMMAND test_phasor_system
@@ -237,6 +246,7 @@ install(
           test_phasor_branch
           test_phasor_loadz
           test_phasor_loadzip
+          test_phasor_load_perc1
           test_phasor_genrou
           test_phasor_governor_tgov1
           test_phasor_governor_gastpti

@@ -19,6 +19,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/PERC1/Perc1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSourceData.hpp>
@@ -59,6 +60,7 @@ namespace GridKit
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadZDataT        = LoadZData<RealT, IdxT>;
       using LoadZIPDataT      = LoadZIPData<RealT, IdxT>;
+      using Perc1DataT        = Perc1Data<RealT, IdxT>;
       using ConstantSourceT   = ConstantSignalSourceData<RealT, IdxT>;
       using FunctionSourceT   = FunctionSignalSourceData<RealT, IdxT>;
       using SignalDataT       = SignalNodeData<RealT, IdxT>;
@@ -111,6 +113,7 @@ namespace GridKit
       std::vector<GenClassicalDataT> genclassical;    ///< Classical generator instances within the model
       std::vector<LoadZDataT>        loadz;           ///< LoadZ instances within the model
       std::vector<LoadZIPDataT>      loadzip;         ///< LoadZIP instances within the model
+      std::vector<Perc1DataT>        perc1;           ///< PERC1 loads within the model
       std::vector<Tgov1DataT>        gov;             ///< Governors within the model
       std::vector<Esdc1aDataT>       esdc1a;          ///< ESDC1A exciters within the model
       std::vector<GastPtiDataT>      gastpti;         ///< GASTPTI governors within the model
