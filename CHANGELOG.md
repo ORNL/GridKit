@@ -11,6 +11,7 @@
 - `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
 - Added `Model::ParameterReader`
 - Removed legacy PhasorDynamics component constructors in favor of constructors taking model data.
+- Added hierarchical PhasorDynamics system models.
 
 ## v0.2
 

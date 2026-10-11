@@ -25,6 +25,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
+      // The top-level system builds the Jacobian from its whole residual.
+      // @todo Subsystem Jacobian from the subsystem's own residual.
+      if (is_subsystem_)
+      {
+        Log::error() << "Subsystem Jacobians are only available with Enzyme\n";
+        return -1;
+      }
+
       this->constructCsr();
 
       // Log::misc() << "System DependencyTracking Jacobian\n";
