@@ -10,7 +10,6 @@
 #include <atomic>
 #include <variant>
 
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -33,12 +32,9 @@ namespace GridKit
        * The regulated bus is retained, the model is sized, and every
        * parameter keeps its documented default. No monitor or signal
        * connection is created.
-       *
-       * @param[in] bus Regulated bus measured by the controller.
        */
       template <typename scalar_type, typename index_type>
-      Repca<scalar_type, index_type>::Repca(BusT* bus)
-        : bus_(bus)
+      Repca<scalar_type, index_type>::Repca()
       {
         size_ = static_cast<IdxT>(Utilities::enum_size<RepcaInternalVariables>());
         setDerivedParameters();
@@ -47,13 +43,11 @@ namespace GridKit
       /**
        * @brief Construct REPCA from model data
        *
-       * @param[in] bus Regulated bus measured by the controller.
        * @param[in] data Model parameters and monitor selections.
        */
       template <typename scalar_type, typename index_type>
-      Repca<scalar_type, index_type>::Repca(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Repca<scalar_type, index_type>::Repca(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -152,7 +146,8 @@ namespace GridKit
           }
         };
 
-        check(bus_ != nullptr, "regulated bus is required");
+        check(signals_.template isAttached<RepcaExternalVariables::VR>(), "VR signal is not attached");
+        check(signals_.template isAttached<RepcaExternalVariables::VI>(), "VI signal is not attached");
 
         const bool valid_component_base = std::isfinite(mva_base_)
                                           && mva_base_ > ZERO<RealT>
@@ -598,8 +593,6 @@ namespace GridKit
       {
         auto* y_ext = y_ext_.getData();
 
-        const auto VR      = static_cast<size_t>(RepcaExternalVariables::VR);
-        const auto VI      = static_cast<size_t>(RepcaExternalVariables::VI);
         const auto IR      = static_cast<size_t>(RepcaExternalVariables::IR);
         const auto II      = static_cast<size_t>(RepcaExternalVariables::II);
         const auto P       = static_cast<size_t>(RepcaExternalVariables::P);
@@ -614,13 +607,9 @@ namespace GridKit
                   variable_indices_ext_.end(),
                   INVALID_INDEX<IdxT>);
 
-        y_ext[VR] = Vr();
-        y_ext[VI] = Vi();
-        if (bus_->size() > 0)
-        {
-          variable_indices_ext_[VR] = bus_->getVariableIndex(0);
-          variable_indices_ext_[VI] = bus_->getVariableIndex(1);
-        }
+        // Regulated-bus voltage is read only; the controller injects no current.
+        signals_.template gatherExternalVariable<RepcaExternalVariables::VR>(y_ext, variable_indices_ext_.data());
+        signals_.template gatherExternalVariable<RepcaExternalVariables::VI>(y_ext, variable_indices_ext_.data());
 
         y_ext[VREF]    = vref_set_;
         y_ext[PREF]    = pref_set_;
@@ -644,41 +633,39 @@ namespace GridKit
             ports_.in.template port<RepcaSignalInputs::q>().readSignal();
         variable_indices_ext_[Q] =
             ports_.in.template port<RepcaSignalInputs::q>().signalVariableIndex();
-        if (ports_.in.template port<RepcaSignalInputs::freq>().connected())
+        if (auto freq_port = ports_.in.template port<RepcaSignalInputs::freq>())
         {
-          y_ext[FREQ] =
-              ports_.in.template port<RepcaSignalInputs::freq>().readSignal();
-          variable_indices_ext_[FREQ] =
-              ports_.in.template port<RepcaSignalInputs::freq>().signalVariableIndex();
+          y_ext[FREQ]                 = freq_port.readSignal();
+          variable_indices_ext_[FREQ] = freq_port.signalVariableIndex();
         }
 
         if (auto vref_port = ports_.in.template port<RepcaSignalInputs::vref>())
         {
           y_ext[VREF] =
-              ports_.in.template port<RepcaSignalInputs::vref>().readSignal();
+              vref_port.readSignal();
           variable_indices_ext_[VREF] =
-              ports_.in.template port<RepcaSignalInputs::vref>().signalVariableIndex();
+              vref_port.signalVariableIndex();
         }
         if (auto pref_port = ports_.in.template port<RepcaSignalInputs::pref>())
         {
           y_ext[PREF] =
-              ports_.in.template port<RepcaSignalInputs::pref>().readSignal();
+              pref_port.readSignal();
           variable_indices_ext_[PREF] =
-              ports_.in.template port<RepcaSignalInputs::pref>().signalVariableIndex();
+              pref_port.signalVariableIndex();
         }
         if (auto qref_port = ports_.in.template port<RepcaSignalInputs::qref>())
         {
           y_ext[QREF] =
-              ports_.in.template port<RepcaSignalInputs::qref>().readSignal();
+              qref_port.readSignal();
           variable_indices_ext_[QREF] =
-              ports_.in.template port<RepcaSignalInputs::qref>().signalVariableIndex();
+              qref_port.signalVariableIndex();
         }
         if (auto freqref_port = ports_.in.template port<RepcaSignalInputs::freqref>())
         {
           y_ext[FREQREF] =
-              ports_.in.template port<RepcaSignalInputs::freqref>().readSignal();
+              freqref_port.readSignal();
           variable_indices_ext_[FREQREF] =
-              ports_.in.template port<RepcaSignalInputs::freqref>().signalVariableIndex();
+              freqref_port.signalVariableIndex();
         }
       }
 
@@ -697,19 +684,6 @@ namespace GridKit
         evaluateInternalResidual(y, yp, y_ext_.getData(), f);
         f_.setDataUpdated();
         return 0;
-      }
-
-      /**
-       * @brief Evaluate internal equations and external contributions.
-       *
-       * REPCA contributes no external residual, so the base implementation
-       * returns zero after the internal equations are evaluated.
-       */
-      template <typename scalar_type, typename index_type>
-      int Repca<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
       }
 
       /**
@@ -1220,28 +1194,6 @@ namespace GridKit
                  + std::log(std::sinh(HALF<RealT> * x));
         }
         return std::log1p(-std::exp(-x));
-      }
-
-      /**
-       * @brief Access the regulated-bus real voltage component
-       *
-       * @return Mutable reference to the bus real voltage state.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Repca<scalar_type, index_type>::Vr()
-      {
-        return bus_->Vr();
-      }
-
-      /**
-       * @brief Access the regulated-bus imaginary voltage component
-       *
-       * @return Mutable reference to the bus imaginary voltage state.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Repca<scalar_type, index_type>::Vi()
-      {
-        return bus_->Vi();
       }
 
     } // namespace Controller

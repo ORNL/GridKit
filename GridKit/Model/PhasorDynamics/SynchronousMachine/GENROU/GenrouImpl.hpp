@@ -103,8 +103,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(const ModelDataT& data)
-      :
-        monitor_(std::make_unique<MonitorT>(data))
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -118,8 +117,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(SignalNodeT* omega, SignalNodeT* pmech, const ModelDataT& data)
-      :
-        monitor_(std::make_unique<MonitorT>(data))
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       ports_.in.template port<GenrouSignalInputs::pmech>().connect(pmech);
       ports_.out.template port<GenrouSignalOutputs::speed>().connect(omega);
@@ -135,8 +133,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(SignalNodeT* omega, SignalNodeT* pmech, SignalNodeT* efd, const ModelDataT& data)
-      :
-        monitor_(std::make_unique<MonitorT>(data))
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       ports_.in.template port<GenrouSignalInputs::pmech>().connect(pmech);
       ports_.in.template port<GenrouSignalInputs::efd>().connect(efd);
@@ -322,9 +319,6 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<GenrouExternalVariables>()));
-      f_ext_.resize(2);
-      f_ext_.setToZero();
-      residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
       // Set output signals
       if (auto speed_port = ports_.out.template port<GenrouSignalOutputs::speed>())
@@ -527,13 +521,18 @@ namespace GridKit
       ScalarT psiqp_dot = yp[4];
       ScalarT Edp_dot   = yp[5];
 
+      const auto VR  = static_cast<size_t>(GenrouExternalVariables::VR);
+      const auto VI  = static_cast<size_t>(GenrouExternalVariables::VI);
+      const auto PM  = static_cast<size_t>(GenrouExternalVariables::PM);
+      const auto EFD = static_cast<size_t>(GenrouExternalVariables::EFD);
+
       // Set coupling variable aliases
-      ScalarT vr = y_ext[0];
-      ScalarT vi = y_ext[1];
+      ScalarT vr = y_ext[VR];
+      ScalarT vi = y_ext[VI];
 
       // Set signal variable aliases
-      ScalarT pmech = this->toComponentBase(y_ext[2]);
-      ScalarT efd   = y_ext[3];
+      ScalarT pmech = this->toComponentBase(y_ext[PM]);
+      ScalarT efd   = y_ext[EFD];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
@@ -575,9 +574,12 @@ namespace GridKit
       ScalarT ir = y[15];
       ScalarT ii = y[16];
 
+      const auto VR = static_cast<size_t>(GenrouExternalVariables::VR);
+      const auto VI = static_cast<size_t>(GenrouExternalVariables::VI);
+
       // Convert current injection to system base for the network.
-      f_ext[0] = this->toSystemBase(ir);
-      f_ext[1] = this->toSystemBase(ii);
+      f_ext[VR] = this->toSystemBase(ir);
+      f_ext[VI] = this->toSystemBase(ii);
 
       return 0;
     }
@@ -589,33 +591,31 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Genrou<scalar_type, index_type>::gatherExternalVariables()
     {
-      auto* y_ext = y_ext_.getData();
+      const auto PM  = static_cast<size_t>(GenrouExternalVariables::PM);
+      const auto EFD = static_cast<size_t>(GenrouExternalVariables::EFD);
+
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
 
       // Bus voltages
-      static constexpr auto VR = GenrouExternalVariables::VR;
-      static constexpr auto VI = GenrouExternalVariables::VI;
-
-      y_ext_.getData()[0]                = Vr();
-      y_ext_.getData()[1]                = Vi();
-      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
-      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
-      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
-      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
+      signals_.template gatherExternalVariable<GenrouExternalVariables::VR>(y_ext, columns, rows);
+      signals_.template gatherExternalVariable<GenrouExternalVariables::VI>(y_ext, columns, rows);
 
       // Mechanical Power
-      y_ext[2] = pmech_set_;
-      if (ports_.in.template port<GenrouSignalInputs::pmech>().connected())
+      y_ext[PM] = pmech_set_;
+      if (auto pmech_port = ports_.in.template port<GenrouSignalInputs::pmech>())
       {
-        y_ext[2]                 = ports_.in.template port<GenrouSignalInputs::pmech>().readSignal();
-        variable_indices_ext_[2] = ports_.in.template port<GenrouSignalInputs::pmech>().signalVariableIndex();
+        y_ext[PM]   = pmech_port.readSignal();
+        columns[PM] = pmech_port.signalVariableIndex();
       }
 
       // Exciter Efield
-      y_ext[3] = efd_set_;
-      if (ports_.in.template port<GenrouSignalInputs::efd>().connected())
+      y_ext[EFD] = efd_set_;
+      if (auto efd_port = ports_.in.template port<GenrouSignalInputs::efd>())
       {
-        y_ext[3]                 = ports_.in.template port<GenrouSignalInputs::efd>().readSignal();
-        variable_indices_ext_[3] = ports_.in.template port<GenrouSignalInputs::efd>().signalVariableIndex();
+        y_ext[EFD]   = efd_port.readSignal();
+        columns[EFD] = efd_port.signalVariableIndex();
       }
     }
 

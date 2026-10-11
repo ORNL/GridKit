@@ -13,6 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -240,6 +241,76 @@ namespace GridKit
         success *= isEqual(branch.getExternalResidual()[1], Ii1);
         success *= isEqual(bus2.Ir(), Ir2);
         success *= isEqual(bus2.Ii(), Ii2);
+
+        return success.report(__func__);
+      }
+
+      /// A load on a bus whose voltage comes from signals: the system adds the
+      /// load current into the bus rows, and the `ir`/`ii` outlets publish the
+      /// boundary currents as system variables.
+      TestOutcome signalVoltageInAssembly()
+      {
+        TestStatus success = true;
+
+        using SignalIn  = PhasorDynamics::BusSignalInputs;
+        using SignalOut = PhasorDynamics::BusSignalOutputs;
+
+        // Voltage arrives from outside the system, so it has no column.
+        ScalarT Vr{1.06};
+        ScalarT Vi{-0.01};
+        IdxT    vr_index{INVALID_INDEX<IdxT>};
+        IdxT    vi_index{INVALID_INDEX<IdxT>};
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_inlet;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_inlet;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ir_outlet;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ii_outlet;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus_vi;
+        vr_inlet.link(&Vr, &vr_index);
+        vi_inlet.link(&Vi, &vi_index);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT>        system;
+        PhasorDynamics::BusSignalVoltageIn<ScalarT, IdxT> bus;
+        PhasorDynamics::LoadZ<ScalarT, IdxT>              load(0.1, 0.0);
+
+        bus.getPorts().in.template port<SignalIn::vr>().connect(&vr_inlet);
+        bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_inlet);
+        bus.getPorts().out.template port<SignalOut::ir>().connect(&ir_outlet);
+        bus.getPorts().out.template port<SignalOut::ii>().connect(&ii_outlet);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus_vr);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus_vi);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZExternalVariables::VR>(&bus_vr);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZExternalVariables::VI>(&bus_vi);
+
+        system.addBus(&bus);
+        system.addComponent(&load);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.evaluateResidual() == 0;
+
+        success *= ir_outlet.getVariableIndex() == bus.getVariableIndex(0);
+        success *= ii_outlet.getVariableIndex() == bus.getVariableIndex(1);
+
+        // With zero boundary current, each bus row holds the load injection.
+        const auto* f       = system.getResidual().getData();
+        const auto  ir_row  = static_cast<size_t>(bus.getResidualIndex(0));
+        const auto  ii_row  = static_cast<size_t>(bus.getResidualIndex(1));
+        const auto  Ir      = load.getExternalResidual()[0];
+        const auto  Ii      = load.getExternalResidual()[1];
+        success            *= !isEqual(Ir, 0.0);
+        success            *= isEqual(f[ir_row], Ir);
+        success            *= isEqual(f[ii_row], Ii);
+
+        // The consistent boundary current zeroes the rows and is published.
+        bus.Ir()  = Ir;
+        bus.Ii()  = Ii;
+        success  *= system.evaluateResidual() == 0;
+        success  *= isEqual(f[ir_row], 0.0);
+        success  *= isEqual(f[ii_row], 0.0);
+        success  *= isEqual(ir_outlet.read(), Ir);
+        success  *= isEqual(ii_outlet.read(), Ii);
 
         return success.report(__func__);
       }

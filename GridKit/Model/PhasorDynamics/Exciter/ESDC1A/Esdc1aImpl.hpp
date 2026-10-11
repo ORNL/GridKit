@@ -10,7 +10,6 @@
 #include <atomic>
 #include <variant>
 
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -33,12 +32,9 @@ namespace GridKit
        * The model is sized but left unconfigured. Every parameter keeps its
        * documented default, and no monitor is created. verify() rejects the
        * model until an `efd` output node is assigned.
-       *
-       * @param[in] bus Terminal bus the exciter measures.
        */
       template <typename scalar_type, typename index_type>
-      Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus)
-        : bus_(bus)
+      Esdc1a<scalar_type, index_type>::Esdc1a()
       {
         size_ = static_cast<IdxT>(Utilities::enum_size<Esdc1aInternalVariables>());
         setDerivedParameters();
@@ -47,13 +43,11 @@ namespace GridKit
       /**
        * @brief Construct an ESDC1A exciter from model data
        *
-       * @param[in] bus Terminal bus the exciter measures.
        * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Esdc1a<scalar_type, index_type>::Esdc1a(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -150,11 +144,8 @@ namespace GridKit
           }
         };
 
-        if (bus_ == nullptr)
-        {
-          Log::error() << "Esdc1a: bus pointer is null\n";
-          ret += 1;
-        }
+        check(signals_.template isAttached<Esdc1aExternalVariables::VREAL>(), "VREAL signal is not attached");
+        check(signals_.template isAttached<Esdc1aExternalVariables::VIMAG>(), "VIMAG signal is not attached");
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
@@ -447,22 +438,14 @@ namespace GridKit
       {
         auto* y_ext = y_ext_.getData();
 
-        const auto VR_EXT = static_cast<size_t>(Esdc1aExternalVariables::VR);
-        const auto VI_EXT = static_cast<size_t>(Esdc1aExternalVariables::VI);
-        const auto OMEGA  = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
-        const auto VREF   = static_cast<size_t>(Esdc1aExternalVariables::VREF);
-        const auto VS     = static_cast<size_t>(Esdc1aExternalVariables::VS);
-        const auto VUEL   = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
-        y_ext[VR_EXT]                 = Vr();
-        y_ext[VI_EXT]                 = Vi();
-        variable_indices_ext_[VR_EXT] = INVALID_INDEX<IdxT>;
-        variable_indices_ext_[VI_EXT] = INVALID_INDEX<IdxT>;
-        if (bus_->size() > 0)
-        {
-          variable_indices_ext_[VR_EXT] = bus_->getVariableIndex(0);
-          variable_indices_ext_[VI_EXT] = bus_->getVariableIndex(1);
-        }
+        // Bus voltages are read only; the exciter injects no current.
+        signals_.template gatherExternalVariable<Esdc1aExternalVariables::VREAL>(y_ext, variable_indices_ext_.data());
+        signals_.template gatherExternalVariable<Esdc1aExternalVariables::VIMAG>(y_ext, variable_indices_ext_.data());
 
         y_ext[OMEGA]                 = omega_set_;
         y_ext[VREF]                  = vref_set_;
@@ -520,19 +503,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Evaluate internal equations and external contributions.
-       *
-       * ESDC1A contributes no external residual, so the base implementation
-       * returns zero after the internal equations are evaluated.
-       */
-      template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
-      }
-
-      /**
        * @brief Access the monitor
        *
        * @return Monitor for this model, or nullptr when the model was
@@ -580,12 +550,12 @@ namespace GridKit
         const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
         const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
-        const auto VR_EXT = static_cast<size_t>(Esdc1aExternalVariables::VR);
-        const auto VI_EXT = static_cast<size_t>(Esdc1aExternalVariables::VI);
-        const auto OMEGA  = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
-        const auto VREF   = static_cast<size_t>(Esdc1aExternalVariables::VREF);
-        const auto VS     = static_cast<size_t>(Esdc1aExternalVariables::VS);
-        const auto VUEL   = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+        const auto VREAL = static_cast<size_t>(Esdc1aExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(Esdc1aExternalVariables::VIMAG);
+        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
         const ScalarT efdp = y[EFDP];
         const ScalarT vc   = y[VC];
@@ -611,7 +581,7 @@ namespace GridKit
         const ScalarT vuel  = y_ext[VUEL];
 
         const ScalarT ec = std::sqrt(
-            y_ext[VR_EXT] * y_ext[VR_EXT] + y_ext[VI_EXT] * y_ext[VI_EXT]);
+            y_ext[VREAL] * y_ext[VREAL] + y_ext[VIMAG] * y_ext[VIMAG]);
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
         const ScalarT vfe_target        = Ke_eff_ * efdp + se;
         const ScalarT efdp_rate         = (vr - vfe) / Te_;
@@ -934,28 +904,6 @@ namespace GridKit
       {
         const RealT mu = Math::MU<RealT>;
         return ramp_output + std::log(-std::expm1(-mu * ramp_output)) / mu;
-      }
-
-      /**
-       * @brief Access the terminal-bus real voltage component.
-       *
-       * @return Reference to the bus variable.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Esdc1a<scalar_type, index_type>::Vr()
-      {
-        return bus_->Vr();
-      }
-
-      /**
-       * @brief Access the terminal-bus imaginary voltage component.
-       *
-       * @return Reference to the bus variable.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Esdc1a<scalar_type, index_type>::Vi()
-      {
-        return bus_->Vi();
       }
 
     } // namespace Exciter

@@ -20,6 +20,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     using Log = ::GridKit::Utilities::Logger;
+
     /**
      * @brief Constructor for a classical generator model
      */
@@ -180,9 +181,6 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<GenClassicalExternalVariables>()));
-      f_ext_.resize(2);
-      f_ext_.setToZero();
-      residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
       // Set output signals
       if (auto speed_port = ports_.out.template port<GenClassicalSignalOutputs::speed>())
@@ -200,18 +198,17 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::verify() const
     {
-        int ret = 0;
-        if (!signals_.template isAttached<GenClassicalExternalVariables::VR>())
-        {
-          Log::error() << "GenClassical: VR signal is not attached\n";
-          ++ret;
-        }
-        if (!signals_.template isAttached<GenClassicalExternalVariables::VI>())
-        {
-          Log::error() << "GenClassical: VI signal is not attached\n";
-          ++ret;
-        }
-
+      int ret = 0;
+      if (!signals_.template isAttached<GenClassicalExternalVariables::VR>())
+      {
+        Log::error() << "GenClassical: VR signal is not attached\n";
+        ++ret;
+      }
+      if (!signals_.template isAttached<GenClassicalExternalVariables::VI>())
+      {
+        Log::error() << "GenClassical: VI signal is not attached\n";
+        ++ret;
+      }
 
       auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
       if (pmech_port.connected() && !pmech_port.linked())
@@ -346,13 +343,18 @@ namespace GridKit
       const ScalarT delta_dot = yp[0];
       const ScalarT omega_dot = yp[1];
 
+      const auto VR  = static_cast<size_t>(GenClassicalExternalVariables::VR);
+      const auto VI  = static_cast<size_t>(GenClassicalExternalVariables::VI);
+      const auto PM  = static_cast<size_t>(GenClassicalExternalVariables::PM);
+      const auto EFD = static_cast<size_t>(GenClassicalExternalVariables::EFD);
+
       // Set coupling variable aliases
-      const ScalarT vr = y_ext[0];
-      const ScalarT vi = y_ext[1];
+      const ScalarT vr = y_ext[VR];
+      const ScalarT vi = y_ext[VI];
 
       // Set signal variable aliases
-      const ScalarT pmech = this->toComponentBase(y_ext[2]);
-      const ScalarT efd   = y_ext[3];
+      const ScalarT pmech = this->toComponentBase(y_ext[PM]);
+      const ScalarT efd   = y_ext[EFD];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
@@ -379,10 +381,13 @@ namespace GridKit
         [[maybe_unused]] const ScalarT* y_ext,
         ScalarT*                        f_ext)
     {
+      const auto VR = static_cast<size_t>(GenClassicalExternalVariables::VR);
+      const auto VI = static_cast<size_t>(GenClassicalExternalVariables::VI);
+
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
-      f_ext[0]         = this->toSystemBase(ir);
-      f_ext[1]         = this->toSystemBase(ii);
+      f_ext[VR]        = this->toSystemBase(ir);
+      f_ext[VI]        = this->toSystemBase(ii);
 
       return 0;
     }
@@ -394,30 +399,31 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::gatherExternalVariables()
     {
-      auto* y_ext = y_ext_.getData();
-      static constexpr auto VR = GenClassicalExternalVariables::VR;
-      static constexpr auto VI = GenClassicalExternalVariables::VI;
+      const auto PM  = static_cast<size_t>(GenClassicalExternalVariables::PM);
+      const auto EFD = static_cast<size_t>(GenClassicalExternalVariables::EFD);
 
-      y_ext[0]                = Vr();
-      y_ext[1]                = Vi();
-      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
-      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
-      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
-      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
+
+      // Bus voltages
+      signals_.template gatherExternalVariable<GenClassicalExternalVariables::VR>(y_ext, columns, rows);
+      signals_.template gatherExternalVariable<GenClassicalExternalVariables::VI>(y_ext, columns, rows);
+
       // Mechanical Power
-      y_ext[2] = pmech_set_;
-      if (ports_.in.template port<GenClassicalSignalInputs::pmech>().connected())
+      y_ext[PM] = pmech_set_;
+      if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
-        y_ext[2]                 = ports_.in.template port<GenClassicalSignalInputs::pmech>().readSignal();
-        variable_indices_ext_[2] = ports_.in.template port<GenClassicalSignalInputs::pmech>().signalVariableIndex();
+        y_ext[PM]   = pmech_port.readSignal();
+        columns[PM] = pmech_port.signalVariableIndex();
       }
 
       // Exciter Efield
-      y_ext[3] = efd_set_;
-      if (ports_.in.template port<GenClassicalSignalInputs::efd>().connected())
+      y_ext[EFD] = efd_set_;
+      if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
       {
-        y_ext[3]                 = ports_.in.template port<GenClassicalSignalInputs::efd>().readSignal();
-        variable_indices_ext_[3] = ports_.in.template port<GenClassicalSignalInputs::efd>().signalVariableIndex();
+        y_ext[EFD]   = efd_port.readSignal();
+        columns[EFD] = efd_port.signalVariableIndex();
       }
     }
 

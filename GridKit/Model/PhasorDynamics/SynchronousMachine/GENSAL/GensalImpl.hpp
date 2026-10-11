@@ -202,9 +202,6 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<GensalExternalVariables>()));
-      f_ext_.resize(2);
-      f_ext_.setToZero();
-      residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
       // Set output signals
       if (auto speed_port = ports_.out.template port<GensalSignalOutputs::speed>())
@@ -387,13 +384,18 @@ namespace GridKit
       ScalarT psidp_dot  = yp[3];
       ScalarT psiqpp_dot = yp[4];
 
+      const auto VR  = static_cast<size_t>(GensalExternalVariables::VR);
+      const auto VI  = static_cast<size_t>(GensalExternalVariables::VI);
+      const auto PM  = static_cast<size_t>(GensalExternalVariables::PM);
+      const auto EFD = static_cast<size_t>(GensalExternalVariables::EFD);
+
       // Set coupling variable aliases
-      ScalarT vr = y_ext[0];
-      ScalarT vi = y_ext[1];
+      ScalarT vr = y_ext[VR];
+      ScalarT vi = y_ext[VI];
 
       // Set signal variable aliases
-      ScalarT pmech = this->toComponentBase(y_ext[2]);
-      ScalarT efd   = y_ext[3];
+      ScalarT pmech = this->toComponentBase(y_ext[PM]);
+      ScalarT efd   = y_ext[EFD];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
@@ -432,9 +434,12 @@ namespace GridKit
       ScalarT ir = y[12];
       ScalarT ii = y[13];
 
+      const auto VR = static_cast<size_t>(GensalExternalVariables::VR);
+      const auto VI = static_cast<size_t>(GensalExternalVariables::VI);
+
       // Convert current injection to system base for the network.
-      f_ext[0] = this->toSystemBase(ir);
-      f_ext[1] = this->toSystemBase(ii);
+      f_ext[VR] = this->toSystemBase(ir);
+      f_ext[VI] = this->toSystemBase(ii);
 
       return 0;
     }
@@ -446,33 +451,31 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Gensal<scalar_type, index_type>::gatherExternalVariables()
     {
-      auto* y_ext = y_ext_.getData();
+      const auto PM  = static_cast<size_t>(GensalExternalVariables::PM);
+      const auto EFD = static_cast<size_t>(GensalExternalVariables::EFD);
+
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
 
       // Bus voltages
-      static constexpr auto VR = GensalExternalVariables::VR;
-      static constexpr auto VI = GensalExternalVariables::VI;
-
-      y_ext_.getData()[0]                = Vr();
-      y_ext_.getData()[1]                = Vi();
-      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
-      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
-      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
-      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
+      signals_.template gatherExternalVariable<GensalExternalVariables::VR>(y_ext, columns, rows);
+      signals_.template gatherExternalVariable<GensalExternalVariables::VI>(y_ext, columns, rows);
 
       // Mechanical Power
-      y_ext[2] = pmech_set_;
-      if (ports_.in.template port<GensalSignalInputs::pmech>().connected())
+      y_ext[PM] = pmech_set_;
+      if (auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>())
       {
-        y_ext[2]                 = ports_.in.template port<GensalSignalInputs::pmech>().readSignal();
-        variable_indices_ext_[2] = ports_.in.template port<GensalSignalInputs::pmech>().signalVariableIndex();
+        y_ext[PM]   = pmech_port.readSignal();
+        columns[PM] = pmech_port.signalVariableIndex();
       }
 
       // Exciter Efield
-      y_ext[3] = efd_set_;
-      if (ports_.in.template port<GensalSignalInputs::efd>().connected())
+      y_ext[EFD] = efd_set_;
+      if (auto efd_port = ports_.in.template port<GensalSignalInputs::efd>())
       {
-        y_ext[3]                 = ports_.in.template port<GensalSignalInputs::efd>().readSignal();
-        variable_indices_ext_[3] = ports_.in.template port<GensalSignalInputs::efd>().signalVariableIndex();
+        y_ext[EFD]   = efd_port.readSignal();
+        columns[EFD] = efd_port.signalVariableIndex();
       }
     }
 

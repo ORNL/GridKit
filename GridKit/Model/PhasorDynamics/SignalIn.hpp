@@ -34,6 +34,14 @@ namespace GridKit
         return this->signal_node_->getVariableIndex();
       }
 
+      /// Link `node` to the signal this inlet reads, with a residual row of
+      /// the caller's.
+      void forward(SignalNode<ScalarT, IdxT>* node, IdxT* residual_index) const
+      {
+        assert(this->linked());
+        node->link(*this->signal_node_, residual_index);
+      }
+
       /// Write a value to the connected signal node.
       ///
       /// @warning Use only during initialization as this violates assumptions.

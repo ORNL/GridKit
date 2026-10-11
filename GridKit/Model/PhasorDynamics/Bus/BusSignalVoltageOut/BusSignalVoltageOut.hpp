@@ -26,9 +26,8 @@ namespace GridKit
      *   mandatory: verify() throws if either is not connected to a linked
      *   signal, and no default value is ever used.
      *
-     * Components attached to the bus directly (without signals) keep adding
-     * their currents to the residuals after the bus residual is evaluated,
-     * exactly as they do for @ref Bus.
+     * The system adds the currents of attached components to the residuals,
+     * exactly as it does for @ref Bus.
      *
      * @note Signal ports have to be connected before allocate() is called, since
      *       the output signals are linked to the bus variables there.

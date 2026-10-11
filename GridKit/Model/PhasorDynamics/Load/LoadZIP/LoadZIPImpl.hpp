@@ -26,8 +26,7 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     LoadZIP<scalar_type, index_type>::LoadZIP(RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP)
-      :
-        Pnom_(Pnom),
+      : Pnom_(Pnom),
         Qnom_(Qnom),
         alphaI_(alphaI),
         alphaP_(alphaP)
@@ -114,9 +113,6 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<LoadZIPExternalVariables>()));
-      f_ext_.resize(2);
-      f_ext_.setToZero();
-      residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
       allocated_ = true;
       return 0;
@@ -205,10 +201,13 @@ namespace GridKit
         [[maybe_unused]] const ScalarT* y_ext,
         ScalarT*                        f_ext)
     {
+      const auto VR = static_cast<size_t>(LoadZIPExternalVariables::VR);
+      const auto VI = static_cast<size_t>(LoadZIPExternalVariables::VI);
+
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
-      f_ext[0]         = Ir;
-      f_ext[1]         = Ii;
+      f_ext[VR]        = Ir;
+      f_ext[VI]        = Ii;
 
       return 0;
     }
@@ -220,15 +219,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::gatherExternalVariables()
     {
-      static constexpr auto VR = LoadZIPExternalVariables::VR;
-      static constexpr auto VI = LoadZIPExternalVariables::VI;
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
 
-      y_ext_.getData()[0]                = Vr();
-      y_ext_.getData()[1]                = Vi();
-      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
-      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
-      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
-      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
+      signals_.template gatherExternalVariable<LoadZIPExternalVariables::VR>(y_ext, columns, rows);
+      signals_.template gatherExternalVariable<LoadZIPExternalVariables::VI>(y_ext, columns, rows);
     }
 
     /**
@@ -277,8 +273,11 @@ namespace GridKit
         const ScalarT*                  y_ext,
         ScalarT*                        f)
     {
-      const ScalarT Vr    = y_ext[0];
-      const ScalarT Vi    = y_ext[1];
+      const auto VR = static_cast<size_t>(LoadZIPExternalVariables::VR);
+      const auto VI = static_cast<size_t>(LoadZIPExternalVariables::VI);
+
+      const ScalarT Vr    = y_ext[VR];
+      const ScalarT Vi    = y_ext[VI];
       const ScalarT Ir    = y[0];
       const ScalarT Ii    = y[1];
       const RealT   Vnom2 = Vnom_ * Vnom_;

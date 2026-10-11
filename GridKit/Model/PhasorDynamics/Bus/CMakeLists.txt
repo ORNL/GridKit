@@ -19,7 +19,13 @@ if(GRIDKIT_ENABLE_ENZYME)
       BusEnzyme.cpp
       BusInfinite.cpp
       BusSignalVoltageOut/BusSignalVoltageOutEnzyme.cpp
-      BusSignalVoltageIn/BusSignalVoltageIn.cpp)
+      BusSignalVoltageIn/BusSignalVoltageInEnzyme.cpp)
+  set(_bus_enzyme_libraries PRIVATE ClangEnzymeFlags)
+  set(_bus_enzyme_options
+      PRIVATE
+      -mllvm
+      -enzyme-auto-sparsity=1
+      -fno-math-errno)
 else()
   set(_bus_sources
       Bus.cpp
@@ -37,7 +43,9 @@ gridkit_add_library(
     PUBLIC
     GridKit::phasor_dynamics_core
     PUBLIC
-    GridKit::phasor_dynamics_signal)
+    GridKit::phasor_dynamics_signal
+    ${_bus_enzyme_libraries}
+  COMPILE_OPTIONS ${_bus_enzyme_options})
 
 gridkit_add_library(
   phasor_dynamics_bus_dependency_tracking

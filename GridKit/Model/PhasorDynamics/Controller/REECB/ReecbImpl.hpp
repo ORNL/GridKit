@@ -11,7 +11,6 @@
 #include <atomic>
 #include <variant>
 
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -49,12 +48,9 @@ namespace GridKit
 
       /**
        * @brief Construct an unconfigured REECB controller
-       *
-       * @param[in] bus Terminal bus measured by the controller.
        */
       template <typename scalar_type, typename index_type>
-      Reecb<scalar_type, index_type>::Reecb(BusT* bus)
-        : bus_(bus)
+      Reecb<scalar_type, index_type>::Reecb()
       {
         size_ = static_cast<IdxT>(Utilities::enum_size<ReecbInternalVariables>());
         setDerivedParameters();
@@ -63,13 +59,11 @@ namespace GridKit
       /**
        * @brief Construct REECB from model data
        *
-       * @param[in] bus Terminal bus measured by the controller.
        * @param[in] data Model parameters and monitor selections.
        */
       template <typename scalar_type, typename index_type>
-      Reecb<scalar_type, index_type>::Reecb(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Reecb<scalar_type, index_type>::Reecb(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -168,7 +162,8 @@ namespace GridKit
           }
         };
 
-        check(bus_ != nullptr, "terminal bus is required");
+        check(signals_.template isAttached<ReecbExternalVariables::VR>(), "VR signal is not attached");
+        check(signals_.template isAttached<ReecbExternalVariables::VI>(), "VI signal is not attached");
 
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
@@ -795,23 +790,15 @@ namespace GridKit
       {
         auto* y_ext = y_ext_.getData();
 
-        const auto VR_EXT = static_cast<size_t>(ReecbExternalVariables::VR);
-        const auto VI_EXT = static_cast<size_t>(ReecbExternalVariables::VI);
         const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
         const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
         const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
         const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
         const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
 
-        y_ext[VR_EXT]                 = Vr();
-        y_ext[VI_EXT]                 = Vi();
-        variable_indices_ext_[VR_EXT] = INVALID_INDEX<IdxT>;
-        variable_indices_ext_[VI_EXT] = INVALID_INDEX<IdxT>;
-        if (bus_->size() > 0)
-        {
-          variable_indices_ext_[VR_EXT] = bus_->getVariableIndex(0);
-          variable_indices_ext_[VI_EXT] = bus_->getVariableIndex(1);
-        }
+        // Terminal voltage is read only; the controller injects no current.
+        signals_.template gatherExternalVariable<ReecbExternalVariables::VR>(y_ext, variable_indices_ext_.data());
+        signals_.template gatherExternalVariable<ReecbExternalVariables::VI>(y_ext, variable_indices_ext_.data());
 
         y_ext[PE]                     = pe_set_;
         y_ext[QGEN]                   = qgen_set_;
@@ -826,34 +813,34 @@ namespace GridKit
 
         if (auto pe_port = ports_.in.template port<ReecbSignalInputs::pe>())
         {
-          y_ext[PE] = ports_.in.template port<ReecbSignalInputs::pe>().readSignal();
+          y_ext[PE] = pe_port.readSignal();
           variable_indices_ext_[PE] =
-              ports_.in.template port<ReecbSignalInputs::pe>().signalVariableIndex();
+              pe_port.signalVariableIndex();
         }
         if (auto qgen_port = ports_.in.template port<ReecbSignalInputs::qgen>())
         {
-          y_ext[QGEN] = ports_.in.template port<ReecbSignalInputs::qgen>().readSignal();
+          y_ext[QGEN] = qgen_port.readSignal();
           variable_indices_ext_[QGEN] =
-              ports_.in.template port<ReecbSignalInputs::qgen>().signalVariableIndex();
+              qgen_port.signalVariableIndex();
         }
         if (auto qext_port = ports_.in.template port<ReecbSignalInputs::qext>())
         {
-          y_ext[QEXT] = ports_.in.template port<ReecbSignalInputs::qext>().readSignal();
+          y_ext[QEXT] = qext_port.readSignal();
           variable_indices_ext_[QEXT] =
-              ports_.in.template port<ReecbSignalInputs::qext>().signalVariableIndex();
+              qext_port.signalVariableIndex();
         }
         if (auto pfaref_port = ports_.in.template port<ReecbSignalInputs::pfaref>())
         {
           y_ext[PFAREF] =
-              ports_.in.template port<ReecbSignalInputs::pfaref>().readSignal();
+              pfaref_port.readSignal();
           variable_indices_ext_[PFAREF] =
-              ports_.in.template port<ReecbSignalInputs::pfaref>().signalVariableIndex();
+              pfaref_port.signalVariableIndex();
         }
         if (auto pref_port = ports_.in.template port<ReecbSignalInputs::pref>())
         {
-          y_ext[PREF] = ports_.in.template port<ReecbSignalInputs::pref>().readSignal();
+          y_ext[PREF] = pref_port.readSignal();
           variable_indices_ext_[PREF] =
-              ports_.in.template port<ReecbSignalInputs::pref>().signalVariableIndex();
+              pref_port.signalVariableIndex();
         }
       }
 
@@ -868,19 +855,6 @@ namespace GridKit
         evaluateInternalResidual(y_.getData(), yp_.getData(), y_ext_.getData(), f_.getData());
         f_.setDataUpdated();
         return 0;
-      }
-
-      /**
-       * @brief Evaluate internal equations and external contributions.
-       *
-       * REECB contributes no external residual, so the base implementation
-       * returns zero after the internal equations are evaluated.
-       */
-      template <typename scalar_type, typename index_type>
-      int Reecb<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
       }
 
       /**
@@ -936,8 +910,8 @@ namespace GridKit
         const auto IQCMD  = static_cast<size_t>(ReecbInternalVariables::IQCMD);
         const auto IPCMD  = static_cast<size_t>(ReecbInternalVariables::IPCMD);
 
-        const auto VR_EXT = static_cast<size_t>(ReecbExternalVariables::VR);
-        const auto VI_EXT = static_cast<size_t>(ReecbExternalVariables::VI);
+        const auto VR     = static_cast<size_t>(ReecbExternalVariables::VR);
+        const auto VI     = static_cast<size_t>(ReecbExternalVariables::VI);
         const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
         const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
         const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
@@ -974,8 +948,8 @@ namespace GridKit
         const ScalarT qv_dot    = yp[QV];
         const ScalarT pord_dot  = yp[PORD];
 
-        const ScalarT vr = y_ext[VR_EXT];
-        const ScalarT vi = y_ext[VI_EXT];
+        const ScalarT vr = y_ext[VR];
+        const ScalarT vi = y_ext[VI];
 
         const ScalarT pe     = this->toComponentBase(y_ext[PE]);
         const ScalarT qgen   = this->toComponentBase(y_ext[QGEN]);
@@ -1563,27 +1537,6 @@ namespace GridKit
         return std::isfinite(input);
       }
 
-      /**
-       * @brief Access the terminal-bus real voltage component
-       *
-       * @return Mutable reference to the bus real voltage state.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Reecb<scalar_type, index_type>::Vr()
-      {
-        return bus_->Vr();
-      }
-
-      /**
-       * @brief Access the terminal-bus imaginary voltage component
-       *
-       * @return Mutable reference to the bus imaginary voltage state.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Reecb<scalar_type, index_type>::Vi()
-      {
-        return bus_->Vi();
-      }
     } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

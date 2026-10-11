@@ -32,8 +32,7 @@ namespace GridKit
 
       template <typename scalar_type, typename index_type>
       SexsPti<scalar_type, index_type>::SexsPti(const ModelDataT& data)
-        :
-          monitor_(std::make_unique<MonitorT>(data))
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initModelParams(data);
         initializeMonitor();
@@ -323,14 +322,10 @@ namespace GridKit
         read_signal.template operator()<SexsPtiSignalInputs::voel,
                                         SexsPtiExternalVariables::VOEL>(voel_set_);
 
-        const auto VREAL = static_cast<size_t>(SexsPtiExternalVariables::VREAL);
-        const auto VIMAG = static_cast<size_t>(SexsPtiExternalVariables::VIMAG);
-        y_ext[VREAL]     = signals_.template readExternalVariable<SexsPtiExternalVariables::VREAL>();
-        y_ext[VIMAG]     = signals_.template readExternalVariable<SexsPtiExternalVariables::VIMAG>();
-          variable_indices_ext_[VREAL] = signals_.template readExternalVariableIndex<SexsPtiExternalVariables::VREAL>();
-          variable_indices_ext_[VIMAG] = signals_.template readExternalVariableIndex<SexsPtiExternalVariables::VIMAG>();
-        {
-        }
+        // Bus voltages are read only; the exciter injects no current.
+        auto* columns = variable_indices_ext_.data();
+        signals_.template gatherExternalVariable<SexsPtiExternalVariables::VREAL>(y_ext, columns);
+        signals_.template gatherExternalVariable<SexsPtiExternalVariables::VIMAG>(y_ext, columns);
       }
 
       template <typename scalar_type, typename index_type>

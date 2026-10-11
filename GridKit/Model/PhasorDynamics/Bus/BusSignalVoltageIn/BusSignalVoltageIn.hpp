@@ -26,18 +26,16 @@ namespace GridKit
      * voltage of its own and never modifies it. Both voltage inlets are
      * mandatory: verify() logs an error and throws for an inlet that is not
      * connected to a linked signal, and reading the voltage through an
-     * unlinked inlet throws. No default voltage is ever used. The bus has
-     * no unknowns and no equations (size() == 0, like @ref BusInfinite).
-     * Components attached to the bus add their current injections to Ir()
-     * and Ii(); the resulting sums are published on signal outlets `ir`
-     * and `ii`.
+     * unlinked inlet throws. No default voltage is ever used.
+     *
+     * The boundary currents _Ir_ and _Ii_ are the two algebraic variables of
+     * the bus, published on signal outlets `ir` and `ii`. Each residual row
+     * is the sum of the injections the system adds from attached components,
+     * minus the boundary current, so the published currents are system
+     * variables with Jacobian columns of their own.
      *
      * @note Signal ports have to be connected before allocate() is called, since
      *       the output signals are linked there.
-     *
-     * @warning The current sums are complete only after all attached
-     *          components have evaluated their residuals. A consumer of the
-     *          `ir` and `ii` signals must be evaluated after them.
      */
     template <typename scalar_type, typename index_type>
     class BusSignalVoltageIn : public BusBase<scalar_type, index_type>
@@ -45,11 +43,20 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::bus_id_;
       using BusBase<scalar_type, index_type>::size_;
       using BusBase<scalar_type, index_type>::nnz_;
+      using BusBase<scalar_type, index_type>::y_;
+      using BusBase<scalar_type, index_type>::yp_;
+      using BusBase<scalar_type, index_type>::f_;
+      using BusBase<scalar_type, index_type>::tag_;
+      using BusBase<scalar_type, index_type>::abs_tol_;
       using BusBase<scalar_type, index_type>::variable_indices_;
       using BusBase<scalar_type, index_type>::residual_indices_;
       using BusBase<scalar_type, index_type>::coo_jac_;
+      using BusBase<scalar_type, index_type>::J_rows_buffer_;
+      using BusBase<scalar_type, index_type>::J_cols_buffer_;
+      using BusBase<scalar_type, index_type>::J_vals_buffer_;
       using BusBase<scalar_type, index_type>::monitor_;
       using BusBase<scalar_type, index_type>::allocated_;
+      using BusBase<scalar_type, index_type>::signals_;
 
     public:
       using ScalarT      = scalar_type;
@@ -76,6 +83,9 @@ namespace GridKit
       virtual int initialize() override final;
       virtual int evaluateInternalResidual() override final;
       virtual int evaluateJacobian() override final;
+
+      __attribute__((always_inline)) inline int evaluateInternalResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       virtual BusTypeT BusType() const override final
       {
@@ -113,24 +123,26 @@ namespace GridKit
         return readVoltage<BusSignalInputs::vi>("vi");
       }
 
+      /// Boundary current, real component, published on the `ir` outlet.
       virtual ScalarT& Ir() override final
       {
-        return Ir_;
+        return y_.getData()[0];
       }
 
       virtual const ScalarT& Ir() const override final
       {
-        return Ir_;
+        return y_.getData()[0];
       }
 
+      /// Boundary current, imaginary component, published on the `ii` outlet.
       virtual ScalarT& Ii() override final
       {
-        return Ii_;
+        return y_.getData()[1];
       }
 
       virtual const ScalarT& Ii() const override final
       {
-        return Ii_;
+        return y_.getData()[1];
       }
 
       SignalPortsT& getPorts()
@@ -157,13 +169,6 @@ namespace GridKit
         }
         return port.readSignal();
       }
-
-      ScalarT Ir_{0.0};
-      ScalarT Ii_{0.0};
-
-      /// Current sums are not system variables; the output signals carry no valid index.
-      IdxT ir_index_{INVALID_INDEX<IdxT>};
-      IdxT ii_index_{INVALID_INDEX<IdxT>};
 
       /// Signal ports (inlets and outlets)
       SignalPortsT ports_;

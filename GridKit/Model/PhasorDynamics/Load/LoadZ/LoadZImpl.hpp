@@ -97,9 +97,6 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<LoadZExternalVariables>()));
-      f_ext_.resize(2);
-      f_ext_.setToZero();
-      residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
       allocated_ = true;
       return 0;
@@ -179,10 +176,13 @@ namespace GridKit
         [[maybe_unused]] const ScalarT* y_ext,
         ScalarT*                        f_ext)
     {
+      const auto VR = static_cast<size_t>(LoadZExternalVariables::VR);
+      const auto VI = static_cast<size_t>(LoadZExternalVariables::VI);
+
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
-      f_ext[0]         = Ir;
-      f_ext[1]         = Ii;
+      f_ext[VR]        = Ir;
+      f_ext[VI]        = Ii;
 
       return 0;
     }
@@ -198,8 +198,11 @@ namespace GridKit
         const ScalarT*                  y_ext,
         ScalarT*                        f)
     {
-      const ScalarT Vr = y_ext[0];
-      const ScalarT Vi = y_ext[1];
+      const auto VR = static_cast<size_t>(LoadZExternalVariables::VR);
+      const auto VI = static_cast<size_t>(LoadZExternalVariables::VI);
+
+      const ScalarT Vr = y_ext[VR];
+      const ScalarT Vi = y_ext[VI];
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
       f[0]             = Ir + g_ * Vr - b_ * Vi;
@@ -215,15 +218,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZ<scalar_type, index_type>::gatherExternalVariables()
     {
-      static constexpr auto VR = LoadZExternalVariables::VR;
-      static constexpr auto VI = LoadZExternalVariables::VI;
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
 
-      y_ext_.getData()[0]                = Vr();
-      y_ext_.getData()[1]                = Vi();
-      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
-      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
-      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
-      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
+      signals_.template gatherExternalVariable<LoadZExternalVariables::VR>(y_ext, columns, rows);
+      signals_.template gatherExternalVariable<LoadZExternalVariables::VI>(y_ext, columns, rows);
     }
 
     template <typename scalar_type, typename index_type>

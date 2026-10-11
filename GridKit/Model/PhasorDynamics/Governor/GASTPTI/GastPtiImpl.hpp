@@ -460,16 +460,16 @@ namespace GridKit
         if (auto omega_port = ports_.in.template port<GastPtiSignalInputs::speed>())
         {
           y_ext[OMEGA] =
-              ports_.in.template port<GastPtiSignalInputs::speed>().readSignal();
+              omega_port.readSignal();
           variable_indices_ext_[OMEGA] =
-              ports_.in.template port<GastPtiSignalInputs::speed>().signalVariableIndex();
+              omega_port.signalVariableIndex();
         }
         if (auto pref_port = ports_.in.template port<GastPtiSignalInputs::pref>())
         {
           y_ext[PREF] =
-              ports_.in.template port<GastPtiSignalInputs::pref>().readSignal();
+              pref_port.readSignal();
           variable_indices_ext_[PREF] =
-              ports_.in.template port<GastPtiSignalInputs::pref>().signalVariableIndex();
+              pref_port.signalVariableIndex();
         }
       }
 
@@ -488,19 +488,6 @@ namespace GridKit
         evaluateInternalResidual(y, yp, y_ext_.getData(), f);
         f_.setDataUpdated();
         return 0;
-      }
-
-      /**
-       * @brief Evaluate internal equations and external contributions.
-       *
-       * GASTPTI contributes no external residual, so the base implementation
-       * returns zero after the internal equations are evaluated.
-       */
-      template <typename scalar_type, typename index_type>
-      int GastPti<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
       }
 
       /**

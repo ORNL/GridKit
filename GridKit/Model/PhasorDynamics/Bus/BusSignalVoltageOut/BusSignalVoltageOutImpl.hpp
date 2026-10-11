@@ -246,11 +246,8 @@ namespace GridKit
      * Residuals f[0] and f[1] are set to the values read from the `ir` and
      * `ii` signal inlets, respectively. Both inlets are mandatory; verify()
      * throws if either is not connected to a linked signal, and no default
-     * value is used here. Components attached to the bus add their currents
-     * afterwards.
-     *
-     * @warning This implementation assumes bus residuals are always evaluated
-     * _before_ component model residuals.
+     * value is used here. The system adds the currents of attached
+     * components to these rows.
      */
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageOut<scalar_type, index_type>::evaluateInternalResidual()

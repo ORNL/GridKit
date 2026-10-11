@@ -10,6 +10,7 @@
 #include <memory>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
@@ -19,9 +20,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
     template <typename scalar_type, typename index_type>
     class SignalNode;
 
@@ -46,8 +44,8 @@ namespace GridKit
       /// External variables read by an `Esdc1a`.
       enum class Esdc1aExternalVariables : size_t
       {
-        VR,    ///< \f$V_\mathrm{r}\f$ Terminal-bus real voltage [p.u.]
-        VI,    ///< \f$V_\mathrm{i}\f$ Terminal-bus imaginary voltage [p.u.]
+        VREAL, ///< Real bus voltage
+        VIMAG, ///< Imaginary bus voltage
         OMEGA, ///< \f$\omega\f$ Known machine speed deviation [p.u.]
         VREF,  ///< \f$V_{\mathrm{ref}}\f$ Unknown voltage-control reference [p.u.]
         VS,    ///< \f$V_S\f$ Known stabilizer input signal [p.u.]
@@ -85,7 +83,6 @@ namespace GridKit
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
-        using BusT               = BusBase<ScalarT, IdxT>;
         using SignalT            = SignalNode<ScalarT, IdxT>;
         using ModelDataT         = Esdc1aData<RealT, IdxT>;
         using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
@@ -94,8 +91,8 @@ namespace GridKit
         using InternalVariablesT = Esdc1aInternalVariables;
         using ExternalVariablesT = Esdc1aExternalVariables;
 
-        Esdc1a(BusT* bus);
-        Esdc1a(BusT* bus, const ModelDataT& data);
+        Esdc1a();
+        Esdc1a(const ModelDataT& data);
         ~Esdc1a();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -105,7 +102,6 @@ namespace GridKit
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateInternalResidual() override final;
-        int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
@@ -114,6 +110,12 @@ namespace GridKit
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
+
+        auto getSignals()
+            -> ComponentSignals<ScalarT, IdxT, NoVariables, Esdc1aExternalVariables>&
+        {
+          return signals_;
+        }
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             const ScalarT* y,
@@ -136,13 +138,20 @@ namespace GridKit
         /// requested strictly positive output.
         RealT inverseRamp(RealT ramp_output) const;
 
-        ScalarT& Vr();
-        ScalarT& Vi();
+        ScalarT Vr() const
+        {
+          return signals_.template readExternalVariable<Esdc1aExternalVariables::VREAL>();
+        }
+
+        ScalarT Vi() const
+        {
+          return signals_.template readExternalVariable<Esdc1aExternalVariables::VIMAG>();
+        }
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
 
-        BusT* bus_{nullptr};
+        ComponentSignals<ScalarT, IdxT, NoVariables, Esdc1aExternalVariables> signals_;
 
         RealT Tr_{ZERO<RealT>};
         RealT Ka_{static_cast<RealT>(40.0)};

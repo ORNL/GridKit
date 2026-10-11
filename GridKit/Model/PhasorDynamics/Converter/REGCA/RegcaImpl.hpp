@@ -11,7 +11,6 @@
 #include <cmath>
 #include <variant>
 
-#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -29,12 +28,9 @@ namespace GridKit
 
       /**
        * @brief Construct a sized but unconfigured REGCA converter.
-       *
-       * @param[in] bus Terminal bus the converter injects into.
        */
       template <typename scalar_type, typename index_type>
-      Regca<scalar_type, index_type>::Regca(BusT* bus)
-        : bus_(bus)
+      Regca<scalar_type, index_type>::Regca()
       {
         size_ = static_cast<IdxT>(Utilities::enum_size<RegcaInternalVariables>());
       }
@@ -45,13 +41,11 @@ namespace GridKit
        * Parameters are loaded and the monitor is created. Model-data errors
        * are recorded for verify() rather than thrown.
        *
-       * @param[in] bus Terminal bus the converter injects into.
        * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      Regca<scalar_type, index_type>::Regca(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Regca<scalar_type, index_type>::Regca(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -118,42 +112,6 @@ namespace GridKit
         }
 
         this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
-      }
-
-      /**
-       * @brief Access the terminal-bus real voltage component.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Regca<scalar_type, index_type>::Vr()
-      {
-        return bus_->Vr();
-      }
-
-      /**
-       * @brief Access the terminal-bus imaginary voltage component.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Regca<scalar_type, index_type>::Vi()
-      {
-        return bus_->Vi();
-      }
-
-      /**
-       * @brief Access the terminal-bus real-current accumulation target.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Regca<scalar_type, index_type>::Ir()
-      {
-        return bus_->Ir();
-      }
-
-      /**
-       * @brief Access the terminal-bus imaginary-current accumulation target.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type& Regca<scalar_type, index_type>::Ii()
-      {
-        return bus_->Ii();
       }
 
       /**
@@ -316,9 +274,6 @@ namespace GridKit
 
         // Resize coupling data
         this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<RegcaExternalVariables>()));
-        f_ext_.resize(2);
-        f_ext_.setToZero();
-        residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -359,8 +314,9 @@ namespace GridKit
       /**
        * @brief Validate the REGCA configuration.
        *
-       * Applies the parameter conditions documented in the README, requires a
-       * terminal bus, and checks that attached command ports have linked sources.
+       * Applies the parameter conditions documented in the README, requires the
+       * terminal-bus voltage signals, and checks that attached command ports have
+       * linked sources.
        * Operating-point admissibility is checked by initialize().
        *
        * @return Number of configuration errors, zero when valid.
@@ -379,11 +335,8 @@ namespace GridKit
           }
         };
 
-        if (bus_ == nullptr)
-        {
-          Log::error() << "Regca: bus pointer is null\n";
-          ret += 1;
-        }
+        check(signals_.template isAttached<RegcaExternalVariables::VR>(), "VR signal is not attached");
+        check(signals_.template isAttached<RegcaExternalVariables::VI>(), "VI signal is not attached");
 
         check(mva_base_ > ZERO<RealT>, "mva must be positive");
         check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
@@ -658,9 +611,11 @@ namespace GridKit
       {
         const auto IR = static_cast<size_t>(RegcaInternalVariables::IR);
         const auto II = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto VR = static_cast<size_t>(RegcaExternalVariables::VR);
+        const auto VI = static_cast<size_t>(RegcaExternalVariables::VI);
 
-        f_ext[0] = y[IR];
-        f_ext[1] = y[II];
+        f_ext[VR] = y[IR];
+        f_ext[VI] = y[II];
         return 0;
       }
 
@@ -670,42 +625,31 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::gatherExternalVariables()
       {
-        auto* y_ext = y_ext_.getData();
-
-        const auto VR    = static_cast<size_t>(RegcaExternalVariables::VR);
-        const auto VI    = static_cast<size_t>(RegcaExternalVariables::VI);
         const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
         const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
 
-        // Terminal-bus voltage
-        y_ext[VR] = Vr();
-        y_ext[VI] = Vi();
-        if (bus_->size() > 0)
-        {
-          variable_indices_ext_[VR] = bus_->getVariableIndex(0);
-          variable_indices_ext_[VI] = bus_->getVariableIndex(1);
-          residual_indices_ext_[0]  = bus_->getResidualIndex(0);
-          residual_indices_ext_[1]  = bus_->getResidualIndex(1);
-        }
+        auto* y_ext   = y_ext_.getData();
+        auto* columns = variable_indices_ext_.data();
+        auto* rows    = residual_indices_ext_.data();
+
+        // Terminal-bus voltage and current balance
+        signals_.template gatherExternalVariable<RegcaExternalVariables::VR>(y_ext, columns, rows);
+        signals_.template gatherExternalVariable<RegcaExternalVariables::VI>(y_ext, columns, rows);
 
         // Active-current command
         y_ext[IPCMD] = ipcmd_set_;
-        if (ports_.in.template port<RegcaSignalInputs::ipcmd>().connected())
+        if (auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
-          y_ext[IPCMD] =
-              ports_.in.template port<RegcaSignalInputs::ipcmd>().readSignal();
-          variable_indices_ext_[IPCMD] =
-              ports_.in.template port<RegcaSignalInputs::ipcmd>().signalVariableIndex();
+          y_ext[IPCMD]   = ipcmd_port.readSignal();
+          columns[IPCMD] = ipcmd_port.signalVariableIndex();
         }
 
         // Reactive-current command
         y_ext[IQCMD] = iqcmd_set_;
-        if (ports_.in.template port<RegcaSignalInputs::iqcmd>().connected())
+        if (auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
-          y_ext[IQCMD] =
-              ports_.in.template port<RegcaSignalInputs::iqcmd>().readSignal();
-          variable_indices_ext_[IQCMD] =
-              ports_.in.template port<RegcaSignalInputs::iqcmd>().signalVariableIndex();
+          y_ext[IQCMD]   = iqcmd_port.readSignal();
+          columns[IQCMD] = iqcmd_port.signalVariableIndex();
         }
       }
 
@@ -747,15 +691,6 @@ namespace GridKit
         return 0;
       }
 
-      /**
-       * @brief Evaluate model residuals and accumulate the branch current.
-       */
-      template <typename scalar_type, typename index_type>
-      int Regca<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return evaluateExternalResidual();
-      }
     } // namespace Converter
   } // namespace PhasorDynamics
 } // namespace GridKit

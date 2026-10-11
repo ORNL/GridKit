@@ -70,7 +70,9 @@ namespace GridKit
         exciter_data.parameters[ExciterParams::Tr] = static_cast<RealT>(0.02);
         exciter_data.parameters[ExciterParams::Tb] = static_cast<RealT>(0.5);
 
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(&bus, exciter_data);
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(exciter_data);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Esdc1aExternalVariables::VREAL>(&vr_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Esdc1aExternalVariables::VIMAG>(&vi_signal);
 
         machine.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::efd>().connect(&efd);
         exciter.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&efd);
@@ -166,7 +168,7 @@ namespace GridKit
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> machine_data;
         PhasorDynamics::GenClassical<ScalarT, IdxT>   machine(machine_data);
-        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>     vr_signal, vi_signal;
         bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
         bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
         machine.getSignals().template attachSignalNode<PhasorDynamics::GenClassicalExternalVariables::VR>(&vr_signal);
@@ -176,7 +178,9 @@ namespace GridKit
         exciter_data.parameters[ExciterParams::Tr] = static_cast<RealT>(0.02);
         exciter_data.parameters[ExciterParams::Tb] = static_cast<RealT>(0.5);
 
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(&bus, exciter_data);
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(exciter_data);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Esdc1aExternalVariables::VREAL>(&vr_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Esdc1aExternalVariables::VIMAG>(&vi_signal);
 
         machine.getPorts().in.template port<PhasorDynamics::GenClassicalSignalInputs::efd>().connect(&efd);
         exciter.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&efd);
@@ -219,7 +223,7 @@ namespace GridKit
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> machine_data;
         PhasorDynamics::GenClassical<ScalarT, IdxT>   machine(machine_data);
-        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>     vr_signal, vi_signal;
         bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
         bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
         machine.getSignals().template attachSignalNode<PhasorDynamics::GenClassicalExternalVariables::VR>(&vr_signal);
@@ -270,6 +274,9 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
             static_cast<ScalarT>(1.0),
             static_cast<ScalarT>(0.0));
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
         PhasorDynamics::SignalNode<ScalarT, IdxT> ir;
         PhasorDynamics::SignalNode<ScalarT, IdxT> ii;
         PhasorDynamics::SignalNode<ScalarT, IdxT> p;
@@ -296,8 +303,12 @@ namespace GridKit
         plant_data.parameters[PlantParams::mva] = static_cast<RealT>(50.0);
         plant_data.parameters[PlantParams::Tp]  = static_cast<RealT>(0.05);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT>  converter(&bus, converter_data);
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> plant(&bus, plant_data);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT>  converter(converter_data);
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> plant(plant_data);
+        converter.getSignals().template attachSignalNode<PhasorDynamics::Converter::RegcaExternalVariables::VR>(&vr_signal);
+        converter.getSignals().template attachSignalNode<PhasorDynamics::Converter::RegcaExternalVariables::VI>(&vi_signal);
+        plant.getSignals().template attachSignalNode<PhasorDynamics::Controller::RepcaExternalVariables::VR>(&vr_signal);
+        plant.getSignals().template attachSignalNode<PhasorDynamics::Controller::RepcaExternalVariables::VI>(&vi_signal);
 
         converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ibranchr>().connect(&ir);
         converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ibranchi>().connect(&ii);
@@ -358,6 +369,9 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
             static_cast<ScalarT>(1.0),
             static_cast<ScalarT>(0.0));
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
         PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd;
         PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd;
         PhasorDynamics::SignalNode<ScalarT, IdxT> pe;
@@ -382,7 +396,9 @@ namespace GridKit
         converter_data.parameters[ConverterParams::VA1]    = static_cast<RealT>(0.75);
         converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.5);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(&bus, converter_data);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(converter_data);
+        converter.getSignals().template attachSignalNode<PhasorDynamics::Converter::RegcaExternalVariables::VR>(&vr_signal);
+        converter.getSignals().template attachSignalNode<PhasorDynamics::Converter::RegcaExternalVariables::VI>(&vi_signal);
 
         PhasorDynamics::Controller::ReecbData<RealT, IdxT> controller_data;
         controller_data.parameters[ControllerParams::mva]    = static_cast<RealT>(100.0);
@@ -394,7 +410,9 @@ namespace GridKit
         controller_data.parameters[ControllerParams::Vmin]   = static_cast<RealT>(0.5);
         controller_data.parameters[ControllerParams::Vmax]   = static_cast<RealT>(1.5);
 
-        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> controller(&bus, controller_data);
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> controller(controller_data);
+        controller.getSignals().template attachSignalNode<PhasorDynamics::Controller::ReecbExternalVariables::VR>(&vr_signal);
+        controller.getSignals().template attachSignalNode<PhasorDynamics::Controller::ReecbExternalVariables::VI>(&vi_signal);
 
         controller.getPorts().out.template port<PhasorDynamics::Controller::ReecbSignalOutputs::ipcmd>().connect(&ipcmd);
         controller.getPorts().out.template port<PhasorDynamics::Controller::ReecbSignalOutputs::iqcmd>().connect(&iqcmd);

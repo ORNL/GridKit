@@ -120,9 +120,6 @@ namespace GridKit
       residual_indices_.resize(size);
 
       this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<BranchExternalVariables>()));
-      f_ext_.resize(4);
-      f_ext_.setToZero();
-      residual_indices_ext_.assign(4, INVALID_INDEX<IdxT>);
 
       allocated_ = true;
       return 0;
@@ -222,26 +219,33 @@ namespace GridKit
         const ScalarT*                  y_ext,
         ScalarT*                        f_ext)
     {
-      const ScalarT Vr1 = y_ext[0];
-      const ScalarT Vi1 = y_ext[1];
-      const ScalarT Vr2 = y_ext[2];
-      const ScalarT Vi2 = y_ext[3];
+      const auto VR1 = static_cast<size_t>(BranchExternalVariables::VR1);
+      const auto VI1 = static_cast<size_t>(BranchExternalVariables::VI1);
+      const auto VR2 = static_cast<size_t>(BranchExternalVariables::VR2);
+      const auto VI2 = static_cast<size_t>(BranchExternalVariables::VI2);
 
-      f_ext[0] = (g11_ * Vr1 - b11_ * Vi1) + (g12_ * Vr2 - b12_ * Vi2);
-      f_ext[1] = (b11_ * Vr1 + g11_ * Vi1) + (b12_ * Vr2 + g12_ * Vi2);
-      f_ext[2] = (g21_ * Vr1 - b21_ * Vi1) + (g22_ * Vr2 - b22_ * Vi2);
-      f_ext[3] = (b21_ * Vr1 + g21_ * Vi1) + (b22_ * Vr2 + g22_ * Vi2);
+      const ScalarT Vr1 = y_ext[VR1];
+      const ScalarT Vi1 = y_ext[VI1];
+      const ScalarT Vr2 = y_ext[VR2];
+      const ScalarT Vi2 = y_ext[VI2];
+
+      f_ext[VR1] = (g11_ * Vr1 - b11_ * Vi1) + (g12_ * Vr2 - b12_ * Vi2);
+      f_ext[VI1] = (b11_ * Vr1 + g11_ * Vi1) + (b12_ * Vr2 + g12_ * Vi2);
+      f_ext[VR2] = (g21_ * Vr1 - b21_ * Vi1) + (g22_ * Vr2 - b22_ * Vi2);
+      f_ext[VI2] = (b21_ * Vr1 + g21_ * Vi1) + (b22_ * Vr2 + g22_ * Vi2);
 
       return 0;
     }
 
     /**
-     * @brief The branch owns no internal residual equations.
+     * @brief The branch owns no internal residual equations; this phase
+     * only gathers the terminal voltages for the external phase.
      *
      */
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::evaluateInternalResidual()
     {
+      gatherExternalVariables();
       return 0;
     }
 
@@ -252,23 +256,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::gatherExternalVariables()
     {
-      static constexpr auto VR1 = BranchExternalVariables::VR1;
-      static constexpr auto VI1 = BranchExternalVariables::VI1;
-      static constexpr auto VR2 = BranchExternalVariables::VR2;
-      static constexpr auto VI2 = BranchExternalVariables::VI2;
+      auto* y_ext   = y_ext_.getData();
+      auto* columns = variable_indices_ext_.data();
+      auto* rows    = residual_indices_ext_.data();
 
-      y_ext_.getData()[0]                = Vr1();
-      y_ext_.getData()[1]                = Vi1();
-      y_ext_.getData()[2]                = Vr2();
-      y_ext_.getData()[3]                = Vi2();
-      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR1>();
-      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI1>();
-      variable_indices_ext_[2] = signals_.template readExternalVariableIndex<VR2>();
-      variable_indices_ext_[3] = signals_.template readExternalVariableIndex<VI2>();
-      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR1>();
-      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI1>();
-      residual_indices_ext_[2] = signals_.template readExternalResidualIndex<VR2>();
-      residual_indices_ext_[3] = signals_.template readExternalResidualIndex<VI2>();
+      signals_.template gatherExternalVariable<BranchExternalVariables::VR1>(y_ext, columns, rows);
+      signals_.template gatherExternalVariable<BranchExternalVariables::VI1>(y_ext, columns, rows);
+      signals_.template gatherExternalVariable<BranchExternalVariables::VR2>(y_ext, columns, rows);
+      signals_.template gatherExternalVariable<BranchExternalVariables::VI2>(y_ext, columns, rows);
     }
 
     /**
@@ -280,8 +275,6 @@ namespace GridKit
     {
       auto* y_ext = y_ext_.getData();
       auto* f_ext = f_ext_.getData();
-
-      gatherExternalVariables();
 
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();

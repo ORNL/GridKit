@@ -85,7 +85,14 @@ namespace GridKit
           bus_index = regcadata.buses.at(RegcaBuses::bus);
         }
 
-        auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
+        auto* regca = new Regca<ScalarT, IdxT>(regcadata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        regca->getSignals().template attachSignalNode<RegcaExternalVariables::VR>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        regca->getSignals().template attachSignalNode<RegcaExternalVariables::VI>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
+
         regca->getPorts().connect(regcadata, signal_nodes_);
 
         addComponent(regca);
@@ -224,13 +231,16 @@ namespace GridKit
       // components initialize in insertion order.
       for (const auto& reecbdata : data.reecb)
       {
-        BusT* bus = nullptr;
+        auto* reecb = new Reecb<ScalarT, IdxT>(reecbdata);
+
         if (reecbdata.buses.contains(ReecbBuses::bus))
         {
-          bus = getBus(reecbdata.buses.at(ReecbBuses::bus));
+          auto& bus_signals = getBus(reecbdata.buses.at(ReecbBuses::bus))->getSignals();
+          reecb->getSignals().template attachSignalNode<ReecbExternalVariables::VR>(
+              bus_signals.template getSignalNode<BusInternalVariables::VR>());
+          reecb->getSignals().template attachSignalNode<ReecbExternalVariables::VI>(
+              bus_signals.template getSignalNode<BusInternalVariables::VI>());
         }
-
-        auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
         reecb->getPorts().connect(reecbdata, signal_nodes_);
 
         addComponent(reecb);
@@ -294,13 +304,16 @@ namespace GridKit
 
       for (const auto& excitedata : data.esdc1a)
       {
-        BusT* bus = nullptr;
+        auto* exciter = new Esdc1a<ScalarT, IdxT>(excitedata);
+
         if (excitedata.buses.contains(Esdc1aBuses::bus))
         {
-          bus = getBus(excitedata.buses.at(Esdc1aBuses::bus));
+          auto& bus_signals = getBus(excitedata.buses.at(Esdc1aBuses::bus))->getSignals();
+          exciter->getSignals().template attachSignalNode<Esdc1aExternalVariables::VREAL>(
+              bus_signals.template getSignalNode<BusInternalVariables::VR>());
+          exciter->getSignals().template attachSignalNode<Esdc1aExternalVariables::VIMAG>(
+              bus_signals.template getSignalNode<BusInternalVariables::VI>());
         }
-
-        auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -331,13 +344,16 @@ namespace GridKit
       // initialization
       for (const auto& repcadata : data.repca)
       {
-        BusT* bus = nullptr;
+        auto* repca = new Repca<ScalarT, IdxT>(repcadata);
+
         if (repcadata.buses.contains(RepcaBuses::bus))
         {
-          bus = getBus(repcadata.buses.at(RepcaBuses::bus));
+          auto& bus_signals = getBus(repcadata.buses.at(RepcaBuses::bus))->getSignals();
+          repca->getSignals().template attachSignalNode<RepcaExternalVariables::VR>(
+              bus_signals.template getSignalNode<BusInternalVariables::VR>());
+          repca->getSignals().template attachSignalNode<RepcaExternalVariables::VI>(
+              bus_signals.template getSignalNode<BusInternalVariables::VI>());
         }
-
-        auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
         repca->getPorts().connect(repcadata, signal_nodes_);
 
         addComponent(repca);

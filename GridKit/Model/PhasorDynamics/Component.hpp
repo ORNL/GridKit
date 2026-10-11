@@ -1,6 +1,5 @@
 #pragma once
 #include <span>
-
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -98,11 +97,17 @@ namespace GridKit
        */
       virtual int scatterExternalResidual(ScalarT* f_root)
       {
-        for (size_t i = 0; i < f_ext_.getSize(); ++i)
+        if (residual_indices_ext_.empty())
+        {
+          return 0;
+        }
+
+        const auto* f_ext = f_ext_.getData();
+        for (size_t i = 0; i < residual_indices_ext_.size(); ++i)
         {
           if (residual_indices_ext_[i] != INVALID_INDEX<IdxT>)
           {
-            f_root[static_cast<size_t>(residual_indices_ext_[i])] += f_ext_.getData()[i];
+            f_root[static_cast<size_t>(residual_indices_ext_[i])] += f_ext[i];
           }
         }
         return 0;
@@ -454,14 +459,19 @@ namespace GridKit
 
       /**
        * @brief Allocate this component's external variable vectors.
+       *
+       * Entry k of each vector describes external variable k: its value, its
+       * global column, and the global row that receives f_ext_[k]. Entries
+       * left at INVALID_INDEX are dropped from the residual and Jacobian.
        */
       void allocateExternalVectors(IdxT n)
       {
         y_ext_.resize(n);
         y_ext_.setToZero();
-        yp_ext_.resize(n);
-        yp_ext_.setToZero();
+        f_ext_.resize(n);
+        f_ext_.setToZero();
         variable_indices_ext_.assign(static_cast<size_t>(n), INVALID_INDEX<IdxT>);
+        residual_indices_ext_.assign(static_cast<size_t>(n), INVALID_INDEX<IdxT>);
       }
 
       /**
@@ -701,13 +711,12 @@ namespace GridKit
       VectorT           y_;
       VectorT           y_ext_;
       VectorT           yp_;
-      VectorT           yp_ext_;
       std::vector<bool> tag_;
       VectorT           abs_tol_;
       VectorT           f_;
       VectorT           f_ext_;
       bool              allocated_{false};
-      bool bound_{false};
+      bool              bound_{false};
 
       std::vector<ScalarT> g_;
 

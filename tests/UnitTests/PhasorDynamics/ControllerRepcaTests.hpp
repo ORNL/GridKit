@@ -52,9 +52,11 @@ namespace GridKit
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        // verify() only checks that the regulated-bus voltages are attached.
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi;
 
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(&bus);
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty;
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (empty.getMonitor() == nullptr);
         success *= (empty.verify() > 0);
@@ -76,7 +78,9 @@ namespace GridKit
         integer_parameter.attachAllInputs();
         success *= (integer_parameter.repca.verify() == 0);
 
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> missing_signals(&bus, makeData());
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> missing_signals(makeData());
+        missing_signals.getSignals().template attachSignalNode<Terminal::VR>(&vr);
+        missing_signals.getSignals().template attachSignalNode<Terminal::VI>(&vi);
         success *= (missing_signals.verify() > 0);
 
         success *= invalidParameterCase(Params::mva, 0.0);
@@ -196,8 +200,8 @@ namespace GridKit
           }
         }
 
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> busless(nullptr, makeData());
-        success *= (busless.verify() > 0);
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> unattached(makeData());
+        success *= (unattached.verify() > 0);
 
         success *= unlinkedSignalRejected<Ext::ir>();
         success *= unlinkedSignalRejected<Ext::ii>();
@@ -1277,12 +1281,13 @@ namespace GridKit
 #endif
 
     private:
-      using Params = PhasorDynamics::Controller::RepcaParameters;
-      using Vars   = PhasorDynamics::Controller::RepcaInternalVariables;
-      using Mon    = PhasorDynamics::Controller::RepcaMonitorableVariables;
-      using Data   = PhasorDynamics::Controller::RepcaData<RealT, IdxT>;
-      using Ext    = typename Data::SignalInputs;
-      using RepcaT = PhasorDynamics::Controller::Repca<ScalarT, IdxT>;
+      using Params   = PhasorDynamics::Controller::RepcaParameters;
+      using Vars     = PhasorDynamics::Controller::RepcaInternalVariables;
+      using Mon      = PhasorDynamics::Controller::RepcaMonitorableVariables;
+      using Data     = PhasorDynamics::Controller::RepcaData<RealT, IdxT>;
+      using Ext      = typename Data::SignalInputs;
+      using RepcaT   = PhasorDynamics::Controller::Repca<ScalarT, IdxT>;
+      using Terminal = PhasorDynamics::Controller::RepcaExternalVariables;
 
       static constexpr size_t index(Vars variable)
       {
@@ -1333,6 +1338,8 @@ namespace GridKit
 
         PhasorDynamics::SignalNode<T, IdxT> qext_node_;
         PhasorDynamics::SignalNode<T, IdxT> pext_node_;
+        PhasorDynamics::SignalNode<T, IdxT> vr_node_;
+        PhasorDynamics::SignalNode<T, IdxT> vi_node_;
 
       public:
         explicit Fixture(const Data& data,
@@ -1341,8 +1348,12 @@ namespace GridKit
                          RealT       system_va_base         = 100.0e6,
                          bool        assign_command_outputs = true)
           : bus(static_cast<T>(vr), static_cast<T>(vi)),
-            repca(&bus, data)
+            repca(data)
         {
+          bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_node_);
+          bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_node_);
+          repca.getSignals().template attachSignalNode<PhasorDynamics::Controller::RepcaExternalVariables::VR>(&vr_node_);
+          repca.getSignals().template attachSignalNode<PhasorDynamics::Controller::RepcaExternalVariables::VI>(&vi_node_);
           repca.setSystemBase(60.0, system_va_base);
           if (assign_command_outputs)
           {

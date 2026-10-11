@@ -10,8 +10,8 @@
 #include <memory>
 #include <optional>
 
-#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
@@ -21,9 +21,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
     namespace Controller
     {
       /// Internal variables and residual rows of a `Reecb`.
@@ -99,7 +96,6 @@ namespace GridKit
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
-        using BusT               = BusBase<ScalarT, IdxT>;
         using ModelDataT         = ReecbData<RealT, IdxT>;
         using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
         using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
@@ -111,8 +107,8 @@ namespace GridKit
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
-        Reecb(BusT* bus);
-        Reecb(BusT* bus, const ModelDataT& data);
+        Reecb();
+        Reecb(const ModelDataT& data);
         ~Reecb();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -122,7 +118,6 @@ namespace GridKit
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateInternalResidual() override final;
-        int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
@@ -131,6 +126,12 @@ namespace GridKit
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
+
+        auto getSignals()
+            -> ComponentSignals<ScalarT, IdxT, NoVariables, ReecbExternalVariables>&
+        {
+          return signals_;
+        }
 
         [[gnu::always_inline]] inline int evaluateInternalResidual(
             const ScalarT* y,
@@ -193,15 +194,22 @@ namespace GridKit
         static RealT logOneMinusExp(RealT x);
         bool         iclamp(RealT output, RealT lower, RealT upper, RealT& input) const;
 
-        ScalarT& Vr();
-        ScalarT& Vi();
+        ScalarT Vr() const
+        {
+          return signals_.template readExternalVariable<ReecbExternalVariables::VR>();
+        }
+
+        ScalarT Vi() const
+        {
+          return signals_.template readExternalVariable<ReecbExternalVariables::VI>();
+        }
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
 
         static constexpr RealT VMEAS_MINIMUM = static_cast<RealT>(0.01);
 
-        BusT* bus_{nullptr};
+        ComponentSignals<ScalarT, IdxT, NoVariables, ReecbExternalVariables> signals_;
 
         // Input parameters
         bool  PfFlag_{false};

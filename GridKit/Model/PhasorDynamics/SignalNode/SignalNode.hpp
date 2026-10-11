@@ -71,6 +71,17 @@ namespace GridKit
         residual_index_ = residual_index;
       }
 
+      /// Link to the value and column of a linked source node, with a
+      /// residual row of this node's own.
+      [[gnu::always_inline]]
+      void link(const SignalNode& source, IdxT* residual_index) noexcept
+      {
+        assert(source.linked());
+        signal_         = source.signal_;
+        variable_index_ = source.variable_index_;
+        residual_index_ = residual_index;
+      }
+
       [[gnu::always_inline]]
       bool linked() const noexcept
       {
@@ -98,14 +109,21 @@ namespace GridKit
         *signal_ = signal_in;
       }
 
-      IdxT getResidualIndex() const { return residual_index_ ? *residual_index_ : INVALID_INDEX<IdxT>; }
+      IdxT getResidualIndex() const
+      {
+        if (residual_index_ == nullptr)
+        {
+          return INVALID_INDEX<IdxT>;
+        }
+        return *residual_index_;
+      }
 
     private:
       ScalarT* signal_{nullptr};
       IdxT     signal_id_{0};
       IdxT*    variable_index_{nullptr};
       bool     assigned_{false};
-      IdxT* residual_index_{nullptr};
+      IdxT*    residual_index_{nullptr};
     };
 
   } // namespace PhasorDynamics

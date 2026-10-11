@@ -11,6 +11,7 @@
 #include <memory>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
@@ -20,9 +21,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
     template <typename scalar_type, typename index_type>
     class SignalNode;
   } // namespace PhasorDynamics
@@ -91,7 +89,6 @@ namespace GridKit
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
-        using BusT               = BusBase<ScalarT, IdxT>;
         using SignalT            = SignalNode<ScalarT, IdxT>;
         using ModelDataT         = RegcaData<RealT, IdxT>;
         using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
@@ -100,8 +97,8 @@ namespace GridKit
         using InternalVariablesT = RegcaInternalVariables;
         using ExternalVariablesT = RegcaExternalVariables;
 
-        Regca(BusT* bus);
-        Regca(BusT* bus, const ModelDataT& data);
+        Regca();
+        Regca(const ModelDataT& data);
         ~Regca();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -112,7 +109,6 @@ namespace GridKit
         int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateInternalResidual() override final;
         int evaluateExternalResidual() override final;
-        int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
@@ -121,6 +117,12 @@ namespace GridKit
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
+
+        auto getSignals()
+            -> ComponentSignals<ScalarT, IdxT, NoVariables, RegcaExternalVariables>&
+        {
+          return signals_;
+        }
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             const ScalarT* y, const ScalarT* yp, const ScalarT* y_ext, ScalarT* f);
@@ -194,16 +196,21 @@ namespace GridKit
                        * gap_rate;
         }
 
-        ScalarT& Vr();
-        ScalarT& Vi();
-        ScalarT& Ir();
-        ScalarT& Ii();
+        ScalarT Vr() const
+        {
+          return signals_.template readExternalVariable<RegcaExternalVariables::VR>();
+        }
+
+        ScalarT Vi() const
+        {
+          return signals_.template readExternalVariable<RegcaExternalVariables::VI>();
+        }
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static constexpr RealT KL_                   = static_cast<RealT>(100.0);
         static void            logTimeConstantWarning();
 
-        BusT* bus_{nullptr};
+        ComponentSignals<ScalarT, IdxT, NoVariables, RegcaExternalVariables> signals_;
 
         // Input parameters
         RealT p0_{0};

@@ -493,21 +493,21 @@ namespace GridKit
 
         if (auto omega_port = ports_.in.template port<HygovSignalInputs::speed>())
         {
-          y_ext[OMEGA] = ports_.in.template port<HygovSignalInputs::speed>().readSignal();
+          y_ext[OMEGA] = omega_port.readSignal();
           variable_indices_ext_[OMEGA] =
-              ports_.in.template port<HygovSignalInputs::speed>().signalVariableIndex();
+              omega_port.signalVariableIndex();
         }
         if (auto pref_port = ports_.in.template port<HygovSignalInputs::pref>())
         {
-          y_ext[PREF] = ports_.in.template port<HygovSignalInputs::pref>().readSignal();
+          y_ext[PREF] = pref_port.readSignal();
           variable_indices_ext_[PREF] =
-              ports_.in.template port<HygovSignalInputs::pref>().signalVariableIndex();
+              pref_port.signalVariableIndex();
         }
         if (auto paux_port = ports_.in.template port<HygovSignalInputs::paux>())
         {
-          y_ext[PAUX] = ports_.in.template port<HygovSignalInputs::paux>().readSignal();
+          y_ext[PAUX] = paux_port.readSignal();
           variable_indices_ext_[PAUX] =
-              ports_.in.template port<HygovSignalInputs::paux>().signalVariableIndex();
+              paux_port.signalVariableIndex();
         }
       }
 
@@ -526,19 +526,6 @@ namespace GridKit
         evaluateInternalResidual(y, yp, y_ext_.getData(), f);
         f_.setDataUpdated();
         return 0;
-      }
-
-      /**
-       * @brief Evaluate internal equations and external contributions.
-       *
-       * HYGOV contributes no external residual, so the base implementation
-       * returns zero after the internal equations are evaluated.
-       */
-      template <typename scalar_type, typename index_type>
-      int Hygov<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
       }
 
       /**

@@ -232,9 +232,9 @@ namespace GridKit
           yp[static_cast<size_t>(i)] = 0.0;
         }
 
-        y_ext[0] = u;
-        variable_indices_ext_[0] =
-            ports_.in.template port<IeeestSignalInputs::input>().signalVariableIndex();
+        const auto U             = static_cast<size_t>(IeeestExternalVariables::U);
+        y_ext[U]                 = u;
+        variable_indices_ext_[U] = input_port.signalVariableIndex();
 
         y[0] = use_notch_ * u;
         y[4] = u;
@@ -326,7 +326,9 @@ namespace GridKit
         ScalarT x6_dot = yp[5];
         ScalarT x7_dot = yp[6];
 
-        ScalarT u = y_ext[0];
+        const auto U = static_cast<size_t>(IeeestExternalVariables::U);
+
+        ScalarT u = y_ext[U];
 
         const ScalarT x2_rhs = (use_4th_order_ + use_3rd_order_) * x3
                                + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
@@ -355,12 +357,14 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Ieeest<scalar_type, index_type>::gatherExternalVariables()
       {
+        const auto U = static_cast<size_t>(IeeestExternalVariables::U);
+
         auto* y_ext = y_ext_.getData();
 
         if (auto input_port = ports_.in.template port<IeeestSignalInputs::input>())
         {
-          y_ext[0]                 = ports_.in.template port<IeeestSignalInputs::input>().readSignal();
-          variable_indices_ext_[0] = ports_.in.template port<IeeestSignalInputs::input>().signalVariableIndex();
+          y_ext[U]                 = input_port.readSignal();
+          variable_indices_ext_[U] = input_port.signalVariableIndex();
         }
       }
 

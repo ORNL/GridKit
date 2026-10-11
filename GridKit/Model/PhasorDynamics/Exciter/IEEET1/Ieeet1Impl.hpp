@@ -42,8 +42,7 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Ieeet1<scalar_type, index_type>::Ieeet1(const ModelDataT& data)
-        :
-          monitor_(std::make_unique<MonitorT>(data))
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         // Parse data struct into model
         this->initModelParams(data);
@@ -459,15 +458,10 @@ namespace GridKit
         read_signal.template operator()<Ieeet1SignalInputs::voel,
                                         Ieeet1ExternalVariables::VOEL>(voel_set_);
 
-        // Bus voltages
-        const auto VREAL = static_cast<size_t>(Ieeet1ExternalVariables::VREAL);
-        const auto VIMAG = static_cast<size_t>(Ieeet1ExternalVariables::VIMAG);
-        y_ext[VREAL]     = signals_.template readExternalVariable<Ieeet1ExternalVariables::VREAL>();
-        y_ext[VIMAG]     = signals_.template readExternalVariable<Ieeet1ExternalVariables::VIMAG>();
-          variable_indices_ext_[VREAL] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VREAL>();
-          variable_indices_ext_[VIMAG] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VIMAG>();
-        {
-        }
+        // Bus voltages are read only; the exciter injects no current.
+        auto* columns = variable_indices_ext_.data();
+        signals_.template gatherExternalVariable<Ieeet1ExternalVariables::VREAL>(y_ext, columns);
+        signals_.template gatherExternalVariable<Ieeet1ExternalVariables::VIMAG>(y_ext, columns);
       }
 
       /**

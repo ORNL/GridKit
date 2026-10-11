@@ -1,12 +1,12 @@
 #pragma once
 
 #include <array>
-#include <GridKit/Utilities/Enum.hpp>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
 
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -148,6 +148,37 @@ namespace GridKit
         }
 
         return (*external_variable_signals_[static_cast<size_t>(variable)])->getResidualIndex();
+      }
+
+      /// Copies the value, global column, and global residual row of an
+      /// external variable into slot `variable` of the given arrays
+      ///
+      /// @tparam variable The external variable to read from
+      /// @pre A signal node has been assigned to the requested external
+      ///      variable
+      template <ExternalVariables variable>
+      auto gatherExternalVariable(ScalarT* values, IdxT* columns, IdxT* rows) const
+      {
+        constexpr auto slot = static_cast<size_t>(variable);
+
+        values[slot]  = readExternalVariable<variable>();
+        columns[slot] = readExternalVariableIndex<variable>();
+        rows[slot]    = readExternalResidualIndex<variable>();
+      }
+
+      /// Copies the value and global column of an external variable that is
+      /// only read, into slot `variable` of the given arrays
+      ///
+      /// @tparam variable The external variable to read from
+      /// @pre A signal node has been assigned to the requested external
+      ///      variable
+      template <ExternalVariables variable>
+      auto gatherExternalVariable(ScalarT* values, IdxT* columns) const
+      {
+        constexpr auto slot = static_cast<size_t>(variable);
+
+        values[slot]  = readExternalVariable<variable>();
+        columns[slot] = readExternalVariableIndex<variable>();
       }
 
       /// Writes a value to the specified external variable
