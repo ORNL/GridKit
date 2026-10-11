@@ -31,7 +31,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /// Definitions of every supported component model
-    inline constexpr auto COMPONENT_DEFINITIONS = std::tie();
+    inline constexpr auto COMPONENT_DEFINITIONS = std::tie(Exciter::IEEET1_DEFINITION);
 
     /// Calls `visit(definition)` once for each entry of `COMPONENT_DEFINITIONS`
     template <typename Visitor>
