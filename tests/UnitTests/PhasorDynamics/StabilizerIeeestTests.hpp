@@ -1,14 +1,22 @@
 #pragma once
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
-#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestFactory.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -18,369 +26,625 @@ namespace GridKit
 {
   namespace Testing
   {
-    using Log = ::GridKit::Utilities::Logger;
-
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type, size_t order>
     class StabilizerIeeestTests
     {
     public:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
-      StabilizerIeeestTests()  = default;
-      ~StabilizerIeeestTests() = default;
+      // Exactly representable parameters keep every check within one epsilon.
+      static constexpr RealT kTol = std::numeric_limits<RealT>::epsilon();
 
-      TestOutcome constructor()
+      /// Construction and every verify() rule, including parameter types,
+      /// output limits, signal linkage, and the notch order of the data.
+      TestOutcome validation()
       {
         TestStatus success = true;
 
-        auto  data = makeTestData();
-        auto* stab = new PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>(data);
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
-        success *= (stab != nullptr);
-        success *= (stab->getMonitor() != nullptr);
+        IeeestT empty;
+        success *= (empty.size() == kSize);
+        success *= (empty.getMonitor() == nullptr);
+        success *= (!empty.verify().passed());
 
-        delete stab;
+        Fixture<ScalarT> configured(makeData());
+        success *= (configured.ieeest.size() == kSize);
+        success *= (configured.ieeest.getMonitor() != nullptr);
+        success *= configured.initialize(0.0);
+
+        IeeestT unattached(makeData());
+        success *= (!unattached.verify().passed());
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
+        IeeestT                                   unlinked(makeData());
+        unlinked.getPorts().in.template port<Inputs::input>().connect(&unlinked_node);
+        success *= (!unlinked.verify().passed());
+
+        success *= invalidParameterCase(Params::Lsmin, 1.0);
+        success *= invalidParameterCase(Params::T2, -0.1);
+        success *= invalidParameterCase(Params::T4, -0.1);
+        success *= invalidParameterCase(Params::T6, -0.1);
+        success *= invalidParameterCase(Params::Ks, true);
+        success *= invalidParameterCase(Params::A1, std::numeric_limits<RealT>::quiet_NaN());
+        success *= invalidParameterCase(Params::T1, std::numeric_limits<RealT>::infinity());
+
+        // Data of another notch order does not fit this specialization.
+        RealT other_order_A4 = 0.125;
+        if constexpr (order == 4)
+        {
+          other_order_A4 = 0.0;
+        }
+        success *= invalidParameterCase(Params::A4, other_order_A4);
+
+        // The numerator degree may not exceed the notch order.
+        if constexpr (order == 0)
+        {
+          success *= invalidParameterCase(Params::A5, 0.5);
+        }
+        if constexpr (order == 1)
+        {
+          success *= invalidParameterCase(Params::A6, 0.125);
+        }
+
+        Log::setVerbosity(previous_verbosity);
+        return success.report(__func__);
+      }
+
+      /// The factory builds this specialization from data of this notch
+      /// order, whichever denominator factor comes first, and connects its
+      /// signals.
+      TestOutcome factory()
+      {
+        TestStatus success = true;
+
+        auto data                            = makeData();
+        data.signal_inputs[Inputs::input]    = 1;
+        data.signal_outputs[Outputs::output] = 2;
+
+        typename Factory::SignalNodeSetT nodes;
+        nodes.add({"input", 1});
+        nodes.add({"output", 2});
+
+        std::unique_ptr<PhasorDynamics::Component<ScalarT, IdxT>> built(Factory::create(data, nodes));
+
+        auto* ieeest  = dynamic_cast<IeeestT*>(built.get());
+        success      *= (ieeest != nullptr);
+        if (ieeest != nullptr)
+        {
+          success *= ieeest->getPorts().in.template port<Inputs::input>().connected();
+          success *= ieeest->getPorts().out.template port<Outputs::output>().connected();
+        }
+
+        auto swapped = makeData();
+        swapFactors(swapped);
+        std::unique_ptr<PhasorDynamics::Component<ScalarT, IdxT>> swapped_built(Factory::create(swapped, nodes));
+        success *= (dynamic_cast<IeeestT*>(swapped_built.get()) != nullptr);
 
         return success.report(__func__);
       }
 
-      /**
-       * @brief All states initialize to zero (stabilizer at rest).
-       * With u = 0, all residuals should be zero.
-       */
-      TestOutcome zeroInitialResidual()
+      /// Any constant input is an equilibrium with zero output, every
+      /// variable but the limited output is differential, and the output node
+      /// and the monitor both publish the limited output.
+      TestOutcome steadyState()
       {
         TestStatus success = true;
 
-        // Create signal nodes for input (u) and output (Vss)
-        PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
-        ScalarT                                   u_value{0.0};
-        IdxT                                      u_index = 12; // beyond internal variables
-        ScalarT                                   vss_value{0.0};
-        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
-
-        // Link signal nodes to backing storage
-        u_node.link(&u_value, &u_index);
-        vss_node.link(&vss_value, &vss_index);
-
-        using namespace GridKit::PhasorDynamics::Stabilizer;
-
-        auto data = makeTestData();
-        auto stab = Ieeest<ScalarT, IdxT>(data);
-
-        // Wire: stabilizer reads u_node as input, writes vss_node as output
-        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
-        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
-
-        stab.allocate();
-        success *= (stab.verify().passed());
-        stab.initialize();
-        stab.evaluateResidual();
-
-        auto        tol    = 10 * std::numeric_limits<RealT>::epsilon();
-        const auto& f      = stab.getResidual();
-        const auto* f_data = f.getData();
-        for (size_t i = 0; i < f.getSize(); ++i)
+        for (const RealT u : {0.0, 0.5, -2.0})
         {
-          if (!isEqual(f_data[i], 0.0, tol))
+          Fixture<ScalarT> fixture(makeData());
+          success *= fixture.initialize(u);
+          success *= (fixture.ieeest.evaluateResidual() == 0);
+          success *= allZero(fixture.ieeest.getResidual(), "residual", "at rest");
+          success *= allZero(fixture.ieeest.yp(), "derivative", "at rest");
+          success *= scalarMatches(fixture.output(), 0.0, "output at rest");
+        }
+
+        Fixture<ScalarT> fixture(makeData());
+        success *= fixture.initialize(0.5);
+        success *= (fixture.ieeest.tagDifferentiable() == 0);
+        for (size_t i = 0; i < kSize; ++i)
+        {
+          const bool expected = (i != static_cast<size_t>(Internal::VSS));
+          if (fixture.ieeest.tag()[i] != expected)
           {
-            std::cout << "Non-zero residual at index " << i << ": " << f_data[i] << "\n";
+            std::cout << "IEEEST differentiability tag " << i << " mismatch\n";
             success = false;
           }
         }
 
-        // Verify output signal is linked and reads the correct value
-        success *= vss_node.linked();
-        success *= (vss_node.getVariableIndex() == 11);
-        success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.0), tol);
+        setState(fixture.ieeest, {{Internal::VSS, 0.25}});
+        success *= scalarMatches(fixture.output(), 0.25, "published output");
+
+        RealT                                     time = 0.0;
+        Model::VariableMonitorController<ScalarT> monitor(time);
+        monitor.addMonitor(fixture.ieeest.getMonitor());
+        std::stringstream monitor_output;
+        monitor.addSink({Model::VariableMonitorFormat::CSV}, monitor_output);
+        monitor.start();
+        monitor.print();
+        monitor.stop();
+
+        std::string monitor_header;
+        std::string monitor_values;
+        std::getline(monitor_output, monitor_header);
+        std::getline(monitor_output, monitor_values);
+        success              *= (monitor_header == "t,Ieeest_ieeest_test_vss");
+        const auto monitored  = Tokenizer<RealT>(monitor_values, ',')();
+        success              *= (monitored.size() == 2);
+        if (monitored.size() == 2)
+        {
+          success *= scalarMatches(monitored[1], 0.25, "monitored vss");
+        }
 
         return success.report(__func__);
       }
 
-      /**
-       * @brief Residual evaluation against hand-computed answer key.
-       *
-       * Sets specific y/yp values and verifies residuals match
-       * pre-computed expected values. See plan for derivation.
-       */
-      TestOutcome residual()
+      /// An exponential input \f$u e^{st}\f$ drives every signal as its
+      /// transfer function times the input, so the residual vanishes at
+      /// every rate that is not a pole.
+      TestOutcome transferFunction()
       {
         TestStatus success = true;
 
-        PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
-        ScalarT                                   u_value{0.5};
-        IdxT                                      u_index = 12;
-        ScalarT                                   vss_value{0.0};
-        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
-
-        u_node.link(&u_value, &u_index);
-        vss_node.link(&vss_value, &vss_index);
-
-        using namespace GridKit::PhasorDynamics::Stabilizer;
-
-        auto data = makeTestData();
-        auto stab = Ieeest<ScalarT, IdxT>(data);
-
-        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
-        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
-
-        stab.allocate();
-        stab.initialize();
-        setStatePoint(stab);
-        stab.evaluateResidual();
-
-        // Hand-computed answer key (see plan for full derivation)
-        const std::vector<ScalarT> res_answer = {
-            0.19,   // f[0]:  -x1_dot + x2
-            0.28,   // f[1]:  -x2_dot + x3
-            0.37,   // f[2]:  -x3_dot + x4
-            1.0975, // f[3]:  -x4_dot + (-a0*x1 - a1*x2 - a2*x3 - a3*x4 + u) / a4
-            0.25,   // f[4]:  -T2*x5_dot - x5 + v4
-            0.24,   // f[5]:  -T4*x6_dot - x6 + v5
-            -0.05,  // f[6]:  -T6*x7_dot - x7 + v6
-            -0.42,  // f[7]:  -v4 + x1 + A5*x2 + A6*x3
-            -0.25,  // f[8]:  -T2*(v5 - x5) + T1*(v4 - x5)
-            -0.31,  // f[9]:  -T4*(v6 - x6) + T3*(v5 - x6)
-            5.75,   // f[10]: -T6*v7 + Ks*T5*(v6 - x7)
-            0.0,    // f[11]: limiter (v7=0.05 within [-0.1, 0.1])
+        const auto data = makeData();
+        const auto p    = [&data](Params key)
+        {
+          return std::get<RealT>(data.parameters.at(key));
         };
 
-        // Looser tolerance for f[11] — Math::clamp is a smooth ramp approximation.
-        const auto  loose_tol     = static_cast<RealT>(1.0e-4);
-        auto&       residual      = stab.getResidual();
-        const auto* residual_data = residual.getData();
-
-        for (size_t i = 0; i < res_answer.size(); ++i)
+        for (const RealT s : {-0.5, 0.25, 2.0})
         {
-          auto test_tol = (i == 11) ? loose_tol : static_cast<RealT>(10 * std::numeric_limits<ScalarT>::epsilon());
-          if (!isEqual(residual_data[i], res_answer[i], test_tol))
-          {
-            std::cout << "Incorrect result for residual " << i << ": "
-                      << std::setprecision(15) << residual_data[i]
-                      << " != " << res_answer[i] << "\n";
-            success = false;
-          }
+          const RealT numerator = 1.0 + p(Params::A5) * s + p(Params::A6) * s * s;
+          const RealT first     = 1.0 + p(Params::A1) * s + p(Params::A2) * s * s;
+          const RealT second    = 1.0 + p(Params::A3) * s + p(Params::A4) * s * s;
+
+          // Small enough that the limiter is transparent.
+          const RealT u  = 0.01;
+          const RealT x1 = u / first;
+          const RealT v4 = numerator * x1 / second;
+          const RealT x5 = v4 / (1.0 + p(Params::T2) * s);
+          const RealT v5 = (1.0 + p(Params::T1) * s) * x5;
+          const RealT x6 = v5 / (1.0 + p(Params::T4) * s);
+          const RealT v6 = (1.0 + p(Params::T3) * s) * x6;
+          const RealT x7 = v6 / (1.0 + p(Params::T6) * s);
+          const RealT v7 = p(Params::Ks) * p(Params::T5) * s * x7;
+
+          Fixture<ScalarT> fixture(data);
+          success         *= fixture.initialize(0.0);
+          fixture.input()  = u;
+          setMode(fixture.ieeest,
+                  s,
+                  {{Internal::X1, x1},
+                   {Internal::X2, s * x1},
+                   {Internal::X3, v4},
+                   {Internal::X4, s * v4},
+                   {Internal::X5, x5},
+                   {Internal::X6, x6},
+                   {Internal::X7, x7}});
+          setState(fixture.ieeest, {{Internal::VSS, v7}});
+          success *= (fixture.ieeest.evaluateResidual() == 0);
+          success *= allZero(fixture.ieeest.getResidual(), "residual", "under exponential input");
         }
 
-        // Verify output signal reads the stabilizer output
-        success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.05), loose_tol);
+        return success.report(__func__);
+      }
+
+      /// For notch orders one to three, equivalent factorizations of the
+      /// notch denominator give the same residual: the factors commute, and
+      /// two first-order factors combine into one second-order factor.
+      TestOutcome factorOrdering()
+      {
+        TestStatus success = true;
+
+        auto swapped = makeData();
+        swapFactors(swapped);
+        success *= sameResidual(makeData(), swapped, "with swapped factors");
+
+        if constexpr (order == 2)
+        {
+          auto first_order_factors                   = makeData();
+          first_order_factors.parameters[Params::A1] = 1.0;
+          first_order_factors.parameters[Params::A2] = 0.0;
+          first_order_factors.parameters[Params::A3] = 0.5;
+
+          auto second_order_factor                   = makeData();
+          second_order_factor.parameters[Params::A1] = 1.5;
+          second_order_factor.parameters[Params::A2] = 0.5;
+
+          success *= sameResidual(first_order_factors,
+                                  second_order_factor,
+                                  "with combined first-order factors");
+        }
+
+        return success.report(__func__);
+      }
+
+      /// The limiter passes the washout output inside its band and holds the
+      /// nearest limit outside it.
+      TestOutcome limiter()
+      {
+        TestStatus success = true;
+
+        // With zero input and lead-lag states and a unit washout gain, the
+        // unlimited signal is -x7.
+        success *= limitedOutput(-0.75, 0.75, "inside the band");
+        success *= limitedOutput(0.75, -0.75, "inside the band");
+        success *= limitedOutput(-2.0, 1.0, "above Lsmax");
+        success *= limitedOutput(2.0, -1.0, "below Lsmin");
 
         return success.report(__func__);
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /**
-       * @brief Compare DependencyTracking Jacobian against Enzyme Jacobian.
-       */
+      /// Away from equilibrium, every Enzyme Jacobian row matches dependency
+      /// tracking.
       TestOutcome jacobian()
       {
         TestStatus success = true;
 
-        auto data = makeTestData();
+        const auto dependency_jacobian = dependencyTrackingJacobian(success);
+        const auto enzyme_jacobian     = enzymeJacobian(success);
 
-        std::vector<DependencyTracking::Variable::DependencyMap>
-            dependency_tracking_jacobian = DependencyTrackingJacobian(data);
-
-        std::vector<DependencyTracking::Variable::DependencyMap>
-            enzyme_jacobian = EnzymeJacobian(data);
-
-        // Compare DependencyTracking dependencies to Enzyme's
-        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        success         *= (dependency_jacobian.size() == enzyme_jacobian.size());
+        const auto rows  = std::min(dependency_jacobian.size(), enzyme_jacobian.size());
+        for (size_t row = 0; row < rows; ++row)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+          if (!isEqual(dependency_jacobian[row], enzyme_jacobian[row], kTol))
+          {
+            std::cout << "IEEEST Jacobian row " << row
+                      << " mismatch between dependency tracking and Enzyme\n";
+            success = false;
+          }
         }
 
         return success.report(__func__);
       }
-
-    private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata)
-      {
-        using DepVar = DependencyTracking::Variable;
-
-        // Set up signal nodes with DependencyTracking scalar type
-        PhasorDynamics::SignalNode<DepVar, IdxT> u_node;
-        PhasorDynamics::SignalNode<DepVar, IdxT> vss_node;
-        DepVar                                   u_value{0.5};
-        IdxT                                     u_index = 12;
-        DepVar                                   vss_value{0.0};
-        IdxT                                     vss_index = INVALID_INDEX<IdxT>;
-
-        u_node.link(&u_value, &u_index);
-        vss_node.link(&vss_value, &vss_index);
-
-        using namespace GridKit::PhasorDynamics::Stabilizer;
-
-        auto stab = Ieeest<DepVar, IdxT>(ieeestdata);
-        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
-        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
-
-        stab.allocate();
-        stab.initialize();
-
-        // Tag external signal u as an additional independent variable
-        u_value.setVariableNumber(2 * stab.size()); // @todo avoid requiring knowledge of the numbering
-        setStatePointDep(stab);
-
-        stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
-
-        stab.evaluateResidual();
-        stab.evaluateJacobian();
-        auto  model_jacobian = stab.getCsrJacobian();
-        auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: Ieeest DependencyTracking Jacobian\n";
-        model_jacobian->print(output_stream);
-
-        return GridKit::Testing::MapFromCsr(model_jacobian);
-      }
-
-      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata)
-      {
-        PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
-        ScalarT                                   u_value{0.5};
-        IdxT                                      u_index = 12;
-        ScalarT                                   vss_value{0.0};
-        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
-
-        u_node.link(&u_value, &u_index);
-        vss_node.link(&vss_value, &vss_index);
-
-        using namespace GridKit::PhasorDynamics::Stabilizer;
-
-        auto stab = Ieeest<ScalarT, IdxT>(ieeestdata);
-        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
-        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
-
-        stab.allocate();
-        stab.initialize();
-        setStatePoint(stab);
-
-        stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
-
-        stab.evaluateResidual();
-        stab.evaluateJacobian();
-        stab.constructCsr();
-        auto  model_jacobian = stab.getCsrJacobian();
-        auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: Ieeest Enzyme Jacobian\n";
-        model_jacobian->print(output_stream);
-
-        return GridKit::Testing::MapFromCsr(model_jacobian);
-      }
 #endif
 
     private:
-      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+      using Log      = ::GridKit::Utilities::Logger;
+      using IeeestT  = PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT, order>;
+      using Factory  = PhasorDynamics::Stabilizer::IeeestFactory<ScalarT, IdxT>;
+      using Data     = typename IeeestT::ModelDataT;
+      using Params   = typename Data::Parameters;
+      using Inputs   = typename Data::SignalInputs;
+      using Outputs  = typename Data::SignalOutputs;
+      using Internal = typename IeeestT::InternalVariablesT;
+      using Rows     = std::vector<std::pair<Internal, RealT>>;
 
-      /**
-       * @brief Standard IEEEST parameter set for all tests.
-       * Derived: a0=1, a1=0.4, a2=0.63, a3=0.1, a4=0.08
-       */
-      auto makeTestData() -> PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT>
+      static constexpr size_t kSize       = static_cast<size_t>(Internal::X1) + order;
+      static constexpr IdxT   kInputIndex = static_cast<IdxT>(kSize);
+
+      /// Owns IEEEST and its input and output nodes. Signal storage is
+      /// declared before the model so every referenced node outlives it.
+      /// Copying would invalidate the model and signal-node pointers.
+      template <typename T>
+      class Fixture
       {
-        using Params = PhasorDynamics::Stabilizer::IeeestParameters;
+      private:
+        T                                   input_value_{};
+        IdxT                                input_index_{kInputIndex};
+        PhasorDynamics::SignalNode<T, IdxT> input_node_;
+        PhasorDynamics::SignalNode<T, IdxT> output_node_;
 
-        PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> data;
-        data.device_class          = "stabilizer";
+      public:
+        explicit Fixture(const Data& data)
+          : ieeest(data)
+        {
+          input_node_.link(&input_value_, &input_index_);
+          ieeest.getPorts().in.template port<Inputs::input>().connect(&input_node_);
+          ieeest.getPorts().out.template port<Outputs::output>().connect(&output_node_);
+        }
+
+        Fixture(const Fixture&)            = delete;
+        Fixture& operator=(const Fixture&) = delete;
+
+        /// Allocation, verification, and initialization at a constant input.
+        bool initialize(RealT u)
+        {
+          input_value_       = static_cast<T>(u);
+          const bool success = (ieeest.allocate() == 0) && ieeest.verify().passed()
+                               && (ieeest.initialize() == 0);
+          if (!success)
+          {
+            std::cout << "IEEEST fixture initialization failed\n";
+          }
+          return success;
+        }
+
+        T& input()
+        {
+          return input_value_;
+        }
+
+        IdxT inputIndex() const
+        {
+          return input_index_;
+        }
+
+        T output()
+        {
+          return output_node_.read();
+        }
+
+        PhasorDynamics::Stabilizer::Ieeest<T, IdxT, order> ieeest;
+      };
+
+      /// Distinct, exactly representable parameters. Notch terms above this
+      /// order are zero, the lead-lag ratios differ from one so no Jacobian
+      /// entry cancels, and the washout gain Ks T5 / T6 is one.
+      static Data makeData()
+      {
+        Data data;
+        data.device_class          = "Ieeest";
         data.disambiguation_string = "ieeest_test";
-        data.monitored_variables.insert(PhasorDynamics::Stabilizer::IeeestMonitorableVariables::vss);
-
-        data.parameters[Params::A1]     = 0.1;
-        data.parameters[Params::A2]     = 0.2;
-        data.parameters[Params::A3]     = 0.3;
-        data.parameters[Params::A4]     = 0.4;
-        data.parameters[Params::A5]     = 0.5;
-        data.parameters[Params::A6]     = 0.6;
-        data.parameters[Params::T1]     = 0.5;
-        data.parameters[Params::T2]     = 1.0;
-        data.parameters[Params::T3]     = 0.3;
-        data.parameters[Params::T4]     = 1.0;
-        data.parameters[Params::T5]     = 2.0;
-        data.parameters[Params::T6]     = 5.0;
-        data.parameters[Params::Ks]     = 10.0;
-        data.parameters[Params::Lsmin]  = -0.1;
-        data.parameters[Params::Lsmax]  = 0.1;
-        data.parameters[Params::Vcl]    = 0.0;
-        data.parameters[Params::Vcu]    = 0.0;
-        data.parameters[Params::Tdelay] = 0.0;
-
+        data.monitored_variables.insert(Data::MonitorableVariables::vss);
+        data.parameters = {{Params::A1, 0.0},
+                           {Params::A2, 0.0},
+                           {Params::A3, 0.0},
+                           {Params::A4, 0.0},
+                           {Params::A5, 0.0},
+                           {Params::A6, 0.0},
+                           {Params::T1, 1.5},
+                           {Params::T2, 0.75},
+                           {Params::T3, 2.5},
+                           {Params::T4, 1.25},
+                           {Params::T5, 2.0},
+                           {Params::T6, 1.0},
+                           {Params::Ks, 0.5},
+                           {Params::Lsmin, -1.0},
+                           {Params::Lsmax, 1.0}};
+        if constexpr (order >= 1)
+        {
+          data.parameters[Params::A1] = 1.0;
+          data.parameters[Params::A5] = 0.375;
+        }
+        if constexpr (order >= 2)
+        {
+          data.parameters[Params::A2] = 0.5;
+          data.parameters[Params::A6] = 0.125;
+        }
+        if constexpr (order >= 3)
+        {
+          data.parameters[Params::A3] = 0.75;
+        }
+        if constexpr (order == 4)
+        {
+          data.parameters[Params::A4] = 0.25;
+        }
         return data;
       }
 
-      /**
-       * @brief Set a non-trivial operating point for residual/Jacobian tests.
-       * Avoids zeros and ones to catch coefficient errors.
-       */
-      void setStatePoint(PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>& stab)
+      /// Exchange the two notch denominator factors.
+      static void swapFactors(Data& data)
       {
-        auto* y  = stab.y().getData();
-        auto* yp = stab.yp().getData();
-
-        y[0]  = 0.1;  // x1
-        y[1]  = 0.2;  // x2
-        y[2]  = 0.3;  // x3
-        y[3]  = 0.4;  // x4
-        y[4]  = 0.5;  // x5
-        y[5]  = 0.6;  // x6
-        y[6]  = 0.7;  // x7
-        y[7]  = 0.8;  // v4
-        y[8]  = 0.9;  // v5
-        y[9]  = 1.0;  // v6
-        y[10] = 0.05; // v7  (within limiter range)
-        y[11] = 0.05; // Vss (model output)
-
-        yp[0] = 0.01; // x1_dot
-        yp[1] = 0.02; // x2_dot
-        yp[2] = 0.03; // x3_dot
-        yp[3] = 0.04; // x4_dot
-        yp[4] = 0.05; // x5_dot
-        yp[5] = 0.06; // x6_dot
-        yp[6] = 0.07; // x7_dot
-
-        stab.y().setDataUpdated();
-        stab.yp().setDataUpdated();
+        std::swap(data.parameters[Params::A1], data.parameters[Params::A3]);
+        std::swap(data.parameters[Params::A2], data.parameters[Params::A4]);
       }
 
-      /**
-       * @brief Set the same operating point for DependencyTracking variables.
-       * Uses setValue() to set the numeric value while preserving dependency info.
-       */
-      void setStatePointDep(PhasorDynamics::Stabilizer::Ieeest<DependencyTracking::Variable, IdxT>& stab)
+      template <typename ValueT>
+      bool invalidParameterCase(Params parameter, ValueT value) const
       {
-        auto* y  = stab.y().getData();
-        auto* yp = stab.yp().getData();
-
-        y[0].setValue(0.1);
-        y[1].setValue(0.2);
-        y[2].setValue(0.3);
-        y[3].setValue(0.4);
-        y[4].setValue(0.5);
-        y[5].setValue(0.6);
-        y[6].setValue(0.7);
-        y[7].setValue(0.8);
-        y[8].setValue(0.9);
-        y[9].setValue(1.0);
-        y[10].setValue(0.05);
-        y[11].setValue(0.05);
-
-        yp[0].setValue(0.01);
-        yp[1].setValue(0.02);
-        yp[2].setValue(0.03);
-        yp[3].setValue(0.04);
-        yp[4].setValue(0.05);
-        yp[5].setValue(0.06);
-        yp[6].setValue(0.07);
-
-        stab.y().setDataUpdated();
-        stab.yp().setDataUpdated();
+        auto data                  = makeData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              Fixture<ScalarT> fixture(data);
+              return fixture.ieeest.verify();
+            });
       }
-    }; // class StabilizerIeeestTests
 
+      /// Drive the unlimited signal through the washout state and check the
+      /// limited-output row.
+      bool limitedOutput(RealT x7, RealT expected, const char* context) const
+      {
+        Fixture<ScalarT> fixture(makeData());
+        if (!fixture.initialize(0.0))
+        {
+          return false;
+        }
+        setState(fixture.ieeest, {{Internal::X7, x7}});
+        if (fixture.ieeest.evaluateResidual() != 0)
+        {
+          return false;
+        }
+        return residualsMatch(fixture.ieeest, {{Internal::VSS, expected}}, context);
+      }
+
+      /// Evaluate two models at the same state and compare their residuals.
+      bool sameResidual(const Data& first, const Data& second, const char* context) const
+      {
+        Fixture<ScalarT> expected(first);
+        Fixture<ScalarT> actual(second);
+        if (!expected.initialize(0.0) || !actual.initialize(0.0))
+        {
+          return false;
+        }
+        setOffEquilibriumState(expected);
+        setOffEquilibriumState(actual);
+        if (expected.ieeest.evaluateResidual() != 0 || actual.ieeest.evaluateResidual() != 0)
+        {
+          return false;
+        }
+
+        bool        success         = true;
+        const auto* expected_values = expected.ieeest.getResidual().getData();
+        const auto* actual_values   = actual.ieeest.getResidual().getData();
+        for (size_t row = 0; row < kSize; ++row)
+        {
+          if (!rowMatches(actual_values[row], expected_values[row], "residual", row, context))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      /// A state away from equilibrium that keeps the unlimited signal at
+      /// least 0.5 inside the output limits for every notch order.
+      template <typename T>
+      void setOffEquilibriumState(Fixture<T>& fixture) const
+      {
+        fixture.input() = static_cast<T>(0.5);
+        setState(fixture.ieeest,
+                 {{Internal::X1, 0.25},
+                  {Internal::X2, 0.125},
+                  {Internal::X3, 0.5},
+                  {Internal::X4, -0.25},
+                  {Internal::X5, 0.375},
+                  {Internal::X6, 0.25},
+                  {Internal::X7, 0.625}});
+      }
+
+      /// Write state rows and publish the update. Rows of notch states this
+      /// order does not have are skipped.
+      template <typename T>
+      static void setState(PhasorDynamics::Stabilizer::Ieeest<T, IdxT, order>& ieeest, const Rows& rows)
+      {
+        auto* y = ieeest.y().getData();
+        for (const auto& [variable, value] : rows)
+        {
+          const auto row = static_cast<size_t>(variable);
+          if (row < kSize)
+          {
+            y[row] = static_cast<T>(value);
+          }
+        }
+        ieeest.y().setDataUpdated();
+      }
+
+      /// setState() with each derivative set to the rate times its state,
+      /// as an exponential trajectory requires.
+      template <typename T>
+      static void setMode(PhasorDynamics::Stabilizer::Ieeest<T, IdxT, order>& ieeest, RealT rate, const Rows& rows)
+      {
+        setState(ieeest, rows);
+        auto* yp = ieeest.yp().getData();
+        for (const auto& [variable, value] : rows)
+        {
+          const auto row = static_cast<size_t>(variable);
+          if (row < kSize)
+          {
+            yp[row] = static_cast<T>(rate * value);
+          }
+        }
+        ieeest.yp().setDataUpdated();
+      }
+
+      /// Compare one vector row against its expected value. Every row check
+      /// in this suite reports through here, so failures share one format.
+      static bool rowMatches(RealT       actual,
+                             RealT       expected,
+                             const char* what,
+                             size_t      row,
+                             const char* context)
+      {
+        if (isEqual(actual, expected, kTol))
+        {
+          return true;
+        }
+        std::cout << "IEEEST order " << order << ' ' << what << " row " << row << ' ' << context
+                  << " mismatch: " << std::setprecision(std::numeric_limits<RealT>::max_digits10)
+                  << actual << " != " << expected << '\n';
+        return false;
+      }
+
+      bool residualsMatch(const IeeestT& ieeest, const Rows& rows, const char* context) const
+      {
+        bool        success = true;
+        const auto* f       = ieeest.getResidual().getData();
+        for (const auto& [variable, expected] : rows)
+        {
+          const auto row = static_cast<size_t>(variable);
+          if (!rowMatches(f[row], expected, "residual", row, context))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      template <typename VectorT>
+      static bool allZero(const VectorT& vector, const char* what, const char* context)
+      {
+        bool        success = true;
+        const auto* values  = vector.getData();
+        for (size_t row = 0; row < kSize; ++row)
+        {
+          if (!rowMatches(values[row], 0.0, what, row, context))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      static bool scalarMatches(RealT actual, RealT expected, const char* label)
+      {
+        if (isEqual(actual, expected, kTol))
+        {
+          return true;
+        }
+        std::cout << "IEEEST order " << order << ' ' << label << " mismatch: "
+                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
+                  << actual << " != " << expected << '\n';
+        return false;
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /// Number y and yp as the even and odd columns that constructCsr()
+      /// merges, and the input as the column after the internal variables.
+      void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
+      {
+        auto* y  = fixture.ieeest.y().getData();
+        auto* yp = fixture.ieeest.yp().getData();
+        for (size_t i = 0; i < kSize; ++i)
+        {
+          y[i].setVariableNumber(2 * i);
+          yp[i].setVariableNumber(2 * i + 1);
+        }
+        fixture.input().setVariableNumber(2 * static_cast<size_t>(fixture.inputIndex()));
+
+        fixture.ieeest.y().setDataUpdated();
+        fixture.ieeest.yp().setDataUpdated();
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
+          TestStatus& success) const
+      {
+        Fixture<DependencyTracking::Variable> fixture(makeData());
+        success *= fixture.initialize(0.0);
+        setOffEquilibriumState(fixture);
+        numberVariables(fixture);
+        fixture.ieeest.updateTime(0.0, 1.0);
+        success *= (fixture.ieeest.evaluateResidual() == 0);
+        success *= (fixture.ieeest.evaluateJacobian() == 0);
+
+        return MapFromCsr(fixture.ieeest.getCsrJacobian());
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
+          TestStatus& success) const
+      {
+        Fixture<ScalarT> fixture(makeData());
+        success *= fixture.initialize(0.0);
+        setOffEquilibriumState(fixture);
+        fixture.ieeest.updateTime(0.0, 1.0);
+        success *= (fixture.ieeest.evaluateResidual() == 0);
+        success *= (fixture.ieeest.evaluateJacobian() == 0);
+        success *= (fixture.ieeest.constructCsr() == 0);
+
+        return MapFromCsr(fixture.ieeest.getCsrJacobian());
+      }
+#endif
+    };
   } // namespace Testing
 } // namespace GridKit

@@ -3,7 +3,7 @@
 #    - Luke Lowery <lukel@tamu.edu>
 # ]]
 
-set(_install_headers Ieeest.hpp IeeestData.hpp)
+set(_install_headers Ieeest.hpp IeeestData.hpp IeeestFactory.hpp)
 
 if(GRIDKIT_ENABLE_ENZYME)
   gridkit_add_library(
