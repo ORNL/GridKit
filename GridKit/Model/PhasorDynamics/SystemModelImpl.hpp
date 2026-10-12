@@ -616,12 +616,11 @@ namespace GridKit
     }
 
     /**
-     * @brief Evaluate every component, then this system's own residual.
+     * @brief Evaluate this system's internal and external residuals.
      *
-     * Each component assigns the rows it owns and fills its external
-     * residual. The internal residual completes the rows this system owns
-     * with those contributions; the external residual holds the
-     * contributions to rows outside it, which its parent assembles in turn.
+     * The internal residual holds the rows this system owns; the external
+     * residual holds its contributions to rows outside it, which its parent
+     * assembles in turn.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
@@ -630,11 +629,6 @@ namespace GridKit
       if (!bound_)
       {
         gatherExternalVariables();
-      }
-
-      for (const auto& component : components_)
-      {
-        component->evaluateResidual();
       }
 
       evaluateInternalResidual();
@@ -687,17 +681,23 @@ namespace GridKit
     }
 
     /**
-     * @brief Complete the rows this system owns with the external residuals
-     * of its components.
+     * @brief Evaluate every component, then complete the rows this system
+     * owns with the external residuals of its components.
      *
-     * Every component has been evaluated, so each row is assigned by its
-     * owner before any contribution is added.
+     * Each row is assigned by the component that owns it before any
+     * contribution is added.
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::evaluateInternalResidual()
     {
+      for (const auto& component : components_)
+      {
+        component->evaluateResidual();
+      }
+
       auto* f = f_.getData();
 
+      // The scattering of signals between components (edges of a graph)
       for (const auto& component : components_)
       {
         const auto  values           = component->getExternalResidual();
