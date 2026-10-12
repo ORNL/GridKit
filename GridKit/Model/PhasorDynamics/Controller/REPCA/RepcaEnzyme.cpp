@@ -28,6 +28,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateJacobian()
       {
+        gatherExternalVariables();
+
         if (J_rows_buffer_ == nullptr)
         {
           const auto size        = static_cast<size_t>(size_);

@@ -850,11 +850,9 @@ namespace GridKit
        * @brief Evaluate the REECB residual equations.
        */
       template <typename scalar_type, typename index_type>
-      int Reecb<scalar_type, index_type>::evaluateResidual()
+      int Reecb<scalar_type, index_type>::evaluateInternalResidual()
       {
-        evaluateInternalResidual(y_.getData(), yp_.getData(), y_ext_.getData(), f_.getData());
-        f_.setDataUpdated();
-        return 0;
+        return evaluateInternalResidual(y_.getData(), yp_.getData(), y_ext_.getData(), f_.getData());
       }
 
       /**

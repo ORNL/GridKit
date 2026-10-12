@@ -155,7 +155,6 @@ namespace GridKit
         bus.y().setDataUpdated();
 
         bus.evaluateResidual();
-        load.gatherExternalVariables();
         load.evaluateResidual();
 
         const auto* f  = load.getResidual().getData();
@@ -255,7 +254,6 @@ namespace GridKit
         load.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
-        load.gatherExternalVariables();
         load.evaluateResidual(); //< Tracks dependencies
         load.evaluateJacobian(); //< Converts dependencies to CSR
         auto* model_jacobian = load.getCsrJacobian();
@@ -291,7 +289,6 @@ namespace GridKit
         load.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
-        load.gatherExternalVariables();
         load.evaluateResidual();
 
         bus.evaluateJacobian();

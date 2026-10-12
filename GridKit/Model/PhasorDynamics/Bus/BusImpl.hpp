@@ -218,13 +218,13 @@ namespace GridKit
      * adds the current injections of attached components.
      */
     template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::evaluateResidual()
+    int Bus<scalar_type, index_type>::evaluateInternalResidual()
     {
       auto* f = f_.getData();
 
       f[0] = -(fault_g_ * Vr() - fault_b_ * Vi());
       f[1] = -(fault_b_ * Vr() + fault_g_ * Vi());
-      f_.setDataUpdated();
+
       return 0;
     }
 

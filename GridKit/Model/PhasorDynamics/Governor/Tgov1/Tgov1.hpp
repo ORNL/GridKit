@@ -74,14 +74,12 @@ namespace GridKit
         Tgov1(const ModelDataT&);
         ~Tgov1() = default;
 
-        int  setGridKitComponentID(IdxT) override final;
-        int  allocate() override final;
-        int  verify() const override final;
-        int  initialize() override final;
-        int  tagDifferentiable() override final;
-        int  setAbsoluteTolerance(RealT) override final;
-        void gatherExternalVariables() override final;
-        int  evaluateResidual() override final;
+        int setGridKitComponentID(IdxT) override final;
+        int allocate() override final;
+        int verify() const override final;
+        int initialize() override final;
+        int tagDifferentiable() override final;
+        int setAbsoluteTolerance(RealT) override final;
 
         // Still to be implemented
         int evaluateJacobian() override final;
@@ -118,6 +116,10 @@ namespace GridKit
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
+
+      protected:
+        void gatherExternalVariables() override final;
+        int  evaluateInternalResidual() override final;
       };
 
     } // namespace Governor

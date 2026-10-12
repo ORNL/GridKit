@@ -258,18 +258,21 @@ namespace GridKit
     }
 
     /**
-     * @brief Evaluate the branch current injections into its two terminal
-     * buses. The branch owns no residual rows.
+     * @brief The branch owns no residual rows.
      */
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateResidual()
+    int Branch<scalar_type, index_type>::evaluateInternalResidual()
     {
-      const auto* y     = y_.getData();
-      const auto* yp    = yp_.getData();
-      const auto* y_ext = y_ext_.getData();
-      evaluateExternalResidual(y, yp, y_ext, f_ext_.getData());
-
       return 0;
+    }
+
+    /**
+     * @brief Evaluate the branch current injections into its two terminal buses.
+     */
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      return evaluateExternalResidual(y_.getData(), yp_.getData(), y_ext_.getData(), f_ext_.getData());
     }
 
     template <typename scalar_type, typename index_type>

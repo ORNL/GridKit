@@ -43,12 +43,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
-      // A parent gathers its components; a root model gathers itself.
-      if (!bound_)
-      {
-        gatherExternalVariables();
-      }
-
       for (const auto& component : components_)
       {
         component->evaluateJacobian();

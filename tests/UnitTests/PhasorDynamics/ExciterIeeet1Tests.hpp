@@ -75,7 +75,6 @@ namespace GridKit
         bus.initialize();
         exciter.initialize();
 
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
 
         const auto& residual      = exciter.getResidual();
@@ -152,7 +151,6 @@ namespace GridKit
           success *= std::isfinite(y[i]);
         }
 
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         for (IdxT i = 0; i < exciter.getResidual().getSize(); ++i)
         {
@@ -162,7 +160,6 @@ namespace GridKit
 
         y[2] = 4.0;
         exciter.y().setDataUpdated();
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         success *= isEqual(f[8], static_cast<ScalarT>(0.0));
         y[2]     = 1.2;
@@ -170,7 +167,6 @@ namespace GridKit
         yp[0] = 123.0;
         exciter.y().setDataUpdated();
         exciter.yp().setDataUpdated();
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         success *= isEqual(f[0], static_cast<ScalarT>(-123.0));
         yp[0]    = 0.0;
@@ -178,28 +174,24 @@ namespace GridKit
         y[0] = 4.0;
         exciter.y().setDataUpdated();
         exciter.yp().setDataUpdated();
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         success *= isEqual(f[0], static_cast<ScalarT>(1.0e3));
 
         y[0] = 5.0;
         y[4] = 0.02;
         exciter.y().setDataUpdated();
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         success *= isEqual(f[1], static_cast<ScalarT>(900.0));
 
         y[4] = 0.0;
         y[1] = 1.0;
         exciter.y().setDataUpdated();
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         success *= isEqual(f[2], static_cast<ScalarT>(900.0));
 
         y[1] = 0.0;
         y[5] = 1.0;
         exciter.y().setDataUpdated();
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         success *= isEqual(f[3], static_cast<ScalarT>(1.0e3));
 
@@ -279,7 +271,6 @@ namespace GridKit
         bus.initialize();
         efd_node.init(1.2);
         success *= (exciter.initialize() == 0);
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
 
         const auto* y = exciter.y().getData();
@@ -292,13 +283,11 @@ namespace GridKit
         success *= isEqual(f[4], static_cast<ScalarT>(0.0), kTol);
 
         vuel_value = -0.3;
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         success *= isEqual(f[4], static_cast<ScalarT>(0.1), kTol);
 
         vuel_value = -0.4;
         voel_value = 0.3;
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
         success *= isEqual(f[4], static_cast<ScalarT>(0.1), kTol);
 
@@ -361,7 +350,6 @@ namespace GridKit
         exciter.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
 
         bus.evaluateResidual();
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
 
         bus.evaluateJacobian();
@@ -402,7 +390,6 @@ namespace GridKit
         exciter.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
 
         bus.evaluateResidual();
-        exciter.gatherExternalVariables();
         exciter.evaluateResidual();
 
         bus.evaluateJacobian();

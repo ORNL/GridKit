@@ -113,14 +113,12 @@ namespace GridKit
              RealT S12);
       ~Genrou();
 
-      int  setGridKitComponentID(IdxT) override final;
-      int  allocate() override final;
-      int  verify() const override final;
-      int  initialize() override final;
-      int  tagDifferentiable() override final;
-      int  setAbsoluteTolerance(RealT) override final;
-      void gatherExternalVariables() override final;
-      int  evaluateResidual() override final;
+      int setGridKitComponentID(IdxT) override final;
+      int allocate() override final;
+      int verify() const override final;
+      int initialize() override final;
+      int tagDifferentiable() override final;
+      int setAbsoluteTolerance(RealT) override final;
 
       // Still to be implemented
       int evaluateJacobian() override final;
@@ -206,6 +204,11 @@ namespace GridKit
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
+
+    protected:
+      void gatherExternalVariables() override final;
+      int  evaluateInternalResidual() override final;
+      int  evaluateExternalResidual() override final;
     };
 
   } // namespace PhasorDynamics

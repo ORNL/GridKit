@@ -55,7 +55,6 @@ namespace GridKit
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
       virtual int initialize() override final;
-      virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
 
       virtual BusTypeT BusType() const override final
@@ -110,6 +109,9 @@ namespace GridKit
       /* Fault admittance */
       RealT fault_g_{0.0};
       RealT fault_b_{0.0};
+
+    protected:
+      virtual int evaluateInternalResidual() override final;
     };
 
   } // namespace PhasorDynamics

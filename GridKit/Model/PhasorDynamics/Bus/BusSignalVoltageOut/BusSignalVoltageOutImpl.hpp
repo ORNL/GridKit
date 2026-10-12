@@ -235,14 +235,13 @@ namespace GridKit
      * components to these rows.
      */
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageOut<scalar_type, index_type>::evaluateResidual()
+    int BusSignalVoltageOut<scalar_type, index_type>::evaluateInternalResidual()
     {
       auto* f = f_.getData();
 
       f[0] = ports_.in.template port<BusSignalInputs::ir>().readSignal();
       f[1] = ports_.in.template port<BusSignalInputs::ii>().readSignal();
 
-      f_.setDataUpdated();
       return 0;
     }
   } // namespace PhasorDynamics

@@ -223,7 +223,6 @@ namespace GridKit
         floored.attachAllInputs();
         setInitializationInputs(floored);
         success *= floored.initialize(0.25, 0.45);
-        floored.repca.gatherExternalVariables();
         success *= (floored.repca.evaluateResidual() == 0);
         success *= allResidualsWithinInitTolerance(floored.repca);
 
@@ -233,7 +232,6 @@ namespace GridKit
         y[index(Vars::PMEAS)] -= 0.003;
         y[index(Vars::PREF)]  -= 0.004;
         floored.repca.y().setDataUpdated();
-        floored.repca.gatherExternalVariables();
         success *= (floored.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 4> floored_residuals{{
             {Vars::VMEAS, 1.0},
@@ -259,7 +257,6 @@ namespace GridKit
         setInitializationInputs(fixture);
         success *= fixture.initialize(0.25, 0.45);
         success *= (fixture.repca.tagDifferentiable() == 0);
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateResidual() == 0);
 
         const std::array<VariableValue, Utilities::enum_size<Vars>()> initial_state{{
@@ -346,7 +343,6 @@ namespace GridKit
           success *= scalarPreserved(exact_commands.qext(), 0.25, "qext signal");
           success *= scalarPreserved(exact_commands.pext(), 0.45, "pext signal");
           success *= scalarPreserved(exact_commands.input(Ext::qref), 0.1, "qref signal");
-          exact_commands.repca.gatherExternalVariables();
           success *= (exact_commands.repca.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(exact_commands.repca);
         }
@@ -361,7 +357,6 @@ namespace GridKit
         success *= fallback.initialize(0.25, 0.45);
         Log::setVerbosity(previous_verbosity);
         success *= scalarMatches(fallback.input(Ext::freqref), 1.0, "default frequency");
-        fallback.repca.gatherExternalVariables();
         success *= (fallback.repca.evaluateResidual() == 0);
         success *= allResidualsWithinInitTolerance(fallback.repca);
 
@@ -373,7 +368,6 @@ namespace GridKit
         outputless.attachAllInputs();
         setInitializationInputs(outputless);
         success *= outputless.initialize(0.25, 0.45);
-        outputless.repca.gatherExternalVariables();
         success *= (outputless.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 2> outputless_state{{
             {Vars::QEXT, 0.25},
@@ -419,7 +413,6 @@ namespace GridKit
           scenario.attachAllInputs(99.0);
           setInitializationInputs(scenario);
           success *= scenario.initialize(0.25, 0.45);
-          scenario.repca.gatherExternalVariables();
           success *= (scenario.repca.evaluateResidual() == 0);
 
           const std::array<VariableValue, 5> expected_state{{
@@ -535,7 +528,6 @@ namespace GridKit
             asymmetric_reactive.attachAllInputs();
             setInitializationInputs(asymmetric_reactive);
             success *= asymmetric_reactive.initialize(0.25, 0.45);
-            asymmetric_reactive.repca.gatherExternalVariables();
             success *= (asymmetric_reactive.repca.evaluateResidual() == 0);
             success *= stateMatches(asymmetric_reactive.repca,
                                     asymmetric_reactive_state,
@@ -552,7 +544,6 @@ namespace GridKit
           frozen_reactive_rate.attachAllInputs();
           setInitializationInputs(frozen_reactive_rate);
           success *= frozen_reactive_rate.initialize(0.25, 0.45);
-          frozen_reactive_rate.repca.gatherExternalVariables();
           success *= (frozen_reactive_rate.repca.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(frozen_reactive_rate.repca);
         }
@@ -565,7 +556,6 @@ namespace GridKit
           asymmetric_active.attachAllInputs();
           setInitializationInputs(asymmetric_active);
           success *= asymmetric_active.initialize(0.25, 0.45);
-          asymmetric_active.repca.gatherExternalVariables();
           success *= (asymmetric_active.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 3> lower_active_state{{
               {Vars::EF, 0.0},
@@ -592,7 +582,6 @@ namespace GridKit
           asymmetric_active.attachAllInputs();
           setInitializationInputs(asymmetric_active);
           success *= asymmetric_active.initialize(0.25, 0.45);
-          asymmetric_active.repca.gatherExternalVariables();
           success *= (asymmetric_active.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 3> upper_active_state{{
               {Vars::EF, 0.0},
@@ -646,7 +635,6 @@ namespace GridKit
           qmax_pmin_boundary.attachAllInputs();
           setInitializationInputs(qmax_pmin_boundary);
           success *= qmax_pmin_boundary.initialize(0.75, 0.0);
-          qmax_pmin_boundary.repca.gatherExternalVariables();
           success *= (qmax_pmin_boundary.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 8> qmax_pmin_state{{
               {Vars::QPI, 1.5},
@@ -668,7 +656,6 @@ namespace GridKit
           qmin_pmax_boundary.attachAllInputs();
           setInitializationInputs(qmin_pmax_boundary);
           success *= qmin_pmax_boundary.initialize(-0.4, 1.0);
-          qmin_pmax_boundary.repca.gatherExternalVariables();
           success *= (qmin_pmax_boundary.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 8> qmin_pmax_state{{
               {Vars::QPI, -0.8},
@@ -690,7 +677,6 @@ namespace GridKit
           collapsed_limits.attachAllInputs();
           setInitializationInputs(collapsed_limits);
           success *= collapsed_limits.initialize(0.25, 0.45);
-          collapsed_limits.repca.gatherExternalVariables();
           success *= (collapsed_limits.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 8> collapsed_state{{
               {Vars::XQPI, 0.5},
@@ -733,7 +719,6 @@ namespace GridKit
           success *= stateMatches(adjusted.repca,
                                   {{test_case.output, test_case.expected}},
                                   test_case.label);
-          adjusted.repca.gatherExternalVariables();
           success *= (adjusted.repca.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(adjusted.repca);
         }
@@ -752,14 +737,12 @@ namespace GridKit
                                    {Vars::PPI, 0.8},
                                    {Vars::PEXT, 0.0}},
                                   "measured-power limit");
-          disabled_frequency.repca.gatherExternalVariables();
           success *= (disabled_frequency.repca.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(disabled_frequency.repca);
 
           setState(disabled_frequency.repca,
                    {{Vars::PPI, 0.65}, {Vars::EPLIM, 0.1}});
           setDerivative(disabled_frequency.repca, {{Vars::XPPI, 0.0}});
-          disabled_frequency.repca.gatherExternalVariables();
           success *= (disabled_frequency.repca.evaluateResidual() == 0);
           success *= residualsMatch(disabled_frequency.repca,
                                     {{Vars::XPPI, 0.18}},
@@ -779,7 +762,6 @@ namespace GridKit
                     {Vars::PPI, 2.25},
                     {Vars::EPLIM, 0.1}});
           setDerivative(adjusted.repca, {{Vars::XQPI, 0.0}, {Vars::XPPI, 0.0}});
-          adjusted.repca.gatherExternalVariables();
           success *= (adjusted.repca.evaluateResidual() == 0);
           success *= residualsMatch(adjusted.repca,
                                     {{Vars::XQPI, 0.3}, {Vars::XPPI, 0.18}},
@@ -792,7 +774,6 @@ namespace GridKit
                     {Vars::PPI, 0.0},
                     {Vars::EPLIM, 0.0},
                     {Vars::XPPI, 2.25}});
-          adjusted.repca.gatherExternalVariables();
           success *= (adjusted.repca.evaluateResidual() == 0);
           success *= residualsMatch(adjusted.repca,
                                     {{Vars::QPI, 1.75}, {Vars::PPI, 2.25}},
@@ -814,7 +795,6 @@ namespace GridKit
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
         setAnswerKeyState(fixture.repca);
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateResidual() == 0);
 
         const std::array<VariableValue, Utilities::enum_size<Vars>()> expected_residuals{{
@@ -902,7 +882,6 @@ namespace GridKit
                     {Vars::VDROOP, 1.08},
                     {Vars::VCTRL, 1.0},
                     {Vars::ERQ, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
 
           const std::array<VariableValue, 2> expected_residuals{{
@@ -937,7 +916,6 @@ namespace GridKit
           for (const auto& test_case : freeze_cases)
           {
             setState(freeze.repca, {{Vars::V, test_case.input}, {Vars::SFRZ, 0.0}});
-            freeze.repca.gatherExternalVariables();
             success *= (freeze.repca.evaluateResidual() == 0);
             success *= residualsMatch(freeze.repca,
                                       {{Vars::SFRZ, test_case.expected}},
@@ -955,7 +933,6 @@ namespace GridKit
         for (const auto& test_case : deadband_cases)
         {
           setState(fixture.repca, {{Vars::ERQ, test_case.input}, {Vars::ERQDB, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::ERQDB, test_case.expected}},
@@ -970,7 +947,6 @@ namespace GridKit
         for (const auto& test_case : error_limit_cases)
         {
           setState(fixture.repca, {{Vars::ERQDB, test_case.input}, {Vars::ERQLIM, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::ERQLIM, test_case.expected}},
@@ -988,7 +964,6 @@ namespace GridKit
                    {{Vars::XQPI, test_case.input},
                     {Vars::ERQLIM, 0.0},
                     {Vars::QPI, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::QPI, test_case.expected}},
@@ -1012,7 +987,6 @@ namespace GridKit
                     {Vars::ERQLIM, test_case.error},
                     {Vars::SFRZ, 1.0}});
           setDerivative(fixture.repca, {{Vars::XQPI, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::XQPI, test_case.expected}},
@@ -1024,7 +998,6 @@ namespace GridKit
                   {Vars::QPI, 0.27},
                   {Vars::QEXT, 0.20}});
         setDerivative(fixture.repca, {{Vars::XQLAG, -0.04}});
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 2> lead_lag_residuals{{
             {Vars::XQLAG, 0.092},
@@ -1047,7 +1020,6 @@ namespace GridKit
           setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
           numberVariables(blocked);
           blocked.repca.updateTime(0.0, 1.0);
-          blocked.repca.gatherExternalVariables();
           success *= (blocked.repca.evaluateResidual() == 0);
 
           const DependencyTracking::Variable::DependencyMap expected{
@@ -1093,7 +1065,6 @@ namespace GridKit
           setAnswerKeyInputs(fixture);
           success *= fixture.prepare(0.0, 0.0);
           setState(fixture.repca, {{Vars::PREF, 0.8}, {Vars::PEXT, 0.3}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::PEXT, test_case.pext}},
@@ -1117,7 +1088,6 @@ namespace GridKit
           fixture.input(Ext::freq)    = 1.0;
           fixture.input(Ext::freqref) = 1.0 + test_case.input;
           setState(fixture.repca, {{Vars::EF, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::EF, test_case.expected}},
@@ -1136,7 +1106,6 @@ namespace GridKit
                    {{Vars::EF, test_case.input},
                     {Vars::EP, 0.0},
                     {Vars::PMEAS, 0.4}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::EP, test_case.expected}},
@@ -1151,7 +1120,6 @@ namespace GridKit
         for (const auto& test_case : error_limit_cases)
         {
           setState(fixture.repca, {{Vars::EP, test_case.input}, {Vars::EPLIM, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::EPLIM, test_case.expected}},
@@ -1169,7 +1137,6 @@ namespace GridKit
                    {{Vars::XPPI, test_case.input},
                     {Vars::EPLIM, 0.0},
                     {Vars::PPI, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::PPI, test_case.expected}},
@@ -1192,7 +1159,6 @@ namespace GridKit
                    {{Vars::PPI, test_case.output},
                     {Vars::EPLIM, test_case.error}});
           setDerivative(fixture.repca, {{Vars::XPPI, 0.0}});
-          fixture.repca.gatherExternalVariables();
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
                                     {{Vars::XPPI, test_case.expected}},
@@ -1201,7 +1167,6 @@ namespace GridKit
 
         setState(fixture.repca, {{Vars::PPI, 0.66}, {Vars::PREF, 0.60}});
         setDerivative(fixture.repca, {{Vars::PREF, 0.05}});
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateResidual() == 0);
         success *= residualsMatch(fixture.repca,
                                   {{Vars::PREF, 0.07}},
@@ -1228,7 +1193,6 @@ namespace GridKit
                        {Vars::PMEAS, 0.6},
                        {Vars::XPPI, -0.5},
                        {Vars::PREF, 0.8}});
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 7> expected_residuals{{
             {Vars::VMEAS, 0.3},
@@ -1700,12 +1664,10 @@ namespace GridKit
           return false;
         }
 
-        implicit_defaults.repca.gatherExternalVariables();
         if (implicit_defaults.repca.evaluateResidual() != 0)
         {
           success = false;
         }
-        explicit_defaults.repca.gatherExternalVariables();
         if (explicit_defaults.repca.evaluateResidual() != 0)
         {
           success = false;
@@ -1746,12 +1708,10 @@ namespace GridKit
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.repca);
         setAnswerKeyState(explicit_defaults.repca);
-        implicit_defaults.repca.gatherExternalVariables();
         if (implicit_defaults.repca.evaluateResidual() != 0)
         {
           success = false;
         }
-        explicit_defaults.repca.gatherExternalVariables();
         if (explicit_defaults.repca.evaluateResidual() != 0)
         {
           success = false;
@@ -2375,9 +2335,7 @@ namespace GridKit
         setAnswerKeyState(fixture.repca);
         numberVariables(fixture);
         fixture.repca.updateTime(0.0, alpha);
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateResidual() == 0);
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.repca.getCsrJacobian());
@@ -2401,9 +2359,7 @@ namespace GridKit
 
         setAnswerKeyState(fixture.repca);
         fixture.repca.updateTime(0.0, alpha);
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateResidual() == 0);
-        fixture.repca.gatherExternalVariables();
         success *= (fixture.repca.evaluateJacobian() == 0);
         success *= (fixture.repca.constructCsr() == 0);
 

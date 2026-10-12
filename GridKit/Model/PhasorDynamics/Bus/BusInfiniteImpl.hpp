@@ -163,7 +163,7 @@ namespace GridKit
      * dropped and the accumulators stay zero.
      */
     template <typename scalar_type, typename index_type>
-    int BusInfinite<scalar_type, index_type>::evaluateResidual()
+    int BusInfinite<scalar_type, index_type>::evaluateInternalResidual()
     {
       Ir_ = 0.0;
       Ii_ = 0.0;

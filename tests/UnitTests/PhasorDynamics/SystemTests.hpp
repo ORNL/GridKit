@@ -90,7 +90,7 @@ namespace GridKit
           return 0;
         }
 
-        int evaluateResidual() override final
+        int evaluateInternalResidual() override final
         {
           return 0;
         }
@@ -137,7 +137,7 @@ namespace GridKit
           return 0;
         }
 
-        int evaluateResidual() override final
+        int evaluateInternalResidual() override final
         {
           return 0;
         }

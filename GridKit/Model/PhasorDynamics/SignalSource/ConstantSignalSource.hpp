@@ -49,7 +49,6 @@ namespace GridKit
       int initialize() override final;
       int tagDifferentiable() override final;
       int setAbsoluteTolerance(RealT) override final;
-      int evaluateResidual() override final;
       int evaluateJacobian() override final;
 
       SignalPortsT& getPorts()
@@ -72,6 +71,9 @@ namespace GridKit
 
       // Parameter initialization function
       void initializeParameters(const ModelDataT& data);
+
+    protected:
+      int evaluateInternalResidual() override final;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

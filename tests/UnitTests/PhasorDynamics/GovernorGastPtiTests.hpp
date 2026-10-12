@@ -1042,7 +1042,6 @@ namespace GridKit
 
         int evaluate()
         {
-          gastpti.gatherExternalVariables();
           return gastpti.evaluateResidual();
         }
 
@@ -1647,7 +1646,6 @@ namespace GridKit
         numberVariables(fixture);
         fixture.gastpti.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
-        fixture.gastpti.gatherExternalVariables();
         success *= (fixture.gastpti.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.gastpti.getCsrJacobian());
@@ -1668,7 +1666,6 @@ namespace GridKit
         setState(fixture.gastpti, overrides);
         fixture.gastpti.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
-        fixture.gastpti.gatherExternalVariables();
         success *= (fixture.gastpti.evaluateJacobian() == 0);
         success *= (fixture.gastpti.constructCsr() == 0);
 

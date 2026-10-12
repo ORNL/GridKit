@@ -134,7 +134,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int FunctionSignalSource<scalar_type, index_type>::evaluateResidual()
+    int FunctionSignalSource<scalar_type, index_type>::evaluateInternalResidual()
     {
       return 0;
     }

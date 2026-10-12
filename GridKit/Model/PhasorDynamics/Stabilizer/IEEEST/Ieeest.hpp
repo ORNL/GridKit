@@ -76,15 +76,13 @@ namespace GridKit
         Ieeest(const ModelDataT& data);
         ~Ieeest();
 
-        int  setGridKitComponentID(IdxT) override final;
-        int  allocate() override final;
-        int  verify() const override final;
-        int  initialize() override final;
-        int  tagDifferentiable() override final;
-        int  setAbsoluteTolerance(RealT rel_tol) override final;
-        void gatherExternalVariables() override final;
-        int  evaluateResidual() override final;
-        int  evaluateJacobian() override final;
+        int setGridKitComponentID(IdxT) override final;
+        int allocate() override final;
+        int verify() const override final;
+        int initialize() override final;
+        int tagDifferentiable() override final;
+        int setAbsoluteTolerance(RealT rel_tol) override final;
+        int evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -147,6 +145,10 @@ namespace GridKit
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
+
+      protected:
+        void gatherExternalVariables() override final;
+        int  evaluateInternalResidual() override final;
       };
 
     } // namespace Stabilizer

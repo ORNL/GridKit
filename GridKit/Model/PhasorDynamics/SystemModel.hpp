@@ -93,8 +93,6 @@ namespace GridKit
 
       int  tagDifferentiable() override;
       int  setAbsoluteTolerance(RealT rel_tol) override;
-      void gatherExternalVariables() override;
-      int  evaluateResidual() override;
       IdxT jacobianNnz() override;
       int  scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter) override;
       int  scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter) override;
@@ -115,11 +113,12 @@ namespace GridKit
       SignalNodeT* getSignalNode(IdxT signal_id);
       ComponentT*  getComponent(IdxT gridkit_component_id);
 
+    protected:
+      int evaluateInternalResidual() override;
+      int evaluateExternalResidual() override;
+
     private:
       size_t findOwningComponent(IdxT local_index) const;
-
-      void evaluateInternalResidual();
-      void evaluateExternalResidual();
 
       static bool owns(const std::vector<IdxT>& indices, IdxT index);
 

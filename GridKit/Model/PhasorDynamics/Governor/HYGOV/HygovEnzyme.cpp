@@ -17,6 +17,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::evaluateJacobian()
       {
+        gatherExternalVariables();
+
         if (J_rows_buffer_ == nullptr)
         {
           auto size        = static_cast<size_t>(size_);

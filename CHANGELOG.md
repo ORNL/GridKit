@@ -9,7 +9,7 @@
 - Removed the `BusFault` class in favor of `Bus::setFault`.
 - Removed bus pointers from component constructors. Every bus publishes its voltage on signal outlets `vr` and `vi`, and components read it through `SignalPorts` terminal ports that also carry the bus current-balance rows.
 - Buses are components. Each `SystemModel` completes the rows it owns with its components' external residuals; contributions to rows outside it form its own external residual.
-- Added `Component::gatherExternalVariables()`. A system gathers its components' external variables before evaluating them.
+- Every component, including a `SystemModel`, evaluates its residual in three steps: gather its external variables, evaluate the rows it owns, then its contributions to rows owned elsewhere.
 - Allowed a `SystemModel` to be nested inside another `SystemModel`.
 - `BusSignalVoltageIn` solves its boundary currents as two algebraic variables published on `ir` and `ii`.
 - Merged the Enzyme bus and signal Jacobian drivers (`DfDwb`, `DfDws`, `DhDy`, `DhDwb`) into `DfDyExt`.

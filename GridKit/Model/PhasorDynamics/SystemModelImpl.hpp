@@ -454,7 +454,7 @@ namespace GridKit
                        << status << '\n';
           throw std::runtime_error("SystemModel allocation failed");
         }
-        evaluateResidual();
+        this->evaluateResidual();
         evaluateJacobian();
       }
 
@@ -616,79 +616,15 @@ namespace GridKit
     }
 
     /**
-     * @brief Evaluate this system's internal and external residuals.
-     *
-     * The internal residual holds the rows this system owns; the external
-     * residual holds its contributions to rows outside it, which its parent
-     * assembles in turn.
-     */
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateResidual()
-    {
-      // A parent gathers its components; a root model gathers itself.
-      if (!bound_)
-      {
-        gatherExternalVariables();
-      }
-
-      evaluateInternalResidual();
-      evaluateExternalResidual();
-      f_.setDataUpdated();
-
-      return 0;
-    }
-
-    /**
-     * @brief Gather the external variables of every component, then collect
-     * those that lie outside this system, i.e. its coupling to the rest of
-     * the model.
-     *
-     * Slot k of each component, in insertion order, is one slot of this
-     * system. Slots this system owns stay at INVALID_INDEX.
-     */
-    template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::gatherExternalVariables()
-    {
-      for (const auto& component : components_)
-      {
-        component->gatherExternalVariables();
-      }
-
-      auto*  y_ext = y_ext_.getData();
-      size_t slot  = 0;
-
-      for (const auto& component : components_)
-      {
-        const auto  values           = component->getExternalVariables();
-        const auto& variable_indices = component->getExternalVariableIndices();
-        const auto& residual_indices = component->getExternalResidualIndices();
-
-        for (size_t k = 0; k < variable_indices.size(); ++k, ++slot)
-        {
-          variable_indices_ext_[slot] = INVALID_INDEX<IdxT>;
-          residual_indices_ext_[slot] = INVALID_INDEX<IdxT>;
-          if (!owns(variable_indices_, variable_indices[k]))
-          {
-            y_ext[slot]                 = values[k];
-            variable_indices_ext_[slot] = variable_indices[k];
-          }
-          if (!owns(residual_indices_, residual_indices[k]))
-          {
-            residual_indices_ext_[slot] = residual_indices[k];
-          }
-        }
-      }
-    }
-
-    /**
      * @brief Evaluate every component, then complete the rows this system
      * owns with the external residuals of its components.
      *
-     * Each row is assigned by the component that owns it before any
-     * contribution is added.
+     * Each component gathers its own external variables. Each row is
+     * assigned by the component that owns it before any contribution is
+     * added.
      */
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::evaluateInternalResidual()
+    int SystemModel<scalar_type, index_type>::evaluateInternalResidual()
     {
       for (const auto& component : components_)
       {
@@ -711,30 +647,50 @@ namespace GridKit
           }
         }
       }
+
+      return 0;
     }
 
     /**
-     * @brief Copy the contributions to rows outside this system into its
-     * external residual.
+     * @brief Record the component slots that lie outside this system, i.e.
+     * its coupling to the rest of the model, with their contributions.
+     *
+     * Slot k of each component, in insertion order, is one slot of this
+     * system. Slots this system owns stay at INVALID_INDEX. The parent
+     * assembles the contributions in turn.
      */
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::evaluateExternalResidual()
+    int SystemModel<scalar_type, index_type>::evaluateExternalResidual()
     {
+      auto*  y_ext = y_ext_.getData();
       auto*  f_ext = f_ext_.getData();
       size_t slot  = 0;
 
       for (const auto& component : components_)
       {
-        const auto values = component->getExternalResidual();
+        const auto  values           = component->getExternalVariables();
+        const auto  contributions    = component->getExternalResidual();
+        const auto& variable_indices = component->getExternalVariableIndices();
+        const auto& residual_indices = component->getExternalResidualIndices();
 
-        for (size_t k = 0; k < values.size(); ++k, ++slot)
+        for (size_t k = 0; k < residual_indices.size(); ++k, ++slot)
         {
-          if (residual_indices_ext_[slot] != INVALID_INDEX<IdxT>)
+          variable_indices_ext_[slot] = INVALID_INDEX<IdxT>;
+          residual_indices_ext_[slot] = INVALID_INDEX<IdxT>;
+          if (!owns(variable_indices_, variable_indices[k]))
           {
-            f_ext[slot] = values[k];
+            y_ext[slot]                 = values[k];
+            variable_indices_ext_[slot] = variable_indices[k];
+          }
+          if (!owns(residual_indices_, residual_indices[k]))
+          {
+            f_ext[slot]                 = contributions[k];
+            residual_indices_ext_[slot] = residual_indices[k];
           }
         }
       }
+
+      return 0;
     }
 
     /**

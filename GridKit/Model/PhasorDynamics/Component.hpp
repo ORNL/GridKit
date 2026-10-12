@@ -66,13 +66,18 @@ namespace GridKit
       virtual int verify() const = 0;
 
       /**
-       * @brief Copy the current external variables and their indices into
-       * the external vectors.
-       *
-       * The owning system gathers every component before evaluating it.
+       * @brief Gather the external variables, then evaluate the internal and
+       * external residuals.
        */
-      virtual void gatherExternalVariables()
+      int evaluateResidual() override final
       {
+        gatherExternalVariables();
+
+        int status  = evaluateInternalResidual();
+        status     += evaluateExternalResidual();
+        f_.setDataUpdated();
+
+        return status;
       }
 
       /**
@@ -390,6 +395,20 @@ namespace GridKit
       }
 
     protected:
+      /// Read the external variables and their indices into the external vectors.
+      virtual void gatherExternalVariables()
+      {
+      }
+
+      /// Assign the residual rows this component owns.
+      virtual int evaluateInternalResidual() = 0;
+
+      /// Fill the contributions to rows owned elsewhere.
+      virtual int evaluateExternalResidual()
+      {
+        return 0;
+      }
+
       void setComponentBase(RealT va_component_base)
       {
         va_component_base_ = va_component_base;

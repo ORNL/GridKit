@@ -167,7 +167,6 @@ namespace GridKit
 
         gen.allocate();
         gen.initialize();
-        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         const auto& f      = gen.getResidual();
@@ -211,7 +210,6 @@ namespace GridKit
 
         gen.allocate();
         gen.initialize();
-        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         const auto& f      = gen.getResidual();
@@ -253,7 +251,6 @@ namespace GridKit
 
         gen.y().setDataUpdated();
         gen.yp().setDataUpdated();
-        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         const auto* f  = gen.getResidual().getData();
@@ -288,7 +285,6 @@ namespace GridKit
         gen.setSystemBase(60.0, 100.0e6);
         gen.allocate();
         gen.initialize();
-        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         RealT                                     time = 0.0;
@@ -354,7 +350,6 @@ namespace GridKit
         success *= speed.linked();
 
         gen.initialize();
-        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         // With Ra = 0 the seeded system-base mechanical power equals p0.
@@ -433,7 +428,6 @@ namespace GridKit
 
         gen.y().setDataUpdated();
         gen.yp().setDataUpdated();
-        gen.gatherExternalVariables();
         gen.evaluateResidual();
         auto&       residual      = gen.getResidual();
         const auto* residual_data = residual.getData();
@@ -498,7 +492,6 @@ namespace GridKit
         gen.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
-        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         gen.evaluateJacobian();
@@ -534,7 +527,6 @@ namespace GridKit
         gen.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
-        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         bus.evaluateJacobian();

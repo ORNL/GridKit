@@ -230,19 +230,21 @@ namespace GridKit
     }
 
     /**
-     * @brief Evaluate the load residual and its current injection into the bus.
+     * @brief Evaluate the residual rows the load owns.
      */
     template <typename scalar_type, typename index_type>
-    int LoadZ<scalar_type, index_type>::evaluateResidual()
+    int LoadZ<scalar_type, index_type>::evaluateInternalResidual()
     {
-      const auto* y     = y_.getData();
-      const auto* yp    = yp_.getData();
-      const auto* y_ext = y_ext_.getData();
-      evaluateInternalResidual(y, yp, y_ext, f_.getData());
-      evaluateExternalResidual(y, yp, y_ext, f_ext_.getData());
-      f_.setDataUpdated();
+      return evaluateInternalResidual(y_.getData(), yp_.getData(), y_ext_.getData(), f_.getData());
+    }
 
-      return 0;
+    /**
+     * @brief Evaluate the load current injection into the bus.
+     */
+    template <typename scalar_type, typename index_type>
+    int LoadZ<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      return evaluateExternalResidual(y_.getData(), yp_.getData(), y_ext_.getData(), f_ext_.getData());
     }
 
     /**

@@ -259,12 +259,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageIn<scalar_type, index_type>::evaluateResidual()
+    int BusSignalVoltageIn<scalar_type, index_type>::evaluateInternalResidual()
     {
-      evaluateInternalResidual(y_.getData(), yp_.getData(), nullptr, f_.getData());
-      f_.setDataUpdated();
-
-      return 0;
+      return evaluateInternalResidual(y_.getData(), yp_.getData(), nullptr, f_.getData());
     }
   } // namespace PhasorDynamics
 } // namespace GridKit
