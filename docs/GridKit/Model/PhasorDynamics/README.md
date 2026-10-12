@@ -14,6 +14,7 @@ Exciter <Exciter/README>
 Governor <Governor/README>
 Load <Load/README>
 SignalNode <SignalNode/README>
+SignalDelay <SignalDelay/README>
 SignalSource <SignalSource/README>
 Stabilizer <Stabilizer/README>
 SynchronousMachine <SynchronousMachine/README>

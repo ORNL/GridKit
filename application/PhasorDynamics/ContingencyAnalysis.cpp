@@ -8,6 +8,7 @@
 #endif
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalDelay/SignalDelayControl.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -41,6 +42,7 @@ TestStatus runStudy(StudyData study_data)
   ida.setMaxSteps(study_data.max_steps);
   ida.setMaxOrder(study_data.max_order);
   ida.setConsistentICType(study_data.consistent_ic_type);
+  configureSignalDelays(sys, ida, study_data.history_rel_tol, study_data.history_abs_tol, study_data.compress_history);
   ida.configureSimulation();
 
   using EventType = SystemEvent::Type;

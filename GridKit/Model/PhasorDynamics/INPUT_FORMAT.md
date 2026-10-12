@@ -117,6 +117,12 @@ a signal and has the following fields:
   `signal_id`        | Unique non-negative integer identifying the signal
   `name`             | String containing the name or description of the signal. This may be empty or non-unique
 
+Signals may declare a delayed value using `source` (another signal ID) and
+`delay` (finite, nonnegative seconds). Both fields are required together.
+Consumers connect to the derived `signal_id` normally. The optional `mon: ["z"]`
+selects a positive-delay output for monitoring. See the
+[delayed signal model](SignalDelay/README.md) for equations and initialization.
+
 All interactions with signals are handled by `devices`, which reference signals via `signal_id`
 
 

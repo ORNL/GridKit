@@ -10,4 +10,11 @@ add_test(
 
 install(TARGETS test_pd_integration)
 
+add_executable(test_pd_signal_delay runSignalDelayIntegrationTests.cpp)
+target_link_libraries(
+  test_pd_signal_delay
+  PRIVATE GridKit::phasor_dynamics_systemmodel GridKit::solvers_dyn GridKit::testing)
+add_test(NAME PhasorDynamicsSignalDelayIntegrationTest COMMAND test_pd_signal_delay)
+install(TARGETS test_pd_signal_delay)
+
 add_subdirectory(TenGen)

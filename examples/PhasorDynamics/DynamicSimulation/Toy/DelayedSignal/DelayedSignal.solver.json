@@ -1,0 +1,9 @@
+{
+  "system_model_file": "DelayedSignal.case.json",
+  "tmax": 1.0,
+  "dt_monitor": 0.01,
+  "rel_tol": 1e-7,
+  "abs_tol": 1e-9,
+  "signal_history": { "compress": true },
+  "events": []
+}

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalDelay/SignalDelay.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 
 namespace GridKit
@@ -102,12 +103,48 @@ namespace GridKit
       SignalNodeT* getSignalNode(IdxT signal_id);
       ComponentT*  getComponent(IdxT gridkit_component_id);
 
+      bool hasSignalDelays() const
+      {
+        return !signal_histories_.empty();
+      }
+
+      SignalHistory<RealT>& signalHistory(IdxT source)
+      {
+        return signal_histories_.at(source).history;
+      }
+
+      void  setSignalHistoryTolerance(RealT relative, RealT absolute, bool compress = true);
+      void  initializeSignalHistory(RealT t, bool consistent);
+      RealT assessSignalHistory(RealT begin, RealT end, const std::function<void(RealT)>& sample_state);
+      void  acceptSignalHistory();
+      void  finishSignalHistory();
+      void  discardSignalHistory();
+
     private:
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
 
-      std::map<IdxT, IdxT> gridkit_bus_indices_; ///< Map between gridkit_bus_id and bus_id
+      struct SourceHistory
+      {
+        SignalNodeT*         source;
+        SignalHistory<RealT> history;
+        std::vector<RealT>   delays;
+      };
+
+      struct DelayedConnection
+      {
+        SignalNodeT*                output;
+        SignalNodeT*                source;
+        SignalDelay<ScalarT, IdxT>* component;
+        IdxT                        source_id;
+      };
+
+      std::map<IdxT, SourceHistory>  signal_histories_;
+      std::vector<DelayedConnection> delayed_connections_;
+      bool                           compress_signal_history_{true};
+
+      std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
 
       bool owns_components_{false};
 

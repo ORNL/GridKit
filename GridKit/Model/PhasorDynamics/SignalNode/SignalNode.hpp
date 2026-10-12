@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <stdexcept>
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
@@ -51,9 +52,12 @@ namespace GridKit
       }
 
       [[gnu::always_inline]]
-      void setAssigned() noexcept
+      void setAssigned()
       {
-        assert(!assigned_);
+        if (assigned_)
+        {
+          throw std::invalid_argument("Signal node has more than one producer");
+        }
         assigned_ = true;
       }
 
@@ -68,6 +72,13 @@ namespace GridKit
       {
         signal_         = signal_in;
         variable_index_ = global_index;
+      }
+
+      /// Alias a linked source during equilibrium initialization or for zero delay.
+      void link(const SignalNode& source) noexcept
+      {
+        signal_         = source.signal_;
+        variable_index_ = source.variable_index_;
       }
 
       [[gnu::always_inline]]

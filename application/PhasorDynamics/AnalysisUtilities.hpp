@@ -67,6 +67,9 @@ namespace GridKit
       double                                         rel_tol;
       /// absolute tolerance for the solver
       double                                         abs_tol;
+      double                                         history_rel_tol;
+      double                                         history_abs_tol;
+      bool                                           compress_history;
       /// fixed solver time step size, or 0 for adaptive stepping
       double                                         dt_fixed;
       /// maximum number of solver time steps, or 0 for the IDA default
@@ -108,8 +111,18 @@ namespace GridKit
       j.at("system_model_file").get_to(c.system_model_file);
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
-      c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
-      c.abs_tol            = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.rel_tol          = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
+      c.abs_tol          = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.history_rel_tol  = c.rel_tol;
+      c.history_abs_tol  = c.abs_tol > 0 ? c.abs_tol : DEFAULT_SOLVER_ABS_TOL;
+      c.compress_history = true;
+      if (j.contains("signal_history"))
+      {
+        const auto& history = j.at("signal_history");
+        c.history_rel_tol   = history.value("rel_tol", c.history_rel_tol);
+        c.history_abs_tol   = history.value("abs_tol", c.history_abs_tol);
+        c.compress_history  = history.value("compress", true);
+      }
       c.dt_fixed           = j.value("dt_fixed", 0.0);
       c.max_steps          = j.value("max_steps", std::size_t{0});
       c.max_order          = j.value("max_order", 5);

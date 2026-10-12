@@ -1,0 +1,10 @@
+{
+  "head": "43153016e6ab03487a5ef4260fc9ee5c5e73a4ec",
+  "diff_sha256": "be1b3d892a3188093060ae0d2b092dbbd10e16d0495bc830f093bed0ab88838c",
+  "description": "Local staged delay implementation, linked against build/ GridKit shared libraries. Application cases use DynamicSimulation. Source implementation unchanged during this review.",
+  "compiler": "clang++-16",
+  "build": "RelWithDebInfo, Enzyme enabled, SUNDIALS 7.8.0",
+  "experiments": 44,
+  "fixed_step_note": "Existing IDA fixed-step mode caps BDF order at 2 and disables its integration error test. Sweep uses loose history rtol=1, atol=.01 to measure error instead of enforcing target accuracy. Adaptive runs use matched solver and history tolerances.",
+  "error_note": "Sampled maxima include monitor times and every accepted step midpoint. Endpoint errors are reported separately. These are measured errors, not continuous error bounds."
+}

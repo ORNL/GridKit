@@ -51,6 +51,10 @@ namespace GridKit
        */
       void add(const SignalNodeDataT& node_data)
       {
+        if (signal_node_id_map_.contains(node_data.signal_id))
+        {
+          throw std::invalid_argument("Duplicate signal ID");
+        }
         auto node = new SignalNodeT(node_data);
         signal_nodes_.push_back(node);
         signal_node_id_map_[node_data.signal_id] = node;

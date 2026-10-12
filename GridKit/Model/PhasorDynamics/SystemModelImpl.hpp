@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <set>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
@@ -56,6 +57,55 @@ namespace GridKit
       for (const auto& signaldata : data.signal)
       {
         signal_nodes_.add(signaldata);
+      }
+
+      // Resolve declarations once. Device feedback is independent of this alias graph.
+      std::map<IdxT, const SignalNodeData<RealT, IdxT>*> signals;
+      std::map<IdxT, std::pair<IdxT, RealT>>             resolved_delays;
+      for (const auto& signal : data.signal)
+      {
+        signals.emplace(signal.signal_id, &signal);
+      }
+      for (const auto& signal : data.signal)
+      {
+        if (!signal.source)
+        {
+          if (signal.delay != 0)
+          {
+            throw std::invalid_argument("Signal delay requires a source");
+          }
+          continue;
+        }
+        IdxT           root  = signal.signal_id;
+        RealT          delay = 0;
+        std::set<IdxT> visited;
+        while (signals.at(root)->source)
+        {
+          if (!visited.insert(root).second)
+          {
+            throw std::invalid_argument("Cyclic delayed signal declaration");
+          }
+          const auto& declaration = *signals.at(root);
+          if (!std::isfinite(declaration.delay) || declaration.delay < 0)
+          {
+            throw std::invalid_argument("Signal delay must be finite and nonnegative");
+          }
+          delay += declaration.delay;
+          root   = *declaration.source;
+          if (!signals.contains(root))
+          {
+            throw std::invalid_argument("Delayed signal source does not exist");
+          }
+        }
+        if (!std::isfinite(delay))
+        {
+          throw std::invalid_argument("Accumulated signal delay is not finite");
+        }
+        if (delay == 0 && signal.monitor)
+        {
+          throw std::invalid_argument("Signal monitor z requires a positive total delay");
+        }
+        resolved_delays.emplace(signal.signal_id, std::pair{root, delay});
       }
 
       // Add electrical buses
@@ -294,6 +344,43 @@ namespace GridKit
         addComponent(source);
       }
 
+      for (const auto& signal : data.signal)
+      {
+        if (!signal.source)
+        {
+          continue;
+        }
+        const auto [root, delay] = resolved_delays.at(signal.signal_id);
+        auto* output             = signal_nodes_[signal.signal_id];
+        auto* source             = signal_nodes_[root];
+        if (output->assigned())
+        {
+          throw std::invalid_argument("Delayed signal also has a device producer");
+        }
+        if (delay == 0)
+        {
+          output->setAssigned();
+          delayed_connections_.push_back({output, source, nullptr, root});
+          continue;
+        }
+        auto [entry, inserted] = signal_histories_.try_emplace(root, SourceHistory{source, {}, {}});
+        entry->second.delays.push_back(delay);
+        SignalDelayData<RealT, IdxT> delay_data;
+        delay_data.device_class                           = "SignalDelay";
+        delay_data.disambiguation_string                  = signal.name;
+        delay_data.parameters[SignalDelayParameters::tau] = delay;
+        delay_data.signal_inputs[SignalDelayInputs::u]    = root;
+        delay_data.signal_outputs[SignalDelayOutputs::z]  = signal.signal_id;
+        if (signal.monitor)
+        {
+          delay_data.monitored_variables.insert(SignalDelayMonitors::z);
+        }
+        auto component = std::make_unique<SignalDelay<ScalarT, IdxT>>(delay_data, entry->second.history);
+        component->getPorts().connect(delay_data, signal_nodes_);
+        delayed_connections_.push_back({output, source, component.get(), root});
+        addComponent(component.release());
+      }
+
       for (const auto& sink : data.monitor_sink)
       {
         monitor_->addSink(sink);
@@ -455,6 +542,18 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
+      for (const auto& connection : delayed_connections_)
+      {
+        if (!connection.source->linked())
+        {
+          throw std::invalid_argument("Delayed signal source has no linked producer");
+        }
+        if (!connection.component)
+        {
+          connection.output->link(*connection.source);
+        }
+      }
+
       // Verify component configuration
       int errorCount = this->verify();
       if (errorCount > 0)
@@ -529,7 +628,29 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
-      int status = 0;
+      int                   status = 0;
+      std::set<ComponentT*> deferred_delays;
+
+      for (auto& [id, source] : signal_histories_)
+      {
+        source.history.reset();
+        source.history.begin(time_);
+      }
+      for (const auto& connection : delayed_connections_)
+      {
+        if (connection.component)
+        {
+          deferred_delays.insert(connection.component);
+        }
+        if (!connection.component || !signal_histories_.at(connection.source_id).history.hasPrehistory())
+        {
+          connection.output->link(*connection.source);
+        }
+        else
+        {
+          connection.component->initialize();
+        }
+      }
 
       for (const auto& bus : buses_)
       {
@@ -537,6 +658,15 @@ namespace GridKit
       }
 
       for (const auto& component : components_)
+      {
+        if (!deferred_delays.contains(component))
+        {
+          status += component->initialize();
+        }
+      }
+      // Keep equilibrium aliases active for initialization writes even when
+      // ordinary devices were appended after the generated delay components.
+      for (auto* component : deferred_delays)
       {
         status += component->initialize();
       }
@@ -551,6 +681,93 @@ namespace GridKit
       }
 
       return status;
+    }
+
+    template <typename ScalarT, typename IdxT>
+    void SystemModel<ScalarT, IdxT>::setSignalHistoryTolerance(RealT relative, RealT absolute, bool compress)
+    {
+      for (auto& [id, source] : signal_histories_)
+      {
+        source.history.setTolerance(relative, absolute);
+      }
+      compress_signal_history_ = compress;
+    }
+
+    template <typename ScalarT, typename IdxT>
+    void SystemModel<ScalarT, IdxT>::initializeSignalHistory(RealT t, bool consistent)
+    {
+      for (auto& [id, source] : signal_histories_)
+      {
+        if (consistent)
+        {
+          source.history.initialize(t, static_cast<RealT>(source.source->read()));
+        }
+        else
+        {
+          source.history.begin(t);
+        }
+      }
+    }
+
+    template <typename ScalarT, typename IdxT>
+    typename SystemModel<ScalarT, IdxT>::RealT
+    SystemModel<ScalarT, IdxT>::assessSignalHistory(RealT begin, RealT end, const std::function<void(RealT)>& sample_state)
+    {
+      // The solver has restored the candidate endpoint before entering this hook.
+      for (auto& [id, source] : signal_histories_)
+      {
+        source.history.prepare(end, static_cast<RealT>(source.source->read()));
+      }
+      std::vector<RealT> points{begin + (end - begin) / 4, begin + (end - begin) / 2, begin + 3 * (end - begin) / 4};
+      for (const auto& [id, source] : signal_histories_)
+      {
+        for (RealT delay : source.delays)
+        {
+          if (end - delay > begin)
+          {
+            points.push_back(end - delay);
+          }
+        }
+      }
+      std::sort(points.begin(), points.end());
+      points.erase(std::unique(points.begin(), points.end()), points.end());
+      RealT error = 0;
+      for (RealT t : points)
+      {
+        sample_state(t);
+        for (const auto& [id, source] : signal_histories_)
+        {
+          error = std::max(error, source.history.estimate(t, static_cast<RealT>(source.source->read())));
+        }
+      }
+      return error;
+    }
+
+    template <typename ScalarT, typename IdxT>
+    void SystemModel<ScalarT, IdxT>::acceptSignalHistory()
+    {
+      for (auto& [id, source] : signal_histories_)
+      {
+        source.history.accept();
+      }
+    }
+
+    template <typename ScalarT, typename IdxT>
+    void SystemModel<ScalarT, IdxT>::finishSignalHistory()
+    {
+      for (auto& [id, source] : signal_histories_)
+      {
+        source.history.maintain(source.delays, compress_signal_history_);
+      }
+    }
+
+    template <typename ScalarT, typename IdxT>
+    void SystemModel<ScalarT, IdxT>::discardSignalHistory()
+    {
+      for (auto& [id, source] : signal_histories_)
+      {
+        source.history.discard();
+      }
     }
 
     /**

@@ -6,7 +6,10 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <type_traits>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
@@ -233,7 +236,16 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      t_init_ = t0;
+      t_init_                = t0;
+      controlled_time_       = t0;
+      controlled_step_limit_ = 0;
+      restart_stats_         = {};
+      rejected_steps_        = 0;
+      if (step_control_)
+      {
+        updateModelState(t0);
+        step_control_->initialize(t0, false);
+      }
 
       // Need to reinitialize IDA to set to get correct initial conditions
       retval = IDAReInit(solver_, t0, yy_, yp_);
@@ -251,6 +263,12 @@ namespace AnalysisManager
 
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());
+      }
+
+      if (step_control_)
+      {
+        updateModelState(t0);
+        step_control_->initialize(t0, true);
       }
 
       if (model_->monitoring())
@@ -334,6 +352,10 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<StepCallback> step_callback)
     {
+      if (step_control_)
+      {
+        return runControlledSimulation(tf, dt_monitor, step_callback);
+      }
       int retval = 0;
       int nsteps = getStepCount(tf, dt_monitor);
 
@@ -352,8 +374,12 @@ namespace AnalysisManager
         RealT tf, RealT dt_monitor, int step, int nsteps, const std::optional<StepCallback> callback)
     {
       const RealT tout = getMonitorTime(tf, dt_monitor, step, nsteps);
-      RealT       tret;
-      auto        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
+      if (step_control_)
+      {
+        return runControlledSimulation(tout, 0, callback);
+      }
+      RealT tret;
+      auto  retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
       checkOutput(retval, "IDASolve");
 
       if (callback.has_value() || model_->monitoring())
@@ -374,6 +400,132 @@ namespace AnalysisManager
       }
 
       return retval;
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setStepControl(StepControl control)
+    {
+      if (q_ || yyB_)
+      {
+        throw std::logic_error("Step control requires a forward solver without quadrature or adjoints");
+      }
+      if (!control.initialize || !control.assess || !control.accept || !control.finish || !control.discard)
+      {
+        throw std::invalid_argument("IDA step control requires all lifecycle callbacks");
+      }
+      step_control_ = std::move(control);
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::runControlledSimulation(RealT tf, RealT dt_monitor, std::optional<StepCallback> callback)
+    {
+      if (!std::isfinite(tf) || tf < controlled_time_ || !std::isfinite(dt_monitor))
+      {
+        throw std::invalid_argument("Invalid controlled simulation interval");
+      }
+      if (tf == controlled_time_)
+      {
+        return 0;
+      }
+
+      using OwnedVector = std::unique_ptr<std::remove_pointer_t<N_Vector>, decltype(&N_VDestroy)>;
+      auto clone        = [&]()
+      {
+        auto* vector = N_VClone(yy_);
+        checkAllocation(vector, "N_VClone");
+        return OwnedVector(vector, &N_VDestroy);
+      };
+      auto              saved_y = clone(), saved_yp = clone(), dense_y = clone(), dense_yp = clone();
+      const DenseOutput dense = [&](RealT t)
+      {
+        checkOutput(IDAGetDky(solver_, t, 0, dense_y.get()), "IDAGetDky");
+        checkOutput(IDAGetDky(solver_, t, 1, dense_yp.get()), "IDAGetDky");
+        copyVec(dense_y.get(), model_->y());
+        copyVec(dense_yp.get(), model_->yp());
+        model_->updateTime(t, 0);
+      };
+
+      const RealT output_begin = controlled_time_;
+      const RealT epsilon      = std::numeric_limits<RealT>::epsilon()
+                            * std::max({std::abs(tf), std::abs(output_begin), RealT{1}});
+      const int outputs    = dt_monitor > 0
+                                 ? std::max(1, static_cast<int>(std::ceil((tf - output_begin - epsilon) / dt_monitor)))
+                                 : 1;
+      int       output     = 1;
+      auto      outputTime = [&]()
+      { return output == outputs ? tf : std::fma(static_cast<RealT>(output), dt_monitor, output_begin); };
+      IdxT       attempts     = 0;
+      const IdxT max_attempts = max_steps_ > 0 ? max_steps_ : 500;
+      while (controlled_time_ < tf)
+      {
+        if (++attempts > max_attempts)
+        {
+          throw std::runtime_error("IDA controlled simulation exceeded max_steps between outputs");
+        }
+        const RealT begin = controlled_time_;
+        N_VScale(1, yy_, saved_y.get());
+        N_VScale(1, yp_, saved_yp.get());
+        const RealT limit = time_step_ > 0 ? time_step_ : controlled_step_limit_;
+        checkOutput(IDASetMaxStep(solver_, limit), "IDASetMaxStep");
+        checkOutput(IDASetStopTime(solver_, tf), "IDASetStopTime");
+        RealT end;
+        checkOutput(IDASolve(solver_, tf, &end, yy_, yp_, IDA_ONE_STEP), "IDASolve");
+        if (!(end > begin))
+        {
+          throw std::runtime_error("IDA controlled step did not advance time");
+        }
+        updateModelState(end);
+        const RealT error = step_control_->assess(begin, end, dense);
+        updateModelState(end);
+        const RealT h = end - begin;
+        if (!std::isfinite(error) || error > 1)
+        {
+          step_control_->discard();
+          N_VScale(1, saved_y.get(), yy_);
+          N_VScale(1, saved_yp.get(), yp_);
+          updateModelState(begin);
+          restart_stats_ = getStats();
+          checkOutput(IDAReInit(solver_, begin, yy_, yp_), "IDAReInit");
+          ++rejected_steps_;
+          if (time_step_ > 0)
+          {
+            throw std::runtime_error("Step accuracy check requires a smaller fixed step or adaptive stepping");
+          }
+          controlled_step_limit_ = h / 2;
+          if (!(begin + controlled_step_limit_ > begin))
+          {
+            throw std::runtime_error("Controlled step size underflow");
+          }
+          checkOutput(IDASetInitStep(solver_, controlled_step_limit_), "IDASetInitStep");
+          continue;
+        }
+
+        step_control_->accept();
+        controlled_time_ = end;
+        while (output <= outputs && outputTime() <= end)
+        {
+          const RealT t = outputTime();
+          if (model_->monitoring() || callback)
+          {
+            dense(t);
+            if (model_->monitoring())
+            {
+              model_->printMonitoredVariables();
+            }
+            if (callback)
+            {
+              (*callback)(t);
+            }
+          }
+          ++output;
+          attempts = 0;
+        }
+        updateModelState(end);
+        step_control_->finish();
+        // The history cap depends on accuracy, never on the shortest delay.
+        controlled_step_limit_ = error < RealT{0.125} ? 2 * h : h;
+      }
+      return 0;
     }
 
     /**
@@ -405,6 +557,10 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureQuadrature()
     {
+      if (step_control_)
+      {
+        throw std::logic_error("Step control does not support quadrature rollback");
+      }
       int retval = 0;
 
       // Create and initialize quadratures
@@ -455,6 +611,10 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, RealT dt_monitor)
     {
+      if (step_control_)
+      {
+        throw std::logic_error("Step control is supported by forward simulation only");
+      }
       int retval = 0;
       int nsteps = getStepCount(tf, dt_monitor);
 
@@ -504,6 +664,10 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureAdjoint()
     {
+      if (step_control_)
+      {
+        throw std::logic_error("Step control does not support adjoints");
+      }
       // Allocate adjoint vector, derivatives and quadrature
       yyB_ = N_VNew_Serial(static_cast<sunindextype>(model_->size()), context_);
       checkAllocation((void*) yyB_, "N_VNew_Serial");
@@ -526,6 +690,10 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeAdjoint(IdxT steps)
     {
+      if (step_control_)
+      {
+        throw std::logic_error("Step control does not support adjoint history replay");
+      }
       int retval = 0;
 
       // Create adjoint workspace
@@ -642,6 +810,10 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runForwardSimulation(RealT tf, RealT dt_monitor)
     {
+      if (step_control_)
+      {
+        throw std::logic_error("Step control does not support adjoint history replay");
+      }
       int retval = 0;
       int ncheck;
       int nsteps = getStepCount(tf, dt_monitor);
@@ -1053,6 +1225,8 @@ namespace AnalysisManager
 
       retval = IDAGetNonlinSolvStats(solver_, &stats.num_nonlinear_iters_, &stats.num_nonlinear_convergence_fails_);
       checkOutput(retval, "IDAGetNonlinSolvStats");
+
+      stats += restart_stats_;
 
       return stats;
     }

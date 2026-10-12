@@ -3,6 +3,18 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
+add_executable(test_phasor_signal_delay runSignalDelayTests.cpp)
+target_link_libraries(
+  test_phasor_signal_delay
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::phasor_dynamics_signal_delay_dependency_tracking
+  GridKit::testing)
+target_include_directories(
+  test_phasor_signal_delay
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
+add_test(NAME PhasorDynamicsSignalDelayTest COMMAND test_phasor_signal_delay)
+install(TARGETS test_phasor_signal_delay RUNTIME DESTINATION bin)
+
 add_executable(test_phasor_bus runBusTests.cpp)
 target_link_libraries(
   test_phasor_bus

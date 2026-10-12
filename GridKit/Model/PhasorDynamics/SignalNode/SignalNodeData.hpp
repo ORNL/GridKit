@@ -28,10 +28,14 @@ namespace GridKit
     template <typename real_type, typename index_type>
     struct SignalNodeData
     {
-      using IdxT = index_type;
+      using IdxT  = index_type;
+      using RealT = real_type;
 
-      std::string name;         ///< A name given to this bus
-      IdxT        signal_id{0}; ///< The unique ID of the signal node
+      std::string         name;           ///< A name given to this bus
+      IdxT                signal_id{0};   ///< The unique ID of the signal node
+      std::optional<IdxT> source{};       ///< Original or derived signal to delay
+      RealT               delay{0};       ///< Constant delay in seconds
+      bool                monitor{false}; ///< Monitor the delayed output z
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalDelay/SignalDelayControl.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -48,6 +49,7 @@ int runApplication(int argc, const char* argv[])
   ida.setMaxSteps(study.max_steps);
   ida.setMaxOrder(study.max_order);
   ida.setConsistentICType(study.consistent_ic_type);
+  configureSignalDelays(sys, ida, study.history_rel_tol, study.history_abs_tol, study.compress_history);
   ida.configureSimulation();
 
   // Start timer

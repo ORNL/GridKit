@@ -24,7 +24,7 @@ namespace GridKit
       using SignalNodeT = SignalNode<ScalarT, IdxT>;
 
       /// Connect a signal node to this port.
-      void connect(SignalNodeT* node) noexcept
+      void connect(SignalNodeT* node)
       {
         assert(node != nullptr);
         signal_node_ = node;

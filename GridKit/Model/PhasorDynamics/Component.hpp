@@ -580,8 +580,8 @@ namespace GridKit
       /// Global indices of attached external signals
       std::vector<IdxT> ws_indices_;
 
-      RealT time_;
-      RealT alpha_;
+      RealT time_{0};
+      RealT alpha_{0};
 
       RealT freq_system_base_{60.0};
       RealT va_system_base_{100.0e6};

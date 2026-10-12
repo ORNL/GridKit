@@ -57,6 +57,26 @@ namespace AnalysisManager
       using StepCallback = std::function<void(RealT)>;
 
     public:
+      /// Optional application-owned checks on internal steps. DenseOutput updates
+      /// the model temporarily; the wrapper restores the endpoint after assess.
+      using DenseOutput = std::function<void(RealT)>;
+
+      struct StepControl
+      {
+        std::function<void(RealT, bool)>                       initialize;
+        std::function<RealT(RealT, RealT, const DenseOutput&)> assess;
+        std::function<void()>                                  accept;
+        std::function<void()>                                  finish;
+        std::function<void()>                                  discard;
+      };
+
+      void setStepControl(StepControl control);
+
+      size_t getRejectedStepCount() const
+      {
+        return rejected_steps_;
+      }
+
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
 
@@ -198,6 +218,7 @@ namespace AnalysisManager
       RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
       int   getIDAConsistentICType() const;
       void  updateModelState(RealT t);
+      int   runControlledSimulation(RealT tf, RealT dt_monitor, std::optional<StepCallback> callback);
 
     private:
       static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
@@ -209,7 +230,12 @@ namespace AnalysisManager
       SUNLinearSolver linearSolver_{};
       SUNLinearSolver linearSolverB_{};
 
-      RealT t_init_{};
+      RealT                      t_init_{};
+      RealT                      controlled_time_{};
+      RealT                      controlled_step_limit_{};
+      std::optional<StepControl> step_control_;
+      IdaStats                   restart_stats_;
+      size_t                     rejected_steps_{0};
 
       N_Vector yy_{};  ///< Solution vector
       N_Vector yp_{};  ///< Solution derivatives vector

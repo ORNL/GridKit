@@ -9,6 +9,7 @@
   `tmax`               | A floating-point value for max time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
   `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9)
+  `signal_history`     | Optional delayed-signal accuracy and storage settings (see below)
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `max_order`          | Maximum IDA integration method order from 1 to 5 (default: 5; fixed stepping is capped at 2)
@@ -21,6 +22,27 @@
   `abs_err_threshold`  | A floating-point value for the smallest value at which to scale relative error (default: machine epsilon for double-precision)
 
 [^1]: See system model [case format](../../GridKit/Model/PhasorDynamics/INPUT_FORMAT.md)
+
+## Signal history
+
+Delayed signals are declared in the case's `signals` array. Both applications
+enable history control when positive delays are present. An optional solver-file
+object overrides its defaults:
+
+```json
+"signal_history": {
+  "rel_tol": 1e-7,
+  "abs_tol": 1e-9,
+  "compress": true
+}
+```
+
+History tolerances default to the solver tolerances; a nonpositive solver absolute
+tolerance uses `1e-9` for history. Set `compress` to `false` to retain every accepted
+interpolation segment within the required delay window. Accuracy controls the
+step limit, independently of the shortest delay. A fixed step that fails the
+history error check reports an error. See the
+[model equations and initialization](../../GridKit/Model/PhasorDynamics/SignalDelay/README.md).
 
 ## Events
 
