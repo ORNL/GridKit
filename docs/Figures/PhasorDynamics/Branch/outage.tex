@@ -19,25 +19,55 @@
     \end{scope}
 }
 
+% Constant current source at bus 1, with a tap for YG at x = -1.3.
+\newcommand{\source}{
+    \node[draw, semithick, fill=white, circle, minimum size=1.0cm]
+        (source) at (-2.7, -1.5) {};
+    \draw[->, line] ($(source.south)+(0, 0.18)$)
+        -- ($(source.north)+(0, -0.18)$);
+    \node[sig, anchor=east] at ($(source.west)+(-0.15, 0)$) {$I_G$};
+    \draw[line] (0, 0) -| (source.north);
+    \draw[line] (source.south) -- (-2.7, -2.5);
+    \ground{(-2.7, -2.5)}
+    \node[signal] at (-1.3, 0) {};
+}
+
+% Load at the bus at x = #2; #1 is its style.
+\newcommand{\load}[2]{
+    \begin{scope}[#1]
+        \node[shunt] (YL) at ({#2 + 1.3}, -1.5) {$Y_L$};
+        \draw[line] (#2, 0) -| (YL.north);
+        \draw[line] (YL.south) -- ({#2 + 1.3}, -2.5);
+        \ground{({#2 + 1.3}, -2.5)}
+    \end{scope}
+}
+
+% Bus bars as number/x pairs, drawn last to stay on top of the wires.
+\newcommand{\buses}[1]{
+    \foreach \k/\x in {#1} {
+        \draw[bus] (\x, -0.7) -- (\x, 0.7);
+        \node[sig, anchor=south] at (\x, 0.75) {$V_\k$};
+    }
+}
+
+% Four-turn line inductor from (#1, #2) to the next bus.
+\newcommand{\inductor}[2]{
+    \draw[semithick] (#1, #2) -- ++(1.4, 0)
+        arc[start angle=180, end angle=0, radius=0.15]
+        arc[start angle=180, end angle=0, radius=0.15]
+        arc[start angle=180, end angle=0, radius=0.15]
+        arc[start angle=180, end angle=0, radius=0.15]
+        -- ++(1.4, 0);
+}
+
 % Three-bus chain; #1, #2, #3 are the styles of Y12, Y23, and YL.
 \newcommand{\chain}[3]{
 \begin{tikzpicture}[emt diagram]
-
-% Norton generator at bus 1: constant current source in parallel with YG.
+\source
 \node[shunt] (YG) at (-1.3, -1.5) {$Y_G$};
-\node[draw, semithick, fill=white, circle, minimum size=1.0cm]
-    (source) at (-2.7, -1.5) {};
-\draw[->, line] ($(source.south)+(0, 0.18)$) -- ($(source.north)+(0, -0.18)$);
-\node[sig, anchor=east] at ($(source.west)+(-0.15, 0)$) {$I_G$};
-\draw[line] (0, 0) -| (source.north);
-\node[signal] at (-1.3, 0) {};
 \draw[line] (-1.3, 0) -- (YG.north);
-\foreach \x/\node in {-1.3/YG,-2.7/source} {
-    \draw[line] (\node.south) -- (\x, -2.5);
-    \ground{(\x, -2.5)}
-}
-
-% Series branches.
+\draw[line] (YG.south) -- (-1.3, -2.5);
+\ground{(-1.3, -2.5)}
 \begin{scope}[#1]
     \node[series] (Y12) at (2, 0) {$Y_{12}$};
     \node[sig, anchor=south] at (2, 0.5) {$u_{12}$};
@@ -50,21 +80,29 @@
     \draw[line] (4, 0) -- (Y23.west);
     \draw[line] (Y23.east) -- (8, 0);
 \end{scope}
-
-% Load at bus 3.
-\begin{scope}[#3]
-    \node[shunt] (YL) at (9.3, -1.5) {$Y_L$};
-    \draw[line] (8, 0) -| (YL.north);
-    \draw[line] (YL.south) -- (9.3, -2.5);
-    \ground{(9.3, -2.5)}
-\end{scope}
-
-% Bus bars, drawn last to stay on top of the wires.
-\foreach \k/\x in {1/0,2/4,3/8} {
-    \draw[bus] (\x, -0.7) -- (\x, 0.7);
-    \node[sig, anchor=south] at (\x, 0.75) {$V_\k$};
+\load{#3}{8}
+\buses{1/0,2/4,3/8}
+\end{tikzpicture}
 }
 
+% Two buses: capacitive YG and a double circuit; #1 is the lower circuit style.
+\newcommand{\resonance}[1]{
+\begin{tikzpicture}[emt diagram]
+\source
+\draw[line] (-1.3, 0) -- (-1.3, -1.38);
+\draw[semithick] (-1.65, -1.38) -- (-0.95, -1.38);
+\draw[semithick] (-1.65, -1.62) -- (-0.95, -1.62);
+\draw[line] (-1.3, -1.62) -- (-1.3, -2.5);
+\ground{(-1.3, -2.5)}
+\node[sig, anchor=west] at (-0.85, -1.5) {$Y_G$};
+\inductor{0}{0.35}
+\node[sig, anchor=south] at (2, 0.55) {$Y_{12}$};
+\begin{scope}[#1]
+    \inductor{0}{-0.35}
+    \node[sig, anchor=north] at (2, -0.45) {$u Y_{12}$};
+\end{scope}
+\load{in service}{4}
+\buses{1/0,2/4}
 \end{tikzpicture}
 }
 
@@ -73,4 +111,6 @@
 \chain{in service}{out of service}{out of service}
 \chain{out of service}{in service}{out of service}
 \chain{out of service}{in service}{in service}
+\resonance{in service}
+\resonance{out of service}
 \end{document}
