@@ -161,21 +161,25 @@ namespace GridKit
         return err_code;
       }
 
-      // Allocate subsystem vectors.
-      y_ext_data_.resize(n_extern_);
-      yp_ext_data_.resize(n_extern_);
-      f_ext_data_.resize(n_extern_);
+      // Allocate external subsystem vectors.
+      y_ext_data_.resize(static_cast<IdxT>(n_extern_));
+      yp_ext_data_.resize(static_cast<IdxT>(n_extern_));
+      f_ext_data_.resize(static_cast<IdxT>(n_extern_));
 
+      // Contains global external indicies used for
+      // fetching external variables from global state vectors
+      external_data_indices_.resize(n_extern_);
+
+      // Contains internal and external connection indicies
       connection_nodes_ = std::make_unique<IdxT[]>(n_intern_ + n_extern_);
       if (!this->isAllocated())
       {
+        // Allocate internal subsystem vectors.
         allocateVectors(static_cast<IdxT>(size_), true);
         abs_tol_.setToZero(memory::HOST);
       }
 
       tag_.resize(size_);
-
-      external_data_indices_.resize(n_extern_);
 
       // Store the mapping from local subsystem indices back to their global system indices
       for (const auto [global_idx, local_idx] : global_to_local_map_)
@@ -191,10 +195,11 @@ namespace GridKit
         counter++;
       }
 
-      // Start node internal indexing after all component internals for proper KLU ordering
+      // Map each node's global connection indices to subsystem-local indices,
+      // then set the corresponding state, derivative, and residual pointers.
       for (node_type* node : nodes_)
       {
-        for (size_t i = 0; i < node->getInternalSize(); i++)
+        for (IdxT i = 0; i < static_cast<IdxT>(node->getInternalSize()); i++)
         {
           const IdxT node_global_connection = node->getNodeConnection(i).idx_;
           const IdxT node_local_connection  = global_to_local_map_.at(node_global_connection);
@@ -213,6 +218,7 @@ namespace GridKit
       ScalarT* yp_ext_data_ptr = yp_ext_data_.getData();
       ScalarT* f_ext_data_ptr  = f_ext_data_.getData();
 
+      // Map connections from global indices to subsystem-local indices and set data pointers accordingly.
       size_t component_internal_idx = 0;
       for (component_type* comp : components_)
       {
@@ -225,22 +231,24 @@ namespace GridKit
 
         const auto& external_indices = comp->getExternIndices();
 
+        // Map each component connection from its global index to the
+        // corresponding subsystem-local index.
         for (IdxT i = 0; i < comp->size(); i++)
         {
           const IdxT comp_global_connection = comp->getNodeConnection(i);
           const IdxT comp_local_connection  = global_to_local_map_.at(comp_global_connection);
 
-          // Internal component variables use their subsystem-local connection indices.
           if (!external_indices.contains(i))
           {
+            // If the connection is internal to the component, we know it is internal to the subsystem,
+            // so only update its index. The pointers have already been updated in the outer loop.
             comp->setConnectionNodes(i, comp_local_connection);
-            continue;
           }
-
-          if (comp_local_connection < this->getInternalSize())
+          else if (comp_local_connection < static_cast<IdxT>(this->getInternalSize()))
           {
-            // This variable is external to the component but internal to the subsystem,
-            // since it is owned by another component within the subsystem.
+            // Otherwise, if the variable is external to this component but internal to
+            // another component or node within the subsystem (which it is when the local index
+            // is less than internal size), connect it to the subsystem's internal storage.
 
             ExternalConnection<ScalarT, IdxT> connection{
                 .y_   = y_int_ + comp_local_connection,
@@ -252,8 +260,9 @@ namespace GridKit
           }
           else
           {
-            // Otherwise the variable is owned outside this subsystem. Connect the
-            // component to the subsystem's external coupling-data storage instead.
+            // Otherwise, the variable is external to the subsystem, so connect
+            // it to the external coupling storage.
+
             const IdxT external_offset = comp_local_connection - static_cast<IdxT>(this->getInternalSize());
 
             ExternalConnection<ScalarT, IdxT> connection{
@@ -290,8 +299,8 @@ namespace GridKit
           return false;
         }
 
-        const bool row_is_internal = row < this->getInternalSize();
-        const bool col_is_internal = col < this->getInternalSize();
+        const bool row_is_internal = static_cast<size_t>(row) < this->getInternalSize();
+        const bool col_is_internal = static_cast<size_t>(col) < this->getInternalSize();
 
         return (row_is_internal && col_is_internal);
       };
