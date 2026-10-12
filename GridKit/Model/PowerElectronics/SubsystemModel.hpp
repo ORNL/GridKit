@@ -700,7 +700,7 @@ namespace GridKit
 
       n_intern_ = static_cast<size_t>(internal_size);
       n_extern_ = static_cast<size_t>(local_connection - internal_size);
-      size_     = local_connection;
+      size_     = internal_size;
 
       return 0;
     }
