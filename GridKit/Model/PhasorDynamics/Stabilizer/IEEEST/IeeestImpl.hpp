@@ -343,7 +343,7 @@ namespace GridKit
        * @return Zero on success.
        */
       template <typename scalar_type, typename index_type, size_t order>
-      __attribute__((always_inline)) inline int
+      [[gnu::always_inline]] inline int
       Ieeest<scalar_type, index_type, order>::evaluateInternalResidual(
           const ScalarT*                  y,
           const ScalarT*                  yp,
