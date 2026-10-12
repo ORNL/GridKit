@@ -1,0 +1,76 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../../EMT/diagram-style.tex}
+
+% Out-of-service elements are drawn dashed in red.
+\definecolor{outage}{HTML}{D62828}
+\tikzset{
+    in service/.style     = {},
+    out of service/.style = {outage, densely dashed},
+    bus/.style            = {very thick},
+    series/.style         = {block, minimum width=1.6cm, minimum height=0.9cm},
+    shunt/.style          = {block, minimum width=1.0cm, minimum height=1.0cm}
+}
+
+\newcommand{\ground}[1]{
+    \begin{scope}[shift={#1}, solid]
+        \draw[semithick] (-0.35,  0.00) -- (0.35,  0.00);
+        \draw[semithick] (-0.22, -0.15) -- (0.22, -0.15);
+        \draw[semithick] (-0.09, -0.30) -- (0.09, -0.30);
+    \end{scope}
+}
+
+% Three-bus chain; #1, #2, #3 are the styles of Y12, Y23, and YL.
+\newcommand{\chain}[3]{
+\begin{tikzpicture}[emt diagram]
+
+% Norton generator at bus 1: constant current source in parallel with YG.
+\node[shunt] (YG) at (-1.3, -1.5) {$Y_G$};
+\node[draw, semithick, fill=white, circle, minimum size=1.0cm]
+    (source) at (-2.7, -1.5) {};
+\draw[->, line] ($(source.south)+(0, 0.18)$) -- ($(source.north)+(0, -0.18)$);
+\node[sig, anchor=east] at ($(source.west)+(-0.15, 0)$) {$I_G$};
+\draw[line] (0, 0) -| (source.north);
+\node[signal] at (-1.3, 0) {};
+\draw[line] (-1.3, 0) -- (YG.north);
+\foreach \x/\node in {-1.3/YG,-2.7/source} {
+    \draw[line] (\node.south) -- (\x, -2.5);
+    \ground{(\x, -2.5)}
+}
+
+% Series branches.
+\begin{scope}[#1]
+    \node[series] (Y12) at (2, 0) {$Y_{12}$};
+    \node[sig, anchor=south] at (2, 0.5) {$u_{12}$};
+    \draw[line] (0, 0) -- (Y12.west);
+    \draw[line] (Y12.east) -- (4, 0);
+\end{scope}
+\begin{scope}[#2]
+    \node[series] (Y23) at (6, 0) {$Y_{23}$};
+    \node[sig, anchor=south] at (6, 0.5) {$u_{23}$};
+    \draw[line] (4, 0) -- (Y23.west);
+    \draw[line] (Y23.east) -- (8, 0);
+\end{scope}
+
+% Load at bus 3.
+\begin{scope}[#3]
+    \node[shunt] (YL) at (9.3, -1.5) {$Y_L$};
+    \draw[line] (8, 0) -| (YL.north);
+    \draw[line] (YL.south) -- (9.3, -2.5);
+    \ground{(9.3, -2.5)}
+\end{scope}
+
+% Bus bars, drawn last to stay on top of the wires.
+\foreach \k/\x in {1/0,2/4,3/8} {
+    \draw[bus] (\x, -0.7) -- (\x, 0.7);
+    \node[sig, anchor=south] at (\x, 0.75) {$V_\k$};
+}
+
+\end{tikzpicture}
+}
+
+\begin{document}
+\chain{in service}{in service}{in service}
+\chain{in service}{out of service}{out of service}
+\chain{out of service}{in service}{out of service}
+\chain{out of service}{in service}{in service}
+\end{document}

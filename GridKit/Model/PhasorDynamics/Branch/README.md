@@ -13,11 +13,15 @@ contributions are oriented entering the adjacent buses.
   bus 1; both shunts are added outside the $\mathbf{M}$ transformation.
 - The branch has no solver-owned variables; it contributes current residuals
   directly to the connected buses.
-- Taking a branch out of service can leave bus voltages unconstrained and make
-  the system Jacobian singular. This can happen when an outage leaves a bus
-  with no other current contributions, or a floating island of series branches
-  without shunts. An island with generators may still be solvable. The model
-  does not detect or handle these singular cases.
+- Taking a branch out of service can make the system Jacobian singular, which
+  the model does not detect. See
+  [Appendix A](#appendix-a-out-of-service-branches).
+
+## Block Diagram
+
+![Branch model block diagram](../../../../docs/Figures/PhasorDynamics/Branch/diagram.png)
+
+Figure 1: Branch model.
 
 ## Model Parameters
 
@@ -210,22 +214,115 @@ Monitor | Units  | Description                                  | Note
 `p2`    | [p.u.] | Active power at bus 2 terminal               | Positive entering bus 2
 `q2`    | [p.u.] | Reactive power at bus 2 terminal             | Positive entering bus 2
 
-Current magnitudes are:
+## Appendix A: Out-of-Service Branches
+
+Taking a branch out of service changes the system Jacobian and can make it
+singular. Let the system be described by the DAE
+$\mathbf{F}(\mathbf{x}, \dot{\mathbf{x}}, t) = \mathbf{0}$. For a purely
+algebraic network, $\mathbf{x} = \mathbf{V}$ are the bus voltages and
+
+```math
+\mathbf{F}(\mathbf{V}) = -\mathbf{I} + \mathbf{Y}\mathbf{V}
+```
+
+where $\mathbf{I}$ is the current injected by devices and $\mathbf{Y}$ is the
+bus admittance matrix.
+
+In the three-bus example below, bus 1 has a Norton generator, a constant
+current $I_G$ in parallel with $Y_G$, so $\mathbf{I} = (I_G, 0, 0)$. The branch
+service statuses are $u_{12}$ and $u_{23}$.
+
+![Three-bus example](../../../../docs/Figures/PhasorDynamics/Branch/oneline.png)
+
+Since $\mathbf{I}$ is constant, the Jacobian is the admittance matrix:
 
 ```math
 \begin{aligned}
-  I_{m1} &= \sqrt{I_{r1}^2 + I_{i1}^2} \\
-  I_{m2} &= \sqrt{I_{r2}^2 + I_{i2}^2}
+  \mathbf{J} &= \dfrac{\partial \mathbf{F}}{\partial \mathbf{V}} = \mathbf{Y} \\
+  \mathbf{Y} &=
+  u_{12}
+  \begin{bmatrix}
+    Y_{12} & -Y_{12} & 0 \\
+    -Y_{12} & Y_{12} & 0 \\
+    0 & 0 & 0
+  \end{bmatrix}
+  + u_{23}
+  \begin{bmatrix}
+    0 & 0 & 0 \\
+    0 & Y_{23} & -Y_{23} \\
+    0 & -Y_{23} & Y_{23}
+  \end{bmatrix}
+  +
+  \begin{bmatrix}
+    Y_G & 0 & 0 \\
+    0 & 0 & 0 \\
+    0 & 0 & Y_L
+  \end{bmatrix} \\
+  \det \mathbf{J} &= u_{12} u_{23} Y_{12} Y_{23} (Y_G + Y_L) + (u_{12} Y_{12} + u_{23} Y_{23}) Y_G Y_L
 \end{aligned}
 ```
 
-Complex power at each end is defined as $S=VI^{\ast}$:
+### Scenario 1: Isolated Bus
+
+![Scenario 1: isolated bus](../../../../docs/Figures/PhasorDynamics/Branch/scenario1.png)
+
+Branch 2–3 is out of service and bus 3 has no load, so $u_{23} = 0$ and
+$Y_L = 0$:
 
 ```math
 \begin{aligned}
-  P_1 &= V_{r1} I_{r1} + V_{i1} I_{i1} \\
-  Q_1 &= V_{i1} I_{r1} - V_{r1} I_{i1} \\
-  P_2 &= V_{r2} I_{r2} + V_{i2} I_{i2} \\
-  Q_2 &= V_{i2} I_{r2} - V_{r2} I_{i2}
+  \mathbf{J} &=
+  \begin{bmatrix}
+    Y_G + Y_{12} & -Y_{12} & 0 \\
+    -Y_{12} & Y_{12} & 0 \\
+    0 & 0 & 0
+  \end{bmatrix} \\
+  \det \mathbf{J} &= 0
 \end{aligned}
 ```
+
+Bus 3 is isolated, so its row is zero and $V_3$ is undetermined.
+
+### Scenario 2: Floating Island
+
+![Scenario 2: floating island](../../../../docs/Figures/PhasorDynamics/Branch/scenario2.png)
+
+Branch 1–2 is out of service and bus 3 has no load, so $u_{12} = 0$ and
+$Y_L = 0$:
+
+```math
+\begin{aligned}
+  \mathbf{J} &=
+  \begin{bmatrix}
+    Y_G & 0 & 0 \\
+    0 & Y_{23} & -Y_{23} \\
+    0 & -Y_{23} & Y_{23}
+  \end{bmatrix} \\
+  \det \mathbf{J} &= 0
+\end{aligned}
+```
+
+Buses 2 and 3 form an island with no load, so their rows sum to zero and the
+island voltage $V_2 = V_3$ is undetermined.
+
+### Scenario 3: Grounded Island
+
+![Scenario 3: grounded island](../../../../docs/Figures/PhasorDynamics/Branch/scenario3.png)
+
+Branch 1–2 is out of service and bus 3 has a load, so $u_{12} = 0$ and
+$Y_L \neq 0$:
+
+```math
+\begin{aligned}
+  \mathbf{J} &=
+  \begin{bmatrix}
+    Y_G & 0 & 0 \\
+    0 & Y_{23} & -Y_{23} \\
+    0 & -Y_{23} & Y_{23} + Y_L
+  \end{bmatrix} \\
+  \det \mathbf{J} &= Y_G Y_{23} Y_L \neq 0
+\end{aligned}
+```
+
+The load grounds the island, so $\mathbf{J}$ is nonsingular. A fault or
+generator at bus 3 has the same effect.
