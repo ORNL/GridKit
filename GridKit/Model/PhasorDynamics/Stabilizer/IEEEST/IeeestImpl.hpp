@@ -329,12 +329,6 @@ namespace GridKit
       /**
        * @brief Evaluate the IEEEST internal residual
        *
-       * The notch is realized as its two denominator factors in series, the
-       * first carrying the numerator. The notch and lead-lag outputs and the
-       * unlimited signal are evaluated inline rather than solved for. The
-       * notch order is a template parameter, so each specialization is free
-       * of branches and loops for sparse automatic differentiation.
-       *
        * @param[in] y Internal variables in IeeestInternalVariables order.
        * @param[in] yp Internal derivatives in the same enum order.
        * @param[in] wb Unused; IEEEST has no bus interface.
@@ -440,12 +434,10 @@ namespace GridKit
       /**
        * @brief Read the parameters out of the model data
        *
-       * No parameter is required; every parameter keeps its documented
-       * default when omitted. A non-numeric or non-finite value, or a
-       * negative T2, T4, or T6, throws std::invalid_argument. Integer JSON
-       * values are accepted for real parameters.
-       *
        * @param[in] data Parameters and monitored-variable selections.
+       *
+       * @pre Every given parameter is a finite number, and T2, T4, and T6
+       *      are nonnegative.
        */
       template <typename scalar_type, typename index_type, size_t order>
       void Ieeest<scalar_type, index_type, order>::initializeParameters(const ModelDataT& data)
@@ -495,14 +487,16 @@ namespace GridKit
       }
 
       /**
-       * @brief Log the time-constant floor warning
-       *
-       * @note Guarded by a static std::atomic<bool> flag so the warning is
-       *       printed at most once per model type.
+       * @brief Log the time-constant floor warning once per notch order
        */
       template <typename scalar_type, typename index_type, size_t order>
       void Ieeest<scalar_type, index_type, order>::logTimeConstantWarning()
       {
+        static std::atomic<bool> time_constant_warning_flag_{false};
+        if (time_constant_warning_flag_.exchange(true))
+        {
+          return;
+        }
         Log::warning() << "Ieeest: T2, T4, and T6 below "
                        << TIME_CONSTANT_MINIMUM
                        << " s are raised to that floor to keep the stabilizer lags well posed\n";
@@ -520,11 +514,7 @@ namespace GridKit
         if (T2_ < TIME_CONSTANT_MINIMUM || T4_ < TIME_CONSTANT_MINIMUM
             || T6_ < TIME_CONSTANT_MINIMUM)
         {
-          static std::atomic<bool> time_constant_warning_flag_{false};
-          if (!time_constant_warning_flag_.exchange(true))
-          {
-            logTimeConstantWarning();
-          }
+          logTimeConstantWarning();
         }
 
         T2_ = std::max(T2_, TIME_CONSTANT_MINIMUM);

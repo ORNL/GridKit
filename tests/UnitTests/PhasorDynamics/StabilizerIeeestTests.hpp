@@ -1,8 +1,7 @@
 #pragma once
 
 #include <algorithm>
-#include <iomanip>
-#include <iostream>
+#include <format>
 #include <limits>
 #include <memory>
 #include <sstream>
@@ -154,7 +153,7 @@ namespace GridKit
           const bool expected = (i != static_cast<size_t>(Internal::VSS));
           if (fixture.ieeest.tag()[i] != expected)
           {
-            std::cout << "IEEEST differentiability tag " << i << " mismatch\n";
+            Log::error() << std::format("IEEEST order {} differentiability tag {} mismatch\n", order, i);
             success = false;
           }
         }
@@ -298,8 +297,9 @@ namespace GridKit
         {
           if (!isEqual(dependency_jacobian[row], enzyme_jacobian[row], kTol))
           {
-            std::cout << "IEEEST Jacobian row " << row
-                      << " mismatch between dependency tracking and Enzyme\n";
+            Log::error() << std::format("IEEEST order {} Jacobian row {} mismatch between dependency tracking and Enzyme\n",
+                                        order,
+                                        row);
             success = false;
           }
         }
@@ -354,7 +354,7 @@ namespace GridKit
                                && (ieeest.initialize() == 0);
           if (!success)
           {
-            std::cout << "IEEEST fixture initialization failed\n";
+            Log::error() << std::format("IEEEST order {} fixture initialization failed\n", order);
           }
           return success;
         }
@@ -551,9 +551,13 @@ namespace GridKit
         {
           return true;
         }
-        std::cout << "IEEEST order " << order << ' ' << what << " row " << row << ' ' << context
-                  << " mismatch: " << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                  << actual << " != " << expected << '\n';
+        Log::error() << std::format("IEEEST order {} {} row {} {} mismatch: {} != {}\n",
+                                    order,
+                                    what,
+                                    row,
+                                    context,
+                                    actual,
+                                    expected);
         return false;
       }
 
@@ -593,9 +597,7 @@ namespace GridKit
         {
           return true;
         }
-        std::cout << "IEEEST order " << order << ' ' << label << " mismatch: "
-                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                  << actual << " != " << expected << '\n';
+        Log::error() << std::format("IEEEST order {} {} mismatch: {} != {}\n", order, label, actual, expected);
         return false;
       }
 

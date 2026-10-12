@@ -1,9 +1,13 @@
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
 #include "StabilizerIeeestTests.hpp"
+
+using Log = GridKit::Utilities::Logger;
 
 template <size_t order>
 void runNotchOrder(GridKit::Testing::TestingResults& result)
 {
-  std::cout << "IEEEST notch order " << order << '\n';
+  Log::misc() << "IEEEST notch order " << order << ":\n";
 
   GridKit::Testing::StabilizerIeeestTests<double, size_t, order> test;
 

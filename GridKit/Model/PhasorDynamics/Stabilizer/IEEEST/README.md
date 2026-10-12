@@ -22,26 +22,26 @@ Figure 1: IEEEST stabilizer model. Figure courtesy of the
 
 ## Model Parameters
 
-Symbol               | Units  | JSON     | Description                          | Typical Value | Note
----------------------|--------|----------|--------------------------------------|---------------|------------
-$A_1$                | [s]    | `A1`     | Notch denominator coefficient        | 1.013         |
-$A_2$                | [s²]   | `A2`     | Notch denominator coefficient        | 0.013         |
-$A_3$                | [s]    | `A3`     | Notch denominator coefficient        | 0.0           |
-$A_4$                | [s²]   | `A4`     | Notch denominator coefficient        | 0.0           |
-$A_5$                | [s]    | `A5`     | Notch numerator coefficient          | 1.013         |
-$A_6$                | [s²]   | `A6`     | Notch numerator coefficient          | 0.113         |
-$T_1$                | [s]    | `T1`     | Lead–lag 1 numerator time constant   | 0.0           |
-$T_2$                | [s]    | `T2`     | Lead–lag 1 denominator time constant | 0.02          |
-$T_3$                | [s]    | `T3`     | Lead–lag 2 numerator time constant   | 0.0           |
-$T_4$                | [s]    | `T4`     | Lead–lag 2 denominator time constant | 0.0           |
-$T_5$                | [s]    | `T5`     | Washout numerator time constant      | 1.65          |
-$T_6$                | [s]    | `T6`     | Washout denominator time constant    | 1.65          |
-$K_s$                | [p.u.] | `Ks`     | Stabilizer gain                      | 3.0           |
-$L_s^{\max}$         | [p.u.] | `Lsmax`  | Maximum stabilizer output            | 0.1           |
-$L_s^{\min}$         | [p.u.] | `Lsmin`  | Minimum stabilizer output            | -0.1          |
-$V_{\mathrm{cu}}$    | [p.u.] | `Vcu`    | Upper cutout voltage                 | 0.0           | Not modeled
-$V_{\mathrm{cl}}$    | [p.u.] | `Vcl`    | Lower cutout voltage                 | 0.0           | Not modeled
-$T_{\mathrm{delay}}$ | [s]    | `Tdelay` | Input delay                          | 0.0           | Not modeled
+Symbol               | Units            | JSON     | Description                          | Typical Value | Note
+---------------------|------------------|----------|--------------------------------------|---------------|------------
+$A_1$                | [s]              | `A1`     | Notch denominator coefficient        | 1.013         |
+$A_2$                | [$\mathrm{s}^2$] | `A2`     | Notch denominator coefficient        | 0.013         |
+$A_3$                | [s]              | `A3`     | Notch denominator coefficient        | 0.0           |
+$A_4$                | [$\mathrm{s}^2$] | `A4`     | Notch denominator coefficient        | 0.0           |
+$A_5$                | [s]              | `A5`     | Notch numerator coefficient          | 1.013         |
+$A_6$                | [$\mathrm{s}^2$] | `A6`     | Notch numerator coefficient          | 0.113         |
+$T_1$                | [s]              | `T1`     | Lead–lag 1 numerator time constant   | 0.0           |
+$T_2$                | [s]              | `T2`     | Lead–lag 1 denominator time constant | 0.02          |
+$T_3$                | [s]              | `T3`     | Lead–lag 2 numerator time constant   | 0.0           |
+$T_4$                | [s]              | `T4`     | Lead–lag 2 denominator time constant | 0.0           |
+$T_5$                | [s]              | `T5`     | Washout numerator time constant      | 1.65          |
+$T_6$                | [s]              | `T6`     | Washout denominator time constant    | 1.65          |
+$K_s$                | [p.u.]           | `Ks`     | Stabilizer gain                      | 3.0           |
+$L_s^{\max}$         | [p.u.]           | `Lsmax`  | Maximum stabilizer output            | 0.1           |
+$L_s^{\min}$         | [p.u.]           | `Lsmin`  | Minimum stabilizer output            | -0.1          |
+$V_{\mathrm{cu}}$    | [p.u.]           | `Vcu`    | Upper cutout voltage                 | 0.0           | Not modeled
+$V_{\mathrm{cl}}$    | [p.u.]           | `Vcl`    | Lower cutout voltage                 | 0.0           | Not modeled
+$T_{\mathrm{delay}}$ | [s]              | `Tdelay` | Input delay                          | 0.0           | Not modeled
 
 Every parameter is optional and must be finite. An omitted parameter is zero,
 except $T_2 = T_4 = T_6 = K_s = 1$ and $L_s^{\max} = -L_s^{\min} = 0.1$.
