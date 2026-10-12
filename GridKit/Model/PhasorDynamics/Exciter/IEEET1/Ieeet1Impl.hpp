@@ -469,10 +469,8 @@ namespace GridKit
        *
        */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::evaluateInternalResidual()
+      int Ieeet1<scalar_type, index_type>::evaluateResidual()
       {
-        gatherExternalVariables();
-
         // Residual evaluation
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();

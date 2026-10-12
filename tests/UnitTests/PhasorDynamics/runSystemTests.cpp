@@ -14,6 +14,9 @@ int main()
   result += test.indexRouting();
   result += test.nestedSystem();
   result += test.nestedTwin();
+  result += test.nestedDepthTwo();
+  result += test.nestedLaterProducer();
+  result += test.nestedSystemBase();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();
 #ifdef GRIDKIT_ENABLE_ENZYME

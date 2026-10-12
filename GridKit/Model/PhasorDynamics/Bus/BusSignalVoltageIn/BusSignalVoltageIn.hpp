@@ -33,8 +33,9 @@ namespace GridKit
      * minus the boundary current, so the published currents are system
      * variables with Jacobian columns of their own.
      *
-     * @note Signal ports have to be connected before allocate() is called, since
-     *       the output signals are linked there.
+     * @note Signal ports have to be connected before allocate() is called.
+     *       Outlets `ir` and `ii` are linked there, and outlets `vr` and `vi`
+     *       in initialize().
      */
     template <typename scalar_type, typename index_type>
     class BusSignalVoltageIn : public BusBase<scalar_type, index_type>
@@ -79,7 +80,7 @@ namespace GridKit
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
       virtual int initialize() override final;
-      virtual int evaluateInternalResidual() override final;
+      virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
 
       __attribute__((always_inline)) inline int evaluateInternalResidual(

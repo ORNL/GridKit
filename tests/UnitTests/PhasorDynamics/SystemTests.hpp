@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageOut/BusSignalVoltageOut.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -89,7 +90,7 @@ namespace GridKit
           return 0;
         }
 
-        int evaluateInternalResidual() override final
+        int evaluateResidual() override final
         {
           return 0;
         }
@@ -97,6 +98,58 @@ namespace GridKit
         int evaluateJacobian() override final
         {
           return this->constructCoo();
+        }
+      };
+
+      /// Zero-size component that exposes the system base it was given
+      class BaseProbeComponent final : public ComponentT
+      {
+      public:
+        int setGridKitComponentID(IdxT component_id) override final
+        {
+          this->gridkit_component_id_ = component_id;
+          return 0;
+        }
+
+        int allocate() override final
+        {
+          this->allocated_ = true;
+          return 0;
+        }
+
+        int verify() const override final
+        {
+          return 0;
+        }
+
+        int initialize() override final
+        {
+          return 0;
+        }
+
+        int tagDifferentiable() override final
+        {
+          return 0;
+        }
+
+        int setAbsoluteTolerance(RealT) override final
+        {
+          return 0;
+        }
+
+        int evaluateResidual() override final
+        {
+          return 0;
+        }
+
+        int evaluateJacobian() override final
+        {
+          return this->constructCoo();
+        }
+
+        RealT vaSystemBase() const
+        {
+          return this->va_system_base_;
         }
       };
 
@@ -446,13 +499,10 @@ namespace GridKit
         success *= isEqual(root.y().getData()[0], 30.0);
         success *= isEqual(root.y().getData()[1], 40.0);
 
-        // A bound system is not evaluated standalone.
-        const auto previous_verbosity = Log::verbosity();
-        // Suppress the expected bound-system error below.
-        // Use EVERYTHING to inspect the diagnostic.
-        Log::setVerbosity(Log::Verbosity::NONE);
-        success *= (nested.evaluateResidual() != 0);
-        Log::setVerbosity(previous_verbosity);
+        // The nested system completes the rows it owns on its own.
+        success *= (nested.evaluateResidual() == 0);
+        success *= isEqual(bus2.Ir(), Ir2);
+        success *= isEqual(bus2.Ii(), Ii2);
 
         return success.report(__func__);
       }
@@ -575,13 +625,218 @@ namespace GridKit
         }
 #endif
 
-        // A bound system is not assembled standalone.
+        // Branch 2-3 injects into bus-2, which lies outside the nested
+        // system, so that injection is the nested system's external residual.
+        const auto& rows   = nested.getExternalResidualIndices();
+        const auto  f_ext  = nested.getExternalResidual();
+        const auto  f_23   = nbranch23.getExternalResidual();
+        success           *= (rows.size() == 4);
+        success           *= (rows[0] == nbus2.getResidualIndex(0));
+        success           *= (rows[1] == nbus2.getResidualIndex(1));
+        success           *= (rows[2] == INVALID_INDEX<IdxT>);
+        success           *= (rows[3] == INVALID_INDEX<IdxT>);
+        success           *= isEqual(f_ext[0], f_23[0]);
+        success           *= isEqual(f_ext[1], f_23[1]);
+
+        // A nested system evaluates its Jacobian entries; the root assembles.
+        success *= (nested.evaluateJacobian() == 0);
+        success *= (nested.getCsrJacobian() == nullptr);
+
+        return success.report(__func__);
+      }
+
+      /// Systems nested two deep, next to an empty one, match their flat twin
+      TestOutcome nestedDepthTwo()
+      {
+        TestStatus success = true;
+
+        // A slack bus and three PQ buses in a chain, with the variables in
+        // the same order in both systems. The twin nests bus-3 one level down
+        // and bus-4 two levels down, each with the branch to the level above.
+        struct Network
+        {
+          PhasorDynamics::BusInfinite<ScalarT, IdxT> bus1{10.0, 20.0};
+          PhasorDynamics::Bus<ScalarT, IdxT>         bus2{30.0, 40.0};
+          PhasorDynamics::Bus<ScalarT, IdxT>         bus3{25.0, 35.0};
+          PhasorDynamics::Bus<ScalarT, IdxT>         bus4{15.0, 45.0};
+          PhasorDynamics::Branch<ScalarT, IdxT>      branch12{2.0, 4.0, 0.2, 1.2};
+          PhasorDynamics::Branch<ScalarT, IdxT>      branch23{2.0, 4.0, 0.2, 1.2};
+          PhasorDynamics::Branch<ScalarT, IdxT>      branch34{2.0, 4.0, 0.2, 1.2};
+          PhasorDynamics::SignalNode<ScalarT, IdxT>  nodes[8];
+
+          void connect(PhasorDynamics::BusBase<ScalarT, IdxT>& bus, IdxT node)
+          {
+            bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vr].connect(&nodes[node]);
+            bus.getPorts().out[PhasorDynamics::BusSignalOutputs::vi].connect(&nodes[node + 1]);
+          }
+
+          void connect(PhasorDynamics::Branch<ScalarT, IdxT>& branch, BranchBuses terminal, IdxT node)
+          {
+            branch.getPorts().terminal_vr[terminal].connect(&nodes[node]);
+            branch.getPorts().terminal_vi[terminal].connect(&nodes[node + 1]);
+          }
+
+          Network()
+          {
+            connect(bus1, 0);
+            connect(bus2, 2);
+            connect(bus3, 4);
+            connect(bus4, 6);
+            connect(branch12, BranchBuses::bus1, 0);
+            connect(branch12, BranchBuses::bus2, 2);
+            connect(branch23, BranchBuses::bus1, 2);
+            connect(branch23, BranchBuses::bus2, 4);
+            connect(branch34, BranchBuses::bus1, 4);
+            connect(branch34, BranchBuses::bus2, 6);
+          }
+        };
+
+        Network                                    f;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> flat;
+        flat.addBus(&f.bus1);
+        flat.addBus(&f.bus2);
+        flat.addComponent(&f.branch12);
+        flat.addBus(&f.bus3);
+        flat.addComponent(&f.branch23);
+        flat.addBus(&f.bus4);
+        flat.addComponent(&f.branch34);
+
+        Network                                    n;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> root;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> empty;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> middle;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> inner;
+        inner.addBus(&n.bus4);
+        inner.addComponent(&n.branch34);
+        middle.addBus(&n.bus3);
+        middle.addComponent(&n.branch23);
+        middle.addComponent(&inner);
+        root.addComponent(&empty);
+        root.addBus(&n.bus1);
+        root.addBus(&n.bus2);
+        root.addComponent(&n.branch12);
+        root.addComponent(&middle);
+
+        flat.allocate();
+        flat.initialize();
+        flat.evaluateResidual();
+
+        root.allocate();
+        root.initialize();
+        root.evaluateResidual();
+
+        success *= (root.size() == flat.size());
+        success *= (empty.size() == 0);
+        for (IdxT j = 0; j < flat.size(); ++j)
+        {
+          success *= isEqual(root.y().getData()[j], flat.y().getData()[j]);
+          success *= isEqual(root.getResidual().getData()[j], flat.getResidual().getData()[j]);
+        }
+
+        // Each subsystem passes up only its injections into the level above;
+        // the root has nothing outside it.
+        const auto& middle_rows  = middle.getExternalResidualIndices();
+        const auto& inner_rows   = inner.getExternalResidualIndices();
+        success                 *= (inner_rows[0] == n.bus3.getResidualIndex(0));
+        success                 *= (inner_rows[2] == INVALID_INDEX<IdxT>);
+        success                 *= (middle_rows[0] == n.bus2.getResidualIndex(0));
+        success                 *= (middle_rows[2] == INVALID_INDEX<IdxT>);
+        success                 *= (middle_rows[4] == INVALID_INDEX<IdxT>);
+        for (const auto row : root.getExternalResidualIndices())
+        {
+          success *= (row == INVALID_INDEX<IdxT>);
+        }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        flat.evaluateJacobian();
+        root.evaluateJacobian();
+
+        auto* flat_jac = flat.getCsrJacobian();
+        auto* root_jac = root.getCsrJacobian();
+
+        success *= (flat_jac != nullptr && root_jac != nullptr);
+        if (flat_jac != nullptr && root_jac != nullptr)
+        {
+          success *= (root_jac->getNnz() == flat_jac->getNnz());
+          for (IdxT i = 0; i < flat_jac->getNnz(); ++i)
+          {
+            success *= (root_jac->getColData()[i] == flat_jac->getColData()[i]);
+            success *= isEqual(root_jac->getValues()[i], flat_jac->getValues()[i]);
+          }
+        }
+#endif
+
+        return success.report(__func__);
+      }
+
+      /// A subsystem may read signals its parent produces after it
+      TestOutcome nestedLaterProducer()
+      {
+        TestStatus success = true;
+
+        using SignalIn  = PhasorDynamics::BusSignalInputs;
+        using SignalOut = PhasorDynamics::BusSignalOutputs;
+
+        // The nested bus takes its voltage from a bus the root adds after the
+        // subsystem, and returns its boundary current to that bus.
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ir;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ii;
+
+        PhasorDynamics::BusSignalVoltageIn<ScalarT, IdxT>  bus_in;
+        PhasorDynamics::BusSignalVoltageOut<ScalarT, IdxT> bus_out(1.02, -0.05);
+        bus_in.getPorts().in.template port<SignalIn::vr>().connect(&vr);
+        bus_in.getPorts().in.template port<SignalIn::vi>().connect(&vi);
+        bus_in.getPorts().out.template port<SignalOut::ir>().connect(&ir);
+        bus_in.getPorts().out.template port<SignalOut::ii>().connect(&ii);
+        bus_out.getPorts().out.template port<SignalOut::vr>().connect(&vr);
+        bus_out.getPorts().out.template port<SignalOut::vi>().connect(&vi);
+        bus_out.getPorts().in.template port<SignalIn::ir>().connect(&ir);
+        bus_out.getPorts().in.template port<SignalIn::ii>().connect(&ii);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> root;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> nested;
+        nested.addBus(&bus_in);
+        root.addComponent(&nested);
+        root.addBus(&bus_out);
+
+        // The root verifies once every producer in the tree is allocated.
         const auto previous_verbosity = Log::verbosity();
-        // Suppress the expected bound-system error below.
+        // Suppress the error a failed verification would log.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        success *= (nested.evaluateJacobian() != 0);
+        const bool allocated = !throws<std::runtime_error>(
+            [&]()
+            { root.allocate(); });
         Log::setVerbosity(previous_verbosity);
+
+        success *= allocated;
+        if (allocated)
+        {
+          success *= (root.evaluateResidual() == 0);
+          success *= isEqual(bus_in.Vr(), 1.02);
+          success *= isEqual(bus_in.Vi(), -0.05);
+        }
+
+        return success.report(__func__);
+      }
+
+      /// A subsystem adopts the system base of its parent
+      TestOutcome nestedSystemBase()
+      {
+        TestStatus success = true;
+
+        BaseProbeComponent                         probe;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> nested;
+        nested.setSystemBase(50.0, 200.0e6);
+        nested.addComponent(&probe);
+        success *= isEqual(probe.vaSystemBase(), 200.0e6);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> root;
+        root.setSystemBase(60.0, 100.0e6);
+        root.addComponent(&nested);
+        success *= isEqual(probe.vaSystemBase(), 100.0e6);
 
         return success.report(__func__);
       }

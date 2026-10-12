@@ -76,6 +76,7 @@ namespace GridKit
         stab.allocate();
         success *= (stab.verify() == 0);
         stab.initialize();
+        stab.gatherExternalVariables();
         stab.evaluateResidual();
 
         auto        tol    = 10 * std::numeric_limits<RealT>::epsilon();
@@ -129,6 +130,7 @@ namespace GridKit
         stab.allocate();
         stab.initialize();
         setStatePoint(stab);
+        stab.gatherExternalVariables();
         stab.evaluateResidual();
 
         // Hand-computed answer key (see plan for full derivation)
@@ -228,6 +230,7 @@ namespace GridKit
 
         stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
 
+        stab.gatherExternalVariables();
         stab.evaluateResidual();
         stab.evaluateJacobian();
         auto  model_jacobian = stab.getCsrJacobian();
@@ -263,6 +266,7 @@ namespace GridKit
 
         stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
 
+        stab.gatherExternalVariables();
         stab.evaluateResidual();
         stab.evaluateJacobian();
         stab.constructCsr();

@@ -334,8 +334,9 @@ namespace GridKit
      * external system storage.
      *
      * @note System models compose hierarchically: a nested system binds to
-     * its parent's storage and allocates like any other component. Residual
-     * assembly and Jacobian priming run only on the root model.
+     * its parent's storage and allocates like any other component. Index
+     * assignment, verification, Jacobian priming, and monitors run only on
+     * the root model, once every model in the tree is allocated.
      *
      * @throws std::runtime_error if storage allocation, child binding, model
      * verification, or initialization for sparse Jacobian discovery fails.
@@ -407,6 +408,20 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
+      // External slots mirror the slots of the components in insertion order.
+      IdxT size_ext = 0;
+      for (const auto& component : components_)
+      {
+        size_ext += static_cast<IdxT>(component->getExternalVariableIndices().size());
+      }
+      this->allocateExternalVectors(size_ext);
+
+      if (bound_)
+      {
+        allocated_ = true;
+        return 0;
+      }
+
       // Default variable and residual index mapping to local index. The
       // routed writes land in the owning component's index-map slots, where
       // published signal nodes point. A parent model can reassign global
@@ -430,7 +445,7 @@ namespace GridKit
       // monitor startup.
       // @todo Replace with a sparsity analysis that sets the NNZ and allocates
       // the Jacobian without needing the Jacobian values.
-      if (!bound_ && hasJacobian())
+      if (hasJacobian())
       {
         const int status = initialize();
         if (status != 0)
@@ -443,11 +458,8 @@ namespace GridKit
         evaluateJacobian();
       }
 
-      if (!bound_)
-      {
-        initializeMonitor();
-        startMonitor();
-      }
+      initializeMonitor();
+      startMonitor();
 
       allocated_ = true;
       return 0;
@@ -604,99 +616,140 @@ namespace GridKit
     }
 
     /**
-     * @brief Compute the residuals each bus and component owns.
+     * @brief Evaluate every component, then this system's own residual.
      *
-     * Components read and write their bound system-vector slices directly.
-     * Every owned residual row, including the bus current balance rows, is
-     * assigned here before external contributions accumulate in phase two.
-     */
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateInternalResidual()
-    {
-      for (const auto& component : components_)
-      {
-        component->evaluateInternalResidual();
-      }
-
-      return 0;
-    }
-
-    /**
-     * @brief Fill component contributions to residuals owned elsewhere,
-     * e.g. bus current balances.
-     *
-     * Every component fills its external residual buffer; composite
-     * children recurse. Contributions are not scattered here; the root
-     * model assembles them in evaluateResidual().
-     */
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateExternalResidual()
-    {
-      for (const auto& component : components_)
-      {
-        component->evaluateExternalResidual();
-      }
-
-      for (const auto& component : components_)
-      {
-        component->getResidual().setDataUpdated();
-      }
-
-      return 0;
-    }
-
-    /**
-     * @brief Forward the root residual vector to every child.
-     */
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::scatterExternalResidual(ScalarT* f_root)
-    {
-      for (const auto& component : components_)
-      {
-        component->scatterExternalResidual(f_root);
-      }
-
-      return 0;
-    }
-
-    /**
-     * @brief Compute system residual vector
-     *
-     * Internal residuals assign every owned entry of the residual vector,
-     * external residuals fill the component contribution buffers, and the
-     * scatter assembles every contribution at its global row. Only a root
-     * model assembles; a bound system is evaluated by its root.
+     * Each component assigns the rows it owns and fills its external
+     * residual. The internal residual completes the rows this system owns
+     * with those contributions; the external residual holds the
+     * contributions to rows outside it, which its parent assembles in turn.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
     {
-      if (bound_)
+      // A parent gathers its components; a root model gathers itself.
+      if (!bound_)
       {
-        Log::error() << "A bound system model is evaluated by its root model\n";
-        return 1;
+        gatherExternalVariables();
+      }
+
+      for (const auto& component : components_)
+      {
+        component->evaluateResidual();
       }
 
       evaluateInternalResidual();
       evaluateExternalResidual();
-      this->scatterExternalResidual(f_.getData());
-
       f_.setDataUpdated();
 
       return 0;
     }
 
     /**
-     * @brief Refresh Jacobian entries throughout the component tree.
+     * @brief Gather the external variables of every component, then collect
+     * those that lie outside this system, i.e. its coupling to the rest of
+     * the model.
+     *
+     * Slot k of each component, in insertion order, is one slot of this
+     * system. Slots this system owns stay at INVALID_INDEX.
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::fillJacobian()
+    void SystemModel<scalar_type, index_type>::gatherExternalVariables()
     {
       for (const auto& component : components_)
       {
-        component->fillJacobian();
+        component->gatherExternalVariables();
       }
 
-      return 0;
+      auto*  y_ext = y_ext_.getData();
+      size_t slot  = 0;
+
+      for (const auto& component : components_)
+      {
+        const auto  values           = component->getExternalVariables();
+        const auto& variable_indices = component->getExternalVariableIndices();
+        const auto& residual_indices = component->getExternalResidualIndices();
+
+        for (size_t k = 0; k < variable_indices.size(); ++k, ++slot)
+        {
+          variable_indices_ext_[slot] = INVALID_INDEX<IdxT>;
+          residual_indices_ext_[slot] = INVALID_INDEX<IdxT>;
+          if (!owns(variable_indices_, variable_indices[k]))
+          {
+            y_ext[slot]                 = values[k];
+            variable_indices_ext_[slot] = variable_indices[k];
+          }
+          if (!owns(residual_indices_, residual_indices[k]))
+          {
+            residual_indices_ext_[slot] = residual_indices[k];
+          }
+        }
+      }
+    }
+
+    /**
+     * @brief Complete the rows this system owns with the external residuals
+     * of its components.
+     *
+     * Every component has been evaluated, so each row is assigned by its
+     * owner before any contribution is added.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::evaluateInternalResidual()
+    {
+      auto* f = f_.getData();
+
+      for (const auto& component : components_)
+      {
+        const auto  values           = component->getExternalResidual();
+        const auto& residual_indices = component->getExternalResidualIndices();
+
+        for (size_t k = 0; k < residual_indices.size(); ++k)
+        {
+          if (owns(residual_indices_, residual_indices[k]))
+          {
+            f[static_cast<size_t>(residual_indices[k] - residual_indices_.front())] += values[k];
+          }
+        }
+      }
+    }
+
+    /**
+     * @brief Copy the contributions to rows outside this system into its
+     * external residual.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      auto*  f_ext = f_ext_.getData();
+      size_t slot  = 0;
+
+      for (const auto& component : components_)
+      {
+        const auto values = component->getExternalResidual();
+
+        for (size_t k = 0; k < values.size(); ++k, ++slot)
+        {
+          if (residual_indices_ext_[slot] != INVALID_INDEX<IdxT>)
+          {
+            f_ext[slot] = values[k];
+          }
+        }
+      }
+    }
+
+    /**
+     * @brief Whether a global index falls in the range of an index map.
+     *
+     * @pre The map holds contiguous global indices, as a bound system does.
+     */
+    template <typename scalar_type, typename index_type>
+    bool SystemModel<scalar_type, index_type>::owns(const std::vector<IdxT>& indices, IdxT index)
+    {
+      if (indices.empty() || index == INVALID_INDEX<IdxT> || index < indices.front())
+      {
+        return false;
+      }
+      return index - indices.front() < static_cast<IdxT>(indices.size());
     }
 
     /**

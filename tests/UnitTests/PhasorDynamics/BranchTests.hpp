@@ -105,6 +105,7 @@ namespace GridKit
         bus2.evaluateResidual();
 
         branch.allocate();
+        branch.gatherExternalVariables();
         branch.evaluateResidual();
 
         success *= isEqual(branch.getExternalResidual()[0], Ir1);
@@ -171,6 +172,7 @@ namespace GridKit
         bus1.allocate();
         bus2.allocate();
         branch.allocate();
+        branch.gatherExternalVariables();
         branch.evaluateResidual();
 
         success *= isEqual(branch.getExternalResidual()[0], Ir1);
@@ -217,6 +219,7 @@ namespace GridKit
         bus2.Vi().setVariableNumber(3);
 
         branch.allocate();
+        branch.gatherExternalVariables();
         branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                    ///< the dependencies
 
@@ -274,6 +277,7 @@ namespace GridKit
         bus1.allocate();
         bus2.allocate();
         branch.allocate();
+        branch.gatherExternalVariables();
         branch.evaluateResidual();
 
         const auto&                                              f_ext = branch.getExternalResidual();
@@ -346,7 +350,9 @@ namespace GridKit
         test_branch.setTap(tap);
         test_branch.setPhase(phase);
 
+        ref_branch.gatherExternalVariables();
         ref_branch.evaluateResidual();
+        test_branch.gatherExternalVariables();
         test_branch.evaluateResidual();
 
         success *= isEqual(test_branch.getExternalResidual()[0], ref_branch.getExternalResidual()[0]);
@@ -462,7 +468,9 @@ namespace GridKit
         data_branch.allocate();
         ref_branch.allocate();
 
+        data_branch.gatherExternalVariables();
         data_branch.evaluateResidual();
+        ref_branch.gatherExternalVariables();
         ref_branch.evaluateResidual();
 
         success *= isEqual(data_branch.getExternalResidual()[0], ref_branch.getExternalResidual()[0]);

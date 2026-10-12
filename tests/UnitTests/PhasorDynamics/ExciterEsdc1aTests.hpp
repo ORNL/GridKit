@@ -979,6 +979,7 @@ namespace GridKit
 
         int evaluate()
         {
+          esdc1a.gatherExternalVariables();
           return esdc1a.evaluateResidual();
         }
 
@@ -1493,6 +1494,7 @@ namespace GridKit
         numberVariables(fixture);
         fixture.esdc1a.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
+        fixture.esdc1a.gatherExternalVariables();
         success *= (fixture.esdc1a.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.esdc1a.getCsrJacobian());
@@ -1516,6 +1518,7 @@ namespace GridKit
         setAnswerKeyState(fixture.esdc1a);
         fixture.esdc1a.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
+        fixture.esdc1a.gatherExternalVariables();
         success *= (fixture.esdc1a.evaluateJacobian() == 0);
         success *= (fixture.esdc1a.constructCsr() == 0);
 

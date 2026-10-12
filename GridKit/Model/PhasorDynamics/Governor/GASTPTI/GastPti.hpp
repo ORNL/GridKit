@@ -85,14 +85,15 @@ namespace GridKit
         explicit GastPti(const ModelDataT& data);
         ~GastPti();
 
-        int setGridKitComponentID(IdxT component_id) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateInternalResidual() override final;
-        int evaluateJacobian() override final;
+        int  setGridKitComponentID(IdxT component_id) override final;
+        int  allocate() override final;
+        int  verify() const override final;
+        int  initialize() override final;
+        int  tagDifferentiable() override final;
+        int  setAbsoluteTolerance(RealT rel_tol) override final;
+        void gatherExternalVariables() override final;
+        int  evaluateResidual() override final;
+        int  evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -108,7 +109,6 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        void gatherExternalVariables();
         void loadRealParameter(const ModelDataT& data,
                                GastPtiParameters parameter,
                                RealT&            target,

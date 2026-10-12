@@ -20,11 +20,19 @@ namespace GridKit
     /**
      * @brief Evaluate system DependencyTracking::Variable Jacobian.
      *
+     * The root builds the Jacobian from the dependencies of its assembled
+     * residual, so a nested system has nothing to evaluate.
+     *
      * @note Currently only used for testing.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
+      if (bound_)
+      {
+        return 0;
+      }
+
       this->constructCsr();
 
       // Log::misc() << "System DependencyTracking Jacobian\n";

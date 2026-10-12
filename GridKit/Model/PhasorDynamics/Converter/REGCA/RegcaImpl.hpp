@@ -660,36 +660,17 @@ namespace GridKit
       }
 
       /**
-       * @brief Internal residual for the converter model.
+       * @brief Evaluate the converter residual and its current injection into the terminal bus.
        */
       template <typename scalar_type, typename index_type>
-      int Regca<scalar_type, index_type>::evaluateInternalResidual()
+      int Regca<scalar_type, index_type>::evaluateResidual()
       {
-        gatherExternalVariables();
-
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-
-        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
+        const auto* y     = y_.getData();
+        const auto* yp    = yp_.getData();
+        const auto* y_ext = y_ext_.getData();
+        evaluateInternalResidual(y, yp, y_ext, f_.getData());
+        evaluateExternalResidual(y, yp, y_ext, f_ext_.getData());
         f_.setDataUpdated();
-
-        return 0;
-      }
-
-      /**
-       * @brief Fill the current injected into the terminal bus.
-       */
-      template <typename scalar_type, typename index_type>
-      int Regca<scalar_type, index_type>::evaluateExternalResidual()
-      {
-        auto* y_ext = y_ext_.getData();
-        auto* f_ext = f_ext_.getData();
-
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-
-        evaluateExternalResidual(y, yp, y_ext, f_ext);
 
         return 0;
       }

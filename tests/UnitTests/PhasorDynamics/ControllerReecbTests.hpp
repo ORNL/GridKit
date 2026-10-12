@@ -1906,6 +1906,7 @@ namespace GridKit
 
         int evaluate()
         {
+          reecb.gatherExternalVariables();
           return reecb.evaluateResidual();
         }
 
@@ -2784,7 +2785,9 @@ namespace GridKit
         setJacobianState(fixture, capacity, epiv, ipcmd);
         numberVariables(fixture);
         fixture.reecb.updateTime(0.0, alpha);
+        fixture.reecb.gatherExternalVariables();
         success *= (fixture.reecb.evaluateResidual() == 0);
+        fixture.reecb.gatherExternalVariables();
         success *= (fixture.reecb.evaluateJacobian() == 0);
 
         return GridKit::Testing::MapFromCsr(fixture.reecb.getCsrJacobian());
@@ -2810,7 +2813,9 @@ namespace GridKit
 
         setJacobianState(fixture, capacity, epiv, ipcmd);
         fixture.reecb.updateTime(0.0, alpha);
+        fixture.reecb.gatherExternalVariables();
         success *= (fixture.reecb.evaluateResidual() == 0);
+        fixture.reecb.gatherExternalVariables();
         success *= (fixture.reecb.evaluateJacobian() == 0);
         success *= (fixture.reecb.constructCsr() == 0);
 

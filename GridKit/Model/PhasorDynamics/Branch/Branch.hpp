@@ -73,15 +73,15 @@ namespace GridKit
       Branch(const ModelDataT& data);
       virtual ~Branch();
 
-      virtual int setGridKitComponentID(IdxT) override final;
-      virtual int allocate() override final;
-      virtual int initialize() override final;
-      virtual int tagDifferentiable() override final;
-      virtual int setAbsoluteTolerance(RealT rel_tol) override final;
-      virtual int evaluateInternalResidual() override final;
-      virtual int evaluateExternalResidual() override final;
-      virtual int evaluateJacobian() override final;
-      virtual int verify() const override final;
+      virtual int  setGridKitComponentID(IdxT) override final;
+      virtual int  allocate() override final;
+      virtual int  initialize() override final;
+      virtual int  tagDifferentiable() override final;
+      virtual int  setAbsoluteTolerance(RealT rel_tol) override final;
+      virtual void gatherExternalVariables() override final;
+      virtual int  evaluateResidual() override final;
+      virtual int  evaluateJacobian() override final;
+      virtual int  verify() const override final;
 
       SignalPortsT& getPorts()
       {
@@ -129,7 +129,6 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
-      void gatherExternalVariables();
       void setDerivedParams();
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);

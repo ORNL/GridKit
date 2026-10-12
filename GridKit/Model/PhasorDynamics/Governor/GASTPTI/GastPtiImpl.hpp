@@ -477,10 +477,8 @@ namespace GridKit
        * @brief Evaluate the seven GASTPTI-owned residual rows.
        */
       template <typename scalar_type, typename index_type>
-      int GastPti<scalar_type, index_type>::evaluateInternalResidual()
+      int GastPti<scalar_type, index_type>::evaluateResidual()
       {
-        gatherExternalVariables();
-
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();

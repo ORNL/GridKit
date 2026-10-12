@@ -37,17 +37,27 @@ namespace GridKit
      *   This used a system-level CooMatrix to deduplicate and sort the sparsity pattern.
      * - If already constructed, reset Jacobian values to zero and accumulate contributions.
      *
+     * Component entries carry global indices, so a nested system only
+     * evaluates its components and its root assembles them.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
-      if (bound_)
+      // A parent gathers its components; a root model gathers itself.
+      if (!bound_)
       {
-        Log::error() << "A bound system model is assembled by its root model\n";
-        return 1;
+        gatherExternalVariables();
       }
 
-      this->fillJacobian();
+      for (const auto& component : components_)
+      {
+        component->evaluateJacobian();
+      }
+
+      if (bound_)
+      {
+        return 0;
+      }
 
       // Build or update system CSR Jacobian
       if (csr_jac_ == nullptr)

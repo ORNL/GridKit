@@ -56,14 +56,14 @@ namespace GridKit
       LoadZIP(const ModelDataT& data);
       ~LoadZIP();
 
-      int setGridKitComponentID(IdxT) override final;
-      int allocate() override final;
-      int initialize() override final;
-      int tagDifferentiable() override final;
-      int setAbsoluteTolerance(RealT rel_tol) override final;
-      int evaluateInternalResidual() override final;
-      int evaluateExternalResidual() override final;
-      int evaluateJacobian() override final;
+      int  setGridKitComponentID(IdxT) override final;
+      int  allocate() override final;
+      int  initialize() override final;
+      int  tagDifferentiable() override final;
+      int  setAbsoluteTolerance(RealT rel_tol) override final;
+      void gatherExternalVariables() override final;
+      int  evaluateResidual() override final;
+      int  evaluateJacobian() override final;
 
       int verify() const override final
       {
@@ -114,7 +114,6 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
-      void gatherExternalVariables();
       void setDerivedParams();
 
       ScalarT Vr() const

@@ -515,10 +515,8 @@ namespace GridKit
        * @brief Evaluate the HYGOV-owned residual rows.
        */
       template <typename scalar_type, typename index_type>
-      int Hygov<scalar_type, index_type>::evaluateInternalResidual()
+      int Hygov<scalar_type, index_type>::evaluateResidual()
       {
-        gatherExternalVariables();
-
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();

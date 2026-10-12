@@ -127,6 +127,7 @@ namespace GridKit
 
         gen.allocate();
         gen.initialize();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         // Require results to be within machine precision
@@ -175,6 +176,7 @@ namespace GridKit
         gen.setSystemBase(60.0, 100.0e6);
         gen.allocate();
         gen.initialize();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         RealT                                     time = 0.0;
@@ -302,6 +304,7 @@ namespace GridKit
 
         gen.y().setDataUpdated();
         gen.yp().setDataUpdated();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
         auto&       residual      = gen.getResidual();
         const auto* residual_data = residual.getData();
@@ -400,6 +403,7 @@ namespace GridKit
         gen.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
 
         bus.evaluateResidual();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         bus.evaluateJacobian();
@@ -458,6 +462,7 @@ namespace GridKit
         gen.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
 
         bus.evaluateResidual();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
 
         bus.evaluateJacobian();

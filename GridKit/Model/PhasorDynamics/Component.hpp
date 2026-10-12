@@ -66,62 +66,13 @@ namespace GridKit
       virtual int verify() const = 0;
 
       /**
-       * @brief Evaluate this component's residual buffers standalone.
+       * @brief Copy the current external variables and their indices into
+       * the external vectors.
        *
-       * Owned rows are assigned first, then external contributions are
-       * filled. Contributions are not scattered; a composite model that
-       * owns global storage assembles them through
-       * scatterExternalResidual().
+       * The owning system gathers every component before evaluating it.
        */
-      virtual int evaluateResidual() override
+      virtual void gatherExternalVariables()
       {
-        evaluateInternalResidual();
-        evaluateExternalResidual();
-        return 0;
-      }
-
-      virtual int evaluateInternalResidual() = 0;
-
-      virtual int evaluateExternalResidual()
-      {
-        return 0;
-      }
-
-      /**
-       * @brief Add this component's external contributions to the root
-       * residual vector.
-       *
-       * Rows map through the external residual index map. Entries mapped
-       * to INVALID_INDEX, e.g. constant voltage rows, are dropped. A
-       * composite model forwards the call to its children.
-       */
-      virtual int scatterExternalResidual(ScalarT* f_root)
-      {
-        if (residual_indices_ext_.empty())
-        {
-          return 0;
-        }
-
-        const auto* f_ext = f_ext_.getData();
-        for (size_t i = 0; i < residual_indices_ext_.size(); ++i)
-        {
-          if (residual_indices_ext_[i] != INVALID_INDEX<IdxT>)
-          {
-            f_root[static_cast<size_t>(residual_indices_ext_[i])] += f_ext[i];
-          }
-        }
-        return 0;
-      }
-
-      /**
-       * @brief Refresh this component's Jacobian entries.
-       *
-       * A leaf's standalone Jacobian evaluation is exactly its entry
-       * refresh; a composite model recurses instead.
-       */
-      virtual int fillJacobian()
-      {
-        return this->evaluateJacobian();
       }
 
       /**
@@ -359,6 +310,16 @@ namespace GridKit
         return residual_indices_;
       }
 
+      std::span<const ScalarT> getExternalVariables() const
+      {
+        return {y_ext_.getData(), static_cast<size_t>(y_ext_.getSize())};
+      }
+
+      const std::vector<IdxT>& getExternalVariableIndices() const
+      {
+        return variable_indices_ext_;
+      }
+
       std::span<const ScalarT> getExternalResidual() const
       {
         return {f_ext_.getData(), static_cast<size_t>(f_ext_.getSize())};
@@ -397,7 +358,7 @@ namespace GridKit
        * @param[in] freq_system_base - System frequency base in Hz.
        * @param[in] va_system_base - System power base in VA.
        */
-      void setSystemBase(RealT freq_system_base, RealT va_system_base)
+      virtual void setSystemBase(RealT freq_system_base, RealT va_system_base)
       {
         freq_system_base_ = freq_system_base;
         va_system_base_   = va_system_base;

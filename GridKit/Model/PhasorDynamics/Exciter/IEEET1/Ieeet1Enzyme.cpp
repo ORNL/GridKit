@@ -22,8 +22,6 @@ namespace GridKit
       template <class scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::evaluateJacobian()
       {
-        gatherExternalVariables();
-
         if (J_rows_buffer_ == nullptr)
         {
           // Reserve space for the dense blocks.

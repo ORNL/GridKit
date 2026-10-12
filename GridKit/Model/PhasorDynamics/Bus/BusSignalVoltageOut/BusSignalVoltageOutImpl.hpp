@@ -235,7 +235,7 @@ namespace GridKit
      * components to these rows.
      */
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageOut<scalar_type, index_type>::evaluateInternalResidual()
+    int BusSignalVoltageOut<scalar_type, index_type>::evaluateResidual()
     {
       auto* f = f_.getData();
 

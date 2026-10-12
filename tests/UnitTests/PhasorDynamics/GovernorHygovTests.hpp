@@ -1035,6 +1035,7 @@ namespace GridKit
 
         int evaluate()
         {
+          hygov.gatherExternalVariables();
           return hygov.evaluateResidual();
         }
 
@@ -1612,6 +1613,7 @@ namespace GridKit
         numberVariables(fixture);
         fixture.hygov.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
+        fixture.hygov.gatherExternalVariables();
         success *= (fixture.hygov.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.hygov.getCsrJacobian());
@@ -1630,6 +1632,7 @@ namespace GridKit
         setState(fixture.hygov, {{Internal::G, gate}});
         fixture.hygov.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
+        fixture.hygov.gatherExternalVariables();
         success *= (fixture.hygov.evaluateJacobian() == 0);
         success *= (fixture.hygov.constructCsr() == 0);
 

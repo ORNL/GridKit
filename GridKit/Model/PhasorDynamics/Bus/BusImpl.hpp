@@ -214,12 +214,11 @@ namespace GridKit
     /*!
      * @brief Assign the bus current balance rows.
      *
-     * The bus owns the KCL rows and assigns the fault current; connected
-     * components accumulate their current contributions in the external
-     * residual phase.
+     * The bus owns the KCL rows and assigns the fault current; the system
+     * adds the current injections of attached components.
      */
     template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::evaluateInternalResidual()
+    int Bus<scalar_type, index_type>::evaluateResidual()
     {
       auto* f = f_.getData();
 

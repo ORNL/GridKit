@@ -84,6 +84,7 @@ namespace GridKit
         load.initialize();
 
         bus.evaluateResidual();
+        load.gatherExternalVariables();
         load.evaluateResidual();
 
         success *= isEqual(load.getExternalResidual()[0], Ir);
@@ -125,6 +126,7 @@ namespace GridKit
         load.initialize();
 
         bus.evaluateResidual();
+        load.gatherExternalVariables();
         load.evaluateResidual(); //< Tracks dependencies
         load.evaluateJacobian(); //< Converts dependencies to CSR
         auto* model_jacobian = load.getCsrJacobian();
@@ -221,6 +223,7 @@ namespace GridKit
         load.initialize();
 
         bus.evaluateResidual();
+        load.gatherExternalVariables();
         load.evaluateResidual();
 
         bus.evaluateJacobian();

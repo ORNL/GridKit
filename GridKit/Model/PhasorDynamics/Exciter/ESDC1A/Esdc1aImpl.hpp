@@ -487,13 +487,11 @@ namespace GridKit
       }
 
       /**
-       * @brief Evaluate the internal ESDC1A residual equations.
+       * @brief Evaluate the ESDC1A residual equations.
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::evaluateInternalResidual()
+      int Esdc1a<scalar_type, index_type>::evaluateResidual()
       {
-        gatherExternalVariables();
-
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();

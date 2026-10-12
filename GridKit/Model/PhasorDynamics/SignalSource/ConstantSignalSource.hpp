@@ -49,7 +49,7 @@ namespace GridKit
       int initialize() override final;
       int tagDifferentiable() override final;
       int setAbsoluteTolerance(RealT) override final;
-      int evaluateInternalResidual() override final;
+      int evaluateResidual() override final;
       int evaluateJacobian() override final;
 
       SignalPortsT& getPorts()

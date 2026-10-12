@@ -236,18 +236,6 @@ namespace GridKit
     }
 
     /**
-     * @brief The branch owns no internal residual equations; this phase
-     * only gathers the terminal voltages for the external phase.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateInternalResidual()
-    {
-      gatherExternalVariables();
-      return 0;
-    }
-
-    /**
      * @brief Gather external variables and index maps.
      *
      */
@@ -270,18 +258,16 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual contributions to rows owned by the two terminal buses.
-     *
+     * @brief Evaluate the branch current injections into its two terminal
+     * buses. The branch owns no residual rows.
      */
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateExternalResidual()
+    int Branch<scalar_type, index_type>::evaluateResidual()
     {
-      auto* y_ext = y_ext_.getData();
-      auto* f_ext = f_ext_.getData();
-
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      evaluateExternalResidual(y, yp, y_ext, f_ext);
+      const auto* y     = y_.getData();
+      const auto* yp    = yp_.getData();
+      const auto* y_ext = y_ext_.getData();
+      evaluateExternalResidual(y, yp, y_ext, f_ext_.getData());
 
       return 0;
     }

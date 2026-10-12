@@ -172,7 +172,7 @@ namespace GridKit
         bus.initialize();
         success *= (bus.verify() == 0);
 
-        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
+        bus.evaluateResidual();
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
         success *= isEqual(bus.getResidual().getData()[0], Ir);
@@ -187,7 +187,7 @@ namespace GridKit
         // Re-evaluating resets and re-reads the signals
         Ir = 0.55;
         Ii = -1.25;
-        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
+        bus.evaluateResidual();
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
 
@@ -260,7 +260,7 @@ namespace GridKit
         bus.setVariableIndex(0, 3);
         bus.setVariableIndex(1, 4);
         bus.initialize();
-        static_cast<PhasorDynamics::Component<DependencyTracking::Variable, IdxT>&>(bus).evaluateInternalResidual();
+        bus.evaluateResidual();
         bus.evaluateJacobian();
 
         const auto* f = bus.getResidual().getData();
@@ -303,7 +303,7 @@ namespace GridKit
           bus.setResidualIndex(i, i + var_offset);
         }
         bus.initialize();
-        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
+        bus.evaluateResidual();
         bus.evaluateJacobian();
 
         auto* jac  = bus.getCooJacobian();

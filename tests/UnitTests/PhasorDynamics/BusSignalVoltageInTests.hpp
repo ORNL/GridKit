@@ -140,7 +140,7 @@ namespace GridKit
         Vi       = 0.41;
         success *= isEqual(bus.Vr(), 1.17);
         success *= isEqual(bus.Vi(), 0.41);
-        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
+        bus.evaluateResidual();
         success *= isEqual(bus.Vr(), 1.17);
         success *= isEqual(bus.Vi(), 0.41);
 
@@ -210,7 +210,7 @@ namespace GridKit
 
         // Each residual row is the injection sum minus the boundary current;
         // with nothing attached the sum is zero.
-        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
+        bus.evaluateResidual();
         const auto* f  = bus.getResidual().getData();
         success       *= isEqual(f[0], 2.4);
         success       *= isEqual(f[1], -1.6);
@@ -285,7 +285,7 @@ namespace GridKit
         bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
         bus.allocate();
         bus.initialize();
-        static_cast<PhasorDynamics::Component<DependencyTracking::Variable, IdxT>&>(bus).evaluateInternalResidual();
+        bus.evaluateResidual();
         bus.evaluateJacobian();
 
         success *= isEqual(bus.Vr().getValue(), 0.93);
@@ -333,7 +333,7 @@ namespace GridKit
           bus.setResidualIndex(i, i + var_offset);
         }
         bus.initialize();
-        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
+        bus.evaluateResidual();
         bus.evaluateJacobian();
 
         auto* jac  = bus.getCooJacobian();

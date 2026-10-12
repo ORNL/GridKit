@@ -123,7 +123,9 @@ namespace GridKit
         gov.initialize();
 
         bus.evaluateResidual();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
+        gov.gatherExternalVariables();
         gov.evaluateResidual();
 
         // Set variable values matching the answer key
@@ -140,6 +142,7 @@ namespace GridKit
 
         gov.y().setDataUpdated();
         gov.yp().setDataUpdated();
+        gov.gatherExternalVariables();
         gov.evaluateResidual();
         auto&       residual      = gov.getResidual();
         const auto* residual_data = residual.getData();
@@ -229,7 +232,9 @@ namespace GridKit
         gov.initialize();
 
         bus.evaluateResidual();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
+        gov.gatherExternalVariables();
         gov.evaluateResidual();
 
         // Require results to be within machine precision
@@ -342,7 +347,9 @@ namespace GridKit
         gov.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
 
         bus.evaluateResidual();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
+        gov.gatherExternalVariables();
         gov.evaluateResidual();
 
         gov.evaluateJacobian();
@@ -385,7 +392,9 @@ namespace GridKit
         gov.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
 
         bus.evaluateResidual();
+        gen.gatherExternalVariables();
         gen.evaluateResidual();
+        gov.gatherExternalVariables();
         gov.evaluateResidual();
 
         gov.evaluateJacobian();

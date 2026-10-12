@@ -14,8 +14,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::evaluateJacobian()
     {
-      gatherExternalVariables();
-
       if (J_rows_buffer_ == nullptr)
       {
         // Reserve space for the dense blocks.

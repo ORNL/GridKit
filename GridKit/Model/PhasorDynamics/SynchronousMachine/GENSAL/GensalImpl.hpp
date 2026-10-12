@@ -219,6 +219,16 @@ namespace GridKit
     int Gensal<scalar_type, index_type>::verify() const
     {
       int ret = 0;
+      if (!ports_.terminal_vr[GensalBuses::bus].connected())
+      {
+        Log::error() << "Gensal: bus terminal vr is not connected\n";
+        ++ret;
+      }
+      if (!ports_.terminal_vi[GensalBuses::bus].connected())
+      {
+        Log::error() << "Gensal: bus terminal vi is not connected\n";
+        ++ret;
+      }
 
       auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>();
       if (pmech_port.connected() && !pmech_port.linked())
@@ -481,36 +491,17 @@ namespace GridKit
     }
 
     /**
-     * \brief Internal residual for the generator model.
-     *
+     * @brief Evaluate the generator residual and its current injection into the bus.
      */
     template <typename scalar_type, typename index_type>
-    int Gensal<scalar_type, index_type>::evaluateInternalResidual()
+    int Gensal<scalar_type, index_type>::evaluateResidual()
     {
-      gatherExternalVariables();
-
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      auto*       f  = f_.getData();
-      evaluateInternalResidual(y, yp, y_ext_.getData(), f);
+      const auto* y     = y_.getData();
+      const auto* yp    = yp_.getData();
+      const auto* y_ext = y_ext_.getData();
+      evaluateInternalResidual(y, yp, y_ext, f_.getData());
+      evaluateExternalResidual(y, yp, y_ext, f_ext_.getData());
       f_.setDataUpdated();
-
-      return 0;
-    }
-
-    /**
-     * \brief External residual contributions to rows owned by the bus.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int Gensal<scalar_type, index_type>::evaluateExternalResidual()
-    {
-      auto* y_ext = y_ext_.getData();
-      auto* f_ext = f_ext_.getData();
-
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      evaluateExternalResidual(y, yp, y_ext, f_ext);
 
       return 0;
     }

@@ -108,7 +108,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int ConstantSignalSource<scalar_type, index_type>::evaluateInternalResidual()
+    int ConstantSignalSource<scalar_type, index_type>::evaluateResidual()
     {
       return 0;
     }

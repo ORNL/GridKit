@@ -110,14 +110,15 @@ namespace GridKit
         Reecb(const ModelDataT& data);
         ~Reecb();
 
-        int setGridKitComponentID(IdxT component_id) override final;
-        int allocate() override final;
-        int verify() const override final;
-        int initialize() override final;
-        int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-        int evaluateInternalResidual() override final;
-        int evaluateJacobian() override final;
+        int  setGridKitComponentID(IdxT component_id) override final;
+        int  allocate() override final;
+        int  verify() const override final;
+        int  initialize() override final;
+        int  tagDifferentiable() override final;
+        int  setAbsoluteTolerance(RealT rel_tol) override final;
+        void gatherExternalVariables() override final;
+        int  evaluateResidual() override final;
+        int  evaluateJacobian() override final;
 
         SignalPortsT& getPorts()
         {
@@ -137,8 +138,6 @@ namespace GridKit
         /// initialization tolerance [p.u. current squared].
         static constexpr RealT CURRENT_CIRCLE_KNEE =
             INITIALIZATION_TOLERANCE / Math::MU<RealT>;
-
-        void gatherExternalVariables();
 
         struct InitialPoint;
 

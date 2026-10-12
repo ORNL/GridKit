@@ -50,6 +50,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
+      using Component<scalar_type, index_type>::y_ext_;
+      using Component<scalar_type, index_type>::f_ext_;
+      using Component<scalar_type, index_type>::variable_indices_ext_;
+      using Component<scalar_type, index_type>::residual_indices_ext_;
       using Component<scalar_type, index_type>::csr_jac_;
       using Component<scalar_type, index_type>::map_to_csr_;
       using Component<scalar_type, index_type>::allocated_;
@@ -89,11 +93,8 @@ namespace GridKit
 
       int  tagDifferentiable() override;
       int  setAbsoluteTolerance(RealT rel_tol) override;
-      int  evaluateInternalResidual() override;
-      int  evaluateExternalResidual() override;
-      int  scatterExternalResidual(ScalarT* f_root) override;
+      void gatherExternalVariables() override;
       int  evaluateResidual() override;
-      int  fillJacobian() override;
       IdxT jacobianNnz() override;
       int  scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter) override;
       int  scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter) override;
@@ -108,7 +109,7 @@ namespace GridKit
       void addBus(BusT* bus);
       void addComponent(ComponentT* component);
 
-      void setSystemBase(RealT freq_system_base, RealT va_system_base);
+      void setSystemBase(RealT freq_system_base, RealT va_system_base) override;
 
       BusT*        getBus(IdxT bus_id);
       SignalNodeT* getSignalNode(IdxT signal_id);
@@ -116,6 +117,11 @@ namespace GridKit
 
     private:
       size_t findOwningComponent(IdxT local_index) const;
+
+      void evaluateInternalResidual();
+      void evaluateExternalResidual();
+
+      static bool owns(const std::vector<IdxT>& indices, IdxT index);
 
       template <typename ModelT>
       void connectTerminals(ModelT& model, const typename ModelT::ModelDataT& data);

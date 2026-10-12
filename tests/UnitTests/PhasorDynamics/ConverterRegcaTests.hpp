@@ -804,6 +804,7 @@ namespace GridKit
           {
             return bus_status;
           }
+          regca.gatherExternalVariables();
           return regca.evaluateResidual();
         }
 
@@ -1060,6 +1061,7 @@ namespace GridKit
         fixture.regca.updateTime(0.0, 1.0);
 
         success *= (fixture.evaluate() == 0);
+        fixture.regca.gatherExternalVariables();
         success *= (fixture.regca.evaluateJacobian() == 0);
 
         return MapFromCsr(fixture.regca.getCsrJacobian());
@@ -1090,6 +1092,7 @@ namespace GridKit
         fixture.regca.updateTime(0.0, 1.0);
 
         success *= (fixture.evaluate() == 0);
+        fixture.regca.gatherExternalVariables();
         success *= (fixture.regca.evaluateJacobian() == 0);
         success *= (fixture.regca.constructCsr() == 0);
 

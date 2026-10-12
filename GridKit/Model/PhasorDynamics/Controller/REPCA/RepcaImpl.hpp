@@ -675,10 +675,8 @@ namespace GridKit
        * @brief Evaluate the REPCA-owned residual rows.
        */
       template <typename scalar_type, typename index_type>
-      int Repca<scalar_type, index_type>::evaluateInternalResidual()
+      int Repca<scalar_type, index_type>::evaluateResidual()
       {
-        gatherExternalVariables();
-
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();

@@ -44,7 +44,6 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::abs_tol_;
       using BusBase<scalar_type, index_type>::variable_indices_;
       using BusBase<scalar_type, index_type>::residual_indices_;
-      using BusBase<scalar_type, index_type>::coo_jac_;
       using BusBase<scalar_type, index_type>::J_rows_buffer_;
       using BusBase<scalar_type, index_type>::J_cols_buffer_;
       using BusBase<scalar_type, index_type>::J_vals_buffer_;
@@ -73,7 +72,7 @@ namespace GridKit
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
       virtual int initialize() override final;
-      virtual int evaluateInternalResidual() override final;
+      virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
 
       virtual BusTypeT BusType() const override final
@@ -119,60 +118,6 @@ namespace GridKit
       virtual const ScalarT& Ii() const override final
       {
         return f_.getData()[1];
-      }
-
-    protected:
-      int constructCoo()
-      {
-        if (coo_jac_ == nullptr)
-        {
-          IdxT num_rows = 0;
-          IdxT num_cols = 0;
-          for (IdxT i = 0; i < nnz_; ++i)
-          {
-            if (J_rows_buffer_[i] + 1 > num_rows)
-            {
-              num_rows = J_rows_buffer_[i] + 1;
-            }
-            if (J_cols_buffer_[i] + 1 > num_cols)
-            {
-              num_cols = J_cols_buffer_[i] + 1;
-            }
-          }
-          coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
-          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
-        }
-
-        return 0;
-      }
-
-      /**
-       * @brief Initialize DependencyTracking variable numbers.
-       *
-       * @note Assigns even indices to y and odd indices to yp.
-       *       Should be called in initialize(), after variables have been set.
-       */
-      int initializeDependencyTrackingVariableNumbers()
-        requires std::is_same_v<ScalarT, DependencyTracking::Variable>
-      {
-        auto* y  = y_.getData();
-        auto* yp = yp_.getData();
-
-        for (IdxT j = 0; j < size_; ++j)
-        {
-          const IdxT var_idx = this->getVariableIndex(j);
-          if (var_idx != INVALID_INDEX<IdxT>)
-          {
-            // Even indices for y and odd indices for yp
-            y[j].setVariableNumber(static_cast<size_t>(2 * var_idx));
-            yp[j].setVariableNumber(static_cast<size_t>(2 * var_idx + 1));
-          }
-        }
-
-        y_.setDataUpdated();
-        yp_.setDataUpdated();
-
-        return 0;
       }
 
     private:

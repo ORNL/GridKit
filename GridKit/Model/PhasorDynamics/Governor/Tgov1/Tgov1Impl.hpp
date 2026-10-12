@@ -420,10 +420,8 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::evaluateInternalResidual()
+      int Tgov1<scalar_type, index_type>::evaluateResidual()
       {
-        gatherExternalVariables();
-
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();

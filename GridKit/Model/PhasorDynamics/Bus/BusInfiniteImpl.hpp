@@ -159,11 +159,11 @@ namespace GridKit
     /*!
      * @brief Reset the slack current accumulators.
      *
-     * The infinite bus owns no solver rows. The dummy current accumulators
-     * only serve diagnostics and are reset here.
+     * The infinite bus owns no solver rows, so injections into it are
+     * dropped and the accumulators stay zero.
      */
     template <typename scalar_type, typename index_type>
-    int BusInfinite<scalar_type, index_type>::evaluateInternalResidual()
+    int BusInfinite<scalar_type, index_type>::evaluateResidual()
     {
       Ir_ = 0.0;
       Ii_ = 0.0;
