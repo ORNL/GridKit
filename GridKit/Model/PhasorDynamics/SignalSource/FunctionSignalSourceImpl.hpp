@@ -110,12 +110,6 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks FunctionSignalSource<scalar_type, index_type>::verify() const
-    {
-      return {};
-    }
-
-    template <typename scalar_type, typename index_type>
     int FunctionSignalSource<scalar_type, index_type>::initialize()
     {
       return 0;

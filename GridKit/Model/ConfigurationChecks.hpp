@@ -22,7 +22,7 @@ namespace GridKit
      * condition that does not hold and returns it. The caller decides how
      * the messages are reported; passed() is true when there are none.
      */
-    class ConfigurationChecks
+    class [[nodiscard]] ConfigurationChecks
     {
     public:
       ConfigurationChecks() = default;

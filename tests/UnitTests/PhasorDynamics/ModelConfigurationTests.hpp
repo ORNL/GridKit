@@ -22,9 +22,15 @@ namespace GridKit
     {
       omitted,
       integer,
+      real,
+      zero,
       negative,
       infinite,
+      not_a_number,
       integer_flag,
+      false_flag,
+      true_flag,
+      text,
     };
 
     template <typename RealT, typename IdxT>
@@ -41,7 +47,7 @@ namespace GridKit
                                                    Utilities::EmptyEnum>;
 
     public:
-      /// Omitted parameters keep the default, integers widen to reals, and
+      /// Omitted parameters return no value, integers widen to reals, and
       /// invalid values are rejected naming the model and parameter.
       TestOutcome parameterReader()
       {
@@ -49,31 +55,60 @@ namespace GridKit
 
         DataT data;
         data.parameters = {{Params::integer, static_cast<IdxT>(2)},
+                           {Params::real, static_cast<RealT>(0.5)},
+                           {Params::zero, ZERO<RealT>},
                            {Params::negative, -ONE<RealT>},
                            {Params::infinite, std::numeric_limits<RealT>::infinity()},
-                           {Params::integer_flag, static_cast<IdxT>(1)}};
+                           {Params::not_a_number, std::numeric_limits<RealT>::quiet_NaN()},
+                           {Params::integer_flag, static_cast<IdxT>(1)},
+                           {Params::false_flag, false},
+                           {Params::true_flag, true},
+                           {Params::text, std::string("2")}};
 
         const Model::ParameterReader reader(data, "Test");
-        RealT                        real = ONE<RealT>;
 
-        success *= !reader.loadReal(Params::omitted, real);
-        success *= (real == ONE<RealT>);
-        success *= (reader.requireReal(Params::integer) == TWO<RealT>);
+        success *= !reader.readReal(Params::omitted).has_value();
+        success *= !reader.readNonNegative(Params::omitted).has_value();
+        success *= !reader.readBool(Params::omitted).has_value();
+        success *= !reader.readInteger(Params::omitted).has_value();
+        success *= (reader.readReal(Params::omitted).value_or(ONE<RealT>) == ONE<RealT>);
+        success *= reader.readBool(Params::omitted).value_or(true);
+
+        success *= (reader.readReal(Params::integer) == TWO<RealT>);
+        success *= (reader.readReal(Params::real) == static_cast<RealT>(0.5));
+        success *= (reader.readReal(Params::negative) == -ONE<RealT>);
+        success *= (reader.readNonNegative(Params::zero) == ZERO<RealT>);
+        success *= (reader.readNonNegative(Params::integer) == TWO<RealT>);
+        success *= (reader.readInteger(Params::integer) == static_cast<IdxT>(2));
+        success *= (reader.readBool(Params::false_flag) == false);
+        success *= (reader.readBool(Params::true_flag) == true);
+        success *= !reader.readBool(Params::false_flag).value_or(true);
+
         success *= throws<std::invalid_argument>([&]()
-                                                 { reader.loadNonNegative(Params::negative, real); });
+                                                 { static_cast<void>(reader.readReal(Params::infinite)); });
         success *= throws<std::invalid_argument>([&]()
-                                                 { reader.loadReal(Params::infinite, real); });
+                                                 { static_cast<void>(reader.readReal(Params::not_a_number)); });
         success *= throws<std::invalid_argument>([&]()
-                                                 { reader.requireBool(Params::integer_flag); });
+                                                 { static_cast<void>(reader.readReal(Params::text)); });
+        success *= throws<std::invalid_argument>([&]()
+                                                 { static_cast<void>(reader.readReal(Params::true_flag)); });
+        success *= throws<std::invalid_argument>([&]()
+                                                 { static_cast<void>(reader.readInteger(Params::real)); });
+        success *= throws<std::invalid_argument>([&]()
+                                                 { static_cast<void>(reader.readInteger(Params::zero)); });
+        success *= throws<std::invalid_argument>([&]()
+                                                 { static_cast<void>(reader.readInteger(Params::true_flag)); });
+        success *= throws<std::invalid_argument>([&]()
+                                                 { static_cast<void>(reader.readNonNegative(Params::negative)); });
 
         try
         {
-          reader.requireReal(Params::omitted);
+          static_cast<void>(reader.readBool(Params::integer_flag));
           success = false;
         }
         catch (const std::invalid_argument& error)
         {
-          success *= (std::string_view(error.what()) == "Test: parameter 'omitted' is required");
+          success *= (std::string_view(error.what()) == "Test: parameter 'integer_flag' must be boolean");
         }
 
         return success.report(__func__);

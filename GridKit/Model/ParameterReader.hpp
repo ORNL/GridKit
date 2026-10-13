@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <format>
+#include <optional>
 #include <stdexcept>
 #include <string_view>
 #include <variant>
@@ -24,12 +25,11 @@ namespace GridKit
     /**
      * @brief Reads typed parameters out of a model data container.
      *
-     * A load method stores a provided value in its target and returns true.
-     * An omitted parameter leaves the target untouched, so the target's
-     * initial value is the default. A require method rejects an omitted
-     * parameter. A value of the wrong type cannot produce a valid model, so
-     * it is rejected with std::invalid_argument naming the model and the
-     * parameter. Real parameters accept integer values and must be finite.
+     * A read method returns the provided value or std::nullopt when the
+     * parameter is omitted. The model chooses a default or requires a value.
+     * Invalid values are rejected with std::invalid_argument naming the
+     * model and parameter. Real parameters accept integer values and must
+     * be finite.
      *
      * @tparam ModelDataT A model data container satisfying
      *         PhasorDynamics::ModelData.
@@ -52,13 +52,13 @@ namespace GridKit
       {
       }
 
-      /// Load an optional real parameter.
-      bool loadReal(ParametersT key, RealT& target) const
+      /// Read an optional real parameter.
+      [[nodiscard]] std::optional<RealT> readReal(ParametersT key) const
       {
         const auto* value = find(key);
         if (value == nullptr)
         {
-          return false;
+          return std::nullopt;
         }
 
         RealT real{};
@@ -80,57 +80,30 @@ namespace GridKit
           reject(key, "must be finite");
         }
 
-        target = real;
-        return true;
-      }
-
-      /// Load an optional non-negative real parameter.
-      bool loadNonNegative(ParametersT key, RealT& target) const
-      {
-        if (!loadReal(key, target))
-        {
-          return false;
-        }
-
-        if (target < ZERO<RealT>)
-        {
-          reject(key, "must be non-negative");
-        }
-        return true;
-      }
-
-      /// Load an optional boolean parameter.
-      bool loadBool(ParametersT key, bool& target) const
-      {
-        return loadExact(key, target, "must be boolean");
-      }
-
-      /// Load an optional integer parameter.
-      bool loadInteger(ParametersT key, IdxT& target) const
-      {
-        return loadExact(key, target, "must be an integer");
-      }
-
-      /// Read a real parameter that must be provided.
-      RealT requireReal(ParametersT key) const
-      {
-        RealT real{};
-        if (!loadReal(key, real))
-        {
-          reject(key, "is required");
-        }
         return real;
       }
 
-      /// Read a boolean parameter that must be provided.
-      bool requireBool(ParametersT key) const
+      /// Read an optional non-negative real parameter.
+      [[nodiscard]] std::optional<RealT> readNonNegative(ParametersT key) const
       {
-        bool flag{};
-        if (!loadBool(key, flag))
+        auto value = readReal(key);
+        if (value && *value < ZERO<RealT>)
         {
-          reject(key, "is required");
+          reject(key, "must be non-negative");
         }
-        return flag;
+        return value;
+      }
+
+      /// Read an optional boolean parameter.
+      [[nodiscard]] std::optional<bool> readBool(ParametersT key) const
+      {
+        return readExact<bool>(key, "must be boolean");
+      }
+
+      /// Read an optional integer parameter.
+      [[nodiscard]] std::optional<IdxT> readInteger(ParametersT key) const
+      {
+        return readExact<IdxT>(key, "must be an integer");
       }
 
     private:
@@ -148,14 +121,14 @@ namespace GridKit
         return &entry->second;
       }
 
-      /// Load an optional parameter that must hold exactly a T.
+      /// Read an optional parameter that must hold exactly a T.
       template <typename T>
-      bool loadExact(ParametersT key, T& target, std::string_view reason) const
+      [[nodiscard]] std::optional<T> readExact(ParametersT key, std::string_view reason) const
       {
         const auto* value = find(key);
         if (value == nullptr)
         {
-          return false;
+          return std::nullopt;
         }
 
         const auto* exact_value = std::get_if<T>(value);
@@ -164,8 +137,7 @@ namespace GridKit
           reject(key, reason);
         }
 
-        target = *exact_value;
-        return true;
+        return *exact_value;
       }
 
       /// Reject the model data with a message naming the model and parameter.
