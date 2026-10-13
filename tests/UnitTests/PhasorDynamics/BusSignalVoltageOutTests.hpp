@@ -33,13 +33,6 @@ namespace GridKit
       BusSignalVoltageOutTests()  = default;
       ~BusSignalVoltageOutTests() = default;
 
-      /// True if verify() reports a problem, as it must for a misconnected bus
-      template <typename BusLike>
-      static bool verifyFails(const BusLike& bus)
-      {
-        return !bus.verify().passed();
-      }
-
       /// Constructor, allocation, and initialization checks
       TestOutcome constructor()
       {
@@ -145,7 +138,7 @@ namespace GridKit
           bus.initialize();
           const auto previous_verbosity = Log::verbosity();
           Log::setVerbosity(Log::Verbosity::NONE); // expected errors
-          success *= verifyFails(bus);
+          success *= !bus.verify().passed();
           Log::setVerbosity(previous_verbosity);
         }
 
@@ -201,12 +194,12 @@ namespace GridKit
         bus.allocate();
         bus.initialize();
 
-        success *= verifyFails(bus);
+        success *= !bus.verify().passed();
 
         ScalarT Ir{0.1};
         IdxT    ir_index{0};
         ir_node.link(&Ir, &ir_index);
-        success *= verifyFails(bus);
+        success *= !bus.verify().passed();
 
         ScalarT Ii{0.2};
         IdxT    ii_index{1};

@@ -54,8 +54,6 @@ namespace GridKit
       int evaluateResidual() override final;
       int evaluateJacobian() override final;
 
-      Model::ConfigurationChecks verify() const override final;
-
       void updateTime(RealT t, RealT a) override;
 
       SignalPortsT& getPorts()

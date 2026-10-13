@@ -32,13 +32,6 @@ namespace GridKit
       BusSignalVoltageInTests()  = default;
       ~BusSignalVoltageInTests() = default;
 
-      /// True if verify() reports a problem, as it must for a misconnected bus
-      template <typename BusLike>
-      static bool verifyFails(const BusLike& bus)
-      {
-        return !bus.verify().passed();
-      }
-
       /// Constructor, allocation, and initialization checks
       TestOutcome constructor()
       {
@@ -61,14 +54,14 @@ namespace GridKit
         success *= isEqual(bus->Ir(), 0.0);
         success *= isEqual(bus->Ii(), 0.0);
         // Voltage inlets are mandatory: an unconnected bus fails verification
-        success *= verifyFails(*bus);
+        success *= !bus->verify().passed();
         delete bus;
 
         // Initial voltage arguments are accepted for interface uniformity but not used
         bus = new BusT(Vr, Vi);
         bus->allocate();
         bus->initialize();
-        success *= verifyFails(*bus);
+        success *= !bus->verify().passed();
         delete bus;
 
         bus = nullptr;
@@ -123,7 +116,7 @@ namespace GridKit
         BusT plain;
         plain.allocate();
         plain.initialize();
-        success    *= verifyFails(plain);
+        success    *= !plain.verify().passed();
         bool threw  = false;
         try
         {
@@ -213,15 +206,15 @@ namespace GridKit
         bus.initialize();
 
         // vr connected but unlinked, vi not connected
-        success *= verifyFails(bus);
+        success *= !bus.verify().passed();
 
         ScalarT Vr{0.1};
         IdxT    vr_index{0};
         vr_node.link(&Vr, &vr_index);
-        success *= verifyFails(bus);
+        success *= !bus.verify().passed();
 
         bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
-        success *= verifyFails(bus);
+        success *= !bus.verify().passed();
 
         ScalarT Vi{0.2};
         IdxT    vi_index{1};

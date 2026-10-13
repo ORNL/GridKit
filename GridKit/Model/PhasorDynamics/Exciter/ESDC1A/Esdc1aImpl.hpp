@@ -636,26 +636,26 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        Model::ParameterReader reader(data, "Esdc1a");
+        const Model::ParameterReader reader(data, "Esdc1a");
 
-        reader.loadNonNegative(Params::Tr, Tr_);
-        reader.loadReal(Params::Ka, Ka_);
-        reader.loadNonNegative(Params::Ta, Ta_);
-        reader.loadNonNegative(Params::Tb, Tb_);
-        reader.loadReal(Params::Tc, Tc_);
-        reader.loadReal(Params::Vrmax, Vrmax_);
-        reader.loadReal(Params::Vrmin, Vrmin_);
-        reader.loadReal(Params::Ke, Ke_);
-        reader.loadNonNegative(Params::Te, Te_);
-        reader.loadReal(Params::Kf, Kf_);
-        reader.loadNonNegative(Params::Tf1, Tf1_);
-        reader.loadBool(Params::Spdmlt, Spdmlt_);
-        reader.loadReal(Params::E1, E1_);
-        reader.loadReal(Params::Se1, Se1_);
-        reader.loadReal(Params::E2, E2_);
-        reader.loadReal(Params::Se2, Se2_);
-        reader.loadInteger(Params::UEL, UEL_);
-        reader.loadBool(Params::exclim, exclim_);
+        Tr_     = reader.readNonNegative(Params::Tr).value_or(Tr_);
+        Ka_     = reader.readReal(Params::Ka).value_or(Ka_);
+        Ta_     = reader.readNonNegative(Params::Ta).value_or(Ta_);
+        Tb_     = reader.readNonNegative(Params::Tb).value_or(Tb_);
+        Tc_     = reader.readReal(Params::Tc).value_or(Tc_);
+        Vrmax_  = reader.readReal(Params::Vrmax).value_or(Vrmax_);
+        Vrmin_  = reader.readReal(Params::Vrmin).value_or(Vrmin_);
+        Ke_     = reader.readReal(Params::Ke).value_or(Ke_);
+        Te_     = reader.readNonNegative(Params::Te).value_or(Te_);
+        Kf_     = reader.readReal(Params::Kf).value_or(Kf_);
+        Tf1_    = reader.readNonNegative(Params::Tf1).value_or(Tf1_);
+        Spdmlt_ = reader.readBool(Params::Spdmlt).value_or(Spdmlt_);
+        E1_     = reader.readReal(Params::E1).value_or(E1_);
+        Se1_    = reader.readReal(Params::Se1).value_or(Se1_);
+        E2_     = reader.readReal(Params::E2).value_or(E2_);
+        Se2_    = reader.readReal(Params::Se2).value_or(Se2_);
+        UEL_    = reader.readInteger(Params::UEL).value_or(UEL_);
+        exclim_ = reader.readBool(Params::exclim).value_or(exclim_);
         setDerivedParameters();
       }
 

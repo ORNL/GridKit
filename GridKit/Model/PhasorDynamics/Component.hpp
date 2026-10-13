@@ -62,8 +62,11 @@ namespace GridKit
         }
       }
 
-      /// Report every configuration problem; passed() when the model can initialize.
-      virtual Model::ConfigurationChecks verify() const = 0;
+      /// Report configuration problems. Override when the component has checks.
+      virtual Model::ConfigurationChecks verify() const
+      {
+        return {};
+      }
 
       IdxT size() override final
       {
@@ -287,7 +290,7 @@ namespace GridKit
        *
        * @return true when the configuration has no problems.
        */
-      bool verifyAndLog() const
+      [[nodiscard]] bool verifyAndLog() const
       {
         const auto checks = verify();
         for (const auto& error : checks.errors())
