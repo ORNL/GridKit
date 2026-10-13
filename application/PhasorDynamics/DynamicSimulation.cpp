@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -26,6 +26,16 @@ int runApplication(int argc, const char* argv[])
   // Study file
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
+
+  for (const auto& event : study.events)
+  {
+    if (event.bus == GridKit::INVALID_INDEX<index_type>)
+    {
+      Log::error() << "Fault event at time " << event.time
+                   << " requires a bus number\n";
+      return 1;
+    }
+  }
 
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
@@ -55,14 +65,24 @@ int runApplication(int argc, const char* argv[])
     ida.runSimulation(event.time, dt_monitor);
 
     // Set up run for event (to start at event time)
+    auto* bus = sys.getBus(event.bus);
+    int   ret = 0;
+
     switch (event.type)
     {
     case EventType::FAULT_ON:
-      sys.getBusFault(event.element_id)->setStatus(true);
+      ret = bus->setFault(true, event.R, event.X);
       break;
     case EventType::FAULT_OFF:
-      sys.getBusFault(event.element_id)->setStatus(false);
+      ret = bus->clearFault();
       break;
+    }
+
+    if (ret != 0)
+    {
+      Log::error() << "Fault event failed for bus " << event.bus
+                   << " at time " << event.time << '\n';
+      return 1;
     }
 
     // Re-initialize simulation at event time

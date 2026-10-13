@@ -13,7 +13,6 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -229,10 +228,10 @@ namespace GridKit
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
-        PhasorDynamics::BusFault<ScalarT, IdxT>    fault(&bus1);
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus1);
 
         system.addBus(&bus1);
-        system.addComponent(&fault);
+        system.addComponent(&load);
         success                    *= system.allocate() == 0;
         const IdxT size_before_bus  = system.size();
 

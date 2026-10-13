@@ -2,7 +2,7 @@
 #include <sstream>
 #include <string>
 
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
@@ -172,12 +172,12 @@ int main()
   ida.runSimulation(1.0, dt, step_cb);
 
   // Introduce fault and run for the next 0.1s
-  sys.getBusFault(0)->setStatus(true);
+  sys.getBus(3)->setFault(true, 0.0, 1e-5);
   ida.initializeSimulation(1.0);
   ida.runSimulation(1.1, dt, step_cb);
 
   // Clear the fault and run until t = 10s.
-  sys.getBusFault(0)->setStatus(false);
+  sys.getBus(3)->setFault(false, 0.0, 1e-5);
   ida.initializeSimulation(1.1);
   ida.runSimulation(10.0, dt, step_cb);
 

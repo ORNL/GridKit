@@ -140907,18 +140907,6 @@
         "Vcu": 0.0,
         "Tdelay": 0.0
       }
-    },
-    {
-      "class": "BusFault",
-      "ports": {
-        "bus": 7346
-      },
-      "id": "fault_1",
-      "params": {
-        "state0": false,
-        "R": 0.0,
-        "X": 0.01
-      }
     }
   ]
 }

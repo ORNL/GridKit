@@ -72,30 +72,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome busFault()
-      {
-        TestStatus success = true;
-
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
-
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
-        system->addBus(&bus);
-
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus);
-        system->addFault(&fault);
-
-        success *= system->allocate() == 0;
-        success *= system->initialize() == 0;
-        success *= system->evaluateResidual() == 0;
-        success *= system->evaluateJacobian() == 0;
-        success *= system->size() == fault.size();
-
-        delete system;
-        system = nullptr;
-
-        return success.report(__func__);
-      }
-
       TestOutcome ieeet1()
       {
         TestStatus success = true;

@@ -11830,18 +11830,6 @@
         "Efdmax": 5.0,
         "Efdmin": -4.0
       }
-    },
-    {
-      "class": "BusFault",
-      "ports": {
-        "bus": 149
-      },
-      "id": "fault_1",
-      "params": {
-        "state0": false,
-        "R": 0.0,
-        "X": 0.01
-      }
     }
   ]
 }

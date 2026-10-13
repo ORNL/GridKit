@@ -8,7 +8,6 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
@@ -45,7 +44,6 @@ namespace GridKit
       using IdxT              = index_type;
       using BranchDataT       = BranchData<RealT, IdxT>;
       using BusDataT          = BusData<RealT, IdxT>;
-      using BusFaultDataT     = BusFaultData<RealT, IdxT>;
       using RegcaDataT        = Converter::RegcaData<RealT, IdxT>;
       using ReecbDataT        = Controller::ReecbData<RealT, IdxT>;
       using RepcaDataT        = Controller::RepcaData<RealT, IdxT>;
@@ -105,7 +103,6 @@ namespace GridKit
       /// - Consolidate components to allow writing to them using the enum as the argument
       std::vector<BusDataT>          bus;             ///< Buses within the model
       std::vector<BranchDataT>       branch;          ///< Branches within the model
-      std::vector<BusFaultDataT>     bus_fault;       ///< Bus faults within the model
       std::vector<RegcaDataT>        regca;           ///< REGCA converter instances within the model
       std::vector<ReecbDataT>        reecb;           ///< REECB electrical controllers within the model
       std::vector<RepcaDataT>        repca;           ///< REPCA plant controllers within the model
