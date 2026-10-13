@@ -523,6 +523,40 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome decreasingStepLimit()
+      {
+        TestStatus                          success = true;
+        Model::NullEvaluator<ScalarT, IdxT> model;
+        Ida<double, size_t>                 ida(&model);
+        unsigned                            steps = 0;
+        double                              limit = 0, largest_step = 0;
+        ida.setStepControl({[](double, bool) {},
+                            [&](double begin, double end, const auto&)
+                            {
+                              const double h = end - begin;
+                              if (limit > 0)
+                              {
+                                success *= h <= limit + 1e-12;
+                              }
+                              largest_step       = std::max(largest_step, h);
+                              // Tighten an otherwise unrestricted constant solution,
+                              // then release the cap and check that growth resumes.
+                              const bool tighten = ++steps >= 4 && steps <= 8;
+                              limit              = (tighten ? 0.8 : 2.0) * h;
+                              return tighten ? 1.0 : 0.0;
+                            },
+                            [] {},
+                            [] {},
+                            [] {}});
+        ida.configureSimulation();
+        ida.initializeSimulation(0.0, false);
+        ida.runSimulation(1.0);
+        success *= steps > 8 && steps < 100;
+        success *= largest_step > 0.1;
+        success *= ida.getRejectedStepCount() == 0;
+        return success.report(__func__);
+      }
+
       TestOutcome fixedStep()
       {
         const unsigned n_steps = 32;

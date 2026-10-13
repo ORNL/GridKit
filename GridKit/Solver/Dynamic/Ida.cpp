@@ -473,7 +473,19 @@ namespace AnalysisManager
         N_VScale(1, yp_, saved_yp.get());
         const RealT limit = time_step_ > 0 ? time_step_ : controlled_step_limit_;
         checkOutput(IDASetMaxStep(solver_, limit), "IDASetMaxStep");
-        checkOutput(IDASetStopTime(solver_, tf), "IDASetStopTime");
+        RealT stop = tf;
+        if (time_step_ == 0 && limit > 0)
+        {
+          RealT next_step;
+          checkOutput(IDAGetCurrentStep(solver_, &next_step), "IDAGetCurrentStep");
+          // A reduced maximum does not shorten IDA's already selected step.
+          // Use a stop only when binding; an unconditional stop impedes growth.
+          if (next_step > limit + epsilon)
+          {
+            stop = std::min(tf, begin + limit);
+          }
+        }
+        checkOutput(IDASetStopTime(solver_, stop), "IDASetStopTime");
         RealT end;
         checkOutput(IDASolve(solver_, tf, &end, yy_, yp_, IDA_ONE_STEP), "IDASolve");
         if (!(end > begin))

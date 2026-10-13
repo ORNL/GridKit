@@ -153,6 +153,8 @@ $$h\min\!\left(2,\max\!\left(0.5,\frac{0.8}{\sqrt[3]{\max(\eta,10^{-12})}}\right
 where $\eta$ is the normalized history error estimate.
 This predicts refinement before a rejection; IDA still
 chooses its step under that cap. No cap depends on the shortest delay.
+A temporary stop enforces a reduced cap when IDA has already selected a larger
+step. Otherwise the stop remains at the simulation end, allowing step growth.
 
 Adjacent stored intervals may merge into a cubic matching the outer values and
 slopes. Bernstein coefficients on a common interval give the bound

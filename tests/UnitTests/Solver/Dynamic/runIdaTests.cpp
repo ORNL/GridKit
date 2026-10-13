@@ -11,6 +11,7 @@ int main()
   result += test.callback();
   result += test.dtMonitorZero();
   result += test.dtMonitorSuppressesEpsilonFinalStep();
+  result += test.decreasingStepLimit();
   result += test.fixedStep();
   result += test.suppressAlgebraicErrors();
   result += test.consistentICType();

@@ -1,6 +1,6 @@
 {
-  "head": "c9777411286bb99c60f9f124a1670ab1e8114703",
-  "source_diff_sha256": "b72eea64b11b542abc4ea982c68a4ff3a113712d924687bef826bb6bbd027781",
+  "head": "72b48b3d8ecc650a51e625a1b6ae2416f4325ff9",
+  "source_diff_sha256": "a0b3e975ae4b96bb7b1664ebaa5cc9752cfe672a71838a63634482ad32453534",
   "compiler": "/usr/bin/clang++-16",
   "description": "Smooth manufactured sources linked to build/ GridKit libraries",
   "error_samples": "Uniform monitor times plus each accepted step midpoint",
