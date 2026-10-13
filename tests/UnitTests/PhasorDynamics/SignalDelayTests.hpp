@@ -90,7 +90,9 @@ namespace GridKit::Testing
       {
         auto polynomial = [degree](double t)
         { return std::pow(t, degree); };
-        const std::array<History::Sample, 3> anchors{{{-0.7, polynomial(-0.7)}, {-0.3, polynomial(-0.3)}, {0.2, polynomial(0.2)}}};
+        auto derivative = [degree](double t)
+        { return degree == 0 ? 0 : degree * std::pow(t, degree - 1); };
+        const std::array<History::Sample, 3> anchors{{{-0.7, polynomial(-0.7), derivative(-0.7)}, {-0.3, polynomial(-0.3), derivative(-0.3)}, {0.2, polynomial(0.2), derivative(0.2)}}};
         for (double q : {0.2, 0.31, 0.59, 0.8})
         {
           const auto a             = History::trialSample(anchors, 0.8, q);
@@ -116,7 +118,7 @@ namespace GridKit::Testing
       h.prepare(1, 5);
       const auto   trial   = h.sample(1, 0.4);
       const double before  = trial.constant + trial.weight * 5;
-      success             *= std::abs(before - 3.8) < 1e-12;
+      success             *= std::abs(before - 3.8) < 1e-10;
       h.discard();
       success *= h.time() == 0 && h.segmentCount() == 0;
       h.prepare(1, 5);
@@ -128,9 +130,17 @@ namespace GridKit::Testing
       h.begin(1);
       success *= h.time() == 1;
       h.prepare(2, 8);
-      success *= h.estimateDelayed(1.5, 0.75, 4.25) == 0; // Committed history.
-      success *= h.estimateDelayed(1.5, 0.25, 5.75) == 0; // Current polynomial.
-      success *= h.estimateDelayed(1.5, 0.75, 2) > 1;
+      for (double delay : {0.25, 0.75})
+      {
+        std::array<double, 6> values;
+        for (size_t i = 0; i < values.size(); ++i)
+        {
+          values[i] = 2 + 3 * (1 + History::dense_nodes[i] - delay);
+        }
+        success   *= h.estimateDelayed(1, 2, delay, values) < 1e-4;
+        values[2] += 0.1;
+        success   *= h.estimateDelayed(1, 2, delay, values) > 1;
+      }
       h.reset();
       success *= !h.initialized() && h.hasPrehistory();
       return success.report(__func__);
@@ -155,7 +165,7 @@ namespace GridKit::Testing
         compact.prepare(t, std::sin(t));
         if (i == 1)
         {
-          const double dense  = std::sin(t) / 2 + 9e-5;
+          const double dense  = 0.375 * std::sin(t) + 9e-5;
           success            *= full.estimate(t / 2, dense) < 1;
           success            *= compact.estimate(t / 2, dense) > 1;
         }
@@ -180,6 +190,51 @@ namespace GridKit::Testing
       success *= full.segmentCount() <= 202;
       success *= throws([&]
                         { compact.sample(2, 1.5); });
+      return success.report(__func__);
+    }
+
+    TestOutcome continuityAndHiddenFeature()
+    {
+      TestStatus success = true;
+      History    history;
+      history.initialize(0, 1);
+      for (int i = 1; i <= 200; ++i)
+      {
+        const double t = i / 200.0;
+        history.prepare(t, 1 + std::exp(-std::pow((t - 0.47) / 0.01, 2)));
+        history.accept();
+      }
+      const auto& segments = history.segments();
+      for (size_t i = 1; i < segments.size(); ++i)
+      {
+        const auto&  a      = segments[i - 1];
+        const auto&  b      = segments[i];
+        const double left   = 3 * (a.coefficients[3] - a.coefficients[2]) / (a.end - a.begin);
+        const double right  = 3 * (b.coefficients[1] - b.coefficients[0]) / (b.end - b.begin);
+        success            *= std::abs(left - right) < 1e-10;
+      }
+      history.prepare(1.1, 1);
+      // The pulse falls between the six dense-output nodes. Checking every
+      // history polynomial must still reject a constant delayed trajectory.
+      success *= history.estimateDelayed(1, 2, 1, {1, 1, 1, 1, 1, 1}) > 1;
+
+      History constant;
+      constant.setOptions({.rel_tol = 0, .abs_tol = 1e-7});
+      constant.initialize(0, 1);
+      constant.prepare(1, 1);
+      constant.accept();
+      constant.prepare(2, 1);
+      std::array<double, 6> quintic;
+      for (size_t i = 0; i < quintic.size(); ++i)
+      {
+        quintic[i] = 1 + 1e-4 * std::pow(2 * History::dense_nodes[i] - 1, 5);
+      }
+      // (2x-1)^5 has alternating +/-1 Bernstein coefficients. Check the
+      // fifth-degree bound, including subdivision across accepted/trial history.
+      for (double delay : {0.5, 1.0})
+      {
+        success *= std::abs(constant.estimateDelayed(1, 2, delay, quintic) - 1000) < 1e-5;
+      }
       return success.report(__func__);
     }
 
@@ -208,10 +263,10 @@ namespace GridKit::Testing
       delay.updateTime(0.1, 0);
       delay.y().getData()[0] = 1.9;
       delay.evaluateResidual();
-      success *= std::abs(delay.getResidual().getData()[0] - 0.72) < 1e-12;
+      success *= std::abs(delay.getResidual().getData()[0] - 0.7072) < 1e-12;
       delay.evaluateJacobian();
       success *= delay.getCooJacobian()->getValues()[0] == -1;
-      success *= std::abs(delay.getCooJacobian()->getValues()[1] - 0.8) < 1e-12;
+      success *= std::abs(delay.getCooJacobian()->getValues()[1] - 0.768) < 1e-12;
 
       using AD = DependencyTracking::Variable;
       SignalNode<AD, size_t> ad_source, ad_output;
@@ -227,7 +282,7 @@ namespace GridKit::Testing
       tracked.evaluateResidual();
       const auto& dependencies  = tracked.getResidual().getData()[0].getDependencies();
       success                  *= std::abs(dependencies.at(0) + 1) < 1e-12;
-      success                  *= std::abs(dependencies.at(2) - 0.8) < 1e-12;
+      success                  *= std::abs(dependencies.at(2) - 0.768) < 1e-12;
 
       history.prepare(0.1, input);
       history.accept();

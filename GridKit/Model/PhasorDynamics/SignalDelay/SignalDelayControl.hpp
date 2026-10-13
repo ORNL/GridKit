@@ -28,6 +28,7 @@ namespace GridKit::PhasorDynamics
                            [&system]()
                            { system.finishSignalHistory(); },
                            [&system]()
-                           { system.discardSignalHistory(); }});
+                           { system.discardSignalHistory(); },
+                           4}); // Cubic reconstruction has fourth-order local error.
   }
 } // namespace GridKit::PhasorDynamics

@@ -46,6 +46,7 @@ int runApplication(int argc, const char* argv[])
   Ida<scalar_type, index_type> ida(&sys);
   ida.setTolerance(study.rel_tol, study.abs_tol);
   ida.setFixedStep(study.dt_fixed);
+  ida.setMinStep(study.h_min);
   ida.setMaxSteps(study.max_steps);
   ida.setMaxOrder(study.max_order);
   ida.setConsistentICType(study.consistent_ic_type);

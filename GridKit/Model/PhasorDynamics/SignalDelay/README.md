@@ -71,24 +71,34 @@ the current source iterate:
 
 $$\widehat u(q)=a(q,t)+b(q,t)u(t).$$
 
-For up to three recent accepted anchors $(s_i,u_i)$, ending at $s_{m-1}=t_n$,
+Let $h=t-t_n$, $x=(q-t_n)/h$, and let $d_n$ be the stored slope at $t_n$.
+The trial segment is cubic Hermite interpolation:
 
-$$b(q,t)=\prod_{i=0}^{m-1}\frac{q-s_i}{t-s_i},$$
+$$\widehat u(q)=H_{00}(x)u_n+hH_{10}(x)d_n
+                  +H_{01}(x)u(t)+hH_{11}(x)d(t),$$
 
-$$a(q,t)=\sum_{i=0}^{m-1}u_i\frac{q-t}{s_i-t}
-         \prod_{j\ne i}\frac{q-s_j}{s_i-s_j}.$$
+$$H_{00}=1-3x^2+2x^3,\quad H_{10}=x-2x^2+x^3,\quad
+  H_{01}=3x^2-2x^3,\quad H_{11}=x^3-x^2.$$
 
-Startup uses the available anchors. The Jacobian entries are
-$\partial F_z/\partial z=-1$ and $\partial F_z/\partial u=b$.
-For a query in accepted history, $b=0$. The source column stays in the sparse
-pattern as the query crosses the accepted-history boundary.
+The right slope comes from the interpolant through up to three recent accepted
+values $(s_i,u_i)$ and the live endpoint $u(t)$:
 
-With one anchor and $h=t-t_n>\tau$, this reduces to
+$$d(t)=a_d+b_du(t),\qquad b_d=\sum_i\frac{1}{t-s_i},$$
 
-$$z(t)=\frac{\tau}{h}u_n+\left(1-\frac{\tau}{h}\right)u(t).$$
+$$a_d=\sum_i\frac{u_i}{s_i-t}
+                   \prod_{j\ne i}\frac{t-s_j}{s_i-s_j}.$$
 
-Thus steps may exceed a delay. Integration error, interpolation error and
-nonlinear convergence determine the usable step size.
+Thus $a=H_{00}u_n+hH_{10}d_n+hH_{11}a_d$ and
+$b=H_{01}+hH_{11}b_d$. On acceptance, this endpoint slope becomes the next
+segment's left slope. Adjacent segments share both value and slope.
+Startup uses the available anchors.
+
+The Jacobian entries remain $\partial F_z/\partial z=-1$ and
+$\partial F_z/\partial u=b$. For a query in accepted history, $b=0$.
+The source column stays in the sparse pattern across the history boundary.
+Steps may exceed any delay: the current endpoint participates in the same
+implicit solve as the delayed output. Accuracy and nonlinear convergence
+control the usable step size; there is no restriction $h\le\min\tau$.
 
 ### External Equations
 
@@ -111,7 +121,8 @@ system.setSignalPrehistory(source_id,
 
 The callback must cover all requested times before $t_0$ and agree with the
 initial source value within history tolerance. Its smoothness is the caller's
-responsibility.
+responsibility. The initial slope is zero for constant prehistory and a
+second-order backward difference for a supplied function.
 
 ### Internal Initialization
 
@@ -136,25 +147,40 @@ solve, represented by four cubic Bernstein coefficients. Recent interpolation
 anchors are stored separately. History outside the largest requested delay is
 discarded after output sampling.
 
-Before accepting a step, compare its history polynomial with a lower-degree
-interpolant and source samples from IDA dense output at quarter, half and
-three-quarter points and at delayed query locations. Also check dense delayed
-outputs against history when they use the current source iterate or span finer
-stored intervals. If a step spans more than two stored intervals at a delayed
-input, also probe their shifted midpoints to resolve
-previously captured features as they arrive. IDA controls integration
-error separately. These comparisons are error estimates, not rigorous bounds on
-an arbitrary smooth input. Rejected candidates are retried from the accepted
-state, with no history commit or output. Restarting IDA discards its internal
-multistep history, so retries have a performance cost. The next step cap is
+The IDAS step-check extension runs after native nonlinear/error tests and before
+committing a step. It compares the trial history with source samples at six
+Chebyshev-Lobatto nodes and the midpoint. This measures the reconstruction error
+directly, without a lower-order interpolant that can overestimate it.
 
-$$h\min\!\left(2,\max\!\left(0.5,\frac{0.8}{\sqrt[3]{\max(\eta,10^{-12})}}\right)\right),$$
+IDAS dense output has degree at most five. The same six samples recover its
+Bernstein coefficients. On every intersected history interval, subdivide this
+polynomial and elevate the stored cubic to degree five. Then
 
-where $\eta$ is the normalized history error estimate.
-This predicts refinement before a rejection; IDA still
-chooses its step under that cap. No cap depends on the shortest delay.
-A temporary stop enforces a reduced cap when IDA has already selected a larger
-step. Otherwise the stop remains at the simulation end, allowing step growth.
+$$\|z_{\rm IDAS}(\cdot)-\widehat u(\cdot-\tau)\|_\infty
+  \le \max_i|c_i-b_i|.$$
+
+The relative error scale uses a lower bound on the absolute history value on
+that interval (zero if its Bernstein range contains zero). Consequently this
+check also detects a stored feature between the dense-output sample times.
+It covers accepted and current-trial history without a segment-count heuristic.
+Arbitrary prescribed source functions and prehistory are sampled; their errors
+are estimates, not rigorous continuous bounds.
+
+For normalized error $\eta$, predict a history cap with
+
+$$h_{\rm history}=h\,\operatorname{clip}
+ \left(\frac{0.8}{\max(\eta,10^{-12})^{1/4}},\;0.1,\;2\right).$$
+
+On rejection, limit the factor to at most $0.5$. IDAS restores its trial state,
+retains multistep history and retries at the reduced step. An accepted step uses
+the smaller of IDAS's proposed step and the history cap. Only accepted steps
+commit source history and publish output. No restart or temporary stop is needed.
+
+The optional solver setting `h_min` specifies the minimum adaptive step magnitude.
+Both native and history error tests fail if accuracy cannot be attained there.
+As in IDAS, landing on the final stop time may require a shorter last step.
+A step floor is not a source sampling guarantee: an arbitrarily narrow smooth
+feature can evade finitely many probes. It does not impose a shortest-delay cap.
 
 Adjacent stored intervals may merge into a cubic matching the outer values and
 slopes. Bernstein coefficients on a common interval give the bound
@@ -192,22 +218,30 @@ configureSignalDelays(system, ida, {
     .rel_tol = relative_tolerance,
     .abs_tol = absolute_tolerance,
     .compress = false});
+ida.setMinStep(1e-6); // Optional user-selected floor, in seconds.
 ida.configureSimulation();
 ida.initializeSimulation(t0);
 ida.runSimulation(tf);
 ```
 
 Include `GridKit/Model/PhasorDynamics/SignalDelay/SignalDelayControl.hpp`.
+Signal delays require the local
+[IDAS step-check patch](../../../../buildsystem/spack_repo/gridkit/packages/sundials/README.md).
+The GridKit Spack recipe applies it to SUNDIALS 7.8.0. Unpatched SUNDIALS remains
+usable for simulations without delays; requesting history control fails explicitly.
 Quadrature and adjoint stepping do not support this controller. A requested fixed
 step fails explicitly if history accuracy requires refinement; adaptive stepping
 can retry. Delayed inputs must remain smooth across any simulation events.
 
 ## Testing
 
-Unit tests cover nonuniform interpolation, residuals and Jacobians, initialization,
+Unit tests cover nonuniform C1 interpolation, residuals and Jacobians, initialization,
 declaration validation, history commits, retention and cumulative compression
 bounds. Integration tests use the exact feedback solution $x(t)=e^{\lambda t}$
 of $\dot x=-\gamma x+kx(t-\tau)$ with
 $\gamma=ke^{-\lambda\tau}-\lambda$. They check convergence, steps longer than the
 delay, compression, rejection rollback and continuation. A narrow prescribed
 pulse with a long delay checks that resolved source features reach the output.
+A direct IDAS test checks candidate versus committed dense polynomials and their
+derivatives, retained order on retry, and decreasing maximum steps. Solver tests
+also cover the step floor and exceptions raised inside a trial check.

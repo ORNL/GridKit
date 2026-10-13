@@ -1,0 +1,265 @@
+--- a/include/idas/idas.h
++++ b/include/idas/idas.h
+@@ -91,6 +91,10 @@
+ #define IDA_VECTOROP_ERR -28
+ 
+ #define IDA_CONTEXT_ERR -29
++#define IDA_STEP_CHECK_FAIL -18
++
++/* Optional pre-commit step validation extension. */
++#define SUNDIALS_IDAS_STEP_CHECK 1
+ 
+ #define IDA_NO_QUAD        -30
+ #define IDA_QRHS_FAIL      -31
+@@ -130,6 +134,18 @@
+ 
+ typedef int (*IDARootFn)(sunrealtype t, N_Vector y, N_Vector yp,
+                          sunrealtype* gout_1d, void* user_data);
++
++/* Called after all native error tests and before history is committed.
++ * Return 0 to accept, >0 to retry, <0 to stop. hnext is an absolute step
++ * magnitude: 0 leaves the next step unrestricted on acceptance; retry requires
++ * 0 < hnext < |t1-t0|. IDAGetDky is available on [t0,t1] during this callback
++ * and evaluates the candidate polynomial. Do not modify y, yp or solver options.
++ * A retry preserves the multistep history and honors hmin and maxnef.
++ */
++typedef int (*IDAStepCheckFn)(sunrealtype t0, sunrealtype t1, N_Vector y,
++                            N_Vector yp, sunrealtype* hnext, void* user_data);
++SUNDIALS_EXPORT int IDASetStepCheckFn(void* ida_mem, IDAStepCheckFn check,
++                                    void* user_data);
+ 
+ typedef int (*IDAEwtFn)(N_Vector y, N_Vector ewt, void* user_data);
+ 
+--- a/src/idas/idas.c
++++ b/src/idas/idas.c
+@@ -3103,7 +3103,8 @@
+ {
+   IDAMem IDA_mem;
+   sunrealtype tfuzz, tp, delt, psij_1;
+-  int i, j, retval;
++  int i, j, retval, order;
++  sunrealtype hused;
+   sunrealtype cjk[MXORDP1];
+   sunrealtype cjk_1[MXORDP1];
+ 
+@@ -3114,6 +3115,8 @@
+     return (IDA_MEM_NULL);
+   }
+   IDA_mem = (IDAMem)ida_mem;
++  order = IDA_mem->ida_checking_step ? IDA_mem->ida_kk : IDA_mem->ida_kused;
++  hused = IDA_mem->ida_checking_step ? IDA_mem->ida_hh : IDA_mem->ida_hused;
+ 
+   SUNDIALS_MARK_FUNCTION_BEGIN(IDA_PROFILER);
+ 
+@@ -3125,7 +3128,7 @@
+     return (IDA_BAD_DKY);
+   }
+ 
+-  if ((k < 0) || (k > IDA_mem->ida_kused))
++  if ((k < 0) || (k > order))
+   {
+     IDAProcessError(IDA_mem, IDA_BAD_K, __LINE__, __func__, __FILE__, MSG_BAD_K);
+     SUNDIALS_MARK_FUNCTION_END(IDA_PROFILER);
+@@ -3137,11 +3140,11 @@
+   tfuzz = HUNDRED * IDA_mem->ida_uround *
+           (SUNRabs(IDA_mem->ida_tn) + SUNRabs(IDA_mem->ida_hh));
+   if (IDA_mem->ida_hh < ZERO) { tfuzz = -tfuzz; }
+-  tp = IDA_mem->ida_tn - IDA_mem->ida_hused - tfuzz;
++  tp = IDA_mem->ida_tn - hused - tfuzz;
+   if ((t - tp) * IDA_mem->ida_hh < ZERO)
+   {
+     IDAProcessError(IDA_mem, IDA_BAD_T, __LINE__, __func__, __FILE__, MSG_BAD_T,
+-                    t, IDA_mem->ida_tn - IDA_mem->ida_hused, IDA_mem->ida_tn);
++                    t, IDA_mem->ida_tn - hused, IDA_mem->ida_tn);
+     SUNDIALS_MARK_FUNCTION_END(IDA_PROFILER);
+     return (IDA_BAD_T);
+   }
+@@ -3189,7 +3192,7 @@
+     /* update c_j^(i) */
+ 
+     /*j does not need to go till kused */
+-    for (j = i + 1; j <= IDA_mem->ida_kused - k + i; j++)
++    for (j = i + 1; j <= order - k + i; j++)
+     {
+       cjk[j] = (i * cjk_1[j - 1] + cjk[j - 1] * (delt + psij_1)) /
+                IDA_mem->ida_psi[j - 1];
+@@ -3197,13 +3200,32 @@
+     }
+ 
+     /* save existing c_j^(i)'s */
+-    for (j = i + 1; j <= IDA_mem->ida_kused - k + i; j++) { cjk_1[j] = cjk[j]; }
++    for (j = i + 1; j <= order - k + i; j++) { cjk_1[j] = cjk[j]; }
++  }
++
++  /* Before commit, phi_new[j] = sum(phi_star[j..order]) + ee.
++     Evaluate that same polynomial without modifying any history vectors. */
++  if (IDA_mem->ida_checking_step)
++  {
++    sunrealtype weights[MXORDP1 + 1], sum = ZERO;
++    N_Vector vectors[MXORDP1 + 1];
++    for (j = 0; j <= order; j++)
++    {
++      if (j >= k) { sum += cjk[j]; }
++      weights[j] = sum;
++      vectors[j] = IDA_mem->ida_phi[j];
++    }
++    weights[order + 1] = sum;
++    vectors[order + 1] = IDA_mem->ida_ee;
++    retval = N_VLinearCombination(order + 2, weights, vectors, dky);
++    SUNDIALS_MARK_FUNCTION_END(IDA_PROFILER);
++    return retval == 0 ? IDA_SUCCESS : IDA_VECTOROP_ERR;
+   }
+ 
+   /* Compute sum (c_j(t) * phi(t)) */
+ 
+-  /* Sum j=k to j<=IDA_mem->ida_kused */
+-  retval = N_VLinearCombination(IDA_mem->ida_kused - k + 1, cjk + k,
++  /* Sum j=k to j<=order */
++  retval = N_VLinearCombination(order - k + 1, cjk + k,
+                                 IDA_mem->ida_phi + k, dky);
+   if (retval != IDA_SUCCESS)
+   {
+@@ -5769,6 +5791,14 @@
+   /* Depending on sflag, print error message and return error flag */
+   switch (sflag)
+   {
++  case IDA_STEP_CHECK_FAIL:
++    IDAProcessError(IDA_mem, IDA_STEP_CHECK_FAIL, __LINE__, __func__, __FILE__,
++                    "Step check failed at t = " SUN_FORMAT_G
++                    " with h = " SUN_FORMAT_G " and hmin = " SUN_FORMAT_G
++                    ": callback failure, repeated rejections, or the step floor.",
++                    IDA_mem->ida_tn, IDA_mem->ida_hh, IDA_mem->ida_hmin);
++    return IDA_STEP_CHECK_FAIL;
++
+   case IDA_ERR_FAIL:
+     IDAProcessError(IDA_mem, IDA_ERR_FAIL, __LINE__, __func__, __FILE__,
+                     MSG_ERR_FAILS, IDA_mem->ida_tn, IDA_mem->ida_hh);
+@@ -5936,6 +5966,8 @@
+   int ncf                   = 0; /* corrector failures  */
+   int nef                   = 0; /* error test failures */
+   int step_constraint_fails = 0;
++  int check_fails = 0;
++  sunrealtype check_hnext = ZERO;
+ 
+   if (IDA_mem->ida_nst == 0)
+   {
+@@ -6184,6 +6216,38 @@
+       }
+     }
+ 
++    if (IDA_mem->ida_stepcheck)
++    {
++      check_hnext = ZERO;
++      IDA_mem->ida_checking_step = SUNTRUE;
++      retval = IDA_mem->ida_stepcheck(saved_t, IDA_mem->ida_tn,
++                                      IDA_mem->ida_yy, IDA_mem->ida_yp,
++                                      &check_hnext, IDA_mem->ida_stepcheck_data);
++      IDA_mem->ida_checking_step = SUNFALSE;
++      if (retval != 0 || !(check_hnext >= ZERO) || !isfinite(check_hnext))
++      {
++        IDARestore(IDA_mem, saved_t);
++        if (retval <= 0 || !(check_hnext > ZERO) ||
++            !isfinite(check_hnext) || check_hnext >= SUNRabs(IDA_mem->ida_hh))
++        {
++          return IDA_STEP_CHECK_FAIL;
++        }
++        IDA_mem->ida_netf++;
++        if (++check_fails >= IDA_mem->ida_maxnef ||
++            SUNRabs(IDA_mem->ida_hh) <= IDA_mem->ida_hmin * ONEPSM)
++        {
++          return IDA_STEP_CHECK_FAIL;
++        }
++        IDA_mem->ida_phase = 1;
++        IDA_mem->ida_eta = SUNMAX(check_hnext, IDA_mem->ida_hmin) /
++                           SUNRabs(IDA_mem->ida_hh);
++        IDA_mem->ida_hh *= IDA_mem->ida_eta;
++        if (saved_t + IDA_mem->ida_hh == saved_t) { return IDA_STEP_CHECK_FAIL; }
++        if (IDA_mem->ida_nst == 0) { IDAReset(IDA_mem); }
++        continue;
++      }
++    }
++
+     /* kflag == IDA_SUCCESS */
+     break;
+ 
+@@ -6193,6 +6257,14 @@
+      update data, and consider change of step and/or order */
+ 
+   IDACompleteStep(IDA_mem, err_k, err_km1);
++  if (check_hnext > ZERO)
++  {
++    check_hnext = SUNMAX(check_hnext, IDA_mem->ida_hmin);
++    if (SUNRabs(IDA_mem->ida_hh) > check_hnext)
++    {
++      IDA_mem->ida_hh *= check_hnext / SUNRabs(IDA_mem->ida_hh);
++    }
++  }
+ 
+   /*
+      Rescale ee vector to be the estimated local error
+@@ -7390,6 +7462,13 @@
+ 
+     SUNLogDebug(IDA_LOGGER, "error-test-fail", "nef = %i", *nefPtr);
+ 
++    /* At the floor, retain possible order reductions before declaring failure. */
++    if (IDA_mem->ida_kk == 1 &&
++        SUNRabs(IDA_mem->ida_hh) <= IDA_mem->ida_hmin * ONEPSM)
++    {
++      return IDA_ERR_FAIL;
++    }
++
+     if (*nefPtr == 1)
+     {
+       /* On first error test failure, keep current order or lower order by one.
+--- a/src/idas/idas_impl.h
++++ b/src/idas/idas_impl.h
+@@ -112,6 +112,10 @@
+ 
+   IDAResFn ida_res;    /* F(t,y(t),y'(t))=0; the function F     */
+   void* ida_user_data; /* user pointer passed to res            */
++
++  IDAStepCheckFn ida_stepcheck;
++  void* ida_stepcheck_data;
++  sunbooleantype ida_checking_step;
+ 
+   int ida_itol;                 /* itol = IDA_SS, IDA_SV, IDA_WF, IDA_NN */
+   sunrealtype ida_rtol;         /* relative tolerance                    */
+--- a/src/idas/idas_io.c
++++ b/src/idas/idas_io.c
+@@ -293,6 +293,16 @@
+ 
+ /*-----------------------------------------------------------------*/
+ 
++int IDASetStepCheckFn(void* ida_mem, IDAStepCheckFn check, void* user_data)
++{
++  IDAMem IDA_mem;
++  if (ida_mem == NULL) { return IDA_MEM_NULL; }
++  IDA_mem = (IDAMem)ida_mem;
++  IDA_mem->ida_stepcheck = check;
++  IDA_mem->ida_stepcheck_data = user_data;
++  return IDA_SUCCESS;
++}
++
+ int IDASetMaxStep(void* ida_mem, sunrealtype hmax)
+ {
+   IDAMem IDA_mem;
+@@ -320,6 +330,11 @@
+   }
+ 
+   IDA_mem->ida_hmax_inv = ONE / hmax;
++  /* Apply a changed bound to the already selected next step. */
++  if (IDA_mem->ida_nst > 0 && SUNRabs(IDA_mem->ida_hh) > hmax)
++  {
++    IDA_mem->ida_hh *= hmax / SUNRabs(IDA_mem->ida_hh);
++  }
+ 
+   return (IDA_SUCCESS);
+ }
+@@ -2439,6 +2454,7 @@
+   case IDA_TOO_MUCH_WORK: sprintf(name, "IDA_TOO_MUCH_WORK"); break;
+   case IDA_TOO_MUCH_ACC: sprintf(name, "IDA_TOO_MUCH_ACC"); break;
+   case IDA_ERR_FAIL: sprintf(name, "IDA_ERR_FAIL"); break;
++  case IDA_STEP_CHECK_FAIL: sprintf(name, "IDA_STEP_CHECK_FAIL"); break;
+   case IDA_CONV_FAIL: sprintf(name, "IDA_CONV_FAIL"); break;
+   case IDA_LINIT_FAIL: sprintf(name, "IDA_LINIT_FAIL"); break;
+   case IDA_LSETUP_FAIL: sprintf(name, "IDA_LSETUP_FAIL"); break;

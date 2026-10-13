@@ -717,61 +717,41 @@ namespace GridKit
       {
         source.history.prepare(end, static_cast<RealT>(source.source->read()));
       }
-      std::vector<RealT>                    points{begin + (end - begin) / 4, begin + (end - begin) / 2, begin + 3 * (end - begin) / 4};
-      std::vector<const DelayedConnection*> delayed_checks;
-      for (const auto& connection : delayed_connections_)
+      // Six shared samples recover each IDAS output polynomial (degree <= 5).
+      // Source functions are checked at these nodes and the midpoint as well.
+      std::vector<std::array<RealT, 6>> outputs(delayed_connections_.size());
+      RealT                             error = 0;
+      for (size_t i = 0; i <= 6; ++i)
       {
-        if (!connection.component)
-        {
-          continue;
-        }
-        const RealT delay       = connection.delay;
-        const bool  within_step = end - delay > begin;
-        if (within_step)
-        {
-          points.push_back(end - delay);
-        }
-        // IDA controls ordinary delayed-state interpolation. Also check it
-        // against history when crossing finer stored intervals or using the
-        // current source iterate, where a step can hide a resolved feature.
-        const auto& segments      = signal_histories_.at(connection.source_id).history.segments();
-        auto        first         = std::upper_bound(segments.begin(), segments.end(), begin - delay, [](RealT q, const auto& segment)
-                                      { return q < segment.end; });
-        auto        last          = std::lower_bound(first, segments.end(), end - delay, [](const auto& segment, RealT q)
-                                     { return segment.begin < q; });
-        const bool  finer_history = std::distance(first, last) > 2;
-        if (finer_history)
-        {
-          for (auto it = first; it != last; ++it)
-          {
-            const RealT left  = std::max(begin, it->begin + delay);
-            const RealT right = std::min(end, it->end + delay);
-            points.push_back(left + (right - left) / 2);
-          }
-        }
-        if (within_step || finer_history)
-        {
-          delayed_checks.push_back(&connection);
-        }
-      }
-      std::sort(points.begin(), points.end());
-      points.erase(std::unique(points.begin(), points.end()), points.end());
-      RealT error = 0;
-      for (RealT t : points)
-      {
+        const RealT t = i == 6 ? begin + (end - begin) / 2
+                               : begin + (end - begin) * SignalHistory<RealT>::dense_nodes[i];
         sample_state(t);
         for (const auto& [id, source] : signal_histories_)
         {
           error = std::max(error, source.history.estimate(t, static_cast<RealT>(source.source->read())));
         }
-        for (const auto* connection : delayed_checks)
-        {
-          const auto& history = signal_histories_.at(connection->source_id).history;
-          error               = std::max(error, history.estimateDelayed(t, connection->delay, static_cast<RealT>(connection->output->read())));
-        }
         if (error > 1)
         {
           return error;
+        }
+        if (i < 6)
+        {
+          for (size_t j = 0; j < delayed_connections_.size(); ++j)
+          {
+            if (delayed_connections_[j].component)
+            {
+              outputs[j][i] = static_cast<RealT>(delayed_connections_[j].output->read());
+            }
+          }
+        }
+      }
+      for (size_t j = 0; j < delayed_connections_.size(); ++j)
+      {
+        const auto& connection = delayed_connections_[j];
+        if (connection.component)
+        {
+          const auto& history = signal_histories_.at(connection.source_id).history;
+          error               = std::max(error, history.estimateDelayed(begin, end, connection.delay, outputs[j]));
         }
       }
       return error;

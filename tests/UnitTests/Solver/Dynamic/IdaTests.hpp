@@ -1,4 +1,8 @@
+#include <array>
 #include <cmath>
+#include <utility>
+
+#include <idas/idas.h>
 
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -523,9 +527,201 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome nativeStepCheck()
+      {
+        TestStatus success = true;
+#ifndef SUNDIALS_IDAS_STEP_CHECK
+        success.skipTest();
+#else
+        // Exercise the extension directly, independently of the GridKit adapter.
+        SUNContext context;
+        SUNContext_Create(SUN_COMM_NULL, &context);
+        auto y         = N_VNew_Serial(1, context);
+        auto yp        = N_VClone(y);
+        auto work      = N_VClone(y);
+        NV_Ith_S(y, 0) = NV_Ith_S(yp, 0) = 1;
+        void* mem                        = IDACreate(context);
+        auto  matrix                     = SUNDenseMatrix(1, 1, context);
+        auto  linear                     = SUNLinSol_Dense(y, matrix, context);
+        IDAInit(mem, [](double, N_Vector y, N_Vector yp, N_Vector r, void*)
+                {
+                  NV_Ith_S(r, 0) = NV_Ith_S(yp, 0) - NV_Ith_S(y, 0);
+                  return 0; },
+                0,
+                y,
+                yp);
+        IDASetLinearSolver(mem, linear, matrix);
+        IDASStolerances(mem, 1e-8, 1e-10);
+        IDASetStopTime(mem, 1);
+
+        struct Check
+        {
+          void*                                mem;
+          N_Vector                             work;
+          double                               begin{}, end{}, rejected_begin{};
+          int                                  order{}, rejected_order{}, checks{};
+          bool                                 rejected{false}, retried{false}, valid{true};
+          std::array<std::array<double, 6>, 7> samples{};
+        } check{mem, work};
+
+        IDASetStepCheckFn(mem, [](double begin, double end, N_Vector y, N_Vector, double* next, void* data)
+                          {
+          auto& c = *static_cast<Check*>(data);
+          ++c.checks;
+          c.begin = begin;
+          c.end   = end;
+          IDAGetCurrentOrder(c.mem, &c.order);
+          if (!c.rejected && begin > 0.1 && c.order >= 3)
+          {
+            c.rejected       = true;
+            c.rejected_begin = begin;
+            c.rejected_order = c.order;
+            *next            = (end - begin) / 2;
+            return 1;
+          }
+          if (c.rejected && !c.retried)
+          {
+            c.valid &= begin == c.rejected_begin && c.order == c.rejected_order;
+            c.retried = true;
+          }
+          for (size_t i = 0; i < c.samples.size(); ++i)
+          {
+            const double t = begin + (end - begin) * static_cast<double>(i) / 6;
+            for (int k = 0; k <= c.order; ++k)
+            {
+              c.valid &= IDAGetDky(c.mem, t, k, c.work) == 0;
+              c.samples[i][static_cast<size_t>(k)] = NV_Ith_S(c.work, 0);
+            }
+          }
+          c.valid &= std::abs(c.samples[6][0] - NV_Ith_S(y, 0)) < 1e-12;
+          return 0; },
+                          &check);
+        double t = 0, previous = 0, cap = 0;
+        long   steps            = 0;
+        int    tightened        = 0;
+        double worst_difference = 0;
+        while (t < 1 && steps < 1000)
+        {
+          const int flag  = IDASolve(mem, 1, &t, y, yp, IDA_ONE_STEP);
+          success        *= flag >= 0;
+          if (flag < 0)
+          {
+            break;
+          }
+          ++steps;
+          if (cap > 0)
+          {
+            success *= t - previous <= cap + 1e-12;
+          }
+          previous = t;
+          for (size_t i = 0; i < check.samples.size(); ++i)
+          {
+            const double q = check.begin + (check.end - check.begin) * static_cast<double>(i) / 6;
+            for (int k = 0; k <= check.order; ++k)
+            {
+              success               *= IDAGetDky(mem, q, k, work) == 0;
+              const double expected  = check.samples[i][static_cast<size_t>(k)];
+              worst_difference       = std::max(worst_difference, std::abs(NV_Ith_S(work, 0) - expected) / (1 + std::abs(expected)));
+              success               *= std::abs(NV_Ith_S(work, 0) - expected) < 1e-9 * (1 + std::abs(expected));
+            }
+          }
+          // Lower a maximum after IDAS has already selected its next step.
+          cap = 0;
+          if (steps >= 30 && steps < 33)
+          {
+            double planned;
+            IDAGetCurrentStep(mem, &planned);
+            cap = std::abs(planned) / 4;
+            ++tightened;
+          }
+          IDASetMaxStep(mem, cap);
+        }
+        long native_steps;
+        IDAGetNumSteps(mem, &native_steps);
+        success *= check.valid && check.retried && check.rejected_order >= 3;
+        success *= native_steps == steps && check.checks == steps + 1 && tightened == 3;
+        success *= std::abs(NV_Ith_S(y, 0) - std::exp(1.0)) < 2e-6;
+        std::cout << "native retry retained order " << check.rejected_order
+                  << "; relative trial/committed dense difference " << worst_difference << '\n';
+        // The native local-error test must also stop at the configured floor.
+        IDASetStepCheckFn(mem, nullptr, nullptr);
+        NV_Ith_S(y, 0) = NV_Ith_S(yp, 0) = 1;
+        IDAReInit(mem, 0, y, yp);
+        IDASetMinStep(mem, 0.1);
+        IDASStolerances(mem, 1e-12, 1e-14);
+        success *= IDASolve(mem, 1, &t, y, yp, IDA_ONE_STEP) == IDA_ERR_FAIL;
+        long failures;
+        IDAGetNumErrTestFails(mem, &failures);
+        success *= failures == 1;
+        IDAFree(&mem);
+        SUNLinSolFree(linear);
+        SUNMatDestroy(matrix);
+        N_VDestroy(work);
+        N_VDestroy(yp);
+        N_VDestroy(y);
+        SUNContext_Free(&context);
+#endif
+        return success.report(__func__);
+      }
+
+      TestOutcome controlledStepFailure()
+      {
+        TestStatus success = true;
+        if (!Ida<double, size_t>::supportsStepControl())
+        {
+          success.skipTest();
+          return success.report(__func__);
+        }
+        for (const auto& [floor, throws] : {std::pair{0.01, false}, std::pair{0.0, false}, std::pair{0.01, true}})
+        {
+          Model::NullEvaluator<ScalarT, IdxT> model;
+          Ida<double, size_t>                 ida(&model);
+          unsigned                            accepted = 0, attempts = 0;
+          ida.setMinStep(floor);
+          ida.setStepControl({[](double, bool) {},
+                              [&](double begin, double end, const auto&)
+                              {
+                                ++attempts;
+                                success *= end - begin >= floor;
+                                if (throws)
+                                {
+                                  throw std::runtime_error("step check exception");
+                                }
+                                return 2.0;
+                              },
+                              [&]()
+                              { ++accepted; },
+                              [] {},
+                              [] {}});
+          ida.configureSimulation();
+          ida.initializeSimulation(0, false);
+          bool failed = false;
+          try
+          {
+            ida.runSimulation(1);
+          }
+          catch (const std::exception& error)
+          {
+            failed = true;
+            if (throws)
+            {
+              success *= std::string(error.what()) == "step check exception";
+            }
+          }
+          success *= failed && accepted == 0 && attempts > 0 && attempts <= 10;
+          success *= floor == 0 || attempts == 1;
+        }
+        return success.report(__func__);
+      }
+
       TestOutcome decreasingStepLimit()
       {
-        TestStatus                          success = true;
+        TestStatus success = true;
+        if (!Ida<double, size_t>::supportsStepControl())
+        {
+          success.skipTest();
+          return success.report(__func__);
+        }
         Model::NullEvaluator<ScalarT, IdxT> model;
         Ida<double, size_t>                 ida(&model);
         unsigned                            steps = 0;

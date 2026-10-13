@@ -8,7 +8,8 @@
     "tf": 6,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "ramp_0.25",
@@ -19,7 +20,8 @@
     "tf": 6,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "ramp_1.5",
@@ -30,7 +32,8 @@
     "tf": 6,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "width_0.025",
@@ -41,7 +44,8 @@
     "tf": 5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "width_0.1",
@@ -52,7 +56,8 @@
     "tf": 5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "width_0.4",
@@ -63,7 +68,8 @@
     "tf": 5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "features_0.005",
@@ -74,7 +80,8 @@
     "tf": 6.5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "features_0.15",
@@ -85,7 +92,8 @@
     "tf": 6.5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "features_0.8",
@@ -96,7 +104,8 @@
     "tf": 6.5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "packet_0.005",
@@ -107,7 +116,8 @@
     "tf": 6,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "packet_0.1",
@@ -118,7 +128,8 @@
     "tf": 6,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "packet_0.8",
@@ -129,7 +140,8 @@
     "tf": 6,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "pulse_0.001",
@@ -140,7 +152,8 @@
     "tf": 4.5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "pulse_0.1",
@@ -151,7 +164,8 @@
     "tf": 4.5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "pulse_0.5",
@@ -162,7 +176,8 @@
     "tf": 4.5,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.0005
+    "dt_monitor": 0.0005,
+    "h_min": 1e-06
   },
   {
     "name": "long_0.1",
@@ -173,7 +188,8 @@
     "tf": 14,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.001
+    "dt_monitor": 0.001,
+    "h_min": 1e-06
   },
   {
     "name": "long_2",
@@ -184,7 +200,8 @@
     "tf": 14,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.001
+    "dt_monitor": 0.001,
+    "h_min": 1e-06
   },
   {
     "name": "long_8",
@@ -195,7 +212,8 @@
     "tf": 14,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.001
+    "dt_monitor": 0.001,
+    "h_min": 1e-06
   },
   {
     "name": "compression_0",
@@ -206,7 +224,8 @@
     "tf": 8,
     "rel_tol": 1e-06,
     "compress": false,
-    "dt_monitor": 0.001
+    "dt_monitor": 0.001,
+    "h_min": 1e-06
   },
   {
     "name": "compression_1",
@@ -217,6 +236,7 @@
     "tf": 8,
     "rel_tol": 1e-06,
     "compress": true,
-    "dt_monitor": 0.001
+    "dt_monitor": 0.001,
+    "h_min": 1e-06
   }
 ]

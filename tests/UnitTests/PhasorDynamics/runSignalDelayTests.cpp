@@ -7,6 +7,7 @@ int main()
   results += tests.interpolation();
   results += tests.historyLifecycle();
   results += tests.compression();
+  results += tests.continuityAndHiddenFeature();
   results += tests.component();
   results += tests.declarations();
   return results.summary();

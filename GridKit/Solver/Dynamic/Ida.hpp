@@ -68,9 +68,11 @@ namespace AnalysisManager
         std::function<void()>                                  accept;
         std::function<void()>                                  finish;
         std::function<void()>                                  discard;
+        unsigned                                               error_order{1}; ///< Power of h in the local error estimate.
       };
 
-      void setStepControl(StepControl control);
+      void        setStepControl(StepControl control);
+      static bool supportsStepControl();
 
       /// Inspect or copy the installed control to add diagnostic hooks.
       const StepControl& getStepControl() const
@@ -163,6 +165,8 @@ namespace AnalysisManager
       void printFinalStats() const;
 
       void setFixedStep(ScalarT time_step);
+      /// Minimum adaptive step magnitude; zero leaves the floor to roundoff.
+      void setMinStep(RealT h_min);
       void setBackwardFixedStep(ScalarT time_step);
       using DynamicSolver<ScalarT, IdxT>::setTolerance;
       void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) override;
@@ -182,6 +186,9 @@ namespace AnalysisManager
       IdaStats getStats() const;
 
     private:
+      static int CheckStep(RealT begin, RealT end, N_Vector y, N_Vector yp, RealT* hnext, void* data);
+      void       sampleDenseState(RealT t);
+
       static int Residual(RealT    t,
                           N_Vector yy,
                           N_Vector yp,
@@ -239,10 +246,12 @@ namespace AnalysisManager
 
       RealT                      t_init_{};
       RealT                      controlled_time_{};
-      RealT                      controlled_step_limit_{};
       std::optional<StepControl> step_control_;
-      IdaStats                   restart_stats_;
+      std::exception_ptr         step_check_exception_;
       size_t                     rejected_steps_{0};
+
+      N_Vector dense_y_{}; ///< Scratch space shared by trial checks and monitor output
+      N_Vector dense_yp_{};
 
       N_Vector yy_{};  ///< Solution vector
       N_Vector yp_{};  ///< Solution derivatives vector
@@ -259,6 +268,7 @@ namespace AnalysisManager
       int backwardID_{};
 
       RealT               time_step_{};
+      RealT               min_step_{};
       RealT               rel_tol_{DEFAULT_REL_TOL};
       RealT               abs_tol_override_{};
       IdxT                max_steps_{};

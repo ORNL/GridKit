@@ -79,7 +79,7 @@ def storage(axis, runs):
 
 def save(figure, filename, title, caption):
     figure.tight_layout(rect=(0.015, 0.07, 0.99, 0.98), h_pad=1.7)
-    figure.text(0.085, 0.025, "GridKit output · adaptive IDA · rtol 10⁻⁶, atol 10⁻⁸ · analytic prehistory",
+    figure.text(0.085, 0.025, "GridKit output · adaptive IDAS · rtol 10⁻⁶, atol 10⁻⁸ · h_min 1 µs · analytic prehistory",
                 fontsize=9, color="#586473")
     figure.savefig(FIGURES / f"{filename}.png", dpi=170)
     plt.close(figure)
@@ -225,12 +225,12 @@ parts.extend(f'<a href="#{name}">{index + 1}. {html.escape(title)}</a>'
 parts.append("</nav>")
 performance = json.loads((HERE / "performance/results.json").read_text())
 parts.append('<h2>Application timings</h2><p>Median of three app-reported CPU times, using identical case settings. '
-             'The revised solver also checks delayed history during wide steps; the many-tap case costs more.</p>'
-             '<table><tr><th>Case</th><th>Checkpoint</th><th>Revised</th><th>Time change</th></tr>')
+             'Native retries preserve multistep history; all crossed delay intervals receive an accuracy check.</p>'
+             '<table><tr><th>Case</th><th>Original</th><th>Before this change</th><th>Native check</th><th>Time change</th></tr>')
 for case in performance["cases"]:
-    change = 100 * (case["after_median"] / case["before_median"] - 1)
+    change = 100 * (case["after_median"] / case["previous_median"] - 1)
     parts.append(f'<tr><td>{html.escape(case["case"])}</td><td>{case["before_median"]:.3f} s</td>'
-                 f'<td>{case["after_median"]:.3f} s</td><td>{change:+.1f}%</td></tr>')
+                 f'<td>{case["previous_median"]:.3f} s</td><td>{case["after_median"]:.3f} s</td><td>{change:+.1f}%</td></tr>')
 parts.append('</table>')
 for name, title, caption in PAGES:
     parts.append(f'<figure id="{name}"><h2>{html.escape(title)}</h2>'

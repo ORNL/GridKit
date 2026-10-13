@@ -128,6 +128,7 @@ int main(int argc, char** argv)
     Solver solver(&system);
     solver.setTolerance(tolerance, tolerance * 0.01);
     solver.setMaxSteps(1000000);
+    solver.setMinStep(run.at("h_min"));
     configureSignalDelays(system, solver, {.rel_tol = tolerance, .abs_tol = tolerance * 0.01, .compress = run.at("compress").get<bool>()});
 
     std::ofstream steps(name + "_steps.csv"), samples(name + "_samples.csv"),
@@ -173,7 +174,10 @@ int main(int argc, char** argv)
     };
     observe(0);
     solver.runSimulation(run.at("tf"), run.at("dt_monitor"), observe);
-    std::cout << name << " rejected=" << solver.getRejectedStepCount() << '\n';
+    const auto stats = solver.getStats();
+    std::cout << name << " rejected=" << solver.getRejectedStepCount()
+              << " native_error_failures=" << stats.num_error_test_fails_ - static_cast<long>(solver.getRejectedStepCount())
+              << " nonlinear_failures=" << stats.num_nonlinear_convergence_fails_ << '\n';
     return 0;
   }
   catch (const std::exception& error)

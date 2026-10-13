@@ -39,6 +39,7 @@ TestStatus runStudy(StudyData study_data)
   Ida<scalar_type, index_type> ida(&sys);
   ida.setTolerance(study_data.rel_tol, study_data.abs_tol);
   ida.setFixedStep(study_data.dt_fixed);
+  ida.setMinStep(study_data.h_min);
   ida.setMaxSteps(study_data.max_steps);
   ida.setMaxOrder(study_data.max_order);
   ida.setConsistentICType(study_data.consistent_ic_type);

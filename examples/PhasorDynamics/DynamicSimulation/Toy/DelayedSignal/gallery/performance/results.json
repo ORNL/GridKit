@@ -1,7 +1,7 @@
 {
   "baseline_revision": "c97774112",
   "method": "DynamicSimulation app-reported Complete in time, median of three runs, identical case settings. No monitor CSV output.",
-  "notes": "Revised solver checks delayed history during wide steps. This improves feature capture but adds cost with many taps. Timings are local CPU times, not universal speedups.",
+  "notes": "The native IDAS check preserves multistep history on rejection and bounds delayed dense output on every crossed history interval. Timings are local CPU times, not universal speedups.",
   "cases": [
     {
       "case": "short",
@@ -11,13 +11,19 @@
         0.159348
       ],
       "after_seconds": [
+        0.057894,
+        0.057072,
+        0.061467
+      ],
+      "before_median": 0.159348,
+      "after_median": 0.057894,
+      "speedup": 2.752409576121878,
+      "previous_seconds": [
         0.154291,
         0.163059,
         0.151212
       ],
-      "before_median": 0.159348,
-      "after_median": 0.154291,
-      "speedup": 1.032775728979655
+      "previous_median": 0.154291
     },
     {
       "case": "many",
@@ -27,13 +33,19 @@
         0.143395
       ],
       "after_seconds": [
+        0.108266,
+        0.112473,
+        0.109341
+      ],
+      "before_median": 0.137459,
+      "after_median": 0.109341,
+      "speedup": 1.2571587967916884,
+      "previous_seconds": [
         0.331856,
         0.392381,
         0.309959
       ],
-      "before_median": 0.137459,
-      "after_median": 0.331856,
-      "speedup": 0.4142127910901114
+      "previous_median": 0.331856
     },
     {
       "case": "long",
@@ -43,13 +55,20 @@
         2.1231
       ],
       "after_seconds": [
+        0.229723,
+        0.217243,
+        0.208341
+      ],
+      "before_median": 2.1231,
+      "after_median": 0.217243,
+      "speedup": 9.772927090861385,
+      "previous_seconds": [
         0.397548,
         0.376311,
         0.401427
       ],
-      "before_median": 2.1231,
-      "after_median": 0.397548,
-      "speedup": 5.340487186452957
+      "previous_median": 0.397548
     }
-  ]
+  ],
+  "previous_revision": "de67ae4a1"
 }

@@ -3,6 +3,7 @@ import csv
 import hashlib
 import io
 import json
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -38,7 +39,7 @@ def generate():
         temporary = Path(directory)
         executable = temporary / "gallery"
         subprocess.run(
-            [link[0], "-std=c++20", "-O2", *includes, str(HERE / "gallery.cpp"),
+            [link[0], "-std=c++20", "-O2", "-fvisibility=hidden", *includes, str(HERE / "gallery.cpp"),
              "-o", str(executable), *libraries], cwd=link_dir, check=True
         )
         with zipfile.ZipFile(
@@ -62,9 +63,12 @@ def generate():
             ["git", "rev-parse", "HEAD"], cwd=REPO, text=True
         ).strip(),
         "source_diff_sha256": hashlib.sha256(subprocess.check_output(
-            ["git", "diff", "HEAD", "--", "GridKit", "application", "tests"],
+            ["git", "diff", "HEAD", "--", "GridKit", "application", "tests", "buildsystem/spack_repo/gridkit/packages/sundials"],
             cwd=REPO
         )).hexdigest(),
+        "sundials_step_check_patch_sha256": hashlib.sha256(
+            (REPO / "buildsystem/spack_repo/gridkit/packages/sundials/idas-step-check.patch").read_bytes()
+        ).hexdigest(),
         "compiler": link[0],
         "description": "Smooth manufactured sources linked to build/ GridKit libraries",
         "error_samples": "Uniform monitor times plus each accepted step midpoint",
@@ -91,10 +95,16 @@ def summarize():
         error = np.r_[abs(samples["z"] - samples["exact_z"]),
                       abs(midpoints["z"] - midpoints["exact_z"])]
         assert max(error) < 20 * run["rel_tol"], (name, float(max(error)))
+        with zipfile.ZipFile(HERE / "data.zip") as archive:
+            log = archive.read(f"{name}.log").decode()
+        native_errors = int(re.search(r"native_error_failures=(\d+)", log)[1])
+        nonlinear_failures = int(re.search(r"nonlinear_failures=(\d+)", log)[1])
         rows.append({
             **run,
             "accepted": len(steps),
             "rejected": int(sum(attempts["rejected"])),
+            "native_error_failures": native_errors,
+            "nonlinear_failures": nonlinear_failures,
             "max_abs_z_error": float(max(error)),
             "max_endpoint_z_error": float(max(abs(steps["z"] - steps["exact_z"]))),
             "min_h_tau": float(min(steps["h_over_tau"])),
