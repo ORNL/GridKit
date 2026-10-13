@@ -114,7 +114,9 @@ namespace GridKit
 
       std::map<IdxT, IdxT> gridkit_bus_indices_; ///< Map between gridkit_bus_id and bus_id
 
-      std::map<std::string, IdxT> gridkit_branch_indices_; ///< Map between branch id and gridkit_component_id
+      /// Map between branch id and gridkit_component_id
+      /// @todo remove this map and use branch IDs to access individual branches.
+      std::map<std::string, IdxT> gridkit_branch_indices_;
 
       bool owns_components_{false};
 
