@@ -73,6 +73,8 @@ namespace GridKit
       double                                         dt_fixed;
       /// minimum permitted adaptive step size, or 0 for no explicit floor
       double                                         h_min;
+      /// maximum adaptive step for resolving sources, or 0 for no explicit cap
+      double                                         h_max;
       /// maximum number of solver time steps, or 0 for the IDA default
       std::size_t                                    max_steps;
       /// maximum IDA integration method order
@@ -126,6 +128,7 @@ namespace GridKit
       }
       c.dt_fixed           = j.value("dt_fixed", 0.0);
       c.h_min              = j.value("h_min", 0.0);
+      c.h_max              = j.value("h_max", 0.0);
       c.max_steps          = j.value("max_steps", std::size_t{0});
       c.max_order          = j.value("max_order", 5);
       c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;

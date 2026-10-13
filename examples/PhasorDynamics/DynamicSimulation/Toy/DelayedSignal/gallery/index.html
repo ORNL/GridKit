@@ -1,34 +1,177 @@
-<!doctype html><html lang="en"><meta charset="utf-8">
-<title>GridKit signal delay gallery</title><style>
-body{font:16px/1.6 system-ui,sans-serif;color:#24313e;max-width:1180px;margin:36px auto;padding:0 24px;background:#f5f7fa}
-h1{font-size:32px}h2{font-size:23px}a{color:#176b9d}nav{display:flex;gap:14px;flex-wrap:wrap}
-figure{margin:30px 0;padding:22px;background:white;border:1px solid #dce2e9;border-radius:8px}
-img{width:100%;height:auto}figcaption{color:#465362}
-table{border-collapse:collapse}td,th{padding:7px 22px 7px 0;text-align:left;border-bottom:1px solid #dce2e9}
-</style><h1>Smooth signals, delayed in GridKit</h1>
-<p>Seven PNG figures from 20 runs of the actual GridKit delay implementation.
-Every waveform comparison shows the input. Step sizes are accepted internal solver
-steps; they are distinct from the monitor interval.</p>
-<p><a href="summary.csv">Numerical summary</a> · <a href="README.md">Methods and reproduction</a>
-· <a href="performance/results.json">Application timing comparison</a></p><nav>
-<a href="#01_smooth_ramp">1. A smooth transition, delayed by different amounts</a>
-<a href="#02_pulse_widths">2. The same delay, three different pulse widths</a>
-<a href="#03_multiple_timescales">3. Broad and narrow features in one signal</a>
-<a href="#04_oscillatory_packet">4. An oscillatory packet keeps its shape through a delay</a>
-<a href="#05_adaptive_pulse">5. Adaptive steps around a smooth pulse</a>
-<a href="#06_long_history">6. A short feature can require a long history</a>
-<a href="#07_compression">7. History compression around a delayed pulse</a>
-</nav>
-<h2>Application timings</h2><p>Median of three app-reported CPU times, using identical case settings. Native retries preserve multistep history; all crossed delay intervals receive an accuracy check.</p><table><tr><th>Case</th><th>Original</th><th>Before this change</th><th>Native check</th><th>Time change</th></tr>
-<tr><td>short</td><td>0.159 s</td><td>0.154 s</td><td>0.058 s</td><td>-62.5%</td></tr>
-<tr><td>many</td><td>0.137 s</td><td>0.332 s</td><td>0.109 s</td><td>-67.1%</td></tr>
-<tr><td>long</td><td>2.123 s</td><td>0.398 s</td><td>0.217 s</td><td>-45.4%</td></tr>
-</table>
-<figure id="01_smooth_ramp"><h2>A smooth transition, delayed by different amounts</h2><a href="figures/01_smooth_ramp.png"><img src="figures/01_smooth_ramp.png" alt="A smooth transition, delayed by different amounts"></a><figcaption>Input u(t) = 1 + 0.3[1 + tanh((t − 2)/0.15)]. The output settles to the same value at a later time. The solver refines around both the source transition and its delayed appearance. Compression is off; pruning remains active.<br><br>τ = 10 ms: max h/τ 115, max sampled error 6.3e-07; τ = 250 ms: max h/τ 4.31, max sampled error 9.1e-07; τ = 1.5 s: max h/τ 0.48, max sampled error 1.4e-06</figcaption></figure>
-<figure id="02_pulse_widths"><h2>The same delay, three different pulse widths</h2><a href="figures/02_pulse_widths.png"><img src="figures/02_pulse_widths.png" alt="The same delay, three different pulse widths"></a><figcaption>Input u(t) = 1 + 0.6 exp[−((t − 2)/w)²]. Widths are 25, 100, and 400 ms; w is the Gaussian scale parameter, not its full width at half maximum. All runs have the same 250 ms delay. The required step size changes with the signal feature width even though the delay stays fixed.</figcaption></figure>
-<figure id="03_multiple_timescales"><h2>Broad and narrow features in one signal</h2><a href="figures/03_multiple_timescales.png"><img src="figures/03_multiple_timescales.png" alt="Broad and narrow features in one signal"></a><figcaption>Input u(t) = 1 + 0.25 exp[−((t − 2)/0.3)²] + 0.6 exp[−((t − 4)/0.04)²]. The narrow feature requires more temporal resolution. Stored history preserves it until each delayed output has passed it. Compression is off.<br><br>τ = 5 ms: max h/τ 233, max sampled error 5.5e-07; τ = 150 ms: max h/τ 5.2, max sampled error 1.3e-06; τ = 800 ms: max h/τ 0.841, max sampled error 1.6e-06</figcaption></figure>
-<figure id="04_oscillatory_packet"><h2>An oscillatory packet keeps its shape through a delay</h2><a href="figures/04_oscillatory_packet.png"><img src="figures/04_oscillatory_packet.png" alt="An oscillatory packet keeps its shape through a delay"></a><figcaption>Input u(t) = 1 + 0.5 exp[−((t − 3)/0.6)²] sin(20(t − 3)). The oscillation period is about 314 ms. A delay shifts both the envelope and the oscillations. Compression is off. Steps grow in quiet parts and shrink to resolve the oscillations.<br><br>τ = 5 ms: max h/τ 76.8, max sampled error 8.4e-07; τ = 100 ms: max h/τ 3.84, max sampled error 8.5e-07; τ = 800 ms: max h/τ 0.48, max sampled error 1.3e-06</figcaption></figure>
-<figure id="05_adaptive_pulse"><h2>Adaptive steps around a smooth pulse</h2><a href="figures/05_adaptive_pulse.png"><img src="figures/05_adaptive_pulse.png" alt="Adaptive steps around a smooth pulse"></a><figcaption>Input u(t) = 1 + 0.6 exp[−((t − 2)/0.12)²]. The dashed trace is the actual GridKit input. Accepted h/τ can exceed one; accuracy still requires refinement around the pulse. Compression is off.<br><br>τ = 1 ms: max h/τ 923, max sampled error 4.8e-07; τ = 100 ms: max h/τ 7.63, max sampled error 1e-06; τ = 500 ms: max h/τ 1.15, max sampled error 1.4e-06</figcaption></figure>
-<figure id="06_long_history"><h2>A short feature can require a long history</h2><a href="figures/06_long_history.png"><img src="figures/06_long_history.png" alt="A short feature can require a long history"></a><figcaption>The source pulse occurs near 2 s, while the 8 s tap reproduces it near 10 s. Its history must survive the intervening quiet period. Falling segment counts show pruning after the feature has left the required delay window. Compression is off in every run.<br><br>τ = 100 ms: max h/τ 56.4, max sampled error 1.2e-06; τ = 2 s: max h/τ 2.15, max sampled error 1.6e-06; τ = 8 s: max h/τ 0.358, max sampled error 1.5e-06</figcaption></figure>
-<figure id="07_compression"><h2>History compression around a delayed pulse</h2><a href="figures/07_compression.png"><img src="figures/07_compression.png" alt="History compression around a delayed pulse"></a><figcaption>Input u(t) = 1 + 0.6 exp[−((t − 2)/0.12)²]. Peak segment count decreases by 75.0%. Accepted steps: 576 off, 558 on. Compression may change the adaptive step sequence. Segment count is not total process memory, and a compression-error bound is not a bound on the difference between complete numerical trajectories.</figcaption></figure>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delayed signal gallery · GridKit</title><style>
+:root{font-family:system-ui,sans-serif;color:#25313b;background:white;line-height:1.6}
+body{max-width:960px;margin:48px auto;padding:0 24px}h1{font-size:30px;line-height:1.2;margin:0 0 12px}
+h2{font-size:20px;font-weight:600;margin:0}p{margin:10px 0 20px;color:#626b74}a{color:#0072b2}
+header{padding-bottom:24px}nav{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;margin:20px 0}
+figure{margin:0;padding:32px 0;border-top:1px solid #e5e8eb}.number{color:#89929a;font-weight:400;margin-right:12px}
+.variants{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+.variants a{color:#53616c;border:1px solid #d5dce1;padding:4px 12px;border-radius:4px;text-decoration:none;font-size:13px}
+.variants a[aria-current=true]{color:#0072b2;border-color:#0072b2;background:#f0f7fb}
+.variants a:focus-visible{outline:2px solid #0072b2;outline-offset:3px}
+img{width:100%;height:auto;display:block}figcaption{font-size:14px;color:#626b74;margin:4px 0 12px}
+.download{font-size:13px}details{border-top:1px solid #e5e8eb;margin-top:28px;padding:18px 0;font-size:13px}
+summary{cursor:pointer;font-size:15px}table{border-collapse:collapse;width:100%;margin:18px 0}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #e5e8eb}th{font-weight:600}
+.scroll{overflow-x:auto}@media(max-width:600px){body{padding:0 12px;margin-top:28px}h1{font-size:25px}}
+</style></head><body><header><h1>Delayed signal gallery</h1>
+<p>One signal at a time. The upper panel shows propagation; the lower panel shows the accepted step relative to the delay, h/τ. The dashed line at 1 marks h = τ.</p>
+<p>Choose a variant beneath each heading. Every view is a standalone PNG.</p><nav>
+<a href="#01_smooth_ramp">Smooth rising transition</a>
+<a href="#02_pulse_widths">Gaussian pulse widths</a>
+<a href="#03_multiple_timescales">Broad and narrow features</a>
+<a href="#04_oscillatory_packet">Oscillatory packet</a>
+<a href="#05_adaptive_pulse">Adaptive pulse propagation</a>
+<a href="#06_long_history">Long propagation delay</a>
+<a href="#07_compression">History compression</a>
+<a href="#08_sharp_edges">Sharp smooth edges</a>
+<a href="#09_bipolar_sine">Bipolar sine waves</a>
+<a href="#10_chirp">Increasing-frequency waveform</a>
+<a href="#11_derivative_corners">Continuous signals with corners</a>
+<a href="#12_narrow_pulses">Narrow pulses at different offsets</a>
+<a href="#13_source_resolution">Resolving a narrow source pulse</a>
+<a href="#14_history_detail">History reconstruction</a>
+</nav></header><main>
+<figure id="01_smooth_ramp"><h2><span class="number">01</span>Smooth rising transition</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/01_smooth_ramp.png" data-variant aria-current="true" data-label="τ = 250 ms">τ = 250 ms</a>
+<a href="figures/01_smooth_ramp__ramp_0p01.png" data-variant aria-current="false" data-label="τ = 10 ms">τ = 10 ms</a>
+<a href="figures/01_smooth_ramp__ramp_1p5.png" data-variant aria-current="false" data-label="τ = 1.5 s">τ = 1.5 s</a>
+</div>
+<img src="figures/01_smooth_ramp.png" loading="lazy" alt="Smooth rising transition: τ = 250 ms"><figcaption>The delayed signal follows the same transition at a later time.</figcaption><a class="download" href="figures/01_smooth_ramp.png">Open PNG</a></figure>
+<figure id="02_pulse_widths"><h2><span class="number">02</span>Gaussian pulse widths</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/02_pulse_widths.png" data-variant aria-current="true" data-label="Width 100 ms">Width 100 ms</a>
+<a href="figures/02_pulse_widths__width_0p025.png" data-variant aria-current="false" data-label="Width 25 ms">Width 25 ms</a>
+<a href="figures/02_pulse_widths__width_0p4.png" data-variant aria-current="false" data-label="Width 400 ms">Width 400 ms</a>
+</div>
+<img src="figures/02_pulse_widths.png" loading="lazy" alt="Gaussian pulse widths: Width 100 ms"><figcaption>Choose a pulse width to see how the accepted steps follow its two edges.</figcaption><a class="download" href="figures/02_pulse_widths.png">Open PNG</a></figure>
+<figure id="03_multiple_timescales"><h2><span class="number">03</span>Broad and narrow features</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/03_multiple_timescales.png" data-variant aria-current="true" data-label="τ = 150 ms">τ = 150 ms</a>
+<a href="figures/03_multiple_timescales__features_0p005.png" data-variant aria-current="false" data-label="τ = 5 ms">τ = 5 ms</a>
+<a href="figures/03_multiple_timescales__features_0p8.png" data-variant aria-current="false" data-label="τ = 800 ms">τ = 800 ms</a>
+</div>
+<img src="figures/03_multiple_timescales.png" loading="lazy" alt="Broad and narrow features: τ = 150 ms"><figcaption>A broad feature and a narrow pulse share the same source history.</figcaption><a class="download" href="figures/03_multiple_timescales.png">Open PNG</a></figure>
+<figure id="04_oscillatory_packet"><h2><span class="number">04</span>Oscillatory packet</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/04_oscillatory_packet.png" data-variant aria-current="true" data-label="τ = 100 ms">τ = 100 ms</a>
+<a href="figures/04_oscillatory_packet__packet_0p005.png" data-variant aria-current="false" data-label="τ = 5 ms">τ = 5 ms</a>
+<a href="figures/04_oscillatory_packet__packet_0p8.png" data-variant aria-current="false" data-label="τ = 800 ms">τ = 800 ms</a>
+</div>
+<img src="figures/04_oscillatory_packet.png" loading="lazy" alt="Oscillatory packet: τ = 100 ms"><figcaption>The oscillatory packet retains its shape as it propagates.</figcaption><a class="download" href="figures/04_oscillatory_packet.png">Open PNG</a></figure>
+<figure id="05_adaptive_pulse"><h2><span class="number">05</span>Adaptive pulse propagation</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/05_adaptive_pulse.png" data-variant aria-current="true" data-label="τ = 100 ms">τ = 100 ms</a>
+<a href="figures/05_adaptive_pulse__pulse_0p001.png" data-variant aria-current="false" data-label="τ = 1 ms">τ = 1 ms</a>
+<a href="figures/05_adaptive_pulse__pulse_0p5.png" data-variant aria-current="false" data-label="τ = 500 ms">τ = 500 ms</a>
+</div>
+<img src="figures/05_adaptive_pulse.png" loading="lazy" alt="Adaptive pulse propagation: τ = 100 ms"><figcaption>Steps contract near the source pulse and its delayed arrival.</figcaption><a class="download" href="figures/05_adaptive_pulse.png">Open PNG</a></figure>
+<figure id="06_long_history"><h2><span class="number">06</span>Long propagation delay</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/06_long_history.png" data-variant aria-current="true" data-label="τ = 8 s">τ = 8 s</a>
+<a href="figures/06_long_history__long_0p1.png" data-variant aria-current="false" data-label="τ = 100 ms">τ = 100 ms</a>
+<a href="figures/06_long_history__long_2.png" data-variant aria-current="false" data-label="τ = 2 s">τ = 2 s</a>
+</div>
+<img src="figures/06_long_history.png" loading="lazy" alt="Long propagation delay: τ = 8 s"><figcaption>The input and its delayed arrival are shown on the same time axis.</figcaption><a class="download" href="figures/06_long_history.png">Open PNG</a></figure>
+<figure id="07_compression"><h2><span class="number">07</span>History compression</h2>
+<img src="figures/07_compression.png" loading="lazy" alt="History compression: History compression"><figcaption>Compression reduces retained segments. The second panel shows its effect on the accepted steps; both runs use the same source and delay.</figcaption><a class="download" href="figures/07_compression.png">Open PNG</a></figure>
+<figure id="08_sharp_edges"><h2><span class="number">08</span>Sharp smooth edges</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/08_sharp_edges.png" data-variant aria-current="true" data-label="Rising edge">Rising edge</a>
+<a href="figures/08_sharp_edges__sharp_fall.png" data-variant aria-current="false" data-label="Falling edge">Falling edge</a>
+<a href="figures/08_sharp_edges__asymmetric.png" data-variant aria-current="false" data-label="Asymmetric pulse">Asymmetric pulse</a>
+</div>
+<img src="figures/08_sharp_edges.png" loading="lazy" alt="Sharp smooth edges: Rising edge"><figcaption>Choose a rising edge, falling edge, or asymmetric pulse. Edge widths are 10–90% times.</figcaption><a class="download" href="figures/08_sharp_edges.png">Open PNG</a></figure>
+<figure id="09_bipolar_sine"><h2><span class="number">09</span>Bipolar sine waves</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/09_bipolar_sine.png" data-variant aria-current="true" data-label="5 Hz">5 Hz</a>
+<a href="figures/09_bipolar_sine__sine_1.png" data-variant aria-current="false" data-label="1 Hz">1 Hz</a>
+<a href="figures/09_bipolar_sine__sine_20.png" data-variant aria-current="false" data-label="20 Hz">20 Hz</a>
+</div>
+<img src="figures/09_bipolar_sine.png" loading="lazy" alt="Bipolar sine waves: 5 Hz"><figcaption>Each view shows up to three cycles. At 20 Hz, the 50 ms delay is one full period, so the curves coincide.</figcaption><a class="download" href="figures/09_bipolar_sine.png">Open PNG</a></figure>
+<figure id="10_chirp"><h2><span class="number">10</span>Increasing-frequency waveform</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/10_chirp.png" data-variant aria-current="true" data-label="τ = 50 ms">τ = 50 ms</a>
+<a href="figures/10_chirp__chirp_0p002.png" data-variant aria-current="false" data-label="τ = 2 ms">τ = 2 ms</a>
+<a href="figures/10_chirp__chirp_0p2.png" data-variant aria-current="false" data-label="τ = 200 ms">τ = 200 ms</a>
+</div>
+<img src="figures/10_chirp.png" loading="lazy" alt="Increasing-frequency waveform: τ = 50 ms"><figcaption>The source frequency rises from 1 to 11 Hz. Each delay is shown separately.</figcaption><a class="download" href="figures/10_chirp.png">Open PNG</a></figure>
+<figure id="11_derivative_corners"><h2><span class="number">11</span>Continuous signals with corners</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/11_derivative_corners.png" data-variant aria-current="true" data-label="Adaptive refinement">Adaptive refinement</a>
+<a href="figures/11_derivative_corners__corner_ramp.png" data-variant aria-current="false" data-label="Ramp corner">Ramp corner</a>
+<a href="figures/11_derivative_corners__triangle_restart.png" data-variant aria-current="false" data-label="Known corners">Known corners</a>
+</div>
+<img src="figures/11_derivative_corners.png" loading="lazy" alt="Continuous signals with corners: Adaptive refinement"><figcaption>Signal values remain continuous. The variants compare corner shapes and source-stencil restarts.</figcaption><a class="download" href="figures/11_derivative_corners.png">Open PNG</a></figure>
+<figure id="12_narrow_pulses"><h2><span class="number">12</span>Narrow pulses at different offsets</h2>
+<div class="variants" aria-label="Signal variants">
+<a href="figures/12_narrow_pulses.png" data-variant aria-current="true" data-label="Center 2.013 s">Center 2.013 s</a>
+<a href="figures/12_narrow_pulses__narrow_2p0.png" data-variant aria-current="false" data-label="Center 2 s">Center 2 s</a>
+<a href="figures/12_narrow_pulses__narrow_2p027.png" data-variant aria-current="false" data-label="Center 2.027 s">Center 2.027 s</a>
+</div>
+<img src="figures/12_narrow_pulses.png" loading="lazy" alt="Narrow pulses at different offsets: Center 2.013 s"><figcaption>A 1 ms Gaussian pulse is resolved with a maximum step of 0.5 ms.</figcaption><a class="download" href="figures/12_narrow_pulses.png">Open PNG</a></figure>
+<figure id="13_source_resolution"><h2><span class="number">13</span>Resolving a narrow source pulse</h2>
+<img src="figures/13_source_resolution.png" loading="lazy" alt="Resolving a narrow source pulse: Resolving a narrow source pulse"><figcaption>The uncapped solve misses the pulse. A 0.5 ms maximum step resolves it. Reference markers show the analytic delayed waveform.</figcaption><a class="download" href="figures/13_source_resolution.png">Open PNG</a></figure>
+<figure id="14_history_detail"><h2><span class="number">14</span>History reconstruction</h2>
+<img src="figures/14_history_detail.png" loading="lazy" alt="History reconstruction: History reconstruction"><figcaption>Each circle is an accepted source value. The connecting polynomials preserve the continuous value through a marked derivative corner. These are the original segments, before compression.</figcaption><a class="download" href="figures/14_history_detail.png">Open PNG</a></figure>
+</main><details><summary>Numerical results and methods</summary>
+<p>All 37 recorded experiments remain available. Error checks, step rejections, native solver retries, and storage statistics are in the data below. The uncapped pulse deliberately demonstrates undersampling; every other run passes its sampled analytic-error check.</p>
+<p><a href="summary.csv">CSV summary</a> · <a href="summary.json">JSON summary</a> · <a href="data.zip">Recorded data</a> · <a href="README.md">Methods</a></p>
+<div class="scroll"><table><tr><th>Run</th><th>Sampled max error</th><th>History rejections</th><th>Peak segments</th></tr>
+<tr><td>ramp_0.01</td><td>4.78e-07</td><td>0</td><td>2</td></tr>
+<tr><td>ramp_0.25</td><td>1.01e-06</td><td>3</td><td>52</td></tr>
+<tr><td>ramp_1.5</td><td>1.39e-06</td><td>4</td><td>324</td></tr>
+<tr><td>width_0.025</td><td>1.46e-06</td><td>8</td><td>450</td></tr>
+<tr><td>width_0.1</td><td>1.18e-06</td><td>6</td><td>170</td></tr>
+<tr><td>width_0.4</td><td>9.4e-07</td><td>3</td><td>36</td></tr>
+<tr><td>features_0.005</td><td>5.46e-07</td><td>3</td><td>10</td></tr>
+<tr><td>features_0.15</td><td>1.56e-06</td><td>9</td><td>275</td></tr>
+<tr><td>features_0.8</td><td>1.38e-06</td><td>7</td><td>465</td></tr>
+<tr><td>packet_0.005</td><td>6.98e-07</td><td>4</td><td>6</td></tr>
+<tr><td>packet_0.1</td><td>1.01e-06</td><td>3</td><td>107</td></tr>
+<tr><td>packet_0.8</td><td>1.09e-06</td><td>9</td><td>485</td></tr>
+<tr><td>pulse_0.001</td><td>4.83e-07</td><td>0</td><td>1</td></tr>
+<tr><td>pulse_0.1</td><td>1.28e-06</td><td>3</td><td>53</td></tr>
+<tr><td>pulse_0.5</td><td>1.43e-06</td><td>4</td><td>290</td></tr>
+<tr><td>long_0.1</td><td>1.18e-06</td><td>3</td><td>56</td></tr>
+<tr><td>long_2</td><td>1.41e-06</td><td>5</td><td>473</td></tr>
+<tr><td>long_8</td><td>1.46e-06</td><td>6</td><td>446</td></tr>
+<tr><td>compression_0</td><td>1.61e-06</td><td>7</td><td>455</td></tr>
+<tr><td>compression_1</td><td>1.83e-06</td><td>8</td><td>114</td></tr>
+<tr><td>sharp_rise</td><td>1.54e-06</td><td>2</td><td>337</td></tr>
+<tr><td>sharp_fall</td><td>1.72e-06</td><td>2</td><td>342</td></tr>
+<tr><td>asymmetric</td><td>1.35e-06</td><td>3</td><td>343</td></tr>
+<tr><td>sine_1</td><td>3.45e-07</td><td>1</td><td>28</td></tr>
+<tr><td>sine_5</td><td>8.39e-07</td><td>6</td><td>108</td></tr>
+<tr><td>sine_20</td><td>8.01e-07</td><td>13</td><td>434</td></tr>
+<tr><td>chirp_0.002</td><td>4.57e-07</td><td>24</td><td>21</td></tr>
+<tr><td>chirp_0.05</td><td>1.11e-06</td><td>20</td><td>201</td></tr>
+<tr><td>chirp_0.2</td><td>8.09e-07</td><td>25</td><td>602</td></tr>
+<tr><td>corner_ramp</td><td>1.89e-07</td><td>1</td><td>41</td></tr>
+<tr><td>triangle_adaptive</td><td>4.05e-07</td><td>42</td><td>55</td></tr>
+<tr><td>triangle_restart</td><td>2.13e-07</td><td>2</td><td>6</td></tr>
+<tr><td>narrow_2.0</td><td>1.21e-06</td><td>2</td><td>628</td></tr>
+<tr><td>narrow_2.013</td><td>1.21e-06</td><td>2</td><td>623</td></tr>
+<tr><td>narrow_2.027</td><td>1.21e-06</td><td>2</td><td>622</td></tr>
+<tr><td>resolution_uncapped</td><td>0.6</td><td>0</td><td>10</td></tr>
+<tr><td>resolution_capped</td><td>1.21e-06</td><td>2</td><td>16431</td></tr>
+</table></div></details><details><summary>Application timings</summary>
+<p>Median of three app-reported CPU times with identical inputs.</p><table><tr><th>Case</th><th>Before cleanup</th><th>Current</th></tr>
+<tr><td>short</td><td>0.0699 s</td><td>0.0701 s</td></tr>
+<tr><td>many</td><td>0.1295 s</td><td>0.1118 s</td></tr>
+<tr><td>long</td><td>0.2338 s</td><td>0.0873 s</td></tr>
+</table></details><script>
+document.querySelectorAll('[data-variant]').forEach(link => {
+  link.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const figure = link.closest('figure');
+    figure.querySelector('img').src = link.href;
+    figure.querySelector('img').alt = figure.querySelector('h2').textContent + ': ' + link.dataset.label;
+    figure.querySelector('.download').href = link.href;
+    figure.querySelectorAll('[data-variant]').forEach(item => item.setAttribute('aria-current', String(item === link)));
+  });
+});
+</script></body></html>

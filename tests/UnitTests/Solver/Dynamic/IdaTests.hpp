@@ -707,10 +707,46 @@ namespace GridKit
             {
               success *= std::string(error.what()) == "step check exception";
             }
+            else
+            {
+              const std::string message  = error.what();
+              success                   *= message.find("normalized error=2") != std::string::npos;
+              success                   *= message.find(floor > 0 ? "configured floor" : "rejection limit") != std::string::npos;
+            }
           }
           success *= failed && accepted == 0 && attempts > 0 && attempts <= 10;
           success *= floor == 0 || attempts == 1;
         }
+        return success.report(__func__);
+      }
+
+      TestOutcome maximumStep()
+      {
+        TestStatus                          success = true;
+        Model::NullEvaluator<ScalarT, IdxT> model;
+        Ida<double, size_t>                 ida(&model);
+        for (double invalid : {-0.1, std::numeric_limits<double>::infinity()})
+        {
+          bool rejected = false;
+          try
+          {
+            ida.setMaxStep(invalid);
+          }
+          catch (const std::invalid_argument&)
+          {
+            rejected = true;
+          }
+          success *= rejected;
+        }
+        ida.setMaxStep(0.01);
+        ida.configureSimulation();
+        ida.initializeSimulation(0, false);
+        ida.runSimulation(0.2);
+        const long capped_steps  = ida.getStats().num_steps_;
+        success                 *= capped_steps >= 20;
+        ida.setMaxStep(0);
+        ida.runSimulation(1);
+        success *= ida.getStats().num_steps_ - capped_steps < 20;
         return success.report(__func__);
       }
 

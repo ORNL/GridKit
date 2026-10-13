@@ -20,6 +20,7 @@ gridkit_add_library(
           SignalOut.hpp
           SignalPorts.hpp
           SignalHistory.hpp
+          SignalHistoryPolynomial.hpp
   LINK_LIBRARIES
     INTERFACE
     GridKit::definitions

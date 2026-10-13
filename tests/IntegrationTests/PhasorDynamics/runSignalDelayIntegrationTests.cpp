@@ -11,6 +11,9 @@ int main()
   GridKit::Testing::SignalDelayIntegrationTests tests;
   results += tests.feedbackAndConvergence();
   results += tests.prescribedSource();
+  results += tests.oscillatoryPrehistory();
+  results += tests.narrowSourceResolution();
+  results += tests.continuousCorners();
   results += tests.smoothPulseAndLongDelay();
   results += tests.rollbackAndContinuation();
   return results.summary();

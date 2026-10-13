@@ -1,8 +1,8 @@
 # Delayed signal
 
 A delayed signal publishes a scalar source at an earlier time. Multiple delays
-of the same source share one history. Smooth source signals and constant delays
-are assumed.
+of the same source share one history. Signal values must be continuous; their derivatives may have corners.
+Delays are constant.
 
 ## Model Parameters
 
@@ -90,8 +90,9 @@ $$a_d=\sum_i\frac{u_i}{s_i-t}
 
 Thus $a=H_{00}u_n+hH_{10}d_n+hH_{11}a_d$ and
 $b=H_{01}+hH_{11}b_d$. On acceptance, this endpoint slope becomes the next
-segment's left slope. Adjacent segments share both value and slope.
-Startup uses the available anchors.
+segment's left slope. Ordinary segments share both value and slope. Startup uses the available
+anchors. A known derivative corner can reset this stencil without changing
+accepted values; its first new interval is linear.
 
 The Jacobian entries remain $\partial F_z/\partial z=-1$ and
 $\partial F_z/\partial u=b$. For a query in accepted history, $b=0$.
@@ -116,17 +117,21 @@ For a nonconstant past, set a source-level callback before configuring the solve
 
 ```cpp
 system.setSignalPrehistory(source_id,
-    [](double t) { return std::cos(t); });
+    [](double t) { return std::cos(t); },
+    [](double t) { return -std::sin(t); });
 ```
 
 The callback must cover all requested times before $t_0$ and agree with the
-initial source value within history tolerance. Its smoothness is the caller's
-responsibility. The initial slope is zero for constant prehistory and a
-second-order backward difference for a supplied function.
+initial source value within history tolerance. The optional second callback
+supplies its derivative. Without it, a second-order backward difference stays
+within the prehistory domain. Constant prehistory has zero slope.
 
 ### Internal Initialization
 
-$$z(t_0)=\phi(t_0-\tau).$$
+$$z(t_0)=\phi(t_0-\tau),\qquad \dot z(t_0)=\phi'(t_0-\tau).$$
+
+The derivative seed matters even though $z$ is algebraic: IDAS does not infer
+its time derivative from the algebraic consistency equation.
 
 A fresh model initialization clears stored samples. Solver retries and
 continuation at the accepted time preserve history. Restarting from a different
@@ -169,9 +174,11 @@ are estimates, not rigorous continuous bounds.
 For normalized error $\eta$, predict a history cap with
 
 $$h_{\rm history}=h\,\operatorname{clip}
- \left(\frac{0.8}{\max(\eta,10^{-12})^{1/4}},\;0.1,\;2\right).$$
+ \left(\frac{0.8}{\max(\eta,10^{-12})^{1/p}},\;0.1,\;2\right).$$
 
-On rejection, limit the factor to at most $0.5$. IDAS restores its trial state,
+Use $p=2,3,4$ as startup acquires anchors, $p=2$ after a known corner, and
+$p=1$ for conservative rejection when the error exceeds one. On rejection,
+limit the factor to at most $0.5$. IDAS restores its trial state,
 retains multistep history and retries at the reduced step. An accepted step uses
 the smaller of IDAS's proposed step and the history cap. Only accepted steps
 commit source history and publish output. No restart or temporary stop is needed.
@@ -180,7 +187,28 @@ The optional solver setting `h_min` specifies the minimum adaptive step magnitud
 Both native and history error tests fail if accuracy cannot be attained there.
 As in IDAS, landing on the final stop time may require a shorter last step.
 A step floor is not a source sampling guarantee: an arbitrarily narrow smooth
-feature can evade finitely many probes. It does not impose a shortest-delay cap.
+feature can evade finitely many probes. The independent `h_max` setting limits
+source sampling gaps; choose it from the fastest source feature that must be
+resolved. Zero leaves the maximum unrestricted. Neither setting is tied to the
+shortest delay. `h_max` must not be smaller than `h_min` or a requested fixed step.
+
+For a known derivative corner, stop at its time and restart the source stencil:
+
+```cpp
+ida.runSimulation(corner_time);
+system.restartSignalHistory(source_id);
+ida.initializeSimulation(corner_time, false);
+```
+
+The value is continuous and accepted history is retained. Compression cannot
+merge across the marked corner. Unspecified corners rely on adaptive refinement;
+the integration tests check convergence of triangular waveforms in both modes.
+Value jumps are outside this model's contract.
+
+A terminal history error identifies the source, delayed signal when applicable,
+failed check, normalized error, and whether the step floor or rejection limit
+stopped progress. Native error-test and nonlinear failures are reported separately.
+An ordinary rejected trial is recoverable and does not publish output.
 
 Adjacent stored intervals may merge into a cubic matching the outer values and
 slopes. Bernstein coefficients on a common interval give the bound
@@ -194,6 +222,8 @@ uses the remaining absolute tolerance and the relative tolerance. Without
 compression, interpolation uses the full tolerance. Failed merge checks are
 reused until one of the two intervals changes. Intervals
 containing the current delayed queries and recent anchors are protected.
+Maintenance examines at most 32 pairs per accepted step and resumes from its
+previous cursor; this bounds pair checks, not the cost of deque erasure.
 
 Compression is disabled by default. Setting `compress` to `false` retains every
 accepted polynomial within the required window. This removes compression error;
@@ -218,7 +248,8 @@ configureSignalDelays(system, ida, {
     .rel_tol = relative_tolerance,
     .abs_tol = absolute_tolerance,
     .compress = false});
-ida.setMinStep(1e-6); // Optional user-selected floor, in seconds.
+ida.setMinStep(1e-6); // Optional failure floor, in seconds.
+ida.setMaxStep(5e-4); // Optional source-resolution cap, in seconds.
 ida.configureSimulation();
 ida.initializeSimulation(t0);
 ida.runSimulation(tf);
@@ -231,7 +262,7 @@ The GridKit Spack recipe applies it to SUNDIALS 7.8.0. Unpatched SUNDIALS remain
 usable for simulations without delays; requesting history control fails explicitly.
 Quadrature and adjoint stepping do not support this controller. A requested fixed
 step fails explicitly if history accuracy requires refinement; adaptive stepping
-can retry. Delayed inputs must remain smooth across any simulation events.
+can retry. Delayed signal values must remain continuous across simulation events.
 
 ## Testing
 
@@ -240,8 +271,11 @@ declaration validation, history commits, retention and cumulative compression
 bounds. Integration tests use the exact feedback solution $x(t)=e^{\lambda t}$
 of $\dot x=-\gamma x+kx(t-\tau)$ with
 $\gamma=ke^{-\lambda\tau}-\lambda$. They check convergence, steps longer than the
-delay, compression, rejection rollback and continuation. A narrow prescribed
-pulse with a long delay checks that resolved source features reach the output.
+delay, compression, rejection rollback and continuation. Narrow prescribed
+pulses at several offsets check the source-resolution cap. Bipolar sine tests
+cover exact and estimated prehistory derivatives, including nonzero start times.
+Continuous ramp and triangular-wave tests cover derivative corners, convergence,
+and marked-corner compression.
 A direct IDAS test checks candidate versus committed dense polynomials and their
 derivatives, retained order on retry, and decreasing maximum steps. Solver tests
 also cover the step floor and exceptions raised inside a trial check.

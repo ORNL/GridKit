@@ -1,11 +1,11 @@
-"""Reproduce the gallery using the configured GridKit Makefiles build."""
+"""Build the gallery driver, record simulations, and redraw diagnostic figures."""
+import argparse
 import csv
 import hashlib
 import io
 import json
-import re
 from pathlib import Path
-import shlex
+import re
 import subprocess
 import tempfile
 import zipfile
@@ -14,65 +14,56 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 REPO = next(path for path in HERE.parents if (path / "GridKit/Solver").is_dir())
-BUILD = REPO / "build"
 
 
 def read_data(name, kind="samples"):
     with zipfile.ZipFile(HERE / "data.zip") as archive:
-        return np.genfromtxt(
+        return np.atleast_1d(np.genfromtxt(
             io.BytesIO(archive.read(f"{name}_{kind}.csv")), delimiter=",", names=True
-        )
+        ))
 
 
-def generate():
-    link_dir = BUILD / "tests/IntegrationTests/PhasorDynamics"
-    flags = (BUILD / "application/PhasorDynamics/CMakeFiles/DynamicSimulation.dir/flags.make").read_text()
-    includes = shlex.split(
-        next(line.split("=", 1)[1] for line in flags.splitlines()
-             if line.startswith("CXX_INCLUDES"))
+def generate(build):
+    subprocess.run(
+        ["cmake", "--build", str(build), "--target", "signal_delay_gallery", "-j", "10"],
+        check=True,
     )
-    link = shlex.split(
-        (link_dir / "CMakeFiles/test_pd_signal_delay.dir/link.txt").read_text()
-    )
-    libraries = link[link.index("-o") + 2:]
+    executable = build / HERE.parent.relative_to(REPO) / "signal_delay_gallery"
     with tempfile.TemporaryDirectory(prefix="gridkit-delay-gallery-") as directory:
         temporary = Path(directory)
-        executable = temporary / "gallery"
-        subprocess.run(
-            [link[0], "-std=c++20", "-O2", "-fvisibility=hidden", *includes, str(HERE / "gallery.cpp"),
-             "-o", str(executable), *libraries], cwd=link_dir, check=True
-        )
-        with zipfile.ZipFile(
-            HERE / "data.zip", "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
-        ) as archive:
+        # Publish the complete archive only after every simulation succeeds.
+        with zipfile.ZipFile(temporary / "data.zip", "w", zipfile.ZIP_DEFLATED) as archive:
             for run in json.loads((HERE / "runs.json").read_text()):
                 (temporary / "run.json").write_text(json.dumps(run))
                 name = run["name"]
                 with (temporary / f"{name}.log").open("w") as log:
-                    subprocess.run(
-                        [str(executable), "run.json", name], cwd=temporary,
-                        stdout=log, stderr=log, check=True
-                    )
-                for kind in ("samples", "steps", "attempts", "midpoints"):
+                    subprocess.run([str(executable), "run.json", name], cwd=temporary,
+                                   stdout=log, stderr=log, check=True)
+                for kind in ("samples", "steps", "attempts", "midpoints", "segments"):
                     filename = f"{name}_{kind}.csv"
                     archive.write(temporary / filename, filename)
                 archive.write(temporary / f"{name}.log", f"{name}.log")
                 print(name, flush=True)
+        (HERE / "data.zip").write_bytes((temporary / "data.zip").read_bytes())
     provenance = {
-        "head": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=REPO, text=True
-        ).strip(),
+        "head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
         "source_diff_sha256": hashlib.sha256(subprocess.check_output(
-            ["git", "diff", "HEAD", "--", "GridKit", "application", "tests", "buildsystem/spack_repo/gridkit/packages/sundials"],
-            cwd=REPO
+            ["git", "diff", "HEAD", "--", "GridKit", "application", "tests", "buildsystem",
+             str(HERE.parent / "CMakeLists.txt"), str(HERE / "gallery.cpp"),
+             str(HERE / "generate.py"), str(HERE / "plot_gallery.py"), str(HERE / "runs.json")],
+            cwd=REPO,
         )).hexdigest(),
+        "source_files_sha256": {
+            str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in [REPO / "GridKit/Model/PhasorDynamics/SignalHistoryPolynomial.hpp", HERE / "gallery.cpp"]
+        },
         "sundials_step_check_patch_sha256": hashlib.sha256(
             (REPO / "buildsystem/spack_repo/gridkit/packages/sundials/idas-step-check.patch").read_bytes()
         ).hexdigest(),
-        "compiler": link[0],
-        "description": "Smooth manufactured sources linked to build/ GridKit libraries",
+        "build": str(build),
+        "description": "CMake signal_delay_gallery target using the actual GridKit history and IDAS adapter",
         "error_samples": "Uniform monitor times plus each accepted step midpoint",
-        "prehistory": "Analytic input function for t < 0",
+        "prehistory": "Analytic value and derivative functions",
     }
     (HERE / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
 
@@ -81,20 +72,24 @@ def summarize():
     rows = []
     for run in json.loads((HERE / "runs.json").read_text()):
         name = run["name"]
-        samples = read_data(name)
-        steps = read_data(name, "steps")
-        attempts = read_data(name, "attempts")
-        midpoints = read_data(name, "midpoints")
+        samples, steps, attempts, midpoints = [
+            read_data(name, kind) for kind in ("samples", "steps", "attempts", "midpoints")
+        ]
         for values in (samples, steps, attempts, midpoints):
-            assert all(np.isfinite(values[key]).all() for key in values.dtype.names)
-        assert np.all(np.diff(samples["t"]) > 0)
-        assert np.allclose(steps["h"], np.diff(np.r_[0, steps["t"]]))
-        assert np.allclose(steps["h_over_tau"], steps["h"] / run["tau"])
-        assert np.all(steps["error_estimate"] <= 1)
-        assert abs(steps["t"][-1] - run["tf"]) < 1e-12
+            assert all(np.isfinite(values[key]).all() for key in values.dtype.names), name
+        assert np.all(np.diff(samples["t"]) > 0), name
+        assert np.allclose(steps["h"], np.diff(np.r_[0, steps["t"]])), name
+        assert np.allclose(steps["h_over_tau"], steps["h"] / run["tau"]), name
+        assert np.all(steps["error_estimate"] <= 1), name
+        assert abs(steps["t"][-1] - run["tf"]) < 1e-12, name
+        if run["h_max"]:
+            assert max(steps["h"]) <= run["h_max"] + 1e-12, name
         error = np.r_[abs(samples["z"] - samples["exact_z"]),
                       abs(midpoints["z"] - midpoints["exact_z"])]
-        assert max(error) < 20 * run["rel_tol"], (name, float(max(error)))
+        if run.get("expected_missed", False):
+            assert max(error) > 0.5, (name, float(max(error)))
+        else:
+            assert max(error) < 20 * run["rel_tol"], (name, float(max(error)))
         with zipfile.ZipFile(HERE / "data.zip") as archive:
             log = archive.read(f"{name}.log").decode()
         native_errors = int(re.search(r"native_error_failures=(\d+)", log)[1])
@@ -114,13 +109,17 @@ def summarize():
             "last_segments": int(steps["segments"][-1]),
         })
     with (HERE / "summary.csv").open("w") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator="\n")
+        keys = list(dict.fromkeys(key for row in rows for key in row))
+        writer = csv.DictWriter(stream, fieldnames=keys, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     (HERE / "summary.json").write_text(json.dumps(rows, indent=2) + "\n")
 
 
 if __name__ == "__main__":
-    generate()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--build-dir", type=Path, default=REPO / "build")
+    args = parser.parse_args()
+    generate(args.build_dir.resolve())
     summarize()
     subprocess.run(["python3", "-B", str(HERE / "plot_gallery.py")], check=True)

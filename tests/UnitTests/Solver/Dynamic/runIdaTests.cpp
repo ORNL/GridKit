@@ -14,6 +14,7 @@ int main()
   result += test.nativeStepCheck();
   result += test.controlledStepFailure();
   result += test.decreasingStepLimit();
+  result += test.maximumStep();
   result += test.fixedStep();
   result += test.suppressAlgebraicErrors();
   result += test.consistentICType();

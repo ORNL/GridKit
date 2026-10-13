@@ -199,16 +199,16 @@ namespace GridKit::Testing
       auto control   = solver.getStepControl();
       control.assess = [&, assess = control.assess](double begin, double end, const Solver::DenseOutput& dense)
       {
-        candidate_begin    = begin;
-        candidate_end      = end;
-        const double error = assess(begin, end, dense);
+        candidate_begin       = begin;
+        candidate_end         = end;
+        const auto assessment = assess(begin, end, dense);
         if (force_rejection && !rejected && end > 0.1)
         {
           rejected                      = true;
           output_count_before_rejection = result.outputs;
-          return 2.0;
+          return Solver::StepAssessment{2.0, 1};
         }
-        return error;
+        return assessment;
       };
       control.accept = [&, accept = control.accept]()
       {
@@ -249,7 +249,119 @@ namespace GridKit::Testing
       return result;
     }
 
+    Result solveSource(std::function<double(double)> value,
+                       std::function<double(double)> derivative,
+                       double                        tau,
+                       double                        tf,
+                       double                        tolerance,
+                       double                        max_step,
+                       const std::vector<double>&    corners      = {},
+                       bool                          compress     = false,
+                       double                        initial_time = 0)
+    {
+      using namespace PhasorDynamics;
+      SystemModelData<> data;
+      data.signal = {{.name = "input", .signal_id = 0},
+                     {.name = "delayed", .signal_id = 1, .source = 0, .delay = tau}};
+      System system(data);
+      system.addComponent(new Source(*system.getSignalNode(0), value));
+      system.setSignalPrehistory(0, value, derivative);
+      system.allocate();
+      system.stopMonitor();
+      Solver solver(&system);
+      solver.setTolerance(tolerance, tolerance * 0.01);
+      solver.setMaxSteps(1000000);
+      solver.setMaxStep(max_step);
+      configureSignalDelays(system, solver, {.rel_tol = tolerance, .abs_tol = tolerance * 0.01, .compress = compress});
+      Result result;
+      auto   control = solver.getStepControl();
+      control.assess = [&, assess = control.assess](double begin, double end, const Solver::DenseOutput& dense)
+      {
+        const auto assessment = assess(begin, end, dense);
+        if (assessment.error <= 1)
+        {
+          result.maximum_step = std::max(result.maximum_step, end - begin);
+          dense((begin + end) / 2);
+          result.error = std::max(result.error,
+                                  std::abs(system.getSignalNode(1)->read() - value((begin + end) / 2 - tau)));
+        }
+        return assessment;
+      };
+      solver.setStepControl(std::move(control));
+      solver.configureSimulation();
+      solver.initializeSimulation(initial_time);
+      if (derivative)
+      {
+        result.rollback_ok &= std::abs(system.yp().getData()[0] - derivative(initial_time - tau)) < 1e-9;
+      }
+      auto observe = [&](double t)
+      {
+        ++result.outputs;
+        result.error       = std::max(result.error, std::abs(system.getSignalNode(1)->read() - value(t - tau)));
+        result.final_value = system.getSignalNode(1)->read();
+      };
+      for (double corner : corners)
+      {
+        solver.runSimulation(corner, 0.0002, observe);
+        system.restartSignalHistory(0);
+        solver.initializeSimulation(corner, false);
+      }
+      solver.runSimulation(tf, 0.0002, observe);
+      result.rejected = solver.getRejectedStepCount();
+      std::cout << "source delay=" << tau << " tolerance=" << tolerance << " max error=" << result.error
+                << " max step=" << result.maximum_step << '\n';
+      return result;
+    }
+
   public:
+    TestOutcome oscillatoryPrehistory()
+    {
+      TestStatus success = true;
+      auto       value   = [](double t)
+      { return std::sin(20 * t); };
+      auto derivative = [](double t)
+      { return 20 * std::cos(20 * t); };
+      const auto exact      = solveSource(value, derivative, 8, 9, 1e-6, 0);
+      const auto estimated  = solveSource(value, {}, 8, 9, 1e-6, 0);
+      const auto shifted    = solveSource(value, derivative, 8, 2.1, 1e-6, 0, {}, false, 2);
+      success              *= exact.error < 4e-6 && estimated.error < 4e-6 && shifted.error < 4e-6;
+      success              *= exact.rollback_ok && shifted.rollback_ok;
+      return success.report(__func__);
+    }
+
+    TestOutcome narrowSourceResolution()
+    {
+      TestStatus success = true;
+      for (double center : {2.0, 2.013, 2.027})
+      {
+        auto pulse = [center](double t)
+        { return 1 + 0.6 * std::exp(-std::pow((t - center) / 0.001, 2)); };
+        const auto result  = solveSource(pulse, {}, 8, 10.05, 1e-6, 0.0005);
+        success           *= result.error < 4e-6 && result.maximum_step <= 0.0005 + 1e-12;
+      }
+      return success.report(__func__);
+    }
+
+    TestOutcome continuousCorners()
+    {
+      TestStatus success  = true;
+      auto       triangle = [](double t)
+      {
+        if (t < 0.5)
+          return 0.0;
+        if (t < 1.0)
+          return 2 * (t - 0.5);
+        if (t < 1.5)
+          return 2 * (1.5 - t);
+        return 0.0;
+      };
+      const auto coarse   = solveSource(triangle, {}, 0.2, 2, 1e-4, 0.02);
+      const auto fine     = solveSource(triangle, {}, 0.2, 2, 1e-6, 0.02);
+      const auto restart  = solveSource(triangle, {}, 0.2, 2, 1e-6, 0.02, {0.5, 1.0, 1.5}, true);
+      success            *= fine.error < coarse.error && fine.error < 1e-5 && restart.error < 1e-5;
+      return success.report(__func__);
+    }
+
     TestOutcome prescribedSource()
     {
       using namespace PhasorDynamics;

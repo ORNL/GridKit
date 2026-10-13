@@ -106,6 +106,15 @@ namespace AnalysisManager
       }
       checkOutput(IDASetMinStep(solver_, time_step_ > 0 ? time_step_ : min_step_), "IDASetMinStep");
 
+      if (max_step_ > 0)
+      {
+        if (min_step_ > max_step_ || time_step_ > max_step_)
+        {
+          throw std::invalid_argument("h_max must not be smaller than h_min or the fixed step size");
+        }
+        checkOutput(IDASetMaxStep(solver_, time_step_ > 0 ? time_step_ : max_step_), "IDASetMaxStep");
+      }
+
       // Set up linear solver
       return this->configureLinearSolver();
     }
@@ -245,10 +254,13 @@ namespace AnalysisManager
       controlled_time_      = t0;
       step_check_exception_ = {};
       rejected_steps_       = 0;
+      last_step_assessment_ = {};
       if (step_control_)
       {
         updateModelState(t0);
         step_control_->initialize(t0, false);
+        copyVec(model_->y(), yy_);
+        copyVec(model_->yp(), yp_);
       }
 
       // Need to reinitialize IDA to set to get correct initial conditions
@@ -442,6 +454,13 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
+    std::span<const typename Ida<ScalarT, IdxT>::RealT> Ida<ScalarT, IdxT>::sampleDenseValues(RealT t)
+    {
+      checkOutput(IDAGetDky(solver_, t, 0, dense_y_), "IDAGetDky");
+      return {N_VGetArrayPointer(dense_y_), static_cast<size_t>(N_VGetLength(dense_y_))};
+    }
+
+    template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::sampleDenseState(RealT t)
     {
       checkOutput(IDAGetDky(solver_, t, 0, dense_y_), "IDAGetDky");
@@ -464,12 +483,20 @@ namespace AnalysisManager
       try
       {
         restore();
-        const RealT error = solver.step_control_->assess(begin, end, [&](RealT t)
-                                                         { solver.sampleDenseState(t); });
+        const DenseOutput dense{
+            [&](RealT t)
+            { solver.sampleDenseState(t); },
+            [&](RealT t)
+            { return solver.sampleDenseValues(t); }};
+        solver.last_step_assessment_ = solver.step_control_->assess(begin, end, dense);
+        const RealT    error         = solver.last_step_assessment_.error;
+        const unsigned order         = solver.last_step_assessment_.error_order > 0
+                                           ? solver.last_step_assessment_.error_order
+                                           : solver.step_control_->error_order;
         restore();
         const bool  reject = !std::isfinite(error) || error > 1;
         const RealT factor = std::isfinite(error)
-                                 ? RealT{0.8} * std::pow(std::max(error, RealT{1e-12}), -RealT{1} / static_cast<RealT>(solver.step_control_->error_order))
+                                 ? RealT{0.8} * std::pow(std::max(error, RealT{1e-12}), -RealT{1} / static_cast<RealT>(order))
                                  : RealT{0.1};
         *hnext             = (end - begin) * std::clamp(factor, RealT{0.1}, reject ? RealT{0.5} : RealT{2});
         if (reject)
@@ -544,6 +571,33 @@ namespace AnalysisManager
         if (step_check_exception_)
         {
           std::rethrow_exception(std::exchange(step_check_exception_, {}));
+        }
+#ifdef SUNDIALS_IDAS_STEP_CHECK
+        if (flag == IDA_STEP_CHECK_FAIL)
+        {
+          RealT h;
+          IDAGetCurrentStep(solver_, &h);
+          const RealT        floor = time_step_ > 0 ? time_step_ : min_step_;
+          std::ostringstream message;
+          message << "IDA history step check failed at t=" << end
+                  << ", h=" << h << ", h_min=" << floor << ": "
+                  << (std::abs(h) <= floor * (1 + 100 * std::numeric_limits<RealT>::epsilon())
+                          ? "accuracy requires a step below the configured floor"
+                          : "step rejection limit reached")
+                  << "; " << getLastStepDescription()
+                  << ", normalized error=" << last_step_assessment_.error;
+          throw std::runtime_error(message.str());
+        }
+#endif
+        if (flag == IDA_ERR_FAIL || flag == IDA_CONV_FAIL)
+        {
+          RealT h;
+          IDAGetCurrentStep(solver_, &h);
+          std::ostringstream message;
+          message << "IDA " << (flag == IDA_ERR_FAIL ? "native error test" : "nonlinear convergence")
+                  << " failed at t=" << end << ", h=" << h
+                  << ", h_min=" << (time_step_ > 0 ? time_step_ : min_step_);
+          throw std::runtime_error(message.str());
         }
         checkOutput(flag, "IDASolve");
         if (!(end > begin))
@@ -1310,6 +1364,24 @@ namespace AnalysisManager
         std::free(msg);
         throw SundialsException();
       }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setMaxStep(RealT h_max)
+    {
+      if (!std::isfinite(h_max) || h_max < 0)
+      {
+        throw std::invalid_argument("h_max must be finite and nonnegative");
+      }
+      if (yy_)
+      {
+        if (h_max > 0 && (h_max < min_step_ || h_max < time_step_))
+        {
+          throw std::invalid_argument("h_max must not be smaller than h_min or the fixed step size");
+        }
+        checkOutput(IDASetMaxStep(solver_, time_step_ > 0 ? time_step_ : h_max), "IDASetMaxStep");
+      }
+      max_step_ = h_max;
     }
 
     template <class ScalarT, typename IdxT>

@@ -7,12 +7,6 @@
 #include <GridKit/Model/PhasorDynamics/SignalDelay/SignalDelay.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 
-namespace AnalysisManager::Sundials
-{
-  template <class ScalarT, typename IdxT>
-  class Ida;
-}
-
 namespace GridKit
 {
   namespace Model
@@ -25,6 +19,9 @@ namespace GridKit
   {
     template <typename real_type, typename index_type>
     struct SystemModelData;
+
+    template <typename scalar_type, typename index_type>
+    class SignalHistoryControl;
 
     template <typename scalar_type, typename index_type>
     class BusBase;
@@ -114,9 +111,15 @@ namespace GridKit
         return !signal_histories_.empty();
       }
 
-      void setSignalPrehistory(IdxT source, std::function<RealT(RealT)> prehistory)
+      void setSignalPrehistory(IdxT source, std::function<RealT(RealT)> prehistory, std::function<RealT(RealT)> derivative = {})
       {
-        signal_histories_.at(source).history.setPrehistory(std::move(prehistory));
+        signal_histories_.at(source).history.setPrehistory(std::move(prehistory), std::move(derivative));
+      }
+
+      /// Call after stopping at a known corner of a continuous source signal.
+      void restartSignalHistory(IdxT source)
+      {
+        signal_histories_.at(source).history.restartInterpolation();
       }
 
       /// Read-only history diagnostics. Lifecycle changes belong to the solver.
@@ -126,17 +129,7 @@ namespace GridKit
       }
 
     private:
-      template <class S, class I>
-      friend void configureSignalDelays(SystemModel<S, I>&,
-                                        AnalysisManager::Sundials::Ida<S, I>&,
-                                        SignalHistoryOptions<typename SystemModel<S, I>::RealT>);
-
-      void  setSignalHistoryOptions(SignalHistoryOptions<RealT> options);
-      void  initializeSignalHistory(RealT t, bool consistent);
-      RealT assessSignalHistory(RealT begin, RealT end, const std::function<void(RealT)>& sample_state);
-      void  acceptSignalHistory();
-      void  finishSignalHistory();
-      void  discardSignalHistory();
+      friend class SignalHistoryControl<ScalarT, IdxT>;
 
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;

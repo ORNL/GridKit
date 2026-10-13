@@ -9,7 +9,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "ramp_0.25",
@@ -21,7 +22,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "ramp_1.5",
@@ -33,7 +35,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "width_0.025",
@@ -45,7 +48,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "width_0.1",
@@ -57,7 +61,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "width_0.4",
@@ -69,7 +74,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "features_0.005",
@@ -81,7 +87,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "features_0.15",
@@ -93,7 +100,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "features_0.8",
@@ -105,7 +113,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "packet_0.005",
@@ -117,7 +126,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "packet_0.1",
@@ -129,7 +139,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "packet_0.8",
@@ -141,7 +152,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "pulse_0.001",
@@ -153,7 +165,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "pulse_0.1",
@@ -165,7 +178,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "pulse_0.5",
@@ -177,7 +191,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "long_0.1",
@@ -189,7 +204,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.001,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "long_2",
@@ -201,7 +217,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.001,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "long_8",
@@ -213,7 +230,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.001,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "compression_0",
@@ -225,7 +243,8 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.001,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
   },
   {
     "name": "compression_1",
@@ -237,6 +256,291 @@
     "rel_tol": 1e-06,
     "compress": true,
     "dt_monitor": 0.001,
-    "h_min": 1e-06
+    "h_min": 1e-06,
+    "h_max": 0.0
+  },
+  {
+    "name": "sharp_rise",
+    "group": "edges",
+    "shape": "rise",
+    "tau": 0.02,
+    "width": 0.002,
+    "tf": 2.15,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 5e-05,
+    "h_min": 0.0,
+    "h_max": 0.0005,
+    "label": "Rising edge",
+    "zoom": [
+      1.99,
+      2.06
+    ]
+  },
+  {
+    "name": "sharp_fall",
+    "group": "edges",
+    "shape": "fall",
+    "tau": 0.02,
+    "width": 0.002,
+    "tf": 2.15,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 5e-05,
+    "h_min": 0.0,
+    "h_max": 0.0005,
+    "label": "Falling edge",
+    "zoom": [
+      1.99,
+      2.06
+    ]
+  },
+  {
+    "name": "asymmetric",
+    "group": "edges",
+    "shape": "asymmetric",
+    "tau": 0.02,
+    "width": 0.002,
+    "tf": 2.15,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 5e-05,
+    "h_min": 0.0,
+    "h_max": 0.0005,
+    "label": "Asymmetric pulse",
+    "fall_width": 0.01,
+    "fall_time": 2.035,
+    "zoom": [
+      1.99,
+      2.09
+    ]
+  },
+  {
+    "name": "sine_1",
+    "group": "sine",
+    "shape": "sine",
+    "tau": 0.05,
+    "width": 0.002,
+    "tf": 1.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.005,
+    "frequency": 1,
+    "label": "1 Hz"
+  },
+  {
+    "name": "sine_5",
+    "group": "sine",
+    "shape": "sine",
+    "tau": 0.05,
+    "width": 0.002,
+    "tf": 1.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.005,
+    "frequency": 5,
+    "label": "5 Hz"
+  },
+  {
+    "name": "sine_20",
+    "group": "sine",
+    "shape": "sine",
+    "tau": 0.05,
+    "width": 0.002,
+    "tf": 1.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.005,
+    "frequency": 20,
+    "label": "20 Hz"
+  },
+  {
+    "name": "chirp_0.002",
+    "group": "chirp",
+    "shape": "chirp",
+    "tau": 0.002,
+    "width": 0.002,
+    "tf": 2.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.002,
+    "frequency": 1.0,
+    "chirp_rate": 5.0
+  },
+  {
+    "name": "chirp_0.05",
+    "group": "chirp",
+    "shape": "chirp",
+    "tau": 0.05,
+    "width": 0.002,
+    "tf": 2.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.002,
+    "frequency": 1.0,
+    "chirp_rate": 5.0
+  },
+  {
+    "name": "chirp_0.2",
+    "group": "chirp",
+    "shape": "chirp",
+    "tau": 0.2,
+    "width": 0.002,
+    "tf": 2.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.002,
+    "frequency": 1.0,
+    "chirp_rate": 5.0
+  },
+  {
+    "name": "corner_ramp",
+    "group": "corners",
+    "shape": "corner",
+    "tau": 0.2,
+    "width": 0.002,
+    "tf": 2.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.02,
+    "label": "Ramp corner",
+    "restart_corners": true
+  },
+  {
+    "name": "triangle_adaptive",
+    "group": "corners",
+    "shape": "triangle",
+    "tau": 0.2,
+    "width": 0.002,
+    "tf": 2.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.02,
+    "label": "Adaptive refinement"
+  },
+  {
+    "name": "triangle_restart",
+    "group": "corners",
+    "shape": "triangle",
+    "tau": 0.2,
+    "width": 0.002,
+    "tf": 2.0,
+    "rel_tol": 1e-06,
+    "compress": true,
+    "dt_monitor": 0.0002,
+    "h_min": 0.0,
+    "h_max": 0.02,
+    "label": "Known corners",
+    "restart_corners": true
+  },
+  {
+    "name": "narrow_2.0",
+    "group": "narrow",
+    "shape": "pulse",
+    "tau": 0.1,
+    "width": 0.001,
+    "tf": 2.2,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 5e-05,
+    "h_min": 0.0,
+    "h_max": 0.0005,
+    "center": 2.0,
+    "label": "Center 2 s",
+    "zoom": [
+      1.99,
+      2.14
+    ]
+  },
+  {
+    "name": "narrow_2.013",
+    "group": "narrow",
+    "shape": "pulse",
+    "tau": 0.1,
+    "width": 0.001,
+    "tf": 2.2,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 5e-05,
+    "h_min": 0.0,
+    "h_max": 0.0005,
+    "center": 2.013,
+    "label": "Center 2.013 s",
+    "zoom": [
+      1.99,
+      2.14
+    ]
+  },
+  {
+    "name": "narrow_2.027",
+    "group": "narrow",
+    "shape": "pulse",
+    "tau": 0.1,
+    "width": 0.001,
+    "tf": 2.2,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 5e-05,
+    "h_min": 0.0,
+    "h_max": 0.0005,
+    "center": 2.027,
+    "label": "Center 2.027 s",
+    "zoom": [
+      1.99,
+      2.14
+    ]
+  },
+  {
+    "name": "resolution_uncapped",
+    "group": "resolution",
+    "shape": "pulse",
+    "tau": 8.0,
+    "width": 0.001,
+    "tf": 14.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0001,
+    "h_min": 0.0,
+    "h_max": 0.0,
+    "expected_missed": true,
+    "label": "No source-resolution cap",
+    "zoom": [
+      9.995,
+      10.005
+    ]
+  },
+  {
+    "name": "resolution_capped",
+    "group": "resolution",
+    "shape": "pulse",
+    "tau": 8.0,
+    "width": 0.001,
+    "tf": 14.0,
+    "rel_tol": 1e-06,
+    "compress": false,
+    "dt_monitor": 0.0001,
+    "h_min": 0.0,
+    "h_max": 0.0005,
+    "label": "Maximum step 0.5 ms",
+    "zoom": [
+      9.995,
+      10.005
+    ]
   }
 ]

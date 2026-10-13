@@ -1,82 +1,103 @@
 # Signal delay gallery
 
-Open [index.html](index.html). All seven figures are PNGs in `figures/`.
-Every waveform comparison includes the actual input signal.
+Open [index.html](index.html). Fourteen sections contain 36 PNG views in
+`figures/`. Choose a variant beneath each heading to see one experiment at a
+time. Every variant also opens as a standalone PNG, including without JavaScript.
+The editable source is `plot_gallery.py`; recorded CSV data are in `data.zip`.
+Only PNGs are generated.
 
-| Figure | What changes |
+| Figure | Coverage |
 | --- | --- |
-| 01 — smooth ramp | Delays from 10 ms to 1.5 s |
-| 02 — pulse widths | Gaussian width from 25 to 400 ms, with a fixed 250 ms delay |
-| 03 — multiple timescales | A broad pulse followed by a narrow pulse |
-| 04 — oscillatory packet | A smooth envelope containing oscillations |
-| 05 — adaptive pulse | Delays of 1, 100, and 500 ms; accepted step sizes and step/delay ratios |
-| 06 — long history | A 120 ms feature delayed by up to 8 s |
-| 07 — compression | Input, both delayed outputs, history counts, and numerical errors |
+| 01 | Smooth rising transition with several delays |
+| 02 | Gaussian pulse widths |
+| 03 | Broad and narrow features in one source |
+| 04 | Oscillatory packet |
+| 05 | Adaptive pulse propagation |
+| 06 | Long retained history |
+| 07 | Compression on and off |
+| 08 | Sharp rising/falling edges and an asymmetric pulse |
+| 09 | Bipolar sine waves at 1, 5, and 20 Hz |
+| 10 | Increasing-frequency chirp |
+| 11 | Continuous ramp and triangle signals with derivative corners |
+| 12 | Narrow Gaussian pulses at different offsets |
+| 13 | An intentionally missed pulse beside the source-resolved result |
+| 14 | Accepted source knots and reconstructed history near an edge/corner |
 
-These are 20 runs of the actual GridKit `SystemModel`, `SignalDelay`,
-`SignalHistory`, and IDA wrapper linked from `build/`. The small driver
-[gallery.cpp](gallery.cpp) supplies prescribed smooth inputs, evaluated at the
-queried time like `FunctionSignalSource`, and records diagnostics. It contains
-no separate delay implementation.
+The driver uses the actual GridKit history, delay component, and IDAS wrapper.
+Analytic references evaluate the source at `t - tau`; prehistory provides both
+value and derivative. Signal values are continuous. No value jumps are tested.
 
-`h` is an accepted internal solver step. The monitor interval is separate.
-All runs use relative tolerance `1e-6`, absolute tolerance `1e-8`, `h_min = 1e-6` s, and analytic
-prehistory. References evaluate the input function at `t - tau`. Gaussian
-widths are scale parameters in `exp(-((t-center)/width)^2)`, not full widths
-at half maximum. Compression is disabled except in its explicit comparison.
-Window pruning remains enabled in every run.
+Ordinary views contain two aligned panels: the input and delayed output above,
+and the accepted step-to-delay ratio `h/tau` below. The input is always dashed
+grey and the delayed output solid blue. A dashed line at `h/tau = 1` marks a step
+equal to the delay. Each view uses the same type, line weights, axes, and palette.
+There are no error panels, retry markers, or duplicate absolute-step panels.
 
-## Data and interpretation
+Sine views show at most three cycles. Short time windows use milliseconds with
+an explicit origin; other views use seconds. The plots retain the recorded
+samples and step sequence without smoothing or averaging.
 
-- `runs.json` contains all experiment settings.
-- `summary.csv` and `summary.json` contain errors, accepted steps, history
-  rejections, native error/nonlinear failures, and retained segment counts.
-- `data.zip` contains the complete CSVs and logs: `*_samples.csv` at uniform
-  monitor times, `*_midpoints.csv` at every accepted step midpoint,
-  `*_steps.csv` at accepted endpoints, and `*_attempts.csv` for history checks.
-- `provenance.json` identifies the source revision and local source diff.
-- `performance/` contains separate `DynamicSimulation` application benchmarks,
-  their inputs, and before/after timings.
+Compression has a dedicated comparison of retained segments and `h/tau`.
+The source-resolution figure compares missed and resolved output against sparse
+analytic reference markers. The history detail shows actual accepted values
+and their interpolation polynomials near a smooth edge and a derivative corner.
+Error measurements and retry counts remain in the data and the gallery's
+collapsed numerical-results section.
 
-Errors are sampled maxima, not continuous error bounds. Generation checks for
-nonfinite data, inconsistent step sizes, failed acceptance checks, and missed
-features. Sparse samples cannot guarantee detection of every arbitrarily narrow
-smooth input. Source resolution still matters even though there is no shortest-delay
-step cap. Every crossed history polynomial is checked against the candidate IDAS dense
-polynomial, including features between its sample times. `h_min` is a failure
-floor, not a source sampling guarantee. Rejected trials use native IDAS rollback,
-which preserves the BDF history and order; curves show actual accepted steps,
-without smoothing.
+`h` is the accepted internal step, independent of the monitor interval. `h_min`
+is a failure floor. `h_max` limits source sampling gaps and must be chosen for
+the feature being resolved. The uncapped 1 ms Gaussian intentionally demonstrates
+that an unobserved source pulse can be missed despite passing history checks.
+It is explicitly marked `expected_missed`; every other run must pass its sampled
+analytic-error check. Sparse probing cannot guarantee resolution of arbitrary
+unknown features.
 
-Compression can change the adaptive step sequence. Segment counts are not total
-process memory. History rejection counts exclude IDA's internal error-test and
-nonlinear-solve failures.
+Smooth edge `width` is the 10–90% transition time for the new rise/fall cases.
+The original `ramp` uses a tanh scale parameter. Gaussian `width` is the scale in
+`exp(-((t-center)/width)^2)`, not FWHM. Frequencies are in Hz. The corner cases
+compare adaptive refinement with explicit source-stencil restarts at known
+corner times. Compression preserves marked corners.
+
+## Data
+
+- `runs.json`: complete experiment settings, including per-run step limits.
+- `summary.csv` and `summary.json`: sampled errors, steps, retries, and storage.
+- `data.zip`: monitor samples, accepted-step midpoints, steps, history-check
+  attempts, accepted source-polynomial coefficients, and logs.
+- `provenance.json`: the original simulation source/build record, plus a separate
+  rendering record with plot-source and data hashes, Matplotlib version, and PNG list.
+- `performance/`: separate `DynamicSimulation` timings using identical inputs
+  and the median of three app-reported CPU times.
+
+Errors are sampled maxima. Segment counts exclude container overhead and other
+process memory. Compression bounds concern stored history; they do not bound
+the difference between complete numerical trajectories. Compression may change
+the adaptive step sequence.
 
 ## Reproduce
 
-From the repository root, with the configured CMake Makefiles build, the
+From the repository root, with the configured build, the
 [IDAS step-check extension](../../../../../../buildsystem/spack_repo/gridkit/packages/sundials/README.md),
 and NumPy/Matplotlib:
 
 ```bash
-cmake --build build --target DynamicSimulation test_pd_signal_delay -j 10
+cmake -S . -B build
 python3 -B examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/generate.py
 ```
 
-Compilation and raw intermediates use a temporary directory. Results and PNGs
-are written here. To redraw the saved results without another simulation:
+Generation builds the CMake `signal_delay_gallery` target, runs all experiments,
+validates the data, and redraws the figures. Use `--build-dir` for another
+configured build. Raw intermediates use a temporary directory.
+
+To redraw all PNGs from saved data:
 
 ```bash
 python3 -B examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/plot_gallery.py
 ```
 
-To refresh the application timings with the current build:
+Application timings can be refreshed separately:
 
 ```bash
-python3 examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/performance/measure.py
+cmake --build build --target DynamicSimulation -j 10
+python3 -B examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/performance/measure.py
 ```
-
-The benchmark cases use one 1 ms tap (`short`), 17 taps from 1 ms to 4 s
-(`many`), and a 20 s tap with compression enabled (`long`). They retain the
-original and preceding-checkpoint timings for comparison. These are local CPU
-measurements; speedups are not uniform across cases.

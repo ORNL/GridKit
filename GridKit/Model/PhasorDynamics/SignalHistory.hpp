@@ -11,7 +11,8 @@
 #include <span>
 #include <stdexcept>
 #include <utility>
-#include <vector>
+
+#include <GridKit/Model/PhasorDynamics/SignalHistoryPolynomial.hpp>
 
 namespace GridKit::PhasorDynamics
 {
@@ -42,78 +43,22 @@ namespace GridKit::PhasorDynamics
       RealT weight;
     };
 
-  private:
-    template <size_t N>
-    struct Polynomial
+  public:
+    using Cubic = detail::HistoryPolynomial<RealT, 4>;
+
+    struct Segment : Cubic
     {
-      RealT                begin;
-      RealT                end;
-      std::array<RealT, N> coefficients;
-      RealT                error{0};
-      bool                 merge_failed{false}; ///< Unchanged pair already exceeds the merge budget.
+      RealT error{0};
+      bool  merge_failed{false};
+      bool  break_before{false}; ///< A known derivative corner cannot be merged away.
 
-      RealT evaluate(RealT t) const
+      Segment(RealT begin, RealT end, std::array<RealT, 4> coefficients)
+        : Cubic{begin, end, coefficients}
       {
-        auto        c = coefficients;
-        const RealT x = (t - begin) / (end - begin);
-        for (size_t n = N - 1; n > 0; --n)
-        {
-          for (size_t i = 0; i < n; ++i)
-          {
-            c[i] = (1 - x) * c[i] + x * c[i + 1];
-          }
-        }
-        return c[0];
-      }
-
-      std::pair<Polynomial, Polynomial> split(RealT t) const
-      {
-        auto        c = coefficients;
-        Polynomial  left{begin, t, {}}, right{t, end, {}};
-        const RealT x             = (t - begin) / (end - begin);
-        left.coefficients[0]      = c[0];
-        right.coefficients[N - 1] = c[N - 1];
-        for (size_t n = N - 1; n > 0; --n)
-        {
-          for (size_t i = 0; i < n; ++i)
-          {
-            c[i] = (1 - x) * c[i] + x * c[i + 1];
-          }
-          left.coefficients[N - n]  = c[0];
-          right.coefficients[n - 1] = c[n - 1];
-        }
-        return {left, right};
-      }
-
-      Polynomial restrictTo(RealT a, RealT b) const
-      {
-        auto result = *this;
-        if (b < result.end)
-        {
-          result = result.split(b).first;
-        }
-        if (a > result.begin)
-        {
-          result = result.split(a).second;
-        }
-        return result;
-      }
-
-      static RealT distance(const Polynomial& a, const Polynomial& b)
-      {
-        RealT error = 0;
-        for (size_t i = 0; i < N; ++i)
-        {
-          error = std::max(error, std::abs(a.coefficients[i] - b.coefficients[i]));
-        }
-        return error;
       }
     };
 
-  public:
-    using Segment = Polynomial<4>;
-
-    /// Chebyshev-Lobatto nodes for reconstructing IDAS degree-five dense output.
+    /// Chebyshev-Lobatto nodes for degree-five polynomial reconstruction.
     static constexpr std::array<RealT, 6> dense_nodes{0, 0.095491502812526288, 0.34549150281252627, 0.65450849718747373, 0.90450849718747373, 1};
 
     void setOptions(SignalHistoryOptions<RealT> options)
@@ -129,13 +74,63 @@ namespace GridKit::PhasorDynamics
       options_ = options;
     }
 
-    void setPrehistory(std::function<RealT(RealT)> prehistory)
+    void setPrehistory(std::function<RealT(RealT)> prehistory,
+                       std::function<RealT(RealT)> derivative = {})
     {
       if (initialized())
       {
         throw std::logic_error("Set signal prehistory before initialization");
       }
-      prehistory_ = std::move(prehistory);
+      if (derivative && !prehistory)
+      {
+        throw std::invalid_argument("A prehistory derivative requires a value function");
+      }
+      prehistory_            = std::move(prehistory);
+      prehistory_derivative_ = std::move(derivative);
+    }
+
+    /// Initial slope at the delayed query, not at the current source time.
+    RealT initialDerivative(RealT t) const
+    {
+      if (!prehistory_)
+      {
+        return 0;
+      }
+      RealT derivative;
+      if (prehistory_derivative_)
+      {
+        derivative = prehistory_derivative_(t);
+      }
+      else
+      {
+        // Backward differences stay inside the prescribed prehistory domain.
+        const RealT dt = std::cbrt(std::numeric_limits<RealT>::epsilon())
+                         * std::max(RealT{1}, std::abs(t));
+        derivative = (3 * checkedPrehistory(t) - 4 * checkedPrehistory(t - dt)
+                      + checkedPrehistory(t - 2 * dt))
+                     / (2 * dt);
+      }
+      checkValue(derivative);
+      return derivative;
+    }
+
+    /// Restart at an accepted continuous value after a known derivative corner.
+    /// The first interval uses a secant; later intervals recover cubic order.
+    void restartInterpolation()
+    {
+      if (!initialized() || pending_)
+      {
+        throw std::logic_error("Restart interpolation only at an accepted history time");
+      }
+      recent_[0]    = recent_[recent_count_ - 1];
+      recent_count_ = 1;
+      linear_start_ = true;
+      trial_slope_.reset();
+    }
+
+    unsigned errorOrder() const
+    {
+      return linear_start_ ? 2 : static_cast<unsigned>(recent_count_ + 1);
     }
 
     bool hasPrehistory() const
@@ -145,12 +140,12 @@ namespace GridKit::PhasorDynamics
 
     bool initialized() const
     {
-      return !recent_.empty();
+      return recent_count_ != 0;
     }
 
     RealT time() const
     {
-      return recent_.back().time;
+      return recent_[recent_count_ - 1].time;
     }
 
     size_t segmentCount() const
@@ -166,7 +161,10 @@ namespace GridKit::PhasorDynamics
     /// A fresh model initialization resets history but retains its specification.
     void reset()
     {
-      recent_.clear();
+      recent_count_       = 0;
+      linear_start_       = false;
+      compression_cursor_ = 0;
+      trial_slope_.reset();
       segments_.clear();
       pending_.reset();
     }
@@ -201,16 +199,9 @@ namespace GridKit::PhasorDynamics
           throw std::invalid_argument("Signal initial value is inconsistent with its prehistory");
         }
       }
-      initial_value_   = value;
-      RealT derivative = 0;
-      if (prehistory_)
-      {
-        // A backward difference stays in the user-specified prehistory domain.
-        const RealT dt = std::cbrt(std::numeric_limits<RealT>::epsilon()) * std::max(RealT{1}, std::abs(t));
-        derivative     = (3 * value - 4 * checkedPrehistory(t - dt) + checkedPrehistory(t - 2 * dt)) / (2 * dt);
-      }
-      checkValue(derivative);
-      recent_.push_back({t, value, derivative});
+      initial_value_ = value;
+      recent_[0]     = {t, value, initialDerivative(t)};
+      recent_count_  = 1;
     }
 
     /// Endpoint derivative of the interpolant through recent values and U(t).
@@ -236,16 +227,19 @@ namespace GridKit::PhasorDynamics
     /// C1 Hermite continuation, affine in the current source unknown U(t).
     static AffineSample trialSample(std::span<const Sample> past, RealT t, RealT q)
     {
-      const auto& left = past.back();
-      const RealT h    = t - left.time;
-      const RealT x    = (q - left.time) / h;
-      const RealT h00  = (1 + 2 * x) * (1 - x) * (1 - x);
-      const RealT h10  = x * (1 - x) * (1 - x);
-      const RealT h01  = x * x * (3 - 2 * x);
-      const RealT h11  = x * x * (x - 1);
-      const auto  d    = trialDerivative(past, t);
-      return {h00 * left.value + h10 * h * left.derivative + h11 * h * d.constant,
-              h01 + h11 * h * d.weight};
+      return hermiteSample(past.back(), t, q, trialDerivative(past, t));
+    }
+
+    static AffineSample hermiteSample(const Sample& left, RealT t, RealT q, AffineSample derivative)
+    {
+      const RealT h   = t - left.time;
+      const RealT x   = (q - left.time) / h;
+      const RealT h00 = (1 + 2 * x) * (1 - x) * (1 - x);
+      const RealT h10 = x * (1 - x) * (1 - x);
+      const RealT h01 = x * x * (3 - 2 * x);
+      const RealT h11 = x * x * (x - 1);
+      return {h00 * left.value + h10 * h * left.derivative + h11 * h * derivative.constant,
+              h01 + h11 * h * derivative.weight};
     }
 
     AffineSample sample(RealT t, RealT delay) const
@@ -269,11 +263,16 @@ namespace GridKit::PhasorDynamics
       }
       if (q == time())
       {
-        return {recent_.back().value, 0};
+        return {recent_[recent_count_ - 1].value, 0};
       }
       if (q > time())
       {
-        return trialSample(recent_, t, q);
+        if (linear_start_)
+        {
+          const RealT weight = (q - time()) / (t - time());
+          return {(1 - weight) * recent_[0].value, weight};
+        }
+        return hermiteSample(recent_[recent_count_ - 1], t, q, trialSlope(t));
       }
       if (q == initial_time_)
       {
@@ -296,12 +295,14 @@ namespace GridKit::PhasorDynamics
         throw std::logic_error("Signal history requires an advancing trial step");
       }
       checkValue(endpoint);
-      const RealT begin = time();
-      const RealT h     = t - begin;
-      const auto  slope = trialDerivative(recent_, t);
-      const RealT d1    = slope.constant + slope.weight * endpoint;
-      const auto& left  = recent_.back();
-      pending_          = Segment{begin, t, {left.value, left.value + h * left.derivative / 3, endpoint - h * d1 / 3, endpoint}};
+      const RealT begin      = time();
+      const RealT h          = t - begin;
+      const auto  slope      = trialSlope(t);
+      const RealT d1         = slope.constant + slope.weight * endpoint;
+      const auto& left       = recent_[recent_count_ - 1];
+      const RealT d0         = linear_start_ ? (endpoint - left.value) / h : left.derivative;
+      pending_               = Segment{begin, t, {left.value, left.value + h * d0 / 3, endpoint - h * d1 / 3, endpoint}};
+      pending_->break_before = linear_start_;
       for (RealT coefficient : pending_->coefficients)
       {
         checkValue(coefficient);
@@ -320,29 +321,26 @@ namespace GridKit::PhasorDynamics
       return error / errorScale(high, dense_value);
     }
 
-    /// IDAS dense output has degree at most five. Bound its difference from
-    /// every crossed cubic segment using Bernstein coefficients, including a
-    /// query inside the current trial step. No delayed feature can be skipped
-    /// merely because it lies between the six dense-output sample times.
+    /// Compare six polynomial samples against every crossed history segment.
+    /// Prescribed source/prehistory functions still require adequate resolution.
     RealT estimateDelayed(RealT begin, RealT end, RealT delay, const std::array<RealT, 6>& values) const
     {
-      // Inverse Bernstein collocation matrix: V_ij = binomial(5,j) x_i^j (1-x_i)^(5-j).
-      static constexpr RealT inverse[6][6] = {
-          {1, 0, 0, 0, 0, 0},
-          {-2.4, 4.1888543819998318, -1.1577708763999663, 0.6111456180001682, -0.44222912360003364, 0.2},
-          {2.52, -5.2944271909999161, 5.8499689437998486, -3.5055728090000842, 2.6300310562001514, -1.2},
-          {-1.2, 2.6300310562001514, -3.5055728090000842, 5.8499689437998486, -5.2944271909999161, 2.52},
-          {0.2, -0.44222912360003364, 0.6111456180001682, -1.1577708763999663, 4.1888543819998318, -2.4},
-          {0, 0, 0, 0, 0, 1}};
-      Polynomial<6> output{begin - delay, end - delay, {}};
-      for (size_t i = 0; i < 6; ++i)
+      for (RealT value : values)
       {
-        checkValue(values[i]);
-        for (size_t j = 0; j < 6; ++j)
-        {
-          output.coefficients[i] += inverse[i][j] * values[j];
-        }
-        checkValue(output.coefficients[i]);
+        checkValue(value);
+      }
+      const auto output = detail::HistoryPolynomial<RealT, 6>::interpolate(begin - delay, end - delay, values);
+      return estimateDelayed(output);
+    }
+
+    /// Bound agreement with a polynomial over its overlaps with stored history.
+    template <size_t N>
+    RealT estimateDelayed(const detail::HistoryPolynomial<RealT, N>& output) const
+    {
+      static_assert(N >= 4);
+      for (RealT coefficient : output.coefficients)
+      {
+        checkValue(coefficient);
       }
       RealT error   = 0;
       auto  compare = [&](const Segment& segment)
@@ -353,23 +351,12 @@ namespace GridKit::PhasorDynamics
         {
           return;
         }
-        const auto           cubic = segment.restrictTo(a, b);
-        const auto           dense = output.restrictTo(a, b);
-        // Elevate the cubic twice to compare polynomials in the same basis.
-        std::array<RealT, 6> expected{};
-        std::copy(cubic.coefficients.begin(), cubic.coefficients.end(), expected.begin());
-        for (size_t degree = 4; degree <= 5; ++degree)
-        {
-          expected[degree] = expected[degree - 1];
-          for (size_t i = degree - 1; i > 0; --i)
-          {
-            const RealT weight = static_cast<RealT>(i) / static_cast<RealT>(degree);
-            expected[i]        = weight * expected[i - 1] + (1 - weight) * expected[i];
-          }
-        }
+        const auto cubic       = segment.restrictTo(a, b);
+        const auto dense       = output.restrictTo(a, b);
+        const auto expected    = cubic.template elevate<N>().coefficients;
         const auto [low, high] = std::minmax_element(expected.begin(), expected.end());
         const RealT minimum    = *low > 0 ? *low : (*high < 0 ? -*high : 0);
-        for (size_t i = 0; i < 6; ++i)
+        for (size_t i = 0; i < N; ++i)
         {
           error = std::max(error, std::abs(dense.coefficients[i] - expected[i]) / errorScale(minimum, minimum));
         }
@@ -400,15 +387,18 @@ namespace GridKit::PhasorDynamics
     {
       const auto& p = pending_.value();
       segments_.push_back(p);
-      recent_.push_back({p.end, p.coefficients[3], 3 * (p.coefficients[3] - p.coefficients[2]) / (p.end - p.begin)});
-      if (recent_.size() > 3)
+      if (recent_count_ == recent_.size())
       {
-        recent_.erase(recent_.begin());
+        std::move(recent_.begin() + 1, recent_.end(), recent_.begin());
+        --recent_count_;
       }
+      recent_[recent_count_++] = {p.end, p.coefficients[3], 3 * (p.coefficients[3] - p.coefficients[2]) / (p.end - p.begin)};
+      linear_start_            = false;
+      trial_slope_.reset();
       pending_.reset();
     }
 
-    void discard()
+    void discard() noexcept
     {
       pending_.reset();
     }
@@ -424,6 +414,10 @@ namespace GridKit::PhasorDynamics
       while (!segments_.empty() && segments_.front().end < oldest)
       {
         segments_.pop_front();
+        if (compression_cursor_ > 0)
+        {
+          --compression_cursor_;
+        }
       }
       if (!options_.compress)
       {
@@ -432,7 +426,7 @@ namespace GridKit::PhasorDynamics
 
       auto protectedInterval = [&](RealT begin, RealT end)
       {
-        if (end >= recent_.front().time)
+        if (end >= recent_[0].time)
         {
           return true;
         }
@@ -445,18 +439,27 @@ namespace GridKit::PhasorDynamics
         }
         return false;
       };
-      for (size_t i = 0; i + 1 < segments_.size();)
+      // Bound maintenance work per accepted step. Protected pairs are revisited
+      // as their delayed queries move; failed pairs wait until a neighbor changes.
+      const size_t work = std::min(size_t{32}, segments_.size());
+      for (size_t attempt = 0; attempt < work && segments_.size() > 1; ++attempt)
       {
+        if (compression_cursor_ + 1 >= segments_.size())
+        {
+          compression_cursor_ = 0;
+        }
+        size_t&     i     = compression_cursor_;
         const auto& left  = segments_[i];
         const auto& right = segments_[i + 1];
-        if (left.merge_failed || protectedInterval(left.begin, right.end))
+        if (left.merge_failed || right.break_before || protectedInterval(left.begin, right.end))
         {
           ++i;
           continue;
         }
         const RealT h = right.end - left.begin;
         Segment     merged{left.begin, right.end, {left.coefficients[0], left.coefficients[0] + h * (left.coefficients[1] - left.coefficients[0]) / (left.end - left.begin), right.coefficients[3] - h * (right.coefficients[3] - right.coefficients[2]) / (right.end - right.begin), right.coefficients[3]}};
-        merged.error = std::max(left.error + Segment::distance(merged.restrictTo(left.begin, left.end), left),
+        merged.break_before = left.break_before;
+        merged.error        = std::max(left.error + Segment::distance(merged.restrictTo(left.begin, left.end), left),
                                 right.error + Segment::distance(merged.restrictTo(right.begin, right.end), right));
         if (merged.error <= RealT{0.25} * options_.abs_tol)
         {
@@ -465,6 +468,7 @@ namespace GridKit::PhasorDynamics
           if (i > 0)
           {
             segments_[i - 1].merge_failed = false; // Its right neighbor changed.
+            --i;
           }
         }
         else
@@ -476,6 +480,15 @@ namespace GridKit::PhasorDynamics
     }
 
   private:
+    AffineSample trialSlope(RealT t) const
+    {
+      if (!trial_slope_ || trial_slope_->first != t)
+      {
+        trial_slope_ = {t, trialDerivative(std::span(recent_.data(), recent_count_), t)};
+      }
+      return trial_slope_->second;
+    }
+
     RealT errorScale(RealT a, RealT b) const
     {
       return (options_.compress ? RealT{0.75} : RealT{1}) * options_.abs_tol
@@ -497,12 +510,17 @@ namespace GridKit::PhasorDynamics
       return value;
     }
 
-    std::deque<Segment>         segments_;
-    std::vector<Sample>         recent_;
-    std::optional<Segment>      pending_;
-    std::function<RealT(RealT)> prehistory_;
-    RealT                       initial_time_{0};
-    RealT                       initial_value_{0};
-    SignalHistoryOptions<RealT> options_;
+    std::deque<Segment>                                   segments_;
+    std::array<Sample, 3>                                 recent_{};
+    size_t                                                recent_count_{0};
+    size_t                                                compression_cursor_{0};
+    bool                                                  linear_start_{false};
+    std::optional<Segment>                                pending_;
+    mutable std::optional<std::pair<RealT, AffineSample>> trial_slope_;
+    std::function<RealT(RealT)>                           prehistory_;
+    std::function<RealT(RealT)>                           prehistory_derivative_;
+    RealT                                                 initial_time_{0};
+    RealT                                                 initial_value_{0};
+    SignalHistoryOptions<RealT>                           options_;
   };
 } // namespace GridKit::PhasorDynamics

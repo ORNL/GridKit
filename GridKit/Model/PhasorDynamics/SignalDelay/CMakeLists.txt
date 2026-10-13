@@ -1,12 +1,6 @@
-if(GRIDKIT_ENABLE_ENZYME)
-  set(_source SignalDelayEnzyme.cpp)
-else()
-  set(_source SignalDelay.cpp)
-endif()
-
 gridkit_add_library(
   phasor_dynamics_signal_delay
-  SOURCES ${_source}
+  SOURCES SignalDelay.cpp
   HEADERS SignalDelay.hpp SignalDelayData.hpp SignalDelayControl.hpp
   LINK_LIBRARIES GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal)
 

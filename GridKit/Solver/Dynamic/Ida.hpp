@@ -5,6 +5,8 @@
 #include <functional>
 #include <iostream>
 #include <optional>
+#include <span>
+#include <string>
 
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_context.h>
@@ -57,18 +59,41 @@ namespace AnalysisManager
       using StepCallback = std::function<void(RealT)>;
 
     public:
-      /// Optional application-owned checks on internal steps. DenseOutput updates
-      /// the model temporarily; the wrapper restores the endpoint after assess.
-      using DenseOutput = std::function<void(RealT)>;
+      /// Optional application-owned checks on internal steps. Calling DenseOutput
+      /// updates the model temporarily; values(t) only fills a reusable y buffer.
+      /// The wrapper restores the endpoint after assess. Returned spans expire
+      /// on the next dense-output call.
+      struct DenseOutput
+      {
+        std::function<void(RealT)>                   state;
+        std::function<std::span<const RealT>(RealT)> values;
+
+        void operator()(RealT t) const
+        {
+          state(t);
+        }
+      };
+
+      struct StepAssessment
+      {
+        RealT    error{0};
+        unsigned error_order{0}; ///< Zero uses the control's default order.
+
+        StepAssessment(RealT value = 0, unsigned order = 0)
+          : error(value), error_order(order)
+        {
+        }
+      };
 
       struct StepControl
       {
-        std::function<void(RealT, bool)>                       initialize;
-        std::function<RealT(RealT, RealT, const DenseOutput&)> assess;
-        std::function<void()>                                  accept;
-        std::function<void()>                                  finish;
-        std::function<void()>                                  discard;
-        unsigned                                               error_order{1}; ///< Power of h in the local error estimate.
+        std::function<void(RealT, bool)>                                initialize;
+        std::function<StepAssessment(RealT, RealT, const DenseOutput&)> assess;
+        std::function<void()>                                           accept;
+        std::function<void()>                                           finish;
+        std::function<void()>                                           discard;
+        unsigned                                                        error_order{1}; ///< Power of h in the local error estimate.
+        std::function<std::string()>                                    describe{};     ///< Evaluated only for diagnostics.
       };
 
       void        setStepControl(StepControl control);
@@ -83,6 +108,16 @@ namespace AnalysisManager
       size_t getRejectedStepCount() const
       {
         return rejected_steps_;
+      }
+
+      const StepAssessment& getLastStepAssessment() const
+      {
+        return last_step_assessment_;
+      }
+
+      std::string getLastStepDescription() const
+      {
+        return step_control_ && step_control_->describe ? step_control_->describe() : "application step check";
       }
 
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
@@ -167,6 +202,8 @@ namespace AnalysisManager
       void setFixedStep(ScalarT time_step);
       /// Minimum adaptive step magnitude; zero leaves the floor to roundoff.
       void setMinStep(RealT h_min);
+      /// Maximum step for source resolution; zero leaves it unrestricted.
+      void setMaxStep(RealT h_max);
       void setBackwardFixedStep(ScalarT time_step);
       using DynamicSolver<ScalarT, IdxT>::setTolerance;
       void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) override;
@@ -186,8 +223,9 @@ namespace AnalysisManager
       IdaStats getStats() const;
 
     private:
-      static int CheckStep(RealT begin, RealT end, N_Vector y, N_Vector yp, RealT* hnext, void* data);
-      void       sampleDenseState(RealT t);
+      static int             CheckStep(RealT begin, RealT end, N_Vector y, N_Vector yp, RealT* hnext, void* data);
+      void                   sampleDenseState(RealT t);
+      std::span<const RealT> sampleDenseValues(RealT t);
 
       static int Residual(RealT    t,
                           N_Vector yy,
@@ -249,6 +287,7 @@ namespace AnalysisManager
       std::optional<StepControl> step_control_;
       std::exception_ptr         step_check_exception_;
       size_t                     rejected_steps_{0};
+      StepAssessment             last_step_assessment_;
 
       N_Vector dense_y_{}; ///< Scratch space shared by trial checks and monitor output
       N_Vector dense_yp_{};
@@ -269,6 +308,7 @@ namespace AnalysisManager
 
       RealT               time_step_{};
       RealT               min_step_{};
+      RealT               max_step_{};
       RealT               rel_tol_{DEFAULT_REL_TOL};
       RealT               abs_tol_override_{};
       IdxT                max_steps_{};

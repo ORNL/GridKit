@@ -5,59 +5,61 @@
 
 namespace GridKit::PhasorDynamics
 {
-  template <class ScalarT, class IdxT>
-  SignalDelay<ScalarT, IdxT>::~SignalDelay() = default;
+  template <typename scalar_type, typename index_type>
+  SignalDelay<scalar_type, index_type>::~SignalDelay() = default;
 
-  template <class ScalarT, class IdxT>
-  const Model::VariableMonitorBase* SignalDelay<ScalarT, IdxT>::getMonitor() const
+  template <typename scalar_type, typename index_type>
+  const Model::VariableMonitorBase* SignalDelay<scalar_type, index_type>::getMonitor() const
   {
     return monitor_.get();
   }
 
-  template <class ScalarT, class IdxT>
-  SignalDelay<ScalarT, IdxT>::SignalDelay(const ModelDataT& data, SignalHistory<RealT>& history)
+  template <typename scalar_type, typename index_type>
+  SignalDelay<scalar_type, index_type>::SignalDelay(const ModelDataT& data, SignalHistory<RealT>& history)
     : delay_(std::get<RealT>(data.parameters.at(SignalDelayParameters::tau))), history_(history)
   {
     if (!std::isfinite(delay_) || delay_ <= 0)
     {
       throw std::invalid_argument("SignalDelay requires a finite positive delay");
     }
-    this->size_    = 1;
-    this->monitor_ = std::make_unique<MonitorT>(data);
-    this->monitor_->set(SignalDelayMonitors::z, [this]
-                        { return this->y_.getData()[0]; });
+    size_    = 1;
+    monitor_ = std::make_unique<MonitorT>(data);
+    monitor_->set(SignalDelayMonitors::z, [this]
+                  { return y_.getData()[static_cast<size_t>(SignalDelayInternalVariables::Z)]; });
   }
 
-  template <class ScalarT, class IdxT>
-  int SignalDelay<ScalarT, IdxT>::setGridKitComponentID(IdxT id)
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::setGridKitComponentID(IdxT id)
   {
-    this->gridkit_component_id_ = id;
+    gridkit_component_id_ = id;
     return 0;
   }
 
-  template <class ScalarT, class IdxT>
-  void SignalDelay<ScalarT, IdxT>::linkOutput()
+  template <typename scalar_type, typename index_type>
+  void SignalDelay<scalar_type, index_type>::linkOutput()
   {
-    ports_.out.template port<SignalDelayOutputs::z>().link(this->y_.getData(), &this->getVariableIndex(0));
+    ports_.out.template port<SignalDelayOutputs::z>().link(y_.getData(), &this->getVariableIndex(static_cast<IdxT>(SignalDelayInternalVariables::Z)));
   }
 
-  template <class ScalarT, class IdxT>
-  int SignalDelay<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::allocate()
   {
-    if (!this->allocated_)
+    if (!allocated_)
     {
       this->allocateVectors(1);
     }
-    this->variable_indices_.assign(1, 0);
-    this->residual_indices_.assign(1, 0);
-    this->tag_.assign(1, false);
+    ws_.resize(1);
+    ws_indices_.assign(1, INVALID_INDEX<IdxT>);
+    variable_indices_.assign(1, 0);
+    residual_indices_.assign(1, 0);
+    tag_.assign(1, false);
     linkOutput();
-    this->allocated_ = true;
+    allocated_ = true;
     return 0;
   }
 
-  template <class ScalarT, class IdxT>
-  int SignalDelay<ScalarT, IdxT>::verify() const
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::verify() const
   {
     if (!ports_.in.template port<SignalDelayInputs::u>().linked() || !ports_.out.template port<SignalDelayOutputs::z>().linked())
     {
@@ -66,12 +68,16 @@ namespace GridKit::PhasorDynamics
     return 0;
   }
 
-  template <class ScalarT, class IdxT>
-  int SignalDelay<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::initialize()
   {
-    const auto a           = history_.sample(this->time_, delay_);
-    this->y_.getData()[0]  = a.constant + a.weight * ports_.in.template port<SignalDelayInputs::u>().readSignal();
-    this->yp_.getData()[0] = 0;
+    const auto Z             = static_cast<size_t>(SignalDelayInternalVariables::Z);
+    const auto interpolation = history_.sample(time_, delay_);
+    y_.getData()[Z]          = interpolation.constant
+                      + interpolation.weight * ports_.in.template port<SignalDelayInputs::u>().readSignal();
+    yp_.getData()[Z] = history_.initialDerivative(time_ - delay_);
+    y_.setDataUpdated();
+    yp_.setDataUpdated();
     linkOutput();
     if constexpr (std::is_same_v<ScalarT, DependencyTracking::Variable>)
     {
@@ -80,47 +86,68 @@ namespace GridKit::PhasorDynamics
     return 0;
   }
 
-  template <class ScalarT, class IdxT>
-  int SignalDelay<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::tagDifferentiable()
   {
-    this->tag_[0] = false;
+    tag_[static_cast<size_t>(SignalDelayInternalVariables::Z)] = false;
     return 0;
   }
 
-  template <class ScalarT, class IdxT>
-  int SignalDelay<ScalarT, IdxT>::setAbsoluteTolerance(RealT tolerance)
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::setAbsoluteTolerance(RealT tolerance)
   {
-    this->abs_tol_.getData()[0] = tolerance;
+    abs_tol_.getData()[static_cast<size_t>(SignalDelayInternalVariables::Z)] = tolerance;
+    abs_tol_.setDataUpdated();
     return 0;
   }
 
-  template <class ScalarT, class IdxT>
-  int SignalDelay<ScalarT, IdxT>::evaluateResidual()
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::evaluateResidual()
   {
-    const auto a          = history_.sample(this->time_, delay_);
-    this->f_.getData()[0] = -this->y_.getData()[0] + a.constant
-                            + a.weight * ports_.in.template port<SignalDelayInputs::u>().readSignal();
+    const auto U     = static_cast<size_t>(SignalDelayExternalVariables::U);
+    const auto input = ports_.in.template port<SignalDelayInputs::u>();
+    auto*      ws    = ws_.getData();
+    ws[U]            = input.readSignal();
+    ws_indices_[U]   = input.signalVariableIndex();
+    ws_.setDataUpdated();
+
+    const auto interpolation = history_.sample(time_, delay_);
+    history_value_           = interpolation.constant;
+    source_weight_           = interpolation.weight;
+    evaluateInternalResidual(y_.getData(), yp_.getData(), nullptr, ws, f_.getData());
+    f_.setDataUpdated();
     return 0;
   }
 
-  template <class ScalarT, class IdxT>
-  int SignalDelay<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::evaluateInternalResidual(
+      const ScalarT* y, const ScalarT*, const ScalarT*, const ScalarT* signals, ScalarT* residual)
   {
-    if (this->J_rows_buffer_ == nullptr)
+    const auto Z = static_cast<size_t>(SignalDelayInternalVariables::Z);
+    const auto U = static_cast<size_t>(SignalDelayExternalVariables::U);
+    residual[Z]  = -y[Z] + history_value_ + source_weight_ * signals[U];
+    return 0;
+  }
+
+  template <typename scalar_type, typename index_type>
+  int SignalDelay<scalar_type, index_type>::evaluateJacobian()
+  {
+    if (J_rows_buffer_ == nullptr)
     {
-      this->nnz_           = 2;
-      this->J_rows_buffer_ = new IdxT[2];
-      this->J_cols_buffer_ = new IdxT[2];
-      this->J_vals_buffer_ = new RealT[2];
+      nnz_           = 2;
+      J_rows_buffer_ = new IdxT[2];
+      J_cols_buffer_ = new IdxT[2];
+      J_vals_buffer_ = new RealT[2];
     }
-    const auto a            = history_.sample(this->time_, delay_);
-    const auto source       = ports_.in.template port<SignalDelayInputs::u>().signalVariableIndex();
-    this->J_rows_buffer_[0] = this->J_rows_buffer_[1] = this->getResidualIndex(0);
-    this->J_cols_buffer_[0]                           = this->getVariableIndex(0);
-    this->J_vals_buffer_[0]                           = -1;
+    const auto interpolation = history_.sample(time_, delay_);
+    const auto source        = ports_.in.template port<SignalDelayInputs::u>().signalVariableIndex();
+    const auto Z             = static_cast<IdxT>(SignalDelayInternalVariables::Z);
+    J_rows_buffer_[0] = J_rows_buffer_[1] = this->getResidualIndex(Z);
+    J_cols_buffer_[0]                     = this->getVariableIndex(Z);
+    J_vals_buffer_[0]                     = -1;
     // Preserve the structural entry when the query moves into accepted history.
-    this->J_cols_buffer_[1]                           = source == INVALID_INDEX<IdxT> ? this->getVariableIndex(0) : source;
-    this->J_vals_buffer_[1]                           = source == INVALID_INDEX<IdxT> ? 0 : a.weight;
+    J_cols_buffer_[1]                     = source == INVALID_INDEX<IdxT> ? this->getVariableIndex(Z) : source;
+    J_vals_buffer_[1]                     = source == INVALID_INDEX<IdxT> ? 0 : interpolation.weight;
     return this->constructCoo();
   }
 } // namespace GridKit::PhasorDynamics

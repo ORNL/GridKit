@@ -11,19 +11,26 @@
         0.159348
       ],
       "after_seconds": [
-        0.057894,
-        0.057072,
-        0.061467
+        0.070124,
+        0.066671,
+        0.073448
       ],
       "before_median": 0.159348,
-      "after_median": 0.057894,
-      "speedup": 2.752409576121878,
+      "after_median": 0.070124,
+      "speedup": 2.2723746506189033,
       "previous_seconds": [
         0.154291,
         0.163059,
         0.151212
       ],
-      "previous_median": 0.154291
+      "previous_median": 0.154291,
+      "cleanup_before_seconds": [
+        0.069899,
+        0.079309,
+        0.067513
+      ],
+      "cleanup_before_median": 0.069899,
+      "cleanup_speedup": 0.9967913980948034
     },
     {
       "case": "many",
@@ -33,19 +40,26 @@
         0.143395
       ],
       "after_seconds": [
-        0.108266,
-        0.112473,
-        0.109341
+        0.126481,
+        0.111758,
+        0.111368
       ],
       "before_median": 0.137459,
-      "after_median": 0.109341,
-      "speedup": 1.2571587967916884,
+      "after_median": 0.111758,
+      "speedup": 1.2299701139963135,
       "previous_seconds": [
         0.331856,
         0.392381,
         0.309959
       ],
-      "previous_median": 0.331856
+      "previous_median": 0.331856,
+      "cleanup_before_seconds": [
+        0.131917,
+        0.129492,
+        0.123381
+      ],
+      "cleanup_before_median": 0.129492,
+      "cleanup_speedup": 1.158682152508098
     },
     {
       "case": "long",
@@ -55,20 +69,28 @@
         2.1231
       ],
       "after_seconds": [
-        0.229723,
-        0.217243,
-        0.208341
+        0.08576,
+        0.08731,
+        0.099327
       ],
       "before_median": 2.1231,
-      "after_median": 0.217243,
-      "speedup": 9.772927090861385,
+      "after_median": 0.08731,
+      "speedup": 24.316802199060817,
       "previous_seconds": [
         0.397548,
         0.376311,
         0.401427
       ],
-      "previous_median": 0.397548
+      "previous_median": 0.397548,
+      "cleanup_before_seconds": [
+        0.220568,
+        0.233785,
+        0.250107
+      ],
+      "cleanup_before_median": 0.233785,
+      "cleanup_speedup": 2.6776428816859466
     }
   ],
-  "previous_revision": "de67ae4a1"
+  "previous_revision": "de67ae4a1",
+  "cleanup_baseline_revision": "7d7e29f3a56b29541311f7a1debc473ca174e168"
 }

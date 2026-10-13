@@ -83,6 +83,72 @@ namespace GridKit::Testing
     }
 
   public:
+    TestOutcome prehistoryDerivative()
+    {
+      TestStatus success = true;
+      History    history;
+      auto       value = [](double t)
+      { return std::sin(20 * t); };
+      auto derivative = [](double t)
+      { return 20 * std::cos(20 * t); };
+      history.setPrehistory(value);
+      success *= std::abs(history.initialDerivative(-8) - derivative(-8)) < 1e-5;
+      history.setPrehistory(value, derivative);
+      success *= history.initialDerivative(-8) == derivative(-8);
+      history.initialize(0, 0);
+      success *= throws([&]
+                        { history.setPrehistory(value, derivative); });
+      history.reset();
+      history.setPrehistory(value, [](double)
+                            { return std::numeric_limits<double>::quiet_NaN(); });
+      success *= throws([&]
+                        { history.initialDerivative(-1); });
+      success *= throws([&]
+                        { history.setPrehistory({}, derivative); });
+      return success.report(__func__);
+    }
+
+    TestOutcome derivativeCorner()
+    {
+      TestStatus success = true;
+      History    history;
+      history.setOptions({.rel_tol = 0, .abs_tol = 1e-8, .compress = true});
+      history.setPrehistory([](double t)
+                            { return t; },
+                            [](double)
+                            { return 1.0; });
+      history.initialize(0, 0);
+      history.prepare(1, 1);
+      history.accept();
+      history.restartInterpolation();
+      // A continuous triangular peak changes slope from +1 to -1.
+      const auto sample  = history.sample(1.2, 0.1);
+      success           *= std::abs(sample.constant + sample.weight * 0.8 - 0.9) < 1e-14;
+      history.prepare(1.2, 0.8);
+      history.discard();
+      success *= history.time() == 1 && history.segmentCount() == 1;
+      history.prepare(1.2, 0.8);
+      history.accept();
+      success *= history.segments().back().break_before;
+      for (int i = 1; i <= 20; ++i)
+      {
+        const double t = 1.2 + i * 0.1;
+        history.prepare(t, 2 - t);
+        history.accept();
+        history.maintain(std::array{4.0});
+      }
+      success              *= std::abs(history.sample(3.2, 2.3).constant - 0.9) < 1e-12;
+      success              *= std::abs(history.sample(3.2, 2.1).constant - 0.9) < 1e-12;
+      bool retained_corner  = false;
+      for (const auto& segment : history.segments())
+      {
+        retained_corner |= segment.begin == 1 && segment.break_before;
+        success         *= !(segment.begin < 1 && segment.end > 1);
+      }
+      success *= retained_corner;
+      return success.report(__func__);
+    }
+
     TestOutcome interpolation()
     {
       TestStatus success = true;

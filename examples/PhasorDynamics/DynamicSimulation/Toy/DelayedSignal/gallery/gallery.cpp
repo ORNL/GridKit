@@ -4,7 +4,9 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <numbers>
 #include <string>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -84,24 +86,101 @@ public:
   }
 };
 
-std::function<double(double)> inputFunction(const nlohmann::json& run)
+struct Waveform
 {
-  const auto   shape = run.at("shape").get<std::string>();
-  const double width = run.at("width");
-  auto         pulse = [](double t, double center, double duration)
-  { return std::exp(-std::pow((t - center) / duration, 2)); };
+  std::function<double(double)> value;
+  std::function<double(double)> derivative;
+  std::vector<double>           corners;
+};
+
+Waveform inputFunction(const nlohmann::json& run)
+{
+  const auto   shape  = run.at("shape").get<std::string>();
+  const double width  = run.at("width");
+  const double center = run.value("center", 2.0);
+  auto         pulse  = [](double t, double c, double w)
+  { return std::exp(-std::pow((t - c) / w, 2)); };
+  auto slope = [pulse](double t, double c, double w)
+  { return -2 * (t - c) * pulse(t, c, w) / (w * w); };
   if (shape == "pulse")
-    return [=](double t)
-    { return 1 + 0.6 * pulse(t, 2, width); };
-  if (shape == "ramp")
-    return [=](double t)
-    { return 1 + 0.3 * (1 + std::tanh((t - 2) / width)); };
+  {
+    return {[=](double t)
+            { return 1 + 0.6 * pulse(t, center, width); },
+            [=](double t)
+            { return 0.6 * slope(t, center, width); },
+            {}};
+  }
+  if (shape == "ramp" || shape == "rise" || shape == "fall")
+  {
+    const double scale = shape == "ramp" ? 1 / width : std::log(9.0) / width;
+    const double sign  = shape == "fall" ? -1 : 1;
+    return {[=](double t)
+            { return 1 + 0.3 * (1 + sign * std::tanh(scale * (t - center))); },
+            [=](double t)
+            { const double y = std::tanh(scale * (t - center)); return 0.3 * sign * scale * (1 - y * y); },
+            {}};
+  }
+  if (shape == "asymmetric")
+  {
+    const double fall_width = run.at("fall_width");
+    const double fall_time  = run.at("fall_time");
+    return {[=](double t)
+            { return 1 + 0.3 * (std::tanh(std::log(9.0) * (t - center) / width) - std::tanh(std::log(9.0) * (t - fall_time) / fall_width)); },
+            [=](double t)
+            { const double rise = std::tanh(std::log(9.0) * (t - center) / width);
+                             const double fall = std::tanh(std::log(9.0) * (t - fall_time) / fall_width);
+                             return 0.3 * std::log(9.0) * ((1 - rise * rise) / width - (1 - fall * fall) / fall_width); },
+            {}};
+  }
   if (shape == "features")
-    return [=](double t)
-    { return 1 + 0.25 * pulse(t, 2, 0.3) + 0.6 * pulse(t, 4, width); };
+  {
+    return {[=](double t)
+            { return 1 + 0.25 * pulse(t, 2, 0.3) + 0.6 * pulse(t, 4, width); },
+            [=](double t)
+            { return 0.25 * slope(t, 2, 0.3) + 0.6 * slope(t, 4, width); },
+            {}};
+  }
   if (shape == "packet")
-    return [=](double t)
-    { return 1 + 0.5 * pulse(t, 3, width) * std::sin(20 * (t - 3)); };
+  {
+    return {[=](double t)
+            { return 1 + 0.5 * pulse(t, 3, width) * std::sin(20 * (t - 3)); },
+            [=](double t)
+            { return 0.5 * slope(t, 3, width) * std::sin(20 * (t - 3))
+                     + 10 * pulse(t, 3, width) * std::cos(20 * (t - 3)); },
+            {}};
+  }
+  if (shape == "sine" || shape == "chirp")
+  {
+    const double frequency = run.at("frequency");
+    const double rate      = run.value("chirp_rate", 0.0);
+    const double pi        = std::numbers::pi;
+    return {[=](double t)
+            { return std::sin(2 * pi * (frequency * t + 0.5 * rate * t * t)); },
+            [=](double t)
+            { return 2 * pi * (frequency + rate * t)
+                     * std::cos(2 * pi * (frequency * t + 0.5 * rate * t * t)); },
+            {}};
+  }
+  if (shape == "triangle")
+  {
+    return {[](double t)
+            { if (t < 0.5) return 0.0;
+                            if (t < 1.0) return 2 * (t - 0.5);
+                            if (t < 1.5) return 2 * (1.5 - t);
+                            return 0.0; },
+            [](double t)
+            { if (t < 0.5 || t >= 1.5) return 0.0;
+                            return t < 1.0 ? 2.0 : -2.0; },
+            {0.5, 1.0, 1.5}};
+  }
+  if (shape == "corner")
+  {
+    return {[](double t)
+            { return t < 0.5 ? 0.0 : (t < 1.0 ? t - 0.5 : 0.5 + 0.2 * (t - 1.0)); },
+            [](double t)
+            { return t < 0.5 ? 0.0 : (t < 1.0 ? 1.0 : 0.2); },
+            {0.5, 1.0}};
+  }
   throw std::invalid_argument("Unknown input shape: " + shape);
 }
 
@@ -115,44 +194,65 @@ int main(int argc, char** argv)
     const auto        run  = nlohmann::json::parse(input);
     const std::string name = argv[2];
     const double      tau = run.at("tau"), tolerance = run.at("rel_tol");
-    const auto        exact = inputFunction(run);
+    const auto        waveform = inputFunction(run);
+    const auto&       exact    = waveform.value;
 
     SystemModelData<> data;
     data.signal = {{.name = "input", .signal_id = 0},
                    {.name = "delayed", .signal_id = 1, .source = 0, .delay = tau}};
     System system(data);
     system.addComponent(new Source(*system.getSignalNode(0), exact));
-    system.setSignalPrehistory(0, exact);
+    system.setSignalPrehistory(0, exact, waveform.derivative);
     system.allocate();
     system.stopMonitor();
     Solver solver(&system);
     solver.setTolerance(tolerance, tolerance * 0.01);
     solver.setMaxSteps(1000000);
     solver.setMinStep(run.at("h_min"));
+    solver.setMaxStep(run.value("h_max", 0.0));
     configureSignalDelays(system, solver, {.rel_tol = tolerance, .abs_tol = tolerance * 0.01, .compress = run.at("compress").get<bool>()});
 
     std::ofstream steps(name + "_steps.csv"), samples(name + "_samples.csv"),
-        attempts(name + "_attempts.csv"), midpoints(name + "_midpoints.csv");
-    for (auto* stream : {&steps, &samples, &attempts, &midpoints})
+        attempts(name + "_attempts.csv"), midpoints(name + "_midpoints.csv"), segments(name + "_segments.csv");
+    for (auto* stream : {&steps, &samples, &attempts, &midpoints, &segments})
       *stream << std::setprecision(17);
-    steps << "t,h,h_over_tau,segments,u,z,error_estimate,exact_z\n";
+    steps << "t,h,h_over_tau,segments,u,z,error_estimate,exact_z,native_error_failures,nonlinear_failures\n";
     samples << "t,u,z,exact_u,exact_z\n";
     midpoints << "t,u,z,exact_u,exact_z\n";
-    attempts << "t,h,error_estimate,rejected\n";
+    attempts << "t,h,error_estimate,rejected,check,error_order\n";
+    segments << "begin,end,c0,c1,c2,c3\n";
+    long   native_before = 0, nonlinear_before = 0;
+    size_t rejected_total = 0, rejected_before = 0;
 
     // Decorate the installed control only to record diagnostics.
     auto   control = solver.getStepControl();
     double begin = 0, end = 0, error = 0, mid_u = 0, mid_z = 0;
     control.assess = [&, assess = control.assess](double a, double b, const Solver::DenseOutput& dense)
     {
-      begin = a;
-      end   = b;
-      error = assess(a, b, dense);
-      attempts << end << ',' << end - begin << ',' << error << ',' << (error > 1) << '\n';
+      begin                  = a;
+      end                    = b;
+      const auto assessment  = assess(a, b, dense);
+      error                  = assessment.error;
+      const bool rejected    = !std::isfinite(error) || error > 1;
+      rejected_total        += rejected;
+      const int check        = solver.getLastStepDescription().starts_with("source") ? 0 : 1;
+      attempts << end << ',' << end - begin << ',' << error << ',' << rejected
+               << ',' << check << ',' << assessment.error_order << '\n';
       dense((begin + end) / 2);
       mid_u = system.getSignalNode(0)->read();
       mid_z = system.getSignalNode(1)->read();
-      return error;
+      return assessment;
+    };
+    control.accept = [&, accept = control.accept]()
+    {
+      accept();
+      const auto& segment = system.signalHistory(0).segments().back();
+      segments << segment.begin << ',' << segment.end;
+      for (double coefficient : segment.coefficients)
+      {
+        segments << ',' << coefficient;
+      }
+      segments << '\n';
     };
     control.finish = [&, finish = control.finish]()
     {
@@ -162,7 +262,10 @@ int main(int argc, char** argv)
       steps << end << ',' << end - begin << ',' << (end - begin) / tau << ','
             << system.signalHistory(0).segmentCount() << ','
             << system.getSignalNode(0)->read() << ',' << system.getSignalNode(1)->read()
-            << ',' << error << ',' << exact(end - tau) << '\n';
+            << ',' << error << ',' << exact(end - tau);
+      const auto stats = solver.getStats();
+      steps << ',' << native_before + stats.num_error_test_fails_ - static_cast<long>(rejected_total - rejected_before)
+            << ',' << nonlinear_before + stats.num_nonlinear_convergence_fails_ << '\n';
     };
     solver.setStepControl(std::move(control));
     solver.configureSimulation();
@@ -173,11 +276,28 @@ int main(int argc, char** argv)
               << system.getSignalNode(1)->read() << ',' << exact(t) << ',' << exact(t - tau) << '\n';
     };
     observe(0);
+    auto complete_phase = [&]()
+    {
+      const auto stats  = solver.getStats();
+      native_before    += stats.num_error_test_fails_ - static_cast<long>(rejected_total - rejected_before);
+      nonlinear_before += stats.num_nonlinear_convergence_fails_;
+      rejected_before   = rejected_total;
+    };
+    if (run.value("restart_corners", false))
+    {
+      for (double corner : waveform.corners)
+      {
+        solver.runSimulation(corner, run.at("dt_monitor"), observe);
+        complete_phase();
+        system.restartSignalHistory(0);
+        solver.initializeSimulation(corner, false);
+      }
+    }
     solver.runSimulation(run.at("tf"), run.at("dt_monitor"), observe);
-    const auto stats = solver.getStats();
-    std::cout << name << " rejected=" << solver.getRejectedStepCount()
-              << " native_error_failures=" << stats.num_error_test_fails_ - static_cast<long>(solver.getRejectedStepCount())
-              << " nonlinear_failures=" << stats.num_nonlinear_convergence_fails_ << '\n';
+    complete_phase();
+    std::cout << name << " rejected=" << rejected_total
+              << " native_error_failures=" << native_before
+              << " nonlinear_failures=" << nonlinear_before << '\n';
     return 0;
   }
   catch (const std::exception& error)

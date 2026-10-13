@@ -1,4 +1,4 @@
-"""Refresh the after-checkpoint timings with the current DynamicSimulation build."""
+"""Refresh the application timings with the current DynamicSimulation build."""
 import json
 from pathlib import Path
 import re
@@ -19,5 +19,6 @@ for case in results["cases"]:
     case["after_seconds"] = times
     case["after_median"] = statistics.median(times)
     case["speedup"] = case["before_median"] / case["after_median"]
+    case["cleanup_speedup"] = case["cleanup_before_median"] / case["after_median"]
     print(case["case"], times)
 (HERE / "results.json").write_text(json.dumps(results, indent=2) + "\n")
