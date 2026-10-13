@@ -9,8 +9,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "ramp_0.25",
@@ -22,8 +21,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "ramp_1.5",
@@ -35,8 +33,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "width_0.025",
@@ -48,8 +45,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "width_0.1",
@@ -61,8 +57,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "width_0.4",
@@ -74,8 +69,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "features_0.005",
@@ -87,8 +81,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "features_0.15",
@@ -100,8 +93,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "features_0.8",
@@ -113,8 +105,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "packet_0.005",
@@ -126,8 +117,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "packet_0.1",
@@ -139,8 +129,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "packet_0.8",
@@ -152,8 +141,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "pulse_0.001",
@@ -165,8 +153,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "pulse_0.1",
@@ -178,8 +165,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "pulse_0.5",
@@ -191,8 +177,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.0005,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "long_0.1",
@@ -204,8 +189,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.001,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "long_2",
@@ -217,8 +201,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.001,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "long_8",
@@ -230,8 +213,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.001,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "compression_0",
@@ -243,8 +225,7 @@
     "rel_tol": 1e-06,
     "compress": false,
     "dt_monitor": 0.001,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "compression_1",
@@ -256,8 +237,7 @@
     "rel_tol": 1e-06,
     "compress": true,
     "dt_monitor": 0.001,
-    "h_min": 1e-06,
-    "h_max": 0.0
+    "h_min": 1e-06
   },
   {
     "name": "sharp_rise",
@@ -270,11 +250,10 @@
     "compress": false,
     "dt_monitor": 5e-05,
     "h_min": 0.0,
-    "h_max": 0.0005,
     "label": "Rising edge",
     "zoom": [
-      1.99,
-      2.06
+      1.91,
+      2.15
     ]
   },
   {
@@ -288,11 +267,10 @@
     "compress": false,
     "dt_monitor": 5e-05,
     "h_min": 0.0,
-    "h_max": 0.0005,
     "label": "Falling edge",
     "zoom": [
-      1.99,
-      2.06
+      1.91,
+      2.15
     ]
   },
   {
@@ -306,13 +284,12 @@
     "compress": false,
     "dt_monitor": 5e-05,
     "h_min": 0.0,
-    "h_max": 0.0005,
     "label": "Asymmetric pulse",
     "fall_width": 0.01,
     "fall_time": 2.035,
     "zoom": [
-      1.99,
-      2.09
+      1.91,
+      2.15
     ]
   },
   {
@@ -326,7 +303,6 @@
     "compress": false,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.005,
     "frequency": 1,
     "label": "1 Hz"
   },
@@ -341,7 +317,6 @@
     "compress": false,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.005,
     "frequency": 5,
     "label": "5 Hz"
   },
@@ -356,7 +331,6 @@
     "compress": false,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.005,
     "frequency": 20,
     "label": "20 Hz"
   },
@@ -371,7 +345,6 @@
     "compress": false,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.002,
     "frequency": 1.0,
     "chirp_rate": 5.0
   },
@@ -386,7 +359,6 @@
     "compress": false,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.002,
     "frequency": 1.0,
     "chirp_rate": 5.0
   },
@@ -401,7 +373,6 @@
     "compress": false,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.002,
     "frequency": 1.0,
     "chirp_rate": 5.0
   },
@@ -416,7 +387,6 @@
     "compress": false,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.02,
     "label": "Ramp corner",
     "restart_corners": true
   },
@@ -431,7 +401,6 @@
     "compress": false,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.02,
     "label": "Adaptive refinement"
   },
   {
@@ -445,7 +414,6 @@
     "compress": true,
     "dt_monitor": 0.0002,
     "h_min": 0.0,
-    "h_max": 0.02,
     "label": "Known corners",
     "restart_corners": true
   },
@@ -466,7 +434,8 @@
     "zoom": [
       1.99,
       2.14
-    ]
+    ],
+    "h_max_reason": "Resolve 1 ms source pulse"
   },
   {
     "name": "narrow_2.013",
@@ -485,7 +454,8 @@
     "zoom": [
       1.99,
       2.14
-    ]
+    ],
+    "h_max_reason": "Resolve 1 ms source pulse"
   },
   {
     "name": "narrow_2.027",
@@ -504,7 +474,8 @@
     "zoom": [
       1.99,
       2.14
-    ]
+    ],
+    "h_max_reason": "Resolve 1 ms source pulse"
   },
   {
     "name": "resolution_uncapped",
@@ -517,7 +488,6 @@
     "compress": false,
     "dt_monitor": 0.0001,
     "h_min": 0.0,
-    "h_max": 0.0,
     "expected_missed": true,
     "label": "No source-resolution cap",
     "zoom": [
@@ -541,6 +511,7 @@
     "zoom": [
       9.995,
       10.005
-    ]
+    ],
+    "h_max_reason": "Resolve 1 ms source pulse"
   }
 ]

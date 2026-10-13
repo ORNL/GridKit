@@ -17,6 +17,7 @@ th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #e5e8eb}th{font-w
 .scroll{overflow-x:auto}@media(max-width:600px){body{padding:0 12px;margin-top:28px}h1{font-size:25px}}
 </style></head><body><header><h1>Delayed signal gallery</h1>
 <p>One signal at a time. The upper panel shows propagation; the lower panel shows the accepted step relative to the delay, h/τ. The dashed line at 1 marks h = τ.</p>
+<p>Steps are uncapped by default. Only the narrow Gaussian source-resolution cases use h_max; the PNGs state its value and purpose and mark it with a dotted line.</p>
 <p>Choose a variant beneath each heading. Every view is a standalone PNG.</p><nav>
 <a href="#01_smooth_ramp">Smooth rising transition</a>
 <a href="#02_pulse_widths">Gaussian pulse widths</a>
@@ -83,7 +84,7 @@ th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #e5e8eb}th{font-w
 <a href="figures/08_sharp_edges__sharp_fall.png" data-variant aria-current="false" data-label="Falling edge">Falling edge</a>
 <a href="figures/08_sharp_edges__asymmetric.png" data-variant aria-current="false" data-label="Asymmetric pulse">Asymmetric pulse</a>
 </div>
-<img src="figures/08_sharp_edges.png" loading="lazy" alt="Sharp smooth edges: Rising edge"><figcaption>Choose a rising edge, falling edge, or asymmetric pulse. Edge widths are 10–90% times.</figcaption><a class="download" href="figures/08_sharp_edges.png">Open PNG</a></figure>
+<img src="figures/08_sharp_edges.png" loading="lazy" alt="Sharp smooth edges: Rising edge"><figcaption>These uncapped runs take steps longer than the delay, then refine near the edges. Edge widths are 10–90% times.</figcaption><a class="download" href="figures/08_sharp_edges.png">Open PNG</a></figure>
 <figure id="09_bipolar_sine"><h2><span class="number">09</span>Bipolar sine waves</h2>
 <div class="variants" aria-label="Signal variants">
 <a href="figures/09_bipolar_sine.png" data-variant aria-current="true" data-label="5 Hz">5 Hz</a>
@@ -140,18 +141,18 @@ th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #e5e8eb}th{font-w
 <tr><td>long_8</td><td>1.46e-06</td><td>6</td><td>446</td></tr>
 <tr><td>compression_0</td><td>1.61e-06</td><td>7</td><td>455</td></tr>
 <tr><td>compression_1</td><td>1.83e-06</td><td>8</td><td>114</td></tr>
-<tr><td>sharp_rise</td><td>1.54e-06</td><td>2</td><td>337</td></tr>
-<tr><td>sharp_fall</td><td>1.72e-06</td><td>2</td><td>342</td></tr>
-<tr><td>asymmetric</td><td>1.35e-06</td><td>3</td><td>343</td></tr>
-<tr><td>sine_1</td><td>3.45e-07</td><td>1</td><td>28</td></tr>
+<tr><td>sharp_rise</td><td>1.17e-06</td><td>7</td><td>344</td></tr>
+<tr><td>sharp_fall</td><td>1.72e-06</td><td>7</td><td>333</td></tr>
+<tr><td>asymmetric</td><td>1.31e-06</td><td>9</td><td>344</td></tr>
+<tr><td>sine_1</td><td>8.84e-07</td><td>2</td><td>27</td></tr>
 <tr><td>sine_5</td><td>8.39e-07</td><td>6</td><td>108</td></tr>
 <tr><td>sine_20</td><td>8.01e-07</td><td>13</td><td>434</td></tr>
-<tr><td>chirp_0.002</td><td>4.57e-07</td><td>24</td><td>21</td></tr>
-<tr><td>chirp_0.05</td><td>1.11e-06</td><td>20</td><td>201</td></tr>
-<tr><td>chirp_0.2</td><td>8.09e-07</td><td>25</td><td>602</td></tr>
-<tr><td>corner_ramp</td><td>1.89e-07</td><td>1</td><td>41</td></tr>
-<tr><td>triangle_adaptive</td><td>4.05e-07</td><td>42</td><td>55</td></tr>
-<tr><td>triangle_restart</td><td>2.13e-07</td><td>2</td><td>6</td></tr>
+<tr><td>chirp_0.002</td><td>7.09e-07</td><td>25</td><td>21</td></tr>
+<tr><td>chirp_0.05</td><td>9.28e-07</td><td>30</td><td>182</td></tr>
+<tr><td>chirp_0.2</td><td>1e-06</td><td>15</td><td>507</td></tr>
+<tr><td>corner_ramp</td><td>2.31e-07</td><td>0</td><td>35</td></tr>
+<tr><td>triangle_adaptive</td><td>3.22e-07</td><td>41</td><td>49</td></tr>
+<tr><td>triangle_restart</td><td>3.07e-07</td><td>0</td><td>6</td></tr>
 <tr><td>narrow_2.0</td><td>1.21e-06</td><td>2</td><td>628</td></tr>
 <tr><td>narrow_2.013</td><td>1.21e-06</td><td>2</td><td>623</td></tr>
 <tr><td>narrow_2.027</td><td>1.21e-06</td><td>2</td><td>622</td></tr>

@@ -53,7 +53,7 @@ FAMILIES = [
     ("long", "06_long_history", "Long propagation delay", "long_8",
      "The input and its delayed arrival are shown on the same time axis."),
     ("edges", "08_sharp_edges", "Sharp smooth edges", "sharp_rise",
-     "Choose a rising edge, falling edge, or asymmetric pulse. Edge widths are 10–90% times."),
+     "These uncapped runs take steps longer than the delay, then refine near the edges. Edge widths are 10–90% times."),
     ("sine", "09_bipolar_sine", "Bipolar sine waves", "sine_5",
      "Each view shows up to three cycles. At 20 Hz, the 50 ms delay is one full period, so the curves coincide."),
     ("chirp", "10_chirp", "Increasing-frequency waveform", "chirp_0.05",
@@ -148,7 +148,17 @@ def plot_ratio(ax, run, interval, transform, color=BLUE, linestyle="-"):
             np.r_[steps["h_over_tau"][0], steps["h_over_tau"]],
             where="pre", color=color, lw=1.1, ls=linestyle)
     visible = steps[(steps["t"] > interval[0]) & (steps["t"] - steps["h"] < interval[1])]
-    return min(visible["h_over_tau"]), max(visible["h_over_tau"])
+    upper = max(visible["h_over_tau"])
+    if run.get("h_max", 0):
+        cap = run["h_max"] / run["tau"]
+        ax.axhline(cap, color=GRAY, ls=":", lw=0.9)
+        ax.annotate(r"$h = h_{\max}$", (transform(interval[1]), cap), xytext=(-4, 4),
+                    textcoords="offset points", ha="right", va="bottom", color=GRAY, fontsize=8,
+                    bbox={"facecolor": "white", "edgecolor": "none", "pad": 1})
+        ax.text(1, 1.08, f"$h_{{\\max}}$ = {duration(run['h_max'])} · {run['h_max_reason']}",
+                transform=ax.transAxes, ha="right", fontsize=8, color=GRAY)
+        upper = max(upper, cap)
+    return min(visible["h_over_tau"]), upper
 
 
 def finish_ratio(ax, limits, interval, transform):
@@ -182,6 +192,9 @@ def signal_figure(run, name, title):
     waveform.margins(y=0.15)
     bounds = plot_ratio(ratio, run, interval, transform)
     finish_ratio(ratio, bounds, interval, transform)
+    if not run.get("h_max", 0):
+        ratio.text(1, 1.08, "No step cap", transform=ratio.transAxes,
+                   ha="right", fontsize=8, color=GRAY)
     ratio.set_xlabel(xlabel)
     legend(fig, waveform)
     save(fig, name)
@@ -214,7 +227,8 @@ def resolution_figure(runs):
         samples = read_data(run["name"])
         visible = samples[(samples["t"] >= interval[0]) & (samples["t"] <= interval[1])]
         waveform.plot(transform(visible["t"]), visible["z"], color=color, lw=1.7, ls=linestyle,
-                      label="Uncapped — pulse missed" if run.get("expected_missed") else "Maximum step 0.5 ms")
+                      label="Uncapped — pulse missed" if run.get("expected_missed")
+                      else f"Maximum step {duration(run['h_max'])}")
         bounds.append(plot_ratio(ratio, run, interval, transform, color, linestyle))
     # A few reference markers verify the shape without another overlapping line.
     reference = visible[::max(1, len(visible) // 11)]
@@ -285,6 +299,7 @@ th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #e5e8eb}th{font-w
 .scroll{overflow-x:auto}@media(max-width:600px){body{padding:0 12px;margin-top:28px}h1{font-size:25px}}
 </style></head><body><header><h1>Delayed signal gallery</h1>
 <p>One signal at a time. The upper panel shows propagation; the lower panel shows the accepted step relative to the delay, h/τ. The dashed line at 1 marks h = τ.</p>
+<p>Steps are uncapped by default. Only the narrow Gaussian source-resolution cases use h_max; the PNGs state its value and purpose and mark it with a dotted line.</p>
 <p>Choose a variant beneath each heading. Every view is a standalone PNG.</p><nav>''']
     for entry in entries:
         parts.append(f'<a href="#{entry["name"]}">{html.escape(entry["title"])}</a>')

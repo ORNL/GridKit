@@ -45,8 +45,18 @@ Error measurements and retry counts remain in the data and the gallery's
 collapsed numerical-results section.
 
 `h` is the accepted internal step, independent of the monitor interval. `h_min`
-is a failure floor. `h_max` limits source sampling gaps and must be chosen for
-the feature being resolved. The uncapped 1 ms Gaussian intentionally demonstrates
+is a failure floor. Steps are uncapped by default: omitting `h_max` leaves the
+solver free to take `h > tau`. Figure 08 includes the larger steps surrounding
+the edges; its rising-edge run reaches `h/tau = 27.52` over the full simulation.
+
+Only the three narrow Gaussian runs in Figure 12 and the resolved run in
+Figure 13 use `h_max = 0.5 ms`, to sense a 1 ms source pulse. All four miss the
+pulse when run uncapped. Each retained cap has an `h_max_reason` in `runs.json`;
+the PNG states its value and purpose above the `h/tau` panel and marks the limit
+with a dotted line. The sharp edges, sine waves, chirps, and derivative corners
+pass their sampled analytic-error checks without a cap.
+
+The uncapped 1 ms Gaussian in Figure 13 intentionally demonstrates
 that an unobserved source pulse can be missed despite passing history checks.
 It is explicitly marked `expected_missed`; every other run must pass its sampled
 analytic-error check. Sparse probing cannot guarantee resolution of arbitrary

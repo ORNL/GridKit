@@ -1,6 +1,6 @@
 {
-  "head": "7d7e29f3a56b29541311f7a1debc473ca174e168",
-  "source_diff_sha256": "95bca64a9af9494e4dba2e5123eca5a14bdfb7d298f9b3f6c3fd304780522b29",
+  "head": "dbca7fd3c6868be54b7a680756aa9f8f14ff779e",
+  "source_diff_sha256": "77a5255ee138d2d50c84a16d2bd850c9ba5df721155c9ca96419e170dfe06c36",
   "source_files_sha256": {
     "GridKit/Model/PhasorDynamics/SignalHistoryPolynomial.hpp": "ca6a5537cf58f319d7b4fde65018c26d5328a2bf4143c50610f73e3d003224db",
     "examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/gallery.cpp": "a6db919a7723bb077d8719d410a8c70bba179ccc0ec9178845bf1a3ca7cd5f4e"
@@ -11,8 +11,8 @@
   "error_samples": "Uniform monitor times plus each accepted step midpoint",
   "prehistory": "Analytic value and derivative functions",
   "rendering": {
-    "script_sha256": "2b2e955b7a03519e27021e7f206e252f6fa10c683680dab429c8d0358297bffb",
-    "data_sha256": "12d14381ce44d0fe6c9939722a43ffcf8e25bb61f3e15f2974de3cc93e58ebb3",
+    "script_sha256": "777147869c5abc9a53421110320e27ef9db1f5a6e169fff6d8a9922cf47dece1",
+    "data_sha256": "f8155602ee754f5e84e19b8e081bb109bb0306553f657ef9c01b4a56005befae",
     "matplotlib": "3.6.3",
     "format": "png",
     "dpi": 180,

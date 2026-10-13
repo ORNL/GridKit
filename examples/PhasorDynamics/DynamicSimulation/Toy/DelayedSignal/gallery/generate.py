@@ -82,7 +82,8 @@ def summarize():
         assert np.allclose(steps["h_over_tau"], steps["h"] / run["tau"]), name
         assert np.all(steps["error_estimate"] <= 1), name
         assert abs(steps["t"][-1] - run["tf"]) < 1e-12, name
-        if run["h_max"]:
+        if run.get("h_max", 0):
+            assert run.get("h_max_reason"), (name, "A source-resolution cap needs a reason")
             assert max(steps["h"]) <= run["h_max"] + 1e-12, name
         error = np.r_[abs(samples["z"] - samples["exact_z"]),
                       abs(midpoints["z"] - midpoints["exact_z"])]
