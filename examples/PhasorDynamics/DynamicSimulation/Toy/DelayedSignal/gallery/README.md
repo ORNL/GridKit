@@ -27,11 +27,21 @@ The driver uses the actual GridKit history, delay component, and IDAS wrapper.
 Analytic references evaluate the source at `t - tau`; prehistory provides both
 value and derivative. Signal values are continuous. No value jumps are tested.
 
-Ordinary views contain two aligned panels: the input and delayed output above,
-and the accepted step-to-delay ratio `h/tau` below. The input is always dashed
+Ordinary views contain three aligned panels: the input and delayed output,
+the accepted step-to-delay ratio `h/tau`, and retained history segments.
+The input is always dashed
 grey and the delayed output solid blue. A dashed line at `h/tau = 1` marks a step
 equal to the delay. Each view uses the same type, line weights, axes, and palette.
 There are no error panels, retry markers, or duplicate absolute-step panels.
+
+The third panel compares compressed (solid blue) and uncompressed (dashed grey)
+segment counts on the same accepted source knots. Two diagnostic `SignalHistory`
+instances use the actual retention/compression implementation and the run's
+tolerances, delay, prehistory, and corner restarts. Neither changes the solve.
+The count matching the run's compression setting is checked against the solver's
+actual history after every accepted step. The uncompressed count is also checked
+independently from the accepted interval endpoints and delay. Counts start at
+zero and change only at accepted steps, after pruning and compression.
 
 Sine views show at most three cycles. Short time windows use milliseconds with
 an explicit origin; other views use seconds. The plots retain the recorded
@@ -39,7 +49,8 @@ samples and step sequence without smoothing or averaging.
 
 Compression has a dedicated comparison of retained segments and `h/tau`.
 The source-resolution figure compares missed and resolved output against sparse
-analytic reference markers. The history detail shows actual accepted values
+analytic reference markers; its third panel shows actual retained segments for
+the two solves, both with compression off. The history detail shows actual accepted values
 and their interpolation polynomials near a smooth edge and a derivative corner.
 Error measurements and retry counts remain in the data and the gallery's
 collapsed numerical-results section.
@@ -71,9 +82,12 @@ corner times. Compression preserves marked corners.
 ## Data
 
 - `runs.json`: complete experiment settings, including per-run step limits.
-- `summary.csv` and `summary.json`: sampled errors, steps, retries, and storage.
+- `summary.csv` and `summary.json`: sampled errors, steps, retries, and storage,
+  including peak compressed and uncompressed counts on the same accepted knots.
 - `data.zip`: monitor samples, accepted-step midpoints, steps, history-check
-  attempts, accepted source-polynomial coefficients, and logs.
+  attempts, accepted source-polynomial coefficients, and logs. Step records
+  include `segments` (actual solver history), `uncompressed_segments`, and
+  `compressed_segments` (the diagnostic comparison).
 - `provenance.json`: the original simulation source/build record, plus a separate
   rendering record with plot-source and data hashes, Matplotlib version, and PNG list.
 - `performance/`: separate `DynamicSimulation` timings using identical inputs

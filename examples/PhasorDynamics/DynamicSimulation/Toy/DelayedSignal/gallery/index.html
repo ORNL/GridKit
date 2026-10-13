@@ -16,7 +16,7 @@ summary{cursor:pointer;font-size:15px}table{border-collapse:collapse;width:100%;
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #e5e8eb}th{font-weight:600}
 .scroll{overflow-x:auto}@media(max-width:600px){body{padding:0 12px;margin-top:28px}h1{font-size:25px}}
 </style></head><body><header><h1>Delayed signal gallery</h1>
-<p>One signal at a time. The upper panel shows propagation; the lower panel shows the accepted step relative to the delay, h/τ. The dashed line at 1 marks h = τ.</p>
+<p>Three aligned panels show propagation, the accepted step relative to the delay, h/τ, and retained history. The dashed line at 1 marks h = τ. History panels compare compressed and uncompressed storage on the same accepted source knots.</p>
 <p>Steps are uncapped by default. Only the narrow Gaussian source-resolution cases use h_max; the PNGs state its value and purpose and mark it with a dotted line.</p>
 <p>Choose a variant beneath each heading. Every view is a standalone PNG.</p><nav>
 <a href="#01_smooth_ramp">Smooth rising transition</a>
@@ -114,7 +114,7 @@ th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #e5e8eb}th{font-w
 </div>
 <img src="figures/12_narrow_pulses.png" loading="lazy" alt="Narrow pulses at different offsets: Center 2.013 s"><figcaption>A 1 ms Gaussian pulse is resolved with a maximum step of 0.5 ms.</figcaption><a class="download" href="figures/12_narrow_pulses.png">Open PNG</a></figure>
 <figure id="13_source_resolution"><h2><span class="number">13</span>Resolving a narrow source pulse</h2>
-<img src="figures/13_source_resolution.png" loading="lazy" alt="Resolving a narrow source pulse: Resolving a narrow source pulse"><figcaption>The uncapped solve misses the pulse. A 0.5 ms maximum step resolves it. Reference markers show the analytic delayed waveform.</figcaption><a class="download" href="figures/13_source_resolution.png">Open PNG</a></figure>
+<img src="figures/13_source_resolution.png" loading="lazy" alt="Resolving a narrow source pulse: Resolving a narrow source pulse"><figcaption>The uncapped solve misses the pulse. A 0.5 ms maximum step resolves it. Reference markers show the analytic delayed waveform. The third panel shows actual retained segments for each solve, both with compression off.</figcaption><a class="download" href="figures/13_source_resolution.png">Open PNG</a></figure>
 <figure id="14_history_detail"><h2><span class="number">14</span>History reconstruction</h2>
 <img src="figures/14_history_detail.png" loading="lazy" alt="History reconstruction: History reconstruction"><figcaption>Each circle is an accepted source value. The connecting polynomials preserve the continuous value through a marked derivative corner. These are the original segments, before compression.</figcaption><a class="download" href="figures/14_history_detail.png">Open PNG</a></figure>
 </main><details><summary>Numerical results and methods</summary>

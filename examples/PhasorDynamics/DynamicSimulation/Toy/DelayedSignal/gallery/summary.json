@@ -20,7 +20,9 @@
     "median_h_tau": 1.1211955749117486,
     "max_h_tau": 114.73057948250921,
     "peak_segments": 2,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 2,
+    "peak_compressed_segments": 2
   },
   {
     "name": "ramp_0.25",
@@ -43,7 +45,9 @@
     "median_h_tau": 0.03160029617015203,
     "max_h_tau": 4.34702958671312,
     "peak_segments": 52,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 52,
+    "peak_compressed_segments": 52
   },
   {
     "name": "ramp_1.5",
@@ -66,7 +70,9 @@
     "median_h_tau": 0.0031649010037622105,
     "max_h_tau": 0.37078114481017604,
     "peak_segments": 324,
-    "last_segments": 7
+    "last_segments": 7,
+    "peak_uncompressed_segments": 324,
+    "peak_compressed_segments": 84
   },
   {
     "name": "width_0.025",
@@ -89,7 +95,9 @@
     "median_h_tau": 0.001552705767680962,
     "max_h_tau": 4.702315464844519,
     "peak_segments": 450,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 450,
+    "peak_compressed_segments": 111
   },
   {
     "name": "width_0.1",
@@ -112,7 +120,9 @@
     "median_h_tau": 0.010411324959109791,
     "max_h_tau": 4.387115600066979,
     "peak_segments": 170,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 170,
+    "peak_compressed_segments": 140
   },
   {
     "name": "width_0.4",
@@ -135,7 +145,9 @@
     "median_h_tau": 0.05260171166248373,
     "max_h_tau": 2.2046735581213426,
     "peak_segments": 36,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 36,
+    "peak_compressed_segments": 36
   },
   {
     "name": "features_0.005",
@@ -158,7 +170,9 @@
     "median_h_tau": 0.5849223939904391,
     "max_h_tau": 233.01101383734704,
     "peak_segments": 10,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 10,
+    "peak_compressed_segments": 10
   },
   {
     "name": "features_0.15",
@@ -181,7 +195,9 @@
     "median_h_tau": 0.012028177976718032,
     "max_h_tau": 6.54082554280933,
     "peak_segments": 275,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 275,
+    "peak_compressed_segments": 140
   },
   {
     "name": "features_0.8",
@@ -204,7 +220,9 @@
     "median_h_tau": 0.002018031850387625,
     "max_h_tau": 0.8742775401227387,
     "peak_segments": 465,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 465,
+    "peak_compressed_segments": 116
   },
   {
     "name": "packet_0.005",
@@ -227,7 +245,9 @@
     "median_h_tau": 0.6746332693131407,
     "max_h_tau": 76.8,
     "peak_segments": 6,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 6,
+    "peak_compressed_segments": 6
   },
   {
     "name": "packet_0.1",
@@ -250,7 +270,9 @@
     "median_h_tau": 0.026554825803679627,
     "max_h_tau": 3.84,
     "peak_segments": 107,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 107,
+    "peak_compressed_segments": 98
   },
   {
     "name": "packet_0.8",
@@ -273,7 +295,9 @@
     "median_h_tau": 0.0030297779716703666,
     "max_h_tau": 0.48,
     "peak_segments": 485,
-    "last_segments": 66
+    "last_segments": 66,
+    "peak_uncompressed_segments": 485,
+    "peak_compressed_segments": 427
   },
   {
     "name": "pulse_0.001",
@@ -296,7 +320,9 @@
     "median_h_tau": 4.388276908675159,
     "max_h_tau": 926.248424080125,
     "peak_segments": 1,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 1,
+    "peak_compressed_segments": 1
   },
   {
     "name": "pulse_0.1",
@@ -319,7 +345,9 @@
     "median_h_tau": 0.036586797143813854,
     "max_h_tau": 8.501369919031045,
     "peak_segments": 53,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 53,
+    "peak_compressed_segments": 53
   },
   {
     "name": "pulse_0.5",
@@ -342,7 +370,9 @@
     "median_h_tau": 0.0040305599861767405,
     "max_h_tau": 1.4741829741303425,
     "peak_segments": 290,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 290,
+    "peak_compressed_segments": 138
   },
   {
     "name": "long_0.1",
@@ -365,7 +395,9 @@
     "median_h_tau": 0.03376021745601365,
     "max_h_tau": 51.27527221714557,
     "peak_segments": 56,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 56,
+    "peak_compressed_segments": 54
   },
   {
     "name": "long_2",
@@ -388,7 +420,9 @@
     "median_h_tau": 0.0008987069472630171,
     "max_h_tau": 1.7096369762636865,
     "peak_segments": 473,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 473,
+    "peak_compressed_segments": 114
   },
   {
     "name": "long_8",
@@ -411,7 +445,9 @@
     "median_h_tau": 0.00024784961275092776,
     "max_h_tau": 0.2632389543598278,
     "peak_segments": 446,
-    "last_segments": 446
+    "last_segments": 446,
+    "peak_uncompressed_segments": 446,
+    "peak_compressed_segments": 117
   },
   {
     "name": "compression_0",
@@ -434,7 +470,9 @@
     "median_h_tau": 0.0009313834215660677,
     "max_h_tau": 0.7056699130001549,
     "peak_segments": 455,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 455,
+    "peak_compressed_segments": 114
   },
   {
     "name": "compression_1",
@@ -457,7 +495,9 @@
     "median_h_tau": 0.0009121452621613235,
     "max_h_tau": 0.7219049732155187,
     "peak_segments": 114,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 460,
+    "peak_compressed_segments": 114
   },
   {
     "name": "sharp_rise",
@@ -485,7 +525,9 @@
     "median_h_tau": 0.0013509439835024395,
     "max_h_tau": 27.52,
     "peak_segments": 344,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 344,
+    "peak_compressed_segments": 90
   },
   {
     "name": "sharp_fall",
@@ -513,7 +555,9 @@
     "median_h_tau": 0.0015434133344482959,
     "max_h_tau": 27.52,
     "peak_segments": 333,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 333,
+    "peak_compressed_segments": 90
   },
   {
     "name": "asymmetric",
@@ -543,7 +587,9 @@
     "median_h_tau": 0.0037145031143381857,
     "max_h_tau": 27.52,
     "peak_segments": 344,
-    "last_segments": 1
+    "last_segments": 1,
+    "peak_uncompressed_segments": 344,
+    "peak_compressed_segments": 93
   },
   {
     "name": "sine_1",
@@ -568,7 +614,9 @@
     "median_h_tau": 0.10175678854421832,
     "max_h_tau": 0.22139672552149214,
     "peak_segments": 27,
-    "last_segments": 13
+    "last_segments": 13,
+    "peak_uncompressed_segments": 27,
+    "peak_compressed_segments": 21
   },
   {
     "name": "sine_5",
@@ -593,7 +641,9 @@
     "median_h_tau": 0.011561861992623879,
     "max_h_tau": 0.05444826507443379,
     "peak_segments": 108,
-    "last_segments": 71
+    "last_segments": 71,
+    "peak_uncompressed_segments": 108,
+    "peak_compressed_segments": 99
   },
   {
     "name": "sine_20",
@@ -618,7 +668,9 @@
     "median_h_tau": 0.00293557413854284,
     "max_h_tau": 0.011421452117961646,
     "peak_segments": 434,
-    "last_segments": 228
+    "last_segments": 228,
+    "peak_uncompressed_segments": 434,
+    "peak_compressed_segments": 346
   },
   {
     "name": "chirp_0.002",
@@ -643,7 +695,9 @@
     "median_h_tau": 0.3813901248296281,
     "max_h_tau": 2.7970658393141195,
     "peak_segments": 21,
-    "last_segments": 5
+    "last_segments": 5,
+    "peak_uncompressed_segments": 21,
+    "peak_compressed_segments": 11
   },
   {
     "name": "chirp_0.05",
@@ -668,7 +722,9 @@
     "median_h_tau": 0.00934313530757791,
     "max_h_tau": 0.1021066427268319,
     "peak_segments": 182,
-    "last_segments": 107
+    "last_segments": 107,
+    "peak_uncompressed_segments": 182,
+    "peak_compressed_segments": 163
   },
   {
     "name": "chirp_0.2",
@@ -693,7 +749,9 @@
     "median_h_tau": 0.002761940462137069,
     "max_h_tau": 0.03338648901845029,
     "peak_segments": 507,
-    "last_segments": 367
+    "last_segments": 367,
+    "peak_uncompressed_segments": 507,
+    "peak_compressed_segments": 471
   },
   {
     "name": "corner_ramp",
@@ -718,7 +776,9 @@
     "median_h_tau": 0.005,
     "max_h_tau": 1.7051625544263516,
     "peak_segments": 35,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 35,
+    "peak_compressed_segments": 6
   },
   {
     "name": "triangle_adaptive",
@@ -742,7 +802,9 @@
     "median_h_tau": 0.0001638400000000817,
     "max_h_tau": 0.7496539200656116,
     "peak_segments": 49,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 49,
+    "peak_compressed_segments": 10
   },
   {
     "name": "triangle_restart",
@@ -767,7 +829,9 @@
     "median_h_tau": 0.0014517746967612766,
     "max_h_tau": 1.2199999999999989,
     "peak_segments": 6,
-    "last_segments": 3
+    "last_segments": 3,
+    "peak_uncompressed_segments": 42,
+    "peak_compressed_segments": 6
   },
   {
     "name": "narrow_2.0",
@@ -798,7 +862,9 @@
     "median_h_tau": 0.004999999999999449,
     "max_h_tau": 0.00500000000000167,
     "peak_segments": 628,
-    "last_segments": 428
+    "last_segments": 428,
+    "peak_uncompressed_segments": 628,
+    "peak_compressed_segments": 120
   },
   {
     "name": "narrow_2.013",
@@ -829,7 +895,9 @@
     "median_h_tau": 0.004999999999999449,
     "max_h_tau": 0.00500000000000167,
     "peak_segments": 623,
-    "last_segments": 623
+    "last_segments": 623,
+    "peak_uncompressed_segments": 623,
+    "peak_compressed_segments": 120
   },
   {
     "name": "narrow_2.027",
@@ -860,7 +928,9 @@
     "median_h_tau": 0.004999999999999449,
     "max_h_tau": 0.00500000000000167,
     "peak_segments": 622,
-    "last_segments": 622
+    "last_segments": 622,
+    "peak_uncompressed_segments": 622,
+    "peak_compressed_segments": 120
   },
   {
     "name": "resolution_uncapped",
@@ -889,7 +959,9 @@
     "median_h_tau": 0.028,
     "max_h_tau": 0.8539999999999991,
     "peak_segments": 10,
-    "last_segments": 2
+    "last_segments": 2,
+    "peak_uncompressed_segments": 10,
+    "peak_compressed_segments": 4
   },
   {
     "name": "resolution_capped",
@@ -919,6 +991,8 @@
     "median_h_tau": 6.250000000002087e-05,
     "max_h_tau": 6.250000000007638e-05,
     "peak_segments": 16431,
-    "last_segments": 16431
+    "last_segments": 16431,
+    "peak_uncompressed_segments": 16431,
+    "peak_compressed_segments": 120
   }
 ]

@@ -1,4 +1,5 @@
 // Manufactured smooth sources, integrated by the actual GridKit delay solver.
+#include <array>
 #include <cmath>
 #include <fstream>
 #include <functional>
@@ -212,11 +213,21 @@ int main(int argc, char** argv)
     solver.setMaxStep(run.value("h_max", 0.0));
     configureSignalDelays(system, solver, {.rel_tol = tolerance, .abs_tol = tolerance * 0.01, .compress = run.at("compress").get<bool>()});
 
+    // Compare storage on identical accepted knots, without affecting the solve.
+    // Index 0 is uncompressed; index 1 enables the actual history compressor.
+    std::array<SignalHistory<double>, 2> histories;
+    for (size_t i = 0; i < histories.size(); ++i)
+    {
+      histories[i].setOptions({.rel_tol = tolerance, .abs_tol = tolerance * 0.01, .compress = i == 1});
+      histories[i].setPrehistory(exact, waveform.derivative);
+    }
+    const std::array<double, 1> delays{tau};
+
     std::ofstream steps(name + "_steps.csv"), samples(name + "_samples.csv"),
         attempts(name + "_attempts.csv"), midpoints(name + "_midpoints.csv"), segments(name + "_segments.csv");
     for (auto* stream : {&steps, &samples, &attempts, &midpoints, &segments})
       *stream << std::setprecision(17);
-    steps << "t,h,h_over_tau,segments,u,z,error_estimate,exact_z,native_error_failures,nonlinear_failures\n";
+    steps << "t,h,h_over_tau,segments,u,z,error_estimate,exact_z,native_error_failures,nonlinear_failures,uncompressed_segments,compressed_segments\n";
     samples << "t,u,z,exact_u,exact_z\n";
     midpoints << "t,u,z,exact_u,exact_z\n";
     attempts << "t,h,error_estimate,rejected,check,error_order\n";
@@ -247,6 +258,11 @@ int main(int argc, char** argv)
     {
       accept();
       const auto& segment = system.signalHistory(0).segments().back();
+      for (auto& history : histories)
+      {
+        history.prepare(segment.end, segment.coefficients[3]);
+        history.accept();
+      }
       segments << segment.begin << ',' << segment.end;
       for (double coefficient : segment.coefficients)
       {
@@ -257,6 +273,15 @@ int main(int argc, char** argv)
     control.finish = [&, finish = control.finish]()
     {
       finish();
+      for (auto& history : histories)
+      {
+        history.maintain(delays);
+      }
+      if (histories[run.at("compress").get<bool>() ? 1 : 0].segmentCount()
+          != system.signalHistory(0).segmentCount())
+      {
+        throw std::logic_error("Recorded history comparison differs from the solver history");
+      }
       const double t = (begin + end) / 2;
       midpoints << t << ',' << mid_u << ',' << mid_z << ',' << exact(t) << ',' << exact(t - tau) << '\n';
       steps << end << ',' << end - begin << ',' << (end - begin) / tau << ','
@@ -265,11 +290,16 @@ int main(int argc, char** argv)
             << ',' << error << ',' << exact(end - tau);
       const auto stats = solver.getStats();
       steps << ',' << native_before + stats.num_error_test_fails_ - static_cast<long>(rejected_total - rejected_before)
-            << ',' << nonlinear_before + stats.num_nonlinear_convergence_fails_ << '\n';
+            << ',' << nonlinear_before + stats.num_nonlinear_convergence_fails_
+            << ',' << histories[0].segmentCount() << ',' << histories[1].segmentCount() << '\n';
     };
     solver.setStepControl(std::move(control));
     solver.configureSimulation();
     solver.initializeSimulation(0);
+    for (auto& history : histories)
+    {
+      history.initialize(0, system.getSignalNode(0)->read());
+    }
     auto observe = [&](double t)
     {
       samples << t << ',' << system.getSignalNode(0)->read() << ','
@@ -290,6 +320,10 @@ int main(int argc, char** argv)
         solver.runSimulation(corner, run.at("dt_monitor"), observe);
         complete_phase();
         system.restartSignalHistory(0);
+        for (auto& history : histories)
+        {
+          history.restartInterpolation();
+        }
         solver.initializeSimulation(corner, false);
       }
     }

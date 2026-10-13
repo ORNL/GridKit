@@ -114,14 +114,17 @@ def time_axis(interval):
     return lambda t: t, "Time (s)"
 
 
-def canvas(title, description, *, equal=False):
+def canvas(title, description, *, equal=False, history=False):
+    height = 6.9 if history else 5.3
+    ratios = [2.5, 1, 1] if history else ([1, 1] if equal else [2.5, 1])
     fig, axes = plt.subplots(
-        2, 1, sharex=True, figsize=(8, 5.3),
-        gridspec_kw={"height_ratios": [1, 1] if equal else [2.5, 1]},
+        len(ratios), 1, sharex=True, figsize=(8, height),
+        gridspec_kw={"height_ratios": ratios},
     )
-    fig.subplots_adjust(left=0.12, right=0.97, bottom=0.12, top=0.79, hspace=0.24)
-    fig.text(0.12, 0.954, title, fontsize=14, weight="semibold", va="top")
-    fig.text(0.12, 0.902, description, fontsize=9, color=GRAY, va="top")
+    fig.subplots_adjust(left=0.12, right=0.97, bottom=0.64 / height,
+                        top=1 - 1.11 / height, hspace=0.30 if history else 0.24)
+    fig.text(0.12, 1 - 0.244 / height, title, fontsize=14, weight="semibold", va="top")
+    fig.text(0.12, 1 - 0.52 / height, description, fontsize=9, color=GRAY, va="top")
     for index, ax in enumerate(axes):
         ax.grid(axis="y", which="major")
         ax.text(-0.105, 1, f"({chr(97 + index)})", transform=ax.transAxes,
@@ -133,7 +136,7 @@ def canvas(title, description, *, equal=False):
 
 def legend(fig, ax):
     handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower left", bbox_to_anchor=(0.11, 0.81),
+    fig.legend(handles, labels, loc="lower left", bbox_to_anchor=(0.11, 1 - 1 / fig.get_figheight()),
                ncol=len(labels), handlelength=2.7, columnspacing=2.4)
 
 
@@ -178,12 +181,43 @@ def finish_ratio(ax, limits, interval, transform):
     ax.set_xlim(*transform(np.asarray(interval)))
 
 
+def plot_storage(ax, steps, interval, transform, column="segments", **style):
+    times = np.r_[0, steps["t"]]
+    counts = np.r_[0, steps[column]]
+    ax.step(transform(times), counts, where="post", lw=1.3, **style)
+    first = max(0, np.searchsorted(times, interval[0], side="right") - 1)
+    last = np.searchsorted(times, interval[1], side="right")
+    return max(counts[first:last])
+
+
+def finish_storage(ax, maximum):
+    ax.set_ylabel("Retained\nsegments")
+    ax.set_ylim(0, max(1, maximum * 1.18))
+    ax.yaxis.set_major_locator(MaxNLocator(3, integer=True))
+
+
+def retained_history(ax, run, interval, transform):
+    steps = read_data(run["name"], "steps")
+    maxima = []
+    for column, color, linestyle, label in (
+        ("uncompressed_segments", GRAY, "--", "Uncompressed"),
+        ("compressed_segments", BLUE, "-", "Compressed"),
+    ):
+        maxima.append(plot_storage(ax, steps, interval, transform, column,
+                                   color=color, ls=linestyle, label=label))
+    finish_storage(ax, max(maxima))
+    ax.legend(loc="lower left", bbox_to_anchor=(0, 1.02), ncol=2,
+              borderaxespad=0, fontsize=8, handlelength=2.7, columnspacing=2.4)
+    ax.text(1, 1.08, "Same accepted knots", transform=ax.transAxes,
+            ha="right", fontsize=8, color=GRAY)
+
+
 def signal_figure(run, name, title):
     interval = window(run)
     transform, xlabel = time_axis(interval)
     samples = read_data(run["name"])
     visible = samples[(samples["t"] >= interval[0]) & (samples["t"] <= interval[1])]
-    fig, (waveform, ratio) = canvas(title, subtitle(run))
+    fig, (waveform, ratio, storage) = canvas(title, subtitle(run), history=True)
     waveform.plot(transform(visible["t"]), visible["u"], color=GRAY, ls=(0, (5, 3)),
                   lw=1.3, label="Input")
     waveform.plot(transform(visible["t"]), visible["z"], color=BLUE, lw=1.7,
@@ -195,7 +229,8 @@ def signal_figure(run, name, title):
     if not run.get("h_max", 0):
         ratio.text(1, 1.08, "No step cap", transform=ratio.transAxes,
                    ha="right", fontsize=8, color=GRAY)
-    ratio.set_xlabel(xlabel)
+    retained_history(storage, run, interval, transform)
+    storage.set_xlabel(xlabel)
     legend(fig, waveform)
     save(fig, name)
 
@@ -221,8 +256,9 @@ def compression_figure(runs):
 def resolution_figure(runs):
     interval = tuple(runs[0]["zoom"])
     transform, xlabel = time_axis(interval)
-    fig, (waveform, ratio) = canvas("Resolving a narrow source pulse", "Gaussian width 1 ms · τ = 8 s · delayed arrival")
+    fig, (waveform, ratio, storage) = canvas("Resolving a narrow source pulse", "Gaussian width 1 ms · τ = 8 s · delayed arrival", history=True)
     bounds = []
+    maxima = []
     for run, color, linestyle in zip(runs, (ORANGE, BLUE), ("--", "-")):
         samples = read_data(run["name"])
         visible = samples[(samples["t"] >= interval[0]) & (samples["t"] <= interval[1])]
@@ -230,6 +266,8 @@ def resolution_figure(runs):
                       label="Uncapped — pulse missed" if run.get("expected_missed")
                       else f"Maximum step {duration(run['h_max'])}")
         bounds.append(plot_ratio(ratio, run, interval, transform, color, linestyle))
+        maxima.append(plot_storage(storage, read_data(run["name"], "steps"), interval,
+                                   transform, color=color, ls=linestyle))
     # A few reference markers verify the shape without another overlapping line.
     reference = visible[::max(1, len(visible) // 11)]
     waveform.plot(transform(reference["t"]), reference["exact_z"], "o", ms=4,
@@ -237,7 +275,10 @@ def resolution_figure(runs):
     waveform.set_ylabel("Signal (a.u.)")
     waveform.margins(y=0.15)
     finish_ratio(ratio, (min(b[0] for b in bounds), max(b[1] for b in bounds)), interval, transform)
-    ratio.set_xlabel(xlabel)
+    finish_storage(storage, max(maxima))
+    storage.text(1, 1.08, "Actual solver history · compression off", transform=storage.transAxes,
+                 ha="right", fontsize=8, color=GRAY)
+    storage.set_xlabel(xlabel)
     legend(fig, waveform)
     save(fig, "13_source_resolution")
 
@@ -298,7 +339,7 @@ summary{cursor:pointer;font-size:15px}table{border-collapse:collapse;width:100%;
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #e5e8eb}th{font-weight:600}
 .scroll{overflow-x:auto}@media(max-width:600px){body{padding:0 12px;margin-top:28px}h1{font-size:25px}}
 </style></head><body><header><h1>Delayed signal gallery</h1>
-<p>One signal at a time. The upper panel shows propagation; the lower panel shows the accepted step relative to the delay, h/τ. The dashed line at 1 marks h = τ.</p>
+<p>Three aligned panels show propagation, the accepted step relative to the delay, h/τ, and retained history. The dashed line at 1 marks h = τ. History panels compare compressed and uncompressed storage on the same accepted source knots.</p>
 <p>Steps are uncapped by default. Only the narrow Gaussian source-resolution cases use h_max; the PNGs state its value and purpose and mark it with a dotted line.</p>
 <p>Choose a variant beneath each heading. Every view is a standalone PNG.</p><nav>''']
     for entry in entries:
@@ -368,7 +409,7 @@ def main():
         history_figure()
     for name, title, caption in (
         ("07_compression", "History compression", "Compression reduces retained segments. The second panel shows its effect on the accepted steps; both runs use the same source and delay."),
-        ("13_source_resolution", "Resolving a narrow source pulse", "The uncapped solve misses the pulse. A 0.5 ms maximum step resolves it. Reference markers show the analytic delayed waveform."),
+        ("13_source_resolution", "Resolving a narrow source pulse", "The uncapped solve misses the pulse. A 0.5 ms maximum step resolves it. Reference markers show the analytic delayed waveform. The third panel shows actual retained segments for each solve, both with compression off."),
         ("14_history_detail", "History reconstruction", "Each circle is an accepted source value. The connecting polynomials preserve the continuous value through a marked derivative corner. These are the original segments, before compression."),
     ):
         entries.append({"name": name, "title": title, "caption": caption,

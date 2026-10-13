@@ -1,18 +1,19 @@
 {
-  "head": "dbca7fd3c6868be54b7a680756aa9f8f14ff779e",
-  "source_diff_sha256": "77a5255ee138d2d50c84a16d2bd850c9ba5df721155c9ca96419e170dfe06c36",
+  "head": "e0402aef1c32b7753cfb8c5288f5e44a09780a3e",
+  "source_diff_sha256": "99ce2c7c25d9319ebab83b5edae43848fec03688280ae2b48e8701c014202427",
   "source_files_sha256": {
     "GridKit/Model/PhasorDynamics/SignalHistoryPolynomial.hpp": "ca6a5537cf58f319d7b4fde65018c26d5328a2bf4143c50610f73e3d003224db",
-    "examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/gallery.cpp": "a6db919a7723bb077d8719d410a8c70bba179ccc0ec9178845bf1a3ca7cd5f4e"
+    "examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/gallery.cpp": "e0f66241f10b4deb121e65bf720fdc03154556ebdc801d93c9fc66c49db214dd"
   },
   "sundials_step_check_patch_sha256": "301dd84ce693da39fb6dcd0fad842c5a981b4efba3ebe1aaff73bb17c24fd53f",
   "build": "/home/lukel/GridKit/build",
   "description": "CMake signal_delay_gallery target using the actual GridKit history and IDAS adapter",
   "error_samples": "Uniform monitor times plus each accepted step midpoint",
   "prehistory": "Analytic value and derivative functions",
+  "retained_history": "Uncompressed and compressed SignalHistory instances on the same accepted source knots; neither feeds back into the solve",
   "rendering": {
-    "script_sha256": "777147869c5abc9a53421110320e27ef9db1f5a6e169fff6d8a9922cf47dece1",
-    "data_sha256": "f8155602ee754f5e84e19b8e081bb109bb0306553f657ef9c01b4a56005befae",
+    "script_sha256": "fbe8da2882fd9594c8d53d286d79f6dbe6c21ef3b63c91adc06c5795eb40f634",
+    "data_sha256": "25f9c309486ceee9af23e6f6bbd486b4901cf2230c2282a17bfaec59bde0353b",
     "matplotlib": "3.6.3",
     "format": "png",
     "dpi": 180,

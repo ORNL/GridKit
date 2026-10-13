@@ -64,6 +64,7 @@ def generate(build):
         "description": "CMake signal_delay_gallery target using the actual GridKit history and IDAS adapter",
         "error_samples": "Uniform monitor times plus each accepted step midpoint",
         "prehistory": "Analytic value and derivative functions",
+        "retained_history": "Uncompressed and compressed SignalHistory instances on the same accepted source knots; neither feeds back into the solve",
     }
     (HERE / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
 
@@ -82,6 +83,15 @@ def summarize():
         assert np.allclose(steps["h_over_tau"], steps["h"] / run["tau"]), name
         assert np.all(steps["error_estimate"] <= 1), name
         assert abs(steps["t"][-1] - run["tf"]) < 1e-12, name
+        # Independent count: retain each accepted interval whose end >= t - tau.
+        retained = np.arange(1, len(steps) + 1) - np.searchsorted(
+            steps["t"], steps["t"] - run["tau"], side="left"
+        )
+        assert np.array_equal(steps["uncompressed_segments"], retained), name
+        assert np.all(steps["compressed_segments"] >= 1), name
+        assert np.all(steps["compressed_segments"] <= retained), name
+        active = "compressed_segments" if run["compress"] else "uncompressed_segments"
+        assert np.array_equal(steps["segments"], steps[active]), name
         if run.get("h_max", 0):
             assert run.get("h_max_reason"), (name, "A source-resolution cap needs a reason")
             assert max(steps["h"]) <= run["h_max"] + 1e-12, name
@@ -108,6 +118,8 @@ def summarize():
             "max_h_tau": float(max(steps["h_over_tau"])),
             "peak_segments": int(max(steps["segments"])),
             "last_segments": int(steps["segments"][-1]),
+            "peak_uncompressed_segments": int(max(steps["uncompressed_segments"])),
+            "peak_compressed_segments": int(max(steps["compressed_segments"])),
         })
     with (HERE / "summary.csv").open("w") as stream:
         keys = list(dict.fromkeys(key for row in rows for key in row))
