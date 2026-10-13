@@ -13,9 +13,16 @@ endforeach()
 foreach(
   file
   demo.json
+  physical.json
   bergeron.fit.json
   frequency-dependent.fit.json
+  line_constants.py
+  fit_line.py
+  validate_physical.py
+  plot_physical.py
   validate.py
   plot.py)
   gridkit_example_add_file(${file})
 endforeach()
+
+add_subdirectory(data/overhead)

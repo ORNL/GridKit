@@ -10,9 +10,11 @@ namespace GridKit::Examples::EMT
     voltage_[0]                = dae_.variables(3, false, voltage_scale);
     voltage_[1]                = dae_.variables(3, false, voltage_scale);
     load_                      = dae_.variables(3, false, current_scale);
+    source_                    = dae_.variables(3, false, current_scale);
     for (size_t p = 0; p < 3; ++p)
     {
-      dae_.differential[load_ + p] = data_.inductance[p] > 0;
+      dae_.differential[load_ + p]   = data_.inductance[p] > 0;
+      dae_.differential[source_ + p] = data_.ls[p] > 0;
     }
     line_.allocate(dae_, voltage_scale, current_scale);
     size_ = dae_.scale.size();
@@ -27,8 +29,10 @@ namespace GridKit::Examples::EMT
     line_.stamp(dae_, voltage_, size_);
     for (size_t p = 0; p < 3; ++p)
     {
-      dae_.add(voltage_[0] + p, voltage_[0] + p, -1 / data_.rs[p]);
+      dae_.add(voltage_[0] + p, source_ + p, 1);
       dae_.add(voltage_[0] + p, line_.current[0][p], 1);
+      dae_.add(source_ + p, voltage_[0] + p, -1);
+      dae_.add(source_ + p, source_ + p, -data_.rs[p], -data_.ls[p]);
       dae_.add(voltage_[1] + p, line_.current[1][p], 1);
       dae_.add(voltage_[1] + p, load_ + p, -1);
       dae_.add(voltage_[1] + p, voltage_[1] + p, 0); // Fault pattern exists before switching.
@@ -131,7 +135,7 @@ namespace GridKit::Examples::EMT
     }
     for (size_t p = 0; p < 3; ++p)
     {
-      f[voltage_[0] + p] += data_.source(time_, p) / data_.rs[p];
+      f[source_ + p]     += data_.source(time_, p);
       f[voltage_[1] + p] -= data_.fault(time_, p) * values_[voltage_[1] + p];
     }
     f_.setDataUpdated();
@@ -177,7 +181,7 @@ namespace GridKit::Examples::EMT
     }
     for (size_t p = 0; p < 3; ++p)
     {
-      rhs[voltage_[0] + p] = -std::polar(std::sqrt(2.0) * data_.rms[p], data_.phase[p]) / data_.rs[p];
+      rhs[source_ + p] = -std::polar(std::sqrt(2.0) * data_.rms[p], data_.phase[p]);
     }
     for (size_t i = 0; i < ports_.delayed.size(); ++i)
     {
@@ -197,7 +201,7 @@ namespace GridKit::Examples::EMT
   std::vector<std::string> LineCircuit::columns() const
   {
     std::vector<std::string> result{"t"};
-    for (const char* group : {"e", "v1", "v2", "i1", "i2", "load", "fault"})
+    for (const char* group : {"e", "v1", "v2", "i1", "i2", "load", "fault", "source"})
     {
       for (const char* phase : {"a", "b", "c"})
       {
@@ -243,6 +247,10 @@ namespace GridKit::Examples::EMT
     for (size_t p = 0; p < 3; ++p)
     {
       result.push_back(data_.fault(t, p) * values_[voltage_[1] + p]);
+    }
+    for (size_t p = 0; p < 3; ++p)
+    {
+      result.push_back(values_[source_ + p]);
     }
     for (const auto* group : {&line_.characteristic, &line_.incident})
     {

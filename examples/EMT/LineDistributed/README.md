@@ -177,6 +177,122 @@ is in modal-current units. The circuit sets absolute tolerances by voltage and
 current scales. `h_max=0` leaves smooth intervals uncapped. The monitor interval
 `dt` does not set the internal step size.
 
+## Physical frequency-dependent demonstration
+
+Run from the repository root:
+
+```bash
+cmake --build build --target line_distributed line_distributed_tests -j 10
+build/examples/EMT/LineDistributed/line_distributed_tests examples/EMT/LineDistributed
+build/examples/EMT/LineDistributed/line_distributed examples/EMT/LineDistributed/physical.json examples/EMT/LineDistributed/results/physical
+python3 examples/EMT/LineDistributed/validate_physical.py --executable build/examples/EMT/LineDistributed/line_distributed
+python3 examples/EMT/LineDistributed/plot_physical.py
+```
+
+The physical cases use the documented design in [data/overhead/line.json](data/overhead/line.json):
+three solid aluminium conductors of 10 mm radius, conductivity 35 MS/m, at
+positions (-2,12), (0,12), (2,12) metres, ideally transposed, over homogeneous
+100 ohm m soil. This is an illustrative physical design, not measured asset
+data or a PSCAD export. The 80 km and 1 km lines share per-unit-length data and
+Yc, but have independently fitted propagation functions.
+
+`line_constants.py` computes cylindrical internal impedance using scaled Bessel
+functions, Deri-Semlyen ground return, and electrostatic image-charge capacitance.
+It averages the phase Z and Y matrices over cyclic conductor transpositions.
+It neglects conductor stranding, proximity, corona, sag, soil displacement
+current, and frequency-dependent soil properties. Distributed shunt leakage
+is explicitly 1e-11 S/m (1 Gohm per phase per 100 m). The input data records
+these assumptions and primary references. Numerical Carson quadrature checks
+the ground-return approximation; this is not a comparison against a separate
+commercial simulator or field measurements.
+
+In the common/differential modal basis, the physical reference is
+
+```math
+\gamma_m=\sqrt{z'_m y'_m},\qquad Y_{c,m}=\sqrt{y'_m/z'_m},\qquad
+H_m=\exp(-\ell\gamma_m)=\exp(-s\tau_m)A_m(s).
+```
+
+The explicit delays follow the high-frequency modal L and C of the homogenized
+construction. Band-dependent group delay and attenuation remain in A. Ground
+and differential modes have slightly different wavefront delays and markedly
+different dispersion. Both modes are excited separately in the demo.
+
+`fit_line.py` uses scikit-rf 1.13.0 for pole relocation, then solves a scaled,
+DC-constrained residue fit. The library's S-array is only a container for
+normalized scalar responses; it is not interpreted as physical scattering
+parameters and its S-passivity routines are not used. This also avoids the
+library's DC-enforcement path: the wrapper eliminates the constant term from
+**every** residue-fit row so the DC equality actually constrains the fit.
+Conjugate poles are exported explicitly for the existing C++ realization.
+
+To regenerate the data with NumPy, SciPy and scikit-rf 1.13.0 installed:
+
+```bash
+python3 examples/EMT/LineDistributed/fit_line.py
+```
+
+The frequency grid includes DC and 1e-4–1e6 Hz. `zy.csv` records the physical
+modal Z/Y samples; the two differential modes are identical. Separate held-out
+frequencies check complex fitting error, with a magnitude floor of 0.001 for
+strongly attenuated H. `results/fit-report.json` records fitting order, errors,
+Carson comparison, and assembled-terminal passivity diagnostics. Pole stability
+alone does not establish line passivity. The frequency scan remains a sampled
+diagnostic, not a global passivity certificate.
+
+| Run | Purpose |
+| --- | --- |
+| `physical_pulse` | Phase-A 10 kV pulse, 5 us rise, 50 us FWHM, 400 ohm termination |
+| `physical_reflections` | Same pulse with a 2000 ohm termination |
+| `physical_common_mode` | Equal pulses on all phases expose ground-return dispersion |
+| `physical_differential_mode` | A, B, C pulse amplitudes 10, -5, -5 kV |
+| `physical_fault` | 80 km line, phase-A 10 ohm receiving-terminal fault at 20 ms, cleared at 60 ms |
+| `physical_short_recovery` | 1 km line, phase-A 40% source sag at 20–40 ms, recovered operation through 200 ms |
+
+The pulse generator has 30 ohm + 20 uH source impedance. Circuit studies use a
+22 kV, 60 Hz source with 250 MVA three-phase short-circuit strength and X/R=10
+(R approximately 0.1926 ohm, L approximately 5.110 mH), feeding 400 ohm + 50 mH per phase in the fault study and 400 ohm per phase
+in the short-line stepping study. The resistive short-line termination avoids
+the high-frequency resonances introduced by the series inductive load.
+The source equations are `Ls*di/dt = e-v1-Rs*i`. Optional source inductance
+defaults to zero for the original fixtures. `voltage` events add volts to the
+source; `source` events change its sinusoidal amplitude; `fault` events add
+receiving-terminal shunt conductance. The finite C2 transitions are retained.
+There is no ideal breaker, arc, trapped-charge reclosure, or machine model.
+
+The validator compares voltage **and current** against an inverse-Fourier
+solution using the unfitted telegrapher coth/csch two-port. A second reference
+using the fitted functions separates fitting error from integration error.
+The raw reference is checked with finer sampling and longer zero padding.
+Time-varying faults use tolerance, step-cap and compression comparisons, plus
+post-clearance steady-state checks; they have no independent transient oracle.
+The short-line assessment measures 100–200 ms (six energized cycles), reporting
+both sample-count and elapsed-time fractions, median h/tau, and the longest
+contiguous interval with h exceeding every delay. The target is over 90% of
+elapsed time above the longest delay, with reference and refinement checks.
+Runtime comparisons use identical CSV output and medians of three runs.
+
+The validated short-line run uses 3,874 accepted steps versus 239,944 with
+h capped at tau(min)/4. Over 100–200 ms, all accepted steps exceed every delay,
+with median h/tau(max)=37.03. The capped comparison differs by at most 0.0112 V
+at the monitored terminals. Local medians including CSV output were 0.509 s
+uncapped and 3.504 s capped (6.9x); these timings exclude initialization and
+are specific to this circuit, build and machine. The unfitted-reference
+comparison differs by at most 0.0257 V in the short-line run. The report also
+records reference discretization error, so these differences are not accuracy
+claims beyond the reference resolution or the physical modelling assumptions.
+
+The admittance fit has 24 poles; long/short propagation fits have 40/16 poles.
+The C++ rational equations are normalized by pole magnitude as well as using
+normalized memory states, keeping fast-pole residuals well scaled. All shared
+GridKit model and solver code is unchanged.
+
+![Physical fits](plots/physical_fits.png)
+![Travelling waves](plots/physical_travelling_waves.png)
+![Modal responses](plots/physical_modes.png)
+![Fault and clearing](plots/physical_fault.png)
+![Adaptive integration](plots/physical_adaptivity.png)
+
 ## Fixtures and validation
 
 `bergeron.fit.json` has Yc=I/300 S and H=I times a 250-us delay.

@@ -194,7 +194,8 @@ int main(int argc, char** argv)
     }
     checkFit(complex_fit);
     auto dynamic           = CircuitData::parse(base, directory);
-    dynamic.line.input     = complex_fit; // Both factors now have dynamic states.
+    dynamic.ls             = {0, .005, .02}; // Algebraic and differential source branches.
+    dynamic.line.input     = complex_fit;    // Both factors now have dynamic states.
     dynamic.line.output    = complex_fit;
     dynamic.line.delays[0] = 0; // Zero-delay alias alongside positive delays.
     dynamic.events.push_back({"fault", .01, .02, .00005, .00005, .02, {true, false, false}});
@@ -215,6 +216,16 @@ int main(int argc, char** argv)
     mapped.line.input  = VectorFit::identity(4);
     mapped.line.output = VectorFit::identity(4);
     checkCircuit(mapped);
+
+    Json physical    = readJson(directory / "physical.json").at("defaults");
+    auto source_data = CircuitData::parse(physical, directory);
+    checkCircuit(source_data);
+    source_data.events.push_back({"voltage", .001, .002, .00001, .00001, 1000, {true, false, false}});
+    require(std::abs(source_data.source(.0015, 0) - CircuitData::parse(physical, directory).source(.0015, 0) - 1000) < 1e-9, "Additive pulse must use volts");
+    checkCircuit(source_data);
+    physical["source"]["inductance"] = {-1, 0, 0};
+    rejects([&]
+            { CircuitData::parse(physical, directory); });
 
     Json good         = readJson(directory / "frequency-dependent.fit.json");
     Json bad          = good;

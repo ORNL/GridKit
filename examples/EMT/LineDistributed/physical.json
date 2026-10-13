@@ -1,0 +1,299 @@
+{
+  "defaults": {
+    "line": "data/overhead/long.fit.json",
+    "source": {
+      "rms": [
+        12701.705922171768,
+        12701.705922171768,
+        12701.705922171768
+      ],
+      "phase": [
+        0,
+        -2.0943951023931953,
+        2.0943951023931953
+      ],
+      "frequency": 60,
+      "resistance": [
+        0.1926392000246539,
+        0.1926392000246539,
+        0.1926392000246539
+      ],
+      "inductance": [
+        0.005109913486198673,
+        0.005109913486198673,
+        0.005109913486198673
+      ]
+    },
+    "load": {
+      "resistance": [
+        400,
+        400,
+        400
+      ],
+      "inductance": [
+        0.05,
+        0.05,
+        0.05
+      ]
+    },
+    "initialization": "sinusoidal",
+    "events": [],
+    "solver": {
+      "t0": 0,
+      "tf": 0.008,
+      "dt": 1e-06,
+      "rel_tol": 1e-06,
+      "history_abs_tol": 0.0001,
+      "h_max": 0,
+      "compress": false
+    }
+  },
+  "runs": [
+    {
+      "name": "physical_pulse",
+      "source": {
+        "rms": [
+          0,
+          0,
+          0
+        ],
+        "resistance": [
+          30,
+          30,
+          30
+        ],
+        "inductance": [
+          2e-05,
+          2e-05,
+          2e-05
+        ]
+      },
+      "initialization": "zero",
+      "events": [
+        {
+          "type": "voltage",
+          "phases": [
+            1
+          ],
+          "value": 10000,
+          "on": 0.001,
+          "off": 0.00105,
+          "rise": 5e-06,
+          "fall": 5e-06
+        }
+      ],
+      "load": {
+        "resistance": [
+          400,
+          400,
+          400
+        ],
+        "inductance": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "physical_reflections",
+      "source": {
+        "rms": [
+          0,
+          0,
+          0
+        ],
+        "resistance": [
+          30,
+          30,
+          30
+        ],
+        "inductance": [
+          2e-05,
+          2e-05,
+          2e-05
+        ]
+      },
+      "initialization": "zero",
+      "events": [
+        {
+          "type": "voltage",
+          "phases": [
+            1
+          ],
+          "value": 10000,
+          "on": 0.001,
+          "off": 0.00105,
+          "rise": 5e-06,
+          "fall": 5e-06
+        }
+      ],
+      "load": {
+        "resistance": [
+          2000,
+          2000,
+          2000
+        ],
+        "inductance": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "physical_common_mode",
+      "source": {
+        "rms": [
+          0,
+          0,
+          0
+        ],
+        "resistance": [
+          30,
+          30,
+          30
+        ],
+        "inductance": [
+          2e-05,
+          2e-05,
+          2e-05
+        ]
+      },
+      "initialization": "zero",
+      "events": [
+        {
+          "type": "voltage",
+          "phases": [
+            1,
+            2,
+            3
+          ],
+          "value": 10000,
+          "on": 0.001,
+          "off": 0.00105,
+          "rise": 5e-06,
+          "fall": 5e-06
+        }
+      ],
+      "load": {
+        "resistance": [
+          400,
+          400,
+          400
+        ],
+        "inductance": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "physical_differential_mode",
+      "source": {
+        "rms": [
+          0,
+          0,
+          0
+        ],
+        "resistance": [
+          30,
+          30,
+          30
+        ],
+        "inductance": [
+          2e-05,
+          2e-05,
+          2e-05
+        ]
+      },
+      "initialization": "zero",
+      "events": [
+        {
+          "type": "voltage",
+          "phases": [
+            1
+          ],
+          "value": 10000,
+          "on": 0.001,
+          "off": 0.00105,
+          "rise": 5e-06,
+          "fall": 5e-06
+        },
+        {
+          "type": "voltage",
+          "phases": [
+            2,
+            3
+          ],
+          "value": -5000,
+          "on": 0.001,
+          "off": 0.00105,
+          "rise": 5e-06,
+          "fall": 5e-06
+        }
+      ],
+      "load": {
+        "resistance": [
+          400,
+          400,
+          400
+        ],
+        "inductance": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "physical_fault",
+      "events": [
+        {
+          "type": "fault",
+          "phases": [
+            1
+          ],
+          "value": 0.1,
+          "on": 0.02,
+          "off": 0.06,
+          "rise": 5e-05,
+          "fall": 5e-05
+        }
+      ],
+      "solver": {
+        "tf": 0.2,
+        "dt": 1e-05
+      }
+    },
+    {
+      "name": "physical_short_recovery",
+      "line": "data/overhead/short.fit.json",
+      "events": [
+        {
+          "type": "source",
+          "phases": [
+            1
+          ],
+          "value": -0.4,
+          "on": 0.02,
+          "off": 0.04,
+          "rise": 5e-05,
+          "fall": 5e-05
+        }
+      ],
+      "solver": {
+        "tf": 0.2,
+        "dt": 1e-05
+      },
+      "load": {
+        "inductance": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

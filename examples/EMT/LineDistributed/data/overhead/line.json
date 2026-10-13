@@ -1,0 +1,41 @@
+{
+  "description": "Illustrative 22 kV ideally transposed overhead line, three identical solid aluminium conductors. A physical design example, not a measured asset or PSCAD export.",
+  "positions_m": [
+    [
+      -2,
+      12
+    ],
+    [
+      0,
+      12
+    ],
+    [
+      2,
+      12
+    ]
+  ],
+  "radius_m": 0.01,
+  "conductivity_S_per_m": 35000000,
+  "relative_permeability": 1,
+  "soil_resistivity_ohm_m": 100,
+  "shunt_conductance_S_per_m": 1e-11,
+  "lengths_m": {
+    "long": 80000,
+    "short": 1000
+  },
+  "assumptions": [
+    "Uniform, linear, ideally transposed construction; no shield wires, sag, corona or proximity effect.",
+    "Solid cylindrical aluminium at the stated conductivity; not an ACSR strand model.",
+    "Homogeneous nonmagnetic conducting soil, Deri-Semlyen complex ground plane; soil displacement current is neglected.",
+    "Electrostatic air capacitance from perfect-ground image charges. Average the phase Z and Y matrices over cyclic transpositions before modal reduction.",
+    "Distributed leakage 1e-11 S/m corresponds to 1 Gohm per phase per 100 m; it is an explicit physical parameter.",
+    "Both lengths use identical per-unit-length parameters. Each propagation function is fitted separately.",
+    "Wavefront delays follow the high-frequency modal L and C of the homogenized ideally transposed construction; ground-return dispersion remains in the attenuation functions."
+  ],
+  "references": [
+    "https://www.pscad.com/webhelp/EMTDC/Transmission_Lines/Mutual_Impedance_with_Earth_Return.htm",
+    "https://www.pscad.com/webhelp/EMTDC/Transmission_Lines/Deriving_System_Y_and_Z_Matrices.htm",
+    "https://doi.org/10.1109/TPAS.1981.317011",
+    "https://scikit-rf.readthedocs.io/en/latest/api/generated/skrf.vectorFitting.VectorFitting.vector_fit.html"
+  ]
+}

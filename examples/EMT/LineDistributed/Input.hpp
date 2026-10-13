@@ -36,7 +36,7 @@ namespace GridKit::Examples::EMT
   struct CircuitData
   {
     LineData              line;
-    std::array<double, 3> rms, phase, rs, resistance, inductance;
+    std::array<double, 3> rms, phase, rs, ls, resistance, inductance;
     double                frequency, t0, tf, dt, rtol, history_atol, hmax;
     bool                  compress, steady;
     std::vector<Event>    events;
@@ -51,10 +51,11 @@ namespace GridKit::Examples::EMT
         throw std::invalid_argument("The demonstration circuit requires N = 3");
       }
       const auto& source = j.at("source");
-      fields(source, {"rms", "phase", "frequency", "resistance"});
+      fields(source, {"rms", "phase", "frequency", "resistance", "inductance"});
       d.rms            = phaseValues(source.at("rms"));
       d.phase          = phaseValues(source.at("phase"));
       d.rs             = phaseValues(source.at("resistance"));
+      d.ls             = phaseValues(source.value("inductance", Json::array({0, 0, 0})));
       d.frequency      = real(source.at("frequency"));
       const auto& load = j.at("load");
       fields(load, {"resistance", "inductance"});
@@ -81,9 +82,9 @@ namespace GridKit::Examples::EMT
       }
       for (size_t p = 0; p < 3; ++p)
       {
-        if (!(d.rms[p] >= 0 && d.rs[p] > 0 && d.resistance[p] > 0 && d.inductance[p] >= 0))
+        if (!(d.rms[p] >= 0 && d.rs[p] > 0 && d.ls[p] >= 0 && d.resistance[p] > 0 && d.inductance[p] >= 0))
         {
-          throw std::invalid_argument("Require RMS >= 0, Rs/Rload > 0 and Lload >= 0");
+          throw std::invalid_argument("Require RMS >= 0, Rs/Rload > 0 and Ls/Lload >= 0");
         }
       }
       if (!j.at("events").is_array())
@@ -104,9 +105,9 @@ namespace GridKit::Examples::EMT
         {
           throw std::invalid_argument("Events require positive transition times and off >= on + rise");
         }
-        if (event.type != "source" && event.type != "fault")
+        if (event.type != "source" && event.type != "fault" && event.type != "voltage")
         {
-          throw std::invalid_argument("Event type must be source or fault");
+          throw std::invalid_argument("Event type must be source, voltage or fault");
         }
         if (event.type == "fault" && event.value < 0)
         {
@@ -138,14 +139,19 @@ namespace GridKit::Examples::EMT
     double source(double t, size_t phase_index) const
     {
       double amplitude = steady ? 1 : 0;
+      double pulse     = 0;
       for (const auto& event : events)
       {
         if (event.type == "source" && event.phases[phase_index])
         {
           amplitude += event.value * event.envelope(t);
         }
+        if (event.type == "voltage" && event.phases[phase_index])
+        {
+          pulse += event.value * event.envelope(t);
+        }
       }
-      return amplitude * std::sqrt(2.0) * rms[phase_index] * std::cos(omega() * t + phase[phase_index]);
+      return pulse + amplitude * std::sqrt(2.0) * rms[phase_index] * std::cos(omega() * t + phase[phase_index]);
     }
 
     double fault(double t, size_t phase_index) const

@@ -224,13 +224,15 @@ namespace GridKit::Examples::EMT
         const size_t w = state + q * cols, v = w + cols;
         for (size_t k = 0; k < cols; ++k)
         {
-          dae.add(w + k, w + k, a, -1);
-          dae.add(w + k, column(k), scale);
+          // Normalize the equation as well as the state. Broadband pole rates
+          // span many decades; this avoids large cancelling residual terms.
+          dae.add(w + k, w + k, a / scale, -1 / scale);
+          dae.add(w + k, column(k), 1);
           if (pair)
           {
-            dae.add(w + k, v + k, -b);
-            dae.add(v + k, w + k, b);
-            dae.add(v + k, v + k, a, -1);
+            dae.add(w + k, v + k, -b / scale);
+            dae.add(v + k, w + k, b / scale);
+            dae.add(v + k, v + k, a / scale, -1 / scale);
           }
         }
         for (size_t n = 0; n < rows; ++n)

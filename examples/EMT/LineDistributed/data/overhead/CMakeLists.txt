@@ -1,0 +1,9 @@
+foreach(
+  file
+  line.json
+  zy.csv
+  yc.fit.json
+  long.fit.json
+  short.fit.json)
+  gridkit_example_add_file(${file})
+endforeach()

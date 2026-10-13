@@ -70,7 +70,7 @@ namespace GridKit::Examples::EMT
     LinearDAE             dae_;
     LineDistributed       line_;
     std::array<size_t, 2> voltage_;
-    size_t                load_;
+    size_t                load_, source_;
     std::vector<double>   values_;
     std::vector<Complex>  initial_;
   };

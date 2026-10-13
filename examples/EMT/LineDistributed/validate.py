@@ -52,7 +52,10 @@ def frequency_solution(data, s, excitation):
     yc, h = operators(data, s)
     p = np.zeros((n, k))
     p[np.asarray(data["line"]["conductors"]) - 1, np.arange(k)] = 1
-    source_g = np.diag(1 / np.asarray(data["source"]["resistance"]))
+    source_g = np.zeros((len(s), n, n), complex)
+    for phase in range(n):
+        source_g[:, phase, phase] = 1/(data["source"]["resistance"][phase]
+            + s*data["source"].get("inductance", [0]*n)[phase])
     load_g = 1 / (np.asarray(data["load"]["resistance"])[None]
                   + s[:, None] * np.asarray(data["load"]["inductance"])[None])
     size = 2 * n + 2 * k
@@ -72,7 +75,7 @@ def frequency_solution(data, s, excitation):
     a[:, r2, v2] = 2 * yc @ p.T
     a[:, r2, r2] = -np.eye(k)
     a[:, r2, r1] = -h
-    rhs[:, v1] = -np.asarray(excitation) @ source_g
+    rhs[:, v1] = -np.einsum("fij,fj->fi", source_g, np.broadcast_to(excitation, (len(s), n)))
     return np.linalg.solve(a, rhs)
 
 
@@ -91,14 +94,15 @@ def forcing(data, t):
     t = np.atleast_1d(t)
     amplitude = np.full((len(t), 3), float(data["initialization"] == "sinusoidal"))
     fault = np.zeros_like(amplitude)
+    pulse = np.zeros_like(amplitude)
     for event in data["events"]:
         envelope = ramp(t, event["on"], event["rise"]) - ramp(t, event["off"], event["fall"])
-        array = amplitude if event["type"] == "source" else fault
+        array = {"source": amplitude, "fault": fault, "voltage": pulse}[event["type"]]
         array[:, np.asarray(event["phases"]) - 1] += event["value"] * envelope[:, None]
     source = data["source"]
     voltage = amplitude * np.sqrt(2) * np.asarray(source["rms"]) * np.cos(
         2*np.pi*source["frequency"] * t[:, None] + np.asarray(source["phase"]))
-    return voltage, fault
+    return voltage + pulse, fault
 
 
 def bergeron_reference(data, t):
