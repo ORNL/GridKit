@@ -57,6 +57,7 @@ add_subdirectory(Experimental)
 if(TARGET SUNDIALS::idas)
   add_subdirectory(PhasorDynamics)
   add_subdirectory(Network)
+  add_subdirectory(EMT/LineDistributed)
 endif()
 
 add_subdirectory(Consumer)

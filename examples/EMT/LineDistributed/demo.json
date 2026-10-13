@@ -1,0 +1,282 @@
+{
+  "defaults": {
+    "line": "bergeron.fit.json",
+    "source": {
+      "rms": [
+        12701.705922171768,
+        12701.705922171768,
+        12701.705922171768
+      ],
+      "phase": [
+        0,
+        -2.0943951023931953,
+        2.0943951023931953
+      ],
+      "frequency": 60,
+      "resistance": [
+        30,
+        30,
+        30
+      ]
+    },
+    "load": {
+      "resistance": [
+        600,
+        600,
+        600
+      ],
+      "inductance": [
+        0,
+        0,
+        0
+      ]
+    },
+    "initialization": "sinusoidal",
+    "events": [],
+    "solver": {
+      "t0": 0,
+      "tf": 0.05,
+      "dt": 1e-05,
+      "rel_tol": 1e-06,
+      "history_abs_tol": 1e-06,
+      "h_max": 0,
+      "compress": false
+    }
+  },
+  "runs": [
+    {
+      "name": "energization",
+      "initialization": "zero",
+      "events": [
+        {
+          "type": "source",
+          "on": 0.001,
+          "off": 1,
+          "rise": 5e-05,
+          "fall": 5e-05,
+          "value": 1,
+          "phases": [
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "solver": {
+        "tf": 0.008,
+        "dt": 2e-06
+      }
+    },
+    {
+      "name": "matched",
+      "initialization": "zero",
+      "load": {
+        "resistance": [
+          300,
+          300,
+          300
+        ]
+      },
+      "events": [
+        {
+          "type": "source",
+          "on": 0.001,
+          "off": 1,
+          "rise": 5e-05,
+          "fall": 5e-05,
+          "value": 1,
+          "phases": [
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "solver": {
+        "tf": 0.008,
+        "dt": 2e-06
+      }
+    },
+    {
+      "name": "steady"
+    },
+    {
+      "name": "sag",
+      "events": [
+        {
+          "type": "source",
+          "on": 0.01,
+          "off": 0.025,
+          "rise": 5e-05,
+          "fall": 5e-05,
+          "value": -0.4,
+          "phases": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "phase_a_fault",
+      "events": [
+        {
+          "type": "fault",
+          "on": 0.01,
+          "off": 0.025,
+          "rise": 5e-05,
+          "fall": 5e-05,
+          "value": 0.02,
+          "phases": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "three_phase_fault",
+      "events": [
+        {
+          "type": "fault",
+          "on": 0.01,
+          "off": 0.025,
+          "rise": 5e-05,
+          "fall": 5e-05,
+          "value": 0.02,
+          "phases": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "frequency_dependent_steady",
+      "line": "frequency-dependent.fit.json"
+    },
+    {
+      "name": "frequency_dependent_sag",
+      "line": "frequency-dependent.fit.json",
+      "load": {
+        "inductance": [
+          0.05,
+          0.05,
+          0.05
+        ]
+      },
+      "events": [
+        {
+          "type": "source",
+          "on": 0.01,
+          "off": 0.025,
+          "rise": 5e-05,
+          "fall": 5e-05,
+          "value": -0.4,
+          "phases": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "coupled_fault",
+      "line": "frequency-dependent.fit.json",
+      "events": [
+        {
+          "type": "fault",
+          "on": 0.01,
+          "off": 0.025,
+          "rise": 5e-05,
+          "fall": 5e-05,
+          "value": 0.02,
+          "phases": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "short_delay_sag",
+      "line": {
+        "N": 3,
+        "K": 3,
+        "conductors": [
+          1,
+          2,
+          3
+        ],
+        "Yc": {
+          "rows": 3,
+          "cols": 3,
+          "D": [
+            [
+              0.0033333333333333335,
+              0,
+              0
+            ],
+            [
+              0,
+              0.0033333333333333335,
+              0
+            ],
+            [
+              0,
+              0,
+              0.0033333333333333335
+            ]
+          ],
+          "poles": [],
+          "residues": []
+        },
+        "H": {
+          "delay": 2e-05,
+          "fit": {
+            "rows": 3,
+            "cols": 3,
+            "D": [
+              [
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                1
+              ]
+            ],
+            "poles": [],
+            "residues": []
+          }
+        }
+      },
+      "events": [
+        {
+          "type": "source",
+          "on": 0.01,
+          "off": 0.025,
+          "rise": 5e-05,
+          "fall": 5e-05,
+          "value": -0.4,
+          "phases": [
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "solver": {
+        "tf": 0.035
+      }
+    }
+  ]
+}
