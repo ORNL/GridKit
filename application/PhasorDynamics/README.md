@@ -38,7 +38,7 @@ object overrides its defaults:
 ```
 
 History tolerances default to the solver tolerances; a nonpositive solver absolute
-tolerance uses `1e-9` for history. Set `compress` to `false` to retain every accepted
+tolerance uses `1e-9` for history. Compression defaults to `false`, retaining every accepted
 interpolation segment within the required delay window. Accuracy controls the
 step limit, independently of the shortest delay. A fixed step that fails the
 history error check reports an error. See the

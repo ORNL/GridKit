@@ -1,0 +1,40 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "DelayedSignal",
+    "case_description": "Two delays sharing the history of a cosine source",
+    "case_comments": "Constant equilibrium prehistory before t=0"
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "monitors": [],
+  "buses": [],
+  "signals": [
+    {
+      "signal_id": 0,
+      "name": "source"
+    },
+    {
+      "signal_id": 1,
+      "name": "delay0",
+      "source": 0,
+      "delay": 0.001
+    }
+  ],
+  "devices": [
+    {
+      "class": "FunctionSignalSource",
+      "id": "cosine",
+      "ports": {
+        "sr": 0
+      },
+      "params": {
+        "Fr": "cos",
+        "Fi": "sin"
+      }
+    }
+  ]
+}

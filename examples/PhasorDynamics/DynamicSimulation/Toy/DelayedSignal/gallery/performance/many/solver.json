@@ -1,11 +1,12 @@
 {
   "system_model_file": "case.json",
-  "tmax": 12.0,
-  "dt_monitor": 0.002,
+  "tmax": 300.0,
+  "dt_monitor": 0,
+  "max_steps": 1000000,
   "rel_tol": 1e-07,
   "abs_tol": 1e-09,
   "signal_history": {
-    "compress": true
+    "compress": false
   },
   "events": []
 }

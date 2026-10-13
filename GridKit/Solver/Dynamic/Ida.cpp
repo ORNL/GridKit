@@ -389,17 +389,23 @@ namespace AnalysisManager
         // internal integrator step out of date)
         updateModelState(tret);
 
-        if (model_->monitoring())
-        {
-          model_->printMonitoredVariables();
-        }
-        if (callback.has_value())
-        {
-          (*callback)(tret);
-        }
+        publishOutput(tret, callback);
       }
 
       return retval;
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::publishOutput(RealT t, const std::optional<StepCallback>& callback)
+    {
+      if (model_->monitoring())
+      {
+        model_->printMonitoredVariables();
+      }
+      if (callback)
+      {
+        (*callback)(t);
+      }
     }
 
     template <class ScalarT, typename IdxT>
@@ -502,28 +508,28 @@ namespace AnalysisManager
 
         step_control_->accept();
         controlled_time_ = end;
+        bool sampled     = false;
         while (output <= outputs && outputTime() <= end)
         {
           const RealT t = outputTime();
           if (model_->monitoring() || callback)
           {
             dense(t);
-            if (model_->monitoring())
-            {
-              model_->printMonitoredVariables();
-            }
-            if (callback)
-            {
-              (*callback)(t);
-            }
+            publishOutput(t, callback);
+            sampled = true;
           }
           ++output;
           attempts = 0;
         }
-        updateModelState(end);
+        if (sampled)
+        {
+          updateModelState(end);
+        }
         step_control_->finish();
-        // The history cap depends on accuracy, never on the shortest delay.
-        controlled_step_limit_ = error < RealT{0.125} ? 2 * h : h;
+        // Predict a cap from the cubic history error. IDA still chooses its step.
+        // Shrinking before the error reaches one avoids expensive restarts.
+        const RealT factor     = std::clamp(RealT{0.8} / std::cbrt(std::max(error, RealT{1e-12})), RealT{0.5}, RealT{2});
+        controlled_step_limit_ = factor * h;
       }
       return 0;
     }

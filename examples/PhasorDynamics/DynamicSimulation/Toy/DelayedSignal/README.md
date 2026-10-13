@@ -15,3 +15,6 @@ in the solver file to retain every accepted history segment within the delay
 window. The 1 ms delay does not impose a 1 ms maximum step.
 
 See the [model contract](../../../../../GridKit/Model/PhasorDynamics/SignalDelay/README.md).
+
+See the [signal delay gallery](gallery/index.html) for smooth inputs, different
+delay durations, adaptive steps, and history compression.

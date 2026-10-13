@@ -1,132 +1,241 @@
-"""Render measured GridKit results. Run with: python3 plot_gallery.py."""
+"""Draw PNG figures from recorded GridKit output; no simulations run here."""
+import html
+import json
+import os
 from pathlib import Path
-import os, json, base64, html, io, zipfile
-os.environ.setdefault('MPLCONFIGDIR', '/tmp/gridkit-delay-matplotlib')
-import numpy as np
+
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/gridkit-delay-matplotlib")
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 
-ROOT=Path(__file__).resolve().parent
-OUT=ROOT/'figures';OUT.mkdir(exist_ok=True)
-ROWS=json.loads((ROOT/'summary.json').read_text());BY={r['name']:r for r in ROWS}
-COLORS=['#166b9c','#d95b2b','#27836b','#8758a4','#b48113','#364152']
-plt.rcParams.update({'font.size':10,'axes.titlesize':12,'axes.labelsize':10,'figure.titlesize':17,'axes.prop_cycle':plt.cycler(color=COLORS),'axes.spines.top':False,'axes.spines.right':False,'axes.grid':True,'grid.alpha':.2,'legend.frameon':False,'savefig.facecolor':'white','axes.formatter.useoffset':False})
-PAGES=[]
-def data(name,kind='samples'):
- with zipfile.ZipFile(ROOT/'data.zip') as archive:
-  return np.genfromtxt(io.BytesIO(archive.read(f'{name}_{kind}.csv')),delimiter=',',names=True)
-def app(name):return np.genfromtxt(ROOT/name/'output.csv.gz',delimiter=',',names=True)
-def layout(title,nrows=2,ncols=1,height=7):
- fig,ax=plt.subplots(nrows,ncols,figsize=(11.5,height),squeeze=False)
- fig.suptitle(title,x=.07,ha='left',fontweight='bold');return fig,ax
-pdf=PdfPages(ROOT/'gallery.pdf')
-def save(fig,name,title,caption):
- fig.tight_layout(rect=[.015,.065,.99,.94]);fig.text(.07,.018,caption.split('\n')[0],fontsize=9,color='#444444')
- fig.savefig(OUT/(name+'.png'),dpi=155);fig.savefig(OUT/(name+'.svg'));pdf.savefig(fig)
- PAGES.append((name,title,caption));plt.close(fig)
+from generate import read_data
 
-# 1: Actual application output from a grid component, no manufactured generator model.
-a=app('grid');t=a['t'];u=a['Genrou_DV1_omega'];taus=[.001,.1,.5]
-fig,axes=layout('01  A generator signal delayed inside an actual grid case')
-ax=axes[0,0];ax.plot(t,u*1000,color='#333333',lw=1.8,label='GENROU speed deviation')
-for tau,col in zip(taus,['SignalDelay_speed_1ms_z','SignalDelay_speed_100ms_z','SignalDelay_speed_500ms_z']):
- ax.plot(t,a[col]*1000,lw=1.1,label=fr'$\tau={tau:g}$ s')
-ax.set(ylabel='Speed deviation (10⁻³ pu)',title='TwoBusBasic + smooth mechanical power p(t) = cos(t), no switching events');ax.legend(ncol=4,fontsize=9)
-ax=axes[1,0]
-for tau,col in zip(taus,['SignalDelay_speed_1ms_z','SignalDelay_speed_100ms_z','SignalDelay_speed_500ms_z']):
- ref=np.interp(t-tau,t,u,left=u[0]);ax.plot(t,(a[col]-ref)*1e9,label=fr'$\tau={tau:g}$ s')
-ax.set(xlabel='Time (s)',ylabel='Shift consistency difference (10⁻⁹ pu)',title='Compare delayed output with the same run’s recorded source shifted in time');ax.legend(ncol=3)
-save(fig,'01_grid','Delayed GENROU speed','Actual DynamicSimulation CSV. Relative tolerance 10⁻⁸; monitor interval 0.5 ms.\nThe lower panel is a same-run consistency check, not an independent solution-error estimate. All three delays are integer multiples of the monitor interval. The source port is speed deviation (omega), not absolute speed (1 + omega).')
+HERE = Path(__file__).resolve().parent
+FIGURES = HERE / "figures"
+FIGURES.mkdir(exist_ok=True)
+RUNS = json.loads((HERE / "summary.json").read_text())
+COLORS = ["#176b9d", "#d26432", "#25836c"]
+PAGES = []
+plt.rcParams.update({
+    "font.size": 10, "axes.titlesize": 12, "axes.labelsize": 10,
+    "axes.spines.top": False, "axes.spines.right": False,
+    "axes.grid": True, "grid.alpha": 0.16, "grid.linewidth": 0.7,
+    "legend.frameon": False, "savefig.facecolor": "white",
+    "axes.formatter.useoffset": False,
+})
 
-# 2: Application example with analytic reference and constant prehistory.
-a=app('app');t=a['t'];fig,axes=layout('02  The JSON delay declarations, with an analytic reference')
-axes[0,0].plot(t,np.cos(t),color='#333333',lw=1.5,label='Source cos(t), analytic')
-for tau,col in zip([.001,.15,1.5],['SignalDelay_short_z','SignalDelay_long_z','SignalDelay_wide_z']):
- ref=np.cos(np.maximum(0,t-tau));axes[0,0].plot(t,a[col],label=fr'GridKit $\tau={tau:g}$ s')
- axes[1,0].plot(t,(a[col]-ref)*1e7,label=fr'$\tau={tau:g}$ s')
-axes[0,0].set(ylabel='Signal value',title='Three taps share one source history; prehistory is constant at 1');axes[0,0].legend(ncol=4,fontsize=9)
-axes[1,0].set(xlabel='Time (s)',ylabel='Output − exact delay (10⁻⁷)',title='Exact reference: 1 before the delay elapses, then cos(t − τ)');axes[1,0].legend(ncol=3)
-save(fig,'02_cosine','Delayed cosine from JSON','Actual DynamicSimulation CSV. Relative tolerance 10⁻⁷; monitor interval 2 ms.\nThe large delay is visible as a waveform shift. The 1 ms delay is visually indistinguishable at this scale; the next figure expands its difference from the source. Constant prehistory meets cos(t) with a continuous first derivative at zero.')
 
-# 3: Inspect the small delay directly instead of hiding it underneath the source.
-fig,axes=layout('03  Make a 1 ms delay visible: inspect the difference from its source')
-for h in [.0001,.001,.01,.1]:
- name=f'fixed_tau0.001_h{h:g}';a=data(name);t=a['t'];sig=(a['u']-a['z'])/.001
- axes[0,0].plot(t,sig,lw=1.15,label=fr'$h/\tau={h/.001:g}$ ($h={h:g}$ s)')
- axes[1,0].plot(t,sig-(a['exact_u']-a['exact_z'])/.001,lw=1.1)
-a=data('fixed_tau0.001_h0.1');axes[0,0].plot(a['t'],(a['exact_u']-a['exact_z'])/.001,'k--',lw=1.2,label='Exact difference quotient')
-axes[0,0].set(ylabel=r'$(u-z)/\tau$',title='The quotient approaches u′(t), and exposes whether the small shift is represented');axes[0,0].legend(ncol=3,fontsize=9)
-axes[1,0].set(xlabel='Time (s)',ylabel='Difference-quotient error',yscale='symlog',title='Same runs, including low-order startup; symlog scale expands the small errors');axes[1,0].set_yscale('symlog',linthresh=1e-7)
-save(fig,'03_small_delay','A small delay is not just overlapping traces','Fixed-step diagnostic sweep; loose history tolerance allows the selected steps.\nAll curves use the actual GridKit source and delayed algebraic variables. The analytic reference is [cos(t) − cos(t − τ)]/τ, with analytic prehistory. The difference quotient magnifies errors by 1/τ; visual overlap of raw waveforms alone does not validate a small delay.')
+def group(name):
+    return [run for run in RUNS if run["group"] == name]
 
-# 4: Separate h/tau from resolution of the signal itself.
-fig,axes=layout('04  Step / delay ratio does not determine accuracy by itself',1,2,height=6.5)
-for tau in [.001,.01,.1,1.]:
- rows=sorted([r for r in ROWS if r['fixed_h'] and r['tau']==tau],key=lambda r:r['fixed_h'])
- err=[r['max_abs_z_error'] for r in rows]
- axes[0,0].loglog([r['fixed_h']/tau for r in rows],err,'o-',ms=4,label=fr'$\tau={tau:g}$ s')
- axes[0,1].loglog([r['fixed_h']/(2*np.pi) for r in rows],err,'o-',ms=4,label=fr'$\tau={tau:g}$ s')
-axes[0,0].axvline(1,color='#555555',ls=':',lw=1);axes[0,0].set(xlabel=r'$h/\tau$',ylabel='Maximum sampled |z − exact delay|',title='Crossing h/τ = 1 creates no accuracy cliff')
-axes[0,1].set(xlabel=r'$h/T$, with signal period $T=2\pi$ s',ylabel='Maximum sampled |z − exact delay|',title='Signal resolution and startup matter');axes[0,1].legend()
-save(fig,'04_step_sweep','28 fixed-step runs','Error includes uniform monitor samples AND the midpoint of every accepted step.\nFour delays × seven steps, h = 0.0001 … 0.5 s. Analytic cos(t) prehistory; compression disabled. Existing GridKit fixed-step mode limits IDA to order 2 and disables its integration error test. History rtol=1, atol=0.01 intentionally avoids accuracy-triggered rejection. These runs measure error; they do not certify tolerance compliance. The final shortened step is included.')
 
-# 5: Adaptive time steps around smooth pulse.
-fig,axes=layout('05  Adaptive steps follow a smooth pulse, without a shortest-delay cap',3,1,height=9)
-for tau in [.001,.1,.5]:
- name=f'pulse_tau{tau:g}';a=data(name);s=data(name,'steps');at=data(name,'attempts')
- axes[0,0].plot(a['t'],a['z'],label=fr'$\tau={tau:g}$ s')
- axes[1,0].step(s['t'],s['h_over_tau'],where='pre',lw=1,label=fr'$\tau={tau:g}$ s')
- axes[2,0].step(s['t'],s['h'],where='pre',lw=1)
- rej=at[at['rejected']>0];axes[2,0].scatter(rej['t'],rej['h'],marker='x',s=35)
-axes[0,0].plot(a['t'],a['exact_u'],'k--',lw=1,label='Analytic source');axes[0,0].set(ylabel='Signal value',title='u(t) = 1 + 0.6 exp[−((t − 2)/0.12)²]');axes[0,0].legend(ncol=4,fontsize=9)
-axes[1,0].axhline(1,color='k',ls=':',lw=1);axes[1,0].set(yscale='log',ylabel=r'Accepted $h/\tau$',title='Dashed horizontal line: h = τ')
-axes[2,0].set(xlabel='Time (s)',ylabel='Step size h (s)',yscale='log',title='Accepted steps; crosses show rejected candidate steps')
-save(fig,'05_adaptive_pulse','Adaptive resolution of a smooth pulse','Relative tolerance 10⁻⁶; absolute tolerance 10⁻⁸; analytic prehistory; compression off.\nFor τ=1 ms, h reaches 0.512 s in a flat part but is at most 4.27 ms near the source pulse (t=1.8…2.2 s). This is h/τ up to 512, not a claim that the pulse itself is resolved by 0.512 s steps. Delayed outputs also affect integration accuracy and therefore the step sequence.')
+def delay_label(tau):
+    return f"τ = {tau * 1000:g} ms" if tau < 1 else f"τ = {tau:g} s"
 
-# 6: Coupled differential equation, not only prescribed inputs.
-fig,axes=layout('06  Delay inside feedback: check against an independent exact solution',2,2,height=8)
-t=np.linspace(0,2,1000);axes[0,0].plot(t,np.exp(-.4*(t-.001)),'k--',label='Exact delayed state')
-for tol in [1e-3,1e-5,1e-7]:
- name=f'feedback_{tol:g}';a=data(name);s=data(name,'steps')
- axes[0,0].plot(a['t'],a['z'],label=fr'rtol = {tol:g}')
- axes[0,1].plot(a['t'],a['z']-a['exact_z'],label=fr'rtol = {tol:g}')
- axes[1,0].step(s['t'],s['h_over_tau'],where='pre',lw=1,label=fr'rtol = {tol:g}')
-r=sorted([r for r in ROWS if r['kind']=='feedback'],key=lambda r:r['rtol'])
-axes[1,1].loglog([r['rtol'] for r in r],[r['max_abs_z_error'] for r in r],'o-',label='Measured delayed-output error')
-axes[0,0].set(ylabel='Delayed state',title='x′ = −γx + 1.3x(t − τ), τ = 1 ms');axes[0,0].legend(fontsize=9)
-axes[0,1].set(ylabel='z − exact delayed state',title='Exact x(t) = exp(−0.4t)',yscale='symlog');axes[0,1].set_yscale('symlog',linthresh=1e-9)
-axes[1,0].axhline(1,color='k',ls=':',lw=1);axes[1,0].set(xlabel='Time (s)',ylabel=r'Accepted $h/\tau$',yscale='log')
-axes[1,1].set(xlabel='Requested relative tolerance',ylabel='Maximum sampled delay error',title='Global error need not vary monotonically')
-save(fig,'06_feedback','A true feedback connection','γ = 1.3 exp(0.4τ) + 0.4; exact exponential prehistory; compression off.\nAt rtol=10⁻⁷: maximum h/τ = 23.402, maximum sampled delayed-output error = 9.35×10⁻⁹. Tightening to 10⁻⁸ gives 1.59×10⁻⁸ in this run: local error control is not a strict global-error or monotonic-convergence guarantee. Six tolerances were run; all are retained in summary.csv.')
 
-# 7: Optional compression evaluated honestly.
-a=data('compression_0');b=data('compression_1');fig,axes=layout('07  Does history compression pay for itself here?',3,1,height=9)
-axes[0,0].plot(a['t'],a['z'],label='Compression off');axes[0,0].plot(b['t'],b['z'],'--',label='Compression on');axes[0,0].set(ylabel='Delayed pulse',title='Same pulse, τ = 2 s; only the compression option changes');axes[0,0].legend()
-for name,label in [('compression_0','off'),('compression_1','on')]:
- s=data(name,'steps');r=BY[name];axes[1,0].step(s['t'],s['segments'],where='post',label=f'{label}: peak {r["peak_segments"]} segments, {r["accepted"]} accepted steps')
-axes[1,0].set(ylabel='Retained cubic segments',title='Window pruning remains enabled in both runs');axes[1,0].legend(fontsize=9)
-axes[2,0].plot(a['t'],(b['z']-a['z'])*1e6);axes[2,0].set(xlabel='Time (s)',ylabel='On − off (10⁻⁶)',title='Trajectory difference; adaptive step sequences differ')
-save(fig,'07_compression','Compression versus retention','Peak segments: 324 → 289 (10.8% reduction). Accepted steps: 538 → 564.\nSegment counts are not process-memory measurements. No speedup is established. Compression has a bounded change to stored polynomials; that is not a bound on the difference between two complete adaptive trajectories. Both runs keep a bounded delay window even with compression disabled.')
+def layout(title, subtitle, rows=3, columns=1):
+    figure, axes = plt.subplots(
+        rows, columns, figsize=(11.4, 8.5), squeeze=False, sharex="col"
+    )
+    figure.suptitle(title, x=0.085, y=0.975, ha="left", fontsize=18, weight="bold")
+    figure.text(0.085, 0.934, subtitle, color="#495461", fontsize=11)
+    return figure, axes
 
-# 8: Increasing frequency makes restart costs visible.
-fig,axes=layout('08  A smooth chirp exposes the cost of history-triggered retries',3,1,height=9)
-a=data('chirp_1e-06');axes[0,0].plot(a['t'],a['z'],label='GridKit delayed signal');axes[0,0].plot(a['t'],a['exact_z'],'k--',lw=.9,label='Exact delay');axes[0,0].set(ylabel='Signal value',title='u(t) = cos(t + 0.4t²), τ = 1 ms');axes[0,0].legend()
-for tol in [1e-4,1e-6,1e-8]:
- name=f'chirp_{tol:g}';s=data(name,'steps');at=data(name,'attempts');r=BY[name]
- axes[1,0].step(s['t'],s['h_over_tau'],where='pre',lw=.8,label=f'rtol={tol:g}: {r["accepted"]} accepted, {r["rejected"]} rejected')
- rej=at[at['rejected']>0];axes[2,0].step(rej['t'],np.arange(1,len(rej)+1),where='post',label=f'rtol={tol:g}')
-axes[1,0].axhline(1,color='k',ls=':',lw=1);axes[1,0].set(ylabel=r'Accepted $h/\tau$',yscale='log');axes[1,0].legend(fontsize=9)
-axes[2,0].set(xlabel='Time (s)',ylabel='Cumulative history rejections',title='Each rejection currently calls IDAReInit, discarding BDF history')
-save(fig,'08_chirp','Retries on an increasingly oscillatory source','Smooth analytic prehistory; compression off; matched solver/history tolerances.\nAt rtol=10⁻⁶: 1,933 accepted steps, 42 history rejections, maximum sampled delay error 5.37×10⁻⁷. Rejections are the additional history-controller rejections, not IDA’s internal error-test or nonlinear-solve failures. This is evidence to improve the step predictor, not a runtime speed comparison.')
-pdf.close()
-# Self-contained HTML supports copying the gallery without broken image links.
-intro='''<h1>GridKit delayed signals: measured results</h1><p>44 runs: two actual <code>DynamicSimulation</code> application cases and 42 experiments linked to the current GridKit libraries. All colored numerical curves are GridKit outputs. Dashed analytic curves and shifted-source comparisons are labeled.</p><p><strong>h is an accepted internal solver step.</strong> The monitor interval is a separate quantity. Large h/τ is possible; source resolution, interpolation and nonlinear/integration accuracy still limit h.</p><p><a href="gallery.pdf">Eight-page PDF</a> · <a href="summary.csv">42-run numerical summary</a> · <a href="README.md">Methods and reproduction</a> · <a href="provenance.json">Provenance</a></p>'''
-parts=['<!doctype html><html lang="en"><meta charset="utf-8"><title>GridKit signal delay gallery</title><style>body{font:16px/1.55 system-ui,sans-serif;color:#202a35;max-width:1180px;margin:36px auto;padding:0 24px;background:#f6f8fb}h1{font-size:32px}h2{font-size:24px}a{color:#12649a}figure{margin:34px 0;padding:22px;background:white;border:1px solid #dce2e9;border-radius:9px}img{width:100%;height:auto}figcaption{color:#334155}nav{display:flex;gap:15px;flex-wrap:wrap}code{background:#e9edf3;padding:2px 5px}</style>',intro,'<nav>']
-parts.extend(f'<a href="#{name}">{i+1}. {html.escape(title)}</a>' for i,(name,title,_) in enumerate(PAGES));parts.append('</nav>')
-for name,title,caption in PAGES:
- encoded=base64.b64encode((OUT/(name+'.png')).read_bytes()).decode()
- parts.append(f'<figure id="{name}"><h2>{html.escape(title)}</h2><img alt="{html.escape(title)}" src="data:image/png;base64,{encoded}"><figcaption>{html.escape(caption).replace(chr(10),"<br><br>")}<p><a href="figures/{name}.png">PNG</a> · <a href="figures/{name}.svg">SVG</a></p></figcaption></figure>')
-parts.append('</html>');(ROOT/'index.html').write_text('\n'.join(parts))
-print(f'Wrote {len(PAGES)} figures, gallery.pdf and index.html in {ROOT}')
+
+def waveforms(axis, runs):
+    source = read_data(runs[0]["name"])
+    axis.plot(source["t"], source["u"], "--", color="#303944", lw=1.8,
+              label="Input u(t)", zorder=5)
+    for color, run in zip(COLORS, runs):
+        values = read_data(run["name"])
+        axis.plot(values["t"], values["z"], color=color, lw=1.55,
+                  label=delay_label(run["tau"]))
+    axis.set_ylabel("Signal value")
+    axis.legend(loc="lower right", bbox_to_anchor=(1, 1.02), ncol=4, fontsize=9)
+
+
+def step_ratios(axis, runs):
+    for color, run in zip(COLORS, runs):
+        steps = read_data(run["name"], "steps")
+        # Each recorded h belongs to the interval ENDING at its recorded t.
+        axis.step(steps["t"], steps["h_over_tau"], where="pre", color=color, lw=1.1)
+        attempts = read_data(run["name"], "attempts")
+        rejected = attempts[attempts["rejected"] > 0]
+        axis.scatter(rejected["t"], rejected["h"] / run["tau"],
+                     marker="x", s=25, color=color, zorder=4)
+    axis.axhline(1, color="#59616b", ls=":", lw=1)
+    axis.set(yscale="log", ylabel="Accepted h / τ")
+    axis.set_title("Step size relative to delay · dotted line: h = τ · ×: rejected trial", loc="left", fontsize=10)
+
+
+def storage(axis, runs):
+    for color, run in zip(COLORS, runs):
+        steps = read_data(run["name"], "steps")
+        axis.step(steps["t"], steps["segments"], where="post", color=color, lw=1.4)
+    axis.set(ylabel="Stored history segments")
+    axis.set_title("Accepted source history retained for future delayed reads", loc="left", fontsize=10)
+
+
+def save(figure, filename, title, caption):
+    figure.tight_layout(rect=(0.015, 0.07, 0.99, 0.98), h_pad=1.7)
+    figure.text(0.085, 0.025, "GridKit output · adaptive IDA · rtol 10⁻⁶, atol 10⁻⁸ · analytic prehistory",
+                fontsize=9, color="#586473")
+    figure.savefig(FIGURES / f"{filename}.png", dpi=170)
+    plt.close(figure)
+    PAGES.append((filename, title, caption))
+
+
+def adaptive_figure(group_name, filename, title, subtitle, caption, memory_first=False):
+    runs = group(group_name)
+    figure, axes = layout(title, subtitle)
+    waveforms(axes[0, 0], runs)
+    if memory_first:
+        storage(axes[1, 0], runs)
+        step_ratios(axes[2, 0], runs)
+    else:
+        step_ratios(axes[1, 0], runs)
+        if group_name == "pulse":
+            for color, run in zip(COLORS, runs):
+                steps = read_data(run["name"], "steps")
+                axes[2, 0].step(steps["t"], steps["h"], where="pre", color=color, lw=1.1)
+            axes[2, 0].set(yscale="log", ylabel="Accepted step h (s)")
+            axes[2, 0].set_title("The same accepted steps in seconds", loc="left", fontsize=10)
+        else:
+            storage(axes[2, 0], runs)
+    axes[2, 0].set_xlabel("Time (s)")
+    for axis in axes[:, 0]:
+        axis.set_xlim(0, runs[0]["tf"])
+    measured = "; ".join(
+        f"{delay_label(run['tau'])}: max h/τ {run['max_h_tau']:.3g}, "
+        f"max sampled error {run['max_abs_z_error']:.2g}"
+        for run in runs
+    )
+    save(figure, filename, title, caption + "\n\n" + measured)
+
+
+adaptive_figure(
+    "ramp", "01_smooth_ramp", "A smooth transition, delayed by different amounts",
+    "Ramp width 150 ms · delays from 10 ms to 1.5 s",
+    "Input u(t) = 1 + 0.3[1 + tanh((t − 2)/0.15)]. The output settles to the same "
+    "value at a later time. The solver refines around both the source transition "
+    "and its delayed appearance. Compression is off; pruning remains active."
+)
+
+figure, axes = layout("The same delay, three different pulse widths",
+                      "Delay fixed at 250 ms · only the input width changes", columns=2)
+for row, run in enumerate(group("width")):
+    values = read_data(run["name"])
+    color = COLORS[row]
+    axes[row, 0].plot(values["t"], values["u"], "--", color="#303944", lw=1.7, label="Input u(t)")
+    axes[row, 0].plot(values["t"], values["z"], color=color, lw=1.5, label="Delayed output")
+    axes[row, 0].set(ylabel="Signal value", title=f"Gaussian width w = {run['width'] * 1000:g} ms")
+    axes[row, 0].legend(loc="upper right", fontsize=9)
+    steps = read_data(run["name"], "steps")
+    axes[row, 1].step(steps["t"], steps["h_over_tau"], where="pre", color=color, lw=1.1)
+    axes[row, 1].axhline(1, color="#59616b", ls=":", lw=1)
+    axes[row, 1].set(yscale="log", ylabel="Accepted h / τ",
+                     title=f"{run['accepted']} steps · {run['rejected']} history rejections")
+    for axis in axes[row]:
+        axis.set_xlim(0, run["tf"])
+for axis in axes[-1]:
+    axis.set_xlabel("Time (s)")
+save(figure, "02_pulse_widths", "The same delay, three different pulse widths",
+     "Input u(t) = 1 + 0.6 exp[−((t − 2)/w)²]. Widths are 25, 100, and 400 ms; "
+     "w is the Gaussian scale parameter, not its full width at half maximum. "
+     "All runs have the same 250 ms delay. The required step size changes with "
+     "the signal feature width even though the delay stays fixed.")
+
+adaptive_figure(
+    "features", "03_multiple_timescales", "Broad and narrow features in one signal",
+    "A broad pulse followed by a sharp, smooth pulse · three delay durations",
+    "Input u(t) = 1 + 0.25 exp[−((t − 2)/0.3)²] + 0.6 exp[−((t − 4)/0.04)²]. "
+    "The narrow feature requires more temporal resolution. Stored history preserves "
+    "it until each delayed output has passed it. Compression is off."
+)
+adaptive_figure(
+    "packet", "04_oscillatory_packet", "An oscillatory packet keeps its shape through a delay",
+    "A smooth envelope around oscillations · delays from 5 ms to 800 ms",
+    "Input u(t) = 1 + 0.5 exp[−((t − 3)/0.6)²] sin(20(t − 3)). The oscillation "
+    "period is about 314 ms. A delay shifts both the envelope and the oscillations. "
+    "Compression is off. Steps grow in quiet parts and shrink to resolve the oscillations."
+)
+adaptive_figure(
+    "pulse", "05_adaptive_pulse", "Adaptive steps around a smooth pulse",
+    "Gaussian width 120 ms · delays of 1 ms, 100 ms, and 500 ms",
+    "Input u(t) = 1 + 0.6 exp[−((t − 2)/0.12)²]. The dashed trace is the actual "
+    "GridKit input. Accepted h/τ can exceed one; "
+    "accuracy still requires refinement around the pulse. Compression is off."
+)
+adaptive_figure(
+    "long", "06_long_history", "A short feature can require a long history",
+    "The same 120 ms pulse · delays of 100 ms, 2 s, and 8 s",
+    "The source pulse occurs near 2 s, while the 8 s tap reproduces it near 10 s. "
+    "Its history must survive the intervening quiet period. Falling segment counts "
+    "show pruning after the feature has left the required delay window. "
+    "Compression is off in every run.", memory_first=True
+)
+
+runs = group("compression")
+figure, axes = layout("History compression around a delayed pulse",
+                      "Gaussian width 120 ms · delay 2 s · compression is the only changed option")
+source = read_data(runs[0]["name"])
+axes[0, 0].plot(source["t"], source["u"], "--", color="#303944", lw=1.8, label="Input u(t)")
+for color, run, style in zip(COLORS, runs, ["-", "--"]):
+    values = read_data(run["name"])
+    steps = read_data(run["name"], "steps")
+    label = "Compression on" if run["compress"] else "Compression off"
+    axes[0, 0].plot(values["t"], values["z"], style, color=color, lw=1.7, label=label)
+    axes[1, 0].step(steps["t"], steps["segments"], where="post", color=color, lw=1.4,
+                     label=f"{label}: peak {run['peak_segments']} segments")
+    axes[2, 0].plot(values["t"], abs(values["z"] - values["exact_z"]) * 1e6,
+                    style, color=color, lw=1.15, label=label)
+axes[0, 0].set_ylabel("Signal value")
+axes[0, 0].legend(loc="lower right", bbox_to_anchor=(1, 1.02), ncol=3, fontsize=9)
+axes[1, 0].set_ylabel("Stored history segments")
+axes[1, 0].set_title("Both runs prune history outside the required delay window", loc="left", fontsize=10)
+axes[1, 0].legend(loc="upper right", fontsize=9)
+axes[2, 0].set(xlabel="Time (s)", ylabel="Absolute delay error (10⁻⁶)")
+axes[2, 0].set_title("Compare each output with the analytic input evaluated at t − τ", loc="left", fontsize=10)
+for axis in axes[:, 0]:
+    axis.set_xlim(0, runs[0]["tf"])
+change = 100 * (1 - runs[1]["peak_segments"] / runs[0]["peak_segments"])
+save(figure, "07_compression", "History compression around a delayed pulse",
+     f"Input u(t) = 1 + 0.6 exp[−((t − 2)/0.12)²]. Peak segment count decreases by "
+     f"{change:.1f}%. Accepted steps: {runs[0]['accepted']} off, {runs[1]['accepted']} on. "
+     "Compression may change the adaptive step sequence. Segment count is not total "
+     "process memory, and a compression-error bound is not a bound on the difference "
+     "between complete numerical trajectories.")
+
+parts = ["""<!doctype html><html lang="en"><meta charset="utf-8">
+<title>GridKit signal delay gallery</title><style>
+body{font:16px/1.6 system-ui,sans-serif;color:#24313e;max-width:1180px;margin:36px auto;padding:0 24px;background:#f5f7fa}
+h1{font-size:32px}h2{font-size:23px}a{color:#176b9d}nav{display:flex;gap:14px;flex-wrap:wrap}
+figure{margin:30px 0;padding:22px;background:white;border:1px solid #dce2e9;border-radius:8px}
+img{width:100%;height:auto}figcaption{color:#465362}
+table{border-collapse:collapse}td,th{padding:7px 22px 7px 0;text-align:left;border-bottom:1px solid #dce2e9}
+</style><h1>Smooth signals, delayed in GridKit</h1>
+<p>Seven PNG figures from 20 runs of the actual GridKit delay implementation.
+Every waveform comparison shows the input. Step sizes are accepted internal solver
+steps; they are distinct from the monitor interval.</p>
+<p><a href="summary.csv">Numerical summary</a> · <a href="README.md">Methods and reproduction</a>
+· <a href="performance/results.json">Application timing comparison</a></p><nav>"""]
+parts.extend(f'<a href="#{name}">{index + 1}. {html.escape(title)}</a>'
+             for index, (name, title, _) in enumerate(PAGES))
+parts.append("</nav>")
+performance = json.loads((HERE / "performance/results.json").read_text())
+parts.append('<h2>Application timings</h2><p>Median of three app-reported CPU times, using identical case settings. '
+             'The revised solver also checks delayed history during wide steps; the many-tap case costs more.</p>'
+             '<table><tr><th>Case</th><th>Checkpoint</th><th>Revised</th><th>Time change</th></tr>')
+for case in performance["cases"]:
+    change = 100 * (case["after_median"] / case["before_median"] - 1)
+    parts.append(f'<tr><td>{html.escape(case["case"])}</td><td>{case["before_median"]:.3f} s</td>'
+                 f'<td>{case["after_median"]:.3f} s</td><td>{change:+.1f}%</td></tr>')
+parts.append('</table>')
+for name, title, caption in PAGES:
+    parts.append(f'<figure id="{name}"><h2>{html.escape(title)}</h2>'
+                 f'<a href="figures/{name}.png"><img src="figures/{name}.png" alt="{html.escape(title)}"></a>'
+                 f'<figcaption>{html.escape(caption).replace(chr(10), "<br>")}</figcaption></figure>')
+parts.append("</html>")
+(HERE / "index.html").write_text("\n".join(parts))
+print(f"Wrote {len(PAGES)} PNG figures and index.html")

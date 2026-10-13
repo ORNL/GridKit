@@ -14,6 +14,14 @@
 
 namespace GridKit::PhasorDynamics
 {
+  template <class RealT>
+  struct SignalHistoryOptions
+  {
+    RealT rel_tol{1e-5};
+    RealT abs_tol{1e-7};
+    bool  compress{false};
+  };
+
   /// Accepted source history and affine interpolation within a trial step.
   /// Values in this class are real constants, never active AD variables.
   template <class RealT>
@@ -38,6 +46,7 @@ namespace GridKit::PhasorDynamics
       RealT                end;
       std::array<RealT, 4> coefficients;
       RealT                error{0};
+      bool                 merge_failed{false}; ///< Unchanged pair already exceeds the merge budget.
 
       RealT evaluate(RealT t) const
       {
@@ -97,14 +106,17 @@ namespace GridKit::PhasorDynamics
       }
     };
 
-    void setTolerance(RealT relative, RealT absolute)
+    void setOptions(SignalHistoryOptions<RealT> options)
     {
-      if (!std::isfinite(relative) || relative < 0 || !std::isfinite(absolute) || absolute <= 0)
+      if (initialized())
+      {
+        throw std::logic_error("Set signal history options before initialization");
+      }
+      if (!std::isfinite(options.rel_tol) || options.rel_tol < 0 || !std::isfinite(options.abs_tol) || options.abs_tol <= 0)
       {
         throw std::invalid_argument("Signal history requires finite rtol >= 0 and atol > 0");
       }
-      relative_tolerance_ = relative;
-      absolute_tolerance_ = absolute;
+      options_ = options;
     }
 
     void setPrehistory(std::function<RealT(RealT)> prehistory)
@@ -172,7 +184,7 @@ namespace GridKit::PhasorDynamics
       if (prehistory_)
       {
         const RealT initial = checkedPrehistory(t);
-        if (std::abs(initial - value) > absolute_tolerance_ + relative_tolerance_ * std::max(std::abs(initial), std::abs(value)))
+        if (std::abs(initial - value) > options_.abs_tol + options_.rel_tol * std::max(std::abs(initial), std::abs(value)))
         {
           throw std::invalid_argument("Signal initial value is inconsistent with its prehistory");
         }
@@ -285,10 +297,18 @@ namespace GridKit::PhasorDynamics
         checkValue(low.constant + low.weight * p.coefficients[3]);
         error = std::max(error, std::abs(high - low.constant - low.weight * p.coefficients[3]));
       }
-      // Reserve one quarter of the absolute tolerance for compression.
-      const RealT scale = RealT{0.75} * absolute_tolerance_
-                          + relative_tolerance_ * std::max(std::abs(high), std::abs(dense_value));
-      return error / scale;
+      // Reserve a compression budget only when merging is enabled.
+      return error / errorScale(high, dense_value);
+    }
+
+    /// Check dense delayed output against the same history used by the residual.
+    RealT estimateDelayed(RealT t, RealT delay, RealT output) const
+    {
+      checkValue(output);
+      const auto& p        = pending_.value();
+      const auto  a        = sample(p.end, p.end - (t - delay));
+      const RealT expected = a.constant + a.weight * p.coefficients[3];
+      return std::abs(output - expected) / errorScale(output, expected);
     }
 
     void accept()
@@ -309,7 +329,7 @@ namespace GridKit::PhasorDynamics
     }
 
     /// Called after dense output has been published for the accepted step.
-    void maintain(std::span<const RealT> delays, bool compress)
+    void maintain(std::span<const RealT> delays)
     {
       if (delays.empty() || !initialized())
       {
@@ -320,7 +340,7 @@ namespace GridKit::PhasorDynamics
       {
         segments_.pop_front();
       }
-      if (!compress)
+      if (!options_.compress)
       {
         return;
       }
@@ -344,7 +364,7 @@ namespace GridKit::PhasorDynamics
       {
         const auto& left  = segments_[i];
         const auto& right = segments_[i + 1];
-        if (protectedInterval(left.begin, right.end))
+        if (left.merge_failed || protectedInterval(left.begin, right.end))
         {
           ++i;
           continue;
@@ -353,19 +373,30 @@ namespace GridKit::PhasorDynamics
         Segment     merged{left.begin, right.end, {left.coefficients[0], left.coefficients[0] + h * (left.coefficients[1] - left.coefficients[0]) / (left.end - left.begin), right.coefficients[3] - h * (right.coefficients[3] - right.coefficients[2]) / (right.end - right.begin), right.coefficients[3]}};
         merged.error = std::max(left.error + Segment::distance(merged.restrictTo(left.begin, left.end), left),
                                 right.error + Segment::distance(merged.restrictTo(right.begin, right.end), right));
-        if (merged.error <= RealT{0.25} * absolute_tolerance_)
+        if (merged.error <= RealT{0.25} * options_.abs_tol)
         {
           segments_[i] = merged;
           segments_.erase(segments_.begin() + static_cast<std::ptrdiff_t>(i + 1));
+          if (i > 0)
+          {
+            segments_[i - 1].merge_failed = false; // Its right neighbor changed.
+          }
         }
         else
         {
+          segments_[i].merge_failed = true;
           ++i;
         }
       }
     }
 
   private:
+    RealT errorScale(RealT a, RealT b) const
+    {
+      return (options_.compress ? RealT{0.75} : RealT{1}) * options_.abs_tol
+             + options_.rel_tol * std::max(std::abs(a), std::abs(b));
+    }
+
     static void checkValue(RealT value)
     {
       if (!std::isfinite(value))
@@ -387,7 +418,6 @@ namespace GridKit::PhasorDynamics
     std::function<RealT(RealT)> prehistory_;
     RealT                       initial_time_{0};
     RealT                       initial_value_{0};
-    RealT                       relative_tolerance_{1e-5};
-    RealT                       absolute_tolerance_{1e-7};
+    SignalHistoryOptions<RealT> options_;
   };
 } // namespace GridKit::PhasorDynamics

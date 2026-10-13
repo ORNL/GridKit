@@ -100,6 +100,72 @@ namespace GridKit::Testing
       }
     };
 
+    class Source : public PhasorDynamics::Component<double, size_t>
+    {
+      Node&                         node_;
+      std::function<double(double)> function_;
+      double                        value_{0};
+      size_t                        index_{INVALID_INDEX<size_t>};
+
+    public:
+      Source(Node& node, std::function<double(double)> function)
+        : node_(node), function_(std::move(function))
+      {
+        size_ = 0;
+        node_.setAssigned();
+      }
+
+      int setGridKitComponentID(size_t id) override
+      {
+        gridkit_component_id_ = id;
+        return 0;
+      }
+
+      int allocate() override
+      {
+        node_.link(&value_, &index_);
+        allocated_ = true;
+        return 0;
+      }
+
+      int verify() const override
+      {
+        return 0;
+      }
+
+      int initialize() override
+      {
+        value_ = function_(time_);
+        return 0;
+      }
+
+      int tagDifferentiable() override
+      {
+        return 0;
+      }
+
+      int setAbsoluteTolerance(double) override
+      {
+        return 0;
+      }
+
+      int evaluateResidual() override
+      {
+        return 0;
+      }
+
+      int evaluateJacobian() override
+      {
+        return constructCoo();
+      }
+
+      void updateTime(double t, double alpha) override
+      {
+        PhasorDynamics::Component<double, size_t>::updateTime(t, alpha);
+        value_ = function_(t);
+      }
+    };
+
     struct Result
     {
       double error{0};
@@ -118,11 +184,10 @@ namespace GridKit::Testing
       data.signal = {{.name = "x", .signal_id = 0}, {.name = "short", .signal_id = 1, .source = 0, .delay = tau}, {.name = "long", .signal_id = 2, .source = 1, .delay = 0.199}};
       System system(data);
       system.addComponent(new Feedback(*system.getSignalNode(0), *system.getSignalNode(1), tau));
-      system.signalHistory(0).setPrehistory([](double t)
-                                            { return std::exp(-0.4 * t); });
+      system.setSignalPrehistory(0, [](double t)
+                                 { return std::exp(-0.4 * t); });
       system.allocate();
       system.stopMonitor();
-      system.setSignalHistoryTolerance(tolerance, tolerance * 0.01, compress);
       Solver solver(&system);
       solver.setTolerance(tolerance, tolerance * 0.01);
       solver.setMaxSteps(100000);
@@ -130,37 +195,36 @@ namespace GridKit::Testing
       bool   rejected        = false;
       double candidate_begin = 0, candidate_end = 0;
       size_t output_count_before_rejection = 0;
-      solver.setStepControl({[&](double t, bool consistent)
-                             { system.initializeSignalHistory(t, consistent); },
-                             [&](double begin, double end, const Solver::DenseOutput& dense)
-                             {
-                               candidate_begin    = begin;
-                               candidate_end      = end;
-                               const double error = system.assessSignalHistory(begin, end, dense);
-                               if (force_rejection && !rejected && end > 0.1)
-                               {
-                                 rejected                      = true;
-                                 output_count_before_rejection = result.outputs;
-                                 return 2.0;
-                               }
-                               return error;
-                             },
-                             [&]()
-                             {
-                               system.acceptSignalHistory();
-                               result.maximum_step = std::max(result.maximum_step, candidate_end - candidate_begin);
-                             },
-                             [&]()
-                             { system.finishSignalHistory(); },
-                             [&]()
-                             {
-                               system.discardSignalHistory();
-                               result.rollback_ok &= system.signalHistory(0).time() == candidate_begin;
-                               if (force_rejection && rejected)
-                               {
-                                 result.rollback_ok &= result.outputs == output_count_before_rejection;
-                               }
-                             }});
+      configureSignalDelays(system, solver, {.rel_tol = tolerance, .abs_tol = tolerance * 0.01, .compress = compress});
+      auto control   = solver.getStepControl();
+      control.assess = [&, assess = control.assess](double begin, double end, const Solver::DenseOutput& dense)
+      {
+        candidate_begin    = begin;
+        candidate_end      = end;
+        const double error = assess(begin, end, dense);
+        if (force_rejection && !rejected && end > 0.1)
+        {
+          rejected                      = true;
+          output_count_before_rejection = result.outputs;
+          return 2.0;
+        }
+        return error;
+      };
+      control.accept = [&, accept = control.accept]()
+      {
+        accept();
+        result.maximum_step = std::max(result.maximum_step, candidate_end - candidate_begin);
+      };
+      control.discard = [&, discard = control.discard]()
+      {
+        discard();
+        result.rollback_ok &= system.signalHistory(0).time() == candidate_begin;
+        if (force_rejection && rejected)
+        {
+          result.rollback_ok &= result.outputs == output_count_before_rejection;
+        }
+      };
+      solver.setStepControl(std::move(control));
       solver.configureSimulation();
       solver.initializeSimulation(0);
       auto observe = [&](double t)
@@ -204,7 +268,7 @@ namespace GridKit::Testing
       Solver solver(&system);
       solver.setTolerance(1e-4, 1e-6);
       solver.setMaxSteps(100000);
-      configureSignalDelays(system, solver, 1e-10, 1e-12, false);
+      configureSignalDelays(system, solver, {.rel_tol = 1e-10, .abs_tol = 1e-12});
       solver.configureSimulation();
       solver.initializeSimulation(0);
       solver.runSimulation(1);
@@ -219,13 +283,44 @@ namespace GridKit::Testing
       success *= solver.getRejectedStepCount() > 0;
       // A fresh run may start at a nonzero time with explicitly supplied past.
       solver.getDefaultInitialCondition();
-      system.signalHistory(0).setPrehistory([](double t)
-                                            { return std::cos(t); });
+      system.setSignalPrehistory(0, [](double t)
+                                 { return std::cos(t); });
       solver.initializeSimulation(2);
       success *= system.signalHistory(0).time() == 2;
       success *= system.signalHistory(0).segmentCount() == 0;
       solver.runSimulation(2.1);
       success *= std::abs(system.getSignalNode(1)->read() - std::cos(0.1)) < 1e-5;
+      return success.report(__func__);
+    }
+
+    TestOutcome smoothPulseAndLongDelay()
+    {
+      using namespace PhasorDynamics;
+      TestStatus       success = true;
+      constexpr double tau     = 8;
+      auto             pulse   = [](double t)
+      { return 1 + 0.6 * std::exp(-std::pow((t - 2) / 0.03, 2)); };
+      SystemModelData<> data;
+      data.signal = {{.name = "u", .signal_id = 0}, {.name = "delayed", .signal_id = 1, .source = 0, .delay = tau}};
+      System system(data);
+      system.addComponent(new Source(*system.getSignalNode(0), pulse));
+      system.setSignalPrehistory(0, pulse);
+      system.allocate();
+      system.stopMonitor();
+      Solver solver(&system);
+      solver.setTolerance(1e-6, 1e-8);
+      solver.setMaxSteps(100000);
+      configureSignalDelays(system, solver, {.rel_tol = 1e-6, .abs_tol = 1e-8});
+      solver.configureSimulation();
+      solver.initializeSimulation(0);
+      double error = 0, peak = 0;
+      solver.runSimulation(14, 0.005, [&](double t)
+                           {
+        const double value = system.getSignalNode(1)->read();
+        error = std::max(error, std::abs(value - pulse(t - tau)));
+        peak = std::max(peak, value); });
+      success *= error < 3e-5 && peak > 1.59;
+      std::cout << "delayed pulse error=" << error << " peak=" << peak << '\n';
       return success.report(__func__);
     }
 

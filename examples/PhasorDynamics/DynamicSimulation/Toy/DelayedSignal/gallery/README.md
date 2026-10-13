@@ -1,74 +1,78 @@
-# Signal delay results
+# Signal delay gallery
 
-Open [index.html](index.html) for the self-contained gallery, or [gallery.pdf](gallery.pdf)
-for eight pages of plots. PNG and SVG versions are in `figures/`.
+Open [index.html](index.html). All seven figures are PNGs in `figures/`.
+Every waveform comparison includes the actual input signal.
 
-The gallery contains 44 runs against the local GridKit implementation:
+| Figure | What changes |
+| --- | --- |
+| 01 — smooth ramp | Delays from 10 ms to 1.5 s |
+| 02 — pulse widths | Gaussian width from 25 to 400 ms, with a fixed 250 ms delay |
+| 03 — multiple timescales | A broad pulse followed by a narrow pulse |
+| 04 — oscillatory packet | A smooth envelope containing oscillations |
+| 05 — adaptive pulse | Delays of 1, 100, and 500 ms; accepted step sizes and step/delay ratios |
+| 06 — long history | A 120 ms feature delayed by up to 8 s |
+| 07 — compression | Input, both delayed outputs, history counts, and numerical errors |
 
-1. Actual `DynamicSimulation` output from a two-bus GENROU case. Smooth mechanical
-   power forcing, `pmech = cos(t)`, excites a machine-speed signal with three delay taps.
-2. Actual `DynamicSimulation` output from the JSON cosine-source example, with
-   three delays and constant prehistory.
-3. Twenty-eight fixed-step runs: four delays and seven step sizes.
-4. Six feedback runs with an independent exact exponential solution.
-5. Three smooth-pulse runs with different delays.
-6. Two runs comparing history compression on and off.
-7. Three smooth-chirp runs with different error tolerances.
+These are 20 runs of the actual GridKit `SystemModel`, `SignalDelay`,
+`SignalHistory`, and IDA wrapper linked from `build/`. The small driver
+[gallery.cpp](gallery.cpp) supplies prescribed smooth inputs, evaluated at the
+queried time like `FunctionSignalSource`, and records diagnostics. It contains
+no separate delay implementation.
 
-The 42 instrumented runs use the actual GridKit `SystemModel`, `SignalDelay`,
-`SignalHistory`, and IDA wrapper, linked from `build/`. The standalone
-[gallery.cpp](gallery.cpp) adds only manufactured source/feedback components and
-records solver diagnostics. It does not implement another delay algorithm.
+`h` is an accepted internal solver step. The monitor interval is separate.
+All runs use relative tolerance `1e-6`, absolute tolerance `1e-8`, and analytic
+prehistory. References evaluate the input function at `t - tau`. Gaussian
+widths are scale parameters in `exp(-((t-center)/width)^2)`, not full widths
+at half maximum. Compression is disabled except in its explicit comparison.
+Window pruning remains enabled in every run.
 
-The complete instrumented CSV files and logs are grouped in `data.zip` to keep
-the directory compact. The two application CSVs are compressed separately.
+## Data and interpretation
 
-`h` is an actual accepted internal solver step. `dt_monitor` only determines the
-uniform output sampling. Data includes every accepted step midpoint, so fixed
-steps that align with monitor times do not hide interpolation errors.
+- `runs.json` contains all experiment settings.
+- `summary.csv` and `summary.json` contain errors, accepted steps, history
+  rejections, and retained segment counts.
+- `data.zip` contains the complete CSVs and logs: `*_samples.csv` at uniform
+  monitor times, `*_midpoints.csv` at every accepted step midpoint,
+  `*_steps.csv` at accepted endpoints, and `*_attempts.csv` for history checks.
+- `provenance.json` identifies the source revision and local source diff.
+- `performance/` contains separate `DynamicSimulation` application benchmarks,
+  their inputs, and before/after timings.
 
-## Reading the results
+Errors are sampled maxima, not continuous error bounds. Generation checks for
+nonfinite data, inconsistent step sizes, failed acceptance checks, and missed
+features. Sparse samples cannot guarantee detection of every arbitrarily narrow
+smooth input. Source resolution still matters even though there is no shortest-delay
+step cap. Retained history receives additional checks when a trial step spans
+several of its intervals, so a previously resolved feature is also checked when
+it reaches a delayed output.
 
-- `summary.csv` and `summary.json`: measured errors, steps, rejections, and segment counts.
-- `runs.json`: all 42 harness experiment settings. Absolute tolerance is relative
-  tolerance times 0.01, for both the solver and the history controller.
-- `data.zip: *_samples.csv`: uniform callback output plus the initial condition.
-- `data.zip: *_midpoints.csv`: IDA dense output at every accepted step midpoint.
-- `data.zip: *_steps.csv`: accepted endpoint values, step sizes, history counts,
-  and the history error estimate.
-- `data.zip: *_attempts.csv`: candidate steps and additional history-control rejections.
-- `app/` and `grid/`: JSON inputs, application logs, and compressed original monitor CSVs.
-- `provenance.json`: source revision, local diff fingerprint, build description, and caveats.
-
-Maximum errors are sampled maxima, not continuous error bounds. Analytic
-references are used for all manufactured problems. The generator plot instead
-compares with its own recorded source shifted in time; it is a consistency check.
-
-The fixed-step sweep deliberately uses loose history tolerances (`rtol=1`,
-`atol=0.01`) so that selected coarse steps are measured rather than rejected.
-GridKit's existing fixed-step mode disables the IDA integration error test and
-caps BDF order at two. Adaptive experiments use matched solver/history tolerances.
-All harness cases use analytic prehistory; the JSON application cases use default
-constant prehistory.
-
-Compression-off still prunes history outside the largest required delay window.
-Segment counts describe retained cubic segments, not total process memory.
-No runtime speedup is claimed. Rejection counts exclude IDA's own internal
-error-test and nonlinear-solve failures.
+Compression can change the adaptive step sequence. Segment counts are not total
+process memory. History rejection counts exclude IDA's internal error-test and
+nonlinear-solve failures.
 
 ## Reproduce
 
-From the repository root, with the existing CMake Makefiles build and NumPy/Matplotlib:
+From the repository root, with the configured CMake Makefiles build and NumPy/Matplotlib:
 
 ```bash
 cmake --build build --target DynamicSimulation test_pd_signal_delay -j 10
-python3 examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/generate.py
+python3 -B examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/generate.py
 ```
 
-Compilation and raw intermediate output use a temporary directory. Compressed
-results and figures are written here. To redraw the saved results without running
-GridKit again:
+Compilation and raw intermediates use a temporary directory. Results and PNGs
+are written here. To redraw the saved results without another simulation:
 
 ```bash
-python3 examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/plot_gallery.py
+python3 -B examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/plot_gallery.py
 ```
+
+To refresh the application timings with the current build:
+
+```bash
+python3 examples/PhasorDynamics/DynamicSimulation/Toy/DelayedSignal/gallery/performance/measure.py
+```
+
+The benchmark cases use one 1 ms tap (`short`), 17 taps from 1 ms to 4 s
+(`many`), and a 20 s tap with compression enabled (`long`). They retain the
+checkpoint timings for comparison. The revised checks can cost more with many
+taps; speedups are not uniform across cases.

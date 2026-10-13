@@ -72,6 +72,12 @@ namespace AnalysisManager
 
       void setStepControl(StepControl control);
 
+      /// Inspect or copy the installed control to add diagnostic hooks.
+      const StepControl& getStepControl() const
+      {
+        return step_control_.value();
+      }
+
       size_t getRejectedStepCount() const
       {
         return rejected_steps_;
@@ -219,6 +225,7 @@ namespace AnalysisManager
       int   getIDAConsistentICType() const;
       void  updateModelState(RealT t);
       int   runControlledSimulation(RealT tf, RealT dt_monitor, std::optional<StepCallback> callback);
+      void  publishOutput(RealT t, const std::optional<StepCallback>& callback);
 
     private:
       static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;

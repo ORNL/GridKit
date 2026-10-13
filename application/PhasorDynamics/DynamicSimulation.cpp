@@ -49,7 +49,7 @@ int runApplication(int argc, const char* argv[])
   ida.setMaxSteps(study.max_steps);
   ida.setMaxOrder(study.max_order);
   ida.setConsistentICType(study.consistent_ic_type);
-  configureSignalDelays(sys, ida, study.history_rel_tol, study.history_abs_tol, study.compress_history);
+  configureSignalDelays(sys, ida, study.signal_history);
   ida.configureSimulation();
 
   // Start timer

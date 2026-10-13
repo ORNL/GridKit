@@ -1,0 +1,136 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "DelayedSignal",
+    "case_description": "Two delays sharing the history of a cosine source",
+    "case_comments": "Constant equilibrium prehistory before t=0"
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "monitors": [],
+  "buses": [],
+  "signals": [
+    {
+      "signal_id": 0,
+      "name": "source"
+    },
+    {
+      "signal_id": 1,
+      "name": "delay0",
+      "source": 0,
+      "delay": 0.001
+    },
+    {
+      "signal_id": 2,
+      "name": "delay1",
+      "source": 0,
+      "delay": 0.25
+    },
+    {
+      "signal_id": 3,
+      "name": "delay2",
+      "source": 0,
+      "delay": 0.5
+    },
+    {
+      "signal_id": 4,
+      "name": "delay3",
+      "source": 0,
+      "delay": 0.75
+    },
+    {
+      "signal_id": 5,
+      "name": "delay4",
+      "source": 0,
+      "delay": 1.0
+    },
+    {
+      "signal_id": 6,
+      "name": "delay5",
+      "source": 0,
+      "delay": 1.25
+    },
+    {
+      "signal_id": 7,
+      "name": "delay6",
+      "source": 0,
+      "delay": 1.5
+    },
+    {
+      "signal_id": 8,
+      "name": "delay7",
+      "source": 0,
+      "delay": 1.75
+    },
+    {
+      "signal_id": 9,
+      "name": "delay8",
+      "source": 0,
+      "delay": 2.0
+    },
+    {
+      "signal_id": 10,
+      "name": "delay9",
+      "source": 0,
+      "delay": 2.25
+    },
+    {
+      "signal_id": 11,
+      "name": "delay10",
+      "source": 0,
+      "delay": 2.5
+    },
+    {
+      "signal_id": 12,
+      "name": "delay11",
+      "source": 0,
+      "delay": 2.75
+    },
+    {
+      "signal_id": 13,
+      "name": "delay12",
+      "source": 0,
+      "delay": 3.0
+    },
+    {
+      "signal_id": 14,
+      "name": "delay13",
+      "source": 0,
+      "delay": 3.25
+    },
+    {
+      "signal_id": 15,
+      "name": "delay14",
+      "source": 0,
+      "delay": 3.5
+    },
+    {
+      "signal_id": 16,
+      "name": "delay15",
+      "source": 0,
+      "delay": 3.75
+    },
+    {
+      "signal_id": 17,
+      "name": "delay16",
+      "source": 0,
+      "delay": 4.0
+    }
+  ],
+  "devices": [
+    {
+      "class": "FunctionSignalSource",
+      "id": "cosine",
+      "ports": {
+        "sr": 0
+      },
+      "params": {
+        "Fr": "cos",
+        "Fi": "sin"
+      }
+    }
+  ]
+}

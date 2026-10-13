@@ -105,7 +105,7 @@ $z=u$. Its final source value defines constant prehistory $\phi(s)=u(t_0)$.
 For a nonconstant past, set a source-level callback before configuring the solver:
 
 ```cpp
-system.signalHistory(source_id).setPrehistory(
+system.setSignalPrehistory(source_id,
     [](double t) { return std::cos(t); });
 ```
 
@@ -138,11 +138,21 @@ discarded after output sampling.
 
 Before accepting a step, compare its history polynomial with a lower-degree
 interpolant and source samples from IDA dense output at quarter, half and
-three-quarter points and at delayed query locations. IDA controls integration
+three-quarter points and at delayed query locations. Also check dense delayed
+outputs against history when they use the current source iterate or span finer
+stored intervals. If a step spans more than two stored intervals at a delayed
+input, also probe their shifted midpoints to resolve
+previously captured features as they arrive. IDA controls integration
 error separately. These comparisons are error estimates, not rigorous bounds on
 an arbitrary smooth input. Rejected candidates are retried from the accepted
 state, with no history commit or output. Restarting IDA discards its internal
-multistep history, so retries have a performance cost.
+multistep history, so retries have a performance cost. The next step cap is
+
+$$h\min\!\left(2,\max\!\left(0.5,\frac{0.8}{\sqrt[3]{\max(\eta,10^{-12})}}\right)\right),$$
+
+where $\eta$ is the normalized history error estimate.
+This predicts refinement before a rejection; IDA still
+chooses its step under that cap. No cap depends on the shortest delay.
 
 Adjacent stored intervals may merge into a cubic matching the outer values and
 slopes. Bernstein coefficients on a common interval give the bound
@@ -152,12 +162,14 @@ $$\|P-Q\|_\infty\le\max_k|p_k-q_k|.$$
 After subdivision of a candidate to each child interval, its new bound is the
 maximum of each child's accumulated compression error plus this difference.
 Merges spend at most one quarter of the source absolute tolerance. Interpolation
-uses the remaining absolute tolerance and the relative tolerance. Intervals
+uses the remaining absolute tolerance and the relative tolerance. Without
+compression, interpolation uses the full tolerance. Failed merge checks are
+reused until one of the two intervals changes. Intervals
 containing the current delayed queries and recent anchors are protected.
 
-Setting `compress` to `false` retains every accepted polynomial within the
-required window. This removes compression error; integration and interpolation
-remain numerical approximations to the true delay.
+Compression is disabled by default. Setting `compress` to `false` retains every
+accepted polynomial within the required window. This removes compression error;
+integration and interpolation remain numerical approximations to the true delay.
 
 ## Usage
 
@@ -174,8 +186,10 @@ Connect device inputs to signal 11 normally. `DynamicSimulation` and
 forward simulations attach it before solver configuration:
 
 ```cpp
-configureSignalDelays(system, ida, relative_tolerance, absolute_tolerance,
-                      /* compress = */ true);
+configureSignalDelays(system, ida, {
+    .rel_tol = relative_tolerance,
+    .abs_tol = absolute_tolerance,
+    .compress = false});
 ida.configureSimulation();
 ida.initializeSimulation(t0);
 ida.runSimulation(tf);
@@ -193,4 +207,5 @@ declaration validation, history commits, retention and cumulative compression
 bounds. Integration tests use the exact feedback solution $x(t)=e^{\lambda t}$
 of $\dot x=-\gamma x+kx(t-\tau)$ with
 $\gamma=ke^{-\lambda\tau}-\lambda$. They check convergence, steps longer than the
-delay, compression, rejection rollback and continuation.
+delay, compression, rejection rollback and continuation. A narrow prescribed
+pulse with a long delay checks that resolved source features reach the output.

@@ -1,0 +1,55 @@
+{
+  "baseline_revision": "c97774112",
+  "method": "DynamicSimulation app-reported Complete in time, median of three runs, identical case settings. No monitor CSV output.",
+  "notes": "Revised solver checks delayed history during wide steps. This improves feature capture but adds cost with many taps. Timings are local CPU times, not universal speedups.",
+  "cases": [
+    {
+      "case": "short",
+      "before_seconds": [
+        0.152106,
+        0.181871,
+        0.159348
+      ],
+      "after_seconds": [
+        0.142418,
+        0.156623,
+        0.156764
+      ],
+      "before_median": 0.159348,
+      "after_median": 0.156623,
+      "speedup": 1.017398466381055
+    },
+    {
+      "case": "many",
+      "before_seconds": [
+        0.137459,
+        0.137396,
+        0.143395
+      ],
+      "after_seconds": [
+        0.343223,
+        0.313932,
+        0.332707
+      ],
+      "before_median": 0.137459,
+      "after_median": 0.332707,
+      "speedup": 0.4131533150790335
+    },
+    {
+      "case": "long",
+      "before_seconds": [
+        2.23139,
+        2.06557,
+        2.1231
+      ],
+      "after_seconds": [
+        0.387057,
+        0.405134,
+        0.40203
+      ],
+      "before_median": 2.1231,
+      "after_median": 0.40203,
+      "speedup": 5.280949182896799
+    }
+  ]
+}

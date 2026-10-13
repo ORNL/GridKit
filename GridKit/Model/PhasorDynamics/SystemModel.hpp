@@ -7,6 +7,12 @@
 #include <GridKit/Model/PhasorDynamics/SignalDelay/SignalDelay.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 
+namespace AnalysisManager::Sundials
+{
+  template <class ScalarT, typename IdxT>
+  class Ida;
+}
+
 namespace GridKit
 {
   namespace Model
@@ -108,19 +114,30 @@ namespace GridKit
         return !signal_histories_.empty();
       }
 
-      SignalHistory<RealT>& signalHistory(IdxT source)
+      void setSignalPrehistory(IdxT source, std::function<RealT(RealT)> prehistory)
+      {
+        signal_histories_.at(source).history.setPrehistory(std::move(prehistory));
+      }
+
+      /// Read-only history diagnostics. Lifecycle changes belong to the solver.
+      const SignalHistory<RealT>& signalHistory(IdxT source) const
       {
         return signal_histories_.at(source).history;
       }
 
-      void  setSignalHistoryTolerance(RealT relative, RealT absolute, bool compress = true);
+    private:
+      template <class S, class I>
+      friend void configureSignalDelays(SystemModel<S, I>&,
+                                        AnalysisManager::Sundials::Ida<S, I>&,
+                                        SignalHistoryOptions<typename SystemModel<S, I>::RealT>);
+
+      void  setSignalHistoryOptions(SignalHistoryOptions<RealT> options);
       void  initializeSignalHistory(RealT t, bool consistent);
       RealT assessSignalHistory(RealT begin, RealT end, const std::function<void(RealT)>& sample_state);
       void  acceptSignalHistory();
       void  finishSignalHistory();
       void  discardSignalHistory();
 
-    private:
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
@@ -138,11 +155,11 @@ namespace GridKit
         SignalNodeT*                source;
         SignalDelay<ScalarT, IdxT>* component;
         IdxT                        source_id;
+        RealT                       delay;
       };
 
       std::map<IdxT, SourceHistory>  signal_histories_;
       std::vector<DelayedConnection> delayed_connections_;
-      bool                           compress_signal_history_{true};
 
       std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
 

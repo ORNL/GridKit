@@ -360,7 +360,7 @@ namespace GridKit
         if (delay == 0)
         {
           output->setAssigned();
-          delayed_connections_.push_back({output, source, nullptr, root});
+          delayed_connections_.push_back({output, source, nullptr, root, delay});
           continue;
         }
         auto [entry, inserted] = signal_histories_.try_emplace(root, SourceHistory{source, {}, {}});
@@ -377,7 +377,7 @@ namespace GridKit
         }
         auto component = std::make_unique<SignalDelay<ScalarT, IdxT>>(delay_data, entry->second.history);
         component->getPorts().connect(delay_data, signal_nodes_);
-        delayed_connections_.push_back({output, source, component.get(), root});
+        delayed_connections_.push_back({output, source, component.get(), root, delay});
         addComponent(component.release());
       }
 
@@ -684,13 +684,12 @@ namespace GridKit
     }
 
     template <typename ScalarT, typename IdxT>
-    void SystemModel<ScalarT, IdxT>::setSignalHistoryTolerance(RealT relative, RealT absolute, bool compress)
+    void SystemModel<ScalarT, IdxT>::setSignalHistoryOptions(SignalHistoryOptions<RealT> options)
     {
       for (auto& [id, source] : signal_histories_)
       {
-        source.history.setTolerance(relative, absolute);
+        source.history.setOptions(options);
       }
-      compress_signal_history_ = compress;
     }
 
     template <typename ScalarT, typename IdxT>
@@ -718,15 +717,41 @@ namespace GridKit
       {
         source.history.prepare(end, static_cast<RealT>(source.source->read()));
       }
-      std::vector<RealT> points{begin + (end - begin) / 4, begin + (end - begin) / 2, begin + 3 * (end - begin) / 4};
-      for (const auto& [id, source] : signal_histories_)
+      std::vector<RealT>                    points{begin + (end - begin) / 4, begin + (end - begin) / 2, begin + 3 * (end - begin) / 4};
+      std::vector<const DelayedConnection*> delayed_checks;
+      for (const auto& connection : delayed_connections_)
       {
-        for (RealT delay : source.delays)
+        if (!connection.component)
         {
-          if (end - delay > begin)
+          continue;
+        }
+        const RealT delay       = connection.delay;
+        const bool  within_step = end - delay > begin;
+        if (within_step)
+        {
+          points.push_back(end - delay);
+        }
+        // IDA controls ordinary delayed-state interpolation. Also check it
+        // against history when crossing finer stored intervals or using the
+        // current source iterate, where a step can hide a resolved feature.
+        const auto& segments      = signal_histories_.at(connection.source_id).history.segments();
+        auto        first         = std::upper_bound(segments.begin(), segments.end(), begin - delay, [](RealT q, const auto& segment)
+                                      { return q < segment.end; });
+        auto        last          = std::lower_bound(first, segments.end(), end - delay, [](const auto& segment, RealT q)
+                                     { return segment.begin < q; });
+        const bool  finer_history = std::distance(first, last) > 2;
+        if (finer_history)
+        {
+          for (auto it = first; it != last; ++it)
           {
-            points.push_back(end - delay);
+            const RealT left  = std::max(begin, it->begin + delay);
+            const RealT right = std::min(end, it->end + delay);
+            points.push_back(left + (right - left) / 2);
           }
+        }
+        if (within_step || finer_history)
+        {
+          delayed_checks.push_back(&connection);
         }
       }
       std::sort(points.begin(), points.end());
@@ -738,6 +763,15 @@ namespace GridKit
         for (const auto& [id, source] : signal_histories_)
         {
           error = std::max(error, source.history.estimate(t, static_cast<RealT>(source.source->read())));
+        }
+        for (const auto* connection : delayed_checks)
+        {
+          const auto& history = signal_histories_.at(connection->source_id).history;
+          error               = std::max(error, history.estimateDelayed(t, connection->delay, static_cast<RealT>(connection->output->read())));
+        }
+        if (error > 1)
+        {
+          return error;
         }
       }
       return error;
@@ -757,7 +791,7 @@ namespace GridKit
     {
       for (auto& [id, source] : signal_histories_)
       {
-        source.history.maintain(source.delays, compress_signal_history_);
+        source.history.maintain(source.delays);
       }
     }
 

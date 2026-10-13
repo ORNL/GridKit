@@ -127,6 +127,10 @@ namespace GridKit::Testing
                         { h.begin(0.5); });
       h.begin(1);
       success *= h.time() == 1;
+      h.prepare(2, 8);
+      success *= h.estimateDelayed(1.5, 0.75, 4.25) == 0; // Committed history.
+      success *= h.estimateDelayed(1.5, 0.25, 5.75) == 0; // Current polynomial.
+      success *= h.estimateDelayed(1.5, 0.75, 2) > 1;
       h.reset();
       success *= !h.initialized() && h.hasPrehistory();
       return success.report(__func__);
@@ -136,10 +140,12 @@ namespace GridKit::Testing
     {
       TestStatus success = true;
       History    full, compact;
-      full.setTolerance(0, 1e-4);
-      compact.setTolerance(0, 1e-4);
+      full.setOptions({.rel_tol = 0, .abs_tol = 1e-4});
+      compact.setOptions({.rel_tol = 0, .abs_tol = 1e-4, .compress = true});
       full.initialize(0, 0);
       compact.initialize(0, 0);
+      success *= throws([&]
+                        { compact.setOptions({}); });
       const std::array<double, 2> delays{0.001, 1.0};
       bool                        reduced = false;
       for (int i = 1; i <= 400; ++i)
@@ -147,11 +153,17 @@ namespace GridKit::Testing
         const double t = i * 0.005;
         full.prepare(t, std::sin(t));
         compact.prepare(t, std::sin(t));
+        if (i == 1)
+        {
+          const double dense  = std::sin(t) / 2 + 9e-5;
+          success            *= full.estimate(t / 2, dense) < 1;
+          success            *= compact.estimate(t / 2, dense) > 1;
+        }
         full.accept();
         compact.accept();
         const double accepted = compact.sample(t, delays[0]).constant;
-        full.maintain(delays, false);
-        compact.maintain(delays, true);
+        full.maintain(delays);
+        compact.maintain(delays);
         success *= compact.sample(t, delays[0]).constant == accepted;
         reduced |= compact.segmentCount() < full.segmentCount();
         for (int j = 1; j <= 40; ++j)

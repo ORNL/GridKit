@@ -10,12 +10,7 @@
     "freq_base": 60.0,
     "va_base": 100000000.0
   },
-  "monitors": [
-    {
-      "file_name": "mon.csv",
-      "format": "csv"
-    }
-  ],
+  "monitors": [],
   "buses": [],
   "signals": [
     {
@@ -24,30 +19,9 @@
     },
     {
       "signal_id": 1,
-      "name": "short",
+      "name": "delay0",
       "source": 0,
-      "delay": 0.001,
-      "mon": [
-        "z"
-      ]
-    },
-    {
-      "signal_id": 2,
-      "name": "long",
-      "source": 0,
-      "delay": 0.15,
-      "mon": [
-        "z"
-      ]
-    },
-    {
-      "signal_id": 3,
-      "name": "wide",
-      "source": 0,
-      "delay": 1.5,
-      "mon": [
-        "z"
-      ]
+      "delay": 20.0
     }
   ],
   "devices": [
