@@ -38,8 +38,9 @@ namespace AnalysisManager
         : abs_tol_(std::move(abs_tol)),
           rel_tol_(rel_tol)
       {
-        if (!abs_tol_)
+        if (!abs_tol_) {
           throw std::invalid_argument("InfNorm requires an absolute-tolerance vector");
+        }
       }
 
       /**
