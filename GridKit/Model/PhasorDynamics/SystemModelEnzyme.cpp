@@ -24,7 +24,12 @@ namespace GridKit
         has_jacobian = has_jacobian && bus->hasJacobian();
       }
 
-      if (!has_jacobian)
+      for (const auto& subsystem : subsystems_)
+      {
+        has_jacobian = has_jacobian && subsystem->hasJacobian();
+      }
+
+      if (!has_jacobian && !is_subsystem_)
       {
         Log::warning() << "GridKit was built with Enzyme, but some models "
                           "don't have Jacobians available. "
@@ -35,16 +40,11 @@ namespace GridKit
     }
 
     /**
-     * @brief Evaluate system Jacobian using component-level Jacobians.
-     *
-     * - Evaluate component-level Jacobians (stored as CooMatrixT).
-     * - If not already constructed, construct system-level Jacobian.
-     *   This used a system-level CooMatrix to deduplicate and sort the sparsity pattern.
-     * - If already constructed, reset Jacobian values to zero and accumulate contributions.
-     *
+     * @brief Evaluate the COO Jacobians of buses and devices, including
+     * subsystems'
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateJacobian()
+    void SystemModel<scalar_type, index_type>::evaluateCooJacobians()
     {
       // Initialize bus Jacobians
       for (const auto& bus : buses_)
@@ -58,36 +58,73 @@ namespace GridKit
         component->evaluateJacobian();
       }
 
-      // Build or update system CSR Jacobian
+      for (const auto& subsystem : subsystems_)
+      {
+        subsystem->evaluateCooJacobians();
+      }
+    }
+
+    /**
+     * @brief Evaluate system Jacobian using component-level Jacobians.
+     *
+     * - Evaluate component-level Jacobians (stored as CooMatrixT), including subsystems'.
+     * - If not already constructed, construct system-level Jacobian.
+     *   This used a system-level CooMatrix to deduplicate and sort the sparsity pattern.
+     * - If already constructed, reset Jacobian values to zero and accumulate contributions.
+     *
+     * A subsystem assembles its Jacobian in global indices. Its external buses
+     * precede its own variables, so the Jacobian size is offset() + size().
+     * Entries on external buses come from its devices only, not from the
+     * external buses.
+     *
+     * @pre The top-level system is allocated.
+     *
+     * @return 0 on success
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateJacobian()
+    {
+      evaluateCooJacobians();
+
+      // Build or update system CSR Jacobian. All passes must visit systems in
+      // the same order.
       if (csr_jac_ == nullptr)
       {
         // Count the number of non-zeros
         IdxT nnz_dup = 0;
-        for (const auto& component : components_)
+
+        std::vector<SystemModel*> systems{this};
+        for (size_t k = 0; k < systems.size(); ++k)
         {
-          const auto component_jacobian = component->getCooJacobian();
+          SystemModel* system = systems[k];
+          systems.insert(systems.end(), system->subsystems_.begin(), system->subsystems_.end());
 
-          if (component_jacobian != nullptr)
+          for (const auto& component : system->components_)
           {
-            nnz_dup += component_jacobian->getNnz();
-          }
-          else
-          {
-            Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
-        }
+            const auto component_jacobian = component->getCooJacobian();
 
-        for (const auto& bus : buses_)
-        {
-          auto bus_jacobian = bus->getCooJacobian();
-
-          if (bus_jacobian != nullptr)
-          {
-            nnz_dup += bus_jacobian->getNnz();
+            if (component_jacobian != nullptr)
+            {
+              nnz_dup += component_jacobian->getNnz();
+            }
+            else
+            {
+              Log::warning() << "A component has returned a nullptr Jacobian.\n";
+            }
           }
-          else
+
+          for (const auto& bus : system->buses_)
           {
-            Log::warning() << "A bus has returned a nullptr Jacobian.\n";
+            auto bus_jacobian = bus->getCooJacobian();
+
+            if (bus_jacobian != nullptr)
+            {
+              nnz_dup += bus_jacobian->getNnz();
+            }
+            else
+            {
+              Log::warning() << "A bus has returned a nullptr Jacobian.\n";
+            }
           }
         }
 
@@ -97,54 +134,63 @@ namespace GridKit
         RealT* vals_dup = new RealT[static_cast<size_t>(nnz_dup)];
 
         IdxT counter = 0;
-        for (const auto& component : components_)
-        {
-          auto component_jacobian = component->getCooJacobian();
 
-          if (component_jacobian != nullptr)
+        systems = {this};
+        for (size_t k = 0; k < systems.size(); ++k)
+        {
+          SystemModel* system = systems[k];
+          systems.insert(systems.end(), system->subsystems_.begin(), system->subsystems_.end());
+
+          for (const auto& component : system->components_)
           {
-            const IdxT*  rows    = component_jacobian->getRowData();
-            const IdxT*  columns = component_jacobian->getColData();
-            const RealT* values  = component_jacobian->getValues();
-            for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
+            auto component_jacobian = component->getCooJacobian();
+
+            if (component_jacobian != nullptr)
             {
-              rows_dup[counter] = rows[i];
-              cols_dup[counter] = columns[i];
-              vals_dup[counter] = values[i];
-              counter++;
+              const IdxT*  rows    = component_jacobian->getRowData();
+              const IdxT*  columns = component_jacobian->getColData();
+              const RealT* values  = component_jacobian->getValues();
+              for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
+              {
+                rows_dup[counter] = rows[i];
+                cols_dup[counter] = columns[i];
+                vals_dup[counter] = values[i];
+                counter++;
+              }
+            }
+            else
+            {
+              Log::warning() << "A component has returned a nullptr Jacobian.\n";
             }
           }
-          else
-          {
-            Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
-        }
 
-        for (const auto& bus : buses_)
-        {
-          auto bus_jacobian = bus->getCooJacobian();
-
-          if (bus_jacobian != nullptr)
+          for (const auto& bus : system->buses_)
           {
-            const IdxT*  rows    = bus_jacobian->getRowData();
-            const IdxT*  columns = bus_jacobian->getColData();
-            const RealT* values  = bus_jacobian->getValues();
-            for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i)
+            auto bus_jacobian = bus->getCooJacobian();
+
+            if (bus_jacobian != nullptr)
             {
-              rows_dup[counter] = rows[i];
-              cols_dup[counter] = columns[i];
-              vals_dup[counter] = values[i];
-              counter++;
+              const IdxT*  rows    = bus_jacobian->getRowData();
+              const IdxT*  columns = bus_jacobian->getColData();
+              const RealT* values  = bus_jacobian->getValues();
+              for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i)
+              {
+                rows_dup[counter] = rows[i];
+                cols_dup[counter] = columns[i];
+                vals_dup[counter] = values[i];
+                counter++;
+              }
             }
-          }
-          else
-          {
-            Log::warning() << "A bus has returned a nullptr Jacobian.\n";
+            else
+            {
+              Log::warning() << "A bus has returned a nullptr Jacobian.\n";
+            }
           }
         }
 
         // Build the system COO Jacobian
-        CooMatrixT jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+        const IdxT n = offset_ + size_;
+        CooMatrixT jac(n, n, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
 
         // Populate CSR data with sort and deduplicate
         IdxT* row_ptrs = jac.getCsrRowData();
@@ -160,7 +206,7 @@ namespace GridKit
         std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
 
         // Create the CSR Jacobian
-        csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+        csr_jac_ = new CsrMatrixT(n, n, nnz_, &row_ptrs, &cols, &vals);
 
         const IdxT* map_to_sorted = jac.getMapToSorted();
         const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
@@ -183,32 +229,40 @@ namespace GridKit
 
         // Update CSR values from component and bus Jacobians
         IdxT counter = 0;
-        for (const auto& component : components_)
-        {
-          auto component_jacobian = component->getCooJacobian();
 
-          if (component_jacobian != nullptr)
+        std::vector<SystemModel*> systems{this};
+        for (size_t k = 0; k < systems.size(); ++k)
+        {
+          SystemModel* system = systems[k];
+          systems.insert(systems.end(), system->subsystems_.begin(), system->subsystems_.end());
+
+          for (const auto& component : system->components_)
           {
-            const RealT* values = component_jacobian->getValues();
-            for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
+            auto component_jacobian = component->getCooJacobian();
+
+            if (component_jacobian != nullptr)
             {
-              vals[map_to_csr_[counter]] += values[i];
-              counter++;
+              const RealT* values = component_jacobian->getValues();
+              for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
+              {
+                vals[map_to_csr_[counter]] += values[i];
+                counter++;
+              }
             }
           }
-        }
 
-        for (const auto& bus : buses_)
-        {
-          auto bus_jacobian = bus->getCooJacobian();
-
-          if (bus_jacobian != nullptr)
+          for (const auto& bus : system->buses_)
           {
-            const RealT* values = bus_jacobian->getValues();
-            for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i)
+            auto bus_jacobian = bus->getCooJacobian();
+
+            if (bus_jacobian != nullptr)
             {
-              vals[map_to_csr_[counter]] += values[i];
-              counter++;
+              const RealT* values = bus_jacobian->getValues();
+              for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i)
+              {
+                vals[map_to_csr_[counter]] += values[i];
+                counter++;
+              }
             }
           }
         }

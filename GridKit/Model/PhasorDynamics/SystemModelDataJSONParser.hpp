@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 #include <nlohmann/json.hpp>
 
@@ -18,6 +19,9 @@ namespace GridKit
     using json          = nlohmann::json;
     using Log           = ::GridKit::Utilities::Logger;
     using MonitorFormat = ::GridKit::Model::VariableMonitorFormat;
+
+    template <typename RealT, typename IdxT>
+    void parseSystemContents(const json& j, SystemModelData<RealT, IdxT>& sm);
 
     /// JSON parser function implementation for the `SystemModelData` type
     ///
@@ -77,6 +81,13 @@ namespace GridKit
         }
       }
 
+      parseSystemContents(j, sm);
+    }
+
+    /// Parse buses, signals, devices and subsystems of a system or subsystem
+    template <typename RealT, typename IdxT>
+    void parseSystemContents(const json& j, SystemModelData<RealT, IdxT>& sm)
+    {
       /// Gets all electrical buses
       j.at("buses").get_to(sm.bus);
 
@@ -204,6 +215,45 @@ namespace GridKit
                        << "\n\tSee the \"devices\" list in your JSON file."
                        << std::endl;
           throw std::runtime_error("JSON parser failed");
+        }
+      }
+
+      /// Gets hierarchical subsystems, which use this system's bases
+      if (j.contains("subsystems"))
+      {
+        if (!j.at("subsystems").empty() && !j.at("devices").empty())
+        {
+          Log::error() << "\n\tA system with subsystems may only contain buses and subsystems; "
+                       << "move its devices into a subsystem.\n";
+          throw std::runtime_error("JSON parser failed");
+        }
+
+        for (auto& raw_subsystem : j.at("subsystems"))
+        {
+          SystemModelData<RealT, IdxT> subsystem;
+          subsystem.freq_base = sm.freq_base;
+          subsystem.va_base   = sm.va_base;
+          subsystem.level     = sm.level + 1;
+
+          if (!raw_subsystem.contains("id") || !raw_subsystem.at("id").is_string())
+          {
+            Log::error() << "\n\tEach subsystem requires a string \"id\".\n";
+            throw std::runtime_error("JSON parser failed");
+          }
+          raw_subsystem.at("id").get_to(subsystem.id);
+
+          // The level is redundant here; it allows a flat layout later.
+          if (!raw_subsystem.contains("level")
+              || !raw_subsystem.at("level").is_number_integer()
+              || raw_subsystem.at("level").get<long long>() != static_cast<long long>(subsystem.level))
+          {
+            Log::error() << "\n\tSubsystem \"" << subsystem.id << "\" requires \"level\": "
+                         << subsystem.level << " (parent level + 1).\n";
+            throw std::runtime_error("JSON parser failed");
+          }
+
+          parseSystemContents(raw_subsystem, subsystem);
+          sm.subsystems.push_back(std::move(subsystem));
         }
       }
     }

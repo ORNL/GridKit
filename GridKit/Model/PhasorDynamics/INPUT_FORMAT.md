@@ -35,9 +35,9 @@ also be encoded as [MessagePack](https://msgpack.org).
 ## Format
 
 The root object contains `header`, `params`, `buses`, and `devices`, and may
-also contain `signals` and `monitors`. `header` contains information about
-the case, `params` contains system-wide parameters, `buses` is an array of
-electrical buses, and `devices` is an array of system devices.
+also contain `signals`, `monitors` and `subsystems`. `header` contains
+information about the case, `params` contains system-wide parameters, `buses`
+is an array of electrical buses, and `devices` is an array of system devices.
 
 ### Header
 
@@ -160,6 +160,37 @@ are specified:
   [SexsPti](Exciter/SEXS-PTI/README.md) | the SEXS-PTI simplified exciter model
   [Ieeest](Stabilizer/IEEEST/README.md) | the IEEEST stabilizer model
   [ConstantSignalSource](SignalSource/README.md) | Constant complex signal source
+
+### Subsystems
+
+Contained in the optional `subsystems` key is an array of objects, each of
+which describes a hierarchical subsystem with its own `buses` and `devices`,
+and optional `signals` and `subsystems`. Subsystems use the root's `params`.
+Each subsystem also requires:
+
+Key | Description
+-- | --
+`id` | Subsystem ID (string), unique across the whole hierarchy
+`level` | Hierarchy level (integer): the root system is level 0 (implied, not given in the file), its subsystems level 1, their subsystems level 2, and so on
+
+The `level` must match the depth of the subsystem. It is redundant in this
+hierarchical layout, but makes the hierarchy explicit, so that a flat layout
+can be supported later.
+That flat layout will also need a `subsystem` tag (the ID of the containing
+subsystem) on buses, devices and signals; this tag is not supported yet.
+
+The input must already be partitioned:
+
+-   A system with subsystems contains only buses and subsystems: its
+    `devices` array must be empty.
+-   Devices may use buses of their own system and of its ancestors, but not
+    of sibling subsystems.
+-   Devices may only use signals of their own system.
+-   Bus numbers and signal IDs must be unique across the whole hierarchy.
+
+Not all of these are checked yet: duplicate subsystem IDs, duplicate signal
+IDs across systems, and bus numbers repeated in sibling subsystems are not
+detected.
 
 ## Example File for a 2-Bus System
 
