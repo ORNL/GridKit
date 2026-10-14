@@ -17,7 +17,6 @@ A `PartitionGroup` has the following properties:
 - The root object is a `PartitionGroup`.
 - Internal buses are unique to one `Partition`.
 - Every bus must be exlusively `external` or `internal`.
-- A `Component`s `bus` ports must all reside in the same partition
 
 ## PROPERTIES
 
