@@ -1,0 +1,26 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+% Membership of the buses in the TenGen integration tests.
+% The weak branch 5--6 belongs to A; bus 6 is shared with B.
+\def\diagramScale{1}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram, scale=\diagramScale, transform shape]
+\draw[partition group] (-0.4, -0.4) rectangle (11.2, 2.4);
+\node[partition label, anchor=west] at (-0.2, 2.4) {TenGen};
+\draw[partition] (0, 0) rectangle (4.8, 1.8);
+\node[partition label, anchor=west] at (0.2, 1.8) {A};
+\draw[partition] (6, 0) rectangle (10.8, 1.8);
+\node[partition label, anchor=west] at (6.2, 1.8) {B};
+
+% Copies of the same bus; this connector is not the physical branch 5--6.
+\draw[external reference] (4.8, 0.9) -- (6, 0.9);
+\foreach \bus/\x in {1/0.5,2/1.25,3/2,4/2.75,5/3.5}
+    \node[internal bus, label={[internal bus label]below:$\bus$}] at (\x, 0.9) {};
+\foreach \bus/\x in {7/7.3,8/8.15,9/9,10/9.85}
+    \node[internal bus, label={[internal bus label]below:$\bus$}] at (\x, 0.9) {};
+\node[external bus, label={[external bus label]left:$6$}] (bus6-A) at (4.8, 0.9) {};
+\node[external bus, label={[external bus label]right:$6$}] (bus6-B) at (6, 0.9) {};
+\end{tikzpicture}
+\end{document}

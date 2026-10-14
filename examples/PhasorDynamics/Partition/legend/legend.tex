@@ -1,0 +1,11 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+\draw[partition] (0, 0) rectangle (4, 1.6);
+\node[partition label, anchor=west] at (0.2, 1.6) {Partition};
+\draw[partition group] (5, 0) rectangle (9, 1.6);
+\node[partition label, anchor=west] at (5.2, 1.6) {PartitionGroup};
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,13 @@
+{
+  "name": "gridkit-wecc240-partition-figure",
+  "private": true,
+  "type": "module",
+  "scripts": { "render": "node render.mjs" },
+  "dependencies": {
+    "@latkit/gpu": "0.19.0",
+    "@latkit/model": "4.2.0",
+    "@latkit/network": "0.22.0",
+    "esbuild": "0.28.2",
+    "playwright": "1.64.1"
+  }
+}
