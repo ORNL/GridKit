@@ -15,8 +15,8 @@ namespace GridKit
     namespace Stabilizer
     {
       /**
-       * @brief Evaluate the sparse residual Jacobian.
-       *
+       * @brief Evaluate the sparse Jacobian.
+      *
        * @tparam scalar_type Scalar data type.
        * @tparam index_type Index data type.
        * @tparam order Notch-denominator degree.
