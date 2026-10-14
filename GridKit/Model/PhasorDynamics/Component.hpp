@@ -62,11 +62,8 @@ namespace GridKit
         }
       }
 
-      /// Report configuration problems. Override when the component has checks.
-      virtual Model::ConfigurationChecks verify() const
-      {
-        return {};
-      }
+      /// Report configuration problems.
+      virtual Model::ConfigurationChecks verify() const = 0;
 
       IdxT size() override final
       {

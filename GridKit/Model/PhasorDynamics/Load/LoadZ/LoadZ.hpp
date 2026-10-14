@@ -56,6 +56,11 @@ namespace GridKit
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
 
+      Model::ConfigurationChecks verify() const override final
+      {
+        return {};
+      }
+
     public:
       void setR(RealT R)
       {
