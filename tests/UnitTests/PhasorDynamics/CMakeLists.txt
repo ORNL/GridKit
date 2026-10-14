@@ -190,6 +190,14 @@ target_link_libraries(
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
                ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasicBad.json COPYONLY)
 
+add_executable(test_phasor_partition runPartitionTests.cpp)
+target_link_libraries(
+  test_phasor_partition GridKit::phasor_dynamics_systemmodel GridKit::testing)
+target_include_directories(
+  test_phasor_partition
+  PRIVATE ${PROJECT_SOURCE_DIR}/application/PhasorDynamics
+          ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
+
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(
   test_phasor_system_single_component
@@ -229,6 +237,10 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
+add_test(
+  NAME PhasorDynamicsPartitionTest
+  COMMAND
+    test_phasor_partition ${PROJECT_SOURCE_DIR}/cases/PhasorDynamics/Toy/ThreeBusBasic.case.json)
 
 install(
   TARGETS test_phasor_bus
@@ -251,6 +263,7 @@ install(
           test_phasor_stabilizer_ieeest
           test_phasor_gen_classical
           test_phasor_system
+          test_phasor_partition
           test_phasor_system_single_component
           test_phasor_component_connection
   RUNTIME DESTINATION bin)

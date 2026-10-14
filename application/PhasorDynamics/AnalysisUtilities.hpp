@@ -63,6 +63,8 @@ namespace GridKit
     {
       /// path to system model JSON file
       fs::path                                       system_model_file;
+      /// optional partition file for DynamicSimulation
+      fs::path                                       partition_file;
       /// monitor output time step size, or 0 for no intermediate monitoring
       double                                         dt_monitor;
       /// max time
@@ -110,7 +112,8 @@ namespace GridKit
       using namespace magic_enum;
 
       j.at("system_model_file").get_to(c.system_model_file);
-      c.dt_monitor = j.value("dt_monitor", 0.0);
+      c.partition_file = j.value("partition_file", fs::path{});
+      c.dt_monitor     = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
       c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
       c.abs_tol            = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
@@ -235,6 +238,10 @@ namespace GridKit
       if (!data.system_model_file.is_absolute())
       {
         data.system_model_file = loc / data.system_model_file;
+      }
+      if (!data.partition_file.empty() && !data.partition_file.is_absolute())
+      {
+        data.partition_file = loc / data.partition_file;
       }
       if (!data.reference_file.empty())
       {

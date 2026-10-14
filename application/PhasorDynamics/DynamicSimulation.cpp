@@ -10,6 +10,7 @@
 #include <GridKit/Testing/Testing.hpp>
 
 #include "AnalysisUtilities.hpp"
+#include "Partition.hpp"
 
 using namespace AnalysisManager::Sundials;
 using namespace GridKit::PhasorDynamics;
@@ -42,6 +43,10 @@ int runApplication(int argc, const char* argv[])
   }
 
   // Instantiate system
+  if (!study.partition_file.empty())
+  {
+    applyPartition(study.model_data, json::parse(openFile(study.partition_file)));
+  }
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
 

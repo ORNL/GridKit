@@ -108,6 +108,8 @@ namespace GridKit
       Branch<ScalarT, IdxT>* getBranch(const std::string& id);
 
     private:
+      Branch<ScalarT, IdxT>* findBranch(const std::string& id);
+
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;

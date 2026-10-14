@@ -1,0 +1,11 @@
+{
+  "system_model_file": "../../../../cases/PhasorDynamics/WECC240/WECC240.case.json",
+  "partition_file": "WECC240.partition.json",
+  "output_file": "WECC240.partitioned.csv",
+  "dt_monitor": 0.004166666666666667,
+  "tmax": 10.0,
+  "events": [
+    { "time": 1.0, "type": "fault_on", "bus": 4005, "R": 0.0, "X": 0.01 },
+    { "time": 1.15, "type": "fault_off", "bus": 4005 }
+  ]
+}

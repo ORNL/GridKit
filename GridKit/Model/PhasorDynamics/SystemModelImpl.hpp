@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
@@ -789,26 +790,53 @@ namespace GridKit
     }
 
     /**
-     * @brief Return pointer to a component
+     * @brief Return pointer to a component of this system by its local index
      *
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::ComponentT*
     SystemModel<scalar_type, index_type>::getComponent(IdxT gridkit_component_id)
     {
-      // gridkit_component_id_ is set by System model and guaranteed to be unique
+      // gridkit_component_id_ is unique within this system.
       return components_[gridkit_component_id];
     }
 
     /**
-     * @brief Return pointer to a branch by case-file `id`
+     * @brief Return pointer to a branch of this system or its subsystems by case-file `id`
      */
     template <typename scalar_type, typename index_type>
     Branch<scalar_type, index_type>*
     SystemModel<scalar_type, index_type>::getBranch(const std::string& id)
     {
-      // Should fail if user-provided id is incorrect
-      return dynamic_cast<Branch<ScalarT, IdxT>*>(components_[gridkit_branch_indices_.at(id)]);
+      auto* branch = findBranch(id);
+      if (branch == nullptr)
+      {
+        throw std::out_of_range("Unknown branch: " + id);
+      }
+      return branch;
+    }
+
+    /**
+     * @brief Return pointer to a branch of this system or its subsystems, or nullptr
+     */
+    template <typename scalar_type, typename index_type>
+    Branch<scalar_type, index_type>*
+    SystemModel<scalar_type, index_type>::findBranch(const std::string& id)
+    {
+      const auto it = gridkit_branch_indices_.find(id);
+      if (it != gridkit_branch_indices_.end())
+      {
+        return dynamic_cast<Branch<ScalarT, IdxT>*>(components_[it->second]);
+      }
+
+      for (auto* subsystem : subsystems_)
+      {
+        if (auto* branch = subsystem->findBranch(id))
+        {
+          return branch;
+        }
+      }
+      return nullptr;
     }
 
   } // namespace PhasorDynamics

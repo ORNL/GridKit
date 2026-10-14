@@ -5,6 +5,7 @@
    Name                | Value
  ----------------------|-------------------------------------------------------
   `system_model_file`  | Path to the system model file[^1]
+  `partition_file`     | Optional partition JSON file for `DynamicSimulation`, relative to the solver file
   `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
   `tmax`               | A floating-point value for max time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
