@@ -12,7 +12,8 @@ files:
 - `MyModel.hpp`: Component model declaration.
 - `MyModelData.hpp`: Definitions of model data including model parameters,
                      model connection ports and model outputs (monitored
-                     variables).
+                     variables), and the `MYMODEL_DEFINITION` table holding
+                     their units, symbols and descriptions.
 - `MyModelDependencyTracking.cpp`: Compilation unit for Jacobian evaluation
                                    using dependency tracking data type (a.k.a
                                    tapeless automatic differentiation).
@@ -78,7 +79,8 @@ We recommend developers follow these steps when adding new component models:
        should ensure residual evaluates to zero within prescribed tolerance).
 5. Once model is tested, add it to the system composer. This requires following steps:
     1. Add header file `MyModel.hpp` to `ComponentLibrary.hpp`, so that
-       `MyModel` declaration is visible to the `SystemModel` class.
+       `MyModel` declaration is visible to the `SystemModel` class, and add
+       `MYMODEL_DEFINITION` to its `COMPONENT_DEFINITIONS`.
     2. Modify `SystemModelDataJSONParser.hpp` so that `MyModel` is recognized by the
        parser.
     3. Modify `SystemModelData.hpp` so that `MyModelData` is visible to the system

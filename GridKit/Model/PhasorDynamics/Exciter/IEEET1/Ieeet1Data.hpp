@@ -2,12 +2,13 @@
  * @file Ieeet1Data.hpp
  * @author Luke Lowery (lukel@tamu.edu)
  *
- * @brief Data structure for IEEET1 Data
+ * @brief Data structure and definition for IEEET1 Data
  *
  */
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentDefinition.hpp>
 
 namespace GridKit
 {
@@ -18,42 +19,42 @@ namespace GridKit
       /// Initial parameters for IEEET1 Exciter model
       enum class Ieeet1Parameters : size_t
       {
-        Tr,      ///< Time constant for voltage sensing
-        Ka,      ///< Coefficient for voltage regulation
-        Ta,      ///< Time constant for voltage regulation
-        Ke,      ///< Coefficient for excitation system
-        Te,      ///< Time constant for excitation system
-        Kf,      ///< Coefficient for feedback
-        Tf,      ///< Time constant for feedback
-        Vrmin,   ///< LL to voltage regulation
-        Vrmax,   ///< HH to voltage regulation
-        E1,      ///< Saturation parameter
-        E2,      ///< Saturation parameter
-        Se1,     ///< Saturation parameter
-        Se2,     ///< Saturation parameter
-        Ispdlim, ///< Speed limit flag indicator
+        Tr,
+        Ka,
+        Ta,
+        Ke,
+        Te,
+        Kf,
+        Tf,
+        Vrmin,
+        Vrmax,
+        E1,
+        E2,
+        Se1,
+        Se2,
+        Ispdlim,
       };
 
       /// Buses for a IEEET1 Exciter model
       enum class Ieeet1Buses : size_t
       {
-        bus, ///< Unique ID of the terminal bus
+        bus,
       };
 
       /// Signal inputs for a IEEET1 Exciter model
       enum class Ieeet1SignalInputs : size_t
       {
-        speed, ///< Unique ID of the generator speed signal
-        vref,  ///< Unique ID of the voltage reference signal (optional)
-        vs,    ///< Unique ID of the stabilizer output signal (optional)
-        vuel,  ///< Unique ID of the under-excitation limiter signal (optional)
-        voel,  ///< Unique ID of the over-excitation limiter signal (optional)
+        speed,
+        vref,
+        vs,
+        vuel,
+        voel,
       };
 
       /// Signal outputs for a IEEET1 Exciter model
       enum class Ieeet1SignalOutputs : size_t
       {
-        efd, ///< Unique ID of the output efd signal
+        efd,
       };
 
       /// Variables able to be monitored for a IEEET1 Exciter model
@@ -80,6 +81,52 @@ namespace GridKit
                         Ieeet1SignalInputs,
                         Ieeet1SignalOutputs,
                         Ieeet1MonitorableVariables>;
+
+      /// IEEET1 definition, units, symbols and descriptions of its data
+      inline constexpr ComponentDefinition<Ieeet1Parameters,
+                                           Ieeet1Buses,
+                                           Ieeet1SignalInputs,
+                                           Ieeet1SignalOutputs,
+                                           Ieeet1MonitorableVariables>
+          IEEET1_DEFINITION{
+              .device_class          = "Ieeet1",
+              .description           = "IEEE Type 1 excitation-system model",
+              .parameters            = {{
+                  {Ieeet1Parameters::Tr, "s", "T_R", "Time constant for voltage sensing"},
+                  {Ieeet1Parameters::Ka, "p.u.", "K_A", "Coefficient for voltage regulation"},
+                  {Ieeet1Parameters::Ta, "s", "T_A", "Time constant for voltage regulation"},
+                  {Ieeet1Parameters::Ke, "p.u.", "K_E", "Exciter field resistance line slope margin, 0 requests automatic calculation"},
+                  {Ieeet1Parameters::Te, "s", "T_E", "Time constant for excitation system"},
+                  {Ieeet1Parameters::Kf, "p.u.", "K_F", "Coefficient for feedback"},
+                  {Ieeet1Parameters::Tf, "s", "T_F", "Time constant for feedback"},
+                  {Ieeet1Parameters::Vrmin, "p.u.", "V_R^{\\min}", "Lower limit to voltage regulation"},
+                  {Ieeet1Parameters::Vrmax, "p.u.", "V_R^{\\max}", "Upper limit to voltage regulation"},
+                  {Ieeet1Parameters::E1, "p.u.", "E_1", "Saturation parameter"},
+                  {Ieeet1Parameters::E2, "p.u.", "E_2", "Saturation parameter"},
+                  {Ieeet1Parameters::Se1, "p.u.", "S_1", "Saturation parameter"},
+                  {Ieeet1Parameters::Se2, "p.u.", "S_2", "Saturation parameter"},
+                  {Ieeet1Parameters::Ispdlim, "binary", "I_{\\mathrm{spdlim}}", "Speed limit flag indicator"},
+              }},
+              .buses                 = {{
+                  {Ieeet1Buses::bus, "Terminal bus voltage"},
+              }},
+              .signal_inputs         = {{
+                  {Ieeet1SignalInputs::speed, "Machine speed deviation"},
+                  {Ieeet1SignalInputs::vref, "Voltage-control reference"},
+                  {Ieeet1SignalInputs::vs, "Stabilizer input signal"},
+                  {Ieeet1SignalInputs::vuel, "Under-excitation limiter input"},
+                  {Ieeet1SignalInputs::voel, "Over-excitation limiter input"},
+              }},
+              .signal_outputs        = {{
+                  {Ieeet1SignalOutputs::efd, "Field-voltage output seeded by the machine"},
+              }},
+              .monitorable_variables = {{
+                  {Ieeet1MonitorableVariables::efd, "p.u.", "Field winding voltage"},
+                  {Ieeet1MonitorableVariables::ksat, "p.u.", "Scaled-quadratic saturation contribution"},
+              }},
+          };
+
+      static_assert(IEEET1_DEFINITION.complete());
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit
