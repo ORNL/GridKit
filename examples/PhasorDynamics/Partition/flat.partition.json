@@ -1,0 +1,32 @@
+{
+    "name": "root",
+    "partitions": [
+        {
+            "name": "A",
+            "external_buses":[
+                3, 4
+            ],
+            "internal_buses":[
+                1, 2
+            ]
+        },
+        {
+            "name":"BX",
+            "external_buses":[
+                3, 7
+            ],
+            "internal_buses":[
+                6
+            ]
+        },
+        {
+            "name":"BY",
+            "external_buses":[
+                4, 7
+            ],
+            "internal_buses":[
+                5, 8
+            ]
+        }
+    ]
+}
