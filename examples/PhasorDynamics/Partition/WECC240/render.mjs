@@ -123,7 +123,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><title>WECC240 pa
 *{box-sizing:border-box}body{margin:0;background:white;font-family:Arial,sans-serif;color:#171717}
 #figure{width:1600px;padding-top:24px}h1{font-size:28px;margin:0 35px 12px}.legend{margin:0 35px;font-size:16px;display:flex;gap:30px;align-items:center}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}.red{background:#d64545}.blue{background:#007aff}
-.line{display:inline-block;width:30px;border-top:2px solid;margin-right:8px}.branch{border-color:#9b9fa5}
+.line{display:inline-block;width:30px;border-top:2px dashed;margin-right:8px}.branch{border-top-style:solid;border-color:#9b9fa5}
 #scene{position:relative;width:${width}px;height:${height}px}#scene>svg,#network{position:absolute;inset:0;width:100%;height:100%}
 svg{overflow:visible}.frames{fill:none;stroke:#202020;stroke-width:1.5}.heading{font-size:19px;dominant-baseline:middle;paint-order:stroke;stroke:white;stroke-width:9px;stroke-linejoin:round}
 .port{font-size:13px;fill:#007aff;dominant-baseline:middle;paint-order:stroke;stroke:white;stroke-width:4px}

@@ -37,7 +37,7 @@ async function render() {
     } },
     edges: {
       Branch: { ends: ['from', 'to'], color: [0.3, 0.33, 0.38, 0.38], widthPx: 1 },
-      SharedBus: { ends: ['from', 'to'], color: [0, 0, 0, 1], widthPx: 1.5 },
+      SharedBus: { ends: ['from', 'to'], color: [0, 0, 0, 1], widthPx: 1.5, dash: true },
     },
     camera: { projection: 'flat', fit: false, center: [width / 2, -height / 2], scale: 1 },
     background: [1, 1, 1, 0], grid: false, shadows: false, input: 'none',
