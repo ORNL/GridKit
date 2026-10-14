@@ -29,7 +29,7 @@ namespace GridKit
      * @brief Describes an event that is used to modify the simulation at the
      * given time point
      *
-     * ContingencyAnalysis repeats this event at each bus with the same R and X.
+     * ContingencyAnalysis repeats fault events at each bus with the same R and X.
      */
     struct SystemEvent
     {
@@ -37,7 +37,9 @@ namespace GridKit
       enum class Type
       {
         FAULT_ON,
-        FAULT_OFF
+        FAULT_OFF,
+        IN_SERVICE,
+        OUT_OF_SERVICE
       };
 
       /// Time event takes place
@@ -50,6 +52,8 @@ namespace GridKit
       double      R{0.0};
       /// Fault reactance [p.u.]
       double      X{0.0};
+      /// Case-file `id` of the branch to put in or out of service
+      std::string device;
     };
 
     /**
@@ -137,7 +141,8 @@ namespace GridKit
       {
         auto& event = c.events.emplace_back();
         raw_event.at("time").get_to(event.time);
-        event.bus = raw_event.value("bus", INVALID_INDEX<std::size_t>);
+        event.bus    = raw_event.value("bus", INVALID_INDEX<std::size_t>);
+        event.device = raw_event.value("device", std::string{});
 
         auto type_str   = raw_event.at("type").get<std::string>();
         using EventType = SystemEvent::Type;

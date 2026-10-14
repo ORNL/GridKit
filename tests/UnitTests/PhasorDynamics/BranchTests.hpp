@@ -1,8 +1,10 @@
 #include <complex>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -242,6 +244,70 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome outOfServiceJacobian()
+      {
+        // Verify zero currents, fixed sparsity, and restoration after switching.
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        bus1.allocate();
+        bus2.allocate();
+        bus1.initialize();
+        bus2.initialize();
+        for (IdxT i = 0; i < 2; ++i)
+        {
+          bus1.setVariableIndex(i, i);
+          bus1.setResidualIndex(i, i);
+          bus2.setVariableIndex(i, i + 2);
+          bus2.setResidualIndex(i, i + 2);
+        }
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, 2.0, 4.0, 0.2, 1.2);
+        branch.allocate();
+        branch.evaluateJacobian();
+        const IdxT nnz                     = branch.nnz();
+        success                           *= nnz > 0;
+        auto*                    jacobian  = branch.getCooJacobian();
+        const std::vector<IdxT>  rows(jacobian->getRowData(), jacobian->getRowData() + nnz);
+        const std::vector<IdxT>  cols(jacobian->getColData(), jacobian->getColData() + nnz);
+        const std::vector<RealT> values(jacobian->getValues(), jacobian->getValues() + nnz);
+
+        success *= branch.setInService(false) == 0;
+        bus1.evaluateResidual();
+        bus2.evaluateResidual();
+        branch.evaluateResidual();
+        success *= isEqual(bus1.Ir(), ScalarT{0.0});
+        success *= isEqual(bus1.Ii(), ScalarT{0.0});
+        success *= isEqual(bus2.Ir(), ScalarT{0.0});
+        success *= isEqual(bus2.Ii(), ScalarT{0.0});
+        branch.evaluateJacobian();
+        success *= branch.nnz() == nnz;
+
+        jacobian = branch.getCooJacobian();
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          success *= jacobian->getRowData()[i] == rows[i];
+          success *= jacobian->getColData()[i] == cols[i];
+          success *= isEqual(jacobian->getValues()[i], RealT{0.0});
+        }
+
+        success *= branch.setInService(true) == 0;
+        branch.evaluateJacobian();
+        success  *= branch.nnz() == nnz;
+        jacobian  = branch.getCooJacobian();
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          success *= jacobian->getRowData()[i] == rows[i];
+          success *= jacobian->getColData()[i] == cols[i];
+          success *= isEqual(jacobian->getValues()[i], values[i]);
+        }
+
+        return success.report(__func__);
+      }
+#endif
 
       TestOutcome parameterSetters()
       {

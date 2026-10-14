@@ -74,6 +74,8 @@ namespace GridKit
       virtual int evaluateJacobian() override final;
       virtual int verify() const override final;
 
+      int setInService(bool in_service);
+
       void setR(RealT R)
       {
         R_ = R;
@@ -195,6 +197,7 @@ namespace GridKit
       RealT Bmag_{0.0};
       RealT tap_{1.0};
       RealT phase_{0.0};
+      RealT in_service_{1.0}; ///< 1 in service, 0 out of service
       IdxT  bus1_id_{0};
       IdxT  bus2_id_{0};
 

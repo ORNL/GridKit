@@ -7,6 +7,7 @@
 #include <omp.h>
 #endif
 
+#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -56,16 +57,21 @@ TestStatus runStudy(StudyData study_data)
     ida.runSimulation(event.time, dt_monitor);
 
     // Set up run for event (to start at event time)
-    auto* bus = sys.getBus(event.bus);
-    int   ret = 0;
+    int ret = 0;
 
     switch (event.type)
     {
     case EventType::FAULT_ON:
-      ret = bus->setFault(true, event.R, event.X);
+      ret = sys.getBus(event.bus)->setFault(true, event.R, event.X);
       break;
     case EventType::FAULT_OFF:
-      ret = bus->clearFault();
+      ret = sys.getBus(event.bus)->clearFault();
+      break;
+    case EventType::IN_SERVICE:
+      sys.getBranch(event.device)->setInService(true);
+      break;
+    case EventType::OUT_OF_SERVICE:
+      sys.getBranch(event.device)->setInService(false);
       break;
     }
 
@@ -91,10 +97,13 @@ TestStatus runStudy(StudyData study_data)
 
 TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
 {
-  // Change bus in schedule to current fault bus
+  // Retarget fault events while preserving branch-switching events
   for (auto& event : study_data.events)
   {
-    event.bus = study_data.model_data.bus[fault_id].bus_id;
+    if (event.type == SystemEvent::Type::FAULT_ON || event.type == SystemEvent::Type::FAULT_OFF)
+    {
+      event.bus = study_data.model_data.bus[fault_id].bus_id;
+    }
   }
 
   // Make distinct output files

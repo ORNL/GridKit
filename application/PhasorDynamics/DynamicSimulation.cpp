@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -27,9 +28,12 @@ int runApplication(int argc, const char* argv[])
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
 
+  using EventType = SystemEvent::Type;
+
   for (const auto& event : study.events)
   {
-    if (event.bus == GridKit::INVALID_INDEX<index_type>)
+    if ((event.type == EventType::FAULT_ON || event.type == EventType::FAULT_OFF)
+        && event.bus == GridKit::INVALID_INDEX<index_type>)
     {
       Log::error() << "Fault event at time " << event.time
                    << " requires a bus number\n";
@@ -53,8 +57,6 @@ int runApplication(int argc, const char* argv[])
   // Start timer
   real_type start = static_cast<real_type>(clock());
 
-  using EventType = SystemEvent::Type;
-
   // Initialize simulation for first run
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
@@ -65,16 +67,21 @@ int runApplication(int argc, const char* argv[])
     ida.runSimulation(event.time, dt_monitor);
 
     // Set up run for event (to start at event time)
-    auto* bus = sys.getBus(event.bus);
-    int   ret = 0;
+    int ret = 0;
 
     switch (event.type)
     {
     case EventType::FAULT_ON:
-      ret = bus->setFault(true, event.R, event.X);
+      ret = sys.getBus(event.bus)->setFault(true, event.R, event.X);
       break;
     case EventType::FAULT_OFF:
-      ret = bus->clearFault();
+      ret = sys.getBus(event.bus)->clearFault();
+      break;
+    case EventType::IN_SERVICE:
+      sys.getBranch(event.device)->setInService(true);
+      break;
+    case EventType::OUT_OF_SERVICE:
+      sys.getBranch(event.device)->setInService(false);
       break;
     }
 
