@@ -54,7 +54,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data,
                                                       const std::vector<BusT*>&           external_buses)
-      : monitor_(std::make_unique<MonitorT>(time_))
+      : SystemModel()
     {
       using namespace Governor;
       using namespace Exciter;
@@ -63,6 +63,7 @@ namespace GridKit
       using namespace Converter;
 
       owns_components_ = true;
+      monitor_         = std::make_unique<MonitorT>(time_);
 
       // Store parsed system bases before constructing data-driven components.
       this->setSystemBase(data.freq_base, data.va_base);
