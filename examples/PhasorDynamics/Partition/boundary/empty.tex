@@ -1,0 +1,28 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+% Membership diagram for empty.partition.json.
+% Connectors identify copies of the same external bus, not electrical branches.
+% TUNABLES: scale the complete figure; coordinates below remain editable.
+\def\diagramScale{1}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram, scale=\diagramScale, transform shape]
+
+% Group enclosures are organizational only.
+\draw[partition group] (-1.4, -0.95) rectangle (1.4, 1.25);
+\node[partition label, anchor=west] at (-1.2, 1.25) {root};
+
+% Leaf partitions.
+\draw[partition] (-1.1, -0.65) rectangle (1.1, 0.7);
+\node[partition label, anchor=west] at (-0.9, 0.7) {A};
+
+% Black lines join border copies of the same external bus.
+
+% Internal buses appear only inside their owning leaf.
+
+% Each external bus has one copy on every referencing Partition border.
+
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,43 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+% Membership diagram for multiple-buses.partition.json.
+% Connectors identify copies of the same external bus, not electrical branches.
+% TUNABLES: scale the complete figure; coordinates below remain editable.
+\def\diagramScale{1}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram, scale=\diagramScale, transform shape]
+
+% Group enclosures are organizational only.
+\draw[partition group] (-1.4, -0.95) rectangle (4.8, 1.25);
+\node[partition label, anchor=west] at (-1.2, 1.25) {root};
+
+% Leaf partitions.
+\draw[partition] (-1.1, -0.65) rectangle (1.1, 0.7);
+\node[partition label, anchor=west] at (-0.9, 0.7) {A};
+\draw[partition] (2.3, -0.65) rectangle (4.5, 0.7);
+\node[partition label, anchor=west] at (2.5, 0.7) {B};
+
+% Black lines join border copies of the same external bus.
+% Bus 3: A <-> B.
+\draw[external reference] (1.1, 0.25) -- (2.3, 0.25);
+% Bus 4: A <-> B.
+\draw[external reference] (1.1, -0.25) -- (2.3, -0.25);
+
+% Internal buses appear only inside their owning leaf.
+\node[internal bus, label={[internal bus label]below:$1$}] (bus1) at (0, -0.06) {};
+\node[internal bus, label={[internal bus label]below:$2$}] (bus2) at (3.4, -0.06) {};
+
+% Each external bus has one copy on every referencing Partition border.
+% A references bus 3.
+\node[external bus, label={[external bus label]left:$3$}] (bus3-A) at (1.1, 0.25) {};
+% A references bus 4.
+\node[external bus, label={[external bus label]left:$4$}] (bus4-A) at (1.1, -0.25) {};
+% B references bus 3.
+\node[external bus, label={[external bus label]right:$3$}] (bus3-B) at (2.3, 0.25) {};
+% B references bus 4.
+\node[external bus, label={[external bus label]right:$4$}] (bus4-B) at (2.3, -0.25) {};
+
+\end{tikzpicture}
+\end{document}

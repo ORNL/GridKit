@@ -1,0 +1,43 @@
+{
+  "name": "root",
+  "partitions": [
+    {
+      "name": "A",
+      "internal": [
+        1
+      ],
+      "external": [
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "name": "B",
+      "internal": [
+        2
+      ],
+      "external": [
+        6
+      ]
+    },
+    {
+      "name": "C",
+      "internal": [
+        3
+      ],
+      "external": [
+        5
+      ]
+    },
+    {
+      "name": "D",
+      "internal": [
+        4
+      ],
+      "external": [
+        7
+      ]
+    }
+  ]
+}

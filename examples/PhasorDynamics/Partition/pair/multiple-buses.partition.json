@@ -1,0 +1,25 @@
+{
+  "name": "root",
+  "partitions": [
+    {
+      "name": "A",
+      "internal": [
+        1
+      ],
+      "external": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "B",
+      "internal": [
+        2
+      ],
+      "external": [
+        3,
+        4
+      ]
+    }
+  ]
+}

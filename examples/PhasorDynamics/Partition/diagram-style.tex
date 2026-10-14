@@ -1,0 +1,16 @@
+% Compile each standalone figure from its example subdirectory.
+\input{../../../../docs/Figures/EMT/diagram-style.tex}
+
+\definecolor{externalBusBlue}{HTML}{007AFF}
+\definecolor{internalBusRed}{HTML}{D64545}
+
+\tikzset{
+    partition/.style = {enclosure, solid},
+    partition group/.style = {enclosure},
+    external reference/.style = {line, draw=black},
+    external bus/.style = {signal, fill=externalBusBlue},
+    internal bus/.style = {signal, fill=internalBusRed},
+    external bus label/.style = {sig, text=externalBusBlue, fill=white, inner sep=1pt},
+    internal bus label/.style = {sig, text=internalBusRed},
+    partition label/.style = {sig, fill=white, inner sep=2pt}
+}

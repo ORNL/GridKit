@@ -1,0 +1,57 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+% Membership diagram for mixed.partition.json.
+% Connectors identify copies of the same external bus, not electrical branches.
+% TUNABLES: scale the complete figure; coordinates below remain editable.
+\def\diagramScale{1}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram, scale=\diagramScale, transform shape]
+
+% Group enclosures are organizational only.
+\draw[partition group] (-1.4, -1.25) rectangle (11.6, 1.8);
+\node[partition label, anchor=west] at (-1.2, 1.8) {root};
+\draw[partition group] (2, -0.95) rectangle (8.2, 1.25);
+\node[partition label, anchor=west] at (2.2, 1.25) {B};
+
+% Leaf partitions.
+\draw[partition] (-1.1, -0.65) rectangle (1.1, 0.7);
+\node[partition label, anchor=west] at (-0.9, 0.7) {A};
+\draw[partition] (2.3, -0.65) rectangle (4.5, 0.7);
+\node[partition label, anchor=west] at (2.5, 0.7) {BX};
+\draw[partition] (5.7, -0.65) rectangle (7.9, 0.7);
+\node[partition label, anchor=west] at (5.9, 0.7) {BY};
+\draw[partition] (9.1, -0.65) rectangle (11.3, 0.7);
+\node[partition label, anchor=west] at (9.3, 0.7) {C};
+
+% Black lines join border copies of the same external bus.
+% Bus 5: A <-> BX.
+\draw[external reference] (1.1, 0) -- (2.3, 0);
+% Bus 6: BX <-> BY.
+\draw[external reference] (4.5, 0) -- (5.7, 0);
+% Bus 7: BY <-> C.
+\draw[external reference] (7.9, 0) -- (9.1, 0);
+
+% Internal buses appear only inside their owning leaf.
+\node[internal bus, label={[internal bus label]below:$1$}] (bus1) at (0, -0.06) {};
+\node[internal bus, label={[internal bus label]below:$2$}] (bus2) at (3.4, -0.06) {};
+\node[internal bus, label={[internal bus label]below:$3$}] (bus3) at (6.8, -0.06) {};
+\node[internal bus, label={[internal bus label]below:$4$}] (bus4) at (10.2, -0.06) {};
+
+% Each external bus has one copy on every referencing Partition border.
+% A references bus 5.
+\node[external bus, label={[external bus label]left:$5$}] (bus5-A) at (1.1, 0) {};
+% BX references bus 5.
+\node[external bus, label={[external bus label]right:$5$}] (bus5-BX) at (2.3, 0) {};
+% BX references bus 6.
+\node[external bus, label={[external bus label]left:$6$}] (bus6-BX) at (4.5, 0) {};
+% BY references bus 6.
+\node[external bus, label={[external bus label]right:$6$}] (bus6-BY) at (5.7, 0) {};
+% BY references bus 7.
+\node[external bus, label={[external bus label]left:$7$}] (bus7-BY) at (7.9, 0) {};
+% C references bus 7.
+\node[external bus, label={[external bus label]right:$7$}] (bus7-C) at (9.1, 0) {};
+
+\end{tikzpicture}
+\end{document}
