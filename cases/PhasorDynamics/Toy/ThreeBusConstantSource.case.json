@@ -34,7 +34,11 @@
     },
     {
       "number": 2,
-      "class": "Bus",
+      "class": "SignalVoltageOut",
+      "ports_in": {
+        "ir": 1,
+        "ii": 2
+      },
       "name": "2",
       "init": {
         "Vr": 1.0599558398065716,
@@ -156,16 +160,6 @@
       "mon": [
         "speed"
       ]
-    },
-    {
-      "class": "BusToSignalAdapter",
-      "ports": {
-        "bus": 1,
-        "ir": 1,
-        "ii": 2
-      },
-      "id": "adapt3",
-      "params": {}
     },
     {
       "class": "ConstantSignalSource",
