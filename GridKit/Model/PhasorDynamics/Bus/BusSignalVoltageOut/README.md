@@ -11,8 +11,8 @@ the bus residual is evaluated.
 - Signal ports must be connected before `allocate()` is called. The signal outlets
   are linked to the bus voltage variables and their system indices in
   `allocate()`.
-- Both current inlets are mandatory. `verify()` logs each problem and
-  throws if a current inlet is not connected or not linked, or if a
+- Both current inlets are mandatory. `verify()` reports an error if a
+  current inlet is not connected or not linked, or if a
   connected outlet is not linked. No default current is ever used.
 - Current entering the bus has positive sign.
 

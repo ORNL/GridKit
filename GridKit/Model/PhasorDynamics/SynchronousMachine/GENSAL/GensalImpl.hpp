@@ -225,25 +225,23 @@ namespace GridKit
      * @brief verify method checks that attached signals are also linked
      */
     template <typename scalar_type, typename index_type>
-    int Gensal<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Gensal<scalar_type, index_type>::verify() const
     {
-      int ret = 0;
+      Model::ConfigurationChecks checks("Gensal");
 
       auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>();
       if (pmech_port.connected() && !pmech_port.linked())
       {
-        Log::error() << "Gensal: pmech signal attached with no linked governor\n";
-        ret += 1;
+        checks.fail("pmech signal attached with no linked governor");
       }
 
       auto efd_port = ports_.in.template port<GensalSignalInputs::efd>();
       if (efd_port.connected() && !efd_port.linked())
       {
-        Log::error() << "Gensal: efd signal attached with no linked exciter\n";
-        ret += 1;
+        checks.fail("efd signal attached with no linked exciter");
       }
 
-      return ret;
+      return checks;
     }
 
     /**

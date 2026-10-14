@@ -367,43 +367,34 @@ namespace GridKit
        * terminal bus, and checks that attached command ports have linked sources.
        * Operating-point admissibility is checked by initialize().
        *
-       * @return Number of configuration errors, zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Regca<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Regca<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
+        Model::ConfigurationChecks checks("Regca");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Regca: " << message << '\n';
-            ret += 1;
-          }
-        };
+        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
         if (bus_ == nullptr)
         {
-          Log::error() << "Regca: bus pointer is null\n";
-          ret += 1;
+          checks.fail("bus pointer is null");
         }
 
-        check(mva_base_ > ZERO<RealT>, "mva must be positive");
-        check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
-        check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
-        check(std::isfinite(Khv_) && Khv_ >= ZERO<RealT>,
-              "Khv must be finite and non-negative");
-        check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
-        check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
-              "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
+        checks.check(mva_base_ > ZERO<RealT>, "mva must be positive");
+        checks.check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
+        checks.check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
+        checks.check(std::isfinite(Khv_) && Khv_ >= ZERO<RealT>,
+                     "Khv must be finite and non-negative");
+        checks.check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
+        checks.check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
+                     "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
 
         if (ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
           if (!ports_.in.template port<RegcaSignalInputs::ipcmd>().linked())
           {
-            Log::error() << "Regca: ipcmd signal attached with no linked source\n";
-            ret += 1;
+            checks.fail("ipcmd signal attached with no linked source");
           }
         }
 
@@ -411,12 +402,11 @@ namespace GridKit
         {
           if (!ports_.in.template port<RegcaSignalInputs::iqcmd>().linked())
           {
-            Log::error() << "Regca: iqcmd signal attached with no linked source\n";
-            ret += 1;
+            checks.fail("iqcmd signal attached with no linked source");
           }
         }
 
-        return ret;
+        return checks;
       }
 
       /**

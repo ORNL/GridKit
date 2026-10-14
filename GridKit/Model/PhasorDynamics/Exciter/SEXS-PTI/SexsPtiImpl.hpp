@@ -6,6 +6,7 @@
  * @brief Definition of the SEXS-PTI exciter model.
  */
 
+#include <format>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -91,46 +92,41 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks SexsPti<scalar_type, index_type>::verify() const
       {
-        int ret = missing_param_count_;
+        Model::ConfigurationChecks checks("SexsPti");
+
+        checks.check(missing_param_count_ == 0, "model data is missing required parameters");
 
         if (bus_ == nullptr)
         {
-          Log::error() << "SexsPti: bus pointer is null\n";
-          ret += 1;
+          checks.fail("bus pointer is null");
         }
         if (Ta_ < 0.0)
         {
-          Log::error() << "SexsPti: Ta must be non-negative\n";
-          ret += 1;
+          checks.fail("Ta must be non-negative");
         }
         if (Tb_ <= 0.0)
         {
-          Log::error() << "SexsPti: Tb must be positive\n";
-          ret += 1;
+          checks.fail("Tb must be positive");
         }
         if (Te_ <= 0.0)
         {
-          Log::error() << "SexsPti: Te must be positive\n";
-          ret += 1;
+          checks.fail("Te must be positive");
         }
         if (K_ <= 0.0)
         {
-          Log::error() << "SexsPti: K must be positive\n";
-          ret += 1;
+          checks.fail("K must be positive");
         }
         if (Efdmin_ >= Efdmax_)
         {
-          Log::error() << "SexsPti: Efdmin must be less than Efdmax\n";
-          ret += 1;
+          checks.fail("Efdmin must be less than Efdmax");
         }
 
         auto efd_port = ports_.out.template port<SexsPtiSignalOutputs::efd>();
         if (!efd_port.connected() || !efd_port.linked())
         {
-          Log::error() << "SexsPti: required EFD signal is not assigned\n";
-          ret += 1;
+          checks.fail("required EFD signal is not assigned");
         }
 
         auto check_attached_signal =
@@ -139,8 +135,7 @@ namespace GridKit
           auto port = ports_.in.template port<input>();
           if (port.connected() && !port.linked())
           {
-            Log::error() << "SexsPti: " << name << " signal attached with no linked source\n";
-            ret += 1;
+            checks.fail(std::format("{} signal attached with no linked source", name));
           }
         };
 
@@ -149,7 +144,7 @@ namespace GridKit
         check_attached_signal.template operator()<SexsPtiSignalInputs::vuel>("vuel");
         check_attached_signal.template operator()<SexsPtiSignalInputs::voel>("voel");
 
-        return ret;
+        return checks;
       }
 
       template <typename scalar_type, typename index_type>

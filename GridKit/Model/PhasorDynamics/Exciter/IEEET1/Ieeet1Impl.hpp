@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <format>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -126,36 +127,27 @@ namespace GridKit
        * @brief Verify parameter values and attached signal links
        */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Ieeet1<scalar_type, index_type>::verify() const
       {
-        int ret = 0;
+        Model::ConfigurationChecks checks("Ieeet1");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Ieeet1: " << message << '\n';
-            ret += 1;
-          }
-        };
-
-        check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
-              "Ispdlim must be 0 or 1");
+        checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
+        checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
+        checks.check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
+                     "Ispdlim must be 0 or 1");
 
         const bool saturation_disabled =
             Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
         if (!saturation_disabled)
         {
-          check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
-          check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
-          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+          checks.check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
+          checks.check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
+          checks.check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          checks.check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
 
           const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
-          check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
+          checks.check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
         auto check_attached_signal =
@@ -164,8 +156,7 @@ namespace GridKit
           auto port = ports_.in.template port<input>();
           if (port.connected() && !port.linked())
           {
-            Log::error() << "Ieeet1: " << name << " signal attached with no linked source\n";
-            ret += 1;
+            checks.fail(std::format("{} signal attached with no linked source", name));
           }
         };
 
@@ -175,7 +166,7 @@ namespace GridKit
         check_attached_signal.template operator()<Ieeet1SignalInputs::vuel>("vuel");
         check_attached_signal.template operator()<Ieeet1SignalInputs::voel>("voel");
 
-        return ret;
+        return checks;
       }
 
       /**
@@ -205,7 +196,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::initialize()
       {
-        if (verify() != 0)
+        if (!this->verifyAndLog())
         {
           Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
           return 1;

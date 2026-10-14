@@ -200,7 +200,7 @@ namespace GridKit
         bus.allocate();
         exciter.allocate();
 
-        success *= (exciter.verify() != 0);
+        success *= (!exciter.verify().passed());
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);

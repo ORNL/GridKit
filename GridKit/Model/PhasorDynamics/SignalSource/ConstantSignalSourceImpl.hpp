@@ -84,9 +84,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int ConstantSignalSource<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks ConstantSignalSource<scalar_type, index_type>::verify() const
     {
-      return 0;
+      return {};
     }
 
     template <typename scalar_type, typename index_type>

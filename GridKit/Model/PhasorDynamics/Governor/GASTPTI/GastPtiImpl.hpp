@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <format>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
@@ -128,59 +129,52 @@ namespace GridKit
        * mechanical-power output assignment, attached external signals, and
        * distinct indexed ports.
        *
-       * @return int Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int GastPti<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks GastPti<scalar_type, index_type>::verify() const
       {
         const auto PMECH = static_cast<size_t>(GastPtiInternalVariables::PMECH);
 
-        int ret = static_cast<int>(parameter_error_count_);
+        Model::ConfigurationChecks checks("GastPti");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "GastPti: " << message << '\n';
-            ret += 1;
-          }
-        };
+        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
-        check(std::isfinite(R_) && R_ > ZERO<RealT>, "R must be finite and positive");
-        check(std::isfinite(At_) && At_ >= ZERO<RealT>,
-              "At must be finite and non-negative");
-        check(std::isfinite(Kt_) && Kt_ >= ZERO<RealT>,
-              "Kt must be finite and non-negative");
+        checks.check(std::isfinite(R_) && R_ > ZERO<RealT>, "R must be finite and positive");
+        checks.check(std::isfinite(At_) && At_ >= ZERO<RealT>,
+                     "At must be finite and non-negative");
+        checks.check(std::isfinite(Kt_) && Kt_ >= ZERO<RealT>,
+                     "Kt must be finite and non-negative");
 
         const bool finite_limits = std::isfinite(Vmin_) && std::isfinite(Vmax_);
-        check(finite_limits, "Vmin and Vmax must be finite");
+        checks.check(finite_limits, "Vmin and Vmax must be finite");
         if (finite_limits)
         {
-          check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
+          checks.check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
         }
 
-        check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
-              "Dturb must be finite and non-negative");
+        checks.check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
+                     "Dturb must be finite and non-negative");
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        check(valid_component_base, "component power base must be finite and positive");
-        check(valid_system_base, "system power base must be finite and positive");
+        checks.check(valid_component_base, "component power base must be finite and positive");
+        checks.check(valid_system_base, "system power base must be finite and positive");
 
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
-          check(std::isfinite(system_to_component)
-                    && system_to_component > ZERO<RealT>
-                    && std::isfinite(component_to_system)
-                    && component_to_system > ZERO<RealT>,
-                "system/component power-base conversion ratios must be finite and positive");
+          checks.check(std::isfinite(system_to_component)
+                           && system_to_component > ZERO<RealT>
+                           && std::isfinite(component_to_system)
+                           && component_to_system > ZERO<RealT>,
+                       "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(ports_.out.template port<GastPtiSignalOutputs::pmech>().connected(),
-              "pmech output must be assigned");
+        checks.check(ports_.out.template port<GastPtiSignalOutputs::pmech>().connected(),
+                     "pmech output must be assigned");
 
         // An attached port must resolve to writable signal storage.
         auto check_attached_signal =
@@ -192,8 +186,7 @@ namespace GridKit
           {
             if (!port.linked())
             {
-              Log::error() << "GastPti: " << name << " port attached with no linked source\n";
-              ret += 1;
+              checks.fail(std::format("{} port attached with no linked source", name));
             }
             else
             {
@@ -217,14 +210,14 @@ namespace GridKit
           if (omega_linked)
           {
             auto omega = ports_.in.template port<GastPtiSignalInputs::speed>();
-            check(omega.signalVariableIndex() != pmech_index,
-                  "speed and pmech ports must use distinct signals");
+            checks.check(omega.signalVariableIndex() != pmech_index,
+                         "speed and pmech ports must use distinct signals");
           }
           if (pref_linked)
           {
             auto pref = ports_.in.template port<GastPtiSignalInputs::pref>();
-            check(pref.signalVariableIndex() != pmech_index,
-                  "pref and pmech ports must use distinct signals");
+            checks.check(pref.signalVariableIndex() != pmech_index,
+                         "pref and pmech ports must use distinct signals");
           }
           if (omega_linked && pref_linked)
           {
@@ -236,13 +229,13 @@ namespace GridKit
             if (omega_index != INVALID_INDEX<IdxT>
                 || pref_index != INVALID_INDEX<IdxT>)
             {
-              check(omega_index != pref_index,
-                    "speed and pref ports must use distinct signals");
+              checks.check(omega_index != pref_index,
+                           "speed and pref ports must use distinct signals");
             }
           }
         }
 
-        return ret;
+        return checks;
       }
 
       /**
@@ -283,7 +276,7 @@ namespace GridKit
           return 1;
         }
 
-        if (verify() > 0)
+        if (!this->verifyAndLog())
         {
           Log::error() << "GastPti: cannot initialize with invalid configuration\n";
           return 1;

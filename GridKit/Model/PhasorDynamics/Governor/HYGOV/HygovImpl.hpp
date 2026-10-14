@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <format>
 #include <numeric>
 #include <variant>
 
@@ -124,30 +125,23 @@ namespace GridKit
        * power feasibility is operating-point dependent and is checked by
        * initialize().
        *
-       * @return int Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Hygov<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Hygov<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
+        Model::ConfigurationChecks checks("Hygov");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Hygov: " << message << '\n';
-            ret += 1;
-          }
-        };
+        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        check(valid_component_base,
-              "component power base must be finite and positive");
-        check(valid_system_base,
-              "system power base must be finite and positive");
+        checks.check(valid_component_base,
+                     "component power base must be finite and positive");
+        checks.check(valid_system_base,
+                     "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
@@ -156,18 +150,18 @@ namespace GridKit
                                          && system_to_component > ZERO<RealT>
                                          && std::isfinite(component_to_system)
                                          && component_to_system > ZERO<RealT>;
-          check(valid_base_ratios,
-                "system/component power-base conversion ratios must be finite and positive");
+          checks.check(valid_base_ratios,
+                       "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(Rtemp_ > ZERO<RealT>, "Rtemp must be nonzero");
-        check(Tn_ >= ZERO<RealT>, "Tn must be non-negative");
-        check(Velm_ >= ZERO<RealT>, "Velm must be non-negative");
-        check(Gmin_ < Gmax_, "Gmin must be less than Gmax");
-        check(At_ > ZERO<RealT>, "At must be positive");
-        check(Dturb_ >= ZERO<RealT>, "Dturb must be non-negative");
-        check(db1_ >= ZERO<RealT>, "db1 must be non-negative");
-        check(Hdam_ > ZERO<RealT>, "Hdam must be positive");
+        checks.check(Rtemp_ > ZERO<RealT>, "Rtemp must be nonzero");
+        checks.check(Tn_ >= ZERO<RealT>, "Tn must be non-negative");
+        checks.check(Velm_ >= ZERO<RealT>, "Velm must be non-negative");
+        checks.check(Gmin_ < Gmax_, "Gmin must be less than Gmax");
+        checks.check(At_ > ZERO<RealT>, "At must be positive");
+        checks.check(Dturb_ >= ZERO<RealT>, "Dturb must be non-negative");
+        checks.check(db1_ >= ZERO<RealT>, "db1 must be non-negative");
+        checks.check(Hdam_ > ZERO<RealT>, "Hdam must be positive");
 
         bool curve_shape_is_valid = true;
         for (size_t i = 1; i < Gv_.size(); ++i)
@@ -175,8 +169,8 @@ namespace GridKit
           const bool gate_points_increase  = Gv_[i - 1] < Gv_[i];
           const bool power_points_increase = Pgv_[i - 1] <= Pgv_[i];
 
-          check(gate_points_increase, "Gv points must be strictly increasing");
-          check(power_points_increase, "Pgv points must be non-decreasing");
+          checks.check(gate_points_increase, "Gv points must be strictly increasing");
+          checks.check(power_points_increase, "Pgv points must be non-decreasing");
 
           if (!gate_points_increase || !power_points_increase)
           {
@@ -185,8 +179,8 @@ namespace GridKit
         }
         const bool minimum_gate_is_valid = Gv_[0] <= Gmin_;
         const bool maximum_gate_is_valid = Gmax_ <= Gv_[5];
-        check(minimum_gate_is_valid, "Gmin must be at or above the first Gv point");
-        check(maximum_gate_is_valid, "Gmax must be at or below the last Gv point");
+        checks.check(minimum_gate_is_valid, "Gmin must be at or above the first Gv point");
+        checks.check(maximum_gate_is_valid, "Gmax must be at or below the last Gv point");
 
         const bool can_check_power_range = curve_shape_is_valid
                                            && Gmin_ < Gmax_
@@ -204,17 +198,17 @@ namespace GridKit
           const bool  finite_power_range = std::isfinite(minimum_power)
                                           && std::isfinite(maximum_power)
                                           && std::isfinite(power_range);
-          check(finite_power_range,
-                "mechanical-power range must be finite");
+          checks.check(finite_power_range,
+                       "mechanical-power range must be finite");
           if (finite_power_range)
           {
-            check(power_range > INITIALIZATION_TOLERANCE,
-                  "mechanical power must rise across [Gv0, Gv5]");
+            checks.check(power_range > INITIALIZATION_TOLERANCE,
+                         "mechanical power must rise across [Gv0, Gv5]");
           }
         }
 
-        check(ports_.out.template port<HygovSignalOutputs::pmech>().connected(),
-              "pmech output signal must be assigned");
+        checks.check(ports_.out.template port<HygovSignalOutputs::pmech>().connected(),
+                     "pmech output signal must be assigned");
 
         // An attached port must resolve to readable signal storage. The
         // enumerator is a template argument, so each port names itself once.
@@ -224,8 +218,7 @@ namespace GridKit
           if (ports_.in.template port<variable>().connected()
               && !ports_.in.template port<variable>().linked())
           {
-            Log::error() << "Hygov: " << name << " signal attached with no linked source\n";
-            ret += 1;
+            checks.fail(std::format("{} signal attached with no linked source", name));
           }
         };
 
@@ -233,7 +226,7 @@ namespace GridKit
         check_attached_signal.template operator()<HygovSignalInputs::pref>("pref");
         check_attached_signal.template operator()<HygovSignalInputs::paux>("paux");
 
-        return ret;
+        return checks;
       }
 
       /**
@@ -275,7 +268,7 @@ namespace GridKit
         const auto H       = static_cast<size_t>(HygovInternalVariables::H);
         const auto PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
 
-        bool ret = verify() == 0;
+        bool ret = this->verifyAndLog();
         if (!ret)
         {
           Log::error() << "Hygov: cannot initialize with invalid configuration\n";

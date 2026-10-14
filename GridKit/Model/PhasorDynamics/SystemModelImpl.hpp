@@ -1,4 +1,5 @@
 #include <cassert>
+#include <format>
 #include <iostream>
 
 #include <GridKit/Definitions.hpp>
@@ -458,10 +459,8 @@ namespace GridKit
       }
 
       // Verify component configuration
-      int errorCount = this->verify();
-      if (errorCount > 0)
+      if (!this->verifyAndLog())
       {
-        Log::error() << "Component errors: " << errorCount << std::endl;
         throw std::runtime_error("SystemModel allocation failed");
       }
 
@@ -493,21 +492,25 @@ namespace GridKit
     /**
      * @brief Verify all components are configured correctly
      *
-     * This method accumulates and returns the number of errors given by
-     * components. It should return 0 when all is well.
+     * Collects every problem reported by the components, each prefixed with
+     * the component ID. passed() is true when all is well.
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
     {
-      int ret = 0;
+      Model::ConfigurationChecks checks;
 
       // Verify components
       for (const auto& component : components_)
       {
-        ret += component->verify();
+        const auto component_checks = component->verify();
+        for (const auto& error : component_checks.errors())
+        {
+          checks.fail(std::format("component {}: {}", component->getGridKitComponentID(), error));
+        }
       }
 
-      return ret;
+      return checks;
     }
 
     /**

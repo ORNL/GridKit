@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <format>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -142,23 +143,16 @@ namespace GridKit
        * bus, required measurement signals, and attached optional reference
        * signals. Command-output assignment is optional.
        *
-       * @return Number of configuration errors; zero when valid.
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
-      int Repca<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Repca<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
+        Model::ConfigurationChecks checks("Repca");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Repca: " << message << '\n';
-            ret += 1;
-          }
-        };
+        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
-        check(bus_ != nullptr, "regulated bus is required");
+        checks.check(bus_ != nullptr, "regulated bus is required");
 
         const bool valid_component_base = std::isfinite(mva_base_)
                                           && mva_base_ > ZERO<RealT>
@@ -166,44 +160,42 @@ namespace GridKit
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        check(valid_component_base,
-              "mva must define a finite positive component power base");
-        check(valid_system_base, "system power base must be finite and positive");
+        checks.check(valid_component_base,
+                     "mva must define a finite positive component power base");
+        checks.check(valid_system_base, "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
-          check(std::isfinite(system_to_component)
-                    && system_to_component > ZERO<RealT>
-                    && std::isfinite(component_to_system)
-                    && component_to_system > ZERO<RealT>,
-                "system/component power-base conversion ratios must be finite and positive");
+          checks.check(std::isfinite(system_to_component)
+                           && system_to_component > ZERO<RealT>
+                           && std::isfinite(component_to_system)
+                           && component_to_system > ZERO<RealT>,
+                       "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
-              "dbdlow <= 0 <= dbdupper is required");
-        check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
-              "emin <= 0 <= emax is required");
-        check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
-        check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
-              "fdbd1 <= 0 <= fdbd2 is required");
-        check(Ddn_ >= ZERO<RealT>, "Ddn must be non-negative");
-        check(Dup_ >= ZERO<RealT>, "Dup must be non-negative");
-        check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
-              "femin <= 0 <= femax is required");
-        check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
+        checks.check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
+                     "dbdlow <= 0 <= dbdupper is required");
+        checks.check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
+                     "emin <= 0 <= emax is required");
+        checks.check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
+        checks.check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
+                     "fdbd1 <= 0 <= fdbd2 is required");
+        checks.check(Ddn_ >= ZERO<RealT>, "Ddn must be non-negative");
+        checks.check(Dup_ >= ZERO<RealT>, "Dup must be non-negative");
+        checks.check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
+                     "femin <= 0 <= femax is required");
+        checks.check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
 
         auto check_required_signal = [&]<RepcaSignalInputs variable>(const char* name)
         {
           if (!ports_.in.template port<variable>().connected())
           {
-            Log::error() << "Repca: " << name << " signal is required\n";
-            ret += 1;
+            checks.fail(std::format("{} signal is required", name));
           }
           else if (!ports_.in.template port<variable>().linked())
           {
-            Log::error() << "Repca: " << name << " signal attached with no linked source\n";
-            ret += 1;
+            checks.fail(std::format("{} signal attached with no linked source", name));
           }
         };
 
@@ -217,8 +209,7 @@ namespace GridKit
           if (ports_.in.template port<variable>().connected()
               && !ports_.in.template port<variable>().linked())
           {
-            Log::error() << "Repca: " << name << " signal attached with no linked source\n";
-            ret += 1;
+            checks.fail(std::format("{} signal attached with no linked source", name));
           }
         };
 
@@ -228,7 +219,7 @@ namespace GridKit
         check_optional_signal.template operator()<RepcaSignalInputs::freq>("freq");
         check_optional_signal.template operator()<RepcaSignalInputs::freqref>("freqref");
 
-        return ret;
+        return checks;
       }
 
       /**
@@ -282,7 +273,7 @@ namespace GridKit
           return 1;
         }
 
-        if (verify() > 0)
+        if (!this->verifyAndLog())
         {
           Log::error() << "Repca: cannot initialize with invalid configuration\n";
           return 1;

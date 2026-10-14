@@ -72,7 +72,8 @@ namespace GridKit
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
-      virtual int verify() const override final;
+
+      virtual Model::ConfigurationChecks verify() const override final;
 
       int setInService(bool in_service);
 

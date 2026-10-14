@@ -4,6 +4,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -61,7 +62,8 @@ namespace GridKit
         }
       }
 
-      virtual int verify() const = 0;
+      /// Report configuration problems.
+      virtual Model::ConfigurationChecks verify() const = 0;
 
       IdxT size() override final
       {
@@ -280,6 +282,21 @@ namespace GridKit
       }
 
     protected:
+      /**
+       * @brief Log every problem verify() reports.
+       *
+       * @return true when the configuration has no problems.
+       */
+      [[nodiscard]] bool verifyAndLog() const
+      {
+        const auto checks = verify();
+        for (const auto& error : checks.errors())
+        {
+          Log::error() << error << '\n';
+        }
+        return checks.passed();
+      }
+
       void setComponentBase(RealT va_component_base)
       {
         va_component_base_ = va_component_base;

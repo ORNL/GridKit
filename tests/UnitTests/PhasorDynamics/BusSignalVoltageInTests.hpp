@@ -32,21 +32,6 @@ namespace GridKit
       BusSignalVoltageInTests()  = default;
       ~BusSignalVoltageInTests() = default;
 
-      /// True if verify() throws, as it must for a misconnected bus
-      template <typename BusLike>
-      static bool verifyThrows(const BusLike& bus)
-      {
-        try
-        {
-          bus.verify();
-        }
-        catch (const std::runtime_error&)
-        {
-          return true;
-        }
-        return false;
-      }
-
       /// Constructor, allocation, and initialization checks
       TestOutcome constructor()
       {
@@ -69,14 +54,14 @@ namespace GridKit
         success *= isEqual(bus->Ir(), 0.0);
         success *= isEqual(bus->Ii(), 0.0);
         // Voltage inlets are mandatory: an unconnected bus fails verification
-        success *= verifyThrows(*bus);
+        success *= !bus->verify().passed();
         delete bus;
 
         // Initial voltage arguments are accepted for interface uniformity but not used
         bus = new BusT(Vr, Vi);
         bus->allocate();
         bus->initialize();
-        success *= verifyThrows(*bus);
+        success *= !bus->verify().passed();
         delete bus;
 
         bus = nullptr;
@@ -110,7 +95,7 @@ namespace GridKit
         bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
         bus.allocate();
         bus.initialize();
-        success *= (bus.verify() == 0);
+        success *= (bus.verify().passed());
 
         // Voltage is read straight from the signals, no evaluation needed
         success *= isEqual(bus.Vr(), Vr);
@@ -131,7 +116,7 @@ namespace GridKit
         BusT plain;
         plain.allocate();
         plain.initialize();
-        success    *= verifyThrows(plain);
+        success    *= !plain.verify().passed();
         bool threw  = false;
         try
         {
@@ -177,7 +162,7 @@ namespace GridKit
 
         bus.allocate();
         bus.initialize();
-        success *= (bus.verify() == 0);
+        success *= (bus.verify().passed());
         success *= ir_node.linked();
         success *= ii_node.linked();
         success *= (ir_node.getVariableIndex() == INVALID_INDEX<IdxT>);
@@ -203,7 +188,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// verify() throws for voltage inlets that are unconnected or unlinked
+      /// verify() reports errors for voltage inlets that are unconnected or unlinked
       TestOutcome verifyUnlinked()
       {
         TestStatus success = true;
@@ -221,20 +206,20 @@ namespace GridKit
         bus.initialize();
 
         // vr connected but unlinked, vi not connected
-        success *= verifyThrows(bus);
+        success *= !bus.verify().passed();
 
         ScalarT Vr{0.1};
         IdxT    vr_index{0};
         vr_node.link(&Vr, &vr_index);
-        success *= verifyThrows(bus);
+        success *= !bus.verify().passed();
 
         bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
-        success *= verifyThrows(bus);
+        success *= !bus.verify().passed();
 
         ScalarT Vi{0.2};
         IdxT    vi_index{1};
         vi_node.link(&Vi, &vi_index);
-        success *= (bus.verify() == 0);
+        success *= (bus.verify().passed());
 
         Log::setVerbosity(previous_verbosity);
 

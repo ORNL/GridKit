@@ -87,11 +87,12 @@ namespace GridKit
 
       int setGridKitComponentID(IdxT) override final;
       int allocate() override final;
-      int verify() const override final;
       int initialize() override final;
       int tagDifferentiable() override final;
       int setAbsoluteTolerance(RealT rel_tol) override final;
       int evaluateResidual() override final;
+
+      Model::ConfigurationChecks verify() const override final;
 
       // Still to be implemented
       int evaluateJacobian() override final;

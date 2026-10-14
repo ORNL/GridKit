@@ -3,6 +3,10 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
+add_executable(test_phasor_model_configuration runModelConfigurationTests.cpp)
+target_link_libraries(
+  test_phasor_model_configuration GridKit::phasor_dynamics_core GridKit::testing)
+
 add_executable(test_phasor_bus runBusTests.cpp)
 target_link_libraries(
   test_phasor_bus
@@ -204,6 +208,7 @@ target_link_libraries(
   GridKit::phasor_dynamics_systemmodel
   GridKit::testing)
 
+add_test(NAME PhasorDynamicsModelConfigurationTest COMMAND test_phasor_model_configuration)
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBusSignalVoltageOutTest COMMAND test_phasor_bus_signal_voltage_out)
 add_test(NAME PhasorDynamicsBusSignalVoltageInTest COMMAND test_phasor_bus_signal_voltage_in)

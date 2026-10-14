@@ -23,7 +23,7 @@ namespace GridKit
      * - publishes _Vr_ and _Vi_ on signal outlets `vr` and `vi`, and
      * - sets its residuals f[0] and f[1] to the current injections read from
      *   signal inlets `ir` and `ii`, respectively. Both inlets are
-     *   mandatory: verify() throws if either is not connected to a linked
+     *   mandatory: verify() reports an error if either is not connected to a linked
      *   signal, and no default value is ever used.
      *
      * Components attached to the bus directly (without signals) keep adding
@@ -67,12 +67,13 @@ namespace GridKit
 
       virtual int setBusID(IdxT) override final;
       virtual int allocate() override final;
-      virtual int verify() const override final;
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
       virtual int initialize() override final;
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
+
+      virtual Model::ConfigurationChecks verify() const override final;
 
       virtual BusTypeT BusType() const override final
       {

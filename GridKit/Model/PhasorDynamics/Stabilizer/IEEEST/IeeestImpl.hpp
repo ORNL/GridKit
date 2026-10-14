@@ -188,35 +188,32 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks Ieeest<scalar_type, index_type>::verify() const
       {
-        int ret = 0;
+        Model::ConfigurationChecks checks("Ieeest");
 
         auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
         if (!input_port.connected())
         {
-          Log::error() << "Ieeest: required input signal U is not attached\n";
-          ret += 1;
+          checks.fail("required input signal U is not attached");
         }
         if (input_port.connected() && !input_port.linked())
         {
-          Log::error() << "Ieeest: input signal U attached with no linked source\n";
-          ret += 1;
+          checks.fail("input signal U attached with no linked source");
         }
 
         if (a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0)
         {
-          Log::error() << "Ieeest: a2, a3, and a4 are all zero - no valid notch filter\n";
-          ret += 1;
+          checks.fail("a2, a3, and a4 are all zero - no valid notch filter");
         }
 
-        return ret;
+        return checks;
       }
 
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::initialize()
       {
-        if (verify() != 0)
+        if (!this->verifyAndLog())
         {
           Log::error() << "Ieeest: cannot initialize with invalid configuration\n";
           return 1;

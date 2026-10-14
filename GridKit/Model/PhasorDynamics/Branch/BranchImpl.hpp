@@ -154,34 +154,27 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Branch<scalar_type, index_type>::verify() const
     {
-      int ret = parameter_error_count_;
+      Model::ConfigurationChecks checks("Branch");
 
-      auto check = [&](bool condition, const char* message)
-      {
-        if (!condition)
-        {
-          Log::error() << "Branch: " << message << '\n';
-          ret += 1;
-        }
-      };
+      checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
-      check(bus1_ != nullptr, "bus1 pointer is null");
-      check(bus2_ != nullptr, "bus2 pointer is null");
+      checks.check(bus1_ != nullptr, "bus1 pointer is null");
+      checks.check(bus2_ != nullptr, "bus2 pointer is null");
 
-      check(std::isfinite(R_), "R must be finite");
-      check(std::isfinite(X_), "X must be finite");
-      check(std::isfinite(G_), "G must be finite");
-      check(std::isfinite(B_), "B must be finite");
-      check(std::isfinite(Gmag_), "Gmag must be finite");
-      check(std::isfinite(Bmag_), "Bmag must be finite");
-      check(std::isfinite(tap_), "tap must be finite");
-      check(std::isfinite(phase_), "phase must be finite");
-      check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
-      check(tap_ > RealT{0.0}, "tap must be positive");
+      checks.check(std::isfinite(R_), "R must be finite");
+      checks.check(std::isfinite(X_), "X must be finite");
+      checks.check(std::isfinite(G_), "G must be finite");
+      checks.check(std::isfinite(B_), "B must be finite");
+      checks.check(std::isfinite(Gmag_), "Gmag must be finite");
+      checks.check(std::isfinite(Bmag_), "Bmag must be finite");
+      checks.check(std::isfinite(tap_), "tap must be finite");
+      checks.check(std::isfinite(phase_), "phase must be finite");
+      checks.check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
+      checks.check(tap_ > RealT{0.0}, "tap must be positive");
 
-      return ret;
+      return checks;
     }
 
     /// Put the branch in or out of service; out of service, it injects no current.
