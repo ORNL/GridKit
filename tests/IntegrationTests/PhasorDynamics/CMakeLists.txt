@@ -1,8 +1,7 @@
 if(TARGET SUNDIALS::idas)
   add_executable(test_pd_integration runPDIntegrationTests.cpp)
-  target_link_libraries(
-    test_pd_integration
-    PRIVATE GridKit::phasor_dynamics_systemmodel GridKit::solvers_dyn GridKit::testing)
+  target_link_libraries(test_pd_integration PRIVATE GridKit::phasor_dynamics_systemmodel
+                                                    GridKit::solvers_dyn GridKit::testing)
 
   add_test(
     NAME PhasorDynamicsIntegrationTest
