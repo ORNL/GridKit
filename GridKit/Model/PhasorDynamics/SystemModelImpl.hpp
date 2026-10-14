@@ -958,6 +958,7 @@ namespace GridKit
       }
 
       subsystem->is_subsystem_ = true;
+      subsystem->setGridKitComponentID(static_cast<IdxT>(subsystems_.size()));
       subsystems_.push_back(subsystem);
       allocated_ = false;
     }
