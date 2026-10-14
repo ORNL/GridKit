@@ -103,9 +103,9 @@ namespace GridKit
         }
 
         auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
-        regca->getPorts().connect(regcadata, signal_nodes_);
-
         addComponent(regca);
+
+        regca->getPorts().connect(regcadata, signal_nodes_);
       }
 
       // Add branches
@@ -167,8 +167,8 @@ namespace GridKit
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
         auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
+        gen->getPorts().connect(gendata, signal_nodes_);
       }
 
       // Add GENSAL generators
@@ -181,8 +181,8 @@ namespace GridKit
         }
 
         auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
+        gen->getPorts().connect(gendata, signal_nodes_);
       }
 
       // Add classical generators
@@ -194,8 +194,8 @@ namespace GridKit
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
+        gen->getPorts().connect(gendata, signal_nodes_);
       }
 
       // Add REECB after its current-command and feedback producers because
@@ -209,36 +209,36 @@ namespace GridKit
         }
 
         auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
-        reecb->getPorts().connect(reecbdata, signal_nodes_);
-
         addComponent(reecb);
+
+        reecb->getPorts().connect(reecbdata, signal_nodes_);
       }
 
       // Add Tgov1 governors
       for (const auto& govdata : data.gov)
       {
         auto* gov = new Tgov1<ScalarT, IdxT>(govdata);
-        gov->getPorts().connect(govdata, signal_nodes_);
-
         addComponent(gov);
+
+        gov->getPorts().connect(govdata, signal_nodes_);
       }
 
       // Add GASTPTI governors
       for (const auto& gastptidata : data.gastpti)
       {
         auto* gastpti = new GastPti<ScalarT, IdxT>(gastptidata);
-        gastpti->getPorts().connect(gastptidata, signal_nodes_);
-
         addComponent(gastpti);
+
+        gastpti->getPorts().connect(gastptidata, signal_nodes_);
       }
 
       // Add HYGOV governors
       for (const auto& hygovdata : data.hygov)
       {
         auto* hygov = new Hygov<ScalarT, IdxT>(hygovdata);
-        hygov->getPorts().connect(hygovdata, signal_nodes_);
-
         addComponent(hygov);
+
+        hygov->getPorts().connect(hygovdata, signal_nodes_);
       }
 
       // Add IEEEST stabilizers before exciters that consume their output during
@@ -246,8 +246,8 @@ namespace GridKit
       for (const auto& stabdata : data.stabilizer)
       {
         auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-        stabilizer->getPorts().connect(stabdata, signal_nodes_);
         addComponent(stabilizer);
+        stabilizer->getPorts().connect(stabdata, signal_nodes_);
       }
 
       for (const auto& excitedata : data.exciter)
@@ -259,9 +259,9 @@ namespace GridKit
         }
 
         auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
         addComponent(exciter);
+
+        exciter->getPorts().connect(excitedata, signal_nodes_);
       }
 
       for (const auto& excitedata : data.esdc1a)
@@ -273,9 +273,9 @@ namespace GridKit
         }
 
         auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
         addComponent(exciter);
+
+        exciter->getPorts().connect(excitedata, signal_nodes_);
       }
 
       for (const auto& excitedata : data.sexspti)
@@ -287,9 +287,9 @@ namespace GridKit
         }
 
         auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
         addComponent(exciter);
+
+        exciter->getPorts().connect(excitedata, signal_nodes_);
       }
 
       // Add REPCA plant controllers after the signal producers they read at
@@ -303,25 +303,25 @@ namespace GridKit
         }
 
         auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
-        repca->getPorts().connect(repcadata, signal_nodes_);
-
         addComponent(repca);
+
+        repca->getPorts().connect(repcadata, signal_nodes_);
       }
 
       // Add constant signal sources
       for (const auto& srcdata : data.constant_source)
       {
         auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
-        source->getPorts().connect(srcdata, signal_nodes_);
         addComponent(source);
+        source->getPorts().connect(srcdata, signal_nodes_);
       }
 
       // Add constant signal sources
       for (const auto& srcdata : data.function_source)
       {
         auto* source = new FunctionSignalSource<ScalarT, IdxT>(srcdata);
-        source->getPorts().connect(srcdata, signal_nodes_);
         addComponent(source);
+        source->getPorts().connect(srcdata, signal_nodes_);
       }
 
       // Add subsystems; they may use this system's buses and its external
