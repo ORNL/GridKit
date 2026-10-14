@@ -1,6 +1,8 @@
+#include <array>
 #include <cassert>
 #include <format>
 #include <iostream>
+#include <vector>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
@@ -213,11 +215,51 @@ namespace GridKit
         addComponent(hygov);
       }
 
-      // Add IEEEST stabilizers before exciters that consume their output during
-      // initialization.
+      using IeeestDataT    = IeeestData<RealT, IdxT>;
+      using IeeestFactoryT = IeeestFactory<ScalarT, IdxT>;
+
+      std::array<std::vector<const IeeestDataT*>, 5> stabilizers_by_order;
       for (const auto& stabdata : data.stabilizer)
       {
-        addComponent(IeeestFactory<ScalarT, IdxT>::create(stabdata, signal_nodes_));
+        const auto order = IeeestFactoryT::readNotchOrder(stabdata);
+        stabilizers_by_order[order].push_back(&stabdata);
+      }
+
+      // Add IEEEST stabilizers before exciters that consume their output during
+      // initialization.
+      for (const auto* stabdata : stabilizers_by_order[0])
+      {
+        auto* stabilizer = new Ieeest<ScalarT, IdxT, 0>(*stabdata);
+        stabilizer->getPorts().connect(*stabdata, signal_nodes_);
+        addComponent(stabilizer);
+      }
+
+      for (const auto* stabdata : stabilizers_by_order[1])
+      {
+        auto* stabilizer = new Ieeest<ScalarT, IdxT, 1>(*stabdata);
+        stabilizer->getPorts().connect(*stabdata, signal_nodes_);
+        addComponent(stabilizer);
+      }
+
+      for (const auto* stabdata : stabilizers_by_order[2])
+      {
+        auto* stabilizer = new Ieeest<ScalarT, IdxT, 2>(*stabdata);
+        stabilizer->getPorts().connect(*stabdata, signal_nodes_);
+        addComponent(stabilizer);
+      }
+
+      for (const auto* stabdata : stabilizers_by_order[3])
+      {
+        auto* stabilizer = new Ieeest<ScalarT, IdxT, 3>(*stabdata);
+        stabilizer->getPorts().connect(*stabdata, signal_nodes_);
+        addComponent(stabilizer);
+      }
+
+      for (const auto* stabdata : stabilizers_by_order[4])
+      {
+        auto* stabilizer = new Ieeest<ScalarT, IdxT, 4>(*stabdata);
+        stabilizer->getPorts().connect(*stabdata, signal_nodes_);
+        addComponent(stabilizer);
       }
 
       for (const auto& excitedata : data.exciter)

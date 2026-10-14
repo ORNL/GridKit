@@ -521,26 +521,39 @@ namespace GridKit
         T4_ = std::max(T4_, TIME_CONSTANT_MINIMUM);
         T6_ = std::max(T6_, TIME_CONSTANT_MINIMUM);
 
-        // The factors commute. Up to order two they combine into the first
-        // factor; above that the second-order factor goes first to carry the numerator.
-        if constexpr (order <= 2)
+        b1_ = b2_ = c1_ = c2_ = ZERO<RealT>;
+
+        if constexpr (order == 1)
+        {
+          b1_ = A1_ + A3_;
+        }
+        else if constexpr (order == 2)
         {
           b1_ = A1_ + A3_;
           b2_ = A2_ + A4_ + A1_ * A3_;
         }
-        else if (factorDegree(A1_, A2_) == 2)
+        else if constexpr (order == 3)
+        {
+          // The quadratic factor carries the numerator.
+          if (A2_ != ZERO<RealT>)
+          {
+            b1_ = A1_;
+            b2_ = A2_;
+            c1_ = A3_;
+          }
+          else
+          {
+            b1_ = A3_;
+            b2_ = A4_;
+            c1_ = A1_;
+          }
+        }
+        else if constexpr (order == 4)
         {
           b1_ = A1_;
           b2_ = A2_;
           c1_ = A3_;
           c2_ = A4_;
-        }
-        else
-        {
-          b1_ = A3_;
-          b2_ = A4_;
-          c1_ = A1_;
-          c2_ = A2_;
         }
       }
 

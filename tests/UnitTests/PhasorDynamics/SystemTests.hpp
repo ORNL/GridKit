@@ -15,6 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -401,6 +402,41 @@ namespace GridKit
         Log::setVerbosity(previous_verbosity);
 
         return status.report(__func__);
+      }
+
+      /// SystemModel selects the correct IEEEST specialization and connects its ports.
+      template <size_t order>
+      TestOutcome ieeestConstruction()
+      {
+        using IeeestT = PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT, order>;
+        using Params  = PhasorDynamics::Stabilizer::IeeestParameters;
+        using Inputs  = PhasorDynamics::Stabilizer::IeeestSignalInputs;
+        using Outputs = PhasorDynamics::Stabilizer::IeeestSignalOutputs;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.signal = {{"input", 1}, {"output", 2}};
+
+        auto& stabilizer                           = data.stabilizer.emplace_back();
+        stabilizer.parameters[Params::A1]          = static_cast<RealT>(order >= 1 ? 1.0 : 0.0);
+        stabilizer.parameters[Params::A2]          = static_cast<RealT>(order >= 2 ? 0.5 : 0.0);
+        stabilizer.parameters[Params::A3]          = static_cast<RealT>(order >= 3 ? 0.75 : 0.0);
+        stabilizer.parameters[Params::A4]          = static_cast<RealT>(order == 4 ? 0.25 : 0.0);
+        stabilizer.signal_inputs[Inputs::input]    = 1;
+        stabilizer.signal_outputs[Outputs::output] = 2;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        auto* ieeest  = dynamic_cast<IeeestT*>(system.getComponent(0));
+        success      *= (ieeest != nullptr);
+        if (ieeest != nullptr)
+        {
+          success *= ieeest->getPorts().in.template port<Inputs::input>().connected();
+          success *= ieeest->getPorts().out.template port<Outputs::output>().connected();
+        }
+
+        return success.report(__func__);
       }
 
       /// SystemModel propagates a statically valid component's initialization error.

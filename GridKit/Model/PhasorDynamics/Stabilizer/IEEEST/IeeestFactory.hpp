@@ -48,7 +48,7 @@ namespace GridKit
           }
         }
 
-      private:
+        /// Read the notch order from the denominator coefficients.
         static size_t readNotchOrder(const ModelDataT& data)
         {
           using Params = typename ModelDataT::Parameters;
@@ -62,6 +62,7 @@ namespace GridKit
           return notchOrder(A1, A2, A3, A4);
         }
 
+      private:
         template <size_t order>
         static ComponentT* construct(const ModelDataT& data, SignalNodeSetT& signal_nodes)
         {
