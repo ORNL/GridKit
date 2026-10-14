@@ -27,5 +27,5 @@ A `PartitionGroup` has the following properties:
 ## Regarding Components and SignalNodes
 
 Until we support `internal`/`external` signals, we should enforce:
-- If a `Component` is connected to an `external` bus, it will be assigned to the first partition where that bus appears.
+- Assign each `Component` to the first `Partition` containing all its bus ports. Reject the partitioning if none exists.
 - `SignalNodes` must only connect `Component`s of the same `Partition`

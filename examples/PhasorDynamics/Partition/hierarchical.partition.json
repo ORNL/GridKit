@@ -3,10 +3,10 @@
     "partitions": [
         {
             "name": "A",
-            "external_buses":[
+            "external":[
                 3, 4
             ],
-            "internal_buses":[
+            "internal":[
                 1, 2
             ]
         },
@@ -15,19 +15,19 @@
             "partitions":[
                 {
                     "name":"BX",
-                    "external_buses":[
+                    "external":[
                         3, 7
                     ],
-                    "internal_buses":[
+                    "internal":[
                         6
                     ]
                 },
                 {
                     "name":"BY",
-                    "external_buses":[
+                    "external":[
                         4, 7
                     ],
-                    "internal_buses":[
+                    "internal":[
                         5, 8
                     ]
                 }
