@@ -10,6 +10,9 @@
 - Added `enable` and `disable` solver events that put a branch in or out of service.
 - `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
 - Added `Model::ParameterReader`
+- Added the `OptimalPowerFlow` model family, the `SteadyState` Ipopt interface, and the `EconomicDispatch` example for MATPOWER cases.
+- The MATPOWER reader accepts rows without semicolons, solution columns, and decimal `baseMVA` and costs.
+- Fixed the study output check for a dangling symlink.
 
 ## v0.2
 

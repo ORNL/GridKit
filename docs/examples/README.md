@@ -6,6 +6,7 @@
 :hidden:
 
 EMT <EMT/README>
+OptimalPowerFlow <OptimalPowerFlow/README>
 PhasorDynamics <PhasorDynamics/README>
 PowerElectronics <PowerElectronics/README>
 PowerFlow <PowerFlow/README>

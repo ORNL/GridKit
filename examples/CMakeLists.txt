@@ -59,4 +59,8 @@ if(TARGET SUNDIALS::idas)
   add_subdirectory(Network)
 endif()
 
+if(GRIDKIT_ENABLE_ENZYME)
+  add_subdirectory(OptimalPowerFlow)
+endif()
+
 add_subdirectory(Consumer)
