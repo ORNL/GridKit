@@ -1,6 +1,6 @@
 # Shunt
 
-Constant admittance $Y = G + jB$ to ground. The `EconomicDispatch` application
+Constant admittance $Y = G + jB$ to ground. The `EconomicDispatch` example
 makes one for every LoadZ device in the case.
 
 ## Model Parameters

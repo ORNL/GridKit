@@ -24,7 +24,7 @@ For example `texas-summer2025.state.json` might be structured as:
 
 Each entry gives initial outputs and operating settings. Models use these values and connected inputs to initialize their own state.
 
-Buses own their voltage and shunt outputs. Devices own their terminal current outputs. These values support initialization across PowerFlow, OPF, PhasorDynamics, and EMT.
+Buses store their voltages. Devices store their terminal currents and operating settings.
 
 ## Bus
 
@@ -41,7 +41,7 @@ RMS voltages use real and imaginary parts:
 
 ### ABC State (EMT)
 
-EMT bus entries give instantaneous phase voltages. Device entries give currents. Each model defines any other initial states or history it needs.
+Future EMT bus entries would give instantaneous phase voltages and device entries would give currents. Each model would define any other initial states or history it needs.
 
 ```json
 "bus_id_2533":{
@@ -55,7 +55,7 @@ EMT bus entries give instantaneous phase voltages. Device entries give currents.
 
 Device entries give initial outputs and settings such as `online`, `open`, `tap`, and `phase`.
 
-Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple terminals. Numbers follow the model's terminal numbering. Currents are positive into each connected bus. Phasor currents use the system base. EMT uses the model's phase output names and units.
+Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple terminals. Numbers follow the model's terminal numbering. Currents are positive into each connected bus and use the system base.
 
 > At nonzero voltage, convert terminal power to initial current with `I = conj((P + jQ) / V)`.
 
@@ -99,11 +99,6 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 `GridKit/Model/StateData.hpp` reads and writes this format. Device keys are the
 case `id`. Bus keys are `bus_id_` followed by the bus number.
 
-- The application helper `application/PhasorDynamics/StateUtilities.hpp`
-  applies a state to parsed PhasorDynamics case data: bus
-  `Vr0`/`Vi0`, machine `p0`/`q0`, `LoadZIP` `Pnom`/`Qnom`, and branch `tap`
-  and `phase`. Open branches and offline `LoadZ` devices are removed, and an
-  offline `LoadZIP` draws no power. Offline machines are rejected.
-- `EconomicDispatch` builds the OPF network and initial state together. It
-  fills omitted bus voltages and device current pairs from the case, preserves
-  supplied settings and metadata, and writes solved voltages and currents.
+`OptimalPowerFlow::SystemModel` reads the starting point, load demand, and
+device settings from the state. `solutionState()` returns the state with
+solved bus voltages and device terminal currents.
