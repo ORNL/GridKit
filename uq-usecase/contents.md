@@ -30,6 +30,7 @@ distinction). Update this file whenever a new work-note, case doc, or notebook i
 | File | What it covers |
 |---|---|
 | [`uq_plan.md`](work-notes/uq_plan.md) | **The main plan.** Aleatoric + epistemic track definitions, Task 0/0b, directory structure, notebook workflow, open questions. Has its own Contents + "Related investigative documents" section linking everything below. Start here. |
+| [`all_epistemic_runs.md`](work-notes/all_epistemic_runs.md) | **Live inventory of all completed epistemic UQ sweeps.** Sample counts, disk usage (GB), SLURM timing, throughput metrics. Updated whenever a new run completes. Reference for reporting and throughput tracking. |
 | [`pf_helper.md`](work-notes/pf_helper.md) | GridKit `solve_pf` vs PowerModels.jl power-flow solver comparison; why PM.jl is the production choice; safe-envelope findings |
 | [`m_to_case_helper.md`](work-notes/m_to_case_helper.md) | MATPOWER `.m` → GridKit `case.json` mapping spec: `patch_case_from_m` / `build_case_from_solved_m`, field-by-field rules, test plan |
 | [`notes_1.md`](work-notes/notes_1.md) | Early `m_viz` workflow summary (2026-06-17) |

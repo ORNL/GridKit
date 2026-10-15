@@ -1,0 +1,155 @@
+"""Write a MATPOWER `.m` whose operating point matches a PowerWorld `.aux`.
+
+The TAMU `case_ACTIVSg200.m` is an export of a *different* operating point than
+`illinois.case.json`. To perturb the case that GridKit actually ships, we need a
+`.m` that corresponds to the `.aux`. This module builds one by keeping the
+template's structure (column layout, ratings, limits, gencost, genfuel, bus
+names) and overwriting only the fields that define the operating point.
+
+Verified preconditions for ACTIVSg200 (see notebook section 5):
+  * `.aux` and template `.m` list buses in the same order  (200 == 200)
+  * `.aux` and template `.m` list generators in the same order (49 == 49), so
+    `mpc.gencost` / `mpc.genfuel` rows stay aligned
+  * the `.aux` has one branch the template lacks (64-82); it is appended
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pandas as pd
+
+from m_to_case_utils import _num
+from pf_utils import _parse_block, _replace_block
+
+# MATPOWER column indices (0-based)
+BUS_I, BUS_TYPE, PD, QD, GS, BS = 0, 1, 2, 3, 4, 5
+VM_COL, VA_COL = 7, 8
+GEN_BUS, PG, QG, QMAX, QMIN, VG, MBASE, GEN_STATUS, PMAX, PMIN = range(10)
+
+PQ, PV, SLACK = 1, 2, 3
+
+
+def _fmt(row: list) -> str:
+    return "\t" + "\t".join(str(c) for c in row) + ";"
+
+
+def _agg_by_bus(df: pd.DataFrame, bus_col: str, cols: dict[str, str]) -> pd.DataFrame:
+    out = df.copy()
+    out["_bus"] = _num(out, bus_col).astype(int)
+    for src in cols:
+        out[src] = _num(out, src)
+    return out.groupby("_bus")[list(cols)].sum().rename(columns=cols)
+
+
+def aux_to_m(
+    aux: dict[str, pd.DataFrame],
+    template_m: str | Path,
+    out_m: str | Path,
+    baseMVA: float = 100.0,
+    add_missing_branches: bool = True,
+) -> dict:
+    """Write `out_m`: the template `.m` re-stated at the `.aux` operating point.
+
+    Overwritten per bus: `BUS_TYPE, PD, QD, GS, BS, VM, VA`.
+    Overwritten per gen: `PG, QG, QMAX, QMIN, VG, MBASE, GEN_STATUS, PMAX, PMIN`.
+    Everything else (branch data, ratings, voltage limits, gencost, genfuel,
+    bus names) is inherited from the template.
+
+    Returns a report dict; raises if the bus/gen orderings disagree.
+    """
+    template_m, out_m = Path(template_m), Path(out_m)
+    text = template_m.read_text()
+    report: dict = {}
+
+    bus_rows = [r.split() for r in _parse_block(text, "bus")]
+    gen_rows = [r.split() for r in _parse_block(text, "gen")]
+
+    ax_bus, ax_gen = aux["Bus"], aux["Gen"]
+    bus_nums = [int(x) for x in _num(ax_bus, "BusNum")]
+    gen_buses = [int(x) for x in _num(ax_gen, "BusNum")]
+
+    if [int(float(r[BUS_I])) for r in bus_rows] != bus_nums:
+        raise ValueError("bus ordering differs between template .m and .aux")
+    if [int(float(r[GEN_BUS])) for r in gen_rows] != gen_buses:
+        raise ValueError("gen ordering differs between template .m and .aux")
+
+    # --- bus block ---
+    load = _agg_by_bus(aux["Load"], "BusNum", {"LoadSMW": "pd", "LoadSMVR": "qd"})
+    shunt = _agg_by_bus(aux["Shunt"], "BusNum", {"SSNMW": "gs", "SSNMVR": "bs"})
+    vm = dict(zip(bus_nums, _num(ax_bus, "BusPUVolt")))
+    va = dict(zip(bus_nums, _num(ax_bus, "BusAngle")))
+    slack = {n for n, s in zip(bus_nums, ax_bus["BusSlack"]) if str(s).strip().upper() == "YES"}
+    gen_bus_set = set(gen_buses)
+
+    new_bus = []
+    for row in bus_rows:
+        n = int(float(row[BUS_I]))
+        row = list(row)
+        row[BUS_TYPE] = str(SLACK if n in slack else PV if n in gen_bus_set else PQ)
+        row[PD] = f"{load['pd'].get(n, 0.0):.6f}"
+        row[QD] = f"{load['qd'].get(n, 0.0):.6f}"
+        row[GS] = f"{shunt['gs'].get(n, 0.0):.6f}"
+        row[BS] = f"{shunt['bs'].get(n, 0.0):.6f}"
+        row[VM_COL] = f"{vm[n]:.9f}"
+        row[VA_COL] = f"{va[n]:.9f}"
+        new_bus.append(_fmt(row))
+    text = _replace_block(text, "bus", "\n".join(new_bus) + "\n")
+    report["buses"] = len(new_bus)
+    report["slack_bus"] = sorted(slack)
+
+    # --- gen block ---
+    online = ax_gen["GenStatus"].str.strip().str.lower().eq("closed").tolist()
+    cols = {
+        PG: _num(ax_gen, "GenMWSetPoint"), QG: _num(ax_gen, "GenMvrSetPoint"),
+        QMAX: _num(ax_gen, "GenMVRMax"), QMIN: _num(ax_gen, "GenMVRMin"),
+        VG: _num(ax_gen, "GenVoltSet"), MBASE: _num(ax_gen, "GenMVABase"),
+        PMAX: _num(ax_gen, "GenMWMax"), PMIN: _num(ax_gen, "GenMWMin"),
+    }
+    new_gen = []
+    for i, row in enumerate(gen_rows):
+        row = list(row)
+        for idx, series in cols.items():
+            row[idx] = f"{series.iloc[i]:.6f}"
+        row[GEN_STATUS] = "1" if online[i] else "0"
+        if not online[i]:
+            row[PG] = row[QG] = "0.000000"  # GridKit ignores status; zero the injection
+        new_gen.append(_fmt(row))
+    text = _replace_block(text, "gen", "\n".join(new_gen) + "\n")
+    report["gens"] = len(new_gen)
+    report["gens_online"] = int(sum(online))
+
+    # --- branch block: template rows plus any branch only the .aux has ---
+    branch_rows = [r.split() for r in _parse_block(text, "branch")]
+    report["branches_template"] = len(branch_rows)
+    added = []
+    if add_missing_branches:
+        have = {tuple(sorted((int(float(r[0])), int(float(r[1]))))) for r in branch_rows}
+        ab = aux["Branch"]
+        f, t = _num(ab, "BusNum").astype(int), _num(ab, "BusNum:1").astype(int)
+        width = len(branch_rows[0])
+        for i in range(len(ab)):
+            key = tuple(sorted((int(f.iloc[i]), int(t.iloc[i]))))
+            if key in have:
+                continue
+            have.add(key)
+            r = ["0"] * width
+            r[0], r[1] = str(int(f.iloc[i])), str(int(t.iloc[i]))
+            r[2] = f"{float(ab['LineR'].iloc[i]):.9f}"
+            r[3] = f"{float(ab['LineX'].iloc[i]):.9f}"
+            r[4] = f"{float(ab['LineC'].iloc[i]):.9f}"
+            r[5] = f"{float(ab['LineAMVA'].iloc[i]):.4f}"
+            r[10] = "1"  # BR_STATUS
+            branch_rows.append(r)
+            added.append(key)
+        if added:
+            text = _replace_block(
+                text, "branch", "\n".join(_fmt(r) for r in branch_rows) + "\n"
+            )
+    report["branches_added_from_aux"] = added
+    report["branches"] = len(branch_rows)
+
+    out_m.parent.mkdir(parents=True, exist_ok=True)
+    out_m.write_text(text)
+    report["path"] = out_m
+    return report

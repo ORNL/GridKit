@@ -96,31 +96,83 @@ rsync -avz --delete kestrel:~/gridkit/mkdocs-site/ ~/projects/scidac/gridkit/mkd
   && open ~/projects/scidac/gridkit/mkdocs-site/index.html
 ```
 
-## Routine Maintenance: Pull, Build, Docs
+## Routine Maintenance: Build & Rebuild
+
+### Version Strategies
+
+You have **two workflows** depending on your stability needs:
+
+**Option 1: Track Latest Development (default `rebuild_if_updated.sh`)**
+- Merges `origin/develop` (unreleased, actively changing)
+- Gets latest GridKit features and bug fixes
+- Risk: breaking changes in development work
+- Use when: developing against the latest GridKit
+- Script: `rebuild_if_updated.sh`
+
+**Option 2: Version-Pinned to v0.2.0 (stable `rebuild_if_updated_v0.2.0.sh`)**
+- Rebases onto released `v0.2.0` tag (frozen, stable)
+- Never advances past v0.2.0; no surprise breaking changes
+- Only rebuilds if v0.2.0 tag itself moves (rare)
+- Use when: you want a known-good baseline that won't break
+- Script: `rebuild_if_updated_v0.2.0.sh`
+
+### Workflow: Version-Pinned (Recommended for Stability)
 
 Run on a **CPU compute node**:
 ```bash
 salloc --time=1:00:00 --account=scidac --nodes=1 --partition=debug
 ```
 
+**Save work and rebuild against v0.2.0:**
 ```bash
-# Rebuild GridKit + docs if there are new commits on origin/develop, and run tests:
 cd ~/gridkit/uq-usecase/scripts/
-bash rebuild_if_updated.sh 2>&1 | tee logs/rebuild.log
 
-# Then on local machine — sync docs and open in browser:
+# Save work to your personal branch
+bash wip.sh "your commit message"
+
+# Rebuild GridKit + docs if v0.2.0 has moved (usually doesn't), run tests:
+bash rebuild_if_updated_v0.2.0.sh 2>&1 | tee logs/rebuild_v0.2.0.log
+
+# Check version status anytime:
+bash check_gridkit_version.sh
+```
+
+**Then on local machine — sync docs and open in browser:**
+```bash
 rsync -avz --delete kestrel:~/gridkit/uq-usecase/mkdocs-site/ ~/projects/scidac/gridkit/gridkit-mkdocs/ \
   && open ~/projects/scidac/gridkit/gridkit-mkdocs/index.html
 ```
 
-**Note:** `rebuild_if_updated.sh` now automatically merges `origin/develop` into your local 
-`isatkaus/uq-usecase` branch, rebuilds, runs tests, and **pushes the merged state back to 
-`origin/isatkaus/uq-usecase`**. This keeps your personal branch in sync with the remote, 
-enabling `wip.sh` to run smoothly without validation conflicts.
-
-To force a rebuild even without new commits:
+To force a rebuild even if v0.2.0 hasn't changed:
 ```bash
-bash rebuild_if_updated.sh --force 2>&1 | tee logs/rebuild.log
+bash rebuild_if_updated_v0.2.0.sh --force 2>&1 | tee logs/rebuild_v0.2.0.log
+```
+
+### Workflow: Latest Development (Optional, for Latest Features)
+
+If you want the latest `origin/develop`:
+```bash
+bash rebuild_if_updated.sh 2>&1 | tee logs/rebuild_develop.log
+```
+
+This merges `origin/develop`, rebuilds, and pushes back to your remote branch.
+
+### Version Status
+
+Check your current version and distance from v0.2.0 and develop anytime:
+```bash
+bash check_gridkit_version.sh
+```
+
+Example output:
+```
+📍 Local Branch:  isatkaus/uq-usecase @ 347b06d2
+🏷️  v0.2.0 Release
+   Commit:       d443aeb1
+   Status:       ✅ AT PINNED VERSION (0 commits ahead)
+🌳 Origin/Develop (Unreleased)
+   Commit:       a6f047a4
+   Status:       🚫 NOT PULLED (staying at v0.2.0)
 ```
 
 To rebuild only the docs:

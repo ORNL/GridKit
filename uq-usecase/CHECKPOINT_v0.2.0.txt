@@ -1,0 +1,34 @@
+CHECKPOINT: Before advancing isatkaus/uq-usecase to v0.2.0
+==========================================================
+Created: 2026-10-15
+
+Branch: isatkaus/uq-usecase
+Current commit: 347b06d28c7d9b763764a00dab7d5c6d9d8a53ce
+Message: "before slurm notebook code to helper functions"
+Date: 2026-09-23 09:33:53 -0600
+
+Position relative to tags:
+  - 51 commits AHEAD of v0.2.0
+  - 71 commits BEHIND v0.2.0
+  - (means your branch and v0.2.0 have diverged in both directions)
+
+What's about to happen:
+  1. rebuild_if_updated_v0.2.0.sh will REBASE your personal branch onto v0.2.0
+  2. Your 51 personal commits will be replayed on top of v0.2.0 (commit d443aeb1)
+  3. rebuild will run and tests will execute
+  4. Branch will auto-push to origin/isatkaus/uq-usecase
+
+SAFE RECOVERY if things break:
+  You can return to this checkpoint with either command:
+  
+  git checkout 347b06d28c7d9b763764a00dab7d5c6d9d8a53ce
+  
+  OR (to reset entire branch, discarding rebase):
+  
+  git reset --hard 347b06d28c7d9b763764a00dab7d5c6d9d8a53ce
+  git push -f origin isatkaus/uq-usecase
+
+Details:
+- v0.2.0 tag is at commit d443aeb1 (release tagged "Release 0.2")
+- After rebase, your branch will be: isatkaus/uq-usecase @ d443aeb1 + 51 rebased commits
+- This keeps you locked to the stable release; you won't auto-pull unreleased develop work

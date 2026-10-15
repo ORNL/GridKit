@@ -1,0 +1,38 @@
+[pm_solve] parsed /home/isatkaus/gridkit/uq-usecase/notebooks/test-runs/m_to_case_helper/scenarios/base/base.m: 200 buses, 49 gens (9 offline), baseMVA=100
+[pm_solve] solver=ipopt  pf_type=ac  tol=1.0e-8  max_iter=300  flat_start=false
+Total number of variables............................:      480
+                     variables with only lower bounds:        0
+                variables with lower and upper bounds:        0
+                     variables with only upper bounds:        0
+Total number of equality constraints.................:      480
+Total number of inequality constraints...............:        0
+        inequality constraints with only lower bounds:        0
+   inequality constraints with lower and upper bounds:        0
+        inequality constraints with only upper bounds:        0
+
+
+Number of Iterations....: 4
+
+                                   (scaled)                 (unscaled)
+Objective...............:   0.0000000000000000e+00    0.0000000000000000e+00
+Dual infeasibility......:   0.0000000000000000e+00    0.0000000000000000e+00
+Constraint violation....:   4.0564049072133987e-14    1.6481954689950840e-13
+Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   0.0000000000000000e+00    0.0000000000000000e+00
+Overall NLP error.......:   4.0564049072133987e-14    1.6481954689950840e-13
+
+
+Number of objective function evaluations             = 5
+Number of objective gradient evaluations             = 5
+Number of equality constraint evaluations            = 5
+Number of inequality constraint evaluations          = 0
+Number of equality constraint Jacobian evaluations   = 5
+Number of inequality constraint Jacobian evaluations = 0
+Number of Lagrangian Hessian evaluations             = 4
+Total seconds in IPOPT                               = 3.141
+
+EXIT: Optimal Solution Found.
+[pm_solve] termination_status=LOCALLY_SOLVED
+[pm_solve] solve_time=3.2411539554595947s
+[pm_solve] converged=true
+[pm_solve] wrote solved .m -> /home/isatkaus/gridkit/uq-usecase/notebooks/test-runs/m_to_case_helper/scenarios/base/base_solved.m
