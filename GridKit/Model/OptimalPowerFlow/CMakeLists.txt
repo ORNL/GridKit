@@ -11,9 +11,7 @@ gridkit_add_library(
     INTERFACE
     GridKit::Utilities
     INTERFACE
-    GridKit::utilities_logger
-    INTERFACE
-    GridKit::model_state_data)
+    GridKit::utilities_logger)
 
 target_link_libraries(
   optimal_power_flow_components
@@ -34,8 +32,8 @@ add_library(GridKit::optimal_power_flow_components_dependency_tracking ALIAS
 
 gridkit_add_library(
   optimal_power_flow_systemmodel
-  SOURCES SystemModelEnzyme.cpp SystemModelData.cpp MatpowerData.cpp
-  HEADERS SystemModel.hpp SystemModelData.hpp MatpowerData.hpp
+  SOURCES SystemModelEnzyme.cpp SystemModelData.cpp
+  HEADERS SystemModel.hpp SystemModelData.hpp
   LINK_LIBRARIES
     PUBLIC
     GridKit::optimal_power_flow_components

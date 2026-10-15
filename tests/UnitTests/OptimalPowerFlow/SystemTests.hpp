@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <numbers>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -14,7 +15,6 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModel.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModelData.hpp>
-#include <GridKit/Model/StateData.hpp>
 #include <GridKit/Solver/Optimization/SteadyState.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
@@ -41,17 +41,17 @@ namespace GridKit
       using TrackedT  = OPF::SystemModel<VariableT, IdxT>;
 
     public:
-      /// Balance and magnitude rows at every bus, one reference row, and flow rows at the rated branch only
+      /// Balance and magnitude rows at every bus, and flow rows at the rated branch only
       TestOutcome allocation()
       {
         TestStatus success = true;
 
-        SystemT system(data(), state());
+        SystemT system(data());
         success *= system.allocate() == 0;
 
         // Three buses and two generators with two variables each
         success *= system.size() == 10;
-        success *= system.sizeConstraints() == 12;
+        success *= system.sizeConstraints() == 11;
 
         const RealT* g_lower = system.gLower().getData();
         const RealT* g_upper = system.gUpper().getData();
@@ -63,21 +63,23 @@ namespace GridKit
         {
           success *= isEqual(g_lower[i], VMIN * VMIN) && isEqual(g_upper[i], VMAX * VMAX);
         }
-        success *= isEqual(g_lower[REFERENCE_ROW], ZERO<RealT>) && isEqual(g_upper[REFERENCE_ROW], ZERO<RealT>);
         for (const IdxT i : FLOW_ROWS)
         {
           success *= std::isinf(g_lower[i]) && isEqual(g_upper[i], SMAX * SMAX);
         }
 
+        // The imaginary voltage of reference bus 1 is fixed at zero
+        success *= isEqual(system.xLower().getData()[1], ZERO<RealT>) && isEqual(system.xUpper().getData()[1], ZERO<RealT>);
+
         return success.report(__func__);
       }
 
-      /// The lowest-numbered bus keeps its state angle, and the others move
+      /// The reference bus keeps zero imaginary voltage, and the others move
       TestOutcome reference()
       {
         TestStatus success = true;
 
-        SystemT system(data(), state());
+        SystemT system(data());
         system.allocate();
         success *= optimize(system);
 
@@ -94,13 +96,13 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        SystemT system(data(), state());
+        SystemT system(data());
         system.allocate();
         setVariables(system);
         system.evaluateJacobian();
         const auto enzyme = MapFromCsr(system.getCsrJacobian());
 
-        TrackedT tracked(data(), state());
+        TrackedT tracked(data());
         tracked.allocate();
         setVariables(tracked);
         tracked.evaluateConstraints();
@@ -121,12 +123,12 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        SystemT system(data(), state());
+        SystemT system(data());
         system.allocate();
         setVariables(system);
         system.evaluateGradient();
 
-        TrackedT tracked(data(), state());
+        TrackedT tracked(data());
         tracked.allocate();
         setVariables(tracked);
         tracked.evaluateObjective();
@@ -147,7 +149,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        SystemT system(data(), state());
+        SystemT system(data());
         system.allocate();
         setVariables(system);
 
@@ -178,7 +180,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        SystemT system(data(), state());
+        SystemT system(data());
         system.allocate();
         success *= optimize(system);
 
@@ -198,83 +200,78 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// The solution state restarts the model at the solution
-      TestOutcome solutionState()
+      /// Data with an island without a reference bus, or with a repeated bus, is rejected
+      TestOutcome configuration()
       {
         TestStatus success = true;
 
-        SystemT system(data(), state());
-        system.allocate();
-        optimize(system);
+        auto no_reference             = data();
+        no_reference.bus[0].reference = false;
 
-        SystemT restarted(data(), system.solutionState());
-        success *= restarted.allocate() == 0;
+        success *= configurationRejected([&]()
+                                         { return SystemT(no_reference).verify(); });
 
-        const RealT* x         = system.x().getData();
-        const RealT* x_restart = restarted.x().getData();
-        for (IdxT j = 0; j < system.size(); ++j)
-        {
-          success *= isEqual(x_restart[j], x[j], STATE_TOL);
-        }
+        // Out-of-service branches 2-3 and 1-3 leave bus 3 an island without a reference bus
+        auto island                 = data();
+        island.branch[1].in_service = false;
+        island.branch[2].in_service = false;
 
-        return success.report(__func__);
-      }
+        success *= configurationRejected([&]()
+                                         { return SystemT(island).verify(); });
 
-      /// Rows end at `;` or the line end, and scalars, cell arrays, and comments are skipped
-      TestOutcome parseMatpowerData()
-      {
-        TestStatus success = true;
+        auto repeated          = data();
+        repeated.bus[1].number = 1;
 
-        const OPF::MatpowerData matpower = parse(R"(function mpc = test
-          mpc.baseMVA = 100.0;
-          mpc.bus_name = {
-            'ONE';
-          };
-          mpc.gen = [ % ] 1 2 3;
-            %
-            1 2.5	3;
-            4 5 6; 7 8 9];
-          mpc.gencost = [2 0.5 0.25 2 1 0];
-        )");
-
-        success *= matpower.matrices.size() == 2;
-        success *= matpower.matrix("gen") == OPF::MatpowerMatrix{{1.0, 2.5, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}};
-        success *= matpower.matrix("gencost") == OPF::MatpowerMatrix{{2.0, 0.5, 0.25, 2.0, 1.0, 0.0}};
-
-        success *= throws<std::invalid_argument>([&]
-                                                 { matpower.matrix("branch"); });
-        success *= throws<std::invalid_argument>(parse, "mpc.bus = [\n 1 Inf;\n];");
-        success *= throws<std::invalid_argument>(parse, "mpc.bus = [\n 1 2;\n");
+        success *= throws<std::invalid_argument>([&]()
+                                                 { SystemT system(repeated); });
 
         return success.report(__func__);
       }
 
       /**
-       * @brief Buses match by number, in-service branches by their buses in
-       * order, and in-service generators in order at buses with generators
+       * @brief MATPOWER rows become components on the system base
        *
-       * Branch 2-3 is listed as 3-2, and branch 1-3 has no rating. The
-       * generator at bus 2 is a static injection, and the first one at bus 3
-       * is out of service.
+       * Branch 2 and generator 2 are out of service, and branch 3 is a
+       * phase-shifting transformer with line charging.
        */
-      TestOutcome applyMatpowerData()
+      TestOutcome parseMatpowerCase()
       {
         TestStatus success = true;
 
-        OPF::SystemModelData<RealT, IdxT> network = data();
-        network.branch[0].parameters.erase(OPF::BranchParameters::Smax);
-        network.branch[2].parameters[OPF::BranchParameters::Smax] = 0.25;
-        OPF::applyMatpowerData(network, parse(matpowerCase(MATPOWER_BRANCH, MATPOWER_GEN, MATPOWER_GENCOST)));
+        const auto data = parse(matpowerCase(MATPOWER_BRANCH, MATPOWER_GENCOST));
 
-        success *= isEqual(network.bus[0].parameters.at(OPF::BusParameters::Vmin), 0.94);
-        success *= isEqual(network.bus[0].parameters.at(OPF::BusParameters::Vmax), 1.06);
-        success *= isEqual(network.bus[1].parameters.at(OPF::BusParameters::Vmin), 0.95);
+        success *= isEqual(data.va_base, 100.0e6);
+        success *= data.bus.size() == 3;
+        success *= data.bus[0].reference && !data.bus[1].reference && !data.bus[2].reference;
+        success *= isEqual(data.bus[1].parameters.at(OPF::BusParameters::Vmin), 0.95);
+        success *= isEqual(data.bus[1].parameters.at(OPF::BusParameters::Vmax), 1.05);
 
-        success *= isEqual(network.branch[0].parameters.at(OPF::BranchParameters::Smax), 0.6);
-        success *= isEqual(network.branch[1].parameters.at(OPF::BranchParameters::Smax), 0.9);
-        success *= !network.branch[2].parameters.contains(OPF::BranchParameters::Smax);
+        success *= data.load.size() == 1 && data.load[0].id == "load_2";
+        success *= isEqual(data.load[0].parameters.at(OPF::LoadParameters::P), 1.2);
+        success *= isEqual(data.load[0].parameters.at(OPF::LoadParameters::Q), 0.3);
+        success *= data.shunt.size() == 1 && data.shunt[0].id == "shunt_3";
+        success *= isEqual(data.shunt[0].parameters.at(OPF::ShuntParameters::B), 0.1);
 
-        const auto& gen_1 = network.generator[0].parameters;
+        success *= data.branch.size() == 3 && data.branch[2].id == "branch_3";
+        success *= data.branch[0].in_service && !data.branch[1].in_service && data.branch[2].in_service;
+
+        const auto& line = data.branch[0].parameters;
+
+        success *= isEqual(line.at(OPF::BranchParameters::tap), ONE<RealT>);
+        success *= isEqual(line.at(OPF::BranchParameters::Bmag), ZERO<RealT>);
+        success *= isEqual(line.at(OPF::BranchParameters::Smax), 0.6);
+
+        const auto& transformer = data.branch[2].parameters;
+
+        success *= isEqual(transformer.at(OPF::BranchParameters::tap), 1.05);
+        success *= isEqual(transformer.at(OPF::BranchParameters::phase), std::numbers::pi / 18.0);
+        success *= isEqual(transformer.at(OPF::BranchParameters::Bmag), 0.01 / (1.05 * 1.05) - 0.01);
+        success *= !transformer.contains(OPF::BranchParameters::Smax);
+
+        success *= data.generator.size() == 3 && data.generator[2].id == "gen_3";
+        success *= data.generator[0].in_service && !data.generator[1].in_service && data.generator[2].in_service;
+
+        const auto& gen_1 = data.generator[0].parameters;
 
         success *= isEqual(gen_1.at(OPF::GeneratorParameters::Pmin), 0.1);
         success *= isEqual(gen_1.at(OPF::GeneratorParameters::Pmax), 1.5);
@@ -284,78 +281,56 @@ namespace GridKit
         success *= isEqual(gen_1.at(OPF::GeneratorParameters::c1), 1200.0);
         success *= isEqual(gen_1.at(OPF::GeneratorParameters::c2), 100.0);
 
-        const auto& gen_3 = network.generator[1].parameters;
+        const auto& gen_3 = data.generator[2].parameters;
 
-        success *= isEqual(gen_3.at(OPF::GeneratorParameters::Pmin), 0.3);
-        success *= isEqual(gen_3.at(OPF::GeneratorParameters::Pmax), 1.8);
         success *= isEqual(gen_3.at(OPF::GeneratorParameters::c0), 7.0);
         success *= isEqual(gen_3.at(OPF::GeneratorParameters::c1), 1400.0);
         success *= isEqual(gen_3.at(OPF::GeneratorParameters::c2), 200.0);
 
-        auto duplicate                   = parse(matpowerCase(MATPOWER_BRANCH, MATPOWER_GEN, MATPOWER_GENCOST));
-        duplicate.matrices.at("bus")[1]  = duplicate.matrices.at("bus")[0];
-        success                         *= throws<std::invalid_argument>([&]()
-                                                 {
-                                                   auto invalid = data();
-                                                   OPF::applyMatpowerData(invalid, duplicate); });
+        // An isolated bus, angle-difference limits, a piecewise-linear cost, a cubic cost, and a missing cost
+        const std::string isolated     = MATPOWER_BUS + "\n4 4 0 0 0 0 1 1 0 230 1 1.04 0.96";
+        const std::string angle_limits = MATPOWER_BRANCH + "\n1 3 0.02 0.2 0 0 0 0 0 0 1 -30 30";
+        const std::string piecewise    = "1 0 0 2 0 0 100 1000;\n2 0 0 2 20 0;\n2 0 0 2 14 7";
+        const std::string cubic        = "2 0 0 4 1 0.02 14 7;\n2 0 0 2 20 0;\n2 0 0 2 14 7";
+        const std::string missing      = "2 0 0 3 0.01 12 5;\n2 0 0 2 20 0";
 
-        // Extra and missing branches and generators, a piecewise-linear cost, and a cubic cost
-        const std::string branch_extra = MATPOWER_BRANCH + "\n1 2 0.01 0.1 0 0 0 0 0 0 1";
-        const std::string branch_short = "1 2 0.01 0.1 0.02 60 0 0 0 0 1";
-        const std::string gen_extra    = "1 0 0 50 -50 1 100 1 150 10\n3 0 0 80 -40 1 100 1 90 0\n3 0 0 80 -40 1 100 1 180 30";
-        const std::string gen_short    = "1 0 0 50 -50 1 100 1 150 10";
-        const std::string costs        = "2 0 0 3 0.01 12 5;\n2 0 0 2 20 0;\n2 0 0 2 20 0";
-        const std::string piecewise    = "1 0 0 2 0 0 100 10;\n2 0 0 2 20 0;\n2 0 0 2 20 0;\n2 0 0 2 14 7";
-        const std::string cubic        = "2 0 0 3 0.01 12 5;\n2 0 0 2 20 0;\n2 0 0 2 20 0;\n2 0 0 4 1 0 14 7";
-
-        success *= throws<std::invalid_argument>(apply, matpowerCase(branch_extra, MATPOWER_GEN, MATPOWER_GENCOST));
-        success *= throws<std::invalid_argument>(apply, matpowerCase(branch_short, MATPOWER_GEN, MATPOWER_GENCOST));
-        success *= throws<std::invalid_argument>(apply, matpowerCase(MATPOWER_BRANCH, gen_extra, costs));
-        success *= throws<std::invalid_argument>(apply, matpowerCase(MATPOWER_BRANCH, gen_short, costs));
-        success *= throws<std::invalid_argument>(apply, matpowerCase(MATPOWER_BRANCH, MATPOWER_GEN, piecewise));
-        success *= throws<std::invalid_argument>(apply, matpowerCase(MATPOWER_BRANCH, MATPOWER_GEN, cubic));
+        success *= throws<std::invalid_argument>(parse, matpowerCase(MATPOWER_BRANCH, MATPOWER_GENCOST, isolated));
+        success *= throws<std::invalid_argument>(parse, matpowerCase(angle_limits, MATPOWER_GENCOST));
+        success *= throws<std::invalid_argument>(parse, matpowerCase(MATPOWER_BRANCH, piecewise));
+        success *= throws<std::invalid_argument>(parse, matpowerCase(MATPOWER_BRANCH, cubic));
+        success *= throws<std::invalid_argument>(parse, matpowerCase(MATPOWER_BRANCH, missing));
 
         return success.report(__func__);
       }
 
     private:
-      static OPF::MatpowerData parse(const std::string& text)
+      static OPF::SystemModelData<RealT, IdxT> parse(const std::string& text)
       {
         std::istringstream input(text);
-        return OPF::parseMatpowerData(input);
+        return OPF::parseMatpowerCase(input);
       }
 
-      static void apply(const std::string& text)
+      /// MATPOWER case with the given branch, cost, and bus rows
+      static std::string matpowerCase(const std::string& branch, const std::string& gencost, const std::string& bus = MATPOWER_BUS)
       {
-        OPF::SystemModelData<RealT, IdxT> network = data();
-        OPF::applyMatpowerData(network, parse(text));
+        return "mpc.version = '2';\nmpc.baseMVA = 100;\nmpc.bus = [\n" + bus + "\n];\nmpc.gen = [\n" + MATPOWER_GEN
+               + "\n];\nmpc.branch = [\n" + branch + "\n];\nmpc.gencost = [\n" + gencost + "\n];\n";
       }
 
-      /// MATPOWER case of the `data()` network with the given branch, generator, and cost rows
-      static std::string matpowerCase(const std::string& branch, const std::string& gen, const std::string& gencost)
-      {
-        return "mpc.bus = [\n"
-               "1 3 0 0 0 0 1 1 0 230 1 1.06 0.94;\n"
-               "2 1 120 30 0 0 1 1 0 230 1 1.05 0.95;\n"
-               "3 2 0 0 0 0 1 1 0 230 1 1.04 0.96;\n"
-               "];\n"
-               "mpc.branch = [\n"
-               + branch + "\n];\nmpc.gen = [\n" + gen + "\n];\nmpc.gencost = [\n" + gencost + "\n];\n";
-      }
-
-      static inline const std::string MATPOWER_BRANCH = "1 2 0.01 0.1 0.02 60 0 0 0 0 1\n"
-                                                        "3 2 0.01 0.1 0 90 0 0 0 0 1\n"
-                                                        "1 3 0.02 0.2 0 0 0 0 0 0 1\n"
-                                                        "1 3 0.02 0.2 0 50 0 0 0 0 0";
+      static inline const std::string MATPOWER_BUS = "1 3 0 0 0 0 1 1 0 230 1 1.06 0.94;\n"
+                                                     "2 1 120 30 0 0 1 1 0 230 1 1.05 0.95;\n"
+                                                     "3 2 0 0 0 10 1 1 0 230 1 1.04 0.96;";
 
       static inline const std::string MATPOWER_GEN = "1 0 0 50 -50 1 100 1 150 10\n"
-                                                     "2 20 0 0 0 1 100 1 20 20\n"
                                                      "3 0 0 80 -40 1 100 0 90 0\n"
                                                      "3 0 0 80 -40 1 100 1 180 30";
 
-      static inline const std::string MATPOWER_GENCOST = "2 0 0 3 0.01 12 5;\n"
+      static inline const std::string MATPOWER_BRANCH = "1 2 0.01 0.1 0 60 0 0 0 0 1 -360 360\n"
+                                                        "2 3 0.01 0.1 0 90 0 0 0 0 0 -360 360\n"
+                                                        "1 3 0.02 0.2 0.02 0 0 0 1.05 10 1 0 0";
+
+      static inline const std::string MATPOWER_GENCOST = "2 0.0 0.0 3 0.01 12 5;\n"
                                                          "2 0 0 2 20 0;\n"
-                                                         "2 0 0 3 0 0 0;\n"
                                                          "2 0 0 4 0 0.02 14 7";
 
       /// Values within `tol` relative to one plus the reference magnitude
@@ -401,17 +376,13 @@ namespace GridKit
       static constexpr RealT SIGMA        = 0.7;
       static constexpr RealT LAMBDA_SCALE = 0.25;
 
-      // Measured worst errors: Jacobian 7.0 eps, gradient and Hessian exact,
-      // solved balance 5.4e-13, restart 0.3 eps
       static constexpr RealT DERIVATIVE_TOL = 8 * std::numeric_limits<RealT>::epsilon();
       static constexpr RealT BALANCE_TOL    = 1.0e-12;
-      static constexpr RealT STATE_TOL      = std::numeric_limits<RealT>::epsilon();
 
       /// Rows of the buses in order, then of the rated branch
-      static inline const std::vector<IdxT> BALANCE_ROWS   = {0, 1, 4, 5, 7, 8};
-      static inline const std::vector<IdxT> MAGNITUDE_ROWS = {2, 6, 9};
-      static constexpr IdxT                 REFERENCE_ROW  = 3;
-      static inline const std::vector<IdxT> FLOW_ROWS      = {10, 11};
+      static inline const std::vector<IdxT> BALANCE_ROWS   = {0, 1, 3, 4, 6, 7};
+      static inline const std::vector<IdxT> MAGNITUDE_ROWS = {2, 5, 8};
+      static inline const std::vector<IdxT> FLOW_ROWS      = {9, 10};
 
       /// A point away from the flat start
       static inline const std::vector<RealT> POINT = {1.02, 0.0, 0.97, -0.07, 1.01, -0.03, 0.8, 0.2, 0.4, -0.1};
@@ -424,6 +395,7 @@ namespace GridKit
         {
           auto& bus                                = data.bus.emplace_back();
           bus.number                               = number;
+          bus.reference                            = number == 1;
           bus.parameters[OPF::BusParameters::Vmin] = VMIN;
           bus.parameters[OPF::BusParameters::Vmax] = VMAX;
         }
@@ -436,9 +408,11 @@ namespace GridKit
         addGenerator(data, "gen_1", 1, 10.0);
         addGenerator(data, "gen_3", 3, 20.0);
 
-        auto& load                      = data.load.emplace_back();
-        load.id                         = "load_2";
-        load.buses[OPF::LoadBuses::bus] = 2;
+        auto& load                              = data.load.emplace_back();
+        load.id                                 = "load_2";
+        load.buses[OPF::LoadBuses::bus]         = 2;
+        load.parameters[OPF::LoadParameters::P] = LOAD_P;
+        load.parameters[OPF::LoadParameters::Q] = LOAD_Q;
 
         auto& shunt                               = data.shunt.emplace_back();
         shunt.id                                  = "shunt_3";
@@ -476,18 +450,6 @@ namespace GridKit
         generator.parameters[OPF::GeneratorParameters::Qmax] = 1.0;
         generator.parameters[OPF::GeneratorParameters::c1]   = c1;
         generator.parameters[OPF::GeneratorParameters::c2]   = 0.01;
-      }
-
-      /// Flat start with the load demand
-      static Model::StateData state()
-      {
-        Model::StateData state;
-        for (IdxT number = 1; number <= 3; ++number)
-        {
-          state.buses[Model::busKey(number)].values = {{"vr", ONE<RealT>}, {"vi", ZERO<RealT>}};
-        }
-        Model::setTerminalCurrent(state, "load_2", 2, 0, 1, -LOAD_P, -LOAD_Q);
-        return state;
       }
 
       /// Move the variables to `POINT`

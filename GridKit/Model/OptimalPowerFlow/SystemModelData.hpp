@@ -6,13 +6,14 @@
 #pragma once
 
 #include <cstddef>
+#include <filesystem>
+#include <istream>
 #include <vector>
 
 #include <GridKit/Model/OptimalPowerFlow/Branch/BranchData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Bus/BusData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Generator/GeneratorData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Load/LoadData.hpp>
-#include <GridKit/Model/OptimalPowerFlow/MatpowerData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Shunt/ShuntData.hpp>
 
 namespace GridKit
@@ -43,15 +44,17 @@ namespace GridKit
     };
 
     /**
-     * @brief Set bus voltage limits, branch ratings, and generator limits and
-     * costs from a MATPOWER case of the same network
+     * @brief Read a MATPOWER case
      *
-     * Buses match by number. In-service MATPOWER branches match the branches
-     * between the same buses in order, and in-service MATPOWER generators the
-     * generators at the same bus. MATPOWER generators at a bus without
-     * generators are static injections that the loads carry, and are skipped.
-     * Values in MW, Mvar, and MVA become system base values.
+     * Reference buses are MATPOWER bus type 3, and bus demand and bus shunts
+     * become loads and shunts. Generator and branch status sets `in_service`.
+     * Values in MW, Mvar, and MVA, and costs in P [MW], become system base
+     * values.
+     *
+     * @throw std::invalid_argument for isolated buses, branch angle-difference
+     * limits, or costs that are not polynomials of at most second order
      */
-    void applyMatpowerData(SystemModelData<double, size_t>& data, const MatpowerData& matpower);
+    SystemModelData<double, size_t> parseMatpowerCase(std::istream& stream);
+    SystemModelData<double, size_t> parseMatpowerCase(const std::filesystem::path& file);
   } // namespace OptimalPowerFlow
 } // namespace GridKit

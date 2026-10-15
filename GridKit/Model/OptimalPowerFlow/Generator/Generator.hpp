@@ -21,8 +21,10 @@ namespace GridKit
     {
       using ComponentModelT = ComponentModel<Generator<scalar_type, index_type>, scalar_type, index_type>;
 
-      using ComponentModelT::id_;
+      using ComponentModelT::in_service_;
       using ComponentModelT::variable_indices_;
+      using ComponentModelT::variable_lower_;
+      using ComponentModelT::variable_upper_;
 
     public:
       using ScalarT    = scalar_type;
@@ -32,16 +34,18 @@ namespace GridKit
 
       /// Local variables: active and reactive power, then terminal real and imaginary voltage
       static constexpr IdxT VARIABLE_SIZE            = 4;
-      /// Local constraints: power into the bus
+      /// Local constraint functions: power into the bus
       static constexpr IdxT CONSTRAINT_SIZE          = 2;
-      static constexpr IdxT INTERNAL_SIZE            = 2;
+      /// Internal variables: active and reactive power
+      static constexpr IdxT INTERNAL_VARIABLE_SIZE   = 2;
+      /// Internal constraint functions: none, the power limits act on the internal variables
       static constexpr IdxT INTERNAL_CONSTRAINT_SIZE = 0;
       static constexpr bool CONSTANT                 = false;
 
       explicit Generator(const ModelDataT& data);
 
-      int verify() const override;
-      int initialize(const Model::StateData& state, ScalarT* x, RealT* x_lower, RealT* x_upper) override;
+      Model::ConfigurationChecks verify() const override;
+      int                        initialize(ScalarT* x) override;
 
       __attribute__((always_inline)) inline ScalarT objective(const ScalarT* x) const;
       __attribute__((always_inline)) inline void    constraints(const ScalarT* x, ScalarT* g) const;
@@ -54,7 +58,6 @@ namespace GridKit
       RealT c0_{0.0};
       RealT c1_{0.0};
       RealT c2_{0.0};
-      RealT online_{1.0};
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

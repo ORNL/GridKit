@@ -17,7 +17,7 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     Generator<scalar_type, index_type>::Generator(const ModelDataT& data)
-      : ComponentModelT(data.id, busNumbers(data)),
+      : ComponentModelT(data.id, busNumbers(data), data.in_service),
         Pmin_(parameter(data, GeneratorParameters::Pmin, -UNBOUNDED<RealT>)),
         Pmax_(parameter(data, GeneratorParameters::Pmax, UNBOUNDED<RealT>)),
         Qmin_(parameter(data, GeneratorParameters::Qmin, -UNBOUNDED<RealT>)),
@@ -26,67 +26,36 @@ namespace GridKit
         c1_(parameter(data, GeneratorParameters::c1, ZERO<RealT>)),
         c2_(parameter(data, GeneratorParameters::c2, ZERO<RealT>))
     {
+      // Out of service, the internal constraints fix the power at zero
+      variable_lower_ = {ZERO<RealT>, ZERO<RealT>};
+      variable_upper_ = {ZERO<RealT>, ZERO<RealT>};
+      if (data.in_service)
+      {
+        variable_lower_ = {Pmin_, Qmin_};
+        variable_upper_ = {Pmax_, Qmax_};
+      }
     }
 
     template <typename scalar_type, typename index_type>
-    int Generator<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Generator<scalar_type, index_type>::verify() const
     {
-      return this->check(Pmin_ <= Pmax_, "Pmin must not exceed Pmax")
-             + this->check(Qmin_ <= Qmax_, "Qmin must not exceed Qmax")
-             + this->check(std::isfinite(c0_), "c0 must be finite")
-             + this->check(std::isfinite(c1_), "c1 must be finite")
-             + this->check(std::isfinite(c2_), "c2 must be finite");
+      Model::ConfigurationChecks checks("Generator");
+      checks.check(Pmin_ <= Pmax_, "Pmin must not exceed Pmax");
+      checks.check(Qmin_ <= Qmax_, "Qmin must not exceed Qmax");
+      checks.check(std::isfinite(c0_), "c0 must be finite");
+      checks.check(std::isfinite(c1_), "c1 must be finite");
+      checks.check(std::isfinite(c2_), "c2 must be finite");
+      return checks;
     }
 
     /**
-     * @brief Start from the state injection and bound it by the limits
-     *
-     * An offline generator injects no power and has no cost.
+     * @brief Start from zero power
      */
     template <typename scalar_type, typename index_type>
-    int Generator<scalar_type, index_type>::initialize(const Model::StateData& state,
-                                                       ScalarT*                x,
-                                                       RealT*                  x_lower,
-                                                       RealT*                  x_upper)
+    int Generator<scalar_type, index_type>::initialize(ScalarT* x)
     {
-      bool                      online = true;
-      const Model::StateRecord* record = state.device(id_);
-      if (record != nullptr)
-      {
-        online = record->flag("online", true);
-      }
-
-      RealT p = ZERO<RealT>;
-      RealT q = ZERO<RealT>;
-      this->statePower(state, 0, p, q);
-
-      RealT p_lower = Pmin_;
-      RealT p_upper = Pmax_;
-      RealT q_lower = Qmin_;
-      RealT q_upper = Qmax_;
-
-      online_ = ONE<RealT>;
-      if (!online)
-      {
-        online_ = ZERO<RealT>;
-        p       = ZERO<RealT>;
-        q       = ZERO<RealT>;
-        p_lower = ZERO<RealT>;
-        p_upper = ZERO<RealT>;
-        q_lower = ZERO<RealT>;
-        q_upper = ZERO<RealT>;
-      }
-
-      const IdxT p_index = variable_indices_[0];
-      const IdxT q_index = variable_indices_[1];
-
-      x[p_index]       = p;
-      x[q_index]       = q;
-      x_lower[p_index] = p_lower;
-      x_upper[p_index] = p_upper;
-      x_lower[q_index] = q_lower;
-      x_upper[q_index] = q_upper;
-
+      x[variable_indices_[0]] = ZERO<RealT>;
+      x[variable_indices_[1]] = ZERO<RealT>;
       return 0;
     }
 
@@ -95,7 +64,7 @@ namespace GridKit
     Generator<scalar_type, index_type>::objective(const ScalarT* x) const
     {
       const ScalarT p = x[0];
-      return online_ * (c0_ + c1_ * p + c2_ * p * p);
+      return in_service_ * (c0_ + c1_ * p + c2_ * p * p);
     }
 
     template <typename scalar_type, typename index_type>

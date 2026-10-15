@@ -11,9 +11,8 @@ int main()
   result += test.gradient();
   result += test.hessian();
   result += test.solve();
-  result += test.solutionState();
-  result += test.parseMatpowerData();
-  result += test.applyMatpowerData();
+  result += test.configuration();
+  result += test.parseMatpowerCase();
 
   return result.summary();
 }

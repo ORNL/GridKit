@@ -10,7 +10,7 @@ int main()
   result += test.branchHessian();
   result += test.branchPattern();
   result += test.generator();
-  result += test.offlineGenerator();
+  result += test.outOfServiceGenerator();
   result += test.shunt();
   result += test.bus();
   result += test.load();

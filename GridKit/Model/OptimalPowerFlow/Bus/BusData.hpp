@@ -35,8 +35,8 @@ namespace GridKit
       /// Bus number
       IdxT number{0};
 
-      /// Voltage fixed at its state value, as for `BusInfinite`
-      bool infinite{false};
+      /// Angle reference, with zero imaginary voltage
+      bool reference{false};
 
       /// Mapping of parameters to parameter values
       std::map<Parameters, RealT> parameters;

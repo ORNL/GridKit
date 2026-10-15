@@ -9,10 +9,10 @@
 #include <memory>
 #include <vector>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Component.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModelData.hpp>
 #include <GridKit/Model/OptimizationEvaluator.hpp>
-#include <GridKit/Model/StateData.hpp>
 
 namespace GridKit
 {
@@ -25,10 +25,8 @@ namespace GridKit
      * @brief AC optimal power flow in Cartesian coordinates
      *
      * Minimizes the generation cost subject to the power balance at every
-     * bus that is not infinite and the bounds of the components. The state
-     * gives the starting point, the fixed demand, and the device settings.
-     * The reference bus is the lowest-numbered bus unless an infinite bus
-     * sets the angle reference.
+     * bus and the limits of the components. Each reference bus has zero
+     * imaginary voltage, and every island needs one.
      */
     template <typename scalar_type, typename index_type>
     class SystemModel : public Model::OptimizationEvaluator<scalar_type, index_type>
@@ -55,7 +53,7 @@ namespace GridKit
       using BusT        = Bus<ScalarT, IdxT>;
       using CooEntriesT = typename ComponentT::CooEntriesT;
 
-      SystemModel(const SystemModelData<RealT, IdxT>& data, const Model::StateData& state);
+      explicit SystemModel(const SystemModelData<RealT, IdxT>& data);
 
       int allocate() override;
       int initialize() override;
@@ -66,20 +64,18 @@ namespace GridKit
       int evaluateJacobian() override;
       int evaluateHessian(RealT sigma, const RealT* lambda) override;
 
-      /// Input state with the bus voltages and device currents at `x()`
-      Model::StateData solutionState() const;
+      Model::ConfigurationChecks verify() const;
 
     private:
       using EntriesT = const CooEntriesT& (ComponentT::*) () const;
 
-      int verify() const;
+      std::vector<IdxT> unreferencedIslands() const;
+
       int connect(ComponentT& component);
       int allocateDerivatives();
 
       std::unique_ptr<CsrMatrixT> assemble(IdxT rows, IdxT cols, EntriesT entries, std::vector<IdxT>& map_to_csr) const;
       int                         refill(CsrMatrixT& matrix, EntriesT entries, const std::vector<IdxT>& map_to_csr) const;
-
-      Model::StateData state_;
 
       /// Buses first, then devices
       std::vector<std::unique_ptr<ComponentT>> components_;
@@ -90,8 +86,6 @@ namespace GridKit
       /// Map from component entries to CSR entries
       std::vector<IdxT> jacobian_map_;
       std::vector<IdxT> hessian_map_;
-
-      int data_errors_{0};
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit
