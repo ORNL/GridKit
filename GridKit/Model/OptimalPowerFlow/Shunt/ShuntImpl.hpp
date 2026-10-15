@@ -17,36 +17,27 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     Shunt<scalar_type, index_type>::Shunt(const ModelDataT& data)
-      : ComponentModelT(data.id, busNumbers(data)),
+      : ComponentModelT(data.id, busNumbers(data), data.in_service),
         G_(parameter(data, ShuntParameters::G, ZERO<RealT>)),
         B_(parameter(data, ShuntParameters::B, ZERO<RealT>))
     {
     }
 
     template <typename scalar_type, typename index_type>
-    int Shunt<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Shunt<scalar_type, index_type>::verify() const
     {
-      return this->check(std::isfinite(G_), "G must be finite")
-             + this->check(std::isfinite(B_), "B must be finite");
+      Model::ConfigurationChecks checks("Shunt");
+      checks.check(std::isfinite(G_), "G must be finite");
+      checks.check(std::isfinite(B_), "B must be finite");
+      return checks;
     }
 
     /**
-     * @brief An offline shunt draws no power
+     * @brief No internal variables
      */
     template <typename scalar_type, typename index_type>
-    int Shunt<scalar_type, index_type>::initialize(const Model::StateData&   state,
-                                                   [[maybe_unused]] ScalarT* x,
-                                                   [[maybe_unused]] RealT*   x_lower,
-                                                   [[maybe_unused]] RealT*   x_upper)
+    int Shunt<scalar_type, index_type>::initialize([[maybe_unused]] ScalarT* x)
     {
-      online_ = ONE<RealT>;
-
-      const Model::StateRecord* record = state.device(id_);
-      if (record != nullptr && !record->flag("online", true))
-      {
-        online_ = ZERO<RealT>;
-      }
-
       return 0;
     }
 
@@ -63,8 +54,8 @@ namespace GridKit
     {
       const ScalarT v2 = x[0] * x[0] + x[1] * x[1];
 
-      g[0] = -online_ * G_ * v2;
-      g[1] = online_ * B_ * v2;
+      g[0] = -in_service_ * G_ * v2;
+      g[1] = in_service_ * B_ * v2;
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit

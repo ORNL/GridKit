@@ -19,9 +19,9 @@ namespace GridKit
      *
      * `model_type` provides `objective(x)` and `constraints(x, g)` over its
      * local variables, the sizes `VARIABLE_SIZE`, `CONSTRAINT_SIZE`,
-     * `INTERNAL_SIZE` and `INTERNAL_CONSTRAINT_SIZE`, and `CONSTANT`, which is
-     * true when neither kernel depends on the variables. `g` starts at zero,
-     * so a kernel writes only the rows it contributes to. Derivatives come
+     * `INTERNAL_VARIABLE_SIZE` and `INTERNAL_CONSTRAINT_SIZE`, and `CONSTANT`,
+     * which is true when neither kernel depends on the variables. `g` starts
+     * at zero, so a kernel writes only the entries it contributes to. Derivatives come
      * from Enzyme for double scalars and from the system dependencies for
      * `DependencyTracking::Variable`.
      *
@@ -40,14 +40,14 @@ namespace GridKit
       int evaluateConstraints(const ScalarT* x, ScalarT* g) override;
       int evaluateJacobian(const ScalarT* x) override;
       int evaluateHessian(const ScalarT* x, RealT sigma, const RealT* lambda) override;
-      int evaluateTerminalPower(const ScalarT* x, ScalarT* power) override;
 
     protected:
       /**
-       * @param[in] id - Case device `id`
+       * @param[in] id - Device `id`
        * @param[in] terminals - Bus number of each terminal
+       * @param[in] in_service - Service status
        */
-      ComponentModel(std::string id, std::vector<IdxT> terminals);
+      ComponentModel(std::string id, std::vector<IdxT> terminals, bool in_service = true);
 
     private:
       static constexpr bool hasEnzymeDerivatives();

@@ -15,14 +15,14 @@ namespace GridKit
     /**
      * @brief Constant admittance \f$Y = G + jB\f$ to ground
      *
-     * Power into the bus is \f$-Y^* V^2\f$.
+     * Power into the bus is \f$-Y^* (V_\mathrm{r}^2 + V_\mathrm{i}^2)\f$.
      */
     template <typename scalar_type, typename index_type>
     class Shunt : public ComponentModel<Shunt<scalar_type, index_type>, scalar_type, index_type>
     {
       using ComponentModelT = ComponentModel<Shunt<scalar_type, index_type>, scalar_type, index_type>;
 
-      using ComponentModelT::id_;
+      using ComponentModelT::in_service_;
 
     public:
       using ScalarT    = scalar_type;
@@ -32,16 +32,18 @@ namespace GridKit
 
       /// Local variables: terminal real and imaginary voltage
       static constexpr IdxT VARIABLE_SIZE            = 2;
-      /// Local constraints: power into the bus
+      /// Local constraint functions: power into the bus
       static constexpr IdxT CONSTRAINT_SIZE          = 2;
-      static constexpr IdxT INTERNAL_SIZE            = 0;
+      /// Internal variables: none
+      static constexpr IdxT INTERNAL_VARIABLE_SIZE   = 0;
+      /// Internal constraint functions: none
       static constexpr IdxT INTERNAL_CONSTRAINT_SIZE = 0;
       static constexpr bool CONSTANT                 = false;
 
       explicit Shunt(const ModelDataT& data);
 
-      int verify() const override;
-      int initialize(const Model::StateData& state, ScalarT* x, RealT* x_lower, RealT* x_upper) override;
+      Model::ConfigurationChecks verify() const override;
+      int                        initialize(ScalarT* x) override;
 
       __attribute__((always_inline)) inline ScalarT objective(const ScalarT* x) const;
       __attribute__((always_inline)) inline void    constraints(const ScalarT* x, ScalarT* g) const;
@@ -49,7 +51,6 @@ namespace GridKit
     private:
       RealT G_{0.0};
       RealT B_{0.0};
-      RealT online_{1.0};
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

@@ -22,7 +22,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Branch<scalar_type, index_type>::Branch(const ModelDataT& data)
-      : ComponentModelT(data.id, busNumbers(data)),
+      : ComponentModelT(data.id, busNumbers(data), data.in_service),
         R_(parameter(data, BranchParameters::R, ZERO<RealT>)),
         X_(parameter(data, BranchParameters::X, ZERO<RealT>)),
         G_(parameter(data, BranchParameters::G, ZERO<RealT>)),
@@ -34,50 +34,34 @@ namespace GridKit
         Smax_(parameter(data, BranchParameters::Smax, UNBOUNDED<RealT>))
     {
       constraint_upper_ = {Smax_ * Smax_, Smax_ * Smax_};
+      setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Branch<scalar_type, index_type>::verify() const
     {
-      return this->check(std::isfinite(R_), "R must be finite")
-             + this->check(std::isfinite(X_), "X must be finite")
-             + this->check(std::isfinite(G_), "G must be finite")
-             + this->check(std::isfinite(B_), "B must be finite")
-             + this->check(std::isfinite(Gmag_), "Gmag must be finite")
-             + this->check(std::isfinite(Bmag_), "Bmag must be finite")
-             + this->check(std::isfinite(tap_), "tap must be finite")
-             + this->check(std::isfinite(phase_), "phase must be finite")
-             + this->check(R_ * R_ + X_ * X_ > ZERO<RealT>, "R and X cannot both be zero")
-             + this->check(tap_ > ZERO<RealT>, "tap must be positive")
-             + this->check(Smax_ > ZERO<RealT>, "Smax must be positive");
+      Model::ConfigurationChecks checks("Branch");
+      checks.check(std::isfinite(R_), "R must be finite");
+      checks.check(std::isfinite(X_), "X must be finite");
+      checks.check(std::isfinite(G_), "G must be finite");
+      checks.check(std::isfinite(B_), "B must be finite");
+      checks.check(std::isfinite(Gmag_), "Gmag must be finite");
+      checks.check(std::isfinite(Bmag_), "Bmag must be finite");
+      checks.check(std::isfinite(tap_), "tap must be finite");
+      checks.check(std::isfinite(phase_), "phase must be finite");
+      checks.check(R_ * R_ + X_ * X_ > ZERO<RealT>, "R and X cannot both be zero");
+      checks.check(tap_ > ZERO<RealT>, "tap must be positive");
+      checks.check(Smax_ > ZERO<RealT>, "Smax must be positive");
+      return checks;
     }
 
     /**
-     * @brief Apply the state settings `open`, `tap` and `phase`
+     * @brief No internal variables
      */
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::initialize(const Model::StateData&   state,
-                                                    [[maybe_unused]] ScalarT* x,
-                                                    [[maybe_unused]] RealT*   x_lower,
-                                                    [[maybe_unused]] RealT*   x_upper)
+    int Branch<scalar_type, index_type>::initialize([[maybe_unused]] ScalarT* x)
     {
-      RealT tap    = tap_;
-      RealT phase  = phase_;
-      RealT status = ONE<RealT>;
-
-      const Model::StateRecord* record = state.device(id_);
-      if (record != nullptr)
-      {
-        tap   = record->value("tap", tap);
-        phase = record->value("phase", phase);
-        if (record->flag("open", false))
-        {
-          status = ZERO<RealT>;
-        }
-      }
-
-      setDerivedParameters(tap, phase, status);
-      return this->check(tap > ZERO<RealT>, "state tap must be positive");
+      return 0;
     }
 
     template <typename scalar_type, typename index_type>
@@ -91,7 +75,7 @@ namespace GridKit
      * @brief Squared apparent power and power into each bus
      *
      * Terminal currents are those of `PhasorDynamics::Branch`, and the power
-     * into bus k is \f$V_k I_k^*\f$.
+     * into each bus is \f$P + jQ = V I^*\f$.
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline void
@@ -121,29 +105,39 @@ namespace GridKit
     }
 
     /**
-     * @brief Admittance of `PhasorDynamics::Branch`, scaled by the branch status
+     * @brief Admittance of `PhasorDynamics::Branch`
      */
     template <typename scalar_type, typename index_type>
-    void Branch<scalar_type, index_type>::setDerivedParameters(RealT tap, RealT phase, RealT status)
+    void Branch<scalar_type, index_type>::setDerivedParams()
     {
       const RealT denom   = R_ * R_ + X_ * X_;
       const RealT g_br    = R_ / denom;
       const RealT b_br    = -X_ / denom;
-      const RealT inv_tap = ONE<RealT> / tap;
-      const RealT cos_ph  = std::cos(phase);
-      const RealT sin_ph  = std::sin(phase);
+      const RealT inv_tap = ONE<RealT> / tap_;
+      const RealT cos_ph  = std::cos(phase_);
+      const RealT sin_ph  = std::sin(phase_);
 
-      g11_ = status * (-g_br * inv_tap * inv_tap - HALF<RealT> * G_ - Gmag_);
-      b11_ = status * (-b_br * inv_tap * inv_tap - HALF<RealT> * B_ - Bmag_);
+      g11_ = -g_br * inv_tap * inv_tap - HALF<RealT> * G_ - Gmag_;
+      b11_ = -b_br * inv_tap * inv_tap - HALF<RealT> * B_ - Bmag_;
 
-      g12_ = status * (g_br * cos_ph - b_br * sin_ph) * inv_tap;
-      b12_ = status * (b_br * cos_ph + g_br * sin_ph) * inv_tap;
+      g12_ = (g_br * cos_ph - b_br * sin_ph) * inv_tap;
+      b12_ = (b_br * cos_ph + g_br * sin_ph) * inv_tap;
 
-      g21_ = status * (g_br * cos_ph + b_br * sin_ph) * inv_tap;
-      b21_ = status * (b_br * cos_ph - g_br * sin_ph) * inv_tap;
+      g21_ = (g_br * cos_ph + b_br * sin_ph) * inv_tap;
+      b21_ = (b_br * cos_ph - g_br * sin_ph) * inv_tap;
 
-      g22_ = status * (-g_br - HALF<RealT> * G_);
-      b22_ = status * (-b_br - HALF<RealT> * B_);
+      g22_ = -g_br - HALF<RealT> * G_;
+      b22_ = -b_br - HALF<RealT> * B_;
+
+      // An out-of-service branch has zero admittance
+      g11_ *= in_service_;
+      b11_ *= in_service_;
+      g12_ *= in_service_;
+      b12_ *= in_service_;
+      g21_ *= in_service_;
+      b21_ *= in_service_;
+      g22_ *= in_service_;
+      b22_ *= in_service_;
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit

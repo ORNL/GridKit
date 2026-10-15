@@ -5,14 +5,13 @@
 
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <string>
-#include <type_traits>
 #include <vector>
 
-#include <magic_enum/magic_enum.hpp>
-
 #include <GridKit/Constants.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -27,7 +26,7 @@ namespace GridKit
      * @tparam buses_enum Enumeration over terminal buses
      */
     template <typename real_type, typename index_type, typename parameters_enum, typename buses_enum>
-      requires std::is_enum_v<parameters_enum> && std::is_enum_v<buses_enum>
+      requires Utilities::SizedEnum<parameters_enum> && Utilities::SizedEnum<buses_enum>
     struct ComponentData
     {
       using RealT      = real_type;
@@ -35,8 +34,11 @@ namespace GridKit
       using Parameters = parameters_enum;
       using Buses      = buses_enum;
 
-      /// Case device `id`
+      /// Device `id`
       std::string id;
+
+      /// An out-of-service device keeps its entries and carries no power
+      bool in_service{true};
 
       /// Mapping of parameters to parameter values
       std::map<Parameters, RealT> parameters;
@@ -71,16 +73,10 @@ namespace GridKit
     {
       using IdxT = typename DataT::IdxT;
 
-      std::vector<IdxT> numbers;
-      for (const auto terminal : magic_enum::enum_values<typename DataT::Buses>())
+      std::vector<IdxT> numbers(Utilities::enum_size<typename DataT::Buses>(), INVALID_INDEX<IdxT>);
+      for (const auto& [terminal, number] : data.buses)
       {
-        IdxT       number = INVALID_INDEX<IdxT>;
-        const auto entry  = data.buses.find(terminal);
-        if (entry != data.buses.end())
-        {
-          number = entry->second;
-        }
-        numbers.push_back(number);
+        numbers[static_cast<size_t>(terminal)] = number;
       }
       return numbers;
     }

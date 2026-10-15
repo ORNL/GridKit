@@ -181,7 +181,7 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Leave the final point in the model
+     * @brief Leave the final point and its objective in the model
      */
     template <typename scalar_type, typename index_type>
     void SteadyState<scalar_type, index_type>::finalize_solution([[maybe_unused]] SolverReturn               status,
@@ -197,6 +197,7 @@ namespace AnalysisManager
                                                                  [[maybe_unused]] IpoptCalculatedQuantities* ip_cq)
     {
       setVariables(x);
+      model_->evaluateObjective();
     }
 
     template <typename scalar_type, typename index_type>

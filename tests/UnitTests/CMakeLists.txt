@@ -2,7 +2,6 @@
 add_subdirectory(AutomaticDifferentiation)
 add_subdirectory(LinearAlgebra)
 add_subdirectory(Math)
-add_subdirectory(Model)
 add_subdirectory(Network)
 if(GRIDKIT_ENABLE_ENZYME)
   add_subdirectory(OptimalPowerFlow)

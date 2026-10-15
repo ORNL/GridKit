@@ -26,6 +26,8 @@ namespace GridKit
       using ComponentModelT::constraint_lower_;
       using ComponentModelT::constraint_upper_;
       using ComponentModelT::variable_indices_;
+      using ComponentModelT::variable_lower_;
+      using ComponentModelT::variable_upper_;
 
     public:
       using ScalarT    = scalar_type;
@@ -35,35 +37,31 @@ namespace GridKit
 
       /// Local variables: real and imaginary voltage
       static constexpr IdxT VARIABLE_SIZE            = 2;
-      /// Local constraints: active and reactive power balance, squared voltage magnitude, and angle reference
-      static constexpr IdxT CONSTRAINT_SIZE          = 4;
-      static constexpr IdxT INTERNAL_SIZE            = 2;
-      static constexpr IdxT INTERNAL_CONSTRAINT_SIZE = 4;
+      /// Local constraint functions: active and reactive power balance, and squared voltage magnitude
+      static constexpr IdxT CONSTRAINT_SIZE          = 3;
+      /// Internal variables: real and imaginary voltage
+      static constexpr IdxT INTERNAL_VARIABLE_SIZE   = 2;
+      /// Internal constraint functions: active and reactive power balance, and squared voltage magnitude
+      static constexpr IdxT INTERNAL_CONSTRAINT_SIZE = 3;
       static constexpr bool CONSTANT                 = false;
 
       explicit Bus(const ModelDataT& data);
 
-      int verify() const override;
-      int initialize(const Model::StateData& state, ScalarT* x, RealT* x_lower, RealT* x_upper) override;
+      Model::ConfigurationChecks verify() const override;
+      int                        initialize(ScalarT* x) override;
 
-      /// Keep the state angle, which sets the angle reference
-      void setReference();
-
-      bool infinite() const
+      bool reference() const
       {
-        return infinite_;
+        return reference_;
       }
 
       __attribute__((always_inline)) inline ScalarT objective(const ScalarT* x) const;
       __attribute__((always_inline)) inline void    constraints(const ScalarT* x, ScalarT* g) const;
 
     private:
-      IdxT  number_{0};
-      bool  infinite_{false};
+      bool  reference_{false};
       RealT Vmin_{0.0};
       RealT Vmax_{0.0};
-      RealT vr_ref_{1.0};
-      RealT vi_ref_{0.0};
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

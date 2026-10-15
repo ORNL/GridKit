@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <type_traits>
@@ -65,10 +64,12 @@ namespace GridKit
 
     template <typename model_type, typename scalar_type, typename index_type>
     ComponentModel<model_type, scalar_type, index_type>::ComponentModel(std::string       id,
-                                                                        std::vector<IdxT> terminals)
+                                                                        std::vector<IdxT> terminals,
+                                                                        bool              in_service)
       : Component<scalar_type, index_type>(std::move(id),
                                            std::move(terminals),
-                                           model_type::INTERNAL_SIZE,
+                                           in_service,
+                                           model_type::INTERNAL_VARIABLE_SIZE,
                                            model_type::INTERNAL_CONSTRAINT_SIZE)
     {
       assert(this->size() == model_type::VARIABLE_SIZE);
@@ -162,17 +163,6 @@ namespace GridKit
                                                  multipliers.data(),
                                                  &this->hessian_);
       }
-      return 0;
-    }
-
-    template <typename model_type, typename scalar_type, typename index_type>
-    int ComponentModel<model_type, scalar_type, index_type>::evaluateTerminalPower(const ScalarT* x, ScalarT* power)
-    {
-      const auto                                       local = gather(x);
-      std::array<ScalarT, model_type::CONSTRAINT_SIZE> local_g{};
-      model().constraints(local.data(), local_g.data());
-
-      std::copy(local_g.begin() + model_type::INTERNAL_CONSTRAINT_SIZE, local_g.end(), power);
       return 0;
     }
   } // namespace OptimalPowerFlow
