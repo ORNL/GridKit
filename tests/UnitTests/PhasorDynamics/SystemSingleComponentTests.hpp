@@ -87,6 +87,9 @@ namespace GridKit
         Log::setVerbosity(Log::Verbosity::NONE);
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus);
         Log::setVerbosity(previous_verbosity);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> efd;
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd);
         system->addComponent(&exciter);
 
         success *= system->allocate() == 0;

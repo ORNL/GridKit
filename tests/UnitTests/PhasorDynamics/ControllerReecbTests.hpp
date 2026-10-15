@@ -110,14 +110,11 @@ namespace GridKit
           }
         }
 
+        // REECB has no required parameters: an empty parameter set is the
+        // documented-default model.
         Fixture<ScalarT> documented_defaults(makeMinimalData());
         success *= (documented_defaults.reecb.verify().passed());
         success *= defaultsMatchDocumentedValues();
-
-        auto missing_mva_data = makeMinimalData();
-        missing_mva_data.parameters.erase(Params::mva);
-        Fixture<ScalarT> missing_mva(missing_mva_data);
-        success *= (!missing_mva.reecb.verify().passed());
 
         // Integer JSON values are accepted for real parameters; booleans are
         // not numeric.
@@ -1956,9 +1953,8 @@ namespace GridKit
       Data makeMinimalData() const
       {
         Data data;
-        data.device_class            = "Reecb";
-        data.disambiguation_string   = "reecb_test";
-        data.parameters[Params::mva] = 100.0;
+        data.device_class          = "Reecb";
+        data.disambiguation_string = "reecb_test";
         data.monitored_variables.insert(Mon::iqcmd);
         data.monitored_variables.insert(Mon::ipcmd);
         data.monitored_variables.insert(Mon::vmeas);
@@ -2295,8 +2291,12 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        Fixture<ScalarT> fixture(data);
-        return !fixture.reecb.verify().passed();
+        return configurationRejected(
+            [&]()
+            {
+              Fixture<ScalarT> fixture(data);
+              return fixture.reecb.verify();
+            });
       }
 
       template <Ext variable>

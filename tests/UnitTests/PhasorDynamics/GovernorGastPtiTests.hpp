@@ -85,10 +85,6 @@ namespace GridKit
         success *= (verifyData(makeData()).passed());
         success *= defaultsMatchDocumentedValues();
 
-        auto missing_trate = makeMinimalData();
-        missing_trate.parameters.erase(Params::Trate);
-        success *= (!verifyData(missing_trate).passed());
-
         success *= invalidParameterCase(Params::R, 0.0);
         success *= invalidParameterCase(Params::R, -0.1);
         success *= invalidParameterCase(Params::T1, -0.1);
@@ -119,13 +115,6 @@ namespace GridKit
           success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
         }
 
-        // A finite serialized rating that overflows its MW-to-VA conversion is
-        // still an invalid component base.
-        success *= invalidParameterCase(Params::Trate,
-                                        std::numeric_limits<RealT>::max());
-        success *= invalidParameterCase(Params::Trate,
-                                        std::numeric_limits<RealT>::denorm_min());
-
         // Equal configured limits are valid; reversed limits are not.
         auto equal                      = makeData();
         equal.parameters[Params::Vmin]  = 0.5;
@@ -154,23 +143,8 @@ namespace GridKit
 
         success *= invalidParameterCase(Params::T1, true);
 
-        const std::array<RealT, 5> invalid_system_bases{{
-            -100.0e6,
-            ZERO<RealT>,
-            std::numeric_limits<RealT>::denorm_min(),
-            std::numeric_limits<RealT>::quiet_NaN(),
-            std::numeric_limits<RealT>::infinity(),
-        }};
-        for (const RealT system_base : invalid_system_bases)
-        {
-          Fixture<ScalarT> invalid_base(makeData(), system_base);
-          success *= (invalid_base.gastpti.allocate() == 0);
-          success *= (!invalid_base.gastpti.verify().passed());
-        }
-
         success *= unlinkedSignalRejected<External::speed>();
         success *= unlinkedSignalRejected<External::pref>();
-        success *= aliasedSignalsRejected();
 
         Fixture<ScalarT> unallocated(makeData());
         success *= (unallocated.gastpti.initialize() != 0);
@@ -975,10 +949,10 @@ namespace GridKit
         PhasorDynamics::SignalNode<T, IdxT> pmech_node_;
 
       public:
-        explicit Fixture(const Data& data, RealT system_va_base = 100.0e6)
+        explicit Fixture(const Data& data)
           : gastpti(data)
         {
-          gastpti.setSystemBase(60.0, system_va_base);
+          gastpti.setSystemBase(60.0, 100.0e6);
           gastpti.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech_node_);
         }
 
@@ -1066,9 +1040,8 @@ namespace GridKit
       Data makeMinimalData() const
       {
         Data data;
-        data.device_class              = "GastPti";
-        data.disambiguation_string     = "gastpti_test";
-        data.parameters[Params::Trate] = 100.0;
+        data.device_class          = "GastPti";
+        data.disambiguation_string = "gastpti_test";
         data.monitored_variables.insert(Mon::pmech);
         data.monitored_variables.insert(Mon::xvalve);
         data.monitored_variables.insert(Mon::xflow);
@@ -1231,7 +1204,11 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        return !verifyData(data).passed();
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
       }
 
       Model::ConfigurationChecks verifyData(const Data& data) const
@@ -1251,61 +1228,6 @@ namespace GridKit
         model.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech_node);
         model.getPorts().in.template port<variable>().connect(&unlinked_node);
         return !model.verify().passed();
-      }
-
-      bool aliasedSignalsRejected() const
-      {
-        using ModelT = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
-        using NodeT  = PhasorDynamics::SignalNode<ScalarT, IdxT>;
-
-        bool success = true;
-
-        NodeT  pmech_pref;
-        ModelT pref_alias(makeData());
-        pref_alias.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech_pref);
-        pref_alias.getPorts().in.template port<SignalInputs::pref>().connect(&pmech_pref);
-        if (pref_alias.allocate() != 0)
-        {
-          success = false;
-        }
-        if (pref_alias.verify().passed())
-        {
-          success = false;
-        }
-
-        NodeT  pmech_speed;
-        ModelT speed_alias(makeData());
-        speed_alias.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech_speed);
-        speed_alias.getPorts().in.template port<SignalInputs::speed>().connect(&pmech_speed);
-        if (speed_alias.allocate() != 0)
-        {
-          success = false;
-        }
-        if (speed_alias.verify().passed())
-        {
-          success = false;
-        }
-
-        ScalarT shared_value{ZERO<RealT>};
-        IdxT    shared_index{static_cast<IdxT>(99)};
-        NodeT   shared_input;
-        NodeT   pmech;
-        shared_input.link(&shared_value, &shared_index);
-
-        ModelT input_alias(makeData());
-        input_alias.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech);
-        input_alias.getPorts().in.template port<SignalInputs::speed>().connect(&shared_input);
-        input_alias.getPorts().in.template port<SignalInputs::pref>().connect(&shared_input);
-        if (input_alias.allocate() != 0)
-        {
-          success = false;
-        }
-        if (input_alias.verify().passed())
-        {
-          success = false;
-        }
-
-        return success;
       }
 
       template <typename VectorT>

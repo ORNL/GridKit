@@ -41,8 +41,9 @@ namespace GridKit
       static constexpr RealT kSmoothTol =
           std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
 
-      /// Construction, the monitor, and every verify() error class: missing
-      /// and invalid parameters, a null bus, and an unlinked command port.
+      /// Construction, the monitor, and every verify() error class: parameter
+      /// types and finiteness, negative floored lags, parameter
+      /// relationships, a null bus, and an unlinked command port.
       TestOutcome validation()
       {
         TestStatus success = true;
@@ -62,35 +63,61 @@ namespace GridKit
         // Suppress expected errors and warnings from the invalid cases below.
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
-        success *= (!minimal.verify().passed());
 
-        for (const Params parameter : {Params::Tg, Params::p0, Params::q0})
-        {
-          auto data = makeData();
-          data.parameters.erase(parameter);
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing(&bus, data);
-          success *= (!missing.verify().passed());
-        }
+        // REGCA has no required parameters: the default model and an empty
+        // parameter set both use the documented defaults.
+        success *= (minimal.verify().passed());
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> empty(&bus, Data{});
+        success *= (empty.verify().passed());
 
-        auto bad_switch                   = makeData();
-        bad_switch.parameters[Params::sL] = static_cast<IdxT>(2);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(&bus, bad_switch);
-        success *= (!bad_switch_model.verify().passed());
-
-        success *= invalidParameterCase(bus, Params::mva, 0.0);
-        success *= invalidParameterCase(bus, Params::IL1, -0.1);
-        success *= invalidParameterCase(bus, Params::VL1, 0.3);
-        success *= invalidParameterCase(bus, Params::VA1, 0.3);
+        success *= invalidParameterCase(Params::mva, 0.0);
+        success *= invalidParameterCase(Params::Tg, -0.1);
+        success *= invalidParameterCase(Params::TM, -0.1);
+        success *= invalidParameterCase(Params::Rpmax, -0.1);
+        success *= invalidParameterCase(Params::IL1, -0.1);
+        success *= invalidParameterCase(Params::VL1, 0.3);
+        success *= invalidParameterCase(Params::VA1, 0.3);
 
         // Vhvmax must lie strictly above VA1: reject equality and reversed ordering.
-        success *= invalidParameterCase(bus, Params::Vhvmax, kVa1);
-        success *= invalidParameterCase(bus, Params::Vhvmax, HALF<RealT> * kVa1);
+        success *= invalidParameterCase(Params::Vhvmax, kVa1);
+        success *= invalidParameterCase(Params::Vhvmax, HALF<RealT> * kVa1);
 
-        // Khv is optional, finite, and non-negative.
-        success *= invalidParameterCase(bus, Params::Khv, -0.1);
-        success *= invalidParameterCase(bus,
-                                        Params::Khv,
-                                        std::numeric_limits<RealT>::infinity());
+        // Khv is optional and non-negative.
+        success *= invalidParameterCase(Params::Khv, -0.1);
+
+        for (const Params parameter : {Params::p0,
+                                       Params::q0,
+                                       Params::mva,
+                                       Params::Tg,
+                                       Params::TM,
+                                       Params::Rqmax,
+                                       Params::Rqmin,
+                                       Params::Rpmax,
+                                       Params::IL1,
+                                       Params::VL0,
+                                       Params::VL1,
+                                       Params::VA0,
+                                       Params::VA1,
+                                       Params::Vhvmax,
+                                       Params::Khv})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                    = makeData();
+        integer_real.parameters[Params::mva] = static_cast<IdxT>(100);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> integer_model(&bus, integer_real);
+        success *= (integer_model.verify().passed());
+        success *= invalidParameterCase(Params::mva, true);
+
+        // The LVPL switch accepts JSON booleans only.
+        success *= invalidParameterCase(Params::sL, static_cast<IdxT>(0));
+        success *= invalidParameterCase(Params::sL, static_cast<IdxT>(1));
+        success *= invalidParameterCase(Params::sL, static_cast<IdxT>(2));
+        success *= invalidParameterCase(Params::sL, static_cast<RealT>(1.0));
 
         // A null bus and an attached command with no linked source count as
         // configuration errors on the same footing as bad parameters.
@@ -949,12 +976,18 @@ namespace GridKit
         fixture.bus.y().setDataUpdated();
       }
 
-      bool invalidParameterCase(PhasorDynamics::Bus<ScalarT, IdxT>& bus, Params param, RealT value)
+      template <typename ValueT>
+      bool invalidParameterCase(Params parameter, ValueT value)
       {
-        auto data              = makeData();
-        data.parameters[param] = value;
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
-        return !model.verify().passed();
+        auto data                  = makeData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              PhasorDynamics::Bus<ScalarT, IdxT>              bus(1.0, 0.0);
+              PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
+              return model.verify();
+            });
       }
 
       bool allResidualsZero(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca) const

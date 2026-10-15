@@ -12,6 +12,8 @@
 #include <format>
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
@@ -49,7 +51,7 @@ namespace GridKit
           monitor_(std::make_unique<MonitorT>(data))
       {
         // Parse data struct into model
-        this->initModelParams(data);
+        initializeParameters(data);
 
         initializeMonitor();
 
@@ -124,13 +126,21 @@ namespace GridKit
       }
 
       /**
-       * @brief Verify parameter values and attached signal links
+       * @brief Validate the IEEET1 configuration
+       *
+       * Checks the terminal bus, static parameter relationships, the
+       * saturation curve, the required field-voltage output, and attached
+       * external signals. Seed feasibility is operating-point dependent and
+       * is checked by initialize().
+       *
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
       Model::ConfigurationChecks Ieeet1<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("Ieeet1");
 
+        checks.check(bus_ != nullptr, "bus pointer is null");
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
         checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
         checks.check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
@@ -150,11 +160,16 @@ namespace GridKit
           checks.check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
+        checks.check(ports_.out.template port<Ieeet1SignalOutputs::efd>().connected(),
+                     "required efd output signal is not assigned");
+
+        // An attached port must resolve to readable signal storage. The
+        // enumerator is a template argument, so each port names itself once.
         auto check_attached_signal =
             [&]<Ieeet1SignalInputs input>(const char* name)
         {
-          auto port = ports_.in.template port<input>();
-          if (port.connected() && !port.linked())
+          if (ports_.in.template port<input>().connected()
+              && !ports_.in.template port<input>().linked())
           {
             checks.fail(std::format("{} signal attached with no linked source", name));
           }
@@ -202,21 +217,15 @@ namespace GridKit
           return 1;
         }
 
-        // External Variables
-        ScalarT efd0{0};
-        auto*   y  = y_.getData();
-        auto*   yp = yp_.getData();
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
 
-        // Initial Efd set by generator
-        // The exciter object has no way of knowing if the generator
-        // has set the initial value for Efd.
+        // The assigned efd node aliases this entry after allocate(), so it
+        // holds the field voltage seeded by the machine.
         // TODO: Build protections in system initialization call to
         // ensure Efd is initialized externally before the exciter initializes
         // other variables.
-        if (ports_.out.template port<Ieeet1SignalOutputs::efd>())
-        {
-          efd0 = y[7]; ///<- generator needs to be initialized first
-        }
+        const ScalarT efd0 = y[7];
 
         // Setpoint members provide the defaults for unattached signals.
         auto read_signal = [&]<Ieeet1SignalInputs input>(const ScalarT& default_value) -> ScalarT
@@ -471,70 +480,36 @@ namespace GridKit
       }
 
       /**
-       * @brief Initialization Exciter Parameters from data structure
+       * @brief Read the parameters out of the model data
+       *
+       * Every parameter is optional and keeps its documented default when
+       * omitted. A non-numeric or non-finite value, or a negative floored
+       * time constant, throws std::invalid_argument. Integer JSON values are
+       * accepted for real parameters.
+       *
+       * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      void Ieeet1<scalar_type, index_type>::initModelParams(const ModelDataT& data)
+      void Ieeet1<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        using Parameter = typename ModelDataT::Parameters;
+        using Params = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Tr))
-        {
-          Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
-        }
-        if (data.parameters.contains(Parameter::Ka))
-        {
-          Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
-        }
-        if (data.parameters.contains(Parameter::Ta))
-        {
-          Ta_ = std::get<RealT>(data.parameters.at(Parameter::Ta));
-        }
-        if (data.parameters.contains(Parameter::Ke))
-        {
-          Ke_ = std::get<RealT>(data.parameters.at(Parameter::Ke));
-        }
-        if (data.parameters.contains(Parameter::Te))
-        {
-          Te_ = std::get<RealT>(data.parameters.at(Parameter::Te));
-        }
-        if (data.parameters.contains(Parameter::Kf))
-        {
-          Kf_ = std::get<RealT>(data.parameters.at(Parameter::Kf));
-        }
-        if (data.parameters.contains(Parameter::Tf))
-        {
-          Tf_ = std::get<RealT>(data.parameters.at(Parameter::Tf));
-        }
-        if (data.parameters.contains(Parameter::Vrmin))
-        {
-          Vrmin_ = std::get<RealT>(data.parameters.at(Parameter::Vrmin));
-        }
-        if (data.parameters.contains(Parameter::Vrmax))
-        {
-          Vrmax_ = std::get<RealT>(data.parameters.at(Parameter::Vrmax));
-        }
-        if (data.parameters.contains(Parameter::E1))
-        {
-          E1_ = std::get<RealT>(data.parameters.at(Parameter::E1));
-        }
-        if (data.parameters.contains(Parameter::E2))
-        {
-          E2_ = std::get<RealT>(data.parameters.at(Parameter::E2));
-        }
-        if (data.parameters.contains(Parameter::Se1))
-        {
-          Se1_ = std::get<RealT>(data.parameters.at(Parameter::Se1));
-        }
-        if (data.parameters.contains(Parameter::Se2))
-        {
-          Se2_ = std::get<RealT>(data.parameters.at(Parameter::Se2));
-        }
-        if (data.parameters.contains(Parameter::Ispdlim))
-        {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
-        }
+        const Model::ParameterReader reader(data, "Ieeet1");
 
+        Tr_      = reader.readNonNegative(Params::Tr).value_or(Tr_);
+        Ka_      = reader.readReal(Params::Ka).value_or(Ka_);
+        Ta_      = reader.readNonNegative(Params::Ta).value_or(Ta_);
+        Ke_      = reader.readReal(Params::Ke).value_or(Ke_);
+        Te_      = reader.readNonNegative(Params::Te).value_or(Te_);
+        Kf_      = reader.readReal(Params::Kf).value_or(Kf_);
+        Tf_      = reader.readNonNegative(Params::Tf).value_or(Tf_);
+        Vrmin_   = reader.readReal(Params::Vrmin).value_or(Vrmin_);
+        Vrmax_   = reader.readReal(Params::Vrmax).value_or(Vrmax_);
+        E1_      = reader.readReal(Params::E1).value_or(E1_);
+        E2_      = reader.readReal(Params::E2).value_or(E2_);
+        Se1_     = reader.readReal(Params::Se1).value_or(Se1_);
+        Se2_     = reader.readReal(Params::Se2).value_or(Se2_);
+        Ispdlim_ = reader.readReal(Params::Ispdlim).value_or(Ispdlim_);
         setDerivedParameters();
       }
 

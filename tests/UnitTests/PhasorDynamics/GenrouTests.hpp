@@ -1,9 +1,11 @@
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
@@ -80,6 +82,82 @@ namespace GridKit
         }
         delete bus;
 
+        return success.report(__func__);
+      }
+
+      /// Every verify() error class, including parameter types and
+      /// finiteness, the parameters the machine equations divide by, the
+      /// saturation curve, bus ownership, and signal linkage.
+      TestOutcome validation()
+      {
+        using Parameter = typename GenrouDataT::Parameters;
+
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        // GENROU has no required parameters: an empty parameter set is the
+        // documented-default machine of the plain constructor.
+        success *= verifyData(makeGenrouData()).passed();
+        success *= verifyData(GenrouDataT{}).passed();
+        success *= defaultsMatchPlainConstructor();
+
+        success *= invalidParameterCase(Parameter::H, 0.0);
+        success *= invalidParameterCase(Parameter::Tdop, 0.0);
+        success *= invalidParameterCase(Parameter::Tdopp, 0.0);
+        success *= invalidParameterCase(Parameter::Tqop, 0.0);
+        success *= invalidParameterCase(Parameter::Tqopp, 0.0);
+        success *= invalidParameterCase(Parameter::Xd, 0.15);
+        success *= invalidParameterCase(Parameter::Xdp, 0.15);
+        success *= invalidParameterCase(Parameter::Xqp, 0.15);
+        success *= invalidParameterCase(Parameter::Xqpp, 0.0);
+        success *= invalidParameterCase(Parameter::S10, -0.1);
+        success *= invalidParameterCase(Parameter::S12, -0.1);
+        success *= invalidParameterCase(Parameter::S10, 0.1);
+        success *= invalidParameterCase(Parameter::mva, 0.0);
+
+        for (const Parameter parameter : {Parameter::p0,
+                                          Parameter::q0,
+                                          Parameter::H,
+                                          Parameter::D,
+                                          Parameter::Ra,
+                                          Parameter::Tdop,
+                                          Parameter::Tdopp,
+                                          Parameter::Tqop,
+                                          Parameter::Tqopp,
+                                          Parameter::Xd,
+                                          Parameter::Xdp,
+                                          Parameter::Xdpp,
+                                          Parameter::Xq,
+                                          Parameter::Xqp,
+                                          Parameter::Xqpp,
+                                          Parameter::Xl,
+                                          Parameter::S10,
+                                          Parameter::S12,
+                                          Parameter::mva})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                     = makeGenrouData();
+        integer_real.parameters[Parameter::H] = static_cast<IdxT>(3);
+
+        success *= verifyData(integer_real).passed();
+        success *= invalidParameterCase(Parameter::H, true);
+
+        PhasorDynamics::Genrou<ScalarT, IdxT> busless(nullptr, makeGenrouData());
+        success *= !busless.verify().passed();
+
+        success *= unlinkedSignalRejected<PhasorDynamics::GenrouSignalInputs::pmech>();
+        success *= unlinkedSignalRejected<PhasorDynamics::GenrouSignalInputs::efd>();
+
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -441,6 +519,78 @@ namespace GridKit
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
+
+    private:
+      static Model::ConfigurationChecks verifyData(const GenrouDataT& data)
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+        return gen.verify();
+      }
+
+      template <typename ValueT>
+      static bool invalidParameterCase(typename GenrouDataT::Parameters parameter, ValueT value)
+      {
+        auto data                  = makeGenrouData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
+      }
+
+      template <PhasorDynamics::GenrouSignalInputs input>
+      static bool unlinkedSignalRejected()
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
+        PhasorDynamics::Genrou<ScalarT, IdxT>     gen(&bus, makeGenrouData());
+        gen.getPorts().in.template port<input>().connect(&unlinked_node);
+        return !gen.verify().passed();
+      }
+
+      /// Omitting every parameter gives exactly the plain-constructor
+      /// machine, probed at one non-equilibrium state so every parameter
+      /// enters the residual.
+      static bool defaultsMatchPlainConstructor()
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>    plain_bus(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>    data_bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> plain(&plain_bus);
+        PhasorDynamics::Genrou<ScalarT, IdxT> from_data(&data_bus, GenrouDataT{});
+
+        bool success = (plain_bus.allocate() == 0) && (data_bus.allocate() == 0)
+                       && (plain.allocate() == 0) && (from_data.allocate() == 0);
+        if (!success)
+        {
+          return false;
+        }
+
+        auto* plain_y     = plain.y().getData();
+        auto* from_data_y = from_data.y().getData();
+        for (IdxT i = 0; i < plain.size(); ++i)
+        {
+          plain_y[i]     = static_cast<ScalarT>(0.1) * static_cast<ScalarT>(i + 1);
+          from_data_y[i] = plain_y[i];
+        }
+        plain.y().setDataUpdated();
+        from_data.y().setDataUpdated();
+
+        success = (plain.evaluateResidual() == 0) && (from_data.evaluateResidual() == 0);
+
+        const auto* plain_f     = plain.getResidual().getData();
+        const auto* from_data_f = from_data.getResidual().getData();
+        for (IdxT i = 0; i < plain.size(); ++i)
+        {
+          if (plain_f[i] != from_data_f[i])
+          {
+            std::cout << "GENROU default residual row " << i << " differs from the plain constructor\n";
+            success = false;
+          }
+        }
+        return success;
+      }
     }; // class GenrouTest
 
   } // namespace Testing

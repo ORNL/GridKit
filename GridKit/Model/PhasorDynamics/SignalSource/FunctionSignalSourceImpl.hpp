@@ -1,4 +1,8 @@
 
+#include <format>
+#include <stdexcept>
+
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSource.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSourceData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -48,25 +52,32 @@ namespace GridKit
         { return static_cast<ScalarT>(std::cos(t)); };
       }
 
-      throw std::runtime_error("FunctionSignalSource: Unsupported function");
+      throw std::invalid_argument(
+          std::format("FunctionSignalSource: function '{}' is not supported", expr));
     }
 
     /**
-     * @brief Set value from input data
+     * @brief Read the parameters out of the model data
+     *
+     * Both functions are optional and default to zero. A non-string value
+     * or an unsupported function name throws std::invalid_argument.
+     *
+     * @param[in] data Function names for the real and imaginary outputs.
      */
     template <typename scalar_type, typename index_type>
     void FunctionSignalSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameters = ModelDataT::Parameters;
-      if (data.parameters.contains(Parameters::Fr))
+      using Params = typename ModelDataT::Parameters;
+
+      const Model::ParameterReader reader(data, "FunctionSignalSource");
+
+      if (const auto fr = reader.readString(Params::Fr))
       {
-        auto fr = std::get<std::string>(data.parameters.at(Parameters::Fr));
-        f_real_ = parseFunction(fr);
+        f_real_ = parseFunction(*fr);
       }
-      if (data.parameters.contains(Parameters::Fi))
+      if (const auto fi = reader.readString(Params::Fi))
       {
-        auto fi = std::get<std::string>(data.parameters.at(Parameters::Fi));
-        f_imag_ = parseFunction(fi);
+        f_imag_ = parseFunction(*fi);
       }
     }
 

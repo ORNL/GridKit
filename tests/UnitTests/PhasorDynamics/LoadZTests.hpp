@@ -2,10 +2,12 @@
 
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
@@ -54,6 +56,51 @@ namespace GridKit
 
         delete bus;
 
+        return success.report(__func__);
+      }
+
+      /// Every verify() error class, including parameter types and
+      /// finiteness, an invertible impedance, and bus ownership.
+      TestOutcome validation()
+      {
+        using Params = PhasorDynamics::LoadZParameters;
+
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        // LoadZ has no required parameters: an empty parameter set is the
+        // documented-default load.
+        success *= verifyData(makeData()).passed();
+        success *= verifyData(DataT{}).passed();
+
+        auto zero_impedance                  = makeData();
+        zero_impedance.parameters[Params::R] = 0.0;
+        zero_impedance.parameters[Params::X] = 0.0;
+
+        success *= !verifyData(zero_impedance).passed();
+
+        for (const Params parameter : {Params::R, Params::X})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                  = makeData();
+        integer_real.parameters[Params::R] = static_cast<IdxT>(2);
+
+        success *= verifyData(integer_real).passed();
+        success *= invalidParameterCase(Params::R, true);
+
+        PhasorDynamics::LoadZ<ScalarT, IdxT> busless(nullptr, makeData());
+        success *= !busless.verify().passed();
+
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -237,6 +284,25 @@ namespace GridKit
         data.monitored_variables.insert(Variable::q);
 
         return data;
+      }
+
+      Model::ConfigurationChecks verifyData(const DataT& data)
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>   bus(1.0, 0.0);
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus, data);
+        return load.verify();
+      }
+
+      template <typename ValueT>
+      bool invalidParameterCase(PhasorDynamics::LoadZParameters parameter, ValueT value)
+      {
+        auto data                  = makeData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,

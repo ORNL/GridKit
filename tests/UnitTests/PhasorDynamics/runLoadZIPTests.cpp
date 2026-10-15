@@ -9,6 +9,7 @@ int main()
   GridKit::Testing::LoadZIPTests<double, size_t> test;
 
   result += test.constructor();
+  result += test.validation();
   result += test.initialization();
   result += test.dispatchAtInitializedVoltage();
   result += test.residual();

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
@@ -53,6 +55,46 @@ namespace GridKit
 
         delete bus;
 
+        return success.report(__func__);
+      }
+
+      /// Every verify() error class, including parameter types and
+      /// finiteness, and bus ownership. Every finite parameter value is
+      /// admissible.
+      TestOutcome validation()
+      {
+        using Params = PhasorDynamics::LoadZIPParameters;
+
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        // LoadZIP has no required parameters: an empty parameter set is the
+        // documented-default load.
+        success *= verifyData(makeData()).passed();
+        success *= verifyData(DataT{}).passed();
+
+        for (const Params parameter : {Params::Pnom, Params::Qnom, Params::alphaI, Params::alphaP})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                     = makeData();
+        integer_real.parameters[Params::Pnom] = static_cast<IdxT>(2);
+
+        success *= verifyData(integer_real).passed();
+        success *= invalidParameterCase(Params::Pnom, true);
+
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> busless(nullptr, makeData());
+        success *= !busless.verify().passed();
+
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -311,6 +353,25 @@ namespace GridKit
         data.monitored_variables.insert(Variable::q);
 
         return data;
+      }
+
+      Model::ConfigurationChecks verifyData(const DataT& data)
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>     bus(1.0, 0.0);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, data);
+        return load.verify();
+      }
+
+      template <typename ValueT>
+      bool invalidParameterCase(PhasorDynamics::LoadZIPParameters parameter, ValueT value)
+      {
+        auto data                  = makeData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
       }
     }; // class LoadZIPTests
 

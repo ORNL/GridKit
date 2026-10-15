@@ -71,6 +71,7 @@ namespace GridKit
         success *= !reader.readNonNegative(Params::omitted).has_value();
         success *= !reader.readBool(Params::omitted).has_value();
         success *= !reader.readInteger(Params::omitted).has_value();
+        success *= !reader.readString(Params::omitted).has_value();
         success *= (reader.readReal(Params::omitted).value_or(ONE<RealT>) == ONE<RealT>);
         success *= reader.readBool(Params::omitted).value_or(true);
 
@@ -83,6 +84,7 @@ namespace GridKit
         success *= (reader.readBool(Params::false_flag) == false);
         success *= (reader.readBool(Params::true_flag) == true);
         success *= !reader.readBool(Params::false_flag).value_or(true);
+        success *= (reader.readString(Params::text) == "2");
 
         success *= throws<std::invalid_argument>([&]()
                                                  { static_cast<void>(reader.readReal(Params::infinite)); });
@@ -100,6 +102,8 @@ namespace GridKit
                                                  { static_cast<void>(reader.readInteger(Params::true_flag)); });
         success *= throws<std::invalid_argument>([&]()
                                                  { static_cast<void>(reader.readNonNegative(Params::negative)); });
+        success *= throws<std::invalid_argument>([&]()
+                                                 { static_cast<void>(reader.readString(Params::integer)); });
 
         try
         {

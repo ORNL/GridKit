@@ -9,7 +9,7 @@ int main()
   GridKit::Testing::BranchTests<double, size_t> test;
 
   result += test.constructor();
-  result += test.parameterValidation();
+  result += test.validation();
   result += test.dataConstructorDefaults();
   result += test.parameterSetters();
   result += test.residual();

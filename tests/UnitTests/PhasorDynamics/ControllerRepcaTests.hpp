@@ -96,9 +96,16 @@ namespace GridKit
         success *= invalidParameterCase(Params::mva, true);
 
         success *= invalidParameterCase(Params::Tfltr, -0.2);
-        success *= invalidParameterCase(Params::Tft, -0.1);
         success *= invalidParameterCase(Params::Tp, -0.3);
         success *= invalidParameterCase(Params::Tlag, -0.4);
+
+        // The frequency lead time constant enters only a numerator, so any
+        // sign is valid.
+        auto negative_lead                    = makeData();
+        negative_lead.parameters[Params::Tft] = -0.1;
+        Fixture<ScalarT> negative_lead_model(negative_lead);
+        negative_lead_model.attachAllInputs();
+        success *= (negative_lead_model.repca.verify().passed());
 
         const RealT                  nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT                  infinity = std::numeric_limits<RealT>::infinity();
@@ -137,23 +144,6 @@ namespace GridKit
           success *= invalidParameterCase(parameter, nan);
           success *= invalidParameterCase(parameter, infinity);
           success *= invalidParameterCase(parameter, -infinity);
-        }
-        success *= invalidParameterCase(Params::mva, std::numeric_limits<RealT>::max());
-
-        {
-          Fixture<ScalarT> nonfinite_system_base(makeData(), 1.0, 0.0, infinity);
-          nonfinite_system_base.attachAllInputs();
-          success *= (!nonfinite_system_base.repca.verify().passed());
-        }
-        {
-          auto tiny_base_data                    = makeData();
-          tiny_base_data.parameters[Params::mva] = std::numeric_limits<RealT>::min();
-          Fixture<ScalarT> overflowing_base_ratio(tiny_base_data,
-                                                  1.0,
-                                                  0.0,
-                                                  std::numeric_limits<RealT>::max());
-          overflowing_base_ratio.attachAllInputs();
-          success *= (!overflowing_base_ratio.repca.verify().passed());
         }
 
         const std::array<Params, 3> flag_parameters{{
@@ -605,8 +595,8 @@ namespace GridKit
 
         // An invalid configuration is rejected before any state is written.
         {
-          auto invalid_data                    = data;
-          invalid_data.parameters[Params::Tfv] = -0.1;
+          auto invalid_data                       = data;
+          invalid_data.parameters[Params::dbdlow] = 0.1;
           Fixture<ScalarT> invalid_fixture(invalid_data);
           invalid_fixture.attachAllInputs();
           setInitializationInputs(invalid_fixture);
@@ -1719,9 +1709,13 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        Fixture<ScalarT> fixture(data);
-        fixture.attachAllInputs();
-        return !fixture.repca.verify().passed();
+        return configurationRejected(
+            [&]()
+            {
+              Fixture<ScalarT> fixture(data);
+              fixture.attachAllInputs();
+              return fixture.repca.verify();
+            });
       }
 
       template <Ext variable>

@@ -6,9 +6,13 @@
  * @brief Definition of the SEXS-PTI exciter model.
  */
 
+#include <algorithm>
+#include <atomic>
 #include <format>
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
@@ -30,6 +34,7 @@ namespace GridKit
         : bus_(bus)
       {
         size_ = 3;
+        setDerivedParameters();
       }
 
       template <typename scalar_type, typename index_type>
@@ -37,7 +42,7 @@ namespace GridKit
         : bus_(bus),
           monitor_(std::make_unique<MonitorT>(data))
       {
-        initModelParams(data);
+        initializeParameters(data);
         initializeMonitor();
         size_ = 3;
       }
@@ -91,49 +96,33 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Validate the SEXS-PTI configuration
+       *
+       * Checks the terminal bus, the regulator gain initialization divides
+       * by, the field-voltage limits, the required field-voltage output, and
+       * attached external signals.
+       *
+       * @return The configuration checks; passed() when valid.
+       */
       template <typename scalar_type, typename index_type>
       Model::ConfigurationChecks SexsPti<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("SexsPti");
 
-        checks.check(missing_param_count_ == 0, "model data is missing required parameters");
+        checks.check(bus_ != nullptr, "bus pointer is null");
+        checks.check(K_ > ZERO<RealT>, "K must be positive");
+        checks.check(Efdmin_ < Efdmax_, "Efdmin must be less than Efdmax");
+        checks.check(ports_.out.template port<SexsPtiSignalOutputs::efd>().connected(),
+                     "required efd output signal is not assigned");
 
-        if (bus_ == nullptr)
-        {
-          checks.fail("bus pointer is null");
-        }
-        if (Ta_ < 0.0)
-        {
-          checks.fail("Ta must be non-negative");
-        }
-        if (Tb_ <= 0.0)
-        {
-          checks.fail("Tb must be positive");
-        }
-        if (Te_ <= 0.0)
-        {
-          checks.fail("Te must be positive");
-        }
-        if (K_ <= 0.0)
-        {
-          checks.fail("K must be positive");
-        }
-        if (Efdmin_ >= Efdmax_)
-        {
-          checks.fail("Efdmin must be less than Efdmax");
-        }
-
-        auto efd_port = ports_.out.template port<SexsPtiSignalOutputs::efd>();
-        if (!efd_port.connected() || !efd_port.linked())
-        {
-          checks.fail("required EFD signal is not assigned");
-        }
-
+        // An attached port must resolve to readable signal storage. The
+        // enumerator is a template argument, so each port names itself once.
         auto check_attached_signal =
             [&]<SexsPtiSignalInputs input>(const char* name)
         {
-          auto port = ports_.in.template port<input>();
-          if (port.connected() && !port.linked())
+          if (ports_.in.template port<input>().connected()
+              && !ports_.in.template port<input>().linked())
           {
             checks.fail(std::format("{} signal attached with no linked source", name));
           }
@@ -150,14 +139,18 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::initialize()
       {
-        ScalarT efd0{0.0};
-        auto*   y  = y_.getData();
-        auto*   yp = yp_.getData();
-
-        if (ports_.out.template port<SexsPtiSignalOutputs::efd>())
+        if (!this->verifyAndLog())
         {
-          efd0 = y[1];
+          Log::error() << "SexsPti: cannot initialize with invalid configuration\n";
+          return 1;
         }
+
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+
+        // The assigned efd node aliases this entry after allocate(), so it
+        // holds the field voltage seeded by the machine.
+        const ScalarT efd0 = y[1];
 
         // Setpoint members provide the defaults for unattached signals.
         auto read_signal = [&]<SexsPtiSignalInputs input>(const ScalarT& default_value) -> ScalarT
@@ -328,32 +321,65 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Read the parameters out of the model data
+       *
+       * Every parameter is optional and keeps its documented default when
+       * omitted. A non-numeric or non-finite value, or a negative floored
+       * time constant, throws std::invalid_argument. Integer JSON values are
+       * accepted for real parameters.
+       *
+       * @param[in] data Parameters and monitored-variable selections.
+       */
       template <typename scalar_type, typename index_type>
-      void SexsPti<scalar_type, index_type>::initModelParams(const ModelDataT& data)
+      void SexsPti<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Params = typename ModelDataT::Parameters;
 
-        missing_param_count_ = 0;
+        const Model::ParameterReader reader(data, "SexsPti");
 
-        auto load = [&](auto param, RealT& member, const char* name)
+        Ta_     = reader.readReal(Params::Ta).value_or(Ta_);
+        Tb_     = reader.readNonNegative(Params::Tb).value_or(Tb_);
+        Te_     = reader.readNonNegative(Params::Te).value_or(Te_);
+        K_      = reader.readReal(Params::K).value_or(K_);
+        Efdmax_ = reader.readReal(Params::Efdmax).value_or(Efdmax_);
+        Efdmin_ = reader.readReal(Params::Efdmin).value_or(Efdmin_);
+        setDerivedParameters();
+      }
+
+      /**
+       * @brief Static method to log time constant warnings
+       *
+       * @note Guarded by a static std::atomic<bool> flag so the warning is
+       *       printed at most once per model type.
+       */
+      template <typename scalar_type, typename index_type>
+      void SexsPti<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "SexsPti: Tb and Te below " << TIME_CONSTANT_MINIMUM
+                       << " s are raised to that floor\n";
+      }
+
+      /**
+       * @brief Resolve the parameter-derived constants
+       *
+       * Raises the lead-lag denominator and exciter lags to the
+       * well-posedness floor.
+       */
+      template <typename scalar_type, typename index_type>
+      void SexsPti<scalar_type, index_type>::setDerivedParameters()
+      {
+        if (Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM)
         {
-          if (data.parameters.contains(param))
+          static std::atomic<bool> time_constant_warning_flag_{false};
+          if (!time_constant_warning_flag_.exchange(true))
           {
-            member = std::get<RealT>(data.parameters.at(param));
+            logTimeConstantWarning();
           }
-          else
-          {
-            Log::error() << "SexsPti: missing required parameter '" << name << "'\n";
-            ++missing_param_count_;
-          }
-        };
+        }
 
-        load(Params::Ta, Ta_, "Ta");
-        load(Params::Tb, Tb_, "Tb");
-        load(Params::Te, Te_, "Te");
-        load(Params::K, K_, "K");
-        load(Params::Efdmax, Efdmax_, "Efdmax");
-        load(Params::Efdmin, Efdmin_, "Efdmin");
+        Tb_ = std::max(Tb_, TIME_CONSTANT_MINIMUM);
+        Te_ = std::max(Te_, TIME_CONSTANT_MINIMUM);
       }
 
       template <typename scalar_type, typename index_type>

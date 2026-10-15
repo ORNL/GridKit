@@ -11,7 +11,7 @@ int main()
   result += test.vsSignal();
   result += test.vrefAndLimiterPorts();
   result += test.antiWindupLimiter();
-  result += test.parameterValidation();
+  result += test.validation();
   result += test.systemAssembly();
   result += test.systemSignalFreshness();
 #ifdef GRIDKIT_ENABLE_ENZYME

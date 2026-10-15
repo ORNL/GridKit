@@ -10,6 +10,7 @@
 #include <format>
 #include <optional>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <variant>
 
@@ -104,6 +105,12 @@ namespace GridKit
       [[nodiscard]] std::optional<IdxT> readInteger(ParametersT key) const
       {
         return readExact<IdxT>(key, "must be an integer");
+      }
+
+      /// Read an optional string parameter.
+      [[nodiscard]] std::optional<std::string> readString(ParametersT key) const
+      {
+        return readExact<std::string>(key, "must be a string");
       }
 
     private:

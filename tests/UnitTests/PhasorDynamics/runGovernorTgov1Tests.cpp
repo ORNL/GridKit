@@ -7,6 +7,7 @@ int main()
   GridKit::Testing::GovernorTgov1Tests<double, size_t> test;
 
   result += test.constructor();
+  result += test.validation();
   result += test.accessors();
   result += test.residual();
   result += test.zeroInitialResidual();

@@ -91,8 +91,6 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
-        using Component<scalar_type, index_type>::va_component_base_;
-        using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
         using Component<scalar_type, index_type>::ws_;
@@ -199,7 +197,6 @@ namespace GridKit
         RealT Pmin_{ZERO<RealT>};
         RealT Tlag_{static_cast<RealT>(3.0)};
 
-        IdxT  parameter_error_count_{0};
         RealT vcomp_on_{ONE<RealT>};
         RealT vcomp_off_{ZERO<RealT>};
         RealT ref_on_{ONE<RealT>};

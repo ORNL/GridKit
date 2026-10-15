@@ -62,8 +62,6 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
-        using Component<scalar_type, index_type>::va_component_base_;
-        using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
         using Component<scalar_type, index_type>::ws_;
@@ -111,11 +109,6 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        void loadRealParameter(const ModelDataT& data,
-                               GastPtiParameters parameter,
-                               RealT&            target,
-                               const char*       name);
-        bool floorTimeConstant(RealT& value, const char* name);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
@@ -134,11 +127,11 @@ namespace GridKit
         RealT Vmax_{ONE<RealT>};
         RealT Vmin_{ZERO<RealT>};
         RealT Dturb_{ZERO<RealT>};
+        RealT Trate_{static_cast<RealT>(100.0)};
         RealT Vmin_response_{ZERO<RealT>};
         RealT Vmax_response_{ONE<RealT>};
         RealT s_valve_{ONE<RealT>};
 
-        IdxT    parameter_error_count_{0};
         ScalarT pref_set_{0};
 
         SignalPortsT              ports_;

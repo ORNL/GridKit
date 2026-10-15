@@ -9,6 +9,7 @@ int main()
   GridKit::Testing::LoadZTests<double, size_t> test;
 
   result += test.constructor();
+  result += test.validation();
   result += test.residual();
   result += test.jacobian();
   result += test.monitor();

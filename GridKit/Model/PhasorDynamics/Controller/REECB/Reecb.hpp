@@ -85,8 +85,6 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
-        using Component<scalar_type, index_type>::va_component_base_;
-        using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
         using Component<scalar_type, index_type>::ws_;
@@ -175,15 +173,6 @@ namespace GridKit
         bool buildInitialPoint(InitialPoint& point);
         void commitInitialPoint(const InitialPoint& point);
 
-        void loadRealParameter(const ModelDataT& data,
-                               ReecbParameters   parameter,
-                               RealT&            target,
-                               const char*       name);
-        void loadBooleanParameter(const ModelDataT& data,
-                                  ReecbParameters   parameter,
-                                  bool&             target,
-                                  const char*       name);
-        bool floorTimeConstant(RealT& value, const char* name);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
@@ -202,6 +191,7 @@ namespace GridKit
         BusT* bus_{nullptr};
 
         // Input parameters
+        RealT mva_base_{100.0};
         bool  PfFlag_{false};
         bool  VFlag_{false};
         bool  QFlag_{false};
@@ -233,7 +223,6 @@ namespace GridKit
         RealT Imax_{1.3};
 
         bool Vref0_given_{false};
-        IdxT parameter_error_count_{0};
 
         // Derived parameters
         RealT pf_on_{0};

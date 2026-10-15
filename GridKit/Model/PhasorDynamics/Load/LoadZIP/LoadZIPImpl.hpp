@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
@@ -21,7 +23,7 @@ namespace GridKit
       : bus_(bus)
     {
       size_ = 2;
-      setDerivedParams();
+      setDerivedParameters();
     }
 
     template <typename scalar_type, typename index_type>
@@ -33,7 +35,7 @@ namespace GridKit
         alphaP_(alphaP)
     {
       size_ = 2;
-      setDerivedParams();
+      setDerivedParameters();
     }
 
     template <typename scalar_type, typename index_type>
@@ -52,31 +54,28 @@ namespace GridKit
     {
     }
 
+    /**
+     * @brief Read the parameters out of the model data
+     *
+     * Every parameter is optional and keeps its documented default when
+     * omitted. A non-numeric or non-finite value throws
+     * std::invalid_argument. Integer JSON values are accepted for real
+     * parameters.
+     *
+     * @param[in] data Parameters and monitored-variable selections.
+     */
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::Pnom))
-      {
-        Pnom_ = std::get<RealT>(data.parameters.at(Parameter::Pnom));
-      }
+      using Params = typename ModelDataT::Parameters;
 
-      if (data.parameters.contains(Parameter::Qnom))
-      {
-        Qnom_ = std::get<RealT>(data.parameters.at(Parameter::Qnom));
-      }
+      const Model::ParameterReader reader(data, "LoadZIP");
 
-      if (data.parameters.contains(Parameter::alphaI))
-      {
-        alphaI_ = std::get<RealT>(data.parameters.at(Parameter::alphaI));
-      }
-
-      if (data.parameters.contains(Parameter::alphaP))
-      {
-        alphaP_ = std::get<RealT>(data.parameters.at(Parameter::alphaP));
-      }
-
-      setDerivedParams();
+      Pnom_   = reader.readReal(Params::Pnom).value_or(Pnom_);
+      Qnom_   = reader.readReal(Params::Qnom).value_or(Qnom_);
+      alphaI_ = reader.readReal(Params::alphaI).value_or(alphaI_);
+      alphaP_ = reader.readReal(Params::alphaP).value_or(alphaP_);
+      setDerivedParameters();
     }
 
     /**
@@ -123,12 +122,36 @@ namespace GridKit
     }
 
     /**
+     * @brief Validate the ZIP load configuration
+     *
+     * Every parameter value is admissible, so only the terminal bus is
+     * checked. The initial bus voltage is checked by initialize().
+     *
+     * @return The configuration checks; passed() when valid.
+     */
+    template <typename scalar_type, typename index_type>
+    Model::ConfigurationChecks LoadZIP<scalar_type, index_type>::verify() const
+    {
+      Model::ConfigurationChecks checks("LoadZIP");
+
+      checks.check(bus_ != nullptr, "bus pointer is null");
+
+      return checks;
+    }
+
+    /**
      * Initialization of the load model
      *
      */
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::initialize()
     {
+      if (!this->verifyAndLog())
+      {
+        Log::error() << "LoadZIP: cannot initialize with invalid configuration\n";
+        return 1;
+      }
+
       const ScalarT vr = Vr();
       const ScalarT vi = Vi();
 
@@ -142,7 +165,7 @@ namespace GridKit
         return 1;
       }
       Vnom_ = vm0;
-      setDerivedParams();
+      setDerivedParameters();
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
@@ -272,7 +295,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    void LoadZIP<scalar_type, index_type>::setDerivedParams()
+    void LoadZIP<scalar_type, index_type>::setDerivedParameters()
     {
       const RealT Vnom2 = Vnom_ * Vnom_;
 

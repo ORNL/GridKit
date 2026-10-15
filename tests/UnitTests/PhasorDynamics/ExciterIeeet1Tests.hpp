@@ -1,9 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <limits>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
@@ -23,7 +25,9 @@ namespace GridKit
     class ExciterIeeet1Tests
     {
     public:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using RealT  = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using Data   = PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT>;
+      using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
 
       ExciterIeeet1Tests()  = default;
       ~ExciterIeeet1Tests() = default;
@@ -56,20 +60,23 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
 
-        bus.allocate();
-        exciter.allocate();
+        success *= (bus.allocate() == 0);
+        success *= (exciter.allocate() == 0);
 
-        bus.initialize();
-        exciter.initialize();
+        success *= (bus.initialize() == 0);
+        efd_node.init(1.2);
+        success *= (exciter.initialize() == 0);
 
-        exciter.evaluateResidual();
+        success *= (exciter.evaluateResidual() == 0);
 
         const auto& residual      = exciter.getResidual();
         const auto* residual_data = residual.getData();
         for (size_t i = 0; i < residual.getSize(); ++i)
         {
-          if (!isEqual(residual_data[i], static_cast<ScalarT>(0.0)))
+          if (!isEqual(residual_data[i], static_cast<ScalarT>(0.0), kTol))
           {
             std::cout << "Non-zero Ieeet1 residual at index " << i << ": " << residual_data[i] << "\n";
             success = false;
@@ -82,8 +89,6 @@ namespace GridKit
       TestOutcome zeroTimeConstantsAndDisabledSaturation()
       {
         TestStatus success = true;
-
-        using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
 
         auto data                    = makeTestData();
         data.parameters[Params::Tr]  = 0.0;
@@ -180,27 +185,76 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome invalidSaturationParameters()
+      /// Every verify() error class, including parameter types and
+      /// finiteness, negative floored lags, parameter relationships, bus
+      /// ownership, the required efd output, and signal linkage.
+      TestOutcome validation()
       {
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
-        // Suppress expected errors from the invalid saturation cases below.
+        // Suppress expected errors and warnings from the invalid cases below.
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
+        // IEEET1 has no required parameters: an empty parameter set is the
+        // documented-default model.
+        success *= verifyData(makeTestData()).passed();
+        success *= verifyData(Data{}).passed();
 
-        auto data                    = makeTestData();
-        data.parameters[Params::Se1] = -0.1;
+        success *= invalidParameterCase(Params::Ka, 0.0);
+        success *= invalidParameterCase(Params::Vrmin, 2.0);
+        success *= invalidParameterCase(Params::Ispdlim, 0.5);
+        success *= invalidParameterCase(Params::Tr, -0.1);
+        success *= invalidParameterCase(Params::Ta, -0.1);
+        success *= invalidParameterCase(Params::Te, -0.1);
+        success *= invalidParameterCase(Params::Tf, -0.1);
+        success *= invalidParameterCase(Params::Se1, -0.1);
+        success *= invalidParameterCase(Params::E1, -1.0);
+        success *= invalidParameterCase(Params::Se2, 0.01);
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        for (const Params parameter : {Params::Tr,
+                                       Params::Ka,
+                                       Params::Ta,
+                                       Params::Ke,
+                                       Params::Te,
+                                       Params::Kf,
+                                       Params::Tf,
+                                       Params::Vrmin,
+                                       Params::Vrmax,
+                                       Params::E1,
+                                       Params::E2,
+                                       Params::Se1,
+                                       Params::Se2,
+                                       Params::Ispdlim})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
 
-        bus.allocate();
-        exciter.allocate();
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                   = makeTestData();
+        integer_real.parameters[Params::Ka] = static_cast<IdxT>(50);
 
-        success *= (!exciter.verify().passed());
+        success *= verifyData(integer_real).passed();
+        success *= invalidParameterCase(Params::Ka, true);
+
+        // A model without the required efd output assignment is rejected.
+        PhasorDynamics::Bus<ScalarT, IdxT>             bus(1.0, 0.0);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> unassigned(&bus, makeTestData());
+        success *= !unassigned.verify().passed();
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      busless_efd;
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> busless(nullptr, makeTestData());
+        busless.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&busless_efd);
+        success *= !busless.verify().passed();
+
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::Ieeet1SignalInputs::speed>();
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::Ieeet1SignalInputs::vref>();
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::Ieeet1SignalInputs::vs>();
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::Ieeet1SignalInputs::vuel>();
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::Ieeet1SignalInputs::voel>();
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -299,6 +353,8 @@ namespace GridKit
         DependencyTracking::Variable                                        Vi1{4.0};
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(Vr1, Vi1);
         PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT> exciter(&bus, data);
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>      efd_node;
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
 
         bus.allocate();
         exciter.allocate();
@@ -310,6 +366,7 @@ namespace GridKit
         }
 
         bus.initialize();
+        efd_node.init(DependencyTracking::Variable{1.2});
         exciter.initialize();
 
         exciter.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
@@ -333,6 +390,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
 
         bus.allocate();
         exciter.allocate();
@@ -344,6 +403,7 @@ namespace GridKit
         }
 
         bus.initialize();
+        efd_node.init(1.2);
         exciter.initialize();
 
         exciter.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
@@ -364,11 +424,43 @@ namespace GridKit
 #endif
 
     private:
-      auto makeTestData() -> PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT>
+      /// Verify a model built from @p data with its required efd output assigned.
+      Model::ConfigurationChecks verifyData(const Data& data) const
       {
-        using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
+        PhasorDynamics::Bus<ScalarT, IdxT>             bus(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
+        return exciter.verify();
+      }
 
-        PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT> data;
+      template <typename ValueT>
+      bool invalidParameterCase(Params parameter, ValueT value) const
+      {
+        auto data                  = makeTestData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
+      }
+
+      template <PhasorDynamics::Exciter::Ieeet1SignalInputs input>
+      bool unlinkedSignalRejected() const
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>             bus(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      unlinked_node;
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, makeTestData());
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
+        exciter.getPorts().in.template port<input>().connect(&unlinked_node);
+        return !exciter.verify().passed();
+      }
+
+      auto makeTestData() const -> Data
+      {
+        Data data;
         data.device_class          = "exciter";
         data.disambiguation_string = "ieeet1_test";
         data.monitored_variables.insert(PhasorDynamics::Exciter::Ieeet1MonitorableVariables::efd);

@@ -1,10 +1,12 @@
 #include <complex>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -23,6 +25,7 @@ namespace GridKit
     {
     private:
       using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using DataT = typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT;
 
     public:
       BranchTests()  = default;
@@ -364,9 +367,13 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome parameterValidation()
+      /// Every verify() error class, including parameter types and
+      /// finiteness, an invertible series impedance, a positive tap, and bus
+      /// ownership.
+      TestOutcome validation()
       {
-        // Verifies invalid branch parameters are rejected.
+        using Parameter = typename DataT::Parameters;
+
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
@@ -380,6 +387,13 @@ namespace GridKit
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
+        // The plain constructor and an empty parameter set give the same
+        // documented-default branch.
+        PhasorDynamics::Branch<ScalarT, IdxT> default_branch(&bus1, &bus2);
+        success *= (default_branch.verify().passed());
+        PhasorDynamics::Branch<ScalarT, IdxT> empty_data_branch(&bus1, &bus2, DataT{});
+        success *= (empty_data_branch.verify().passed());
+
         PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, 0.0, 0.0, 0.0, 0.0);
         success *= (!zero_impedance_branch.verify().passed());
 
@@ -389,9 +403,29 @@ namespace GridKit
         PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0, -1.0, 0.0);
         success *= (!negative_tap_branch.verify().passed());
 
-        const RealT                           nan = std::numeric_limits<RealT>::quiet_NaN();
-        PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, nan, 0.1, 0.0, 0.0);
-        success *= (!nonfinite_branch.verify().passed());
+        for (const Parameter parameter : {Parameter::R,
+                                          Parameter::X,
+                                          Parameter::G,
+                                          Parameter::B,
+                                          Parameter::Gmag,
+                                          Parameter::Bmag,
+                                          Parameter::tap,
+                                          Parameter::phase})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                       = makeData();
+        integer_real.parameters[Parameter::tap] = static_cast<IdxT>(1);
+        PhasorDynamics::Branch<ScalarT, IdxT> integer_branch(&bus1, &bus2, integer_real);
+        success *= (integer_branch.verify().passed());
+        success *= invalidParameterCase(Parameter::X, true);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> busless(nullptr, &bus2, makeData());
+        success *= (!busless.verify().passed());
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -457,6 +491,31 @@ namespace GridKit
       }
 
     private:
+      static DataT makeData()
+      {
+        using Parameter = typename DataT::Parameters;
+
+        DataT data;
+        data.parameters[Parameter::R] = RealT{0.0};
+        data.parameters[Parameter::X] = RealT{0.1};
+        return data;
+      }
+
+      template <typename ValueT>
+      static bool invalidParameterCase(typename DataT::Parameters parameter, ValueT value)
+      {
+        auto data                  = makeData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              PhasorDynamics::Bus<ScalarT, IdxT>    bus1(1.0, 0.0);
+              PhasorDynamics::Bus<ScalarT, IdxT>    bus2(1.0, 0.0);
+              PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
+              return branch.verify();
+            });
+      }
+
       std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
                                                                                   const RealT X,
                                                                                   const RealT G,

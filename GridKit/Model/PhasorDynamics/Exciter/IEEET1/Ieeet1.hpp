@@ -110,7 +110,7 @@ namespace GridKit
         static void            logTimeConstantWarning();
 
         // Signal pointers
-        BusT* bus_;
+        BusT* bus_{nullptr};
 
         // Model Input parameters
         RealT Tr_{0.0};      ///< Time constant for voltage sensing
@@ -152,7 +152,7 @@ namespace GridKit
         std::unique_ptr<MonitorT> monitor_;
 
         // Parameter initialization function
-        void initModelParams(const ModelDataT& data);
+        void initializeParameters(const ModelDataT& data);
         void setDerivedParameters();
 
         /// Associate variable getter functions with enum values

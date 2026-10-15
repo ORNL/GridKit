@@ -1,4 +1,5 @@
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSource.hpp>
@@ -36,19 +37,30 @@ namespace GridKit
     }
 
     /**
-     * @brief Set value from input data
+     * @brief Read the parameters out of the model data
+     *
+     * Both values are optional and default to zero. A non-numeric or
+     * non-finite value throws std::invalid_argument. Integer JSON values
+     * are accepted.
+     *
+     * @param[in] data Real and imaginary source values.
      */
     template <typename scalar_type, typename index_type>
     void ConstantSignalSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameters = ModelDataT::Parameters;
-      if (data.parameters.contains(Parameters::Sr))
+      using Params = typename ModelDataT::Parameters;
+
+      const Model::ParameterReader reader(data, "ConstantSignalSource");
+
+      // The values are signal storage of the scalar type, so they are
+      // assigned only when provided instead of through value_or().
+      if (const auto sr = reader.readReal(Params::Sr))
       {
-        s_real_ = std::get<RealT>(data.parameters.at(Parameters::Sr));
+        s_real_ = *sr;
       }
-      if (data.parameters.contains(Parameters::Si))
+      if (const auto si = reader.readReal(Params::Si))
       {
-        s_imag_ = std::get<RealT>(data.parameters.at(Parameters::Si));
+        s_imag_ = *si;
       }
     }
 

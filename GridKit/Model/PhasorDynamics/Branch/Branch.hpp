@@ -80,37 +80,37 @@ namespace GridKit
       void setR(RealT R)
       {
         R_ = R;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       void setX(RealT X)
       {
         X_ = X;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       void setG(RealT G)
       {
         G_ = G;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       void setB(RealT B)
       {
         B_ = B;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       void setTap(RealT tap)
       {
         tap_ = tap;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       void setPhase(RealT phase)
       {
         phase_ = phase;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
@@ -118,12 +118,9 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
-      void setDerivedParams();
+      void setDerivedParameters();
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
-      bool readRealParameter(const ModelDataT&               data,
-                             typename ModelDataT::Parameters parameter,
-                             RealT&                          target);
 
       static __attribute__((always_inline)) inline void addAdmittanceContribution(const RealT   G,
                                                                                   const RealT   B,
@@ -188,10 +185,10 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus1_;
-      BusT* bus2_;
+      BusT* bus1_{nullptr};
+      BusT* bus2_{nullptr};
       RealT R_{0.0};
-      RealT X_{0.0};
+      RealT X_{0.01};
       RealT G_{0.0};
       RealT B_{0.0};
       RealT Gmag_{0.0};
@@ -210,8 +207,6 @@ namespace GridKit
       RealT b21_{0.0};
       RealT g22_{0.0};
       RealT b22_{0.0};
-
-      int parameter_error_count_{0};
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

@@ -150,6 +150,7 @@ namespace GridKit
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
+        void setDerivedParameters();
       };
 
     } // namespace Stabilizer

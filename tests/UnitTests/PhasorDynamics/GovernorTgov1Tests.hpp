@@ -1,8 +1,10 @@
 #include <iomanip>
 #include <iostream>
+#include <limits>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -27,7 +29,27 @@ namespace GridKit
     private:
       using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using Tgov1DataT              = PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+
+      static Tgov1DataT makeTgov1Data()
+      {
+        using Params = PhasorDynamics::Governor::Tgov1Parameters;
+
+        Tgov1DataT data;
+        data.device_class              = "Tgov1";
+        data.disambiguation_string     = "tgov1_test";
+        data.parameters[Params::Trate] = RealT{100.0};
+        data.parameters[Params::R]     = RealT{0.05};
+        data.parameters[Params::T1]    = RealT{0.5};
+        data.parameters[Params::T2]    = RealT{2.5};
+        data.parameters[Params::T3]    = RealT{7.5};
+        data.parameters[Params::Pvmax] = RealT{1.0};
+        data.parameters[Params::Pvmin] = RealT{0.0};
+        data.parameters[Params::Dt]    = RealT{0.0};
+
+        return data;
+      }
 
     public:
       GovernorTgov1Tests()  = default;
@@ -51,6 +73,76 @@ namespace GridKit
           delete gov;
         }
 
+        return success.report(__func__);
+      }
+
+      /// Every verify() error class, including parameter types and
+      /// finiteness, negative floored lags, parameter relationships, the
+      /// required pmech output, and signal linkage.
+      TestOutcome validation()
+      {
+        using Params = PhasorDynamics::Governor::Tgov1Parameters;
+
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        // TGOV1 has no required parameters: an empty parameter set is the
+        // documented-default governor.
+        success *= verifyData(makeTgov1Data()).passed();
+        success *= verifyData(Tgov1DataT{}).passed();
+
+        success *= invalidParameterCase(Params::Trate, 0.0);
+        success *= invalidParameterCase(Params::R, 0.0);
+        success *= invalidParameterCase(Params::Pvmin, 2.0);
+        success *= invalidParameterCase(Params::T1, -0.1);
+        success *= invalidParameterCase(Params::T3, -0.1);
+
+        for (const Params parameter : {Params::Trate,
+                                       Params::R,
+                                       Params::T1,
+                                       Params::T2,
+                                       Params::T3,
+                                       Params::Pvmax,
+                                       Params::Pvmin,
+                                       Params::Dt})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                      = makeTgov1Data();
+        integer_real.parameters[Params::Trate] = static_cast<IdxT>(100);
+
+        success *= verifyData(integer_real).passed();
+        success *= invalidParameterCase(Params::Trate, true);
+
+        // The turbine lead time constant enters only a numerator, so any sign
+        // is valid; zero lags are raised to the documented floor.
+        auto negative_lead                   = makeTgov1Data();
+        negative_lead.parameters[Params::T2] = -0.1;
+
+        success *= verifyData(negative_lead).passed();
+
+        auto zero_lags                   = makeTgov1Data();
+        zero_lags.parameters[Params::T1] = 0.0;
+        zero_lags.parameters[Params::T3] = 0.0;
+
+        success *= verifyData(zero_lags).passed();
+
+        // A model without the required pmech output assignment is rejected.
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> unassigned(makeTgov1Data());
+        success *= !unassigned.verify().passed();
+
+        success *= unlinkedSignalRejected<PhasorDynamics::Governor::Tgov1SignalInputs::speed>();
+        success *= unlinkedSignalRejected<PhasorDynamics::Governor::Tgov1SignalInputs::pref>();
+
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -370,6 +462,38 @@ namespace GridKit
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
+
+    private:
+      static Model::ConfigurationChecks verifyData(const Tgov1DataT& data)
+      {
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> governor(data);
+        governor.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
+        return governor.verify();
+      }
+
+      template <typename ValueT>
+      static bool invalidParameterCase(PhasorDynamics::Governor::Tgov1Parameters parameter, ValueT value)
+      {
+        auto data                  = makeTgov1Data();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
+      }
+
+      template <PhasorDynamics::Governor::Tgov1SignalInputs input>
+      static bool unlinkedSignalRejected()
+      {
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      unlinked_node;
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> governor(makeTgov1Data());
+        governor.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
+        governor.getPorts().in.template port<input>().connect(&unlinked_node);
+        return !governor.verify().passed();
+      }
     }; // class GovernorTgov1Tests
 
   } // namespace Testing

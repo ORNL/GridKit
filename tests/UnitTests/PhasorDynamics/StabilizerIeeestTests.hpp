@@ -6,6 +6,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
@@ -24,7 +25,9 @@ namespace GridKit
     class StabilizerIeeestTests
     {
     public:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using RealT  = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using Data   = PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT>;
+      using Params = PhasorDynamics::Stabilizer::IeeestParameters;
 
       StabilizerIeeestTests()  = default;
       ~StabilizerIeeestTests() = default;
@@ -41,6 +44,80 @@ namespace GridKit
 
         delete stab;
 
+        return success.report(__func__);
+      }
+
+      /// Every verify() error class, including parameter types and
+      /// finiteness, output limits, the realizable notch order, unsupported
+      /// features, and the required input signal.
+      TestOutcome validation()
+      {
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        // IEEEST has no required parameters: an empty parameter set is the
+        // documented-default stabilizer.
+        success *= verifyData(makeTestData()).passed();
+        success *= verifyData(Data{}).passed();
+
+        success *= invalidParameterCase(Params::Lsmin, 0.2);
+        success *= invalidParameterCase(Params::Vcl, 0.5);
+        success *= invalidParameterCase(Params::Vcu, 1.5);
+        success *= invalidParameterCase(Params::Tdelay, 0.1);
+
+        // A1 alone leaves a first-order notch denominator.
+        auto first_order_notch                   = makeTestData();
+        first_order_notch.parameters[Params::A2] = 0.0;
+        first_order_notch.parameters[Params::A3] = 0.0;
+        first_order_notch.parameters[Params::A4] = 0.0;
+
+        success *= !verifyData(first_order_notch).passed();
+
+        for (const Params parameter : {Params::A1,
+                                       Params::A2,
+                                       Params::A3,
+                                       Params::A4,
+                                       Params::A5,
+                                       Params::A6,
+                                       Params::T1,
+                                       Params::T2,
+                                       Params::T3,
+                                       Params::T4,
+                                       Params::T5,
+                                       Params::T6,
+                                       Params::Ks,
+                                       Params::Lsmin,
+                                       Params::Lsmax,
+                                       Params::Vcl,
+                                       Params::Vcu,
+                                       Params::Tdelay})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                   = makeTestData();
+        integer_real.parameters[Params::Ks] = static_cast<IdxT>(10);
+
+        success *= verifyData(integer_real).passed();
+        success *= invalidParameterCase(Params::Ks, true);
+
+        // The required input must be attached and resolve to a linked source.
+        PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> unassigned(makeTestData());
+        success *= !unassigned.verify().passed();
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT>         unlinked_node;
+        PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> unlinked(makeTestData());
+        unlinked.getPorts().in.template port<PhasorDynamics::Stabilizer::IeeestSignalInputs::input>().connect(&unlinked_node);
+        success *= !unlinked.verify().passed();
+
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -282,11 +359,33 @@ namespace GridKit
        * @brief Standard IEEEST parameter set for all tests.
        * Derived: a0=1, a1=0.4, a2=0.63, a3=0.1, a4=0.08
        */
-      auto makeTestData() -> PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT>
+      /// Verify a model built from @p data with its required input linked.
+      Model::ConfigurationChecks verifyData(const Data& data) const
       {
-        using Params = PhasorDynamics::Stabilizer::IeeestParameters;
+        ScalarT                                           u_value{0.0};
+        IdxT                                              u_index{0};
+        PhasorDynamics::SignalNode<ScalarT, IdxT>         u_node;
+        PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(data);
+        u_node.link(&u_value, &u_index);
+        stab.getPorts().in.template port<PhasorDynamics::Stabilizer::IeeestSignalInputs::input>().connect(&u_node);
+        return stab.verify();
+      }
 
-        PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> data;
+      template <typename ValueT>
+      bool invalidParameterCase(Params parameter, ValueT value) const
+      {
+        auto data                  = makeTestData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
+      }
+
+      auto makeTestData() const -> Data
+      {
+        Data data;
         data.device_class          = "stabilizer";
         data.disambiguation_string = "ieeest_test";
         data.monitored_variables.insert(PhasorDynamics::Stabilizer::IeeestMonitorableVariables::vss);

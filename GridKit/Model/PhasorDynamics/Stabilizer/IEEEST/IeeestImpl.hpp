@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
@@ -27,6 +29,7 @@ namespace GridKit
       Ieeest<scalar_type, index_type>::Ieeest()
       {
         size_ = 12;
+        setDerivedParameters();
       }
 
       template <typename scalar_type, typename index_type>
@@ -43,108 +46,78 @@ namespace GridKit
       {
       }
 
+      /**
+       * @brief Read the parameters out of the model data
+       *
+       * Every parameter is optional and keeps its documented default when
+       * omitted. A non-numeric or non-finite value throws
+       * std::invalid_argument. Integer JSON values are accepted for real
+       * parameters.
+       *
+       * @param[in] data Parameters and monitored-variable selections.
+       */
       template <typename scalar_type, typename index_type>
       void Ieeest<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        using Parameter = typename ModelDataT::Parameters;
-        if (data.parameters.contains(Parameter::A1))
-        {
-          A1_ = std::get<RealT>(data.parameters.at(Parameter::A1));
-        }
-        if (data.parameters.contains(Parameter::A2))
-        {
-          A2_ = std::get<RealT>(data.parameters.at(Parameter::A2));
-        }
-        if (data.parameters.contains(Parameter::A3))
-        {
-          A3_ = std::get<RealT>(data.parameters.at(Parameter::A3));
-        }
-        if (data.parameters.contains(Parameter::A4))
-        {
-          A4_ = std::get<RealT>(data.parameters.at(Parameter::A4));
-        }
-        if (data.parameters.contains(Parameter::A5))
-        {
-          A5_ = std::get<RealT>(data.parameters.at(Parameter::A5));
-        }
-        if (data.parameters.contains(Parameter::A6))
-        {
-          A6_ = std::get<RealT>(data.parameters.at(Parameter::A6));
-        }
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-        if (data.parameters.contains(Parameter::T4))
-        {
-          T4_ = std::get<RealT>(data.parameters.at(Parameter::T4));
-        }
-        if (data.parameters.contains(Parameter::T5))
-        {
-          T5_ = std::get<RealT>(data.parameters.at(Parameter::T5));
-        }
-        if (data.parameters.contains(Parameter::T6))
-        {
-          T6_ = std::get<RealT>(data.parameters.at(Parameter::T6));
-        }
-        if (data.parameters.contains(Parameter::Ks))
-        {
-          Ks_ = std::get<RealT>(data.parameters.at(Parameter::Ks));
-        }
-        if (data.parameters.contains(Parameter::Lsmin))
-        {
-          Lsmin_ = std::get<RealT>(data.parameters.at(Parameter::Lsmin));
-        }
-        if (data.parameters.contains(Parameter::Lsmax))
-        {
-          Lsmax_ = std::get<RealT>(data.parameters.at(Parameter::Lsmax));
-        }
-        if (data.parameters.contains(Parameter::Vcl))
-        {
-          Vcl_ = std::get<RealT>(data.parameters.at(Parameter::Vcl));
-        }
-        if (data.parameters.contains(Parameter::Vcu))
-        {
-          Vcu_ = std::get<RealT>(data.parameters.at(Parameter::Vcu));
-        }
-        if (data.parameters.contains(Parameter::Tdelay))
-        {
-          Tdelay_ = std::get<RealT>(data.parameters.at(Parameter::Tdelay));
-        }
+        using Params = typename ModelDataT::Parameters;
 
-        a0_ = 1;
+        const Model::ParameterReader reader(data, "Ieeest");
+
+        A1_     = reader.readReal(Params::A1).value_or(A1_);
+        A2_     = reader.readReal(Params::A2).value_or(A2_);
+        A3_     = reader.readReal(Params::A3).value_or(A3_);
+        A4_     = reader.readReal(Params::A4).value_or(A4_);
+        A5_     = reader.readReal(Params::A5).value_or(A5_);
+        A6_     = reader.readReal(Params::A6).value_or(A6_);
+        T1_     = reader.readReal(Params::T1).value_or(T1_);
+        T2_     = reader.readReal(Params::T2).value_or(T2_);
+        T3_     = reader.readReal(Params::T3).value_or(T3_);
+        T4_     = reader.readReal(Params::T4).value_or(T4_);
+        T5_     = reader.readReal(Params::T5).value_or(T5_);
+        T6_     = reader.readReal(Params::T6).value_or(T6_);
+        Ks_     = reader.readReal(Params::Ks).value_or(Ks_);
+        Lsmin_  = reader.readReal(Params::Lsmin).value_or(Lsmin_);
+        Lsmax_  = reader.readReal(Params::Lsmax).value_or(Lsmax_);
+        Vcl_    = reader.readReal(Params::Vcl).value_or(Vcl_);
+        Vcu_    = reader.readReal(Params::Vcu).value_or(Vcu_);
+        Tdelay_ = reader.readReal(Params::Tdelay).value_or(Tdelay_);
+        setDerivedParameters();
+      }
+
+      /**
+       * @brief Resolve the notch coefficients and block masks
+       *
+       * Expands the notch denominator and precomputes the order masks, safe
+       * inverse coefficients, and lead-lag bypass masks so the residual
+       * stays branch-free.
+       */
+      template <typename scalar_type, typename index_type>
+      void Ieeest<scalar_type, index_type>::setDerivedParameters()
+      {
+        a0_ = ONE<RealT>;
         a1_ = A1_ + A3_;
         a2_ = A2_ + A4_ + A1_ * A3_;
         a3_ = A1_ * A4_ + A2_ * A3_;
         a4_ = A2_ * A4_;
 
-        // Precompute masks and safe inverse coefficients so the residual stays branch-free.
-        use_notch_    = static_cast<RealT>(a2_ != 0.0 || a3_ != 0.0 || a4_ != 0.0);
-        bypass_notch_ = 1.0 - use_notch_;
+        use_notch_    = static_cast<RealT>(a2_ != ZERO<RealT> || a3_ != ZERO<RealT> || a4_ != ZERO<RealT>);
+        bypass_notch_ = ONE<RealT> - use_notch_;
 
-        use_4th_order_ = static_cast<RealT>(a4_ != 0.0);
-        use_3rd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ != 0.0);
-        use_2nd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ == 0.0 && a2_ != 0.0);
-        safe_inv_a4_   = use_4th_order_ / (a4_ + (1.0 - use_4th_order_));
-        safe_inv_a3_   = use_3rd_order_ / (a3_ + (1.0 - use_3rd_order_));
-        safe_inv_a2_   = use_2nd_order_ / (a2_ + (1.0 - use_2nd_order_));
+        use_4th_order_ = static_cast<RealT>(a4_ != ZERO<RealT>);
+        use_3rd_order_ = static_cast<RealT>(a4_ == ZERO<RealT> && a3_ != ZERO<RealT>);
+        use_2nd_order_ = static_cast<RealT>(a4_ == ZERO<RealT> && a3_ == ZERO<RealT> && a2_ != ZERO<RealT>);
+        safe_inv_a4_   = use_4th_order_ / (a4_ + (ONE<RealT> - use_4th_order_));
+        safe_inv_a3_   = use_3rd_order_ / (a3_ + (ONE<RealT> - use_3rd_order_));
+        safe_inv_a2_   = use_2nd_order_ / (a2_ + (ONE<RealT> - use_2nd_order_));
 
-        use_T2_block_    = static_cast<RealT>(T2_ != 0.0);
-        bypass_T2_block_ = 1.0 - use_T2_block_;
+        use_T2_block_    = static_cast<RealT>(T2_ != ZERO<RealT>);
+        bypass_T2_block_ = ONE<RealT> - use_T2_block_;
 
-        use_T4_block_    = static_cast<RealT>(T4_ != 0.0);
-        bypass_T4_block_ = 1.0 - use_T4_block_;
+        use_T4_block_    = static_cast<RealT>(T4_ != ZERO<RealT>);
+        bypass_T4_block_ = ONE<RealT> - use_T4_block_;
 
-        use_T6_block_    = static_cast<RealT>(T6_ != 0.0);
-        bypass_T6_block_ = 1.0 - use_T6_block_;
+        use_T6_block_    = static_cast<RealT>(T6_ != ZERO<RealT>);
+        bypass_T6_block_ = ONE<RealT> - use_T6_block_;
       }
 
       template <typename scalar_type, typename index_type>
@@ -187,24 +160,39 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Validate the IEEEST configuration
+       *
+       * Checks the output limits, the realizable notch order, the
+       * unsupported input-cutout and delay features, and the required input
+       * signal.
+       *
+       * @return The configuration checks; passed() when valid.
+       */
       template <typename scalar_type, typename index_type>
       Model::ConfigurationChecks Ieeest<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("Ieeest");
 
-        auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
+        checks.check(Lsmin_ <= Lsmax_, "Lsmin must be less than or equal to Lsmax");
+
+        // The notch realization covers denominator orders two through four.
+        const bool first_order_notch = a1_ != ZERO<RealT> && a2_ == ZERO<RealT>
+                                       && a3_ == ZERO<RealT> && a4_ == ZERO<RealT>;
+        checks.check(!first_order_notch, "A1 and A3 alone give a first-order notch, which is not supported");
+
+        checks.check(Vcl_ == ZERO<RealT> && Vcu_ == ZERO<RealT>,
+                     "Vcl and Vcu must be zero; input cutout is not supported");
+        checks.check(Tdelay_ == ZERO<RealT>, "Tdelay must be zero; input delay is not supported");
+
+        const auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
         if (!input_port.connected())
         {
-          checks.fail("required input signal U is not attached");
+          checks.fail("required input signal is not assigned");
         }
-        if (input_port.connected() && !input_port.linked())
+        else if (!input_port.linked())
         {
-          checks.fail("input signal U attached with no linked source");
-        }
-
-        if (a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0)
-        {
-          checks.fail("a2, a3, and a4 are all zero - no valid notch filter");
+          checks.fail("input signal attached with no linked source");
         }
 
         return checks;

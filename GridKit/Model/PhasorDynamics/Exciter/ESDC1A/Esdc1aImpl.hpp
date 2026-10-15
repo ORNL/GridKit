@@ -149,11 +149,7 @@ namespace GridKit
       {
         Model::ConfigurationChecks checks("Esdc1a");
 
-        if (bus_ == nullptr)
-        {
-          checks.fail("bus pointer is null");
-        }
-
+        checks.check(bus_ != nullptr, "bus pointer is null");
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
         checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
         checks.check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
@@ -175,10 +171,8 @@ namespace GridKit
           checks.check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
-        if (!ports_.out.template port<Esdc1aSignalOutputs::efd>().connected())
-        {
-          checks.fail("required efd output signal is not assigned");
-        }
+        checks.check(ports_.out.template port<Esdc1aSignalOutputs::efd>().connected(),
+                     "required efd output signal is not assigned");
 
         if (Spdmlt_ && !ports_.in.template port<Esdc1aSignalInputs::speed>().connected())
         {

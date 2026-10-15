@@ -56,40 +56,37 @@ namespace GridKit
       int evaluateResidual() override final;
       int evaluateJacobian() override final;
 
-      Model::ConfigurationChecks verify() const override final
-      {
-        return {};
-      }
+      Model::ConfigurationChecks verify() const override final;
 
     public:
       void setPnom(RealT Pnom)
       {
         Pnom_ = Pnom;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       void setQnom(RealT Qnom)
       {
         Qnom_ = Qnom;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       void setAlphaI(RealT alphaI)
       {
         alphaI_ = alphaI;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       void setAlphaP(RealT alphaP)
       {
         alphaP_ = alphaP;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
-      void setDerivedParams();
+      void setDerivedParameters();
 
       ScalarT& Vr()
       {

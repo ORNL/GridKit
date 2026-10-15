@@ -10,6 +10,9 @@
 - Added `enable` and `disable` solver events that put a branch in or out of service.
 - `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
 - Added `Model::ParameterReader`
+- All PhasorDynamics models read parameters with `Model::ParameterReader`. Every parameter is optional with a documented default, and invalid values throw `std::invalid_argument`.
+- `SystemModel::verify()` checks the system frequency and power bases.
+- GENROU, GENSAL, GENCLS, and LoadZ reject parameters their equations divide by. IEEET1 requires its `efd` output.
 
 ## v0.2
 

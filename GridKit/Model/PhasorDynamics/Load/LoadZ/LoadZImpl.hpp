@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
@@ -24,7 +26,7 @@ namespace GridKit
       : bus_(bus)
     {
       size_ = 2;
-      setDerivedParams();
+      setDerivedParameters();
     }
 
     template <typename scalar_type, typename index_type>
@@ -36,7 +38,7 @@ namespace GridKit
         X_(X)
     {
       size_ = 2;
-      setDerivedParams();
+      setDerivedParameters();
     }
 
     template <typename scalar_type, typename index_type>
@@ -45,25 +47,36 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::R))
-      {
-        R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-      }
-
-      if (data.parameters.contains(Parameter::X))
-      {
-        X_ = std::get<RealT>(data.parameters.at(Parameter::X));
-      }
-
-      size_ = 2;
-      setDerivedParams();
+      initializeParameters(data);
       initializeMonitor();
+      size_ = 2;
     }
 
     template <typename scalar_type, typename index_type>
     LoadZ<scalar_type, index_type>::~LoadZ()
     {
+    }
+
+    /**
+     * @brief Read the parameters out of the model data
+     *
+     * Every parameter is optional and keeps its documented default when
+     * omitted. A non-numeric or non-finite value throws
+     * std::invalid_argument. Integer JSON values are accepted for real
+     * parameters.
+     *
+     * @param[in] data Parameters and monitored-variable selections.
+     */
+    template <typename scalar_type, typename index_type>
+    void LoadZ<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    {
+      using Params = typename ModelDataT::Parameters;
+
+      const Model::ParameterReader reader(data, "LoadZ");
+
+      R_ = reader.readReal(Params::R).value_or(R_);
+      X_ = reader.readReal(Params::X).value_or(X_);
+      setDerivedParameters();
     }
 
     /**
@@ -110,12 +123,36 @@ namespace GridKit
     }
 
     /**
+     * @brief Validate the constant-impedance load configuration
+     *
+     * Checks the terminal bus and that the impedance is invertible.
+     *
+     * @return The configuration checks; passed() when valid.
+     */
+    template <typename scalar_type, typename index_type>
+    Model::ConfigurationChecks LoadZ<scalar_type, index_type>::verify() const
+    {
+      Model::ConfigurationChecks checks("LoadZ");
+
+      checks.check(bus_ != nullptr, "bus pointer is null");
+      checks.check(R_ * R_ + X_ * X_ > ZERO<RealT>, "R and X cannot both be zero");
+
+      return checks;
+    }
+
+    /**
      * Initialization of the load model
      *
      */
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::initialize()
     {
+      if (!this->verifyAndLog())
+      {
+        Log::error() << "LoadZ: cannot initialize with invalid configuration\n";
+        return 1;
+      }
+
       ScalarT vr = Vr();
       ScalarT vi = Vi();
       ScalarT ir = -(g_ * vr - b_ * vi);
@@ -245,7 +282,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    void LoadZ<scalar_type, index_type>::setDerivedParams()
+    void LoadZ<scalar_type, index_type>::setDerivedParameters()
     {
       b_ = -X_ / (R_ * R_ + X_ * X_);
       g_ = R_ / (R_ * R_ + X_ * X_);

@@ -204,22 +204,20 @@ namespace GridKit
         // Input parameters
         RealT p0_{0};
         RealT q0_{0};
-        RealT mva_base_{0};
-        RealT Tg_{0};
-        RealT TM_{0};
-        RealT Rqmax_{0};
-        RealT Rqmin_{0};
-        RealT Rpmax_{0};
-        bool  sL_{false};
-        RealT IL1_{0};
-        RealT VL0_{0};
-        RealT VL1_{0};
-        RealT VA0_{0};
-        RealT VA1_{0};
-        RealT Vhvmax_{0};
+        RealT mva_base_{100.0};
+        RealT Tg_{0.02};
+        RealT TM_{0.02};
+        RealT Rqmax_{999.0};
+        RealT Rqmin_{-999.0};
+        RealT Rpmax_{999.0};
+        bool  sL_{true};
+        RealT IL1_{1.1};
+        RealT VL0_{0.4};
+        RealT VL1_{0.9};
+        RealT VA0_{0.4};
+        RealT VA1_{0.9};
+        RealT Vhvmax_{1.2};
         RealT Khv_{0.7};
-
-        IdxT parameter_error_count_{0};
 
         // Derived parameters
         RealT use_lvpl_{0};

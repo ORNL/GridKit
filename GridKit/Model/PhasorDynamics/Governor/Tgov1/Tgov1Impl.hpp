@@ -10,7 +10,10 @@
 
 #include <algorithm>
 #include <atomic>
+#include <format>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -31,10 +34,9 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Tgov1<scalar_type, index_type>::Tgov1()
-        : Trate_(100.0)
       {
         size_ = 3;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       /**
@@ -45,21 +47,13 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Tgov1<scalar_type, index_type>::Tgov1(SignalNodeT* pmech, SignalNodeT* omega)
-        : Trate_(100.0),
-          R_(0.05),
-          Pvmin_(0),
-          Pvmax_(1),
-          T1_(HALF<RealT>),
-          T2_(2.5),
-          T3_(7.5),
-          Dt_(0)
       {
         ports_.out.template port<Tgov1SignalOutputs::pmech>().connect(pmech);
         ports_.in.template port<Tgov1SignalInputs::speed>().connect(omega);
 
         // 3 internal variables
         size_ = 3;
-        setDerivedParams();
+        setDerivedParameters();
       }
 
       /**
@@ -74,61 +68,34 @@ namespace GridKit
         initializeParameters(data);
 
         size_ = 3;
-        setDerivedParams();
       }
 
       /**
-       * @brief Helper function to extract and assign model parameters.
+       * @brief Read the parameters out of the model data
        *
-       * Parses values from the ModelDataT and assigns them to internal
-       * parameters.
+       * Every parameter is optional and keeps its documented default when
+       * omitted. A non-numeric or non-finite value, or a negative floored
+       * time constant, throws std::invalid_argument. Integer JSON values are
+       * accepted for real parameters.
        *
-       * @param data Structure containing model parameters.
+       * @param[in] data Parameters read by the model.
        */
       template <typename scalar_type, typename index_type>
       void Tgov1<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        using Parameter = typename ModelDataT::Parameters;
+        using Params = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Trate))
-        {
-          Trate_ = std::get<RealT>(data.parameters.at(Parameter::Trate));
-        }
+        const Model::ParameterReader reader(data, "Tgov1");
 
-        if (data.parameters.contains(Parameter::R))
-        {
-          R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-        }
-
-        if (data.parameters.contains(Parameter::Pvmin))
-        {
-          Pvmin_ = std::get<RealT>(data.parameters.at(Parameter::Pvmin));
-        }
-
-        if (data.parameters.contains(Parameter::Pvmax))
-        {
-          Pvmax_ = std::get<RealT>(data.parameters.at(Parameter::Pvmax));
-        }
-
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-
-        if (data.parameters.contains(Parameter::Dt))
-        {
-          Dt_ = std::get<RealT>(data.parameters.at(Parameter::Dt));
-        }
+        Trate_ = reader.readReal(Params::Trate).value_or(Trate_);
+        R_     = reader.readReal(Params::R).value_or(R_);
+        T1_    = reader.readNonNegative(Params::T1).value_or(T1_);
+        T2_    = reader.readReal(Params::T2).value_or(T2_);
+        T3_    = reader.readNonNegative(Params::T3).value_or(T3_);
+        Pvmax_ = reader.readReal(Params::Pvmax).value_or(Pvmax_);
+        Pvmin_ = reader.readReal(Params::Pvmin).value_or(Pvmin_);
+        Dt_    = reader.readReal(Params::Dt).value_or(Dt_);
+        setDerivedParameters();
       }
 
       /**
@@ -144,8 +111,14 @@ namespace GridKit
                        << " s are raised to that floor\n";
       }
 
+      /**
+       * @brief Resolve the parameter-derived constants
+       *
+       * Raises the valve and reheater lags to the well-posedness floor and
+       * sets the component power base from the turbine rating.
+       */
       template <typename scalar_type, typename index_type>
-      void Tgov1<scalar_type, index_type>::setDerivedParams()
+      void Tgov1<scalar_type, index_type>::setDerivedParameters()
       {
         if (T1_ < TIME_CONSTANT_MINIMUM || T3_ < TIME_CONSTANT_MINIMUM)
         {
@@ -217,7 +190,13 @@ namespace GridKit
       }
 
       /**
-       * @brief verify method checks that attached signals are also linked
+       * @brief Validate the TGOV1 configuration
+       *
+       * Checks the turbine rating, the droop the valve equation divides by,
+       * the valve limits, the required mechanical-power output, and
+       * attached external signals.
+       *
+       * @return The configuration checks; passed() when valid.
        */
       template <typename scalar_type, typename index_type>
       Model::ConfigurationChecks Tgov1<scalar_type, index_type>::verify() const
@@ -225,23 +204,25 @@ namespace GridKit
         Model::ConfigurationChecks checks("Tgov1");
 
         checks.check(Trate_ > ZERO<RealT>, "Trate must be positive");
-        checks.check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
         checks.check(R_ != ZERO<RealT>, "R must be nonzero");
         checks.check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
         checks.check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
-                     "pmech output signal must be assigned");
+                     "required pmech output signal is not assigned");
 
-        auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>();
-        if (speed_port.connected() && !speed_port.linked())
+        // An attached port must resolve to readable signal storage. The
+        // enumerator is a template argument, so each port names itself once.
+        auto check_attached_signal =
+            [&]<Tgov1SignalInputs input>(const char* name)
         {
-          checks.fail("speed signal attached with no linked generator");
-        }
+          if (ports_.in.template port<input>().connected()
+              && !ports_.in.template port<input>().linked())
+          {
+            checks.fail(std::format("{} signal attached with no linked source", name));
+          }
+        };
 
-        auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>();
-        if (pref_port.connected() && !pref_port.linked())
-        {
-          checks.fail("pref signal attached with no linked source");
-        }
+        check_attached_signal.template operator()<Tgov1SignalInputs::speed>("speed");
+        check_attached_signal.template operator()<Tgov1SignalInputs::pref>("pref");
 
         return checks;
       }

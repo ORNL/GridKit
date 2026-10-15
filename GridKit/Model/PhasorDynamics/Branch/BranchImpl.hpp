@@ -7,10 +7,8 @@
  *
  */
 
-#include <variant>
-
-#include <magic_enum/magic_enum.hpp>
-
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -30,18 +28,10 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2)
       : bus1_(bus1),
-        bus2_(bus2),
-        R_(0.0),
-        X_(0.01),
-        G_(0.0),
-        B_(0.0),
-        tap_(1.0),
-        phase_(0.0),
-        bus1_id_(0),
-        bus2_id_(0)
+        bus2_(bus2)
     {
       size_ = 0;
-      setDerivedParams();
+      setDerivedParameters();
     }
 
     /**
@@ -72,12 +62,10 @@ namespace GridKit
         G_(G),
         B_(B),
         tap_(tap),
-        phase_(phase),
-        bus1_id_(0),
-        bus2_id_(0)
+        phase_(phase)
     {
       size_ = 0;
-      setDerivedParams();
+      setDerivedParameters();
     }
 
     template <typename scalar_type, typename index_type>
@@ -90,7 +78,6 @@ namespace GridKit
       initializeMonitor();
 
       size_ = 0;
-      setDerivedParams();
     }
 
     /**
@@ -141,6 +128,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::initialize()
     {
+      if (!this->verifyAndLog())
+      {
+        Log::error() << "Branch: cannot initialize with invalid configuration\n";
+        return 1;
+      }
+
       return 0;
     }
 
@@ -153,26 +146,23 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Validate the branch configuration
+     *
+     * Checks both terminal buses, that the series impedance is invertible,
+     * and that the tap ratio is positive.
+     *
+     * @return The configuration checks; passed() when valid.
+     */
     template <typename scalar_type, typename index_type>
     Model::ConfigurationChecks Branch<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks("Branch");
 
-      checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
-
       checks.check(bus1_ != nullptr, "bus1 pointer is null");
       checks.check(bus2_ != nullptr, "bus2 pointer is null");
-
-      checks.check(std::isfinite(R_), "R must be finite");
-      checks.check(std::isfinite(X_), "X must be finite");
-      checks.check(std::isfinite(G_), "G must be finite");
-      checks.check(std::isfinite(B_), "B must be finite");
-      checks.check(std::isfinite(Gmag_), "Gmag must be finite");
-      checks.check(std::isfinite(Bmag_), "Bmag must be finite");
-      checks.check(std::isfinite(tap_), "tap must be finite");
-      checks.check(std::isfinite(phase_), "phase must be finite");
-      checks.check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
-      checks.check(tap_ > RealT{0.0}, "tap must be positive");
+      checks.check(R_ * R_ + X_ * X_ > ZERO<RealT>, "R and X cannot both be zero");
+      checks.check(tap_ > ZERO<RealT>, "tap must be positive");
 
       return checks;
     }
@@ -186,7 +176,7 @@ namespace GridKit
       {
         in_service_ = ONE<RealT>;
       }
-      setDerivedParams();
+      setDerivedParameters();
       return 0;
     }
 
@@ -354,20 +344,32 @@ namespace GridKit
       addAdmittanceContribution(g22_, b22_, Vr2(), Vi2(), Ir, Ii);
     }
 
+    /**
+     * @brief Read the parameters out of the model data
+     *
+     * Every parameter is optional and keeps its documented default when
+     * omitted. A non-numeric or non-finite value throws
+     * std::invalid_argument. Integer JSON values are accepted for real
+     * parameters.
+     *
+     * @param[in] data Parameters, terminal buses, and monitored-variable selections.
+     */
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
-      using Buses     = typename ModelDataT::Buses;
+      using Params = typename ModelDataT::Parameters;
+      using Buses  = typename ModelDataT::Buses;
 
-      readRealParameter(data, Parameter::R, R_);
-      readRealParameter(data, Parameter::X, X_);
-      readRealParameter(data, Parameter::G, G_);
-      readRealParameter(data, Parameter::B, B_);
-      readRealParameter(data, Parameter::Gmag, Gmag_);
-      readRealParameter(data, Parameter::Bmag, Bmag_);
-      readRealParameter(data, Parameter::tap, tap_);
-      readRealParameter(data, Parameter::phase, phase_);
+      const Model::ParameterReader reader(data, "Branch");
+
+      R_     = reader.readReal(Params::R).value_or(R_);
+      X_     = reader.readReal(Params::X).value_or(X_);
+      G_     = reader.readReal(Params::G).value_or(G_);
+      B_     = reader.readReal(Params::B).value_or(B_);
+      Gmag_  = reader.readReal(Params::Gmag).value_or(Gmag_);
+      Bmag_  = reader.readReal(Params::Bmag).value_or(Bmag_);
+      tap_   = reader.readReal(Params::tap).value_or(tap_);
+      phase_ = reader.readReal(Params::phase).value_or(phase_);
 
       if (data.buses.contains(Buses::bus1))
       {
@@ -378,35 +380,8 @@ namespace GridKit
       {
         bus2_id_ = data.buses.at(Buses::bus2);
       }
-    }
 
-    template <typename scalar_type, typename index_type>
-    bool Branch<scalar_type, index_type>::readRealParameter(const ModelDataT&               data,
-                                                            typename ModelDataT::Parameters parameter,
-                                                            RealT&                          target)
-    {
-      if (!data.parameters.contains(parameter))
-      {
-        return false;
-      }
-
-      const auto& value = data.parameters.at(parameter);
-      if (const auto* real_value = std::get_if<RealT>(&value))
-      {
-        target = *real_value;
-        return true;
-      }
-
-      if (const auto* integer_value = std::get_if<IdxT>(&value))
-      {
-        target = static_cast<RealT>(*integer_value);
-        return true;
-      }
-
-      Log::error() << "Branch: parameter " << magic_enum::enum_name(parameter)
-                   << " must be numeric\n";
-      parameter_error_count_ += 1;
-      return false;
+      setDerivedParameters();
     }
 
     template <typename scalar_type, typename index_type>
@@ -486,7 +461,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    void Branch<scalar_type, index_type>::setDerivedParams()
+    void Branch<scalar_type, index_type>::setDerivedParameters()
     {
       g11_ = RealT{0.0};
       b11_ = RealT{0.0};

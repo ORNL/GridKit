@@ -57,7 +57,6 @@ namespace GridKit
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
-        using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::allocated_;
@@ -116,7 +115,7 @@ namespace GridKit
 
         // Parameter initialization function
         void initializeParameters(const ModelDataT& data);
-        void setDerivedParams();
+        void setDerivedParameters();
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();

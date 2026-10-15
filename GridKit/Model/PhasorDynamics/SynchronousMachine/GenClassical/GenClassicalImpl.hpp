@@ -8,8 +8,11 @@
 
 #pragma once
 
+#include <format>
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
@@ -34,7 +37,6 @@ namespace GridKit
       initializeMonitor();
 
       size_ = 5;
-      setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
@@ -42,45 +44,31 @@ namespace GridKit
     {
     }
 
-    /// Read model parameters from the data structure
+    /**
+     * @brief Read the parameters out of the model data
+     *
+     * Every parameter is optional and keeps its documented default when
+     * omitted. A non-numeric or non-finite value throws
+     * std::invalid_argument. Integer JSON values are accepted for real
+     * parameters.
+     *
+     * @param[in] data Parameters and monitored-variable selections.
+     */
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
+      using Params = typename ModelDataT::Parameters;
 
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
+      const Model::ParameterReader reader(data, "GenClassical");
 
-      if (data.parameters.contains(Parameter::H))
-      {
-        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
-      }
-
-      if (data.parameters.contains(Parameter::D))
-      {
-        D_ = std::get<RealT>(data.parameters.at(Parameter::D));
-      }
-
-      if (data.parameters.contains(Parameter::Ra))
-      {
-        Ra_ = std::get<RealT>(data.parameters.at(Parameter::Ra));
-      }
-
-      if (data.parameters.contains(Parameter::Xdp))
-      {
-        Xdp_ = std::get<RealT>(data.parameters.at(Parameter::Xdp));
-      }
-
-      if (data.parameters.contains(Parameter::mva))
-      {
-        mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
-      }
+      p0_       = reader.readReal(Params::p0).value_or(p0_);
+      q0_       = reader.readReal(Params::q0).value_or(q0_);
+      H_        = reader.readReal(Params::H).value_or(H_);
+      D_        = reader.readReal(Params::D).value_or(D_);
+      Ra_       = reader.readReal(Params::Ra).value_or(Ra_);
+      Xdp_      = reader.readReal(Params::Xdp).value_or(Xdp_);
+      mva_base_ = reader.readReal(Params::mva).value_or(mva_base_);
+      setDerivedParameters();
     }
 
     template <typename scalar_type, typename index_type>
@@ -163,24 +151,37 @@ namespace GridKit
     }
 
     /**
-     * @brief verify method checks that attached signals are also linked
+     * @brief Validate the GENCLS configuration
+     *
+     * Checks the terminal bus, the parameters the machine equations divide
+     * by, and attached external signals.
+     *
+     * @return The configuration checks; passed() when valid.
      */
     template <typename scalar_type, typename index_type>
     Model::ConfigurationChecks GenClassical<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks("GenClassical");
 
-      auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
-      if (pmech_port.connected() && !pmech_port.linked())
-      {
-        checks.fail("pmech signal attached with no linked governor");
-      }
+      checks.check(bus_ != nullptr, "bus pointer is null");
+      checks.check(H_ > ZERO<RealT>, "H must be positive");
+      checks.check(Ra_ * Ra_ + Xdp_ * Xdp_ > ZERO<RealT>, "Ra and Xdp cannot both be zero");
+      checks.check(mva_base_ > ZERO<RealT>, "mva must be positive");
 
-      auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>();
-      if (efd_port.connected() && !efd_port.linked())
+      // An attached port must resolve to readable signal storage. The
+      // enumerator is a template argument, so each port names itself once.
+      auto check_attached_signal =
+          [&]<GenClassicalSignalInputs input>(const char* name)
       {
-        checks.fail("efd signal attached with no linked exciter");
-      }
+        if (ports_.in.template port<input>().connected()
+            && !ports_.in.template port<input>().linked())
+        {
+          checks.fail(std::format("{} signal attached with no linked source", name));
+        }
+      };
+
+      check_attached_signal.template operator()<GenClassicalSignalInputs::pmech>("pmech");
+      check_attached_signal.template operator()<GenClassicalSignalInputs::efd>("efd");
 
       return checks;
     }
@@ -191,6 +192,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::initialize()
     {
+      if (!this->verifyAndLog())
+      {
+        Log::error() << "GenClassical: cannot initialize with invalid configuration\n";
+        return 1;
+      }
+
       // Network frame terminal values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
@@ -390,7 +397,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void GenClassical<scalar_type, index_type>::setDerivedParams()
+    void GenClassical<scalar_type, index_type>::setDerivedParameters()
     {
       G_ = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
       B_ = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);

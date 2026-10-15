@@ -97,7 +97,7 @@ namespace GridKit
       void initializeParameters(const ModelDataT& data);
       /// Associate variable getter functions with enum values
       void initializeMonitor();
-      void setDerivedParams();
+      void setDerivedParameters();
 
       ScalarT& Vr()
       {
@@ -127,7 +127,7 @@ namespace GridKit
 
     private:
       /* Identification */
-      BusT* bus_;
+      BusT* bus_{nullptr};
 
       /// Component signal ports
       SignalPortsT ports_;

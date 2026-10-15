@@ -72,8 +72,6 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
-        using Component<scalar_type, index_type>::va_component_base_;
-        using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
         using Component<scalar_type, index_type>::ws_;
@@ -154,6 +152,7 @@ namespace GridKit
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
+        RealT                Trate_{static_cast<RealT>(100.0)};
         RealT                Rperm_{static_cast<RealT>(0.04)};
         RealT                Rtemp_{static_cast<RealT>(0.3)};
         RealT                Tr_{static_cast<RealT>(5.0)};
@@ -176,7 +175,6 @@ namespace GridKit
 
         RealT leadlag_gain_{ZERO<RealT>};
 
-        IdxT    parameter_error_count_{0};
         RealT   Gmin_response_{Gmin_};
         RealT   Gmax_response_{Gmax_};
         RealT   Hdam_eff_{Hdam_};

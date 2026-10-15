@@ -7,6 +7,7 @@ int main()
   GridKit::Testing::GenrouTests<double, size_t> test;
 
   result += test.constructor();
+  result += test.validation();
   result += test.accessors();
   result += test.hard_coded_residual();
   result += test.residual();

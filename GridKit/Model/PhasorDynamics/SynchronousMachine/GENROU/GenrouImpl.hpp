@@ -1,7 +1,10 @@
 #pragma once
 
+#include <format>
 #include <iostream>
 
+#include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
@@ -27,30 +30,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus)
-      : bus_(bus),
-        bus_id_(0),
-        p0_(0.),
-        q0_(0.),
-        H_(3.),
-        D_(0.),
-        Ra_(0.),
-        Tdop_(7.),
-        Tdopp_(.04),
-        Tqopp_(.05),
-        Tqop_(.75),
-        Xd_(2.1),
-        Xdp_(0.2),
-        Xdpp_(0.18),
-        Xq_(.5),
-        Xqp_(.5),
-        Xqpp_(.18),
-        Xl_(.15),
-        S10_(0.),
-        S12_(0.),
-        mva_base_(100.)
+      : bus_(bus)
     {
       size_ = 17;
-      setDerivedParams();
+      setDerivedParameters();
     }
 
     /**
@@ -77,7 +60,6 @@ namespace GridKit
                                             RealT S10,
                                             RealT S12)
       : bus_(bus),
-        bus_id_(0),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -95,11 +77,10 @@ namespace GridKit
         Xqpp_(Xqpp),
         Xl_(Xl),
         S10_(S10),
-        S12_(S12),
-        mva_base_(100.)
+        S12_(S12)
     {
       size_ = 17;
-      setDerivedParams();
+      setDerivedParameters();
     }
 
     /**
@@ -115,7 +96,6 @@ namespace GridKit
       initializeMonitor();
 
       size_ = 17;
-      setDerivedParams();
     }
 
     /**
@@ -132,7 +112,6 @@ namespace GridKit
       initializeMonitor();
 
       size_ = 17;
-      setDerivedParams();
     }
 
     /**
@@ -150,7 +129,6 @@ namespace GridKit
       initializeMonitor();
 
       size_ = 17;
-      setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
@@ -158,112 +136,50 @@ namespace GridKit
     {
     }
 
-    /// Helper function to extract and assign model parameters from the model's associated
-    /// data structure.
+    /**
+     * @brief Read the parameters out of the model data
+     *
+     * Every parameter is optional and keeps its documented default when
+     * omitted. A non-numeric or non-finite value throws
+     * std::invalid_argument. Integer JSON values are accepted for real
+     * parameters.
+     *
+     * @param[in] data Parameters, terminal bus, and monitored-variable selections.
+     */
     template <typename scalar_type, typename index_type>
     void Genrou<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
-      using Buses     = typename ModelDataT::Buses;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
+      using Params = typename ModelDataT::Parameters;
+      using Buses  = typename ModelDataT::Buses;
 
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
+      const Model::ParameterReader reader(data, "Genrou");
 
-      if (data.parameters.contains(Parameter::H))
-      {
-        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
-      }
-
-      if (data.parameters.contains(Parameter::D))
-      {
-        D_ = std::get<RealT>(data.parameters.at(Parameter::D));
-      }
-
-      if (data.parameters.contains(Parameter::Ra))
-      {
-        Ra_ = std::get<RealT>(data.parameters.at(Parameter::Ra));
-      }
-
-      if (data.parameters.contains(Parameter::Tdop))
-      {
-        Tdop_ = std::get<RealT>(data.parameters.at(Parameter::Tdop));
-      }
-
-      if (data.parameters.contains(Parameter::Tdopp))
-      {
-        Tdopp_ = std::get<RealT>(data.parameters.at(Parameter::Tdopp));
-      }
-
-      if (data.parameters.contains(Parameter::Tqopp))
-      {
-        Tqopp_ = std::get<RealT>(data.parameters.at(Parameter::Tqopp));
-      }
-
-      if (data.parameters.contains(Parameter::Tqop))
-      {
-        Tqop_ = std::get<RealT>(data.parameters.at(Parameter::Tqop));
-      }
-
-      if (data.parameters.contains(Parameter::Xd))
-      {
-        Xd_ = std::get<RealT>(data.parameters.at(Parameter::Xd));
-      }
-
-      if (data.parameters.contains(Parameter::Xdp))
-      {
-        Xdp_ = std::get<RealT>(data.parameters.at(Parameter::Xdp));
-      }
-
-      if (data.parameters.contains(Parameter::Xdpp))
-      {
-        Xdpp_ = std::get<RealT>(data.parameters.at(Parameter::Xdpp));
-      }
-
-      if (data.parameters.contains(Parameter::Xq))
-      {
-        Xq_ = std::get<RealT>(data.parameters.at(Parameter::Xq));
-      }
-
-      if (data.parameters.contains(Parameter::Xqp))
-      {
-        Xqp_ = std::get<RealT>(data.parameters.at(Parameter::Xqp));
-      }
-
-      if (data.parameters.contains(Parameter::Xqpp))
-      {
-        Xqpp_ = std::get<RealT>(data.parameters.at(Parameter::Xqpp));
-      }
-
-      if (data.parameters.contains(Parameter::Xl))
-      {
-        Xl_ = std::get<RealT>(data.parameters.at(Parameter::Xl));
-      }
-
-      if (data.parameters.contains(Parameter::S10))
-      {
-        S10_ = std::get<RealT>(data.parameters.at(Parameter::S10));
-      }
-
-      if (data.parameters.contains(Parameter::S12))
-      {
-        S12_ = std::get<RealT>(data.parameters.at(Parameter::S12));
-      }
-
-      if (data.parameters.contains(Parameter::mva))
-      {
-        mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
-      }
+      p0_       = reader.readReal(Params::p0).value_or(p0_);
+      q0_       = reader.readReal(Params::q0).value_or(q0_);
+      H_        = reader.readReal(Params::H).value_or(H_);
+      D_        = reader.readReal(Params::D).value_or(D_);
+      Ra_       = reader.readReal(Params::Ra).value_or(Ra_);
+      Tdop_     = reader.readReal(Params::Tdop).value_or(Tdop_);
+      Tdopp_    = reader.readReal(Params::Tdopp).value_or(Tdopp_);
+      Tqop_     = reader.readReal(Params::Tqop).value_or(Tqop_);
+      Tqopp_    = reader.readReal(Params::Tqopp).value_or(Tqopp_);
+      Xd_       = reader.readReal(Params::Xd).value_or(Xd_);
+      Xdp_      = reader.readReal(Params::Xdp).value_or(Xdp_);
+      Xdpp_     = reader.readReal(Params::Xdpp).value_or(Xdpp_);
+      Xq_       = reader.readReal(Params::Xq).value_or(Xq_);
+      Xqp_      = reader.readReal(Params::Xqp).value_or(Xqp_);
+      Xqpp_     = reader.readReal(Params::Xqpp).value_or(Xqpp_);
+      Xl_       = reader.readReal(Params::Xl).value_or(Xl_);
+      S10_      = reader.readReal(Params::S10).value_or(S10_);
+      S12_      = reader.readReal(Params::S12).value_or(S12_);
+      mva_base_ = reader.readReal(Params::mva).value_or(mva_base_);
 
       if (data.buses.contains(Buses::bus))
       {
         bus_id_ = data.buses.at(Buses::bus);
       }
+
+      setDerivedParameters();
     }
 
     template <typename scalar_type, typename index_type>
@@ -346,35 +262,65 @@ namespace GridKit
     }
 
     /**
-     * @brief verify method checks that attached signals are also linked
+     * @brief Validate the GENROU configuration
+     *
+     * Checks the terminal bus, the parameters the machine equations divide
+     * by, the saturation curve, and attached external signals.
+     *
+     * @return The configuration checks; passed() when valid.
      */
     template <typename scalar_type, typename index_type>
     Model::ConfigurationChecks Genrou<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks("Genrou");
 
-      auto pmech_port = ports_.in.template port<GenrouSignalInputs::pmech>();
-      if (pmech_port.connected() && !pmech_port.linked())
-      {
-        checks.fail("pmech signal attached with no linked governor");
-      }
+      checks.check(bus_ != nullptr, "bus pointer is null");
+      checks.check(H_ > ZERO<RealT>, "H must be positive");
+      checks.check(Tdop_ > ZERO<RealT>, "Tdop must be positive");
+      checks.check(Tdopp_ > ZERO<RealT>, "Tdopp must be positive");
+      checks.check(Tqop_ > ZERO<RealT>, "Tqop must be positive");
+      checks.check(Tqopp_ > ZERO<RealT>, "Tqopp must be positive");
+      checks.check(Xd_ != Xl_, "Xd must differ from Xl");
+      checks.check(Xdp_ != Xl_, "Xdp must differ from Xl");
+      checks.check(Xqp_ != Xl_, "Xqp must differ from Xl");
+      checks.check(Ra_ * Ra_ + Xqpp_ * Xqpp_ > ZERO<RealT>, "Ra and Xqpp cannot both be zero");
+      checks.check(S10_ >= ZERO<RealT>, "S10 must be non-negative");
+      checks.check(S12_ >= ZERO<RealT>, "S12 must be non-negative");
+      checks.check(S10_ == ZERO<RealT> || S12_ > ZERO<RealT>,
+                   "S12 must be positive when S10 is nonzero");
+      checks.check(mva_base_ > ZERO<RealT>, "mva must be positive");
 
-      auto efd_port = ports_.in.template port<GenrouSignalInputs::efd>();
-      if (efd_port.connected() && !efd_port.linked())
+      // An attached port must resolve to readable signal storage. The
+      // enumerator is a template argument, so each port names itself once.
+      auto check_attached_signal =
+          [&]<GenrouSignalInputs input>(const char* name)
       {
-        checks.fail("efd signal attached with no linked exciter");
-      }
+        if (ports_.in.template port<input>().connected()
+            && !ports_.in.template port<input>().linked())
+        {
+          checks.fail(std::format("{} signal attached with no linked source", name));
+        }
+      };
+
+      check_attached_signal.template operator()<GenrouSignalInputs::pmech>("pmech");
+      check_attached_signal.template operator()<GenrouSignalInputs::efd>("efd");
 
       return checks;
     }
 
     /**
-     * Initialization of the branch model
+     * Initialization of the generator model
      *
      */
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::initialize()
     {
+      if (!this->verifyAndLog())
+      {
+        Log::error() << "Genrou: cannot initialize with invalid configuration\n";
+        return 1;
+      }
+
       // Network Frame Terminal Values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
@@ -642,7 +588,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Genrou<scalar_type, index_type>::setDerivedParams()
+    void Genrou<scalar_type, index_type>::setDerivedParameters()
     {
       SA_ = 0;
       SB_ = 0;
@@ -653,7 +599,9 @@ namespace GridKit
         SA_ = (1.2 * s112 + ONE<RealT>) / (s112 + ONE<RealT>);
         SB_ = (1.2 * s112 - ONE<RealT>) / (s112 - ONE<RealT>);
         if (SB_ < SA_)
+        {
           SA_ = SB_;
+        }
         SB_ = S12_ / ((SA_ - 1.2) * (SA_ - 1.2));
       }
       Xd1_ = Xd_ - Xdp_;

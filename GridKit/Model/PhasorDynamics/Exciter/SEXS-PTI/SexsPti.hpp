@@ -93,16 +93,17 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
+        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
+        static void            logTimeConstantWarning();
+
         BusT* bus_{nullptr};
 
-        RealT Ta_{0};
-        RealT Tb_{0};
-        RealT Te_{0};
-        RealT K_{0};
-        RealT Efdmax_{0};
-        RealT Efdmin_{0};
-
-        int missing_param_count_{0};
+        RealT Ta_{1.0};
+        RealT Tb_{10.0};
+        RealT Te_{0.1};
+        RealT K_{100.0};
+        RealT Efdmax_{3.0};
+        RealT Efdmin_{0.0};
 
         // Runtime connection masks keep the summing junction Enzyme sparse-solvable
         RealT uel_on_{0};
@@ -117,8 +118,9 @@ namespace GridKit
 
         std::unique_ptr<MonitorT> monitor_;
 
-        void initModelParams(const ModelDataT& data);
+        void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
+        void setDerivedParameters();
       };
 
     } // namespace Exciter

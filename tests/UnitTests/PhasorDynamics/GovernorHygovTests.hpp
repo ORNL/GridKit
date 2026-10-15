@@ -43,9 +43,9 @@ namespace GridKit
           static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Construction and every verify() error class, including parameter
-      /// types and finiteness, parameter relationships, power bases, curve
-      /// shape, gate-limit domain, the required pmech assignment, and signal
-      /// linkage, plus differentiability tagging.
+      /// types and finiteness, negative floored lags, parameter
+      /// relationships, curve shape, gate-limit domain, the required pmech
+      /// assignment, and signal linkage, plus differentiability tagging.
       TestOutcome validation()
       {
         TestStatus success = true;
@@ -64,14 +64,11 @@ namespace GridKit
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
+        // HYGOV has no required parameters: an empty parameter set is the
+        // documented-default model.
         Fixture<ScalarT> minimal(makeMinimalData());
         success *= (minimal.hygov.verify().passed());
         success *= defaultsMatchDocumentedValues();
-
-        auto missing_trate_data = makeMinimalData();
-        missing_trate_data.parameters.erase(Params::Trate);
-        Fixture<ScalarT> missing_trate(missing_trate_data);
-        success *= (!missing_trate.hygov.verify().passed());
 
         success *= (!empty.verify().passed());
 
@@ -116,8 +113,7 @@ namespace GridKit
         {
           for (const RealT value : nonfinite_values)
           {
-            Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
-            success *= (!invalid_fixture.hygov.verify().passed());
+            success *= invalidParameterCase(parameter, value);
           }
         }
 
@@ -126,7 +122,7 @@ namespace GridKit
         PhasorDynamics::Governor::Hygov<ScalarT, IdxT> unassigned(makeData());
         success *= (!unassigned.verify().passed());
 
-        const std::array<std::pair<Params, RealT>, 19> invalid_parameter_values{{
+        const std::array<std::pair<Params, RealT>, 18> invalid_parameter_values{{
             {Params::Trate, 0.0},
             {Params::Trate, -1.0},
             {Params::Rtemp, 0.0},
@@ -134,7 +130,6 @@ namespace GridKit
             {Params::Tf, -0.1},
             {Params::Tg, -0.1},
             {Params::Tw, -0.1},
-            {Params::Tn, -0.1},
             {Params::Tnp, -0.1},
             {Params::Velm, -0.1},
             {Params::Gmin, 1.1},
@@ -150,9 +145,13 @@ namespace GridKit
 
         for (const auto& [parameter, value] : invalid_parameter_values)
         {
-          Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
-          success *= (!invalid_fixture.hygov.verify().passed());
+          success *= invalidParameterCase(parameter, value);
         }
+
+        // The speed lead time constant enters only a numerator, so any sign
+        // is valid.
+        Fixture<ScalarT> negative_lead(makeData(), {{Params::Tn, -0.1}});
+        success *= (negative_lead.hygov.verify().passed());
 
         // A curve with no rise cannot yield a unique gate.
         Fixture<ScalarT> flat_curve(makeData(),
@@ -187,36 +186,7 @@ namespace GridKit
         integer_real.parameters[Params::Tw] = static_cast<IdxT>(2);
         Fixture<ScalarT> integer_model(integer_real);
         success *= (integer_model.hygov.verify().passed());
-
-        auto bad_numeric_type                      = makeData();
-        bad_numeric_type.parameters[Params::Trate] = true;
-        Fixture<ScalarT> bad_numeric_model(bad_numeric_type);
-        success *= (!bad_numeric_model.hygov.verify().passed());
-
-        Fixture<ScalarT> overflowing_component_base(
-            makeData(),
-            {{Params::Trate, std::numeric_limits<RealT>::max()}});
-        success *= (!overflowing_component_base.hygov.verify().passed());
-
-        Fixture<ScalarT> overflowing_base_ratio(
-            makeData(),
-            {{Params::Trate, std::numeric_limits<RealT>::min()}});
-        success *= (!overflowing_base_ratio.hygov.verify().passed());
-
-        const std::array<RealT, 6> invalid_system_bases{{
-            0.0,
-            -1.0,
-            nan,
-            infinity,
-            -infinity,
-            std::numeric_limits<RealT>::min(),
-        }};
-
-        for (const RealT system_base : invalid_system_bases)
-        {
-          Fixture<ScalarT> invalid_base(makeData(), {}, system_base);
-          success *= (!invalid_base.hygov.verify().passed());
-        }
+        success *= invalidParameterCase(Params::Trate, true);
 
         success *= unlinkedSignalRejected<External::speed>();
         success *= unlinkedSignalRejected<External::pref>();
@@ -1059,9 +1029,8 @@ namespace GridKit
       Data makeMinimalData() const
       {
         Data data;
-        data.device_class              = "Hygov";
-        data.disambiguation_string     = "hygov_test";
-        data.parameters[Params::Trate] = 100.0;
+        data.device_class          = "Hygov";
+        data.disambiguation_string = "hygov_test";
         data.monitored_variables.insert(Mon::pmech);
         data.monitored_variables.insert(Mon::filter);
         data.monitored_variables.insert(Mon::desiredgate);
@@ -1076,7 +1045,8 @@ namespace GridKit
         // These are the documented defaults. The all-zero source curve
         // selects the identity curve, spelled out here point by point.
         return withParameters(makeMinimalData(),
-                              {{Params::Rperm, 0.04},
+                              {{Params::Trate, 100.0},
+                               {Params::Rperm, 0.04},
                                {Params::Rtemp, 0.3},
                                {Params::Tr, 5.0},
                                {Params::Tf, 0.05},
@@ -1267,6 +1237,19 @@ namespace GridKit
           success = false;
         }
         return success;
+      }
+
+      template <typename ValueT>
+      bool invalidParameterCase(Params parameter, ValueT value) const
+      {
+        auto data                  = makeData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              Fixture<ScalarT> fixture(data);
+              return fixture.hygov.verify();
+            });
       }
 
       template <External variable>

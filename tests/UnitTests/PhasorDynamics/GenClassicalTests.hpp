@@ -6,11 +6,13 @@
  *
  */
 #include <iostream>
+#include <limits>
 #include <numbers>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
@@ -76,6 +78,59 @@ namespace GridKit
         }
         delete bus;
 
+        return success.report(__func__);
+      }
+
+      /// Every verify() error class, including parameter types and
+      /// finiteness, the parameters the machine equations divide by, bus
+      /// ownership, and signal linkage.
+      TestOutcome validation()
+      {
+        using Parameter = typename GenClassicalDataT::Parameters;
+
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        // GENCLS has no required parameters: an empty parameter set is the
+        // documented-default machine.
+        success *= verifyData(makeGenClassicalData()).passed();
+        success *= verifyData(GenClassicalDataT{}).passed();
+
+        success *= invalidParameterCase(Parameter::H, 0.0);
+        success *= invalidParameterCase(Parameter::Xdp, 0.0);
+        success *= invalidParameterCase(Parameter::mva, 0.0);
+
+        for (const Parameter parameter : {Parameter::p0,
+                                          Parameter::q0,
+                                          Parameter::H,
+                                          Parameter::D,
+                                          Parameter::Ra,
+                                          Parameter::Xdp,
+                                          Parameter::mva})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                     = makeGenClassicalData();
+        integer_real.parameters[Parameter::H] = static_cast<IdxT>(3);
+
+        success *= verifyData(integer_real).passed();
+        success *= invalidParameterCase(Parameter::H, true);
+
+        PhasorDynamics::GenClassical<ScalarT, IdxT> busless(nullptr, makeGenClassicalData());
+        success *= !busless.verify().passed();
+
+        success *= unlinkedSignalRejected<PhasorDynamics::GenClassicalSignalInputs::pmech>();
+        success *= unlinkedSignalRejected<PhasorDynamics::GenClassicalSignalInputs::efd>();
+
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -519,6 +574,36 @@ namespace GridKit
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
+
+    private:
+      static Model::ConfigurationChecks verifyData(const GenClassicalDataT& data)
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+        return gen.verify();
+      }
+
+      template <typename ValueT>
+      static bool invalidParameterCase(typename GenClassicalDataT::Parameters parameter, ValueT value)
+      {
+        auto data                  = makeGenClassicalData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
+      }
+
+      template <PhasorDynamics::GenClassicalSignalInputs input>
+      static bool unlinkedSignalRejected()
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>   unlinked_node;
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, makeGenClassicalData());
+        gen.getPorts().in.template port<input>().connect(&unlinked_node);
+        return !gen.verify().passed();
+      }
     }; // class GenClassicalTests
 
   } // namespace Testing

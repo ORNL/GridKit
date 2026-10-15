@@ -492,13 +492,17 @@ namespace GridKit
     /**
      * @brief Verify all components are configured correctly
      *
-     * Collects every problem reported by the components, each prefixed with
-     * the component ID. passed() is true when all is well.
+     * Checks the system bases shared by every component, then collects every
+     * problem reported by the components, each prefixed with the component
+     * ID. passed() is true when all is well.
      */
     template <typename scalar_type, typename index_type>
     Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks;
+
+      checks.check(this->freq_system_base_ > ZERO<RealT>, "system frequency base must be positive");
+      checks.check(this->va_system_base_ > ZERO<RealT>, "system power base must be positive");
 
       // Verify components
       for (const auto& component : components_)

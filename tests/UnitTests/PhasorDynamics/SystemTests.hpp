@@ -441,6 +441,27 @@ namespace GridKit
         return status.report(__func__);
       }
 
+      /// The system bases that every component converts through must be
+      /// positive.
+      TestOutcome systemBaseError()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        success *= system.verify().passed();
+
+        system.setSystemBase(ZERO<RealT>, static_cast<RealT>(100.0e6));
+        success *= !system.verify().passed();
+
+        system.setSystemBase(static_cast<RealT>(60.0), ZERO<RealT>);
+        success *= !system.verify().passed();
+
+        system.setSystemBase(static_cast<RealT>(60.0), std::numeric_limits<RealT>::quiet_NaN());
+        success *= !system.verify().passed();
+
+        return success.report(__func__);
+      }
+
       /// SystemModel propagates a statically valid component's initialization error.
       TestOutcome componentInitializationError()
       {

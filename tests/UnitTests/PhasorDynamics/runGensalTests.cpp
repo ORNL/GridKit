@@ -7,6 +7,7 @@ int main()
   GridKit::Testing::GensalTests<double, size_t> test;
 
   result += test.constructor();
+  result += test.validation();
   result += test.hard_coded_residual();
   result += test.residual();
   result += test.residual_nonzero_ra();

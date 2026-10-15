@@ -1,9 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
@@ -25,7 +27,9 @@ namespace GridKit
     class ExciterSexsPtiTests
     {
     public:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using RealT  = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using Data   = PhasorDynamics::Exciter::SexsPtiData<RealT, IdxT>;
+      using Params = PhasorDynamics::Exciter::SexsPtiParameters;
 
       ExciterSexsPtiTests()  = default;
       ~ExciterSexsPtiTests() = default;
@@ -73,7 +77,7 @@ namespace GridKit
         exciter.allocate();
         efd_node.init(1.2);
         success *= (exciter.verify().passed());
-        exciter.initialize();
+        success *= (exciter.initialize() == 0);
         exciter.evaluateResidual();
 
         success       *= efd_node.linked();
@@ -125,7 +129,7 @@ namespace GridKit
         exciter.allocate();
         efd_node.init(1.2);
         success *= (exciter.verify().passed());
-        exciter.initialize();
+        success *= (exciter.initialize() == 0);
         exciter.evaluateResidual();
 
         // vref absorbs the attached vs at initialization; later changes pass through
@@ -203,8 +207,12 @@ namespace GridKit
 
         auto                                            data = makeTestData();
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>       efd_node;
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&efd_node);
         exciter.allocate();
-        exciter.initialize();
+        efd_node.init(0.0);
+        success *= (exciter.initialize() == 0);
+
         auto* y  = exciter.y().getData();
         auto* yp = exciter.yp().getData();
 
@@ -264,29 +272,92 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome parameterValidation()
+      /// Every verify() error class, including parameter types and
+      /// finiteness, negative floored lags, parameter relationships, bus
+      /// ownership, the required efd output, and signal linkage.
+      TestOutcome validation()
       {
-        using Data      = PhasorDynamics::Exciter::SexsPtiData<RealT, IdxT>;
-        using Parameter = typename Data::Parameters;
-
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
-        // Suppress expected errors from the invalid parameter cases below.
+        // Suppress expected errors and warnings from the invalid cases below.
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        // SEXS-PTI has no required parameters: an empty parameter set is the
+        // documented-default model.
+        success *= verifyData(makeTestData()).passed();
+        success *= verifyData(Data{}).passed();
 
-        auto missing = makeTestData();
-        missing.parameters.erase(Parameter::K);
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> missing_model(&bus, missing);
-        success *= (!missing_model.verify().passed());
+        success *= invalidParameterCase(Params::K, 0.0);
+        success *= invalidParameterCase(Params::Efdmin, 5.0);
+        success *= invalidParameterCase(Params::Tb, -0.1);
+        success *= invalidParameterCase(Params::Te, -0.1);
 
-        auto invalid                      = makeTestData();
-        invalid.parameters[Parameter::Tb] = 0.0;
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> invalid_model(&bus, invalid);
-        success *= (!invalid_model.verify().passed());
+        for (const Params parameter : {Params::Ta,
+                                       Params::Tb,
+                                       Params::Te,
+                                       Params::K,
+                                       Params::Efdmax,
+                                       Params::Efdmin})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                  = makeTestData();
+        integer_real.parameters[Params::K] = static_cast<IdxT>(10);
+
+        success *= verifyData(integer_real).passed();
+        success *= invalidParameterCase(Params::K, true);
+
+        // The lead time constant enters only a numerator, so any sign is valid.
+        auto negative_lead                   = makeTestData();
+        negative_lead.parameters[Params::Ta] = -0.1;
+
+        success *= verifyData(negative_lead).passed();
+
+        // A model without the required efd output assignment is rejected.
+        PhasorDynamics::Bus<ScalarT, IdxT>              bus(1.0, 0.0);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> unassigned(&bus, makeTestData());
+        success *= !unassigned.verify().passed();
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT>       busless_efd;
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> busless(nullptr, makeTestData());
+        busless.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&busless_efd);
+        success *= !busless.verify().passed();
+
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::SexsPtiSignalInputs::vref>();
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::SexsPtiSignalInputs::vs>();
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::SexsPtiSignalInputs::vuel>();
+        success *= unlinkedSignalRejected<PhasorDynamics::Exciter::SexsPtiSignalInputs::voel>();
+
+        // Zero lags use the documented numerical floor, so the model still
+        // initializes and no residual row divides by zero. The floor scales
+        // the efd row by 1/(Tb Te), so rounding is not compared to zero.
+        auto zero_time                   = makeTestData();
+        zero_time.parameters[Params::Tb] = 0.0;
+        zero_time.parameters[Params::Te] = 0.0;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>              floored_bus(3.0, 4.0);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> floored(&floored_bus, zero_time);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>       floored_efd;
+        floored.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&floored_efd);
+        success *= (floored_bus.allocate() == 0);
+        success *= (floored_bus.initialize() == 0);
+        success *= (floored.allocate() == 0);
+        floored_efd.init(1.2);
+        success *= (floored.initialize() == 0);
+        success *= (floored.evaluateResidual() == 0);
+
+        const auto& f      = floored.getResidual();
+        const auto* f_data = f.getData();
+        for (IdxT i = 0; i < f.getSize(); ++i)
+        {
+          success *= std::isfinite(f_data[i]);
+        }
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -426,6 +497,8 @@ namespace GridKit
         DependencyTracking::Variable                                         Vi1{4.0};
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>              bus(Vr1, Vi1);
         PhasorDynamics::Exciter::SexsPti<DependencyTracking::Variable, IdxT> exciter(&bus, data);
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>       efd_node;
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&efd_node);
 
         bus.allocate();
         exciter.allocate();
@@ -437,6 +510,7 @@ namespace GridKit
         }
 
         bus.initialize();
+        efd_node.init(DependencyTracking::Variable{1.2});
         exciter.initialize();
 
         exciter.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
@@ -460,6 +534,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT>              bus(3.0, 4.0);
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>       efd_node;
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&efd_node);
 
         bus.allocate();
         exciter.allocate();
@@ -471,6 +547,7 @@ namespace GridKit
         }
 
         bus.initialize();
+        efd_node.init(1.2);
         exciter.initialize();
 
         exciter.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
@@ -491,11 +568,43 @@ namespace GridKit
 #endif
 
     private:
-      auto makeTestData() -> PhasorDynamics::Exciter::SexsPtiData<RealT, IdxT>
+      /// Verify a model built from @p data with its required efd output assigned.
+      Model::ConfigurationChecks verifyData(const Data& data) const
       {
-        using Params = PhasorDynamics::Exciter::SexsPtiParameters;
+        PhasorDynamics::Bus<ScalarT, IdxT>              bus(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>       efd_node;
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&efd_node);
+        return exciter.verify();
+      }
 
-        PhasorDynamics::Exciter::SexsPtiData<RealT, IdxT> data;
+      template <typename ValueT>
+      bool invalidParameterCase(Params parameter, ValueT value) const
+      {
+        auto data                  = makeTestData();
+        data.parameters[parameter] = value;
+        return configurationRejected(
+            [&]()
+            {
+              return verifyData(data);
+            });
+      }
+
+      template <PhasorDynamics::Exciter::SexsPtiSignalInputs input>
+      bool unlinkedSignalRejected() const
+      {
+        PhasorDynamics::Bus<ScalarT, IdxT>              bus(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>       efd_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>       unlinked_node;
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, makeTestData());
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&efd_node);
+        exciter.getPorts().in.template port<input>().connect(&unlinked_node);
+        return !exciter.verify().passed();
+      }
+
+      auto makeTestData() const -> Data
+      {
+        Data data;
         data.device_class          = "exciter";
         data.disambiguation_string = "sexspti_test";
         data.monitored_variables.insert(PhasorDynamics::Exciter::SexsPtiMonitorableVariables::efd);
