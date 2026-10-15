@@ -1,7 +1,7 @@
 # Generator
 
 Dispatchable active and reactive power injection with a quadratic cost. The
-`EconomicDispatch` application makes one for every GENROU, GENSAL,
+`EconomicDispatch` example makes one for every GENROU, GENSAL,
 GenClassical, and REGCA device in the case, with limits and costs from the
 MATPOWER case on the system base.
 

@@ -1,6 +1,6 @@
 /**
  * @file EconomicDispatch.cpp
- * @brief Economic dispatch of a PhasorDynamics case, written as its initial
+ * @brief Economic dispatch of a PhasorDynamics case, written as an operating
  * state.
  */
 
@@ -224,7 +224,7 @@ int runApplication(int argc, const char* argv[])
     return 1;
   }
 
-  // PhasorDynamics initialization rejects limits that relaxed bounds violate
+  // Enforce the original bounds
   Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
   app->Options()->SetNumericValue("bound_relax_factor", 0.0);
   setOptions(*app, options.value("ipopt", json::object()));
