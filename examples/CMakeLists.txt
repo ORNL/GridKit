@@ -59,10 +59,4 @@ if(TARGET SUNDIALS::idas)
   add_subdirectory(Network)
 endif()
 
-if(TARGET SUNDIALS::idas
-   AND GRIDKIT_ENABLE_ENZYME
-   AND GRIDKIT_ENABLE_IPOPT)
-  add_subdirectory(EconomicDispatch)
-endif()
-
 add_subdirectory(Consumer)
