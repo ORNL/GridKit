@@ -230,7 +230,8 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        for (const auto& error : component->verify().errors())
+        const auto component_checks = component->verify();
+        for (const auto& error : component_checks.errors())
         {
           checks.fail(std::format("{}: {}", component->id(), error));
         }
