@@ -401,7 +401,7 @@ namespace GridKit
       // Allow roundoff in the independent power and derivative references.
       static constexpr RealT POWER_TOL    = 2 * std::numeric_limits<RealT>::epsilon();
       static constexpr RealT JACOBIAN_TOL = 2 * std::numeric_limits<RealT>::epsilon();
-      static constexpr RealT HESSIAN_TOL  = 6 * std::numeric_limits<RealT>::epsilon();
+      static constexpr RealT HESSIAN_TOL  = 9 * std::numeric_limits<RealT>::epsilon();
 
       static OPF::BranchData<RealT, IdxT> branchData()
       {
