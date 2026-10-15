@@ -5,7 +5,12 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
+#include <format>
+#include <map>
+#include <set>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -22,21 +27,17 @@ namespace GridKit
   namespace OptimalPowerFlow
   {
     /**
-     * @param[in] data - Network, limits, and costs
-     * @param[in] state - Starting point, fixed demand, and device settings
+     * @param[in] data - Network, demand, limits, and costs
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data,
-                                                      const Model::StateData&             state)
-      : state_(state)
+    SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
     {
       for (const auto& bus_data : data.bus)
       {
         auto bus = std::make_unique<BusT>(bus_data);
         if (!buses_.emplace(bus_data.number, bus.get()).second)
         {
-          Log::error() << "OptimalPowerFlow::SystemModel: duplicate bus " << bus_data.number << "\n";
-          ++data_errors_;
+          throw std::invalid_argument(std::format("OptimalPowerFlow::SystemModel: duplicate bus {}", bus_data.number));
         }
         components_.push_back(std::move(bus));
       }
@@ -63,28 +64,23 @@ namespace GridKit
     }
 
     /**
-     * @brief Number the variables and the bounded constraints, connect the
-     * terminals, and set the starting point and the derivative patterns
+     * @brief Number the variables and the limited constraint functions,
+     * connect the terminals, copy the limits, and set the starting point and
+     * the derivative patterns
      *
-     * A constraint without a finite bound gets no row.
+     * A constraint function without a finite limit gets no row.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
     {
-      if (verify() != 0)
+      const auto checks = verify();
+      for (const auto& error : checks.errors())
       {
-        Log::error() << "OptimalPowerFlow::SystemModel: invalid model data\n";
+        Log::error() << error << '\n';
+      }
+      if (!checks.passed())
+      {
         return 1;
-      }
-
-      bool has_infinite_bus = false;
-      for (const auto& [number, bus] : buses_)
-      {
-        has_infinite_bus = has_infinite_bus || bus->infinite();
-      }
-      if (!has_infinite_bus && !buses_.empty())
-      {
-        buses_.begin()->second->setReference();
       }
 
       IdxT n = 0;
@@ -92,7 +88,7 @@ namespace GridKit
       for (auto& component : components_)
       {
         auto& variables = component->variableIndices();
-        for (IdxT j = 0; j < component->sizeInternal(); ++j)
+        for (IdxT j = 0; j < component->sizeInternalVariables(); ++j)
         {
           variables[j] = n++;
         }
@@ -124,10 +120,19 @@ namespace GridKit
       g_lower_.resize(m);
       g_upper_.resize(m);
 
+      RealT* x_lower = x_lower_.getData();
+      RealT* x_upper = x_upper_.getData();
       RealT* g_lower = g_lower_.getData();
       RealT* g_upper = g_upper_.getData();
       for (const auto& component : components_)
       {
+        const auto& variables = component->variableIndices();
+        for (IdxT j = 0; j < component->sizeInternalVariables(); ++j)
+        {
+          x_lower[variables[j]] = component->variableLower()[j];
+          x_upper[variables[j]] = component->variableUpper()[j];
+        }
+
         const auto& rows = component->constraintIndices();
         for (IdxT i = 0; i < component->sizeInternalConstraints(); ++i)
         {
@@ -138,12 +143,13 @@ namespace GridKit
           }
         }
       }
+      x_lower_.setDataUpdated();
+      x_upper_.setDataUpdated();
       g_lower_.setDataUpdated();
       g_upper_.setDataUpdated();
 
       if (initialize() != 0)
       {
-        Log::error() << "OptimalPowerFlow::SystemModel: initialization from the state failed\n";
         return 1;
       }
 
@@ -151,19 +157,17 @@ namespace GridKit
     }
 
     /**
-     * @brief Starting point and variable bounds from the state
+     * @brief Starting point
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
-      ScalarT* x       = x_.getData();
-      RealT*   x_lower = x_lower_.getData();
-      RealT*   x_upper = x_upper_.getData();
+      ScalarT* x = x_.getData();
 
       int ret = 0;
       for (auto& component : components_)
       {
-        ret += component->initialize(state_, x, x_lower, x_upper);
+        ret += component->initialize(x);
       }
 
       // For DependencyTracking::Variable, set variable numbers
@@ -176,8 +180,6 @@ namespace GridKit
       }
 
       x_.setDataUpdated();
-      x_lower_.setDataUpdated();
-      x_upper_.setDataUpdated();
 
       return ret;
     }
@@ -213,51 +215,89 @@ namespace GridKit
     }
 
     /**
-     * @brief Device currents follow from the power into each terminal bus
+     * @brief Every problem with the data, including an island without a
+     * reference bus
      */
     template <typename scalar_type, typename index_type>
-    Model::StateData SystemModel<scalar_type, index_type>::solutionState() const
+    Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
     {
-      Model::StateData state = state_;
-      const ScalarT*   x     = x_.getData();
+      Model::ConfigurationChecks checks;
 
-      for (const auto& [number, bus] : buses_)
+      for (const IdxT number : unreferencedIslands())
       {
-        auto& voltage = state.buses[Model::busKey(number)].values;
-        voltage["vr"] = static_cast<RealT>(x[bus->variableIndices()[0]]);
-        voltage["vi"] = static_cast<RealT>(x[bus->variableIndices()[1]]);
+        checks.fail(std::format("OptimalPowerFlow::SystemModel: the island of bus {} has no reference bus", number));
       }
 
       for (const auto& component : components_)
       {
-        const auto&          terminals = component->terminals();
-        std::vector<ScalarT> power(ComponentT::TERMINAL_SIZE * terminals.size());
-        component->evaluateTerminalPower(x, power.data());
-
-        for (IdxT t = 0; t < terminals.size(); ++t)
+        for (const auto& error : component->verify().errors())
         {
-          Model::setTerminalCurrent(state,
-                                    component->id(),
-                                    terminals[t],
-                                    t,
-                                    terminals.size(),
-                                    static_cast<RealT>(power[ComponentT::TERMINAL_SIZE * t]),
-                                    static_cast<RealT>(power[ComponentT::TERMINAL_SIZE * t + 1]));
+          checks.fail(std::format("{}: {}", component->id(), error));
         }
       }
 
-      return state;
+      return checks;
     }
 
+    /**
+     * @brief Lowest bus number of each island without a reference bus
+     *
+     * In-service devices connect the buses of their terminals.
+     */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::verify() const
+    std::vector<index_type> SystemModel<scalar_type, index_type>::unreferencedIslands() const
     {
-      int ret = data_errors_;
+      // Each bus points toward the root bus of its island
+      std::map<IdxT, IdxT> parent;
+      for (const auto& [number, bus] : buses_)
+      {
+        parent[number] = number;
+      }
+
+      const auto root = [&parent](IdxT number)
+      {
+        while (parent.at(number) != number)
+        {
+          number = parent.at(number);
+        }
+        return number;
+      };
+
       for (const auto& component : components_)
       {
-        ret += component->verify();
+        const auto& terminals = component->terminals();
+        const bool  connected = std::ranges::all_of(terminals, [this](IdxT number)
+                                                   { return buses_.contains(number); });
+        if (!component->inService() || !connected)
+        {
+          continue;
+        }
+        for (IdxT t = 1; t < terminals.size(); ++t)
+        {
+          parent[root(terminals[t])] = root(terminals[0]);
+        }
       }
-      return ret;
+
+      std::set<IdxT> referenced;
+      for (const auto& [number, bus] : buses_)
+      {
+        if (bus->reference())
+        {
+          referenced.insert(root(number));
+        }
+      }
+
+      std::vector<IdxT> unreferenced;
+      std::set<IdxT>    reported;
+      for (const auto& [number, bus] : buses_)
+      {
+        const IdxT island = root(number);
+        if (!referenced.contains(island) && reported.insert(island).second)
+        {
+          unreferenced.push_back(number);
+        }
+      }
+      return unreferenced;
     }
 
     /**
@@ -276,7 +316,7 @@ namespace GridKit
           return 1;
         }
 
-        const IdxT variable   = component.sizeInternal() + ComponentT::TERMINAL_SIZE * t;
+        const IdxT variable   = component.sizeInternalVariables() + ComponentT::TERMINAL_SIZE * t;
         const IdxT constraint = component.sizeInternalConstraints() + ComponentT::TERMINAL_SIZE * t;
         for (IdxT k = 0; k < ComponentT::TERMINAL_SIZE; ++k)
         {

@@ -123,18 +123,6 @@ namespace GridKit
     return component;
   }
 
-  // Ensure that all of the given line has been consumed, and that the only
-  // remaining non-whitespace character left in the line is a semicolon.
-  inline void checkEndOfMatrixRow(std::istream& is)
-  {
-    std::string rest;
-    is >> rest;
-    ltrim(rest);
-    rtrim(rest);
-    if (rest != ";")
-      throw std::runtime_error(matlab_syntax_error);
-  }
-
   template <typename RealT = double, typename IdxT = int>
   void readMatPowerBusRow(const std::string& row, BusData<RealT, IdxT>& br, LoadData<RealT, IdxT>& lr)
   {
@@ -157,8 +145,9 @@ namespace GridKit
     lr.bus_i = br.bus_i;
   }
 
+  /// Columns after `apf` hold solution values and are ignored.
   template <typename RealT = double, typename IdxT = int>
-  void readMatPowerGenRow(GenData<RealT, IdxT>& gr, std::string& row)
+  void readMatPowerGenRow(GenData<RealT, IdxT>& gr, const std::string& row)
   {
     logs() << "Parsing MATPOWER gen row\n";
     std::stringstream is(row);
@@ -166,29 +155,23 @@ namespace GridKit
         >> gr.status >> gr.Pmax >> gr.Pmin >> gr.Pc1 >> gr.Pc2 >> gr.Qc1min
         >> gr.Qc1max >> gr.Qc2min >> gr.Qc2max >> gr.ramp_agc >> gr.ramp_10
         >> gr.ramp_30 >> gr.ramp_q >> gr.apf;
-    checkEndOfMatrixRow(is);
   }
 
+  /// Columns after `angmax` hold solution values and are ignored.
   template <typename RealT = double, typename IdxT = int>
-  void readMatPowerBranchRow(BranchData<RealT, IdxT>& br, std::string& row)
+  void readMatPowerBranchRow(BranchData<RealT, IdxT>& br, const std::string& row)
   {
     logs() << "Parsing MATPOWER branch row\n";
     std::stringstream is(row);
     is >> br.fbus >> br.tbus >> br.r >> br.x >> br.b >> br.rateA >> br.rateB
         >> br.rateC >> br.ratio >> br.angle >> br.status >> br.angmin
         >> br.angmax;
-    checkEndOfMatrixRow(is);
   }
 
   template <typename RealT = double, typename IdxT = int>
-  void readMatPowerGenCostRow(GenCostData<RealT, IdxT>& gcr, std::string& row)
+  void readMatPowerGenCostRow(GenCostData<RealT, IdxT>& gcr, const std::string& row)
   {
     logs() << "Parsing MATPOWER gen cost row\n";
-    // Ensure last character is semicolon.
-    rtrim(row);
-    if (row[row.size() - 1] != ';')
-      throw std::runtime_error(matlab_syntax_error + "\nGot line " + row);
-
     std::stringstream is(row);
     is >> gcr.kind >> gcr.startup >> gcr.shutdown >> gcr.n;
 
@@ -217,12 +200,11 @@ namespace GridKit
   template <typename RealT = double, typename IdxT = int>
   void readMatPowerBaseMVA(SystemModelData<RealT, IdxT>& mp, std::string& line)
   {
-    std::regex  pat("mpc\\.baseMVA\\s*=\\s*([0-9]+);");
+    std::regex  pat(R"(mpc\.baseMVA\s*=\s*([0-9.eE+-]+)\s*;)");
     std::smatch matches;
     if (std::regex_match(line, matches, pat))
     {
-      std::string s = matches[1];
-      mp.baseMVA    = std::atof(s.c_str());
+      mp.baseMVA = std::stod(matches[1].str());
     }
     else
     {
@@ -272,9 +254,8 @@ namespace GridKit
         // First, parse matrix components
         if (component == "bus")
         {
-          readMatPowerMatrix(is, line, [&](std::string row)
+          readMatPowerMatrix(is, line, [&](const std::string& row)
                              {
-            row += ';';
             BusDataT  br{};
             LoadDataT lr{};
             readMatPowerBusRow(row, br, lr);
@@ -283,27 +264,24 @@ namespace GridKit
         }
         else if (component == "gen")
         {
-          readMatPowerMatrix(is, line, [&](std::string row)
+          readMatPowerMatrix(is, line, [&](const std::string& row)
                              {
-            row += ';';
             GenDataT gr{};
             readMatPowerGenRow(gr, row);
             mp.gen.push_back(gr); });
         }
         else if (component == "branch")
         {
-          readMatPowerMatrix(is, line, [&](std::string row)
+          readMatPowerMatrix(is, line, [&](const std::string& row)
                              {
-            row += ';';
             BranchDataT br{};
             readMatPowerBranchRow(br, row);
             mp.branch.push_back(br); });
         }
         else if (component == "gencost")
         {
-          readMatPowerMatrix(is, line, [&](std::string row)
+          readMatPowerMatrix(is, line, [&](const std::string& row)
                              {
-            row += ';';
             GenCostDataT gcr{};
             readMatPowerGenCostRow(gcr, row);
             mp.gencost.push_back(gcr); });

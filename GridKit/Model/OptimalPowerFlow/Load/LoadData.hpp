@@ -13,9 +13,11 @@ namespace GridKit
 {
   namespace OptimalPowerFlow
   {
-    /// Parameters for a load, whose demand comes from the state
+    /// Parameters for a load
     enum class LoadParameters : size_t
     {
+      P, ///< \f$P\f$ Active power demand [p.u.]
+      Q, ///< \f$Q\f$ Reactive power demand [p.u.]
     };
 
     /// Buses for a load

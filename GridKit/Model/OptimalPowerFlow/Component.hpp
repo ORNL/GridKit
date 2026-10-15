@@ -12,7 +12,7 @@
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/CooEntries.hpp>
 #include <GridKit/Constants.hpp>
-#include <GridKit/Model/StateData.hpp>
+#include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -22,17 +22,20 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    /// Bound of a variable or constraint without a limit
+    /// Limit of a variable or constraint function without one
     template <typename RealT>
     inline constexpr RealT UNBOUNDED = std::numeric_limits<RealT>::infinity();
 
     /**
      * @brief Optimal power flow component
      *
-     * Local variables are the internal variables followed by the real and
-     * imaginary voltage of each terminal bus. Local constraints are the
-     * internal constraints followed by the active and reactive power into
-     * each terminal bus. The system model maps local indices to global ones.
+     * Internal constraints limit the internal variables or the internal
+     * constraint functions. External constraint functions add the active and
+     * reactive power into each terminal bus to its balance. Local variables
+     * are the internal variables followed by the real and imaginary voltage
+     * of each terminal bus, and local constraint functions are the internal
+     * ones followed by the external ones. The system model maps local indices
+     * to global ones.
      */
     template <typename scalar_type, typename index_type>
     class Component
@@ -43,25 +46,19 @@ namespace GridKit
       using RealT       = typename ScalarTraits<ScalarT>::RealT;
       using CooEntriesT = Enzyme::Sparse::CooEntries;
 
-      /// Local variables and constraints per terminal
+      /// Local variables and constraint functions per terminal
       static constexpr IdxT TERMINAL_SIZE = 2;
 
       virtual ~Component() = default;
 
-      virtual int verify() const = 0;
+      virtual Model::ConfigurationChecks verify() const = 0;
 
       /**
-       * @brief Set initial values and bounds of the internal variables
+       * @brief Set the starting point of the internal variables
        *
-       * @param[in] state - Operating state
        * @param[out] x - Variables
-       * @param[out] x_lower - Variable lower bounds
-       * @param[out] x_upper - Variable upper bounds
        */
-      virtual int initialize(const Model::StateData& state,
-                             ScalarT*                x,
-                             RealT*                  x_lower,
-                             RealT*                  x_upper) = 0;
+      virtual int initialize(ScalarT* x) = 0;
 
       /// Add the objective contribution at `x` to `f`
       virtual int evaluateObjective(const ScalarT* x, ScalarT& f) = 0;
@@ -78,9 +75,6 @@ namespace GridKit
       /// Evaluate the lower Lagrangian Hessian entries at `x` into `hessian()`
       virtual int evaluateHessian(const ScalarT* x, RealT sigma, const RealT* lambda) = 0;
 
-      /// Active and reactive power into each terminal bus at `x`
-      virtual int evaluateTerminalPower(const ScalarT* x, ScalarT* power) = 0;
-
       IdxT size() const
       {
         return static_cast<IdxT>(variable_indices_.size());
@@ -91,9 +85,9 @@ namespace GridKit
         return static_cast<IdxT>(constraint_indices_.size());
       }
 
-      IdxT sizeInternal() const
+      IdxT sizeInternalVariables() const
       {
-        return size_internal_;
+        return static_cast<IdxT>(variable_lower_.size());
       }
 
       IdxT sizeInternalConstraints() const
@@ -106,19 +100,36 @@ namespace GridKit
         return id_;
       }
 
+      bool inService() const
+      {
+        return in_service_ > ZERO<RealT>;
+      }
+
       /// Bus number of each terminal
       const std::vector<IdxT>& terminals() const
       {
         return terminals_;
       }
 
-      /// Lower bounds of the internal constraints
+      /// Lower limits of the internal variables
+      const std::vector<RealT>& variableLower() const
+      {
+        return variable_lower_;
+      }
+
+      /// Upper limits of the internal variables
+      const std::vector<RealT>& variableUpper() const
+      {
+        return variable_upper_;
+      }
+
+      /// Lower limits of the internal constraint functions
       const std::vector<RealT>& constraintLower() const
       {
         return constraint_lower_;
       }
 
-      /// Upper bounds of the internal constraints
+      /// Upper limits of the internal constraint functions
       const std::vector<RealT>& constraintUpper() const
       {
         return constraint_upper_;
@@ -156,54 +167,37 @@ namespace GridKit
 
     protected:
       /**
-       * @param[in] id - Case device `id`
+       * @param[in] id - Device `id`
        * @param[in] terminals - Bus number of each terminal
-       * @param[in] size_internal - Number of internal variables
-       * @param[in] size_internal_constraints - Number of internal constraints
+       * @param[in] in_service - Service status
+       * @param[in] size_internal_variables - Number of internal variables
+       * @param[in] size_internal_constraints - Number of internal constraint functions
        */
       Component(std::string       id,
                 std::vector<IdxT> terminals,
-                IdxT              size_internal,
+                bool              in_service,
+                IdxT              size_internal_variables,
                 IdxT              size_internal_constraints)
         : id_(std::move(id)),
           terminals_(std::move(terminals)),
-          size_internal_(size_internal),
+          variable_lower_(size_internal_variables, -UNBOUNDED<RealT>),
+          variable_upper_(size_internal_variables, UNBOUNDED<RealT>),
           constraint_lower_(size_internal_constraints, -UNBOUNDED<RealT>),
           constraint_upper_(size_internal_constraints, UNBOUNDED<RealT>),
-          variable_indices_(size_internal + TERMINAL_SIZE * terminals_.size(), INVALID_INDEX<IdxT>),
+          variable_indices_(size_internal_variables + TERMINAL_SIZE * terminals_.size(), INVALID_INDEX<IdxT>),
           constraint_indices_(size_internal_constraints + TERMINAL_SIZE * terminals_.size(), INVALID_INDEX<IdxT>)
       {
-      }
-
-      /**
-       * @brief Log `message` for this component if `condition` fails
-       *
-       * @return 0 if `condition` holds, 1 otherwise
-       */
-      int check(bool condition, const char* message) const
-      {
-        if (condition)
+        if (!in_service)
         {
-          return 0;
+          in_service_ = ZERO<RealT>;
         }
-        Log::error() << id_ << ": " << message << "\n";
-        return 1;
-      }
-
-      /**
-       * @brief Power into the bus at `terminal` given by the state
-       *
-       * @return false if the state has no current for the terminal or no
-       * voltage for its bus
-       */
-      bool statePower(const Model::StateData& state, IdxT terminal, RealT& p, RealT& q) const
-      {
-        return Model::terminalPower(state, id_, terminals_[terminal], terminal, terminals_.size(), p, q);
       }
 
       std::string        id_;
       std::vector<IdxT>  terminals_;
-      IdxT               size_internal_{0};
+      RealT              in_service_{ONE<RealT>}; ///< \f$u\f$ Service status, 1 in service and 0 out of service
+      std::vector<RealT> variable_lower_;
+      std::vector<RealT> variable_upper_;
       std::vector<RealT> constraint_lower_;
       std::vector<RealT> constraint_upper_;
       std::vector<IdxT>  variable_indices_;

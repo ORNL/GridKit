@@ -7,6 +7,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <numbers>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -17,9 +18,6 @@
 #include <GridKit/Model/OptimalPowerFlow/Generator/Generator.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Load/Load.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Shunt/Shunt.hpp>
-#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/StateData.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
 namespace GridKit
@@ -27,7 +25,6 @@ namespace GridKit
   namespace Testing
   {
     namespace OPF = GridKit::OptimalPowerFlow;
-    namespace PD  = GridKit::PhasorDynamics;
 
     /**
      * @brief Component derivatives against dependency tracking and closed forms
@@ -41,39 +38,24 @@ namespace GridKit
       using EntryMap      = std::map<std::pair<IdxT, IdxT>, RealT>;
 
     public:
-      /// Power into each bus is V conj(I) with I from `PhasorDynamics::Branch`
+      /// Power into each bus at V1 = 1 and V2 = j, from the admittances by hand
       TestOutcome branchPower()
       {
         TestStatus success = true;
 
-        OPF::Branch<RealT, IdxT> branch(opfBranchData());
-        const auto               x = variables(branch, Model::StateData{}, BRANCH_X);
+        OPF::Branch<RealT, IdxT> branch(branchData());
+        const auto               x = variables(branch, POWER_X);
 
         std::vector<RealT> g(branch.sizeConstraints());
         branch.evaluateConstraints(x.data(), g.data());
 
-        const RealT vr1 = BRANCH_X[0];
-        const RealT vi1 = BRANCH_X[1];
-        const RealT vr2 = BRANCH_X[2];
-        const RealT vi2 = BRANCH_X[3];
-
-        RealT ir1 = 0.0;
-        RealT ii1 = 0.0;
-        RealT ir2 = 0.0;
-        RealT ii2 = 0.0;
-        pdCurrents(vr1, vi1, vr2, vi2, ir1, ii1, ir2, ii2);
-
-        const RealT p1 = vr1 * ir1 + vi1 * ii1;
-        const RealT q1 = vi1 * ir1 - vr1 * ii1;
-        const RealT p2 = vr2 * ir2 + vi2 * ii2;
-        const RealT q2 = vi2 * ir2 - vr2 * ii2;
-
-        success *= isEqual(g[0], p1 * p1 + q1 * q1, POWER_TOL);
-        success *= isEqual(g[1], p2 * p2 + q2 * q2, POWER_TOL);
-        success *= isEqual(g[2], p1, POWER_TOL);
-        success *= isEqual(g[3], q1, POWER_TOL);
-        success *= isEqual(g[4], p2, POWER_TOL);
-        success *= isEqual(g[5], q2, POWER_TOL);
+        // S1 = -3.9 - j3.45 and S2 = -7.6 - j7.3
+        success *= isEqual(g[0], 27.1125, POWER_TOL);
+        success *= isEqual(g[1], 111.05, POWER_TOL);
+        success *= isEqual(g[2], -3.9, POWER_TOL);
+        success *= isEqual(g[3], -3.45, POWER_TOL);
+        success *= isEqual(g[4], -7.6, POWER_TOL);
+        success *= isEqual(g[5], -7.3, POWER_TOL);
 
         return success.report(__func__);
       }
@@ -83,12 +65,12 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        OPF::Branch<RealT, IdxT> branch(opfBranchData());
-        const auto               x = variables(branch, Model::StateData{}, BRANCH_X);
+        OPF::Branch<RealT, IdxT> branch(branchData());
+        const auto               x = variables(branch, BRANCH_X);
         branch.evaluateJacobian(x.data());
 
-        OPF::Branch<VariableT, IdxT> tracked(opfBranchData());
-        const auto                   x_tracked = variables(tracked, Model::StateData{}, BRANCH_X);
+        OPF::Branch<VariableT, IdxT> tracked(branchData());
+        const auto                   x_tracked = variables(tracked, BRANCH_X);
         std::vector<VariableT>       g(tracked.sizeConstraints());
         tracked.evaluateConstraints(x_tracked.data(), g.data());
 
@@ -107,30 +89,18 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        OPF::Branch<RealT, IdxT> branch(opfBranchData());
-        const auto               x = variables(branch, Model::StateData{}, BRANCH_X);
+        OPF::Branch<RealT, IdxT> branch(branchData());
+        const auto               x = variables(branch, BRANCH_X);
         branch.evaluateHessian(x.data(), ONE<RealT>, BRANCH_LAMBDA.data());
-
-        // Admittances of PhasorDynamics::Branch from unit voltages
-        RealT g11 = 0.0;
-        RealT b11 = 0.0;
-        RealT g12 = 0.0;
-        RealT b12 = 0.0;
-        RealT g21 = 0.0;
-        RealT b21 = 0.0;
-        RealT g22 = 0.0;
-        RealT b22 = 0.0;
-        pdCurrents(ONE<RealT>, ZERO<RealT>, ZERO<RealT>, ZERO<RealT>, g11, b11, g21, b21);
-        pdCurrents(ZERO<RealT>, ZERO<RealT>, ONE<RealT>, ZERO<RealT>, g12, b12, g22, b22);
 
         // Rows 2 to 5: P1, Q1, P2, Q2
         EntryMap expected;
-        addPowerHessian(expected, 0, {g11, b11, g12, b12}, BRANCH_LAMBDA[2], BRANCH_LAMBDA[3]);
-        addPowerHessian(expected, 1, {g21, b21, g22, b22}, BRANCH_LAMBDA[4], BRANCH_LAMBDA[5]);
+        addPowerHessian(expected, 0, BUS1_ADMITTANCE, BRANCH_LAMBDA[2], BRANCH_LAMBDA[3]);
+        addPowerHessian(expected, 1, BUS2_ADMITTANCE, BRANCH_LAMBDA[4], BRANCH_LAMBDA[5]);
 
         // Rows 0 and 1: |S|^2 = P^2 + Q^2 by the chain rule over tracked gradients
-        OPF::Branch<VariableT, IdxT> tracked(opfBranchData());
-        const auto                   x_tracked = variables(tracked, Model::StateData{}, BRANCH_X);
+        OPF::Branch<VariableT, IdxT> tracked(branchData());
+        const auto                   x_tracked = variables(tracked, BRANCH_X);
         std::vector<VariableT>       g(tracked.sizeConstraints());
         tracked.evaluateConstraints(x_tracked.data(), g.data());
 
@@ -144,8 +114,8 @@ namespace GridKit
         }
         const RealT weight1 = TWO<RealT> * BRANCH_LAMBDA[0];
         const RealT weight2 = TWO<RealT> * BRANCH_LAMBDA[1];
-        addPowerHessian(expected, 0, {g11, b11, g12, b12}, weight1 * g[2].getValue(), weight1 * g[3].getValue());
-        addPowerHessian(expected, 1, {g21, b21, g22, b22}, weight2 * g[4].getValue(), weight2 * g[5].getValue());
+        addPowerHessian(expected, 0, BUS1_ADMITTANCE, weight1 * g[2].getValue(), weight1 * g[3].getValue());
+        addPowerHessian(expected, 1, BUS2_ADMITTANCE, weight2 * g[4].getValue(), weight2 * g[5].getValue());
 
         success *= isEqual(sum(branch.hessian()), expected, HESSIAN_TOL);
         success *= branch.hessian().values.size() == BRANCH_HESSIAN_SIZE;
@@ -153,17 +123,17 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Entry counts are structural, so an open branch at a flat start with
-      /// zero multipliers has the same entries
+      /// Entry counts are structural, so an out-of-service branch at a flat
+      /// start with zero multipliers has the same entries, all zero
       TestOutcome branchPattern()
       {
         TestStatus success = true;
 
-        Model::StateData state;
-        state.devices[BRANCH_ID].flags["open"] = true;
+        auto data       = branchData();
+        data.in_service = false;
 
-        OPF::Branch<RealT, IdxT> branch(opfBranchData());
-        const auto               x = variables(branch, state, FLAT_START);
+        OPF::Branch<RealT, IdxT> branch(data);
+        const auto               x = variables(branch, FLAT_START);
 
         const std::vector<RealT> lambda(branch.sizeConstraints(), ZERO<RealT>);
         branch.evaluateJacobian(x.data());
@@ -171,6 +141,10 @@ namespace GridKit
 
         success *= branch.jacobian().values.size() == BRANCH_JACOBIAN_SIZE;
         success *= branch.hessian().values.size() == BRANCH_HESSIAN_SIZE;
+        for (const RealT value : branch.jacobian().values)
+        {
+          success *= isEqual(value, ZERO<RealT>);
+        }
         for (const RealT value : branch.hessian().values)
         {
           success *= isEqual(value, ZERO<RealT>);
@@ -184,18 +158,17 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        Model::StateData state;
-        state.buses[Model::busKey(1)].values = {{"vr", 1.0}, {"vi", 0.0}};
-
         OPF::Generator<RealT, IdxT> generator(generatorData());
         std::vector<RealT>          x(generator.size());
-        std::vector<RealT>          x_lower(generator.size());
-        std::vector<RealT>          x_upper(generator.size());
         numberLocally(generator);
-        success *= generator.initialize(state, x.data(), x_lower.data(), x_upper.data()) == 0;
+        success *= generator.initialize(x.data()) == 0;
+        success *= isEqual(x[0], ZERO<RealT>) && isEqual(x[1], ZERO<RealT>);
 
-        success *= isEqual(x_lower[0], PMIN) && isEqual(x_upper[0], PMAX);
-        success *= isEqual(x_lower[1], QMIN) && isEqual(x_upper[1], QMAX);
+        const auto& lower = generator.variableLower();
+        const auto& upper = generator.variableUpper();
+
+        success *= isEqual(lower[0], PMIN) && isEqual(upper[0], PMAX);
+        success *= isEqual(lower[1], QMIN) && isEqual(upper[1], QMAX);
 
         x             = GENERATOR_X;
         const RealT p = x[0];
@@ -218,26 +191,25 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// An offline generator is fixed at zero with no cost and the same entries
-      TestOutcome offlineGenerator()
+      /// An out-of-service generator is fixed at zero with no cost and the same entries
+      TestOutcome outOfServiceGenerator()
       {
         TestStatus success = true;
 
-        Model::StateData state;
-        state.devices["gen_1"].flags["online"] = false;
+        auto data       = generatorData();
+        data.in_service = false;
 
-        OPF::Generator<RealT, IdxT> generator(generatorData());
-        std::vector<RealT>          x(generator.size());
-        std::vector<RealT>          x_lower(generator.size());
-        std::vector<RealT>          x_upper(generator.size());
+        OPF::Generator<RealT, IdxT> generator(data);
         numberLocally(generator);
-        generator.initialize(state, x.data(), x_lower.data(), x_upper.data());
 
-        success *= isEqual(x_lower[0], ZERO<RealT>) && isEqual(x_upper[0], ZERO<RealT>);
-        success *= isEqual(x_lower[1], ZERO<RealT>) && isEqual(x_upper[1], ZERO<RealT>);
+        const auto& lower = generator.variableLower();
+        const auto& upper = generator.variableUpper();
 
-        x       = GENERATOR_X;
-        RealT f = ZERO<RealT>;
+        success *= isEqual(lower[0], ZERO<RealT>) && isEqual(upper[0], ZERO<RealT>);
+        success *= isEqual(lower[1], ZERO<RealT>) && isEqual(upper[1], ZERO<RealT>);
+
+        std::vector<RealT> x = GENERATOR_X;
+        RealT              f = ZERO<RealT>;
         generator.evaluateObjective(x.data(), f);
         success *= isEqual(f, ZERO<RealT>);
 
@@ -250,7 +222,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Shunt derivatives in closed form
+      /// Shunt derivatives in closed form, and no power out of service
       TestOutcome shunt()
       {
         TestStatus success = true;
@@ -262,7 +234,7 @@ namespace GridKit
         data.parameters[OPF::ShuntParameters::B] = SHUNT_B;
 
         OPF::Shunt<RealT, IdxT> shunt(data);
-        const auto              x  = variables(shunt, Model::StateData{}, SHUNT_X);
+        const auto              x  = variables(shunt, SHUNT_X);
         const RealT             vr = x[0];
         const RealT             vi = x[1];
 
@@ -283,16 +255,20 @@ namespace GridKit
 
         success *= isEqual(sum(shunt.hessian()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}});
 
+        data.in_service = false;
+        OPF::Shunt<RealT, IdxT> out_of_service(data);
+        const auto              x_out = variables(out_of_service, SHUNT_X);
+        std::vector<RealT>      g_out(out_of_service.sizeConstraints(), ZERO<RealT>);
+        out_of_service.evaluateConstraints(x_out.data(), g_out.data());
+        success *= isEqual(g_out[0], ZERO<RealT>) && isEqual(g_out[1], ZERO<RealT>);
+
         return success.report(__func__);
       }
 
-      /// Bus rows follow the limits and the reference and infinite settings
+      /// Bus rows follow the limits, and a reference bus fixes its imaginary voltage at zero
       TestOutcome bus()
       {
         TestStatus success = true;
-
-        Model::StateData state;
-        state.buses[Model::busKey(3)].values = {{"vr", BUS_VR}, {"vi", BUS_VI}};
 
         OPF::BusData<RealT, IdxT> data;
         data.number                               = 3;
@@ -301,15 +277,13 @@ namespace GridKit
 
         OPF::Bus<RealT, IdxT> bus(data);
         std::vector<RealT>    x(bus.size());
-        std::vector<RealT>    x_lower(bus.size());
-        std::vector<RealT>    x_upper(bus.size());
         numberLocally(bus);
 
-        bus.initialize(state, x.data(), x_lower.data(), x_upper.data());
-        success *= isEqual(x[0], BUS_VR) && isEqual(x[1], BUS_VI);
-        for (IdxT j = 0; j < bus.size(); ++j)
+        bus.initialize(x.data());
+        success *= isEqual(x[0], ONE<RealT>) && isEqual(x[1], ZERO<RealT>);
+        for (IdxT j = 0; j < bus.sizeInternalVariables(); ++j)
         {
-          success *= std::isinf(x_lower[j]) && std::isinf(x_upper[j]);
+          success *= std::isinf(bus.variableLower()[j]) && std::isinf(bus.variableUpper()[j]);
         }
 
         const auto& lower = bus.constraintLower();
@@ -318,70 +292,58 @@ namespace GridKit
         success *= isEqual(lower[0], ZERO<RealT>) && isEqual(upper[0], ZERO<RealT>);
         success *= isEqual(lower[1], ZERO<RealT>) && isEqual(upper[1], ZERO<RealT>);
         success *= isEqual(lower[2], VMIN * VMIN) && isEqual(upper[2], VMAX * VMAX);
-        success *= std::isinf(lower[3]) && std::isinf(upper[3]);
-
-        bus.setReference();
-        success *= isEqual(lower[3], ZERO<RealT>) && isEqual(upper[3], ZERO<RealT>);
 
         x = BUS_X;
         std::vector<RealT> g(bus.sizeConstraints());
         bus.evaluateConstraints(x.data(), g.data());
         success *= isEqual(g[2], x[0] * x[0] + x[1] * x[1]);
-        success *= isEqual(g[3], BUS_VR * x[1] - BUS_VI * x[0]);
 
         bus.evaluateJacobian(x.data());
-        success *= isEqual(sum(bus.jacobian()),
-                           EntryMap{{{2, 0}, TWO<RealT> * x[0]}, {{2, 1}, TWO<RealT> * x[1]}, {{3, 0}, -BUS_VI}, {{3, 1}, BUS_VR}});
+        success *= isEqual(sum(bus.jacobian()), EntryMap{{{2, 0}, TWO<RealT> * x[0]}, {{2, 1}, TWO<RealT> * x[1]}});
 
         bus.evaluateHessian(x.data(), ONE<RealT>, BUS_LAMBDA.data());
         const RealT hessian = TWO<RealT> * BUS_LAMBDA[2];
 
         success *= isEqual(sum(bus.hessian()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}});
 
-        data.infinite = true;
-        OPF::Bus<RealT, IdxT> infinite(data);
-        numberLocally(infinite);
-        infinite.initialize(state, x.data(), x_lower.data(), x_upper.data());
-        success *= isEqual(x_lower[0], BUS_VR) && isEqual(x_upper[0], BUS_VR);
-        success *= isEqual(x_lower[1], BUS_VI) && isEqual(x_upper[1], BUS_VI);
-        for (IdxT i = 0; i < infinite.sizeConstraints(); ++i)
-        {
-          success *= std::isinf(infinite.constraintLower()[i]) && std::isinf(infinite.constraintUpper()[i]);
-        }
+        data.reference = true;
+        OPF::Bus<RealT, IdxT> reference(data);
+        success *= std::isinf(reference.variableLower()[0]) && std::isinf(reference.variableUpper()[0]);
+        success *= isEqual(reference.variableLower()[1], ZERO<RealT>) && isEqual(reference.variableUpper()[1], ZERO<RealT>);
 
         return success.report(__func__);
       }
 
-      /// Load demand comes from the state, with no entries
+      /// Load demand comes from its parameters, with no entries, and is zero
+      /// out of service
       TestOutcome load()
       {
         TestStatus success = true;
 
-        Model::StateData state;
-        state.buses[Model::busKey(2)].values = {{"vr", 1.01}, {"vi", -0.05}};
-        Model::setTerminalCurrent(state, "load_2", 2, 0, 1, -0.6, -0.2);
-
         OPF::LoadData<RealT, IdxT> data;
-        data.id                         = "load_2";
-        data.buses[OPF::LoadBuses::bus] = 2;
+        data.id                                 = "load_2";
+        data.buses[OPF::LoadBuses::bus]         = 2;
+        data.parameters[OPF::LoadParameters::P] = LOAD_P;
+        data.parameters[OPF::LoadParameters::Q] = LOAD_Q;
 
         OPF::Load<RealT, IdxT> load(data);
-        std::vector<RealT>     x = {1.0, 0.0};
-        numberLocally(load);
-        success *= load.initialize(state, x.data(), nullptr, nullptr) == 0;
+        const auto             x = variables(load, LOAD_X);
 
         std::vector<RealT> g(load.sizeConstraints(), ZERO<RealT>);
         load.evaluateConstraints(x.data(), g.data());
-        success *= isEqual(g[0], -0.6) && isEqual(g[1], -0.2);
+        success *= isEqual(g[0], -LOAD_P) && isEqual(g[1], -LOAD_Q);
 
         const std::vector<RealT> lambda(load.sizeConstraints(), ONE<RealT>);
         load.evaluateJacobian(x.data());
         load.evaluateHessian(x.data(), ONE<RealT>, lambda.data());
         success *= load.jacobian().values.empty() && load.hessian().values.empty();
 
-        OPF::Load<RealT, IdxT> missing(data);
-        numberLocally(missing);
-        success *= missing.initialize(Model::StateData{}, x.data(), nullptr, nullptr) != 0;
+        data.in_service = false;
+        OPF::Load<RealT, IdxT> out_of_service(data);
+        const auto             x_out = variables(out_of_service, LOAD_X);
+        std::vector<RealT>     g_out(out_of_service.sizeConstraints(), ZERO<RealT>);
+        out_of_service.evaluateConstraints(x_out.data(), g_out.data());
+        success *= isEqual(g_out[0], ZERO<RealT>) && isEqual(g_out[1], ZERO<RealT>);
 
         return success.report(__func__);
       }
@@ -389,15 +351,20 @@ namespace GridKit
     private:
       static constexpr const char* BRANCH_ID = "branch_1_2";
 
-      static constexpr RealT R     = 0.02;
-      static constexpr RealT X     = 0.15;
-      static constexpr RealT G     = 0.01;
-      static constexpr RealT B     = 0.3;
-      static constexpr RealT GMAG  = 0.004;
-      static constexpr RealT BMAG  = -0.02;
-      static constexpr RealT TAP   = 1.05;
-      static constexpr RealT PHASE = 0.1;
+      static constexpr RealT R     = 0.1;
+      static constexpr RealT X     = 0.1;
+      static constexpr RealT G     = 0.2;
+      static constexpr RealT B     = 0.4;
+      static constexpr RealT GMAG  = 0.05;
+      static constexpr RealT BMAG  = 0.1;
+      static constexpr RealT TAP   = 2.0;
+      static constexpr RealT PHASE = std::numbers::pi / 2.0;
       static constexpr RealT SMAX  = 1.2;
+
+      /// Admittances g_k1, b_k1, g_k2, b_k2 of the current into bus k: series
+      /// admittance 5 - j5, tap 2 at 90 degrees, and the shunts
+      static constexpr std::array<RealT, 4> BUS1_ADMITTANCE = {-1.4, 0.95, 2.5, 2.5};
+      static constexpr std::array<RealT, 4> BUS2_ADMITTANCE = {-2.5, -2.5, -5.1, 4.8};
 
       static constexpr IdxT BRANCH_JACOBIAN_SIZE = 24;
       static constexpr IdxT BRANCH_HESSIAN_SIZE  = 10;
@@ -414,11 +381,13 @@ namespace GridKit
       static constexpr RealT SHUNT_G = 0.05;
       static constexpr RealT SHUNT_B = 0.3;
 
-      static constexpr RealT VMIN   = 0.9;
-      static constexpr RealT VMAX   = 1.1;
-      static constexpr RealT BUS_VR = 0.99;
-      static constexpr RealT BUS_VI = 0.1;
+      static constexpr RealT VMIN = 0.9;
+      static constexpr RealT VMAX = 1.1;
 
+      static constexpr RealT LOAD_P = 0.6;
+      static constexpr RealT LOAD_Q = 0.2;
+
+      static inline const std::vector<RealT> POWER_X       = {1.0, 0.0, 0.0, 1.0};
       static inline const std::vector<RealT> BRANCH_X      = {1.02, 0.12, 0.96, -0.08};
       static inline const std::vector<RealT> BRANCH_LAMBDA = {0.3, -0.2, 1.5, -0.7, 2.1, 0.4};
       static inline const std::vector<RealT> FLAT_START    = {1.0, 0.0, 1.0, 0.0};
@@ -426,14 +395,15 @@ namespace GridKit
       static inline const std::vector<RealT> SHUNT_X       = {0.98, 0.1};
       static inline const std::vector<RealT> SHUNT_LAMBDA  = {1.3, -0.6};
       static inline const std::vector<RealT> BUS_X         = {1.02, -0.05};
-      static inline const std::vector<RealT> BUS_LAMBDA    = {0.7, -0.4, 1.3, 0.5};
+      static inline const std::vector<RealT> BUS_LAMBDA    = {0.7, -0.4, 1.3};
+      static inline const std::vector<RealT> LOAD_X        = {1.01, -0.05};
 
       // Allow roundoff in the independent power and derivative references.
       static constexpr RealT POWER_TOL    = 2 * std::numeric_limits<RealT>::epsilon();
-      static constexpr RealT JACOBIAN_TOL = 64 * std::numeric_limits<RealT>::epsilon();
-      static constexpr RealT HESSIAN_TOL  = 64 * std::numeric_limits<RealT>::epsilon();
+      static constexpr RealT JACOBIAN_TOL = 2 * std::numeric_limits<RealT>::epsilon();
+      static constexpr RealT HESSIAN_TOL  = 6 * std::numeric_limits<RealT>::epsilon();
 
-      static OPF::BranchData<RealT, IdxT> opfBranchData()
+      static OPF::BranchData<RealT, IdxT> branchData()
       {
         OPF::BranchData<RealT, IdxT> data;
         data.id                                       = BRANCH_ID;
@@ -466,48 +436,6 @@ namespace GridKit
         return data;
       }
 
-      /**
-       * @brief Currents into bus 1 and bus 2 from `PhasorDynamics::Branch`
-       */
-      static void pdCurrents(RealT  vr1,
-                             RealT  vi1,
-                             RealT  vr2,
-                             RealT  vi2,
-                             RealT& ir1,
-                             RealT& ii1,
-                             RealT& ir2,
-                             RealT& ii2)
-      {
-        PD::BranchData<RealT, IdxT> data;
-        data.parameters[PD::BranchParameters::R]     = R;
-        data.parameters[PD::BranchParameters::X]     = X;
-        data.parameters[PD::BranchParameters::G]     = G;
-        data.parameters[PD::BranchParameters::B]     = B;
-        data.parameters[PD::BranchParameters::Gmag]  = GMAG;
-        data.parameters[PD::BranchParameters::Bmag]  = BMAG;
-        data.parameters[PD::BranchParameters::tap]   = TAP;
-        data.parameters[PD::BranchParameters::phase] = PHASE;
-
-        PD::Bus<RealT, IdxT> bus1(vr1, vi1);
-        PD::Bus<RealT, IdxT> bus2(vr2, vi2);
-        bus1.allocate();
-        bus1.initialize();
-        bus1.evaluateResidual();
-        bus2.allocate();
-        bus2.initialize();
-        bus2.evaluateResidual();
-
-        PD::Branch<RealT, IdxT> branch(&bus1, &bus2, data);
-        branch.allocate();
-        branch.initialize();
-        branch.evaluateResidual();
-
-        ir1 = bus1.Ir();
-        ii1 = bus1.Ii();
-        ir2 = bus2.Ir();
-        ii2 = bus2.Ii();
-      }
-
       /// Local indices are global indices
       template <typename ComponentT>
       static void numberLocally(ComponentT& component)
@@ -524,17 +452,13 @@ namespace GridKit
 
       /// Initialized component variables set to `values`, tracked by index
       template <typename ComponentT>
-      static std::vector<typename ComponentT::ScalarT> variables(ComponentT&               component,
-                                                                 const Model::StateData&   state,
-                                                                 const std::vector<RealT>& values)
+      static std::vector<typename ComponentT::ScalarT> variables(ComponentT& component, const std::vector<RealT>& values)
       {
         using ScalarT = typename ComponentT::ScalarT;
 
         numberLocally(component);
         std::vector<ScalarT> x(values.size());
-        std::vector<RealT>   x_lower(values.size());
-        std::vector<RealT>   x_upper(values.size());
-        component.initialize(state, x.data(), x_lower.data(), x_upper.data());
+        component.initialize(x.data());
 
         for (IdxT j = 0; j < values.size(); ++j)
         {

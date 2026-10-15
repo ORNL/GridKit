@@ -10,6 +10,9 @@
 - Added `enable` and `disable` solver events that put a branch in or out of service.
 - `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
 - Added `Model::ParameterReader`
+- Added the `OptimalPowerFlow` model family, the `SteadyState` Ipopt interface, and the `EconomicDispatch` example for MATPOWER cases.
+- The MATPOWER reader accepts rows without semicolons, solution columns, and decimal `baseMVA` and costs.
+- Fixed the study output check for a dangling symlink.
 
 ## v0.2
 
@@ -99,8 +102,6 @@
 - Added `GridKit_ENABLE_DEVELOPER_MODE` CMake option; in developer mode the Logger defaults to `EVERYTHING` verbosity.
 - Added `Logger::raiseVerbosity()`, which raises the verbosity without lowering a higher level.
 - Changed most of the core library code outputs to use the Logger instead of `std::cout`/`std::cerr`.
-- Added the `StateData` reader and writer for OPF operating states.
-- Added the `OptimalPowerFlow` model family, with sparse Enzyme Jacobians and Hessians and a steady-state Ipopt interface.
 
 ## v0.1
 

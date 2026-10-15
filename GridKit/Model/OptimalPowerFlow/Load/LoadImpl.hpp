@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <cmath>
+
 #include <GridKit/Model/OptimalPowerFlow/ComponentData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/ComponentModelImpl.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Load/Load.hpp>
@@ -15,38 +17,28 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     Load<scalar_type, index_type>::Load(const ModelDataT& data)
-      : ComponentModelT(data.id, busNumbers(data))
+      : ComponentModelT(data.id, busNumbers(data), data.in_service),
+        P_(parameter(data, LoadParameters::P, ZERO<RealT>)),
+        Q_(parameter(data, LoadParameters::Q, ZERO<RealT>))
     {
     }
 
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Load<scalar_type, index_type>::verify() const
     {
-      return 0;
+      Model::ConfigurationChecks checks("Load");
+      checks.check(std::isfinite(P_), "P must be finite");
+      checks.check(std::isfinite(Q_), "Q must be finite");
+      return checks;
     }
 
     /**
-     * @brief Take the demand from the state injection
-     *
-     * An offline load draws no power.
+     * @brief No internal variables
      */
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::initialize(const Model::StateData&   state,
-                                                  [[maybe_unused]] ScalarT* x,
-                                                  [[maybe_unused]] RealT*   x_lower,
-                                                  [[maybe_unused]] RealT*   x_upper)
+    int Load<scalar_type, index_type>::initialize([[maybe_unused]] ScalarT* x)
     {
-      const bool has_power = this->statePower(state, 0, p_, q_);
-
-      const Model::StateRecord* record = state.device(id_);
-      if (record != nullptr && !record->flag("online", true))
-      {
-        p_ = ZERO<RealT>;
-        q_ = ZERO<RealT>;
-        return 0;
-      }
-
-      return this->check(has_power, "state has no current for the load or no voltage for its bus");
+      return 0;
     }
 
     template <typename scalar_type, typename index_type>
@@ -60,8 +52,8 @@ namespace GridKit
     __attribute__((always_inline)) inline void
     Load<scalar_type, index_type>::constraints([[maybe_unused]] const ScalarT* x, ScalarT* g) const
     {
-      g[0] = p_;
-      g[1] = q_;
+      g[0] = -in_service_ * P_;
+      g[1] = -in_service_ * Q_;
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit

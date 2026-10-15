@@ -1,18 +1,18 @@
 /**
  * @file SystemModelData.cpp
- * @brief Optimal power flow limits and costs from a MATPOWER case.
+ * @brief Optimal power flow data from a MATPOWER case.
  */
 
-#include <algorithm>
 #include <array>
-#include <map>
+#include <format>
+#include <fstream>
+#include <numbers>
 #include <ratio>
 #include <stdexcept>
-#include <string>
-#include <utility>
-#include <vector>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModelData.hpp>
+#include <GridKit/Model/PowerFlow/MatpowerParser.hpp>
 
 namespace GridKit
 {
@@ -20,95 +20,105 @@ namespace GridKit
   {
     namespace
     {
-      namespace Column = MatpowerColumns;
-
       using SystemModelDataT = SystemModelData<double, size_t>;
-      using BusPair          = std::pair<size_t, size_t>;
+      using MatpowerDataT    = PowerFlowData::SystemModelData<double, size_t>;
+
+      /// MATPOWER bus types
+      constexpr size_t REFERENCE_BUS = 3;
+      constexpr size_t ISOLATED_BUS  = 4;
 
       /// MATPOWER polynomial cost model
-      constexpr double POLYNOMIAL = 2.0;
+      constexpr size_t POLYNOMIAL = 2;
 
-      /// Buses of a branch in increasing order
-      BusPair busPair(size_t bus1, size_t bus2)
+      /// MATPOWER angle-difference limit of no effect [deg]
+      constexpr double NO_ANGLE_LIMIT = 360.0;
+
+      constexpr double RADIANS_PER_DEGREE = std::numbers::pi / 180.0;
+
+      bool isZero(double value)
       {
-        return {std::min(bus1, bus2), std::max(bus1, bus2)};
+        return !(value < ZERO<double>) && !(value > ZERO<double>);
       }
 
-      std::string name(const BusPair& buses)
+      /// Buses, and the loads and shunts of their demand and shunt columns
+      void addBuses(SystemModelDataT& data, const MatpowerDataT& matpower)
       {
-        return "Branch " + std::to_string(buses.first) + "-" + std::to_string(buses.second);
+        const double mva_base = matpower.baseMVA;
+        for (size_t i = 0; i < matpower.bus.size(); ++i)
+        {
+          const auto& row = matpower.bus[i];
+          if (row.type == ISOLATED_BUS)
+          {
+            throw std::invalid_argument(std::format("MATPOWER bus {}: isolated buses are not supported", row.bus_i));
+          }
+
+          auto& bus                           = data.bus.emplace_back();
+          bus.number                          = row.bus_i;
+          bus.reference                       = row.type == REFERENCE_BUS;
+          bus.parameters[BusParameters::Vmin] = row.Vmin;
+          bus.parameters[BusParameters::Vmax] = row.Vmax;
+
+          const auto& demand = matpower.load[i];
+          if (!isZero(demand.Pd) || !isZero(demand.Qd))
+          {
+            auto& load                         = data.load.emplace_back();
+            load.id                            = std::format("load_{}", row.bus_i);
+            load.buses[LoadBuses::bus]         = row.bus_i;
+            load.parameters[LoadParameters::P] = demand.Pd / mva_base;
+            load.parameters[LoadParameters::Q] = demand.Qd / mva_base;
+          }
+
+          if (!isZero(row.Gs) || !isZero(row.Bs))
+          {
+            auto& shunt                          = data.shunt.emplace_back();
+            shunt.id                             = std::format("shunt_{}", row.bus_i);
+            shunt.buses[ShuntBuses::bus]         = row.bus_i;
+            shunt.parameters[ShuntParameters::G] = row.Gs / mva_base;
+            shunt.parameters[ShuntParameters::B] = row.Bs / mva_base;
+          }
+        }
       }
 
-      /// Voltage limits of the buses, matched by number
-      void applyBuses(SystemModelDataT& data, const MatpowerMatrix& rows)
+      /// Branches, numbered by MATPOWER row
+      void addBranches(SystemModelDataT& data, const MatpowerDataT& matpower)
       {
-        std::map<size_t, SystemModelDataT::BusDataT*> buses;
-        for (auto& bus : data.bus)
+        const double mva_base = matpower.baseMVA;
+        for (size_t k = 0; k < matpower.branch.size(); ++k)
         {
-          buses[bus.number] = &bus;
-        }
+          const auto& row = matpower.branch[k];
 
-        for (const auto& row : rows)
-        {
-          const auto number = static_cast<size_t>(row.at(Column::BUS_I));
-          const auto bus    = buses.find(number);
-          if (bus == buses.end())
+          const bool no_angle_limit = (row.angmin <= -NO_ANGLE_LIMIT && row.angmax >= NO_ANGLE_LIMIT)
+                                      || (isZero(row.angmin) && isZero(row.angmax));
+          if (!no_angle_limit)
           {
-            throw std::invalid_argument("MATPOWER bus " + std::to_string(number) + " is unknown or repeated");
-          }
-          bus->second->parameters[BusParameters::Vmin] = row.at(Column::VMIN);
-          bus->second->parameters[BusParameters::Vmax] = row.at(Column::VMAX);
-          buses.erase(bus);
-        }
-
-        if (rows.size() != data.bus.size())
-        {
-          throw std::invalid_argument("MATPOWER case has " + std::to_string(rows.size()) + " buses, but the case has "
-                                      + std::to_string(data.bus.size()));
-        }
-      }
-
-      /// Ratings of the branches, matched in order by their buses
-      void applyBranches(SystemModelDataT& data, const MatpowerMatrix& rows, double mva_base)
-      {
-        std::map<BusPair, std::vector<SystemModelDataT::BranchDataT*>> branches;
-        for (auto& branch : data.branch)
-        {
-          branches[busPair(branch.buses.at(BranchBuses::bus1), branch.buses.at(BranchBuses::bus2))].push_back(&branch);
-        }
-
-        std::map<BusPair, size_t> matched;
-        for (const auto& row : rows)
-        {
-          if (row.at(Column::BR_STATUS) <= 0.0)
-          {
-            continue;
+            throw std::invalid_argument(std::format("MATPOWER branch {}: angle difference limits are not supported", k + 1));
           }
 
-          const BusPair buses = busPair(static_cast<size_t>(row.at(Column::F_BUS)), static_cast<size_t>(row.at(Column::T_BUS)));
-          size_t&       count = matched[buses];
-          if (count == branches[buses].size())
+          // A zero ratio is a line
+          double tap = ONE<double>;
+          if (!isZero(row.ratio))
           {
-            throw std::invalid_argument(name(buses) + " has more in-service MATPOWER branches than the case");
+            tap = row.ratio;
           }
+
+          auto& branch                               = data.branch.emplace_back();
+          branch.id                                  = std::format("branch_{}", k + 1);
+          branch.in_service                          = row.status > 0;
+          branch.buses[BranchBuses::bus1]            = row.fbus;
+          branch.buses[BranchBuses::bus2]            = row.tbus;
+          branch.parameters[BranchParameters::R]     = row.r;
+          branch.parameters[BranchParameters::X]     = row.x;
+          branch.parameters[BranchParameters::B]     = row.b;
+          branch.parameters[BranchParameters::tap]   = tap;
+          branch.parameters[BranchParameters::phase] = row.angle * RADIANS_PER_DEGREE;
+
+          // MATPOWER scales the line charging at the tapped bus by 1 / tap^2
+          branch.parameters[BranchParameters::Bmag] = HALF<double> * row.b * (ONE<double> / (tap * tap) - ONE<double>);
 
           // A zero rating is unlimited
-          auto& branch = *branches[buses][count++];
-          if (row.at(Column::RATE_A) > 0.0)
+          if (row.rateA > ZERO<double>)
           {
-            branch.parameters[BranchParameters::Smax] = row.at(Column::RATE_A) / mva_base;
-          }
-          else
-          {
-            branch.parameters.erase(BranchParameters::Smax);
-          }
-        }
-
-        for (const auto& [buses, list] : branches)
-        {
-          if (matched[buses] != list.size())
-          {
-            throw std::invalid_argument(name(buses) + " has fewer in-service MATPOWER branches than the case");
+            branch.parameters[BranchParameters::Smax] = row.rateA / mva_base;
           }
         }
       }
@@ -117,24 +127,23 @@ namespace GridKit
        * @brief Costs from a MATPOWER polynomial in P [MW], whose coefficients
        * run from the highest order down
        */
-      void setCost(SystemModelDataT::GeneratorDataT& generator, const std::vector<double>& cost, double mva_base)
+      void setCost(SystemModelDataT::GeneratorDataT& generator, const MatpowerDataT::GenCostDataT& cost, double mva_base)
       {
-        if (cost.at(Column::MODEL) != POLYNOMIAL)
+        if (cost.kind != POLYNOMIAL || cost.rest.size() != cost.n)
         {
           throw std::invalid_argument(generator.id + ": only polynomial MATPOWER costs are supported");
         }
 
-        const auto            n = static_cast<size_t>(cost.at(Column::NCOST));
         std::array<double, 3> coefficients{};
-        double                scale = 1.0;
-        for (size_t k = 0; k < n; ++k)
+        double                scale = ONE<double>;
+        for (size_t k = 0; k < cost.n; ++k)
         {
-          const double coefficient = cost.at(Column::COST + n - 1 - k) * scale;
+          const double coefficient = cost.rest[cost.n - 1 - k] * scale;
           if (k < coefficients.size())
           {
             coefficients[k] = coefficient;
           }
-          else if (coefficient != 0.0)
+          else if (!isZero(coefficient))
           {
             throw std::invalid_argument(generator.id + ": MATPOWER cost is above quadratic");
           }
@@ -146,61 +155,59 @@ namespace GridKit
         generator.parameters[GeneratorParameters::c2] = coefficients[2];
       }
 
-      /**
-       * @brief Limits and costs of the generators, matched in order by bus
-       *
-       * MATPOWER generators at a bus without generators are skipped.
-       */
-      void applyGenerators(SystemModelDataT& data, const MatpowerMatrix& rows, const MatpowerMatrix& costs, double mva_base)
+      /// Generators, numbered by MATPOWER row
+      void addGenerators(SystemModelDataT& data, const MatpowerDataT& matpower)
       {
-        std::map<size_t, std::vector<SystemModelDataT::GeneratorDataT*>> generators;
-        for (auto& generator : data.generator)
+        if (matpower.gencost.size() != matpower.gen.size())
         {
-          generators[generator.buses.at(GeneratorBuses::bus)].push_back(&generator);
+          throw std::invalid_argument("MATPOWER case needs one active power cost per generator");
         }
 
-        std::map<size_t, size_t> matched;
-        for (size_t i = 0; i < rows.size(); ++i)
+        const double mva_base = matpower.baseMVA;
+        for (size_t i = 0; i < matpower.gen.size(); ++i)
         {
-          const auto& row    = rows[i];
-          const auto  number = static_cast<size_t>(row.at(Column::GEN_BUS));
-          const auto  entry  = generators.find(number);
-          if (row.at(Column::GEN_STATUS) <= 0.0 || entry == generators.end())
-          {
-            continue;
-          }
+          const auto& row = matpower.gen[i];
 
-          size_t& count = matched[number];
-          if (count == entry->second.size())
-          {
-            throw std::invalid_argument("Bus " + std::to_string(number) + " has more in-service MATPOWER generators than the case");
-          }
-
-          auto& generator                                 = *entry->second[count++];
-          generator.parameters[GeneratorParameters::Pmin] = row.at(Column::PMIN) / mva_base;
-          generator.parameters[GeneratorParameters::Pmax] = row.at(Column::PMAX) / mva_base;
-          generator.parameters[GeneratorParameters::Qmin] = row.at(Column::QMIN) / mva_base;
-          generator.parameters[GeneratorParameters::Qmax] = row.at(Column::QMAX) / mva_base;
-          setCost(generator, costs.at(i), mva_base);
-        }
-
-        for (const auto& [number, list] : generators)
-        {
-          if (matched[number] != list.size())
-          {
-            throw std::invalid_argument("Bus " + std::to_string(number) + " has fewer in-service MATPOWER generators than the case");
-          }
+          auto& generator                                 = data.generator.emplace_back();
+          generator.id                                    = std::format("gen_{}", i + 1);
+          generator.in_service                            = row.status > 0;
+          generator.buses[GeneratorBuses::bus]            = row.bus;
+          generator.parameters[GeneratorParameters::Pmin] = row.Pmin / mva_base;
+          generator.parameters[GeneratorParameters::Pmax] = row.Pmax / mva_base;
+          generator.parameters[GeneratorParameters::Qmin] = row.Qmin / mva_base;
+          generator.parameters[GeneratorParameters::Qmax] = row.Qmax / mva_base;
+          setCost(generator, matpower.gencost[i], mva_base);
         }
       }
     } // namespace
 
-    void applyMatpowerData(SystemModelData<double, size_t>& data, const MatpowerData& matpower)
+    SystemModelData<double, size_t> parseMatpowerCase(std::istream& stream)
     {
-      const double mva_base = data.va_base / std::mega::num;
+      MatpowerDataT matpower{};
+      readMatPower(matpower, stream);
+      if (matpower.baseMVA <= ZERO<double>)
+      {
+        throw std::invalid_argument("MATPOWER case needs a positive baseMVA");
+      }
 
-      applyBuses(data, matpower.matrix("bus"));
-      applyBranches(data, matpower.matrix("branch"), mva_base);
-      applyGenerators(data, matpower.matrix("gen"), matpower.matrix("gencost"), mva_base);
+      SystemModelDataT data;
+      data.va_base = matpower.baseMVA * std::mega::num;
+
+      addBuses(data, matpower);
+      addBranches(data, matpower);
+      addGenerators(data, matpower);
+
+      return data;
+    }
+
+    SystemModelData<double, size_t> parseMatpowerCase(const std::filesystem::path& file)
+    {
+      std::ifstream stream(file);
+      if (!stream)
+      {
+        throw std::runtime_error("Could not open MATPOWER case " + file.string());
+      }
+      return parseMatpowerCase(stream);
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit

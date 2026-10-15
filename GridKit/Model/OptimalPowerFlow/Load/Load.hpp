@@ -13,14 +13,14 @@ namespace GridKit
   namespace OptimalPowerFlow
   {
     /**
-     * @brief Fixed power demand given by the state
+     * @brief Constant power demand
      */
     template <typename scalar_type, typename index_type>
     class Load : public ComponentModel<Load<scalar_type, index_type>, scalar_type, index_type>
     {
       using ComponentModelT = ComponentModel<Load<scalar_type, index_type>, scalar_type, index_type>;
 
-      using ComponentModelT::id_;
+      using ComponentModelT::in_service_;
 
     public:
       using ScalarT    = scalar_type;
@@ -30,23 +30,25 @@ namespace GridKit
 
       /// Local variables: terminal real and imaginary voltage
       static constexpr IdxT VARIABLE_SIZE            = 2;
-      /// Local constraints: power into the bus
+      /// Local constraint functions: power into the bus
       static constexpr IdxT CONSTRAINT_SIZE          = 2;
-      static constexpr IdxT INTERNAL_SIZE            = 0;
+      /// Internal variables: none
+      static constexpr IdxT INTERNAL_VARIABLE_SIZE   = 0;
+      /// Internal constraint functions: none
       static constexpr IdxT INTERNAL_CONSTRAINT_SIZE = 0;
       static constexpr bool CONSTANT                 = true;
 
       explicit Load(const ModelDataT& data);
 
-      int verify() const override;
-      int initialize(const Model::StateData& state, ScalarT* x, RealT* x_lower, RealT* x_upper) override;
+      Model::ConfigurationChecks verify() const override;
+      int                        initialize(ScalarT* x) override;
 
       __attribute__((always_inline)) inline ScalarT objective(const ScalarT* x) const;
       __attribute__((always_inline)) inline void    constraints(const ScalarT* x, ScalarT* g) const;
 
     private:
-      RealT p_{0.0};
-      RealT q_{0.0};
+      RealT P_{0.0};
+      RealT Q_{0.0};
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

@@ -1,1 +1,0 @@
-gridkit_economic_dispatch_example(Hawaii)

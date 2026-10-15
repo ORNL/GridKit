@@ -9,6 +9,7 @@ Browse models by family, or see the shared mathematical functions.
 
 CommonMath <../CommonMath>
 EMT <EMT/README>
+OptimalPowerFlow <OptimalPowerFlow/README>
 PhasorDynamics <PhasorDynamics/README>
 PowerElectronics <PowerElectronics/README>
 PowerFlow <PowerFlow/README>

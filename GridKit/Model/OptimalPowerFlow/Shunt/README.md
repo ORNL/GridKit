@@ -1,14 +1,14 @@
 # Shunt
 
-Constant admittance $Y = G + jB$ to ground. The `EconomicDispatch` example
-makes one for every LoadZ device in the case.
+Constant admittance $Y = G + jB$ to ground.
 
 ## Model Parameters
 
-Symbol | Units  | JSON | Description       | Typical Value | Note
--------|--------|------|-------------------|---------------|-----
-$G$    | [p.u.] | `G`  | Shunt conductance |               | $R / (R^2 + X^2)$ of the LoadZ
-$B$    | [p.u.] | `B`  | Shunt susceptance |               | $-X / (R^2 + X^2)$ of the LoadZ
+Symbol | Units  | Data         | Description                                       | Typical Value | Note
+-------|--------|--------------|---------------------------------------------------|---------------|-----
+$G$    | [p.u.] | `G`          | Shunt conductance                                 |               | Default 0
+$B$    | [p.u.] | `B`          | Shunt susceptance                                 |               | Default 0
+$u$    | [-]    | `in_service` | Service status, 1 in service and 0 out of service |               | Default 1
 
 ### Parameter Validation
 
@@ -20,9 +20,9 @@ None.
 
 ## Model Ports
 
-Name  | Port | Init  | Description
-------|------|-------|------------
-`bus` | Bus  | Known | Terminal bus
+Name  | Port | Description
+------|------|------------
+`bus` | Bus  | Terminal bus
 
 ## Model Variables
 
@@ -32,10 +32,10 @@ None.
 
 ### External Variables
 
-Symbol           | Units  | Description                  | Note
------------------|--------|------------------------------|-----
-$V_\mathrm{r}$   | [p.u.] | Terminal real voltage        | Owned by the bus
-$V_\mathrm{i}$   | [p.u.] | Terminal imaginary voltage   | Owned by the bus
+Symbol         | Units  | Description                | Note
+---------------|--------|----------------------------|-----
+$V_\mathrm{r}$ | [p.u.] | Terminal real voltage      | Owned by the bus
+$V_\mathrm{i}$ | [p.u.] | Terminal imaginary voltage | Owned by the bus
 
 ## Model Equations
 
@@ -43,18 +43,19 @@ $V_\mathrm{i}$   | [p.u.] | Terminal imaginary voltage   | Owned by the bus
 
 None.
 
-### External Constraints
+### Internal Constraints
 
-Power into the bus is $-Y^* \lvert V \rvert^2$:
+None.
+
+### External Constraints
 
 ```math
 \begin{aligned}
-\Delta P^\mathrm{bus} &\mathrel{+}= -a G \left(V_\mathrm{r}^2 + V_\mathrm{i}^2\right) \\
-\Delta Q^\mathrm{bus} &\mathrel{+}= a B \left(V_\mathrm{r}^2 + V_\mathrm{i}^2\right)
+\Delta P^\mathrm{bus} &\mathrel{+}= -u G (V_\mathrm{r}^2 + V_\mathrm{i}^2) \\
+\Delta Q^\mathrm{bus} &\mathrel{+}= u B (V_\mathrm{r}^2 + V_\mathrm{i}^2)
 \end{aligned}
 ```
 
 ## Initialization
 
-$a \leftarrow 0$ if the state marks the device `online` as false, and $a
-\leftarrow 1$ otherwise.
+None.
