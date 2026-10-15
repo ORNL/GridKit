@@ -1,8 +1,8 @@
 # Optimal Power Flow
 
 AC optimal power flow in Cartesian coordinates. It finds the least-cost
-operating point within the component limits and writes it as a
-[state](../STATE.md) that PhasorDynamics starts from.
+operating point within the component limits and returns the solution as an
+operating [state](../STATE.md). PhasorDynamics initialization is deferred.
 
 ## Formulation
 
@@ -61,8 +61,8 @@ objective gradient from dependencies. Tests compare the two.
 
 ## Data
 
-`SystemModelData` holds the network. The `EconomicDispatch` application builds
-it from a PhasorDynamics case, and `applyMatpowerData` adds limits and costs
+`SystemModelData` holds the network supplied by the caller.
+`applyMatpowerData` adds limits and costs
 from a [MATPOWER case](https://matpower.org/docs/ref/matpower/caseformat.html)
 of the same network:
 
