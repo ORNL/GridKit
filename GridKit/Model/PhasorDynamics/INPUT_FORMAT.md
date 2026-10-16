@@ -72,6 +72,7 @@ an output for monitored variables (those listed in the `mon` field of a
   `file_name`        | Optional string indicating output file name. If omitted, `stdout` is used.
   `format`           | One of { "CSV", "JSON", "YAML" } (case-insensitive)
   `delim`            | Optional string specifying delimiter to use for CSV output (default is `","`).
+  `layout`           | Optional, one of { "WIDE", "LONG" } (default is "WIDE"). "LONG" writes one row per variable and sample. Event times are written twice, before and after the event, so use `sample` rather than `t` to identify a sample.
 
 __NOTE__: If `monitors` entry is omitted entirely, you will get the default CSV
 output to `stdout`. If you wish to change the console output format, use an

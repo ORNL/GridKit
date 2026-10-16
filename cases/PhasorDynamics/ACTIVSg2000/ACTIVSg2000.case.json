@@ -10,6 +10,13 @@
     "freq_base": 60.0,
     "va_base": 100000000.0
   },
+  "monitors": [
+    {
+      "file_name": "ACTIVSg2000.long.csv",
+      "format": "csv",
+      "layout": "long"
+    }
+  ],
   "buses": [
     {
       "number": 1001,

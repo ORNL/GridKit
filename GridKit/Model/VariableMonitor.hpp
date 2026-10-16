@@ -12,6 +12,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <type_traits>
 #include <variant>
@@ -29,7 +30,7 @@ namespace GridKit
     namespace VariableMonitorDetail
     {
       template <typename RealT>
-      std::string formatReal(RealT value)
+      void formatReal(std::string& out, RealT value)
       {
         std::array<char, 128> buffer{};
         constexpr auto        precision = std::numeric_limits<RealT>::digits10 + 1;
@@ -42,13 +43,14 @@ namespace GridKit
 
         if (ec == std::errc{})
         {
-          return std::string(buffer.data(), ptr);
+          out.append(buffer.data(), ptr);
+          return;
         }
 
         std::ostringstream os;
         os.precision(precision);
         os << std::scientific << value;
-        return os.str();
+        out += os.str();
       }
     } // namespace VariableMonitorDetail
 
@@ -61,6 +63,16 @@ namespace GridKit
       CSV,  ///< CSV format
       JSON, ///< JSON format
       YAML  ///< YAML format
+    };
+
+    /**
+     * @enum VariableMonitorLayout
+     * Available table layouts for monitor output
+     */
+    enum class VariableMonitorLayout
+    {
+      WIDE, ///< One row per sample with one column per variable
+      LONG  ///< One record per sample and variable
     };
 
     /**
@@ -94,8 +106,20 @@ namespace GridKit
       {
       };
 
+      /// Type used for dispatch
+      struct Wide
+      {
+      };
+
+      /// Type used for dispatch
+      struct Long
+      {
+      };
+
       /// Short alias for local use
       using Format = VariableMonitorFormat;
+      /// Short alias for local use
+      using Layout = VariableMonitorLayout;
 
       /**
        * @brief Defines information necessary to create a monitor sink
@@ -108,6 +132,8 @@ namespace GridKit
         std::string file_name{};
         /// Delimiter (used only with CSV format currently)
         std::string delim{","};
+        /// Table layout
+        Layout      layout{Layout::WIDE};
       };
 
       virtual ~VariableMonitorBase()
@@ -119,50 +145,27 @@ namespace GridKit
        */
       virtual bool empty() const = 0;
 
+      /// Returns the current value of a monitored variable
+      using GetterT = std::function<double()>;
+
+      /**
+       * @brief Monitored variable and the getter of its current value
+       */
+      struct Entry
+      {
+        /// Device class, such as `Genrou`
+        std::string_view device_class;
+        /// Device identifier within its class
+        std::string_view id;
+        /// Variable name
+        std::string_view variable;
+        /// Returns the current value
+        GetterT          value;
+      };
+
     protected:
-      ///@{
-      /**
-       * @brief Print items relevant to the start of a file
-       */
-      virtual void appendHeader(std::string&, Csv) const = 0;
-
-      virtual void appendHeader(std::string&, Json) const
-      {
-      }
-
-      virtual void appendHeader(std::string&, Yaml) const
-      {
-      }
-
-      ///@}
-
-      ///@{
-      /**
-       * @brief Print monitored variables at current state
-       */
-      virtual void append(std::string&, Csv) const  = 0;
-      virtual void append(std::string&, Json) const = 0;
-      virtual void append(std::string&, Yaml) const = 0;
-
-      ///@}
-
-      ///@{
-      /**
-       * @brief Print items relevant to the end of a file
-       */
-      virtual void appendFooter(std::string&, Csv) const
-      {
-      }
-
-      virtual void appendFooter(std::string&, Json) const
-      {
-      }
-
-      virtual void appendFooter(std::string&, Yaml) const
-      {
-      }
-
-      ///@}
+      /// Append one entry per monitored variable
+      virtual void appendEntries(std::vector<Entry>&) const = 0;
     };
 
     template <typename eval_type, template <typename, typename> typename model_data_type>
