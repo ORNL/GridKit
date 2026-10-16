@@ -90,46 +90,16 @@ namespace GridKit
       template <typename FuncT>
       void set(VariableEnum v, FuncT f)
       {
-        f_[static_cast<size_t>(enum_integer(v))] = ValueFormatterType<FuncT>{f};
+        f_[static_cast<size_t>(enum_integer(v))] = [f]
+        { return static_cast<RealT>(f()); };
       }
 
     private:
-      ///@{
-      /**
-       * @brief Functors to handle printing different types
-       */
-      template <typename FuncT, typename RetT>
-      struct ValueFormatterImpl
-      {
-        FuncT f;
-
-        void operator()(std::string& out) const
-        {
-          using RetValueT = std::remove_cvref_t<RetT>;
-
-          if constexpr (std::is_floating_point_v<RetValueT>
-                        || std::is_same_v<RetValueT, ScalarT>)
-          {
-            VariableMonitorDetail::formatReal(out, static_cast<RealT>(f()));
-          }
-          else
-          {
-            out += (std::ostringstream{} << f()).str();
-          }
-        }
-      };
-
-      template <typename FuncT>
-      using ValueFormatterType =
-          ValueFormatterImpl<FuncT, std::invoke_result_t<FuncT>>;
-
-      ///@}
-
       void appendEntries(std::vector<Entry>& entries) const override
       {
         for (auto v : variables_)
         {
-          entries.emplace_back(device_class_, id_, enum_name(v), &f_[static_cast<size_t>(enum_integer(v))]);
+          entries.emplace_back(device_class_, id_, enum_name(v), f_[static_cast<size_t>(enum_integer(v))]);
         }
       }
 
@@ -138,13 +108,13 @@ namespace GridKit
       static constexpr auto enum_size_ = enum_count<VariableEnum>();
 
       /// Set of functions associated with each enum value
-      std::array<ValueFormatter, enum_size_> f_;
+      std::array<GetterT, enum_size_> f_;
       /// Set of selected enum values
-      std::vector<VariableEnum>              variables_;
+      std::vector<VariableEnum>       variables_;
       /// Device class, such as `Genrou`
-      std::string                            device_class_;
+      std::string                     device_class_;
       /// Device identifier within its class
-      std::string                            id_;
+      std::string                     id_;
     };
   } // namespace Model
 } // namespace GridKit

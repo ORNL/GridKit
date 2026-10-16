@@ -277,7 +277,7 @@ namespace GridKit
         for (auto&& entry : entries_)
         {
           out += csv.delim;
-          (*entry.value)(out);
+          VariableMonitorDetail::formatReal(out, entry.value());
         }
       }
 
@@ -311,7 +311,7 @@ namespace GridKit
           }
           out += entry.variable;
           out += "\": ";
-          (*entry.value)(out);
+          VariableMonitorDetail::formatReal(out, entry.value());
 
           previous = &entry;
         }
@@ -342,7 +342,7 @@ namespace GridKit
           out += "      ";
           out += entry.variable;
           out += ": ";
-          (*entry.value)(out);
+          VariableMonitorDetail::formatReal(out, entry.value());
           out += '\n';
 
           previous = &entry;
@@ -370,7 +370,7 @@ namespace GridKit
         out += csv.delim;
         out += entry.variable;
         out += csv.delim;
-        (*entry.value)(out);
+        VariableMonitorDetail::formatReal(out, entry.value());
         out += '\n';
       }
 
@@ -393,7 +393,7 @@ namespace GridKit
         out += "\", \"variable\": \"";
         out += entry.variable;
         out += "\", \"value\": ";
-        (*entry.value)(out);
+        VariableMonitorDetail::formatReal(out, entry.value());
         out += '}';
       }
 
@@ -410,7 +410,7 @@ namespace GridKit
         out += "\", variable: ";
         out += entry.variable;
         out += ", value: ";
-        (*entry.value)(out);
+        VariableMonitorDetail::formatReal(out, entry.value());
         out += "}\n";
       }
 
