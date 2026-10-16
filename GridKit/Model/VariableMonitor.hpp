@@ -145,22 +145,22 @@ namespace GridKit
        */
       virtual bool empty() const = 0;
 
-      /// Appends the formatted current value of a monitored variable
-      using ValueFormatter = std::function<void(std::string&)>;
+      /// Returns the current value of a monitored variable
+      using GetterT = std::function<double()>;
 
       /**
-       * @brief Monitored variable and the formatter of its current value
+       * @brief Monitored variable and the getter of its current value
        */
       struct Entry
       {
         /// Device class, such as `Genrou`
-        std::string_view      device_class;
+        std::string_view device_class;
         /// Device identifier within its class
-        std::string_view      id;
+        std::string_view id;
         /// Variable name
-        std::string_view      variable;
-        /// Formats the current value
-        const ValueFormatter* value;
+        std::string_view variable;
+        /// Returns the current value
+        GetterT          value;
       };
 
     protected:
