@@ -59,7 +59,6 @@ namespace GridKit
         {
           if (n_res > 0 && n_var > 0)
           {
-            std::vector<ScalarT> elementary_v(n_var);
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
@@ -77,11 +76,8 @@ namespace GridKit
                                                              vals,
                                                              &nnz);
 
-              // Elementary vector for Jacobian-vector product
-              std::ranges::fill(elementary_v, 0.0);
-              elementary_v[var_i] = 1.0;
-
               // Core automatic differentiation intrinsic that will be replaced by a derivative
+              // The dummy primal pointer is safe only while residuals never read back their output
               __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
                                      enzyme_const,
                                      model,
@@ -91,10 +87,10 @@ namespace GridKit
                                      yp,
                                      enzyme_dup,
                                      wb,
-                                     output,
+                                     output, // Seed: column var_i of the identity
                                      enzyme_dupnoneed,
-                                     elementary_v.data(),
-                                     d_output);
+                                     (ScalarT*) 0x1, // Unneeded primal residual (dummy pointer)
+                                     d_output);      // Column var_i of the Jacobian
             }
           }
         }
