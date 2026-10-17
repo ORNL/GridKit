@@ -6,6 +6,7 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
+#include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -125,7 +126,7 @@ namespace GridKit
         bus2.initialize();
         bus2.evaluateResidual();
 
-        using Data      = typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT;
+        using Data      = PhasorDynamics::BranchData<RealT, IdxT>;
         using Parameter = typename Data::Parameters;
 
         Data data;
@@ -412,7 +413,7 @@ namespace GridKit
         const ScalarT Vr2{30.0};
         const ScalarT Vi2{40.0};
 
-        using Data      = typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT;
+        using Data      = PhasorDynamics::BranchData<RealT, IdxT>;
         using Parameter = typename Data::Parameters;
         using Buses     = typename Data::Buses;
 

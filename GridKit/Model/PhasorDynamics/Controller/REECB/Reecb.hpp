@@ -94,7 +94,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
 
-      public:
+      private:
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
@@ -106,6 +106,7 @@ namespace GridKit
         using InternalVariablesT = ReecbInternalVariables;
         using ExternalVariablesT = ReecbExternalVariables;
 
+      public:
         /// Initialization reconstruction tolerance.
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();

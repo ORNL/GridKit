@@ -7,6 +7,7 @@
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
@@ -18,7 +19,7 @@ namespace GridKit
     class BusTests
     {
     private:
-      using RealT = typename PhasorDynamics::Bus<ScalarT, IdxT>::RealT;
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
       BusTests()  = default;

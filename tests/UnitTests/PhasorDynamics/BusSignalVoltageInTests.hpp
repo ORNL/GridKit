@@ -6,9 +6,11 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageIn/BusSignalVoltageIn.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
+#include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -24,7 +26,8 @@ namespace GridKit
     {
     public:
       using BusT      = PhasorDynamics::BusSignalVoltageIn<ScalarT, IdxT>;
-      using BusTypeT  = typename BusT::BusTypeT;
+      using RealT     = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using BusTypeT  = typename PhasorDynamics::BusData<RealT, IdxT>::BusType;
       using SignalT   = PhasorDynamics::SignalNode<ScalarT, IdxT>;
       using SignalIn  = PhasorDynamics::BusSignalInputs;
       using SignalOut = PhasorDynamics::BusSignalOutputs;

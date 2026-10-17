@@ -65,7 +65,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::allocated_;
 
-      public:
+      private:
         using ScalarT        = scalar_type;
         using IdxT           = index_type;
         using RealT          = typename Component<ScalarT, IdxT>::RealT;
@@ -74,6 +74,7 @@ namespace GridKit
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<Ieeest, IeeestData>;
 
+      public:
         Ieeest();
         Ieeest(const ModelDataT& data);
         ~Ieeest();

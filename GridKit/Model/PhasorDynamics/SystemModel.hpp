@@ -58,7 +58,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::map_to_csr_;
       using Component<scalar_type, index_type>::allocated_;
 
-    public:
+    private:
       using ScalarT        = scalar_type;
       using IdxT           = index_type;
       using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
@@ -70,6 +70,7 @@ namespace GridKit
       using ComponentT     = Component<ScalarT, IdxT>;
       using MonitorT       = Model::VariableMonitorController<ScalarT>;
 
+    public:
       SystemModel();
 
       SystemModel(const SystemModelData<RealT, IdxT>& data);

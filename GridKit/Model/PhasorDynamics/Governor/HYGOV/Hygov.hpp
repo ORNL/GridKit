@@ -81,7 +81,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
 
-      public:
+      private:
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
@@ -93,6 +93,7 @@ namespace GridKit
         using InternalVariablesT = HygovInternalVariables;
         using ExternalVariablesT = HygovExternalVariables;
 
+      public:
         Hygov();
         explicit Hygov(const ModelDataT& data);
         ~Hygov();
