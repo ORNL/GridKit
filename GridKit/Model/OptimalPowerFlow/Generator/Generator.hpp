@@ -23,8 +23,8 @@ namespace GridKit
       Q, ///< \f$Q\f$ Reactive power into the bus [p.u.]
     };
 
-    /// External equality contributions of a `Generator`, the power into its bus
-    enum class GeneratorExternalEqualities : size_t
+    /// External constraint contributions of a `Generator`, the power into its bus
+    enum class GeneratorExternalConstraints : size_t
     {
       DP, ///< \f$\Delta P^\mathrm{bus}\f$ Active power into the bus [p.u.]
       DQ, ///< \f$\Delta Q^\mathrm{bus}\f$ Reactive power into the bus [p.u.]
@@ -48,15 +48,14 @@ namespace GridKit
       using ComponentT::x_upper_;
 
     public:
-      using InternalVariablesT  = GeneratorInternalVariables;
-      using ExternalVariablesT  = Utilities::EmptyEnum;
-      using InternalEqualitiesT = Utilities::EmptyEnum;
-      using ExternalEqualitiesT = GeneratorExternalEqualities;
-      using InequalitiesT       = Utilities::EmptyEnum;
+      using InternalVariablesT   = GeneratorInternalVariables;
+      using ExternalVariablesT   = Utilities::EmptyEnum;
+      using InternalConstraintsT = Utilities::EmptyEnum;
+      using ExternalConstraintsT = GeneratorExternalConstraints;
 
       static constexpr std::array<IdxT, Utilities::enum_size<GeneratorPorts>()> NUM_PORT_VARIABLES{0};
-      static constexpr std::array<IdxT, Utilities::enum_size<GeneratorPorts>()> NUM_PORT_EQUALITIES{
-          Utilities::enum_size<typename BusT::InternalEqualitiesT>()};
+      static constexpr std::array<IdxT, Utilities::enum_size<GeneratorPorts>()> NUM_PORT_CONSTRAINTS{
+          BusT::NUM_SHARED_CONSTRAINTS};
 
       explicit Generator(const ModelDataT& data);
 
@@ -64,12 +63,11 @@ namespace GridKit
       int                        initialize() override;
 
       int evaluateGradient() override;
-      int evaluateEqualityJacobian() override;
-      int evaluateInequalityJacobian() override;
-      int evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d) override;
+      int evaluateJacobian() override;
+      int evaluateHessian(RealT sigma) override;
 
       [[gnu::always_inline]] ScalarT objective(const ScalarT* x, const ScalarT* external) const override;
-      [[gnu::always_inline]] void    externalEqualities(const ScalarT* x, const ScalarT* external, ScalarT* c) const override;
+      [[gnu::always_inline]] void    externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
 
     private:
       void initializeParameters(const ModelDataT& data);

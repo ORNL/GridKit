@@ -25,7 +25,7 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    /// Limit of a variable or inequality row without one
+    /// Limit of a variable or inequality constraint without one
     template <typename RealT>
     inline constexpr RealT UNBOUNDED = std::numeric_limits<RealT>::infinity();
 
@@ -39,10 +39,10 @@ namespace GridKit
      * @brief Requirements on a component model
      *
      * A model enumerates its internal variables, the external variables it
-     * reads at its ports, its internal equality rows, its contributions to
-     * the equality rows at its ports, and its inequality rows. The
-     * counts at each port add up to the external enumerations. It is
-     * `final`, so Enzyme calls its kernels directly.
+     * reads at its ports, the internal constraints it owns, and its
+     * contributions to the constraints at its ports. The counts at each port
+     * add up to the external enumerations. It is `final`, so Enzyme calls its
+     * kernels directly.
      */
     template <typename ModelT, typename ScalarT, typename IdxT>
     concept ComponentKernels =
@@ -50,22 +50,21 @@ namespace GridKit
         && std::is_final_v<ModelT>
         && Utilities::SizedEnum<typename ModelT::InternalVariablesT>
         && Utilities::SizedEnum<typename ModelT::ExternalVariablesT>
-        && Utilities::SizedEnum<typename ModelT::InternalEqualitiesT>
-        && Utilities::SizedEnum<typename ModelT::ExternalEqualitiesT>
-        && Utilities::SizedEnum<typename ModelT::InequalitiesT>
-        && ModelT::NUM_PORT_VARIABLES.size() == ModelT::NUM_PORT_EQUALITIES.size()
+        && Utilities::SizedEnum<typename ModelT::InternalConstraintsT>
+        && Utilities::SizedEnum<typename ModelT::ExternalConstraintsT>
+        && ModelT::NUM_PORT_VARIABLES.size() == ModelT::NUM_PORT_CONSTRAINTS.size()
         && std::accumulate(ModelT::NUM_PORT_VARIABLES.begin(), ModelT::NUM_PORT_VARIABLES.end(), std::size_t{0})
                == Utilities::enum_size<typename ModelT::ExternalVariablesT>()
-        && std::accumulate(ModelT::NUM_PORT_EQUALITIES.begin(), ModelT::NUM_PORT_EQUALITIES.end(), std::size_t{0})
-               == Utilities::enum_size<typename ModelT::ExternalEqualitiesT>();
+        && std::accumulate(ModelT::NUM_PORT_CONSTRAINTS.begin(), ModelT::NUM_PORT_CONSTRAINTS.end(), std::size_t{0})
+               == Utilities::enum_size<typename ModelT::ExternalConstraintsT>();
 
     /**
      * @brief Optimal power flow component
      *
      * `SystemModel` binds the internal blocks of each component to the system
      * vectors. Each port reads variables of another component and contributes
-     * to its equality rows. A component overrides the kernels it has; the others
-     * contribute nothing.
+     * to its constraints, equalities or inequalities alike. A component
+     * overrides the kernels it has; the others contribute nothing.
      */
     template <typename scalar_type, typename index_type>
     class Component
@@ -81,27 +80,25 @@ namespace GridKit
       using IndexVectorT = LinearAlgebra::Vector<IdxT, IdxT>;
 
     public:
-      /// Numbers of variables, equality rows, and inequality rows, or the first index of each
+      /// Numbers of variables and constraints, or the first index of each
       struct Block
       {
         IdxT variables{0};
-        IdxT equalities{0};
-        IdxT inequalities{0};
+        IdxT constraints{0};
 
         constexpr Block& operator+=(const Block& other)
         {
-          variables    += other.variables;
-          equalities   += other.equalities;
-          inequalities += other.inequalities;
+          variables   += other.variables;
+          constraints += other.constraints;
           return *this;
         }
       };
 
-      /// Variables a port reads and equality rows it contributes to, in the internal blocks of `component`
+      /// Variables a port reads and constraints it contributes to, in the internal blocks of `component`
       struct Port
       {
-        Block      size;               ///< Numbers of variables read and equality rows contributed to
-        Component* component{nullptr}; ///< Owner of those variables and rows, after `connect()`
+        Block      size;               ///< Numbers of variables read and constraints contributed to
+        Component* component{nullptr}; ///< Owner of those variables and constraints, after `connect()`
         Block      offset{};           ///< First of them in the internal blocks of `component`
       };
 
@@ -136,10 +133,16 @@ namespace GridKit
       /// Every problem with the parameters
       virtual Model::ConfigurationChecks verify() const = 0;
 
-      /// Read the variables and contribute to the equality rows of `component` at port `port`
+      /// Read the variables and contribute to the constraints of `component` at port `port`
       int connect(IdxT port, Component& component, const Block& offset = {});
 
-      /// Set the bounds and the initial values in the internal blocks, which start unbounded
+      /// Tag the internal constraints that are inequalities; the others are equalities
+      virtual int tagInequality()
+      {
+        return 0;
+      }
+
+      /// Set the bounds and the initial values in the internal blocks
       virtual int initialize()
       {
         return 0;
@@ -154,28 +157,17 @@ namespace GridKit
         return 0;
       }
 
-      /// Add the equality contributions to the system rows
-      int evaluateEqualities();
+      /// Add the constraint contributions to the system constraints
+      int evaluateConstraints();
 
-      /// Evaluate the inequality rows
-      int evaluateInequalities();
-
-      /// Evaluate the equality Jacobian entries into `equalityEntries()`
-      virtual int evaluateEqualityJacobian()
+      /// Evaluate the constraint Jacobian entries into `jacobianEntries()`
+      virtual int evaluateJacobian()
       {
         return 0;
       }
 
-      /// Evaluate the inequality Jacobian entries into `inequalityEntries()`
-      virtual int evaluateInequalityJacobian()
-      {
-        return 0;
-      }
-
-      /// Evaluate the lower Lagrangian Hessian entries into `hessianEntries()`
-      virtual int evaluateHessian([[maybe_unused]] RealT        sigma,
-                                  [[maybe_unused]] const RealT* lambda_c,
-                                  [[maybe_unused]] const RealT* lambda_d)
+      /// Evaluate the lower Lagrangian Hessian entries at the system multipliers into `hessianEntries()`
+      virtual int evaluateHessian([[maybe_unused]] RealT sigma)
       {
         return 0;
       }
@@ -187,24 +179,17 @@ namespace GridKit
         return ScalarT{ZERO<RealT>};
       }
 
-      /// Contributions `c` to the equality rows this component owns
-      virtual void internalEqualities([[maybe_unused]] const ScalarT* x,
-                                      [[maybe_unused]] const ScalarT* external,
-                                      [[maybe_unused]] ScalarT*       c) const
+      /// Contributions `g` to the constraints this component owns
+      virtual void internalConstraints([[maybe_unused]] const ScalarT* x,
+                                       [[maybe_unused]] const ScalarT* external,
+                                       [[maybe_unused]] ScalarT*       g) const
       {
       }
 
-      /// Contributions `c` to the equality rows at each port, in port order
-      virtual void externalEqualities([[maybe_unused]] const ScalarT* x,
-                                      [[maybe_unused]] const ScalarT* external,
-                                      [[maybe_unused]] ScalarT*       c) const
-      {
-      }
-
-      /// Inequality rows `d` this component owns
-      virtual void inequalities([[maybe_unused]] const ScalarT* x,
-                                [[maybe_unused]] const ScalarT* external,
-                                [[maybe_unused]] ScalarT*       d) const
+      /// Contributions `g` to the constraints at each port, in port order
+      virtual void externalConstraints([[maybe_unused]] const ScalarT* x,
+                                       [[maybe_unused]] const ScalarT* external,
+                                       [[maybe_unused]] ScalarT*       g) const
       {
       }
 
@@ -224,16 +209,16 @@ namespace GridKit
         return f_;
       }
 
-      /// Equality Jacobian entries at the last `evaluateEqualityJacobian()`, in global indices
-      const CooBuffer& equalityEntries() const
+      /// Inequality tag of each internal constraint, set by `tagInequality()`
+      const std::vector<bool>& tag() const
       {
-        return equality_entries_;
+        return tag_;
       }
 
-      /// Inequality Jacobian entries at the last `evaluateInequalityJacobian()`, in global indices
-      const CooBuffer& inequalityEntries() const
+      /// Constraint Jacobian entries at the last `evaluateJacobian()`, in global indices
+      const CooBuffer& jacobianEntries() const
       {
-        return inequality_entries_;
+        return jacobian_entries_;
       }
 
       /// Lower Lagrangian Hessian entries at the last `evaluateHessian()`, in global indices
@@ -253,69 +238,64 @@ namespace GridKit
       int evaluateGradient(const ModelT& model);
 
       template <ComponentKernels<scalar_type, index_type> ModelT>
-      int evaluateEqualityJacobian(const ModelT& model);
+      int evaluateJacobian(const ModelT& model);
 
       template <ComponentKernels<scalar_type, index_type> ModelT>
-      int evaluateInequalityJacobian(const ModelT& model);
+      int evaluateHessian(const ModelT& model, RealT sigma);
 
-      template <ComponentKernels<scalar_type, index_type> ModelT>
-      int evaluateHessian(const ModelT& model, RealT sigma, const RealT* lambda_c, const RealT* lambda_d);
+      /// Inequality tag of each internal constraint, which `tagInequality()` sets
+      std::vector<bool> tag_;
 
       // Views of the internal blocks that `initialize()` sets
       VectorT     x_;
       RealVectorT x_lower_;
       RealVectorT x_upper_;
-      RealVectorT d_lower_;
-      RealVectorT d_upper_;
+      RealVectorT g_lower_;
+      RealVectorT g_upper_;
 
     private:
-      /// Numbers of internal variables and rows of `ModelT`
+      /// Numbers of internal variables and constraints of `ModelT`
       template <typename ModelT>
       static constexpr Block internalSize()
       {
         return {static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalVariablesT>()),
-                static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalEqualitiesT>()),
-                static_cast<IdxT>(Utilities::enum_size<typename ModelT::InequalitiesT>())};
+                static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalConstraintsT>())};
       }
 
-      /// Numbers of local variables, equality contributions, and inequality rows of `ModelT`
+      /// Numbers of local variables and constraint contributions of `ModelT`
       template <typename ModelT>
       static constexpr Block localSize()
       {
         return {static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalVariablesT>()
                                   + Utilities::enum_size<typename ModelT::ExternalVariablesT>()),
-                static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalEqualitiesT>()
-                                  + Utilities::enum_size<typename ModelT::ExternalEqualitiesT>()),
-                static_cast<IdxT>(Utilities::enum_size<typename ModelT::InequalitiesT>())};
+                static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalConstraintsT>()
+                                  + Utilities::enum_size<typename ModelT::ExternalConstraintsT>())};
       }
 
       void gather(ScalarT* x) const;
+      void gatherMultipliers(RealT* lambda) const;
       void variableIndices(IdxT* columns) const;
-      void equalityIndices(IdxT* rows) const;
+      void constraintIndices(IdxT* rows) const;
       void scatterGradient(const RealT* gradient);
-      void scatterEqualities(const ScalarT* c);
-
-      template <typename DriverT, typename ModelT>
-      int evaluateJacobian(const ModelT& model, const IdxT* rows, CooBuffer& entries);
+      void scatterConstraints(const ScalarT* g);
 
       static void keepLowerTriangle(CooBuffer& entries);
 
       std::string       id_;
       std::vector<Port> ports_;
-      Block             size_;   ///< Numbers of internal variables and rows
+      Block             size_;   ///< Numbers of internal variables and constraints
       Block             offset_; ///< First global index of each internal block
       bool              bound_{false};
 
-      // Views of the internal blocks that the evaluations set
+      // Views of the internal blocks that the evaluations set, and of their multipliers
       ScalarT     f_{};
       RealVectorT gradient_;
-      VectorT     c_;
-      VectorT     d_;
+      VectorT     g_;
+      RealVectorT lambda_;
 
       VectorT   local_x_; ///< Local variables: internal, then external
-      VectorT   local_c_; ///< Local equality contributions: internal, then external
-      CooBuffer equality_entries_;
-      CooBuffer inequality_entries_;
+      VectorT   local_g_; ///< Local constraint contributions: internal, then external
+      CooBuffer jacobian_entries_;
       CooBuffer hessian_entries_;
     };
   } // namespace OptimalPowerFlow

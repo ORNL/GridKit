@@ -7,7 +7,6 @@
 
 #include <map>
 #include <memory>
-#include <string_view>
 #include <vector>
 
 #include <GridKit/Model/ConfigurationChecks.hpp>
@@ -28,11 +27,10 @@ namespace GridKit
     /**
      * @brief AC optimal power flow in Cartesian coordinates
      *
-     * Minimizes the generation cost subject to the power balance at every
-     * bus, which are the equality constraints, and the limits of the
-     * components, which are the inequality constraints and the variable
-     * bounds. Each reference bus has zero imaginary voltage, and every island
-     * needs one.
+     * Minimizes the generation cost subject to the constraints of the
+     * components: the power balance at every bus, which are equalities, and
+     * the limits, which are inequalities and variable bounds. Each reference
+     * bus has zero imaginary voltage, and every island needs one.
      *
      * @todo Replace the temporary STL containers of system-level data.
      */
@@ -52,18 +50,20 @@ namespace GridKit
       using Block        = typename ComponentT::Block;
       using CooBufferT   = typename ComponentT::CooBuffer;
 
-      using EvaluatorT::c_;
-      using EvaluatorT::d_;
-      using EvaluatorT::d_lower_;
-      using EvaluatorT::d_upper_;
-      using EvaluatorT::equality_jacobian_;
       using EvaluatorT::f_;
+      using EvaluatorT::g_;
+      using EvaluatorT::g_lower_;
+      using EvaluatorT::g_upper_;
       using EvaluatorT::gradient_;
       using EvaluatorT::hessian_;
-      using EvaluatorT::inequality_jacobian_;
+      using EvaluatorT::jacobian_;
+      using EvaluatorT::lambda_;
+      using EvaluatorT::tag_;
       using EvaluatorT::x_;
       using EvaluatorT::x_lower_;
       using EvaluatorT::x_upper_;
+      using EvaluatorT::z_lower_;
+      using EvaluatorT::z_upper_;
 
     public:
       explicit SystemModel(const SystemModelData<RealT, IdxT>& data);
@@ -72,18 +72,14 @@ namespace GridKit
       Model::ConfigurationChecks verify() const;
 
       int allocate() override;
+      int tagInequality() override;
       int initialize() override;
 
       int evaluateObjective() override;
       int evaluateGradient() override;
-      int evaluateEqualities() override;
-      int evaluateInequalities() override;
-      int evaluateEqualityJacobian() override;
-      int evaluateInequalityJacobian() override;
-
-      int evaluateHessian(RealT        sigma,
-                          const RealT* lambda_c,
-                          const RealT* lambda_d) override;
+      int evaluateConstraints() override;
+      int evaluateJacobian() override;
+      int evaluateHessian(RealT sigma) override;
 
     private:
       /// Component entries of one derivative matrix and the CSR entry of each
@@ -92,9 +88,6 @@ namespace GridKit
         std::vector<const CooBufferT*> entries;
         IndexVectorT                   map_to_csr;
       };
-
-      template <typename ModelT, typename DataT>
-      static std::unique_ptr<ModelT> build(const DataT& data, std::string_view id);
 
       void addBus(const BusData<RealT, IdxT>& data);
 
@@ -118,8 +111,7 @@ namespace GridKit
       /// Electrical connectivity, independent of component dependencies
       std::vector<BranchT*> branches_;
 
-      Assembly equality_jacobian_assembly_;
-      Assembly inequality_jacobian_assembly_;
+      Assembly jacobian_assembly_;
       Assembly hessian_assembly_;
     };
   } // namespace OptimalPowerFlow

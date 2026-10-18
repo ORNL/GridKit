@@ -18,21 +18,15 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::evaluateEqualityJacobian()
+    int Load<scalar_type, index_type>::evaluateJacobian()
     {
-      return ComponentT::evaluateEqualityJacobian(*this);
+      return ComponentT::evaluateJacobian(*this);
     }
 
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::evaluateInequalityJacobian()
+    int Load<scalar_type, index_type>::evaluateHessian(RealT sigma)
     {
-      return ComponentT::evaluateInequalityJacobian(*this);
-    }
-
-    template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d)
-    {
-      return ComponentT::evaluateHessian(*this, sigma, lambda_c, lambda_d);
+      return ComponentT::evaluateHessian(*this, sigma);
     }
 
     // Available template instantiations

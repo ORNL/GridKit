@@ -23,8 +23,8 @@ namespace GridKit
       VI, ///< \f$V_\mathrm{i}\f$ Imaginary voltage [p.u.]
     };
 
-    /// External equality contributions of a `Load`, the power into its bus
-    enum class LoadExternalEqualities : size_t
+    /// External constraint contributions of a `Load`, the power into its bus
+    enum class LoadExternalConstraints : size_t
     {
       DP, ///< \f$\Delta P^\mathrm{bus}\f$ Active power into the bus [p.u.]
       DQ, ///< \f$\Delta Q^\mathrm{bus}\f$ Reactive power into the bus [p.u.]
@@ -45,27 +45,25 @@ namespace GridKit
       using BusT       = Bus<scalar_type, index_type>;
 
     public:
-      using InternalVariablesT  = Utilities::EmptyEnum;
-      using ExternalVariablesT  = LoadExternalVariables;
-      using InternalEqualitiesT = Utilities::EmptyEnum;
-      using ExternalEqualitiesT = LoadExternalEqualities;
-      using InequalitiesT       = Utilities::EmptyEnum;
+      using InternalVariablesT   = Utilities::EmptyEnum;
+      using ExternalVariablesT   = LoadExternalVariables;
+      using InternalConstraintsT = Utilities::EmptyEnum;
+      using ExternalConstraintsT = LoadExternalConstraints;
 
       static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()> NUM_PORT_VARIABLES{
-          Utilities::enum_size<typename BusT::InternalVariablesT>()};
-      static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()> NUM_PORT_EQUALITIES{
-          Utilities::enum_size<typename BusT::InternalEqualitiesT>()};
+          BusT::NUM_SHARED_VARIABLES};
+      static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()> NUM_PORT_CONSTRAINTS{
+          BusT::NUM_SHARED_CONSTRAINTS};
 
       explicit Load(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
 
       int evaluateGradient() override;
-      int evaluateEqualityJacobian() override;
-      int evaluateInequalityJacobian() override;
-      int evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d) override;
+      int evaluateJacobian() override;
+      int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] void externalEqualities(const ScalarT* x, const ScalarT* external, ScalarT* c) const override;
+      [[gnu::always_inline]] void externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
 
     private:
       void initializeParameters(const ModelDataT& data);

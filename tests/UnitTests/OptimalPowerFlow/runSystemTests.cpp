@@ -14,8 +14,7 @@ int main()
   result += test.parseCase();
   result += test.connections();
   result += test.objectiveAssembly();
-  result += test.equalityAssembly();
-  result += test.inequalityAssembly();
+  result += test.constraintAssembly();
   result += test.hessianAssembly();
   result += test.repeatedVariables();
   result += test.connectionOwnership();

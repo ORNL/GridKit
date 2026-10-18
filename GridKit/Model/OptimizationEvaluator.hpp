@@ -6,6 +6,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
@@ -18,14 +19,14 @@ namespace GridKit
     /**
      * @brief Abstract class describing a nonlinear program
      *
-     * Minimize \f$f(x)\f$ subject to \f$c(x) = 0\f$,
-     * \f$d_l \le d(x) \le d_u\f$, and \f$x_l \le x \le x_u\f$.
-     * The Lagrangian is
-     * \f$L = \sigma f + \lambda_c^T c + \lambda_d^T d\f$.
-     * `allocate()` sets the sizes and the sparsity patterns, which the
-     * Jacobians and the lower Lagrangian Hessian retain. `initialize()` sets
-     * the bounds and the initial values. Evaluations are at `x()`, and
-     * methods returning `int` return 0 on success.
+     * Minimize \f$f(x)\f$ subject to \f$g_l \le g(x) \le g_u\f$ and
+     * \f$x_l \le x \le x_u\f$. `tag()` marks the inequality constraints; the
+     * others are equalities with \f$g_l = g_u = 0\f$. The Lagrangian is
+     * \f$L = \sigma f + \lambda^T g\f$. `allocate()` sets the sizes, the tags,
+     * and the sparsity patterns, which the Jacobian and the lower Lagrangian
+     * Hessian retain. `initialize()` sets the bounds and the initial values.
+     * Evaluations are at `x()` and `lambda()`, and methods returning `int`
+     * return 0 on success.
      */
     template <typename scalar_type, typename index_type>
     class OptimizationEvaluator
@@ -40,10 +41,13 @@ namespace GridKit
 
       virtual ~OptimizationEvaluator() = default;
 
-      /// Number the variables and constraints, and set the sparsity patterns
+      /// Number the variables and constraints, tag the inequalities, and set the sparsity patterns
       virtual int allocate() = 0;
 
-      /// Set the bounds and the initial values of the variables `x()`
+      /// Fill `tag()`, true for each inequality constraint
+      virtual int tagInequality() = 0;
+
+      /// Set the bounds, the initial values of the variables `x()`, and zero multipliers
       virtual int initialize() = 0;
 
       /// Evaluate \f$f(x)\f$ into `f()`
@@ -52,29 +56,19 @@ namespace GridKit
       /// Evaluate \f$\nabla f(x)\f$ into `gradient()`
       virtual int evaluateGradient() = 0;
 
-      /// Evaluate \f$c(x)\f$ into `c()`
-      virtual int evaluateEqualities() = 0;
+      /// Evaluate \f$g(x)\f$ into `g()`
+      virtual int evaluateConstraints() = 0;
 
-      /// Evaluate \f$d(x)\f$ into `d()`
-      virtual int evaluateInequalities() = 0;
-
-      /// Evaluate the Jacobian of \f$c(x)\f$ into `getCsrEqualityJacobian()`
-      virtual int evaluateEqualityJacobian() = 0;
-
-      /// Evaluate the Jacobian of \f$d(x)\f$ into `getCsrInequalityJacobian()`
-      virtual int evaluateInequalityJacobian() = 0;
+      /// Evaluate the Jacobian of \f$g(x)\f$ into `getCsrJacobian()`
+      virtual int evaluateJacobian() = 0;
 
       /**
-       * @brief Evaluate the lower triangle of the Hessian of \f$L\f$ into
-       * `getCsrHessian()`
+       * @brief Evaluate the lower triangle of the Hessian of \f$L\f$ at the
+       * multipliers `lambda()` into `getCsrHessian()`
        *
        * @param[in] sigma - Objective factor \f$\sigma\f$
-       * @param[in] lambda_c - Equality multipliers \f$\lambda_c\f$, `sizeEqualities()` values
-       * @param[in] lambda_d - Inequality multipliers \f$\lambda_d\f$, `sizeInequalities()` values
        */
-      virtual int evaluateHessian(RealT        sigma,
-                                  const RealT* lambda_c,
-                                  const RealT* lambda_d) = 0;
+      virtual int evaluateHessian(RealT sigma) = 0;
 
       /// Number of variables
       IdxT size() const
@@ -82,16 +76,10 @@ namespace GridKit
         return x_.getSize();
       }
 
-      /// Number of equality constraints
-      IdxT sizeEqualities() const
+      /// Number of constraints
+      IdxT sizeConstraints() const
       {
-        return c_.getSize();
-      }
-
-      /// Number of inequality constraints
-      IdxT sizeInequalities() const
-      {
-        return d_.getSize();
+        return g_.getSize();
       }
 
       /// Objective at the last `evaluateObjective()`
@@ -130,40 +118,70 @@ namespace GridKit
         return gradient_;
       }
 
-      /// Equality constraints at the last `evaluateEqualities()`
-      const VectorT& c() const
+      /// Constraints at the last `evaluateConstraints()`
+      const VectorT& g() const
       {
-        return c_;
+        return g_;
       }
 
-      /// Inequality constraints at the last `evaluateInequalities()`
-      const VectorT& d() const
+      /// Constraint lower bounds
+      const RealVectorT& gLower() const
       {
-        return d_;
+        return g_lower_;
       }
 
-      /// Inequality constraint lower bounds
-      const RealVectorT& dLower() const
+      /// Constraint upper bounds
+      const RealVectorT& gUpper() const
       {
-        return d_lower_;
+        return g_upper_;
       }
 
-      /// Inequality constraint upper bounds
-      const RealVectorT& dUpper() const
+      /// Inequality tag of each constraint, set by `tagInequality()`
+      const std::vector<bool>& tag() const
       {
-        return d_upper_;
+        return tag_;
       }
 
-      /// Jacobian of the equality constraints
-      CsrMatrixT* getCsrEqualityJacobian() const
+      /// Constraint multipliers \f$\lambda\f$
+      RealVectorT& lambda()
       {
-        return equality_jacobian_.get();
+        return lambda_;
       }
 
-      /// Jacobian of the inequality constraints
-      CsrMatrixT* getCsrInequalityJacobian() const
+      /// Constraint multipliers \f$\lambda\f$
+      const RealVectorT& lambda() const
       {
-        return inequality_jacobian_.get();
+        return lambda_;
+      }
+
+      /// Multipliers of the variable lower bounds
+      RealVectorT& zLower()
+      {
+        return z_lower_;
+      }
+
+      /// Multipliers of the variable lower bounds
+      const RealVectorT& zLower() const
+      {
+        return z_lower_;
+      }
+
+      /// Multipliers of the variable upper bounds
+      RealVectorT& zUpper()
+      {
+        return z_upper_;
+      }
+
+      /// Multipliers of the variable upper bounds
+      const RealVectorT& zUpper() const
+      {
+        return z_upper_;
+      }
+
+      /// Jacobian of the constraints
+      CsrMatrixT* getCsrJacobian() const
+      {
+        return jacobian_.get();
       }
 
       /// Lower triangle of the Lagrangian Hessian
@@ -173,18 +191,20 @@ namespace GridKit
       }
 
     protected:
-      ScalarT     f_{};
-      VectorT     x_;
-      RealVectorT x_lower_;
-      RealVectorT x_upper_;
-      RealVectorT gradient_;
-      VectorT     c_;
-      VectorT     d_;
-      RealVectorT d_lower_;
-      RealVectorT d_upper_;
+      ScalarT           f_{};
+      VectorT           x_;
+      RealVectorT       x_lower_;
+      RealVectorT       x_upper_;
+      RealVectorT       gradient_;
+      VectorT           g_;
+      RealVectorT       g_lower_;
+      RealVectorT       g_upper_;
+      std::vector<bool> tag_;
+      RealVectorT       lambda_;
+      RealVectorT       z_lower_;
+      RealVectorT       z_upper_;
 
-      std::unique_ptr<CsrMatrixT> equality_jacobian_;
-      std::unique_ptr<CsrMatrixT> inequality_jacobian_;
+      std::unique_ptr<CsrMatrixT> jacobian_;
       std::unique_ptr<CsrMatrixT> hessian_;
     };
   } // namespace Model

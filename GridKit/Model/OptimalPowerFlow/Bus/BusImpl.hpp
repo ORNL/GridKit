@@ -32,6 +32,23 @@ namespace GridKit
     }
 
     /**
+     * @brief The power balance is an equality, and the squared voltage
+     * magnitude an inequality
+     */
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::tagInequality()
+    {
+      const auto P   = static_cast<size_t>(BusInternalConstraints::P);
+      const auto Q   = static_cast<size_t>(BusInternalConstraints::Q);
+      const auto VM2 = static_cast<size_t>(BusInternalConstraints::VM2);
+
+      tag_[P]   = false;
+      tag_[Q]   = false;
+      tag_[VM2] = true;
+      return 0;
+    }
+
+    /**
      * @brief Unit real voltage for the flat start, the voltage limits on the
      * squared magnitude, and zero imaginary voltage at a reference bus
      */
@@ -40,13 +57,13 @@ namespace GridKit
     {
       const auto VR  = static_cast<size_t>(BusInternalVariables::VR);
       const auto VI  = static_cast<size_t>(BusInternalVariables::VI);
-      const auto VM2 = static_cast<size_t>(BusInequalities::VM2);
+      const auto VM2 = static_cast<size_t>(BusInternalConstraints::VM2);
 
       ScalarT* x       = x_.getData();
       RealT*   x_lower = x_lower_.getData();
       RealT*   x_upper = x_upper_.getData();
-      RealT*   d_lower = d_lower_.getData();
-      RealT*   d_upper = d_upper_.getData();
+      RealT*   g_lower = g_lower_.getData();
+      RealT*   g_upper = g_upper_.getData();
 
       x[VR] = ONE<RealT>;
 
@@ -56,48 +73,35 @@ namespace GridKit
         x_upper[VI] = ZERO<RealT>;
       }
 
-      d_upper[VM2] = Vmax_ * Vmax_;
+      g_upper[VM2] = Vmax_ * Vmax_;
       if (Vmin_ > ZERO<RealT>)
       {
-        d_lower[VM2] = Vmin_ * Vmin_;
+        g_lower[VM2] = Vmin_ * Vmin_;
       }
       return 0;
     }
 
     /**
-     * @brief Power into the bus from its shunt, which starts the balance
+     * @brief Power into the bus from its shunt, which starts the balance, and
+     * the squared voltage magnitude
      */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
-    Bus<scalar_type, index_type>::internalEqualities(const ScalarT*                  x,
-                                                     [[maybe_unused]] const ScalarT* external,
-                                                     ScalarT*                        c) const
-    {
-      const auto VR = static_cast<size_t>(BusInternalVariables::VR);
-      const auto VI = static_cast<size_t>(BusInternalVariables::VI);
-      const auto P  = static_cast<size_t>(BusInternalEqualities::P);
-      const auto Q  = static_cast<size_t>(BusInternalEqualities::Q);
-
-      const ScalarT v2 = x[VR] * x[VR] + x[VI] * x[VI];
-
-      c[P] = -G_ * v2;
-      c[Q] = B_ * v2;
-    }
-
-    /**
-     * @brief Squared voltage magnitude
-     */
-    template <typename scalar_type, typename index_type>
-    [[gnu::always_inline]] void
-    Bus<scalar_type, index_type>::inequalities(const ScalarT*                  x,
-                                               [[maybe_unused]] const ScalarT* external,
-                                               ScalarT*                        d) const
+    Bus<scalar_type, index_type>::internalConstraints(const ScalarT*                  x,
+                                                      [[maybe_unused]] const ScalarT* external,
+                                                      ScalarT*                        g) const
     {
       const auto VR  = static_cast<size_t>(BusInternalVariables::VR);
       const auto VI  = static_cast<size_t>(BusInternalVariables::VI);
-      const auto VM2 = static_cast<size_t>(BusInequalities::VM2);
+      const auto P   = static_cast<size_t>(BusInternalConstraints::P);
+      const auto Q   = static_cast<size_t>(BusInternalConstraints::Q);
+      const auto VM2 = static_cast<size_t>(BusInternalConstraints::VM2);
 
-      d[VM2] = x[VR] * x[VR] + x[VI] * x[VI];
+      const ScalarT v2 = x[VR] * x[VR] + x[VI] * x[VI];
+
+      g[P]   = -G_ * v2;
+      g[Q]   = B_ * v2;
+      g[VM2] = v2;
     }
 
     template <typename scalar_type, typename index_type>

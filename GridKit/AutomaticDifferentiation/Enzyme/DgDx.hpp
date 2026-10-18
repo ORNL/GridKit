@@ -25,15 +25,15 @@ namespace GridKit
        * stored, in global indices.
        *
        * @tparam ModelT - model type with internal and external local variables
-       * @tparam function - constraint functions, `Equalities` or `Inequalities`
+       * and constraints
        */
-      template <typename ModelT, MemberFunctions function>
+      template <typename ModelT>
       struct DgDx
       {
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_var - Number of local variables
-         * @param[in] row_indices - Global row of each local constraint function
+         * @param[in] row_indices - Global row of each local constraint contribution
          * @param[in] col_indices - Global column of each local variable
          * @param[in] x - Local variables
          * @param[out] rows - Row indices
@@ -52,7 +52,7 @@ namespace GridKit
                          ScalarT*       vals,
                          IdxT&          nnz)
         {
-          using WrapperT = ModelWrapper<ModelT, function>;
+          using WrapperT = ModelWrapper<ModelT, MemberFunctions::Constraints>;
 
           std::array<ScalarT, WrapperT::NUM_OUTPUTS> g{};
           for (size_t var_i = 0; var_i < n_var; ++var_i)

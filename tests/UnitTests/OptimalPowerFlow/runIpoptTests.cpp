@@ -7,6 +7,7 @@ int main()
 
   result += test.reference();
   result += test.solve();
+  result += test.multipliers();
 
   return result.summary();
 }

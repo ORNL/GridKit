@@ -31,8 +31,8 @@ namespace GridKit
     /**
      * @brief Component derivatives against dependency tracking and closed forms
      *
-     * Each device is composed ahead of its buses, so its local indices are the
-     * global indices.
+     * Each device is composed ahead of its buses, so its local variables have
+     * their global indices.
      */
     class ComponentTests
     {
@@ -44,7 +44,7 @@ namespace GridKit
       using BranchT       = OPF::Branch<RealT, IdxT>;
 
     public:
-      // Branch Hessian rows reach 5.4 eps, and 8.2 eps on x86-64-v4 with ASan.
+      // Branch Hessian rows reach 5.2 eps, and 8.2 eps on x86-64-v4 with ASan.
       static constexpr RealT kTol =
           static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
@@ -61,23 +61,21 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(system, POWER_X);
-        success *= system.evaluateEqualities() == 0;
-        success *= system.evaluateInequalities() == 0;
+        success *= system.evaluateConstraints() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
 
-        const RealT* c = system.c().getData();
-        const RealT* d = system.d().getData();
+        const RealT* g = system.g().getData();
 
         // S1 = -3.9 - j3.45 and S2 = -7.6 - j7.3
-        success *= isEqual(c[0], -3.9, kTol);
-        success *= isEqual(c[1], -3.45, kTol);
-        success *= isEqual(c[2], -7.6, kTol);
-        success *= isEqual(c[3], -7.3, kTol);
-        success *= isEqual(d[0], 3.9 * 3.9 + 3.45 * 3.45, kTol);
-        success *= isEqual(d[1], 7.6 * 7.6 + 7.3 * 7.3, kTol);
+        success *= isEqual(g[BRANCH_BALANCE_ROWS[0]], -3.9, kTol);
+        success *= isEqual(g[BRANCH_BALANCE_ROWS[1]], -3.45, kTol);
+        success *= isEqual(g[BRANCH_BALANCE_ROWS[2]], -7.6, kTol);
+        success *= isEqual(g[BRANCH_BALANCE_ROWS[3]], -7.3, kTol);
+        success *= isEqual(g[BRANCH_FLOW_ROWS[0]], 3.9 * 3.9 + 3.45 * 3.45, kTol);
+        success *= isEqual(g[BRANCH_FLOW_ROWS[1]], 7.6 * 7.6 + 7.3 * 7.3, kTol);
 
         return success.report(__func__);
       }
@@ -96,8 +94,7 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(system, BRANCH_X);
-        success *= branch.evaluateEqualityJacobian() == 0;
-        success *= branch.evaluateInequalityJacobian() == 0;
+        success *= branch.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -110,28 +107,25 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(tracked, BRANCH_X);
-        success *= tracked.evaluateEqualities() == 0;
-        success *= tracked.evaluateInequalities() == 0;
+        success *= tracked.evaluateConstraints() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
 
-        const VariableT* c = tracked.c().getData();
-        const VariableT* d = tracked.d().getData();
+        const VariableT* g = tracked.g().getData();
 
-        const auto enzyme_c = rowsOf(sum(branch.equalityEntries()));
-        for (IdxT i = 0; i < Utilities::enum_size<OPF::BranchExternalEqualities>(); ++i)
+        const auto enzyme = rowsOf(sum(branch.jacobianEntries()));
+        for (const IdxT row : BRANCH_FLOW_ROWS)
         {
-          success *= isEqual(enzyme_c.at(i), c[i].getDependencies(), kTol);
+          success *= isEqual(enzyme.at(row), g[row].getDependencies(), kTol);
         }
-        const auto enzyme_d = rowsOf(sum(branch.inequalityEntries()));
-        for (IdxT i = 0; i < Utilities::enum_size<OPF::BranchInequalities>(); ++i)
+        for (const IdxT row : BRANCH_BALANCE_ROWS)
         {
-          success *= isEqual(enzyme_d.at(i), d[i].getDependencies(), kTol);
+          success *= isEqual(enzyme.at(row), g[row].getDependencies(), kTol);
         }
-        success *= branch.equalityEntries().nnz == BRANCH_EQUALITY_JACOBIAN_NNZ;
-        success *= branch.inequalityEntries().nnz == BRANCH_INEQUALITY_JACOBIAN_NNZ;
+        success *= enzyme.size() == BRANCH_FLOW_ROWS.size() + BRANCH_BALANCE_ROWS.size();
+        success *= branch.jacobianEntries().nnz == BRANCH_JACOBIAN_NNZ;
 
         return success.report(__func__);
       }
@@ -150,18 +144,19 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(system, BRANCH_X);
-        success *= branch.evaluateHessian(ONE<RealT>, BRANCH_LAMBDA_C.data(), BRANCH_LAMBDA_D.data()) == 0;
+        setMultipliers(system, BRANCH_LAMBDA);
+        success *= branch.evaluateHessian(ONE<RealT>) == 0;
         if (!success)
         {
           return success.report(__func__);
         }
 
-        // Equalities: P1, Q1, P2, Q2
+        // Balances: P1, Q1, P2, Q2
         EntryMap expected;
-        addPowerHessian(expected, 0, BUS1_ADMITTANCE, BRANCH_LAMBDA_C[0], BRANCH_LAMBDA_C[1]);
-        addPowerHessian(expected, 1, BUS2_ADMITTANCE, BRANCH_LAMBDA_C[2], BRANCH_LAMBDA_C[3]);
+        addPowerHessian(expected, 0, BUS1_ADMITTANCE, BRANCH_LAMBDA[BRANCH_BALANCE_ROWS[0]], BRANCH_LAMBDA[BRANCH_BALANCE_ROWS[1]]);
+        addPowerHessian(expected, 1, BUS2_ADMITTANCE, BRANCH_LAMBDA[BRANCH_BALANCE_ROWS[2]], BRANCH_LAMBDA[BRANCH_BALANCE_ROWS[3]]);
 
-        // Inequalities: |S|^2 = P^2 + Q^2 by the chain rule over tracked gradients
+        // Flows: |S|^2 = P^2 + Q^2 by the chain rule over tracked gradients
         auto tracked  = branchSystem(std::make_unique<OPF::Branch<VariableT, IdxT>>(branchData()));
         success      *= tracked.allocate() == 0 && tracked.initialize() == 0;
         if (!success)
@@ -169,25 +164,25 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(tracked, BRANCH_X);
-        success *= tracked.evaluateEqualities() == 0;
+        success *= tracked.evaluateConstraints() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
 
-        const VariableT* c = tracked.c().getData();
+        const VariableT* g = tracked.g().getData();
         for (IdxT port = 0; port < 2; ++port)
         {
-          const RealT     weight = TWO<RealT> * BRANCH_LAMBDA_D[port];
-          const VariableT p      = c[2 * port];
-          const VariableT q      = c[1 + 2 * port];
+          const RealT     weight = TWO<RealT> * BRANCH_LAMBDA[BRANCH_FLOW_ROWS[port]];
+          const VariableT p      = g[BRANCH_BALANCE_ROWS[2 * port]];
+          const VariableT q      = g[BRANCH_BALANCE_ROWS[1 + 2 * port]];
           addOuterProduct(expected, p.getDependencies(), weight);
           addOuterProduct(expected, q.getDependencies(), weight);
         }
-        const RealT weight1 = TWO<RealT> * BRANCH_LAMBDA_D[0];
-        const RealT weight2 = TWO<RealT> * BRANCH_LAMBDA_D[1];
-        addPowerHessian(expected, 0, BUS1_ADMITTANCE, weight1 * c[0].getValue(), weight1 * c[1].getValue());
-        addPowerHessian(expected, 1, BUS2_ADMITTANCE, weight2 * c[2].getValue(), weight2 * c[3].getValue());
+        const RealT weight1 = TWO<RealT> * BRANCH_LAMBDA[BRANCH_FLOW_ROWS[0]];
+        const RealT weight2 = TWO<RealT> * BRANCH_LAMBDA[BRANCH_FLOW_ROWS[1]];
+        addPowerHessian(expected, 0, BUS1_ADMITTANCE, weight1 * g[BRANCH_BALANCE_ROWS[0]].getValue(), weight1 * g[BRANCH_BALANCE_ROWS[1]].getValue());
+        addPowerHessian(expected, 1, BUS2_ADMITTANCE, weight2 * g[BRANCH_BALANCE_ROWS[2]].getValue(), weight2 * g[BRANCH_BALANCE_ROWS[3]].getValue());
 
         success *= matches(sum(branch.hessianEntries()), expected, kTol);
         success *= branch.hessianEntries().nnz == BRANCH_HESSIAN_NNZ;
@@ -210,9 +205,9 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(active, BRANCH_X);
-        success *= active_branch.evaluateEqualityJacobian() == 0;
-        success *= active_branch.evaluateInequalityJacobian() == 0;
-        success *= active_branch.evaluateHessian(ONE<RealT>, BRANCH_LAMBDA_C.data(), BRANCH_LAMBDA_D.data()) == 0;
+        setMultipliers(active, BRANCH_LAMBDA);
+        success *= active_branch.evaluateJacobian() == 0;
+        success *= active_branch.evaluateHessian(ONE<RealT>) == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -228,29 +223,21 @@ namespace GridKit
         {
           return success.report(__func__);
         }
+        // The multipliers start at zero
         setVariables(system, FLAT_START);
 
-        const std::vector<RealT> lambda_c(system.sizeEqualities(), ZERO<RealT>);
-        const std::vector<RealT> lambda_d(system.sizeInequalities(), ZERO<RealT>);
-        success *= branch.evaluateEqualityJacobian() == 0;
-        success *= branch.evaluateInequalityJacobian() == 0;
-        success *= branch.evaluateHessian(ONE<RealT>, lambda_c.data(), lambda_d.data()) == 0;
+        success *= branch.evaluateJacobian() == 0;
+        success *= branch.evaluateHessian(ONE<RealT>) == 0;
         if (!success)
         {
           return success.report(__func__);
         }
 
-        success *= pattern(branch.equalityEntries()) == pattern(active_branch.equalityEntries());
-        success *= pattern(branch.inequalityEntries()) == pattern(active_branch.inequalityEntries());
+        success *= pattern(branch.jacobianEntries()) == pattern(active_branch.jacobianEntries());
         success *= pattern(branch.hessianEntries()) == pattern(active_branch.hessianEntries());
-        success *= branch.equalityEntries().nnz == BRANCH_EQUALITY_JACOBIAN_NNZ;
-        success *= branch.inequalityEntries().nnz == BRANCH_INEQUALITY_JACOBIAN_NNZ;
+        success *= branch.jacobianEntries().nnz == BRANCH_JACOBIAN_NNZ;
         success *= branch.hessianEntries().nnz == BRANCH_HESSIAN_NNZ;
-        for (const RealT value : values(branch.equalityEntries()))
-        {
-          success *= isEqual(value, ZERO<RealT>);
-        }
-        for (const RealT value : values(branch.inequalityEntries()))
+        for (const RealT value : values(branch.jacobianEntries()))
         {
           success *= isEqual(value, ZERO<RealT>);
         }
@@ -315,18 +302,16 @@ namespace GridKit
         }
         success *= isEqual(system.gradient().getData()[0], C1 + TWO<RealT> * C2 * p);
 
-        success *= generator.evaluateEqualityJacobian() == 0;
-        success *= generator.evaluateInequalityJacobian() == 0;
+        success *= generator.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        success *= matches(sum(generator.equalityEntries()), EntryMap{{{0, 0}, ONE<RealT>}, {{1, 1}, ONE<RealT>}}, kTol);
-        success *= generator.inequalityEntries().nnz == 0;
+        success *= matches(sum(generator.jacobianEntries()), EntryMap{{{0, 0}, ONE<RealT>}, {{1, 1}, ONE<RealT>}}, kTol);
 
-        const std::vector<RealT> lambda_c(system.sizeEqualities(), ONE<RealT>);
-        const std::vector<RealT> lambda_d(system.sizeInequalities(), ONE<RealT>);
-        success *= generator.evaluateHessian(SIGMA, lambda_c.data(), lambda_d.data()) == 0;
+        const std::vector<RealT> lambda(system.sizeConstraints(), ONE<RealT>);
+        setMultipliers(system, lambda);
+        success *= generator.evaluateHessian(SIGMA) == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -374,15 +359,13 @@ namespace GridKit
         }
         success *= isEqual(generator.f(), ZERO<RealT>);
 
-        const std::vector<RealT> lambda_c(system.sizeEqualities(), ZERO<RealT>);
-        const std::vector<RealT> lambda_d(system.sizeInequalities(), ZERO<RealT>);
-        success *= generator.evaluateEqualityJacobian() == 0;
-        success *= generator.evaluateHessian(ONE<RealT>, lambda_c.data(), lambda_d.data()) == 0;
+        success *= generator.evaluateJacobian() == 0;
+        success *= generator.evaluateHessian(ONE<RealT>) == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        success *= generator.equalityEntries().nnz == 2;
+        success *= generator.jacobianEntries().nnz == 2;
         success *= generator.hessianEntries().nnz == 1;
 
         return success.report(__func__);
@@ -405,34 +388,36 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        const RealT* c = system.c().getData();
+        const RealT* g = system.g().getData();
 
         setVariables(system, SHUNT_X);
         const RealT vr = SHUNT_X[0];
         const RealT vi = SHUNT_X[1];
 
-        success *= system.evaluateEqualities() == 0;
+        success *= system.evaluateConstraints() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        success *= isEqual(c[0], -SHUNT_G * (vr * vr + vi * vi));
-        success *= isEqual(c[1], SHUNT_B * (vr * vr + vi * vi));
+        success *= isEqual(g[0], -SHUNT_G * (vr * vr + vi * vi));
+        success *= isEqual(g[1], SHUNT_B * (vr * vr + vi * vi));
 
-        success *= bus.evaluateEqualityJacobian() == 0;
+        success *= bus.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        success *= matches(sum(bus.equalityEntries()),
+        success *= matches(sum(bus.jacobianEntries()),
                            EntryMap{{{0, 0}, -TWO<RealT> * SHUNT_G * vr},
                                     {{0, 1}, -TWO<RealT> * SHUNT_G * vi},
                                     {{1, 0}, TWO<RealT> * SHUNT_B * vr},
-                                    {{1, 1}, TWO<RealT> * SHUNT_B * vi}},
+                                    {{1, 1}, TWO<RealT> * SHUNT_B * vi},
+                                    {{2, 0}, TWO<RealT> * vr},
+                                    {{2, 1}, TWO<RealT> * vi}},
                            kTol);
 
-        const std::vector<RealT> lambda_d(system.sizeInequalities(), ZERO<RealT>);
-        success *= bus.evaluateHessian(ONE<RealT>, SHUNT_LAMBDA.data(), lambda_d.data()) == 0;
+        setMultipliers(system, SHUNT_LAMBDA);
+        success *= bus.evaluateHessian(ONE<RealT>) == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -475,52 +460,50 @@ namespace GridKit
           success *= std::isinf(system.xLower().getData()[j]) && std::isinf(system.xUpper().getData()[j]);
         }
 
-        success *= system.sizeEqualities() == 2;
-        success *= system.sizeInequalities() == 1;
-        success *= isEqual(system.dLower().getData()[0], VMIN * VMIN);
-        success *= isEqual(system.dUpper().getData()[0], VMAX * VMAX);
+        // The balance is an equality at zero, and the squared magnitude an inequality within the limits
+        const RealT* g_lower  = system.gLower().getData();
+        const RealT* g_upper  = system.gUpper().getData();
+        success              *= system.sizeConstraints() == 3;
+        success              *= system.tag() == std::vector<bool>{false, false, true};
+        success              *= isEqual(g_lower[0], ZERO<RealT>) && isEqual(g_upper[0], ZERO<RealT>);
+        success              *= isEqual(g_lower[1], ZERO<RealT>) && isEqual(g_upper[1], ZERO<RealT>);
+        success              *= isEqual(g_lower[2], VMIN * VMIN) && isEqual(g_upper[2], VMAX * VMAX);
 
         setVariables(system, BUS_X);
         const RealT vr = BUS_X[0];
         const RealT vi = BUS_X[1];
 
-        success *= system.evaluateEqualities() == 0;
+        success *= system.evaluateConstraints() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        for (IdxT i = 0; i < system.sizeEqualities(); ++i)
-        {
-          success *= isEqual(system.c().getData()[i], ZERO<RealT>);
-        }
+        const RealT* g  = system.g().getData();
+        success        *= isEqual(g[0], ZERO<RealT>) && isEqual(g[1], ZERO<RealT>);
+        success        *= isEqual(g[2], vr * vr + vi * vi);
 
-        success *= system.evaluateInequalities() == 0;
-        if (!success)
-        {
-          return success.report(__func__);
-        }
-        success *= isEqual(system.d().getData()[0], vr * vr + vi * vi);
-
-        success *= bus.evaluateEqualityJacobian() == 0;
-        success *= bus.evaluateInequalityJacobian() == 0;
+        success *= bus.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
         // A bus without a shunt contributes nothing to its balance
-        for (const RealT value : values(bus.equalityEntries()))
-        {
-          success *= isEqual(value, ZERO<RealT>);
-        }
-        success *= matches(sum(bus.inequalityEntries()), EntryMap{{{0, 0}, TWO<RealT> * vr}, {{0, 1}, TWO<RealT> * vi}}, kTol);
+        success *= matches(sum(bus.jacobianEntries()),
+                           EntryMap{{{0, 0}, ZERO<RealT>},
+                                    {{0, 1}, ZERO<RealT>},
+                                    {{1, 0}, ZERO<RealT>},
+                                    {{1, 1}, ZERO<RealT>},
+                                    {{2, 0}, TWO<RealT> * vr},
+                                    {{2, 1}, TWO<RealT> * vi}},
+                           kTol);
 
-        const std::vector<RealT> lambda_c(system.sizeEqualities(), ZERO<RealT>);
-        success *= bus.evaluateHessian(ONE<RealT>, lambda_c.data(), BUS_LAMBDA_D.data()) == 0;
+        setMultipliers(system, BUS_LAMBDA);
+        success *= bus.evaluateHessian(ONE<RealT>) == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        const RealT hessian = TWO<RealT> * BUS_LAMBDA_D[0];
+        const RealT hessian = TWO<RealT> * BUS_LAMBDA[2];
 
         success *= matches(sum(bus.hessianEntries()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}}, kTol);
 
@@ -569,28 +552,27 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        const RealT* c = system.c().getData();
+        const RealT* g = system.g().getData();
 
         setVariables(system, LOAD_X);
 
         // The out-of-service load adds no demand
-        success *= system.evaluateEqualities() == 0;
+        success *= system.evaluateConstraints() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        success *= isEqual(c[0], -LOAD_P) && isEqual(c[1], -LOAD_Q);
+        success *= isEqual(g[0], -LOAD_P) && isEqual(g[1], -LOAD_Q);
 
-        const std::vector<RealT> lambda_c(system.sizeEqualities(), ONE<RealT>);
-        const std::vector<RealT> lambda_d(system.sizeInequalities(), ONE<RealT>);
-        success *= load.evaluateEqualityJacobian() == 0;
-        success *= load.evaluateInequalityJacobian() == 0;
-        success *= load.evaluateHessian(ONE<RealT>, lambda_c.data(), lambda_d.data()) == 0;
+        const std::vector<RealT> lambda(system.sizeConstraints(), ONE<RealT>);
+        setMultipliers(system, lambda);
+        success *= load.evaluateJacobian() == 0;
+        success *= load.evaluateHessian(ONE<RealT>) == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        for (const RealT value : values(load.equalityEntries()))
+        for (const RealT value : values(load.jacobianEntries()))
         {
           success *= isEqual(value, ZERO<RealT>);
         }
@@ -598,7 +580,6 @@ namespace GridKit
         {
           success *= isEqual(value, ZERO<RealT>);
         }
-        success *= load.inequalityEntries().nnz == 0;
 
         return success.report(__func__);
       }
@@ -620,7 +601,7 @@ namespace GridKit
             for (const auto& voltage : ZIP_VOLTAGES)
             {
               setVariables(system, voltage);
-              success *= system.evaluateEqualities() == 0;
+              success *= system.evaluateConstraints() == 0;
               if (!success)
               {
                 return success.report(__func__);
@@ -629,8 +610,8 @@ namespace GridKit
               const RealT v  = std::sqrt(v2);
               const RealT u  = status(in_service);
 
-              success *= isEqual(system.c().getData()[0], -u * (LOAD_P + zip.Pi * v + zip.Pz * v2), kTol);
-              success *= isEqual(system.c().getData()[1], -u * (LOAD_Q + zip.Qi * v + zip.Qz * v2), kTol);
+              success *= isEqual(system.g().getData()[0], -u * (LOAD_P + zip.Pi * v + zip.Pz * v2), kTol);
+              success *= isEqual(system.g().getData()[1], -u * (LOAD_Q + zip.Qi * v + zip.Qz * v2), kTol);
             }
           }
         }
@@ -658,14 +639,14 @@ namespace GridKit
             {
               setVariables(system, voltage);
               setVariables(tracked, voltage);
-              success *= system.evaluateEqualityJacobian() == 0;
-              success *= tracked.evaluateEqualityJacobian() == 0;
+              success *= system.evaluateJacobian() == 0;
+              success *= tracked.evaluateJacobian() == 0;
               if (!success)
               {
                 return success.report(__func__);
               }
-              const auto  actual   = MapFromCsr(system.getCsrEqualityJacobian());
-              const auto  expected = MapFromCsr(tracked.getCsrEqualityJacobian());
+              const auto  actual   = MapFromCsr(system.getCsrJacobian());
+              const auto  expected = MapFromCsr(tracked.getCsrJacobian());
               const RealT v        = std::hypot(voltage[0], voltage[1]);
               const RealT u        = status(in_service);
 
@@ -701,7 +682,8 @@ namespace GridKit
             for (const auto& voltage : ZIP_VOLTAGES)
             {
               setVariables(system, voltage);
-              success *= system.evaluateHessian(ONE<RealT>, LOAD_LAMBDA_C.data(), LOAD_LAMBDA_D.data()) == 0;
+              setMultipliers(system, LOAD_LAMBDA);
+              success *= system.evaluateHessian(ONE<RealT>) == 0;
               if (!success)
               {
                 return success.report(__func__);
@@ -747,15 +729,16 @@ namespace GridKit
             }
             setVariables(system, voltage);
             setVariables(tracked, voltage);
-            success *= system.evaluateEqualityJacobian() == 0;
-            success *= tracked.evaluateEqualityJacobian() == 0;
-            success *= system.evaluateHessian(ONE<RealT>, LOAD_LAMBDA_C.data(), LOAD_LAMBDA_D.data()) == 0;
+            setMultipliers(system, LOAD_LAMBDA);
+            success *= system.evaluateJacobian() == 0;
+            success *= tracked.evaluateJacobian() == 0;
+            success *= system.evaluateHessian(ONE<RealT>) == 0;
             if (!success)
             {
               return success.report(__func__);
             }
-            const auto jacobian = MapFromCsr(system.getCsrEqualityJacobian());
-            const auto expected = MapFromCsr(tracked.getCsrEqualityJacobian());
+            const auto jacobian = MapFromCsr(system.getCsrJacobian());
+            const auto expected = MapFromCsr(tracked.getCsrJacobian());
             for (IdxT row = 0; row < 2; ++row)
             {
               success *= isEqual(jacobian.at(row), expected.at(row), kTol);
@@ -821,8 +804,7 @@ namespace GridKit
                                                           {true, 0.4, 0.15, 0.25, -0.05}}};
 
       static constexpr std::array<std::array<RealT, 2>, 3> ZIP_VOLTAGES{{{1.1, 0.0}, {0.8, -0.6}, {1.15, 0.2}}};
-      static constexpr std::array<RealT, 2>                LOAD_LAMBDA_C{0.7, -0.4};
-      static constexpr std::array<RealT, 1>                LOAD_LAMBDA_D{0.0};
+      static constexpr std::array<RealT, 3>                LOAD_LAMBDA{0.7, -0.4, 0.0};
 
       static OPF::LoadData<RealT, IdxT> loadData(bool in_service, const ZipParts& zip)
       {
@@ -855,8 +837,8 @@ namespace GridKit
       static std::pair<RealT, RealT> loadWeights(bool in_service, const ZipParts& zip)
       {
         const RealT u = status(in_service);
-        return {-u * (LOAD_LAMBDA_C[0] * zip.Pi + LOAD_LAMBDA_C[1] * zip.Qi),
-                -u * (LOAD_LAMBDA_C[0] * zip.Pz + LOAD_LAMBDA_C[1] * zip.Qz)};
+        return {-u * (LOAD_LAMBDA[0] * zip.Pi + LOAD_LAMBDA[1] * zip.Qi),
+                -u * (LOAD_LAMBDA[0] * zip.Pz + LOAD_LAMBDA[1] * zip.Qz)};
       }
 
       template <typename ScalarT>
@@ -901,9 +883,12 @@ namespace GridKit
       static constexpr std::array<RealT, 4> BUS1_ADMITTANCE = {-1.4, 0.95, 2.5, 2.5};
       static constexpr std::array<RealT, 4> BUS2_ADMITTANCE = {-2.5, -2.5, -5.1, 4.8};
 
-      static constexpr IdxT BRANCH_EQUALITY_JACOBIAN_NNZ   = 16;
-      static constexpr IdxT BRANCH_INEQUALITY_JACOBIAN_NNZ = 8;
-      static constexpr IdxT BRANCH_HESSIAN_NNZ             = 10;
+      /// Constraints of a branch system: S1 and S2, then P, Q, and VM2 of each bus
+      static constexpr std::array<IdxT, 2> BRANCH_FLOW_ROWS{0, 1};
+      static constexpr std::array<IdxT, 4> BRANCH_BALANCE_ROWS{2, 3, 5, 6};
+
+      static constexpr IdxT BRANCH_JACOBIAN_NNZ = 24;
+      static constexpr IdxT BRANCH_HESSIAN_NNZ  = 10;
 
       static constexpr RealT PMIN  = 0.1;
       static constexpr RealT PMAX  = 0.9;
@@ -925,14 +910,13 @@ namespace GridKit
 
       static constexpr std::array<RealT, 4> POWER_X{1.0, 0.0, 0.0, 1.0};
       static constexpr std::array<RealT, 4> BRANCH_X{1.02, 0.12, 0.96, -0.08};
-      static constexpr std::array<RealT, 4> BRANCH_LAMBDA_C{1.5, -0.7, 2.1, 0.4};
-      static constexpr std::array<RealT, 2> BRANCH_LAMBDA_D{0.3, -0.2};
+      static constexpr std::array<RealT, 8> BRANCH_LAMBDA{0.3, -0.2, 1.5, -0.7, 0.0, 2.1, 0.4, 0.0};
       static constexpr std::array<RealT, 4> FLAT_START{1.0, 0.0, 1.0, 0.0};
       static constexpr std::array<RealT, 4> GENERATOR_X{0.3, 0.1, 1.01, 0.05};
       static constexpr std::array<RealT, 2> SHUNT_X{0.98, 0.1};
-      static constexpr std::array<RealT, 2> SHUNT_LAMBDA{1.3, -0.6};
+      static constexpr std::array<RealT, 3> SHUNT_LAMBDA{1.3, -0.6, 0.0};
       static constexpr std::array<RealT, 2> BUS_X{1.02, -0.05};
-      static constexpr std::array<RealT, 1> BUS_LAMBDA_D{1.3};
+      static constexpr std::array<RealT, 3> BUS_LAMBDA{0.0, 0.0, 1.3};
       static constexpr std::array<RealT, 2> LOAD_X{1.01, -0.05};
 
       static OPF::BusData<RealT, IdxT> busData(IdxT number)

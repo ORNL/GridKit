@@ -16,7 +16,7 @@ namespace GridKit
       /**
        * @brief Jacobian of `functions` from their dependencies
        *
-       * @param[in] functions - Constraint functions evaluated at the current variables
+       * @param[in] functions - Constraints evaluated at the current variables
        * @param[in] cols - Number of variables
        */
       template <typename CsrMatrixT, typename RealT, typename VectorT, typename IdxT>
@@ -73,33 +73,17 @@ namespace GridKit
     }
 
     /**
-     * @brief Equality constraint Jacobian from the dependencies
+     * @brief Constraint Jacobian from the dependencies
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateEqualityJacobian()
+    int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
-      const int status = evaluateEqualities();
+      const int status = evaluateConstraints();
       if (status != 0)
       {
         return status;
       }
-      equality_jacobian_ = dependencyJacobian<CsrMatrixT, RealT>(c_, x_.getSize());
-
-      return 0;
-    }
-
-    /**
-     * @brief Inequality constraint Jacobian from the dependencies
-     */
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateInequalityJacobian()
-    {
-      const int status = evaluateInequalities();
-      if (status != 0)
-      {
-        return status;
-      }
-      inequality_jacobian_ = dependencyJacobian<CsrMatrixT, RealT>(d_, x_.getSize());
+      jacobian_ = dependencyJacobian<CsrMatrixT, RealT>(g_, x_.getSize());
 
       return 0;
     }
@@ -108,9 +92,7 @@ namespace GridKit
      * @brief Not available, because dependencies hold first derivatives only
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateHessian([[maybe_unused]] RealT        sigma,
-                                                              [[maybe_unused]] const RealT* lambda_c,
-                                                              [[maybe_unused]] const RealT* lambda_d)
+    int SystemModel<scalar_type, index_type>::evaluateHessian([[maybe_unused]] RealT sigma)
     {
       Log::error() << "OptimalPowerFlow::SystemModel: no Hessian for DependencyTracking::Variable\n";
       return 1;
@@ -122,12 +104,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocateDerivatives()
     {
-      const int status = evaluateEqualityJacobian();
-      if (status != 0)
-      {
-        return status;
-      }
-      return evaluateInequalityJacobian();
+      return evaluateJacobian();
     }
 
     // Available template instantiations

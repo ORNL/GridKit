@@ -119,8 +119,8 @@ namespace GridKit
     }
 
     /**
-     * @brief Verify the components, bind them to the system vectors, and
-     * build the derivative patterns
+     * @brief Verify the components, bind them to the system vectors, tag the
+     * inequalities, and build the derivative patterns
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
@@ -135,7 +135,7 @@ namespace GridKit
         return 1;
       }
 
-      if (compose() != 0)
+      if (compose() != 0 || tagInequality() != 0)
       {
         return 1;
       }
@@ -144,10 +144,35 @@ namespace GridKit
     }
 
     /**
+     * @brief Each component tags its own constraints
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::tagInequality()
+    {
+      for (auto& component : components_)
+      {
+        const int status = component->tagInequality();
+        if (status != 0)
+        {
+          return status;
+        }
+
+        const auto& tag = component->tag();
+        for (IdxT i = 0; i < tag.size(); ++i)
+        {
+          tag_[component->offset_.constraints + i] = tag[i];
+        }
+      }
+
+      return 0;
+    }
+
+    /**
      * @brief Bounds and the flat start
      *
-     * Every variable starts at zero and every bound unbounded. Each component
-     * then sets its bounds and any nonzero initial value.
+     * Every variable and multiplier starts at zero and every variable
+     * unbounded, every equality at zero, and every inequality unbounded. Each
+     * component then sets its limits and any nonzero initial value.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
@@ -155,10 +180,24 @@ namespace GridKit
       if (x_.setToZero() != 0
           || x_lower_.setToConst(-UNBOUNDED<RealT>) != 0
           || x_upper_.setToConst(UNBOUNDED<RealT>) != 0
-          || d_lower_.setToConst(-UNBOUNDED<RealT>) != 0
-          || d_upper_.setToConst(UNBOUNDED<RealT>) != 0)
+          || g_lower_.setToZero() != 0
+          || g_upper_.setToZero() != 0
+          || lambda_.setToZero() != 0
+          || z_lower_.setToZero() != 0
+          || z_upper_.setToZero() != 0)
       {
         return 1;
+      }
+
+      RealT* g_lower = g_lower_.getData();
+      RealT* g_upper = g_upper_.getData();
+      for (IdxT i = 0; i < g_.getSize(); ++i)
+      {
+        if (tag_[i])
+        {
+          g_lower[i] = -UNBOUNDED<RealT>;
+          g_upper[i] = UNBOUNDED<RealT>;
+        }
       }
 
       for (auto& component : components_)
@@ -203,60 +242,26 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateEqualities()
+    int SystemModel<scalar_type, index_type>::evaluateConstraints()
     {
-      c_.setToZero();
+      g_.setToZero();
       for (auto& component : components_)
       {
-        const int status = component->evaluateEqualities();
+        const int status = component->evaluateConstraints();
         if (status != 0)
         {
           return status;
         }
       }
-      c_.setDataUpdated();
+      g_.setDataUpdated();
 
       return 0;
-    }
-
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateInequalities()
-    {
-      d_.setToZero();
-      for (auto& component : components_)
-      {
-        const int status = component->evaluateInequalities();
-        if (status != 0)
-        {
-          return status;
-        }
-      }
-      d_.setDataUpdated();
-
-      return 0;
-    }
-
-    /**
-     * @brief `ModelT` from `data`, with a parameter error naming `id`
-     */
-    template <typename scalar_type, typename index_type>
-    template <typename ModelT, typename DataT>
-    std::unique_ptr<ModelT> SystemModel<scalar_type, index_type>::build(const DataT& data, std::string_view id)
-    {
-      try
-      {
-        return std::make_unique<ModelT>(data);
-      }
-      catch (const std::invalid_argument& error)
-      {
-        throw std::invalid_argument(std::format("{}: {}", id, error.what()));
-      }
     }
 
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::addBus(const BusData<RealT, IdxT>& data)
     {
-      auto bus = build<BusT>(data, data.id());
+      auto bus = std::make_unique<BusT>(data);
       if (!buses_.emplace(data.number, bus.get()).second)
       {
         throw std::invalid_argument(std::format("OptimalPowerFlow::SystemModel: duplicate bus {}", data.number));
@@ -274,7 +279,7 @@ namespace GridKit
       using Ports = typename DataT::Ports;
       static_assert(ModelT::NUM_PORT_VARIABLES.size() == Utilities::enum_size<Ports>());
 
-      auto device = build<ModelT>(data, data.id);
+      auto device = std::make_unique<ModelT>(data);
       for (const Ports port : Utilities::enum_values<Ports>())
       {
         const auto number = data.ports.find(port);
@@ -319,13 +324,16 @@ namespace GridKit
           || x_lower_.resize(size.variables) != 0
           || x_upper_.resize(size.variables) != 0
           || gradient_.resize(size.variables) != 0
-          || c_.resize(size.equalities) != 0
-          || d_.resize(size.inequalities) != 0
-          || d_lower_.resize(size.inequalities) != 0
-          || d_upper_.resize(size.inequalities) != 0)
+          || z_lower_.resize(size.variables) != 0
+          || z_upper_.resize(size.variables) != 0
+          || g_.resize(size.constraints) != 0
+          || g_lower_.resize(size.constraints) != 0
+          || g_upper_.resize(size.constraints) != 0
+          || lambda_.resize(size.constraints) != 0)
       {
         return 1;
       }
+      tag_.assign(size.constraints, false);
 
       Block offset;
       for (const auto& component : components_)
@@ -353,10 +361,10 @@ namespace GridKit
           || view(component.x_lower_, x_lower_, offset.variables, size.variables)
           || view(component.x_upper_, x_upper_, offset.variables, size.variables)
           || view(component.gradient_, gradient_, offset.variables, size.variables)
-          || view(component.c_, c_, offset.equalities, size.equalities)
-          || view(component.d_, d_, offset.inequalities, size.inequalities)
-          || view(component.d_lower_, d_lower_, offset.inequalities, size.inequalities)
-          || view(component.d_upper_, d_upper_, offset.inequalities, size.inequalities))
+          || view(component.g_, g_, offset.constraints, size.constraints)
+          || view(component.g_lower_, g_lower_, offset.constraints, size.constraints)
+          || view(component.g_upper_, g_upper_, offset.constraints, size.constraints)
+          || view(component.lambda_, lambda_, offset.constraints, size.constraints))
       {
         return 1;
       }

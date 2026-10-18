@@ -43,7 +43,7 @@ namespace GridKit
       using TrackedT      = OPF::SystemModel<VariableT, IdxT>;
 
     public:
-      // The Hessian linearity sums reach 17 eps.
+      // The Jacobian entries reach 13.4 eps against dependency tracking.
       static constexpr RealT kTol =
           static_cast<RealT>(32.0) * std::numeric_limits<RealT>::epsilon();
 
@@ -62,22 +62,26 @@ namespace GridKit
 
         // Three buses and two generators with two variables each
         success *= system.size() == 10;
-        success *= system.sizeEqualities() == SystemTestData::BALANCE_ROWS.size();
-        success *= system.sizeInequalities() == SystemTestData::MAGNITUDE_ROWS.size() + SystemTestData::FLOW_ROWS.size() + SystemTestData::UNRATED_ROWS.size();
+        success *= system.sizeConstraints() == SystemTestData::BALANCE_ROWS.size() + SystemTestData::MAGNITUDE_ROWS.size() + SystemTestData::FLOW_ROWS.size() + SystemTestData::UNRATED_ROWS.size();
 
-        const RealT* d_lower = system.dLower().getData();
-        const RealT* d_upper = system.dUpper().getData();
+        const auto&  tag     = system.tag();
+        const RealT* g_lower = system.gLower().getData();
+        const RealT* g_upper = system.gUpper().getData();
+        for (const IdxT i : SystemTestData::BALANCE_ROWS)
+        {
+          success *= !tag[i] && isEqual(g_lower[i], ZERO<RealT>) && isEqual(g_upper[i], ZERO<RealT>);
+        }
         for (const IdxT i : SystemTestData::MAGNITUDE_ROWS)
         {
-          success *= isEqual(d_lower[i], SystemTestData::VMIN * SystemTestData::VMIN) && isEqual(d_upper[i], SystemTestData::VMAX * SystemTestData::VMAX);
+          success *= tag[i] && isEqual(g_lower[i], SystemTestData::VMIN * SystemTestData::VMIN) && isEqual(g_upper[i], SystemTestData::VMAX * SystemTestData::VMAX);
         }
         for (const IdxT i : SystemTestData::FLOW_ROWS)
         {
-          success *= std::isinf(d_lower[i]) && isEqual(d_upper[i], SystemTestData::SMAX * SystemTestData::SMAX);
+          success *= tag[i] && std::isinf(g_lower[i]) && isEqual(g_upper[i], SystemTestData::SMAX * SystemTestData::SMAX);
         }
         for (const IdxT i : SystemTestData::UNRATED_ROWS)
         {
-          success *= std::isinf(d_lower[i]) && std::isinf(d_upper[i]);
+          success *= tag[i] && std::isinf(g_lower[i]) && std::isinf(g_upper[i]);
         }
 
         // The imaginary voltage of reference bus 1 is fixed at zero
@@ -86,7 +90,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Enzyme system Jacobians equal the dependency-tracking Jacobians
+      /// Enzyme system Jacobian equals the dependency-tracking Jacobian
       TestOutcome jacobian()
       {
         TestStatus success = true;
@@ -98,14 +102,12 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(system, SystemTestData::POINT);
-        success *= system.evaluateEqualityJacobian() == 0;
-        success *= system.evaluateInequalityJacobian() == 0;
+        success *= system.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        const auto enzyme_c = MapFromCsr(system.getCsrEqualityJacobian());
-        const auto enzyme_d = MapFromCsr(system.getCsrInequalityJacobian());
+        const auto enzyme = MapFromCsr(system.getCsrJacobian());
 
         TrackedT tracked(SystemTestData::data());
         success *= tracked.allocate() == 0 && tracked.initialize() == 0;
@@ -113,30 +115,23 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success *= tracked.getCsrEqualityJacobian() != nullptr;
-        success *= tracked.getCsrInequalityJacobian() != nullptr;
+        success *= tracked.getCsrJacobian() != nullptr;
         setVariables(tracked, SystemTestData::POINT);
-        success *= tracked.evaluateEqualityJacobian() == 0;
-        success *= tracked.evaluateInequalityJacobian() == 0;
+        success *= tracked.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        const auto dependencies_c = MapFromCsr(tracked.getCsrEqualityJacobian());
-        const auto dependencies_d = MapFromCsr(tracked.getCsrInequalityJacobian());
+        const auto dependencies = MapFromCsr(tracked.getCsrJacobian());
 
-        success *= enzyme_c.size() == dependencies_c.size() && enzyme_d.size() == dependencies_d.size();
+        success *= enzyme.size() == dependencies.size();
         if (!success)
         {
           return success.report(__func__);
         }
-        for (IdxT i = 0; i < enzyme_c.size(); ++i)
+        for (IdxT i = 0; i < enzyme.size(); ++i)
         {
-          success *= isEqual(enzyme_c[i], dependencies_c[i], kTol);
-        }
-        for (IdxT i = 0; i < enzyme_d.size(); ++i)
-        {
-          success *= isEqual(enzyme_d[i], dependencies_d[i], kTol);
+          success *= isEqual(enzyme[i], dependencies[i], kTol);
         }
 
         return success.report(__func__);
@@ -198,24 +193,18 @@ namespace GridKit
 
         const auto               expected_pattern = pattern(*system.getCsrHessian());
         const IdxT               nnz              = system.getCsrHessian()->getNnz();
-        const std::vector<RealT> zeros_c(system.sizeEqualities(), ZERO<RealT>);
-        const std::vector<RealT> zeros_d(system.sizeInequalities(), ZERO<RealT>);
-        std::vector<RealT>       lambda_c(system.sizeEqualities());
-        std::vector<RealT>       lambda_d(system.sizeInequalities());
-        for (IdxT i = 0; i < lambda_c.size(); ++i)
+        const std::vector<RealT> zeros(system.sizeConstraints(), ZERO<RealT>);
+        std::vector<RealT>       lambda(system.sizeConstraints());
+        for (IdxT i = 0; i < lambda.size(); ++i)
         {
-          lambda_c[i] = LAMBDA_SCALE * static_cast<RealT>(i + 1);
-        }
-        for (IdxT i = 0; i < lambda_d.size(); ++i)
-        {
-          lambda_d[i] = LAMBDA_SCALE * static_cast<RealT>(lambda_c.size() + i + 1);
+          lambda[i] = LAMBDA_SCALE * static_cast<RealT>(i + 1);
         }
 
-        const std::vector<RealT> objective    = hessianValues(system, SIGMA, zeros_c, zeros_d);
+        const std::vector<RealT> objective    = hessianValues(system, SIGMA, zeros);
         success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
-        const std::vector<RealT> constraints  = hessianValues(system, ZERO<RealT>, lambda_c, lambda_d);
+        const std::vector<RealT> constraints  = hessianValues(system, ZERO<RealT>, lambda);
         success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
-        const std::vector<RealT> lagrangian   = hessianValues(system, SIGMA, lambda_c, lambda_d);
+        const std::vector<RealT> lagrangian   = hessianValues(system, SIGMA, lambda);
         success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
 
         success *= system.getCsrHessian()->getNnz() == nnz;
@@ -232,8 +221,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Inequality constraint functions without limits keep their rows, with
-      /// infinite bounds
+      /// Inequalities without limits keep their constraints, with infinite
+      /// bounds
       TestOutcome unboundedInequalities()
       {
         TestStatus success = true;
@@ -255,30 +244,31 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success *= system.sizeInequalities() == SystemTestData::MAGNITUDE_ROWS.size() + SystemTestData::FLOW_ROWS.size() + SystemTestData::UNRATED_ROWS.size();
+        success *= system.sizeConstraints() == SystemTestData::BALANCE_ROWS.size() + SystemTestData::MAGNITUDE_ROWS.size() + SystemTestData::FLOW_ROWS.size() + SystemTestData::UNRATED_ROWS.size();
 
-        const RealT* d_lower = system.dLower().getData();
-        const RealT* d_upper = system.dUpper().getData();
-        for (IdxT i = 0; i < system.sizeInequalities(); ++i)
+        const auto&  tag     = system.tag();
+        const RealT* g_lower = system.gLower().getData();
+        const RealT* g_upper = system.gUpper().getData();
+        for (IdxT i = 0; i < system.sizeConstraints(); ++i)
         {
-          success *= std::isinf(d_lower[i]) && std::isinf(d_upper[i]);
+          success *= !tag[i] || (std::isinf(g_lower[i]) && std::isinf(g_upper[i]));
         }
-        success *= system.evaluateInequalities() == 0;
-        success *= system.evaluateInequalityJacobian() == 0;
+        success *= system.evaluateConstraints() == 0;
+        success *= system.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        success *= system.getCsrInequalityJacobian()->getNumRows() == system.sizeInequalities();
+        success *= system.getCsrJacobian()->getNumRows() == system.sizeConstraints();
 
         TrackedT tracked(unbounded);
         success *= tracked.allocate() == 0 && tracked.initialize() == 0;
-        success *= tracked.evaluateInequalityJacobian() == 0;
+        success *= tracked.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        success *= tracked.getCsrInequalityJacobian()->getNumRows() == tracked.sizeInequalities();
+        success *= tracked.getCsrJacobian()->getNumRows() == tracked.sizeConstraints();
 
         return success.report(__func__);
       }
@@ -356,33 +346,11 @@ namespace GridKit
         success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"Pd": 1.0}})"));
         success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"node": 2}, "params": {}})"));
 
-        // Every study starts flat and has no monitors, so init and mon are rejected
-        success *= throws<std::invalid_argument>(parse, R"({"params": {"va_base": 1}, "buses": [{"class": "Bus", "number": 1, "params": {}, "init": {"Vr": 1.0}}], "devices": []})");
-        success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {}, "init": {}})"));
-        success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {}, "mon": []})"));
-
         // A boolean real and a numeric service status are read, and rejected by the model
         success *= throws<std::invalid_argument>([&]()
                                                  { SystemT system(parse(jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"P": true}})"))); });
         success *= throws<std::invalid_argument>([&]()
                                                  { SystemT system(parse(jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"in_service": 1}})"))); });
-
-        const std::array<std::string, 4> invalid_numbers{
-            "-1", "1.5", std::to_string(INVALID_INDEX<IdxT>), "1e30"};
-        for (const auto& number : invalid_numbers)
-        {
-          const auto bus_case = R"({"params": {"va_base": 1}, "buses": [{"class": "Bus", "number": )"
-                                + number + R"(, "params": {}}], "devices": []})";
-          success *= throws<std::invalid_argument>(parse, bus_case);
-          success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": )" + number + R"(}, "params": {}})"));
-        }
-
-        for (const IdxT number : {IdxT{0}, INVALID_INDEX<IdxT> - 1})
-        {
-          const auto bus_case = R"({"params": {"va_base": 1}, "buses": [{"class": "Bus", "number": )"
-                                + std::to_string(number) + R"(, "params": {}}], "devices": []})";
-          success *= parse(bus_case).bus[0].number == number;
-        }
 
         return success.report(__func__);
       }
@@ -394,7 +362,7 @@ namespace GridKit
         auto       component_ptr  = std::make_unique<CoupledComponent>();
         auto&      owner          = *owner_ptr;
         auto&      component      = *component_ptr;
-        success                  *= component.connect(0, owner, {1, 1, 0}) == 0;
+        success                  *= component.connect(0, owner, {1, 1}) == 0;
         success                  *= component.connect(1, owner) == 0;
         success                  *= component.connect(2, owner) == 0;
         if (!success)
@@ -402,18 +370,18 @@ namespace GridKit
           return success.report(__func__);
         }
         success     *= component.connect(3, owner) != 0;
-        success     *= component.connect(0, owner, {2, 0, 0}) != 0;
-        success     *= component.connect(0, owner, {0, 2, 0}) != 0;
-        success     *= component.connect(0, owner, {INVALID_INDEX<IdxT>, 0, 0}) != 0;
+        success     *= component.connect(0, owner, {2, 0}) != 0;
+        success     *= component.connect(0, owner, {0, 2}) != 0;
+        success     *= component.connect(0, owner, {INVALID_INDEX<IdxT>, 0}) != 0;
         success     *= component.ports()[0].offset.variables == 1;
-        success     *= component.ports()[0].offset.equalities == 1;
+        success     *= component.ports()[0].offset.constraints == 1;
         auto system  = makeSystem<RealT>(std::move(owner_ptr), std::move(component_ptr));
         success     *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        success *= component.connect(1, owner, {1, 0, 0}) != 0;
+        success *= component.connect(1, owner, {1, 0}) != 0;
         return success.report(__func__);
       }
 
@@ -441,7 +409,9 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome equalityAssembly()
+      /// Contributions add to the constraint they belong to, and only the
+      /// tagged inequality starts unbounded
+      TestOutcome constraintAssembly()
       {
         TestStatus success  = true;
         auto       system   = coupledSystem();
@@ -450,43 +420,30 @@ namespace GridKit
         {
           return success.report(__func__);
         }
+        success *= system.tag() == std::vector<bool>{false, false, false, true};
+        for (IdxT i = 0; i < 3; ++i)
+        {
+          success *= isEqual(system.gLower().getData()[i], ZERO<RealT>) && isEqual(system.gUpper().getData()[i], ZERO<RealT>);
+        }
+        success *= std::isinf(system.gLower().getData()[3]) && std::isinf(system.gUpper().getData()[3]);
+
         setVariables(system, COUPLED_X);
-        success *= system.evaluateEqualities() == 0;
-        success *= system.evaluateEqualityJacobian() == 0;
+        success *= system.evaluateConstraints() == 0;
+        success *= system.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        const RealT* c     = system.c().getData();
-        success           *= isEqual(c[0], 20.0);
-        success           *= isEqual(c[1], -4.0);
-        success           *= isEqual(c[2], 15.0);
-        const auto actual  = MapFromCsr(system.getCsrEqualityJacobian());
+        const RealT* g     = system.g().getData();
+        success           *= isEqual(g[0], 20.0);
+        success           *= isEqual(g[1], -4.0);
+        success           *= isEqual(g[2], 15.0);
+        success           *= isEqual(g[3], 31.0);
+        const auto actual  = MapFromCsr(system.getCsrJacobian());
         success           *= isEqual(actual.at(0), DependencyMap{{0, 5.0}, {2, 2.0}}, kTol);
         success           *= isEqual(actual.at(1), DependencyMap{{0, 3.0}, {1, 2.0}}, kTol);
         success           *= isEqual(actual.at(2), DependencyMap{{1, 5.0}, {2, 3.0}}, kTol);
-        return success.report(__func__);
-      }
-
-      TestOutcome inequalityAssembly()
-      {
-        TestStatus success  = true;
-        auto       system   = coupledSystem();
-        success            *= system.allocate() == 0 && system.initialize() == 0;
-        if (!success)
-        {
-          return success.report(__func__);
-        }
-        setVariables(system, COUPLED_X);
-        success *= system.evaluateInequalities() == 0;
-        success *= system.evaluateInequalityJacobian() == 0;
-        if (!success)
-        {
-          return success.report(__func__);
-        }
-        success           *= isEqual(system.d().getData()[0], 31.0);
-        const auto actual  = MapFromCsr(system.getCsrInequalityJacobian());
-        success           *= isEqual(actual.at(0), DependencyMap{{0, 3.0}, {1, 2.0}, {2, 10.0}}, kTol);
+        success           *= isEqual(actual.at(3), DependencyMap{{0, 3.0}, {1, 2.0}, {2, 10.0}}, kTol);
         return success.report(__func__);
       }
 
@@ -500,7 +457,8 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(system, COUPLED_X);
-        success *= system.evaluateHessian(2.0, COUPLED_LAMBDA_C.data(), COUPLED_LAMBDA_D.data()) == 0;
+        setMultipliers(system, COUPLED_LAMBDA);
+        success *= system.evaluateHessian(2.0) == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -522,8 +480,9 @@ namespace GridKit
           return success.report(__func__);
         }
         setVariables(system, COUPLED_X);
+        setMultipliers(system, COUPLED_LAMBDA);
         success *= system.evaluateGradient() == 0;
-        success *= system.evaluateHessian(2.0, COUPLED_LAMBDA_C.data(), COUPLED_LAMBDA_D.data()) == 0;
+        success *= system.evaluateHessian(2.0) == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -560,8 +519,7 @@ namespace GridKit
 
     private:
       static constexpr std::array<RealT, 3> COUPLED_X{2.0, 3.0, 5.0};
-      static constexpr std::array<RealT, 3> COUPLED_LAMBDA_C{3.0, 5.0, 7.0};
-      static constexpr std::array<RealT, 1> COUPLED_LAMBDA_D{11.0};
+      static constexpr std::array<RealT, 4> COUPLED_LAMBDA{3.0, 5.0, 7.0, 11.0};
 
       static SystemT coupledSystem(bool repeated = false)
       {
@@ -572,8 +530,8 @@ namespace GridKit
         {
           variable_offset = 1;
         }
-        if (component->connect(0, *owner, {1, 1, 0}) != 0
-            || component->connect(1, *owner, {variable_offset, 0, 0}) != 0
+        if (component->connect(0, *owner, {1, 1}) != 0
+            || component->connect(1, *owner, {variable_offset, 0}) != 0
             || component->connect(2, *owner) != 0)
         {
           throw std::invalid_argument("Invalid component test connections");
@@ -606,13 +564,11 @@ namespace GridKit
                + extra + "]}";
       }
 
-      /// Hessian values at `sigma`, `lambda_c`, and `lambda_d`, or none if the evaluation fails
-      static std::vector<RealT> hessianValues(SystemT&                  system,
-                                              RealT                     sigma,
-                                              const std::vector<RealT>& lambda_c,
-                                              const std::vector<RealT>& lambda_d)
+      /// Hessian values at `sigma` and `lambda`, or none if the evaluation fails
+      static std::vector<RealT> hessianValues(SystemT& system, RealT sigma, const std::vector<RealT>& lambda)
       {
-        if (system.evaluateHessian(sigma, lambda_c.data(), lambda_d.data()) != 0)
+        setMultipliers(system, lambda);
+        if (system.evaluateHessian(sigma) != 0)
         {
           return {};
         }

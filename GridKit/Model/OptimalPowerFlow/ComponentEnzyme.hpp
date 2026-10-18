@@ -9,10 +9,8 @@
 
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <cassert>
-#include <numeric>
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/D2LDx2.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/DfDx.hpp>
@@ -38,65 +36,51 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateEqualityJacobian(const ModelT& model)
+    int Component<scalar_type, index_type>::evaluateJacobian(const ModelT& model)
     {
-      if constexpr (localSize<ModelT>().equalities == 0)
+      if constexpr (localSize<ModelT>().constraints == 0)
       {
-        equality_entries_.nnz = 0;
+        jacobian_entries_.nnz = 0;
         return 0;
       }
       else
       {
-        using DriverT = Enzyme::Sparse::DgDx<ModelT, Enzyme::Sparse::MemberFunctions::Equalities>;
+        std::array<ScalarT, localSize<ModelT>().variables> x;
+        std::array<IdxT, localSize<ModelT>().variables>    cols;
+        std::array<IdxT, localSize<ModelT>().constraints>  rows;
+        gather(x.data());
+        variableIndices(cols.data());
+        constraintIndices(rows.data());
 
-        std::array<IdxT, localSize<ModelT>().equalities> rows;
-        equalityIndices(rows.data());
-        return evaluateJacobian<DriverT>(model, rows.data(), equality_entries_);
-      }
-    }
-
-    template <typename scalar_type, typename index_type>
-    template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateInequalityJacobian(const ModelT& model)
-    {
-      if constexpr (localSize<ModelT>().inequalities == 0)
-      {
-        inequality_entries_.nnz = 0;
+        jacobian_entries_.nnz = 0;
+        Enzyme::Sparse::DgDx<ModelT>::eval(&model,
+                                           local_x_.getSize(),
+                                           rows.data(),
+                                           cols.data(),
+                                           x.data(),
+                                           jacobian_entries_.rows.getData(),
+                                           jacobian_entries_.cols.getData(),
+                                           jacobian_entries_.values.getData(),
+                                           jacobian_entries_.nnz);
+        assert(jacobian_entries_.nnz <= jacobian_entries_.values.getSize());
         return 0;
-      }
-      else
-      {
-        using DriverT = Enzyme::Sparse::DgDx<ModelT, Enzyme::Sparse::MemberFunctions::Inequalities>;
-
-        std::array<IdxT, localSize<ModelT>().inequalities> rows;
-        std::iota(rows.begin(), rows.end(), offset_.inequalities);
-        return evaluateJacobian<DriverT>(model, rows.data(), inequality_entries_);
       }
     }
 
     /**
-     * @brief Lower triangle of the Hessian of the component Lagrangian
-     *
-     * @param[in] lambda_c - Equality multipliers in global rows
-     * @param[in] lambda_d - Inequality multipliers in global rows, contiguous
-     * for the internal block
+     * @brief Lower triangle of the Hessian of the component Lagrangian at the
+     * multipliers of the constraints it contributes to
      */
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateHessian(const ModelT& model,
-                                                            RealT         sigma,
-                                                            const RealT*  lambda_c,
-                                                            const RealT*  lambda_d)
+    int Component<scalar_type, index_type>::evaluateHessian(const ModelT& model, RealT sigma)
     {
       std::array<ScalarT, localSize<ModelT>().variables> x;
       std::array<IdxT, localSize<ModelT>().variables>    cols;
-      std::array<IdxT, localSize<ModelT>().equalities>   rows;
-      std::array<RealT, localSize<ModelT>().equalities>  multipliers;
+      std::array<RealT, localSize<ModelT>().constraints> lambda;
       gather(x.data());
       variableIndices(cols.data());
-      equalityIndices(rows.data());
-      std::ranges::transform(rows, multipliers.begin(), [lambda_c](IdxT row)
-                             { return lambda_c[row]; });
+      gatherMultipliers(lambda.data());
 
       hessian_entries_.nnz = 0;
       Enzyme::Sparse::D2LDx2<ModelT>::eval(&model,
@@ -104,8 +88,7 @@ namespace GridKit
                                            cols.data(),
                                            x.data(),
                                            sigma,
-                                           multipliers.data(),
-                                           lambda_d + offset_.inequalities,
+                                           lambda.data(),
                                            hessian_entries_.rows.getData(),
                                            hessian_entries_.cols.getData(),
                                            hessian_entries_.values.getData(),
@@ -113,33 +96,6 @@ namespace GridKit
       assert(hessian_entries_.nnz <= hessian_entries_.values.getSize());
 
       keepLowerTriangle(hessian_entries_);
-      return 0;
-    }
-
-    /**
-     * @brief Jacobian entries of the kernel that `DriverT` differentiates, in
-     * the global `rows`
-     */
-    template <typename scalar_type, typename index_type>
-    template <typename DriverT, typename ModelT>
-    int Component<scalar_type, index_type>::evaluateJacobian(const ModelT& model, const IdxT* rows, CooBuffer& entries)
-    {
-      std::array<ScalarT, localSize<ModelT>().variables> x;
-      std::array<IdxT, localSize<ModelT>().variables>    cols;
-      gather(x.data());
-      variableIndices(cols.data());
-
-      entries.nnz = 0;
-      DriverT::eval(&model,
-                    local_x_.getSize(),
-                    rows,
-                    cols.data(),
-                    x.data(),
-                    entries.rows.getData(),
-                    entries.cols.getData(),
-                    entries.values.getData(),
-                    entries.nnz);
-      assert(entries.nnz <= entries.values.getSize());
       return 0;
     }
 

@@ -43,8 +43,8 @@ namespace GridKit
     /**
      * @brief Generate system model data from a JSON input file
      *
-     * @throw std::invalid_argument for malformed or unsupported input,
-     * naming the bus or device
+     * @throw nlohmann::json::exception for a missing or mistyped value, and
+     * std::invalid_argument for an unknown device class, parameter, or port
      */
     SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);
     SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& file);

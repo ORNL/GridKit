@@ -40,20 +40,20 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
-    Load<scalar_type, index_type>::externalEqualities([[maybe_unused]] const ScalarT* x,
-                                                      const ScalarT*                  external,
-                                                      ScalarT*                        c) const
+    Load<scalar_type, index_type>::externalConstraints([[maybe_unused]] const ScalarT* x,
+                                                       const ScalarT*                  external,
+                                                       ScalarT*                        g) const
     {
       const auto VR = static_cast<size_t>(LoadExternalVariables::VR);
       const auto VI = static_cast<size_t>(LoadExternalVariables::VI);
-      const auto DP = static_cast<size_t>(LoadExternalEqualities::DP);
-      const auto DQ = static_cast<size_t>(LoadExternalEqualities::DQ);
+      const auto DP = static_cast<size_t>(LoadExternalConstraints::DP);
+      const auto DQ = static_cast<size_t>(LoadExternalConstraints::DQ);
 
       const ScalarT v2 = external[VR] * external[VR] + external[VI] * external[VI];
       const ScalarT v  = std::sqrt(current_on_ * v2 + (ONE<RealT> - current_on_));
 
-      c[DP] = -u_ * (P_ + Pi_ * v + Pz_ * v2);
-      c[DQ] = -u_ * (Q_ + Qi_ * v + Qz_ * v2);
+      g[DP] = -u_ * (P_ + Pi_ * v + Pz_ * v2);
+      g[DQ] = -u_ * (Q_ + Qi_ * v + Qz_ * v2);
     }
 
     template <typename scalar_type, typename index_type>

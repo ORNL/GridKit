@@ -19,21 +19,13 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateEqualityJacobian()
+    int Branch<scalar_type, index_type>::evaluateJacobian()
     {
       return 0;
     }
 
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateInequalityJacobian()
-    {
-      return 0;
-    }
-
-    template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateHessian([[maybe_unused]] RealT        sigma,
-                                                         [[maybe_unused]] const RealT* lambda_c,
-                                                         [[maybe_unused]] const RealT* lambda_d)
+    int Branch<scalar_type, index_type>::evaluateHessian([[maybe_unused]] RealT sigma)
     {
       return 0;
     }

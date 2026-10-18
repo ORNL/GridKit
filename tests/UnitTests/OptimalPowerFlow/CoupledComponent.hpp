@@ -12,7 +12,7 @@ namespace GridKit
   {
     namespace OPF = GridKit::OptimalPowerFlow;
 
-    /// Two variables and two equality rows for other components to read and add to
+    /// Two variables and two equality constraints for other components to read and add to
     class EqualityOwner final : public OPF::Component<double, size_t>
     {
       using RealT = double;
@@ -25,20 +25,19 @@ namespace GridKit
         B,
       };
 
-      enum class Equalities : size_t
+      enum class Constraints : size_t
       {
         A,
         B,
       };
 
-      using InternalVariablesT  = Variables;
-      using ExternalVariablesT  = Utilities::EmptyEnum;
-      using InternalEqualitiesT = Equalities;
-      using ExternalEqualitiesT = Utilities::EmptyEnum;
-      using InequalitiesT       = Utilities::EmptyEnum;
+      using InternalVariablesT   = Variables;
+      using ExternalVariablesT   = Utilities::EmptyEnum;
+      using InternalConstraintsT = Constraints;
+      using ExternalConstraintsT = Utilities::EmptyEnum;
 
       static constexpr std::array<IdxT, 0> NUM_PORT_VARIABLES{};
-      static constexpr std::array<IdxT, 0> NUM_PORT_EQUALITIES{};
+      static constexpr std::array<IdxT, 0> NUM_PORT_CONSTRAINTS{};
 
       EqualityOwner()
         : Component(std::type_identity<EqualityOwner>{}, "owner")
@@ -50,14 +49,14 @@ namespace GridKit
         return {};
       }
 
-      void internalEqualities(const RealT*, const RealT*, RealT* c) const override
+      void internalConstraints(const RealT*, const RealT*, RealT* g) const override
       {
-        c[0] = 10.0;
-        c[1] = -10.0;
+        g[0] = 10.0;
+        g[1] = -10.0;
       }
     };
 
-    /// One internal variable, row, and inequality, coupled to an owner at three ports
+    /// One internal variable, equality, and inequality, coupled to an owner at three ports
     class CoupledComponent final : public OPF::Component<double, size_t>
     {
       using RealT = double;
@@ -75,30 +74,25 @@ namespace GridKit
         Z, ///< Read at port 1
       };
 
-      enum class InternalEqualities : size_t
+      enum class InternalConstraints : size_t
       {
-        C,
+        C, ///< Equality
+        D, ///< Inequality
       };
 
-      enum class ExternalEqualities : size_t
+      enum class ExternalConstraints : size_t
       {
         C0, ///< Added at port 0
         C2, ///< Added at port 2
       };
 
-      enum class Inequalities : size_t
-      {
-        D,
-      };
-
-      using InternalVariablesT  = InternalVariables;
-      using ExternalVariablesT  = ExternalVariables;
-      using InternalEqualitiesT = InternalEqualities;
-      using ExternalEqualitiesT = ExternalEqualities;
-      using InequalitiesT       = Inequalities;
+      using InternalVariablesT   = InternalVariables;
+      using ExternalVariablesT   = ExternalVariables;
+      using InternalConstraintsT = InternalConstraints;
+      using ExternalConstraintsT = ExternalConstraints;
 
       static constexpr std::array<IdxT, 3> NUM_PORT_VARIABLES{1, 1, 0};
-      static constexpr std::array<IdxT, 3> NUM_PORT_EQUALITIES{1, 0, 1};
+      static constexpr std::array<IdxT, 3> NUM_PORT_CONSTRAINTS{1, 0, 1};
 
       CoupledComponent()
         : Component(std::type_identity<CoupledComponent>{}, "coupled")
@@ -110,30 +104,32 @@ namespace GridKit
         return {};
       }
 
+      int tagInequality() override
+      {
+        tag_[static_cast<size_t>(InternalConstraints::C)] = false;
+        tag_[static_cast<size_t>(InternalConstraints::D)] = true;
+        return 0;
+      }
+
       int evaluateGradient() override;
-      int evaluateEqualityJacobian() override;
-      int evaluateInequalityJacobian() override;
-      int evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d) override;
+      int evaluateJacobian() override;
+      int evaluateHessian(RealT sigma) override;
 
       [[gnu::always_inline]] RealT objective(const RealT* x, const RealT* external) const override
       {
         return 0.5 * x[0] * x[0] + external[0] * external[1];
       }
 
-      [[gnu::always_inline]] void internalEqualities(const RealT* x, const RealT* external, RealT* c) const override
+      [[gnu::always_inline]] void internalConstraints(const RealT* x, const RealT* external, RealT* g) const override
       {
-        c[0] = x[0] * external[0];
+        g[0] = x[0] * external[0];
+        g[1] = x[0] * x[0] + external[0] * external[1];
       }
 
-      [[gnu::always_inline]] void externalEqualities(const RealT* x, const RealT* external, RealT* c) const override
+      [[gnu::always_inline]] void externalConstraints(const RealT* x, const RealT* external, RealT* g) const override
       {
-        c[0] = external[0] * external[1];
-        c[1] = x[0] * external[1];
-      }
-
-      [[gnu::always_inline]] void inequalities(const RealT* x, const RealT* external, RealT* d) const override
-      {
-        d[0] = x[0] * x[0] + external[0] * external[1];
+        g[0] = external[0] * external[1];
+        g[1] = x[0] * external[1];
       }
     };
   } // namespace Testing
