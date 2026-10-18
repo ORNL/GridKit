@@ -38,8 +38,8 @@ namespace AnalysisManager
 
     public:
       /**
-       * @param[in] model - Allocated model, which holds the solution after
-       * the solve
+       * @param[in] model - Allocated and initialized model, which holds the
+       * solution after the solve
        */
       explicit IpoptInterface(ModelT* model);
 
@@ -49,7 +49,7 @@ namespace AnalysisManager
       /// Variable bounds, then zero bounds on the equality constraints followed by the inequality constraint bounds
       bool get_bounds_info(ipindex n, ipnumber* x_l, ipnumber* x_u, ipindex m, ipnumber* g_l, ipnumber* g_u) override;
 
-      /// Variables from the model's `x()`, with no starting point for the multipliers
+      /// Variables from the model's `x()`, with no initial multipliers
       bool get_starting_point(ipindex   n,
                               bool      init_x,
                               ipnumber* x,

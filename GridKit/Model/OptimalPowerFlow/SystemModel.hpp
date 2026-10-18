@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include <GridKit/Model/ConfigurationChecks.hpp>
@@ -50,7 +51,6 @@ namespace GridKit
       using BranchT      = Branch<ScalarT, IdxT>;
       using Block        = typename ComponentT::Block;
       using CooBufferT   = typename ComponentT::CooBuffer;
-      using EntriesT     = const CooBufferT& (ComponentT::*) () const;
 
       using EvaluatorT::c_;
       using EvaluatorT::d_;
@@ -86,13 +86,28 @@ namespace GridKit
                           const RealT* lambda_d) override;
 
     private:
+      /// Component entries of one derivative matrix and the CSR entry of each
+      struct Assembly
+      {
+        std::vector<const CooBufferT*> entries;
+        IndexVectorT                   map_to_csr;
+      };
+
+      template <typename ModelT, typename DataT>
+      static std::unique_ptr<ModelT> build(const DataT& data, std::string_view id);
+
+      void addBus(const BusData<RealT, IdxT>& data);
+
+      template <typename ModelT, typename DataT>
+      ModelT& addDevice(const DataT& data);
+
       int               compose();
       int               bind(ComponentT& component, const Block& offset);
       std::vector<IdxT> unreferencedIslands() const;
       int               allocateDerivatives();
 
-      std::unique_ptr<CsrMatrixT> assemble(IdxT rows, IdxT cols, EntriesT entries, IndexVectorT& map_to_csr) const;
-      int                         refill(CsrMatrixT& matrix, EntriesT entries, const IndexVectorT& map_to_csr) const;
+      std::unique_ptr<CsrMatrixT> assemble(IdxT rows, IdxT cols, Assembly& assembly) const;
+      int                         refill(CsrMatrixT& matrix, const Assembly& assembly) const;
 
       /// Buses first, then devices
       std::vector<std::unique_ptr<ComponentT>> components_;
@@ -103,10 +118,9 @@ namespace GridKit
       /// Electrical connectivity, independent of component dependencies
       std::vector<BranchT*> branches_;
 
-      /// Map from component entries to CSR entries
-      IndexVectorT equality_jacobian_map_;
-      IndexVectorT inequality_jacobian_map_;
-      IndexVectorT hessian_map_;
+      Assembly equality_jacobian_assembly_;
+      Assembly inequality_jacobian_assembly_;
+      Assembly hessian_assembly_;
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

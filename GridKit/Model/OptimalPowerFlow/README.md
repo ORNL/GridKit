@@ -22,35 +22,41 @@ and sparse matrices. Every component, including `Bus`, views its own blocks
 of those vectors. Components do not inherit the complete nonlinear program.
 Service status is a parameter of each component that uses it.
 
-`NUM_INTERNAL_VARIABLES`, `NUM_INTERNAL_EQUALITIES`, and
-`NUM_INTERNAL_INEQUALITIES` declare the owned dimensions. `NUM_PORT_VARIABLES`
-and `NUM_PORT_EQUALITIES` declare, at each port, the variables read and the
-equality rows contributed to. `Component` derives every other size from these
-counts. Local arrays hold internal entries first, then external entries in port
-order. A bus defines what a port to it shares: its voltage and its power
+Each model enumerates its internal variables, its external variables, its
+internal equality rows, its external equality contributions, and its inequality
+rows as `InternalVariablesT`, `ExternalVariablesT`, `InternalEqualitiesT`,
+`ExternalEqualitiesT`, and `InequalitiesT`. Inequality rows always belong to
+the component that evaluates them.
+`NUM_PORT_VARIABLES` and `NUM_PORT_EQUALITIES` split the external entries among
+the ports. `Component` derives every size from these. Each kernel receives the
+internal variables `x` and the external variables `external`, each indexed by
+its enumeration. A bus defines what a port to it shares: its voltage and its power
 balance. `connect(port, component, offset)` selects contiguous blocks owned by
 any component; variable and equality offsets are independent. Connections must
-target components owned by the same system. Allocation binds the views and
-prevents further connection changes.
+target components owned by the same system. `allocate()` binds the views,
+which prevents further connection changes, and builds the derivative patterns.
+`initialize()` sets the bounds and the flat start. Every variable starts at
+zero, and a model overrides `initialize()` for its bounds and any nonzero
+initial value.
 
 ### Internal Constraints
 
 #### Equality
 
-`internalEqualities(x, c)` contributes to rows owned by the component. Each
+`internalEqualities(x, external, c)` contributes to rows owned by the component. Each
 equality row is owned by one component and is the sum of its owner's
 contribution and those of every component with a port to it; the assembled row
 equals zero.
 
 #### Inequality
 
-`internalInequalities(x, d)` evaluates rows owned by the component. These may
+`inequalities(x, external, d)` evaluates the rows of the component. These may
 depend on both internal and external variables. Variable bounds remain separate
 from these function bounds.
 
 ### External Constraints
 
-`externalEqualities(x, c)` contributes to equality rows owned by the connected
+`externalEqualities(x, external, c)` contributes to equality rows owned by the connected
 components. These contributions are added to the owning rows; they are not
 separate constraints equated to zero. For example, a generator contributes
 power to a bus's balance rows without reading its voltage.
@@ -65,7 +71,7 @@ constructor.
 
 ## Derivatives
 
-Each component supplies `objective(x)` and the constraint kernels above,
+Each component supplies `objective(x, external)` and the constraint kernels above,
 which `Component` differentiates with Enzyme. Internal and external equality
 contributions share one differentiation pass:
 
@@ -84,6 +90,15 @@ Driver   | Derivative                                            | Mode
 [`Bus`](Bus/README.md), [`Branch`](Branch/README.md),
 [`Generator`](Generator/README.md), and [`Load`](Load/README.md). Values are
 per unit on the system base `va_base`.
+
+The parser reads `params.va_base`, the `number` and `params` of each bus, and
+the `class`, `id`, `ports`, and `params` of each device. It ignores `header`,
+`freq_base`, `name`, and `extension`, and rejects `signals`, `monitors`,
+`init`, and `mon`, because every study starts flat. Each model reads its parameters with `Model::ParameterReader`,
+so a real accepts an integer, `reference` and `in_service` must be booleans,
+and an error names the bus or device. `Bus` and `Branch` share their class
+names with PhasorDynamics but not their parameters, so a case file belongs to
+one family.
 
 A bus carries its shunt admittance to ground in `G` and `B`. Loads use `P`,
 `Q`, `Pi`, `Qi`, `Pz`, and `Qz`: the constant-power, constant-current, and

@@ -4,16 +4,16 @@ Dispatchable active and reactive power injection with a quadratic cost.
 
 ## Model Parameters
 
-Symbol     | Units  | Data         | Description                                       | Typical Value | Note
------------|--------|--------------|---------------------------------------------------|---------------|-----
-$P^{\min}$ | [p.u.] | `Pmin`       | Active power lower limit                          | 0             | Default unbounded
-$P^{\max}$ | [p.u.] | `Pmax`       | Active power upper limit                          | 1             | Default unbounded
-$Q^{\min}$ | [p.u.] | `Qmin`       | Reactive power lower limit                        | -0.5          | Default unbounded
-$Q^{\max}$ | [p.u.] | `Qmax`       | Reactive power upper limit                        | 0.5           | Default unbounded
-$c_0$      | [\$/h] | `c0`         | Constant cost coefficient                         |               | Default 0
-$c_1$      | [\$/h] | `c1`         | Linear cost coefficient                           | 1000          | Default 0
-$c_2$      | [\$/h] | `c2`         | Quadratic cost coefficient                        | 100           | Default 0
-$u$        | [-]    | `in_service` | Service status, 1 in service and 0 out of service |               | Default true
+Symbol     | Units        | Data         | Description                                       | Typical Value | Note
+-----------|--------------|--------------|---------------------------------------------------|---------------|-----
+$P^{\min}$ | [p.u.]       | `Pmin`       | Active power lower limit                          | 0             | Default unbounded
+$P^{\max}$ | [p.u.]       | `Pmax`       | Active power upper limit                          | 1             | Default unbounded
+$Q^{\min}$ | [p.u.]       | `Qmin`       | Reactive power lower limit                        | -0.5          | Default unbounded
+$Q^{\max}$ | [p.u.]       | `Qmax`       | Reactive power upper limit                        | 0.5           | Default unbounded
+$c_0$      | [\$/h]       | `c0`         | Constant cost coefficient                         |               | Default 0
+$c_1$      | [\$/h/p.u.]  | `c1`         | Linear cost coefficient                           | 1000          | Default 0
+$c_2$      | [\$/h/p.u.²] | `c2`         | Quadratic cost coefficient                        | 100           | Default 0
+$u$        | [-]          | `in_service` | Service status, 1 in service and 0 out of service |               | Default true
 
 ### Parameter Validation
 

@@ -22,9 +22,10 @@ namespace GridKit
      * \f$d_l \le d(x) \le d_u\f$, and \f$x_l \le x \le x_u\f$.
      * The Lagrangian is
      * \f$L = \sigma f + \lambda_c^T c + \lambda_d^T d\f$.
-     * Jacobians and the lower Lagrangian Hessian retain the sparsity
-     * patterns set by `allocate()`. Evaluations are at `x()`, and methods
-     * returning `int` return 0 on success.
+     * `allocate()` sets the sizes and the sparsity patterns, which the
+     * Jacobians and the lower Lagrangian Hessian retain. `initialize()` sets
+     * the bounds and the initial values. Evaluations are at `x()`, and
+     * methods returning `int` return 0 on success.
      */
     template <typename scalar_type, typename index_type>
     class OptimizationEvaluator
@@ -39,10 +40,10 @@ namespace GridKit
 
       virtual ~OptimizationEvaluator() = default;
 
-      /// Number the variables and constraints, and set the bounds, the starting point, and the sparsity patterns
+      /// Number the variables and constraints, and set the sparsity patterns
       virtual int allocate() = 0;
 
-      /// Set the starting point `x()`
+      /// Set the bounds and the initial values of the variables `x()`
       virtual int initialize() = 0;
 
       /// Evaluate \f$f(x)\f$ into `f()`

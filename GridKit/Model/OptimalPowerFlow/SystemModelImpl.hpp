@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include <algorithm>
 #include <format>
 #include <map>
 #include <set>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -21,6 +21,7 @@
 #include <GridKit/Model/OptimalPowerFlow/Generator/Generator.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Load/Load.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModel.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -28,53 +29,31 @@ namespace GridKit
   {
     /**
      * @param[in] data - Network, demand, limits, and costs
+     *
+     * @throw std::invalid_argument for a duplicate bus, a parameter that
+     * cannot be read, a port without a bus, or a bus that does not exist
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
     {
-      for (const auto& bus_data : data.bus)
+      for (const auto& bus : data.bus)
       {
-        auto bus = std::make_unique<BusT>(bus_data);
-        if (!buses_.emplace(bus_data.number, bus.get()).second)
-        {
-          throw std::invalid_argument(std::format("OptimalPowerFlow::SystemModel: duplicate bus {}", bus_data.number));
-        }
-        components_.push_back(std::move(bus));
+        addBus(bus);
       }
 
-      const auto add = [this](auto component, const auto& component_data)
+      for (const auto& branch : data.branch)
       {
-        const auto numbers = portNumbers(component_data);
-        for (IdxT port = 0; port < numbers.size(); ++port)
-        {
-          const auto bus = buses_.find(numbers[port]);
-          if (numbers[port] != INVALID_INDEX<IdxT> && bus != buses_.end())
-          {
-            const int status = component->connect(port, *bus->second);
-            if (status != 0)
-            {
-              throw std::invalid_argument(std::format("{}: incompatible port {}", component->id(), port));
-            }
-          }
-        }
-        components_.push_back(std::move(component));
-      };
-
-      for (const auto& branch_data : data.branch)
-      {
-        auto branch = std::make_unique<BranchT>(branch_data);
-        branches_.push_back(branch.get());
-        add(std::move(branch), branch_data);
+        branches_.push_back(&addDevice<BranchT>(branch));
       }
 
       for (const auto& generator : data.generator)
       {
-        add(std::make_unique<Generator<ScalarT, IdxT>>(generator), generator);
+        addDevice<Generator<ScalarT, IdxT>>(generator);
       }
 
       for (const auto& load : data.load)
       {
-        add(std::make_unique<Load<ScalarT, IdxT>>(load), load);
+        addDevice<Load<ScalarT, IdxT>>(load);
       }
     }
 
@@ -91,89 +70,57 @@ namespace GridKit
       }
     }
 
-    /// View the internal blocks of the system vectors from `offset`
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::bind(ComponentT& component, const Block& offset)
-    {
-      component.offset_ = offset;
-      const Block& size = component.size_;
-
-      const auto view = [](auto& local, auto& global, IdxT start, IdxT size)
-      { return local.setData(global.getData() + start, size) != 0; };
-
-      if (view(component.x_, this->x_, offset.variables, size.variables)
-          || view(component.x_lower_, this->x_lower_, offset.variables, size.variables)
-          || view(component.x_upper_, this->x_upper_, offset.variables, size.variables)
-          || view(component.gradient_, this->gradient_, offset.variables, size.variables)
-          || view(component.c_, this->c_, offset.equalities, size.equalities)
-          || view(component.d_, this->d_, offset.inequalities, size.inequalities)
-          || view(component.d_lower_, this->d_lower_, offset.inequalities, size.inequalities)
-          || view(component.d_upper_, this->d_upper_, offset.inequalities, size.inequalities))
-      {
-        return 1;
-      }
-      component.bound_ = true;
-      return 0;
-    }
-
     /**
-     * @brief Size the vectors for `components`, bind each to the next blocks,
-     * and allocate it
-     *
-     * Limits start unlimited, and each component then sets its limits.
+     * @brief Every problem with the data, including an island without a
+     * reference bus
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::compose()
+    Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
     {
-      Block size;
+      Model::ConfigurationChecks checks;
+
+      std::unordered_set<const ComponentT*> components;
       for (const auto& component : components_)
       {
-        size += component->size_;
+        components.insert(component.get());
       }
 
-      if (this->x_.resize(size.variables) != 0
-          || this->x_lower_.resize(size.variables) != 0
-          || this->x_upper_.resize(size.variables) != 0
-          || this->gradient_.resize(size.variables) != 0
-          || this->c_.resize(size.equalities) != 0
-          || this->d_.resize(size.inequalities) != 0
-          || this->d_lower_.resize(size.inequalities) != 0
-          || this->d_upper_.resize(size.inequalities) != 0)
+      for (const auto& [number, bus] : buses_)
       {
-        return 1;
+        checks.check(number != INVALID_INDEX<IdxT>,
+                     std::format("{}: invalid bus number", bus->id()));
       }
 
-      if (this->x_lower_.setToConst(-UNBOUNDED<RealT>) != 0
-          || this->x_upper_.setToConst(UNBOUNDED<RealT>) != 0
-          || this->d_lower_.setToConst(-UNBOUNDED<RealT>) != 0
-          || this->d_upper_.setToConst(UNBOUNDED<RealT>) != 0)
+      for (const IdxT number : unreferencedIslands())
       {
-        return 1;
+        checks.fail(std::format("OptimalPowerFlow::SystemModel: the island of bus {} has no reference bus", number));
       }
 
-      Block offset;
+      std::set<std::string> ids;
       for (const auto& component : components_)
       {
-        if (bind(*component, offset) != 0)
+        checks.check(ids.insert(component->id()).second, std::format("{}: duplicate id", component->id()));
+
+        const auto component_checks = component->verify();
+        for (const auto& error : component_checks.errors())
         {
-          return 1;
+          checks.fail(std::format("{}: {}", component->id(), error));
         }
-        offset += component->size_;
-      }
-      for (const auto& component : components_)
-      {
-        const int status = component->allocate();
-        if (status != 0)
+
+        const auto& ports = component->ports();
+        for (IdxT port = 0; port < ports.size(); ++port)
         {
-          return status;
+          checks.check(components.contains(ports[port].component),
+                       std::format("{}: port {} must connect to a component in this system", component->id(), port));
         }
       }
-      return 0;
+
+      return checks;
     }
 
     /**
-     * @brief Compose the components and set the
-     * starting point and the derivative patterns
+     * @brief Verify the components, bind them to the system vectors, and
+     * build the derivative patterns
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
@@ -193,21 +140,27 @@ namespace GridKit
         return 1;
       }
 
-      const int status = initialize();
-      if (status != 0)
-      {
-        return status;
-      }
-
       return allocateDerivatives();
     }
 
     /**
-     * @brief Starting point
+     * @brief Bounds and the flat start
+     *
+     * Every variable starts at zero and every bound unbounded. Each component
+     * then sets its bounds and any nonzero initial value.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
+      if (x_.setToZero() != 0
+          || x_lower_.setToConst(-UNBOUNDED<RealT>) != 0
+          || x_upper_.setToConst(UNBOUNDED<RealT>) != 0
+          || d_lower_.setToConst(-UNBOUNDED<RealT>) != 0
+          || d_upper_.setToConst(UNBOUNDED<RealT>) != 0)
+      {
+        return 1;
+      }
+
       for (auto& component : components_)
       {
         const int status = component->initialize();
@@ -284,47 +237,131 @@ namespace GridKit
     }
 
     /**
-     * @brief Every problem with the data, including an island without a
-     * reference bus
+     * @brief `ModelT` from `data`, with a parameter error naming `id`
      */
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
+    template <typename ModelT, typename DataT>
+    std::unique_ptr<ModelT> SystemModel<scalar_type, index_type>::build(const DataT& data, std::string_view id)
     {
-      Model::ConfigurationChecks checks;
+      try
+      {
+        return std::make_unique<ModelT>(data);
+      }
+      catch (const std::invalid_argument& error)
+      {
+        throw std::invalid_argument(std::format("{}: {}", id, error.what()));
+      }
+    }
 
-      std::unordered_set<const ComponentT*> components;
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::addBus(const BusData<RealT, IdxT>& data)
+    {
+      auto bus = build<BusT>(data, data.id());
+      if (!buses_.emplace(data.number, bus.get()).second)
+      {
+        throw std::invalid_argument(std::format("OptimalPowerFlow::SystemModel: duplicate bus {}", data.number));
+      }
+      components_.push_back(std::move(bus));
+    }
+
+    /**
+     * @brief Device from `data`, connected at each port to the bus it names
+     */
+    template <typename scalar_type, typename index_type>
+    template <typename ModelT, typename DataT>
+    ModelT& SystemModel<scalar_type, index_type>::addDevice(const DataT& data)
+    {
+      using Ports = typename DataT::Ports;
+      static_assert(ModelT::NUM_PORT_VARIABLES.size() == Utilities::enum_size<Ports>());
+
+      auto device = build<ModelT>(data, data.id);
+      for (const Ports port : Utilities::enum_values<Ports>())
+      {
+        const auto number = data.ports.find(port);
+        if (number == data.ports.end())
+        {
+          throw std::invalid_argument(std::format("{}: port '{}' has no bus", data.id, Utilities::enum_name(port)));
+        }
+
+        const auto bus = buses_.find(number->second);
+        if (bus == buses_.end())
+        {
+          throw std::invalid_argument(
+              std::format("{}: port '{}' names unknown bus {}", data.id, Utilities::enum_name(port), number->second));
+        }
+
+        if (device->connect(static_cast<IdxT>(port), *bus->second) != 0)
+        {
+          throw std::invalid_argument(
+              std::format("{}: port '{}' does not fit bus {}", data.id, Utilities::enum_name(port), number->second));
+        }
+      }
+
+      ModelT& added = *device;
+      components_.push_back(std::move(device));
+      return added;
+    }
+
+    /**
+     * @brief Size the vectors for the components and bind each to the next
+     * blocks
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::compose()
+    {
+      Block size;
       for (const auto& component : components_)
       {
-        components.insert(component.get());
+        size += component->size_;
       }
 
-      for (const auto& [number, bus] : buses_)
+      if (x_.resize(size.variables) != 0
+          || x_lower_.resize(size.variables) != 0
+          || x_upper_.resize(size.variables) != 0
+          || gradient_.resize(size.variables) != 0
+          || c_.resize(size.equalities) != 0
+          || d_.resize(size.inequalities) != 0
+          || d_lower_.resize(size.inequalities) != 0
+          || d_upper_.resize(size.inequalities) != 0)
       {
-        checks.check(number != INVALID_INDEX<IdxT>,
-                     std::format("{}: invalid bus number", bus->id()));
+        return 1;
       }
 
-      for (const IdxT number : unreferencedIslands())
-      {
-        checks.fail(std::format("OptimalPowerFlow::SystemModel: the island of bus {} has no reference bus", number));
-      }
-
+      Block offset;
       for (const auto& component : components_)
       {
-        const auto component_checks = component->verify();
-        for (const auto& error : component_checks.errors())
+        if (bind(*component, offset) != 0)
         {
-          checks.fail(std::format("{}: {}", component->id(), error));
+          return 1;
         }
-        const auto& ports = component->ports();
-        for (IdxT port = 0; port < ports.size(); ++port)
-        {
-          checks.check(components.contains(ports[port].component),
-                       std::format("{}: port {} must connect to a component in this system", component->id(), port));
-        }
+        offset += component->size_;
       }
+      return 0;
+    }
 
-      return checks;
+    /// View the internal blocks of the system vectors from `offset`
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::bind(ComponentT& component, const Block& offset)
+    {
+      component.offset_ = offset;
+      const Block& size = component.size_;
+
+      const auto view = [](auto& local, auto& global, IdxT start, IdxT count)
+      { return local.setData(global.getData() + start, count) != 0; };
+
+      if (view(component.x_, x_, offset.variables, size.variables)
+          || view(component.x_lower_, x_lower_, offset.variables, size.variables)
+          || view(component.x_upper_, x_upper_, offset.variables, size.variables)
+          || view(component.gradient_, gradient_, offset.variables, size.variables)
+          || view(component.c_, c_, offset.equalities, size.equalities)
+          || view(component.d_, d_, offset.inequalities, size.inequalities)
+          || view(component.d_lower_, d_lower_, offset.inequalities, size.inequalities)
+          || view(component.d_upper_, d_upper_, offset.inequalities, size.inequalities))
+      {
+        return 1;
+      }
+      component.bound_ = true;
+      return 0;
     }
 
     /**

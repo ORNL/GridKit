@@ -7,6 +7,8 @@
 
 #include <algorithm>
 
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
 namespace AnalysisManager
 {
   namespace SteadyState
@@ -24,6 +26,14 @@ namespace AnalysisManager
                                                                ipindex&        nnz_h_lag,
                                                                IndexStyleEnum& index_style)
     {
+      if (model_->getCsrEqualityJacobian() == nullptr
+          || model_->getCsrInequalityJacobian() == nullptr
+          || model_->getCsrHessian() == nullptr)
+      {
+        GridKit::Utilities::Logger::error() << "IpoptInterface: allocate() the model before solving it\n";
+        return false;
+      }
+
       n           = static_cast<ipindex>(model_->size());
       m           = static_cast<ipindex>(model_->sizeEqualities() + model_->sizeInequalities());
       nnz_jac_g   = static_cast<ipindex>(model_->getCsrEqualityJacobian()->getNnz()
@@ -65,7 +75,7 @@ namespace AnalysisManager
                                                                      bool                       init_lambda,
                                                                      [[maybe_unused]] ipnumber* lambda)
     {
-      // Only the variables have a starting point
+      // Only the variables have initial values
       if (!init_x || init_z || init_lambda)
       {
         return false;

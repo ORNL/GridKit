@@ -27,4 +27,6 @@ gridkit_add_library(
     PUBLIC
     GridKit::dense_vector
     PUBLIC
-    GridKit::sparse_matrix)
+    GridKit::sparse_matrix
+    PUBLIC
+    GridKit::utilities_logger)

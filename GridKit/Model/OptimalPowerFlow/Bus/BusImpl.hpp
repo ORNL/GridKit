@@ -5,13 +5,11 @@
 
 #pragma once
 
-#include <cmath>
-#include <format>
 #include <type_traits>
 
 #include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
-#include <GridKit/Model/OptimalPowerFlow/ComponentData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -19,13 +17,9 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus(const ModelDataT& data)
-      : ComponentT(std::type_identity<Bus>{}, std::format("bus {}", data.number)),
-        reference_(data.reference),
-        Vmin_(parameter(data, BusParameters::Vmin, ZERO<RealT>)),
-        Vmax_(parameter(data, BusParameters::Vmax, UNBOUNDED<RealT>)),
-        G_(parameter(data, BusParameters::G, ZERO<RealT>)),
-        B_(parameter(data, BusParameters::B, ZERO<RealT>))
+      : ComponentT(std::type_identity<Bus>{}, data.id())
     {
+      initializeParameters(data);
     }
 
     template <typename scalar_type, typename index_type>
@@ -34,56 +28,60 @@ namespace GridKit
       Model::ConfigurationChecks checks("Bus");
       checks.check(Vmin_ >= ZERO<RealT>, "Vmin must be nonnegative");
       checks.check(Vmax_ >= Vmin_, "Vmax must not be less than Vmin");
-      checks.check(std::isfinite(G_), "G must be finite");
-      checks.check(std::isfinite(B_), "B must be finite");
       return checks;
     }
 
     /**
-     * @brief The voltage limits bound the squared magnitude, and a reference
-     * bus fixes its imaginary voltage at zero
-     */
-    template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::allocate()
-    {
-      d_upper_.getData()[0] = Vmax_ * Vmax_;
-      if (Vmin_ > ZERO<RealT>)
-      {
-        d_lower_.getData()[0] = Vmin_ * Vmin_;
-      }
-
-      if (reference_)
-      {
-        x_lower_.getData()[1] = ZERO<RealT>;
-        x_upper_.getData()[1] = ZERO<RealT>;
-      }
-      return 0;
-    }
-
-    /**
-     * @brief Flat start
+     * @brief Unit real voltage for the flat start, the voltage limits on the
+     * squared magnitude, and zero imaginary voltage at a reference bus
      */
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::initialize()
     {
-      ScalarT* x = x_.getData();
-      x[0]       = ONE<RealT>;
-      x[1]       = ZERO<RealT>;
+      const auto VR  = static_cast<size_t>(BusInternalVariables::VR);
+      const auto VI  = static_cast<size_t>(BusInternalVariables::VI);
+      const auto VM2 = static_cast<size_t>(BusInequalities::VM2);
+
+      ScalarT* x       = x_.getData();
+      RealT*   x_lower = x_lower_.getData();
+      RealT*   x_upper = x_upper_.getData();
+      RealT*   d_lower = d_lower_.getData();
+      RealT*   d_upper = d_upper_.getData();
+
+      x[VR] = ONE<RealT>;
+
+      if (reference_)
+      {
+        x_lower[VI] = ZERO<RealT>;
+        x_upper[VI] = ZERO<RealT>;
+      }
+
+      d_upper[VM2] = Vmax_ * Vmax_;
+      if (Vmin_ > ZERO<RealT>)
+      {
+        d_lower[VM2] = Vmin_ * Vmin_;
+      }
       return 0;
     }
 
     /**
-     * @brief Active and reactive power into the bus from its shunt; the
-     * ports add the rest of the balance
+     * @brief Power into the bus from its shunt, which starts the balance
      */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
-    Bus<scalar_type, index_type>::internalEqualities(const ScalarT* x, ScalarT* c) const
+    Bus<scalar_type, index_type>::internalEqualities(const ScalarT*                  x,
+                                                     [[maybe_unused]] const ScalarT* external,
+                                                     ScalarT*                        c) const
     {
-      const ScalarT v2 = x[0] * x[0] + x[1] * x[1];
+      const auto VR = static_cast<size_t>(BusInternalVariables::VR);
+      const auto VI = static_cast<size_t>(BusInternalVariables::VI);
+      const auto P  = static_cast<size_t>(BusInternalEqualities::P);
+      const auto Q  = static_cast<size_t>(BusInternalEqualities::Q);
 
-      c[0] = -G_ * v2;
-      c[1] = B_ * v2;
+      const ScalarT v2 = x[VR] * x[VR] + x[VI] * x[VI];
+
+      c[P] = -G_ * v2;
+      c[Q] = B_ * v2;
     }
 
     /**
@@ -91,12 +89,29 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
-    Bus<scalar_type, index_type>::internalInequalities(const ScalarT* x, ScalarT* d) const
+    Bus<scalar_type, index_type>::inequalities(const ScalarT*                  x,
+                                               [[maybe_unused]] const ScalarT* external,
+                                               ScalarT*                        d) const
     {
-      const ScalarT vr = x[0];
-      const ScalarT vi = x[1];
+      const auto VR  = static_cast<size_t>(BusInternalVariables::VR);
+      const auto VI  = static_cast<size_t>(BusInternalVariables::VI);
+      const auto VM2 = static_cast<size_t>(BusInequalities::VM2);
 
-      d[0] = vr * vr + vi * vi;
+      d[VM2] = x[VR] * x[VR] + x[VI] * x[VI];
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Bus<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    {
+      using Params = BusParameters;
+
+      const Model::ParameterReader reader(data, "Bus");
+
+      Vmin_      = reader.readReal(Params::Vmin).value_or(Vmin_);
+      Vmax_      = reader.readReal(Params::Vmax).value_or(Vmax_);
+      G_         = reader.readReal(Params::G).value_or(G_);
+      B_         = reader.readReal(Params::B).value_or(B_);
+      reference_ = reader.readBool(Params::reference).value_or(reference_);
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit
