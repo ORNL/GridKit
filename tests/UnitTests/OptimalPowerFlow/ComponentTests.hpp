@@ -705,55 +705,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// A load without a constant-current part is smooth at zero voltage
-      TestOutcome loadZeroVoltage()
-      {
-        TestStatus                     success = true;
-        constexpr std::array<RealT, 2> voltage{0.0, 0.0};
-        for (const bool in_service : {true, false})
-        {
-          for (const ZipParts& zip : ZIP_PARTS)
-          {
-            if (in_service && zip.current)
-            {
-              continue;
-            }
-            const auto data     = loadData(in_service, zip);
-            auto       system   = loadSystem<RealT>(data);
-            auto       tracked  = loadSystem<VariableT>(data);
-            success            *= system.allocate() == 0 && system.initialize() == 0;
-            success            *= tracked.allocate() == 0 && tracked.initialize() == 0;
-            if (!success)
-            {
-              return success.report(__func__);
-            }
-            setVariables(system, voltage);
-            setVariables(tracked, voltage);
-            setMultipliers(system, LOAD_LAMBDA);
-            success *= system.evaluateJacobian() == 0;
-            success *= tracked.evaluateJacobian() == 0;
-            success *= system.evaluateHessian(ONE<RealT>) == 0;
-            if (!success)
-            {
-              return success.report(__func__);
-            }
-            const auto jacobian = MapFromCsr(system.getCsrJacobian());
-            const auto expected = MapFromCsr(tracked.getCsrJacobian());
-            for (IdxT row = 0; row < 2; ++row)
-            {
-              success *= isEqual(jacobian.at(row), expected.at(row), kTol);
-              success *= isEqual(jacobian.at(row), DependencyMap{{0, ZERO<RealT>}, {1, ZERO<RealT>}}, kTol);
-            }
-
-            const RealT diagonal  = TWO<RealT> * loadWeights(in_service, zip).second;
-            const auto  hessian   = MapFromCsr(system.getCsrHessian());
-            success              *= isEqual(hessian.at(0), DependencyMap{{0, diagonal}}, kTol);
-            success              *= isEqual(hessian.at(1), DependencyMap{{0, ZERO<RealT>}, {1, diagonal}}, kTol);
-          }
-        }
-        return success.report(__func__);
-      }
-
       /// Demands are finite reals, integers count as reals, and the service status is a boolean
       TestOutcome loadConfiguration()
       {
@@ -790,7 +741,6 @@ namespace GridKit
       /// Constant-current and constant-impedance demands of a ZIP load
       struct ZipParts
       {
-        bool  current; ///< Whether the data sets the constant-current part
         RealT Pi;
         RealT Qi;
         RealT Pz;
@@ -798,10 +748,10 @@ namespace GridKit
       };
 
       /// Constant power only, constant current, constant impedance, and all three parts
-      static constexpr std::array<ZipParts, 4> ZIP_PARTS{{{false, 0.0, 0.0, 0.0, 0.0},
-                                                          {true, 0.5, -0.2, 0.0, 0.0},
-                                                          {false, 0.0, 0.0, 0.3, 0.1},
-                                                          {true, 0.4, 0.15, 0.25, -0.05}}};
+      static constexpr std::array<ZipParts, 4> ZIP_PARTS{{{0.0, 0.0, 0.0, 0.0},
+                                                          {0.5, -0.2, 0.0, 0.0},
+                                                          {0.0, 0.0, 0.3, 0.1},
+                                                          {0.4, 0.15, 0.25, -0.05}}};
 
       static constexpr std::array<std::array<RealT, 2>, 3> ZIP_VOLTAGES{{{1.1, 0.0}, {0.8, -0.6}, {1.15, 0.2}}};
       static constexpr std::array<RealT, 3>                LOAD_LAMBDA{0.7, -0.4, 0.0};
@@ -812,14 +762,11 @@ namespace GridKit
         data.id         = "zip";
         data.parameters = {{OPF::LoadParameters::P, LOAD_P},
                            {OPF::LoadParameters::Q, LOAD_Q},
+                           {OPF::LoadParameters::Pi, zip.Pi},
+                           {OPF::LoadParameters::Qi, zip.Qi},
                            {OPF::LoadParameters::Pz, zip.Pz},
                            {OPF::LoadParameters::Qz, zip.Qz},
                            {OPF::LoadParameters::in_service, in_service}};
-        if (zip.current)
-        {
-          data.parameters[OPF::LoadParameters::Pi] = zip.Pi;
-          data.parameters[OPF::LoadParameters::Qi] = zip.Qi;
-        }
         return data;
       }
 

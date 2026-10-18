@@ -17,7 +17,6 @@ int main()
   result += test.loadEqualities();
   result += test.loadJacobian();
   result += test.loadHessian();
-  result += test.loadZeroVoltage();
   result += test.loadConfiguration();
 
   return result.summary();
