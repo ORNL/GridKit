@@ -147,7 +147,15 @@ if(GRIDKIT_ENABLE_SUNDIALS)
         CACHE INTERNAL BOOL "Sparse solver enabled in SUNDIALS.")
     message(STATUS "KLU support enabled in SUNDIALS.")
   endif()
-  get_target_property(_sundials_arkode_includes SUNDIALS::arkode INTERFACE_INCLUDE_DIRECTORIES)
+  # SUNDIALS::arkode is an alias without include directories. Revisit once SUNDIALS reports partitioned DAE
+  # support itself.
+  if(TARGET SUNDIALS::arkode_shared)
+    get_target_property(_sundials_arkode_includes SUNDIALS::arkode_shared
+                        INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    get_target_property(_sundials_arkode_includes SUNDIALS::arkode_static
+                        INTERFACE_INCLUDE_DIRECTORIES)
+  endif()
   find_file(
     GRIDKIT_SUNDIALS_PDAESTEP_HEADER arkode/arkode_pdaestep.h
     PATHS ${_sundials_arkode_includes}
