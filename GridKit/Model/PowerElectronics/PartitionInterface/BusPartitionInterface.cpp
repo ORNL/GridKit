@@ -311,6 +311,8 @@ namespace GridKit
       size_t internal_index = 0;
       size_t external_index = 0;
 
+      component_->updateTime(time_, alpha_);
+
       // Reconstruct the state expected by the wrapped component from the
       // interface's external data. Route the external residual to component_f_ext_.
       for (size_t i = 0; i < static_cast<size_t>(component_->size()); ++i)
