@@ -2,9 +2,11 @@
 
 This example runs the reusable
 [ACTIVSg2000 case](../../../../cases/PhasorDynamics/ACTIVSg2000/README.md)
-through a bus fault and loads its long monitor output into PostgreSQL with
-[psql](https://www.postgresql.org/docs/current/app-psql.html). The
-[Docker Compose](https://docs.docker.com/compose/) file runs both in containers.
+through a bus fault with `"output_layout": "long"` and loads the output into
+PostgreSQL with [psql](https://www.postgresql.org/docs/current/app-psql.html).
+The [Docker Compose](https://docs.docker.com/compose/) file runs both in
+containers. Run from the example's build or install directory (see
+[Running a Study](../../README.md#running-a-study)).
 
 ```bash
 DynamicSimulation ACTIVSg2000.solver.json
@@ -15,8 +17,8 @@ docker compose down
 With Podman, use `podman compose` (or `podman-compose`) in place of
 `docker compose`.
 
-The script loads 802,602 rows and lists the generators with the largest speed
-deviation:
+`ACTIVSg2000.sql` loads 802,602 rows and lists the generators with the largest
+speed deviation:
 
 ```text
  class  |      id       | max_speed_deviation
