@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 #include <GridKit/Model/PowerElectronics/PartitionInterface/PartitionInterface.hpp>
@@ -77,7 +75,7 @@ namespace GridKit
 
     public:
       BusLinePartitionInterface(node_type* bus, component_type* component, IdxT id);
-      virtual ~BusLinePartitionInterface();
+      ~BusLinePartitionInterface() override = default;
 
       int allocate() final;
       int initialize() final;
@@ -95,19 +93,17 @@ namespace GridKit
 
     private:
       /**
-       * @brief Owned copy of the line component across the partition boundary.
+       * @brief Global connection indices for the bus voltages and line currents
+       *        across the partition boundary.
        */
-      std::unique_ptr<component_type> component_;
+      std::vector<IdxT> connection_indices_;
 
       /**
-       * @brief Non-owning pointer to the bus within the local partition.
+       * @brief Sign of the line current contribution to the bus residual.
+       *
+       * -1 for the left end of the line and +1 for the right end.
        */
-      node_type* bus_;
-
-      /**
-       * @brief True if the bus is connected to the left end of the line.
-       */
-      bool is_left_of_Line_;
+      RealT sign_;
     };
   } // namespace PowerElectronics
 } // namespace GridKit

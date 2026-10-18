@@ -1,14 +1,12 @@
 
 #include "BusLinePartitionInterface.hpp"
 
-#include <cassert>
-#include <cmath>
 #include <cstddef>
+#include <format>
 
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/ExternalConnection.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -26,14 +24,14 @@ namespace GridKit
      * The line currents contribute to the bus residual equations, with signs
      * determined by the orientation of the line relative to the bus.
      *
+     * @pre The bus and line connection indices have been allocated.
+     *
      * @param bus Bus associated with the partition interface.
      * @param component Line component across the partition boundary.
      * @param id Unique identifier for the partition interface.
      */
     template <class ScalarT, typename IdxT>
     BusLinePartitionInterface<ScalarT, IdxT>::BusLinePartitionInterface(node_type* bus, component_type* component, IdxT id)
-      : component_(component->clone()),
-        bus_(bus)
     {
       if (dynamic_cast<MicrogridBus<ScalarT, IdxT>*>(bus) == nullptr)
       {
@@ -51,64 +49,42 @@ namespace GridKit
       idc_            = id;
       extern_indices_ = {0, 1, 2, 3};
       nnz_            = 2;
-    }
 
-    template <class ScalarT, typename IdxT>
-    BusLinePartitionInterface<ScalarT, IdxT>::~BusLinePartitionInterface()
-    {
+      // Global indices associated with the local bus.
+      auto bus_idx_i = bus->getNodeConnection(0).idx_;
+      auto bus_idx_j = bus->getNodeConnection(1).idx_;
+
+      const bool is_left_connection  = bus_idx_i == component->getNodeConnection(1) && bus_idx_j == component->getNodeConnection(2);
+      const bool is_right_connection = bus_idx_i == component->getNodeConnection(3) && bus_idx_j == component->getNodeConnection(4);
+
+      if (is_left_connection == is_right_connection)
+      {
+        throw std::invalid_argument(
+            std::format(
+                "Invalid partition interface detected. Bus(ID={}), Component(ID={}). "
+                "Malformed topology or no partitionable connection was found.",
+                bus->busID(),
+                component->getIDcomponent()));
+      }
+
+      sign_ = is_left_connection ? -1.0 : 1.0;
+      connection_indices_.resize(static_cast<size_t>(size_));
+
+      connection_indices_[0] = component->getNodeConnection(is_left_connection ? 1 : 3);
+      connection_indices_[1] = component->getNodeConnection(is_left_connection ? 2 : 4);
+      connection_indices_[2] = component->getNodeConnection(5);
+      connection_indices_[3] = component->getNodeConnection(6);
     }
 
     template <class ScalarT, typename IdxT>
     int BusLinePartitionInterface<ScalarT, IdxT>::allocate()
     {
-
       CircuitComponent<ScalarT, IdxT>::allocate();
 
-      // Connection indices associated with the two ends of the line.
-      auto comp_bus1_idx_i = component_->getNodeConnection(1);
-      auto comp_bus1_idx_j = component_->getNodeConnection(2);
-      auto comp_bus2_idx_i = component_->getNodeConnection(3);
-      auto comp_bus2_idx_j = component_->getNodeConnection(4);
-
-      // Global indices associated with the local bus.
-      auto bus_idx_i = bus_->getNodeConnection(0).idx_;
-      auto bus_idx_j = bus_->getNodeConnection(1).idx_;
-
-      // Determine whether the local bus is connected to the left or right end of the line.
-      bool is_left_connection  = (comp_bus1_idx_i == bus_idx_i) && (comp_bus1_idx_j == bus_idx_j);
-      bool is_right_connection = (comp_bus2_idx_i == bus_idx_i) && (comp_bus2_idx_j == bus_idx_j);
-
-      // Neither end or both ends matched -> invalid interface. Exactly one end should match.
-      if (is_left_connection == is_right_connection)
-      {
-        GridKit::Utilities::Logger::error() << "ERROR: Invalid partition interface detected. "
-                                            << "Bus(ID=" << bus_->busID()
-                                            << "), Component(ID=" << component_->getIDcomponent()
-                                            << "). Malformed topology or no partitionable connection was found."
-                                            << std::endl;
-
-        return 1;
-      }
-
-      if (is_left_connection)
-      {
-        // Use the connection indices associated with the first end of the line.
-        this->setConnectionNodes(0, component_->getNodeConnection(1));
-        this->setConnectionNodes(1, component_->getNodeConnection(2));
-      }
-      else
-      {
-        // Use the connection indices associated with the second end of the line.
-        this->setConnectionNodes(0, component_->getNodeConnection(3));
-        this->setConnectionNodes(1, component_->getNodeConnection(4));
-      }
-
-      // Map the line current variables that provide the current injection to the bus.
-      this->setConnectionNodes(2, component_->getNodeConnection(5));
-      this->setConnectionNodes(3, component_->getNodeConnection(6));
-
-      // Store the partition orientation for residual and Jacobian evaluation.
-      is_left_of_Line_ = is_left_connection;
+      this->setConnectionNodes(0, connection_indices_[0]);
+      this->setConnectionNodes(1, connection_indices_[1]);
+      this->setConnectionNodes(2, connection_indices_[2]);
+      this->setConnectionNodes(3, connection_indices_[3]);
 
       return 0;
     }
@@ -167,11 +143,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusLinePartitionInterface<ScalarT, IdxT>::evaluateExternalResidual()
     {
-
-      const int sign = is_left_of_Line_ ? -1 : 1;
-
-      *f_ext_[0] += sign * *y_ext_[2];
-      *f_ext_[1] += sign * *y_ext_[3];
+      *f_ext_[0] += sign_ * *y_ext_[2];
+      *f_ext_[1] += sign_ * *y_ext_[3];
 
       return 0;
     }
@@ -192,12 +165,10 @@ namespace GridKit
     {
       this->zeroJacMatrix();
 
-      const int sign = is_left_of_Line_ ? -1 : 1;
-
       // Jacobian entries corresponding to the two transferred line contributions.
       std::vector<IdxT>  rtemp{0, 1};
       std::vector<IdxT>  ctemp{2, 3};
-      std::vector<RealT> valtemp{sign * 1.0, sign * 1.0};
+      std::vector<RealT> valtemp{sign_, sign_};
 
       this->setJacValues(rtemp, ctemp, valtemp);
 
