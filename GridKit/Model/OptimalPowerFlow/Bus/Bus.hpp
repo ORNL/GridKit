@@ -79,12 +79,6 @@ namespace GridKit
 
       [[gnu::always_inline]] void internalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
 
-      /// Angle reference, with zero imaginary voltage
-      bool reference() const
-      {
-        return reference_;
-      }
-
     private:
       void initializeParameters(const ModelDataT& data);
 

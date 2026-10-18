@@ -273,24 +273,10 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Invalid bus numbers, connections, and islands are rejected
+      /// Invalid bus numbers and connections are rejected
       TestOutcome configuration()
       {
         TestStatus success = true;
-
-        auto no_reference                                             = SystemTestData::data();
-        no_reference.bus[0].parameters[OPF::BusParameters::reference] = false;
-
-        success *= configurationRejected([&]()
-                                         { return SystemT(no_reference).verify(); });
-
-        // Out-of-service branches 2-3 and 1-3 leave bus 3 an island without a reference bus
-        auto island                                                    = SystemTestData::data();
-        island.branch[1].parameters[OPF::BranchParameters::in_service] = false;
-        island.branch[2].parameters[OPF::BranchParameters::in_service] = false;
-
-        success *= configurationRejected([&]()
-                                         { return SystemT(island).verify(); });
 
         auto repeated          = SystemTestData::data();
         repeated.bus[1].number = 1;

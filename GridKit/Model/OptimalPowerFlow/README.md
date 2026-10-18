@@ -10,7 +10,7 @@ variable bounds $x_l \le x \le x_u$. The objective and each constraint sum
 component contributions. Each constraint and variable bound belongs to one
 component, which tags the constraint as an inequality or leaves it an equality
 with $g_l = g_u = 0$. An inequality without a finite limit has infinite bounds.
-Every island needs a reference bus.
+Every island needs a reference bus, which the system does not check.
 
 Cartesian voltages make a solution directly a starting point for a phasor
 dynamics simulation. Branch power is quadratic in these voltages; ZIP
@@ -57,13 +57,9 @@ are added to the owning constraints; they are not separate constraints. For
 example, a generator contributes power to a bus's balance without reading its
 voltage.
 
-Case bus numbers are resolved when constructing the system. Electrical islands
-follow in-service branches, independently of component dependencies.
-
-`SystemModel` also accepts a vector of owned components for direct composition.
-That constructor validates component parameters and connections. Electrical
-island and reference checks use the network metadata supplied by the case-data
-constructor.
+Case bus numbers are resolved when constructing the system. `SystemModel` also
+accepts a vector of owned components for direct composition. That constructor
+validates component parameters and connections.
 
 ## Derivatives
 
