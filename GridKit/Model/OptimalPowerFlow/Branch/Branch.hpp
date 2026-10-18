@@ -5,8 +5,11 @@
 
 #pragma once
 
+#include <array>
+
 #include <GridKit/Model/OptimalPowerFlow/Branch/BranchData.hpp>
-#include <GridKit/Model/OptimalPowerFlow/ComponentModel.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Component.hpp>
 
 namespace GridKit
 {
@@ -15,44 +18,53 @@ namespace GridKit
     /**
      * @brief Line or off-nominal transformer between two buses
      *
-     * Uses the admittance of `PhasorDynamics::Branch`. Power is positive
-     * into the buses.
+     * Power is positive into the buses.
      */
     template <typename scalar_type, typename index_type>
-    class Branch : public ComponentModel<Branch<scalar_type, index_type>, scalar_type, index_type>
+    class Branch final : public Component<scalar_type, index_type>
     {
-      using ComponentModelT = ComponentModel<Branch<scalar_type, index_type>, scalar_type, index_type>;
-
-      using ComponentModelT::constraint_upper_;
-      using ComponentModelT::in_service_;
-
-    public:
+      using ComponentT = Component<scalar_type, index_type>;
+      using BusT       = Bus<scalar_type, index_type>;
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
-      using RealT      = typename ComponentModelT::RealT;
+      using RealT      = typename ComponentT::RealT;
       using ModelDataT = BranchData<RealT, IdxT>;
 
-      /// Local variables: real and imaginary voltage at bus 1, then at bus 2
-      static constexpr IdxT VARIABLE_SIZE            = 4;
-      /// Local constraint functions: squared apparent power at bus 1 and bus 2, then power into bus 1 and bus 2
-      static constexpr IdxT CONSTRAINT_SIZE          = 6;
-      /// Internal variables: none
-      static constexpr IdxT INTERNAL_VARIABLE_SIZE   = 0;
-      /// Internal constraint functions: squared apparent power at bus 1 and bus 2
-      static constexpr IdxT INTERNAL_CONSTRAINT_SIZE = 2;
-      static constexpr bool CONSTANT                 = false;
+      using ComponentT::d_upper_;
+
+    public:
+      static constexpr IdxT NUM_PORTS                 = 2;
+      static constexpr IdxT NUM_INTERNAL_VARIABLES    = 0;
+      static constexpr IdxT NUM_INTERNAL_EQUALITIES   = 0;
+      static constexpr IdxT NUM_INTERNAL_INEQUALITIES = 2;
+
+      static constexpr std::array<IdxT, NUM_PORTS> NUM_PORT_VARIABLES{BusT::NUM_INTERNAL_VARIABLES,
+                                                                      BusT::NUM_INTERNAL_VARIABLES};
+      static constexpr std::array<IdxT, NUM_PORTS> NUM_PORT_EQUALITIES{BusT::NUM_INTERNAL_EQUALITIES,
+                                                                       BusT::NUM_INTERNAL_EQUALITIES};
 
       explicit Branch(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
-      int                        initialize(ScalarT* x) override;
+      int                        allocate() override;
 
-      __attribute__((always_inline)) inline ScalarT objective(const ScalarT* x) const;
-      __attribute__((always_inline)) inline void    constraints(const ScalarT* x, ScalarT* g) const;
+      int evaluateEqualityJacobian() override;
+      int evaluateInequalityJacobian() override;
+      int evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d) override;
+
+      [[gnu::always_inline]] void externalEqualities(const ScalarT* x, ScalarT* c) const override;
+      [[gnu::always_inline]] void internalInequalities(const ScalarT* x, ScalarT* d) const override;
+
+      bool inService() const
+      {
+        return in_service_ > ZERO<RealT>;
+      }
 
     private:
-      void setDerivedParams();
+      [[gnu::always_inline]] void power(const ScalarT* x, ScalarT* s) const;
+      void                        setDerivedParams();
 
+      RealT in_service_{ONE<RealT>};
       RealT R_{0.0};
       RealT X_{0.0};
       RealT G_{0.0};

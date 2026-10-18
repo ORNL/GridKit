@@ -21,61 +21,78 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class Bus;
 
+    template <typename scalar_type, typename index_type>
+    class Branch;
+
     /**
      * @brief AC optimal power flow in Cartesian coordinates
      *
      * Minimizes the generation cost subject to the power balance at every
-     * bus and the limits of the components. Each reference bus has zero
-     * imaginary voltage, and every island needs one.
+     * bus, which are the equality constraints, and the limits of the
+     * components, which are the inequality constraints and the variable
+     * bounds. Each reference bus has zero imaginary voltage, and every island
+     * needs one.
+     *
+     * @todo Replace the temporary STL containers of system-level data.
      */
     template <typename scalar_type, typename index_type>
     class SystemModel : public Model::OptimizationEvaluator<scalar_type, index_type>
     {
-      using EvaluatorT = Model::OptimizationEvaluator<scalar_type, index_type>;
+      using ComponentT   = Component<scalar_type, index_type>;
+      using EvaluatorT   = Model::OptimizationEvaluator<scalar_type, index_type>;
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using RealT        = typename EvaluatorT::RealT;
+      using RealVectorT  = typename EvaluatorT::RealVectorT;
+      using IndexVectorT = LinearAlgebra::Vector<IdxT, IdxT>;
+      using CsrMatrixT   = typename EvaluatorT::CsrMatrixT;
+      using BusT         = Bus<ScalarT, IdxT>;
+      using BranchT      = Branch<ScalarT, IdxT>;
+      using Block        = typename ComponentT::Block;
+      using CooBufferT   = typename ComponentT::CooBuffer;
+      using EntriesT     = const CooBufferT& (ComponentT::*) () const;
 
+      using EvaluatorT::c_;
+      using EvaluatorT::d_;
+      using EvaluatorT::d_lower_;
+      using EvaluatorT::d_upper_;
+      using EvaluatorT::equality_jacobian_;
       using EvaluatorT::f_;
-      using EvaluatorT::g_;
-      using EvaluatorT::g_lower_;
-      using EvaluatorT::g_upper_;
       using EvaluatorT::gradient_;
       using EvaluatorT::hessian_;
-      using EvaluatorT::jacobian_;
+      using EvaluatorT::inequality_jacobian_;
       using EvaluatorT::x_;
       using EvaluatorT::x_lower_;
       using EvaluatorT::x_upper_;
 
     public:
-      using ScalarT     = scalar_type;
-      using IdxT        = index_type;
-      using RealT       = typename EvaluatorT::RealT;
-      using CsrMatrixT  = typename EvaluatorT::CsrMatrixT;
-      using ComponentT  = Component<ScalarT, IdxT>;
-      using BusT        = Bus<ScalarT, IdxT>;
-      using CooEntriesT = typename ComponentT::CooEntriesT;
-
       explicit SystemModel(const SystemModelData<RealT, IdxT>& data);
+      explicit SystemModel(std::vector<std::unique_ptr<ComponentT>> components);
+
+      Model::ConfigurationChecks verify() const;
 
       int allocate() override;
       int initialize() override;
 
       int evaluateObjective() override;
       int evaluateGradient() override;
-      int evaluateConstraints() override;
-      int evaluateJacobian() override;
-      int evaluateHessian(RealT sigma, const RealT* lambda) override;
+      int evaluateEqualities() override;
+      int evaluateInequalities() override;
+      int evaluateEqualityJacobian() override;
+      int evaluateInequalityJacobian() override;
 
-      Model::ConfigurationChecks verify() const;
+      int evaluateHessian(RealT        sigma,
+                          const RealT* lambda_c,
+                          const RealT* lambda_d) override;
 
     private:
-      using EntriesT = const CooEntriesT& (ComponentT::*) () const;
-
+      int               compose();
+      int               bind(ComponentT& component, const Block& offset);
       std::vector<IdxT> unreferencedIslands() const;
+      int               allocateDerivatives();
 
-      int connect(ComponentT& component);
-      int allocateDerivatives();
-
-      std::unique_ptr<CsrMatrixT> assemble(IdxT rows, IdxT cols, EntriesT entries, std::vector<IdxT>& map_to_csr) const;
-      int                         refill(CsrMatrixT& matrix, EntriesT entries, const std::vector<IdxT>& map_to_csr) const;
+      std::unique_ptr<CsrMatrixT> assemble(IdxT rows, IdxT cols, EntriesT entries, IndexVectorT& map_to_csr) const;
+      int                         refill(CsrMatrixT& matrix, EntriesT entries, const IndexVectorT& map_to_csr) const;
 
       /// Buses first, then devices
       std::vector<std::unique_ptr<ComponentT>> components_;
@@ -83,9 +100,13 @@ namespace GridKit
       /// Buses by number
       std::map<IdxT, BusT*> buses_;
 
+      /// Electrical connectivity, independent of component dependencies
+      std::vector<BranchT*> branches_;
+
       /// Map from component entries to CSR entries
-      std::vector<IdxT> jacobian_map_;
-      std::vector<IdxT> hessian_map_;
+      IndexVectorT equality_jacobian_map_;
+      IndexVectorT inequality_jacobian_map_;
+      IndexVectorT hessian_map_;
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

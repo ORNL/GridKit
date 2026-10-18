@@ -1,23 +1,23 @@
 #pragma once
 
-#include <algorithm>
+#include <array>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
 #include <limits>
-#include <numbers>
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <type_traits>
 #include <vector>
-
-#include <IpIpoptApplication.hpp>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModel.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModelData.hpp>
-#include <GridKit/Solver/Optimization/SteadyState.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
+
+#include "CoupledComponent.hpp"
+#include "SystemTestData.hpp"
+#include "TestHelpers.hpp"
 
 namespace GridKit
 {
@@ -26,7 +26,7 @@ namespace GridKit
     namespace OPF = GridKit::OptimalPowerFlow;
 
     /**
-     * @brief System assembly, derivatives, and an Ipopt solve on a three-bus
+     * @brief System assembly and derivatives on a three-bus
      * network
      *
      * Generator 1 is cheaper, but the rating of branch 1-2 forces generator
@@ -34,38 +34,45 @@ namespace GridKit
      */
     class SystemTests
     {
-      using RealT     = double;
-      using IdxT      = size_t;
-      using VariableT = DependencyTracking::Variable;
-      using SystemT   = OPF::SystemModel<RealT, IdxT>;
-      using TrackedT  = OPF::SystemModel<VariableT, IdxT>;
+      using RealT         = double;
+      using IdxT          = size_t;
+      using VariableT     = DependencyTracking::Variable;
+      using DependencyMap = VariableT::DependencyMap;
+      using SystemT       = OPF::SystemModel<RealT, IdxT>;
+      using TrackedT      = OPF::SystemModel<VariableT, IdxT>;
 
     public:
-      /// Balance and magnitude rows at every bus, and flow rows at the rated branch only
+      /// Balance equalities and magnitude inequalities at every bus, and flow
+      /// inequalities at every branch, unlimited at the unrated ones
       TestOutcome allocation()
       {
         TestStatus success = true;
 
-        SystemT system(data());
+        SystemT system(SystemTestData::data());
         success *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
 
         // Three buses and two generators with two variables each
         success *= system.size() == 10;
-        success *= system.sizeConstraints() == 11;
+        success *= system.sizeEqualities() == SystemTestData::BALANCE_ROWS.size();
+        success *= system.sizeInequalities() == SystemTestData::MAGNITUDE_ROWS.size() + SystemTestData::FLOW_ROWS.size() + SystemTestData::UNRATED_ROWS.size();
 
-        const RealT* g_lower = system.gLower().getData();
-        const RealT* g_upper = system.gUpper().getData();
-        for (const IdxT i : BALANCE_ROWS)
+        const RealT* d_lower = system.dLower().getData();
+        const RealT* d_upper = system.dUpper().getData();
+        for (const IdxT i : SystemTestData::MAGNITUDE_ROWS)
         {
-          success *= isEqual(g_lower[i], ZERO<RealT>) && isEqual(g_upper[i], ZERO<RealT>);
+          success *= isEqual(d_lower[i], SystemTestData::VMIN * SystemTestData::VMIN) && isEqual(d_upper[i], SystemTestData::VMAX * SystemTestData::VMAX);
         }
-        for (const IdxT i : MAGNITUDE_ROWS)
+        for (const IdxT i : SystemTestData::FLOW_ROWS)
         {
-          success *= isEqual(g_lower[i], VMIN * VMIN) && isEqual(g_upper[i], VMAX * VMAX);
+          success *= std::isinf(d_lower[i]) && isEqual(d_upper[i], SystemTestData::SMAX * SystemTestData::SMAX);
         }
-        for (const IdxT i : FLOW_ROWS)
+        for (const IdxT i : SystemTestData::UNRATED_ROWS)
         {
-          success *= std::isinf(g_lower[i]) && isEqual(g_upper[i], SMAX * SMAX);
+          success *= std::isinf(d_lower[i]) && std::isinf(d_upper[i]);
         }
 
         // The imaginary voltage of reference bus 1 is fixed at zero
@@ -74,45 +81,57 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// The reference bus keeps zero imaginary voltage, and the others move
-      TestOutcome reference()
-      {
-        TestStatus success = true;
-
-        SystemT system(data());
-        system.allocate();
-        success *= optimize(system);
-
-        const RealT* x = system.x().getData();
-
-        success *= isEqual(x[1], ZERO<RealT>, BALANCE_TOL);
-        success *= std::abs(x[3]) > BALANCE_TOL && std::abs(x[5]) > BALANCE_TOL;
-
-        return success.report(__func__);
-      }
-
-      /// Enzyme system Jacobian equals the dependency-tracking Jacobian
+      /// Enzyme system Jacobians equal the dependency-tracking Jacobians
       TestOutcome jacobian()
       {
         TestStatus success = true;
 
-        SystemT system(data());
-        system.allocate();
-        setVariables(system);
-        system.evaluateJacobian();
-        const auto enzyme = MapFromCsr(system.getCsrJacobian());
-
-        TrackedT tracked(data());
-        tracked.allocate();
-        setVariables(tracked);
-        tracked.evaluateConstraints();
-        tracked.evaluateJacobian();
-        const auto dependencies = MapFromCsr(tracked.getCsrJacobian());
-
-        success *= enzyme.size() == dependencies.size();
-        for (IdxT i = 0; i < enzyme.size(); ++i)
+        SystemT system(SystemTestData::data());
+        success *= system.allocate() == 0;
+        if (!success)
         {
-          success *= isEqual(enzyme[i], dependencies[i], DERIVATIVE_TOL);
+          return success.report(__func__);
+        }
+        setVariables(system, SystemTestData::POINT);
+        success *= system.evaluateEqualityJacobian() == 0;
+        success *= system.evaluateInequalityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const auto enzyme_c = MapFromCsr(system.getCsrEqualityJacobian());
+        const auto enzyme_d = MapFromCsr(system.getCsrInequalityJacobian());
+
+        TrackedT tracked(SystemTestData::data());
+        success *= tracked.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= tracked.getCsrEqualityJacobian() != nullptr;
+        success *= tracked.getCsrInequalityJacobian() != nullptr;
+        setVariables(tracked, SystemTestData::POINT);
+        success *= tracked.evaluateEqualityJacobian() == 0;
+        success *= tracked.evaluateInequalityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const auto dependencies_c = MapFromCsr(tracked.getCsrEqualityJacobian());
+        const auto dependencies_d = MapFromCsr(tracked.getCsrInequalityJacobian());
+
+        success *= enzyme_c.size() == dependencies_c.size() && enzyme_d.size() == dependencies_d.size();
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        for (IdxT i = 0; i < enzyme_c.size(); ++i)
+        {
+          success *= isEqual(enzyme_c[i], dependencies_c[i], DERIVATIVE_TOL);
+        }
+        for (IdxT i = 0; i < enzyme_d.size(); ++i)
+        {
+          success *= isEqual(enzyme_d[i], dependencies_d[i], DERIVATIVE_TOL);
         }
 
         return success.report(__func__);
@@ -123,16 +142,31 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        SystemT system(data());
-        system.allocate();
-        setVariables(system);
-        system.evaluateGradient();
+        SystemT system(SystemTestData::data());
+        success *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(system, SystemTestData::POINT);
+        success *= system.evaluateGradient() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
 
-        TrackedT tracked(data());
-        tracked.allocate();
-        setVariables(tracked);
-        tracked.evaluateObjective();
-        tracked.evaluateGradient();
+        TrackedT tracked(SystemTestData::data());
+        success *= tracked.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(tracked, SystemTestData::POINT);
+        success *= tracked.evaluateGradient() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
 
         const RealT* enzyme       = system.gradient().getData();
         const RealT* dependencies = tracked.gradient().getData();
@@ -145,28 +179,46 @@ namespace GridKit
       }
 
       /// The Hessian keeps its pattern and is linear in the factors
-      TestOutcome hessian()
+      TestOutcome hessianLinearity()
       {
         TestStatus success = true;
 
-        SystemT system(data());
-        system.allocate();
-        setVariables(system);
-
-        const IdxT               nnz = system.getCsrHessian()->getNnz();
-        const std::vector<RealT> zeros(system.sizeConstraints(), ZERO<RealT>);
-        std::vector<RealT>       lambda(system.sizeConstraints());
-        for (IdxT i = 0; i < lambda.size(); ++i)
+        SystemT system(SystemTestData::data());
+        success *= system.allocate() == 0;
+        if (!success)
         {
-          lambda[i] = LAMBDA_SCALE * static_cast<RealT>(i + 1);
+          return success.report(__func__);
+        }
+        setVariables(system, SystemTestData::POINT);
+
+        const auto               expected_pattern = pattern(*system.getCsrHessian());
+        const IdxT               nnz              = system.getCsrHessian()->getNnz();
+        const std::vector<RealT> zeros_c(system.sizeEqualities(), ZERO<RealT>);
+        const std::vector<RealT> zeros_d(system.sizeInequalities(), ZERO<RealT>);
+        std::vector<RealT>       lambda_c(system.sizeEqualities());
+        std::vector<RealT>       lambda_d(system.sizeInequalities());
+        for (IdxT i = 0; i < lambda_c.size(); ++i)
+        {
+          lambda_c[i] = LAMBDA_SCALE * static_cast<RealT>(i + 1);
+        }
+        for (IdxT i = 0; i < lambda_d.size(); ++i)
+        {
+          lambda_d[i] = LAMBDA_SCALE * static_cast<RealT>(lambda_c.size() + i + 1);
         }
 
-        const std::vector<RealT> objective   = hessianValues(system, SIGMA, zeros);
-        const std::vector<RealT> constraints = hessianValues(system, ZERO<RealT>, lambda);
-        const std::vector<RealT> lagrangian  = hessianValues(system, SIGMA, lambda);
+        const std::vector<RealT> objective    = hessianValues(system, SIGMA, zeros_c, zeros_d);
+        success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
+        const std::vector<RealT> constraints  = hessianValues(system, ZERO<RealT>, lambda_c, lambda_d);
+        success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
+        const std::vector<RealT> lagrangian   = hessianValues(system, SIGMA, lambda_c, lambda_d);
+        success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
 
         success *= system.getCsrHessian()->getNnz() == nnz;
         success *= objective.size() == nnz && constraints.size() == nnz && lagrangian.size() == nnz;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
         for (IdxT k = 0; k < nnz; ++k)
         {
           success *= isEqual(lagrangian[k], objective[k] + constraints[k], DERIVATIVE_TOL);
@@ -175,323 +227,371 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Ipopt meets the balance with the flow limit binding
-      TestOutcome solve()
+      /// Inequality constraint functions without limits keep their rows, with
+      /// infinite bounds
+      TestOutcome unboundedInequalities()
       {
         TestStatus success = true;
 
-        SystemT system(data());
-        system.allocate();
-        success *= optimize(system);
-
-        system.evaluateConstraints();
-        const RealT* g = system.g().getData();
-        for (const IdxT i : BALANCE_ROWS)
+        auto unbounded = SystemTestData::data();
+        for (auto& bus : unbounded.bus)
         {
-          success *= isEqual(g[i], ZERO<RealT>, BALANCE_TOL);
+          bus.parameters.clear();
         }
-        success *= isEqual(g[FLOW_ROWS[0]], SMAX * SMAX, BALANCE_TOL);
+        for (auto& branch : unbounded.branch)
+        {
+          branch.parameters.erase(OPF::BranchParameters::Smax);
+        }
 
-        const RealT* x = system.x().getData();
+        SystemT system(unbounded);
+        success *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= system.sizeInequalities() == SystemTestData::MAGNITUDE_ROWS.size() + SystemTestData::FLOW_ROWS.size() + SystemTestData::UNRATED_ROWS.size();
 
-        success *= x[6] > x[8];
-        success *= x[8] > ZERO<RealT>;
+        const RealT* d_lower = system.dLower().getData();
+        const RealT* d_upper = system.dUpper().getData();
+        for (IdxT i = 0; i < system.sizeInequalities(); ++i)
+        {
+          success *= std::isinf(d_lower[i]) && std::isinf(d_upper[i]);
+        }
+        success *= system.evaluateInequalities() == 0;
+        success *= system.evaluateInequalityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= system.getCsrInequalityJacobian()->getNumRows() == system.sizeInequalities();
+
+        TrackedT tracked(unbounded);
+        success *= tracked.allocate() == 0;
+        success *= tracked.evaluateInequalityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= tracked.getCsrInequalityJacobian()->getNumRows() == tracked.sizeInequalities();
 
         return success.report(__func__);
       }
 
-      /// Data with an island without a reference bus, or with a repeated bus, is rejected
+      /// Invalid bus numbers, connections, and islands are rejected
       TestOutcome configuration()
       {
         TestStatus success = true;
 
-        auto no_reference             = data();
+        auto no_reference             = SystemTestData::data();
         no_reference.bus[0].reference = false;
 
         success *= configurationRejected([&]()
                                          { return SystemT(no_reference).verify(); });
 
         // Out-of-service branches 2-3 and 1-3 leave bus 3 an island without a reference bus
-        auto island                 = data();
+        auto island                 = SystemTestData::data();
         island.branch[1].in_service = false;
         island.branch[2].in_service = false;
 
         success *= configurationRejected([&]()
                                          { return SystemT(island).verify(); });
 
-        auto repeated          = data();
+        auto repeated          = SystemTestData::data();
         repeated.bus[1].number = 1;
 
         success *= throws<std::invalid_argument>([&]()
                                                  { SystemT system(repeated); });
 
+        auto invalid           = SystemTestData::data();
+        invalid.bus[0].number  = INVALID_INDEX<IdxT>;
+        success               *= configurationRejected([&]()
+                                         { return SystemT(invalid).verify(); });
+
+        auto missing = SystemTestData::data();
+        missing.generator[0].ports.clear();
+        success *= configurationRejected([&]()
+                                         { return SystemT(missing).verify(); });
+
+        auto unknown                                = SystemTestData::data();
+        unknown.load[0].ports[OPF::LoadPorts::bus]  = 99;
+        success                                    *= configurationRejected([&]()
+                                         { return SystemT(unknown).verify(); });
+
         return success.report(__func__);
       }
 
-      /**
-       * @brief MATPOWER rows become components on the system base
-       *
-       * Branch 2 and generator 2 are out of service, and branch 3 is a
-       * phase-shifting transformer with line charging.
-       */
-      TestOutcome parseMatpowerCase()
+      /// Buses and devices from a JSON input file
+      TestOutcome parseCase()
       {
         TestStatus success = true;
 
-        const auto data = parse(matpowerCase(MATPOWER_BRANCH, MATPOWER_GENCOST));
+        const auto data = parse(jsonCase());
 
         success *= isEqual(data.va_base, 100.0e6);
-        success *= data.bus.size() == 3;
-        success *= data.bus[0].reference && !data.bus[1].reference && !data.bus[2].reference;
+        success *= data.bus.size() == 2 && data.bus[0].reference && !data.bus[1].reference;
         success *= isEqual(data.bus[1].parameters.at(OPF::BusParameters::Vmin), 0.95);
-        success *= isEqual(data.bus[1].parameters.at(OPF::BusParameters::Vmax), 1.05);
+        success *= isEqual(data.bus[1].parameters.at(OPF::BusParameters::B), 0.1);
 
-        success *= data.load.size() == 1 && data.load[0].id == "load_2";
-        success *= isEqual(data.load[0].parameters.at(OPF::LoadParameters::P), 1.2);
-        success *= isEqual(data.load[0].parameters.at(OPF::LoadParameters::Q), 0.3);
-        success *= data.shunt.size() == 1 && data.shunt[0].id == "shunt_3";
-        success *= isEqual(data.shunt[0].parameters.at(OPF::ShuntParameters::B), 0.1);
+        success *= data.branch.size() == 1 && data.branch[0].ports.at(OPF::BranchPorts::bus2) == 2;
+        success *= isEqual(data.branch[0].parameters.at(OPF::BranchParameters::Smax), 0.6);
+        success *= !data.branch[0].parameters.contains(OPF::BranchParameters::tap);
 
-        success *= data.branch.size() == 3 && data.branch[2].id == "branch_3";
-        success *= data.branch[0].in_service && !data.branch[1].in_service && data.branch[2].in_service;
+        success *= data.generator.size() == 1 && !data.generator[0].in_service;
+        success *= data.load.size() == 1;
 
-        const auto& line = data.branch[0].parameters;
+        // An unknown device class, parameter, and port
+        success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Transformer", "id": "t", "ports": {}, "params": {}})"));
+        success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"Pd": 1.0}})"));
+        success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"node": 2}, "params": {}})"));
 
-        success *= isEqual(line.at(OPF::BranchParameters::tap), ONE<RealT>);
-        success *= isEqual(line.at(OPF::BranchParameters::Bmag), ZERO<RealT>);
-        success *= isEqual(line.at(OPF::BranchParameters::Smax), 0.6);
+        const std::array<std::string, 4> invalid_numbers{
+            "-1", "1.5", std::to_string(INVALID_INDEX<IdxT>), "1e30"};
+        for (const auto& number : invalid_numbers)
+        {
+          const auto bus_case = R"({"params": {"va_base": 1}, "buses": [{"class": "Bus", "number": )"
+                                + number + R"(, "params": {}}], "devices": []})";
+          success *= throws<std::invalid_argument>(parse, bus_case);
+          success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": )" + number + R"(}, "params": {}})"));
+        }
 
-        const auto& transformer = data.branch[2].parameters;
+        for (const IdxT number : {IdxT{0}, INVALID_INDEX<IdxT> - 1})
+        {
+          const auto bus_case = R"({"params": {"va_base": 1}, "buses": [{"class": "Bus", "number": )"
+                                + std::to_string(number) + R"(, "params": {}}], "devices": []})";
+          success *= parse(bus_case).bus[0].number == number;
+        }
 
-        success *= isEqual(transformer.at(OPF::BranchParameters::tap), 1.05);
-        success *= isEqual(transformer.at(OPF::BranchParameters::phase), std::numbers::pi / 18.0);
-        success *= isEqual(transformer.at(OPF::BranchParameters::Bmag), 0.01 / (1.05 * 1.05) - 0.01);
-        success *= !transformer.contains(OPF::BranchParameters::Smax);
+        return success.report(__func__);
+      }
 
-        success *= data.generator.size() == 3 && data.generator[2].id == "gen_3";
-        success *= data.generator[0].in_service && !data.generator[1].in_service && data.generator[2].in_service;
+      TestOutcome connections()
+      {
+        TestStatus success        = true;
+        auto       owner_ptr      = std::make_unique<EqualityOwner>();
+        auto       component_ptr  = std::make_unique<CoupledComponent>();
+        auto&      owner          = *owner_ptr;
+        auto&      component      = *component_ptr;
+        success                  *= component.connect(0, owner, {1, 1, 0}) == 0;
+        success                  *= component.connect(1, owner) == 0;
+        success                  *= component.connect(2, owner) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success     *= component.connect(3, owner) != 0;
+        success     *= component.connect(0, owner, {2, 0, 0}) != 0;
+        success     *= component.connect(0, owner, {0, 2, 0}) != 0;
+        success     *= component.connect(0, owner, {INVALID_INDEX<IdxT>, 0, 0}) != 0;
+        success     *= component.ports()[0].offset.variables == 1;
+        success     *= component.ports()[0].offset.equalities == 1;
+        auto system  = makeSystem<RealT>(std::move(owner_ptr), std::move(component_ptr));
+        success     *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= component.connect(1, owner, {1, 0, 0}) != 0;
+        return success.report(__func__);
+      }
 
-        const auto& gen_1 = data.generator[0].parameters;
+      TestOutcome objectiveAssembly()
+      {
+        TestStatus success  = true;
+        auto       system   = coupledSystem();
+        success            *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(system, COUPLED_X);
+        success *= system.evaluateObjective() == 0;
+        success *= system.evaluateGradient() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success               *= isEqual(system.f(), 18.5);
+        const RealT* gradient  = system.gradient().getData();
+        success               *= isEqual(gradient[0], 3.0);
+        success               *= isEqual(gradient[1], 2.0);
+        success               *= isEqual(gradient[2], 5.0);
+        return success.report(__func__);
+      }
 
-        success *= isEqual(gen_1.at(OPF::GeneratorParameters::Pmin), 0.1);
-        success *= isEqual(gen_1.at(OPF::GeneratorParameters::Pmax), 1.5);
-        success *= isEqual(gen_1.at(OPF::GeneratorParameters::Qmin), -0.5);
-        success *= isEqual(gen_1.at(OPF::GeneratorParameters::Qmax), 0.5);
-        success *= isEqual(gen_1.at(OPF::GeneratorParameters::c0), 5.0);
-        success *= isEqual(gen_1.at(OPF::GeneratorParameters::c1), 1200.0);
-        success *= isEqual(gen_1.at(OPF::GeneratorParameters::c2), 100.0);
+      TestOutcome equalityAssembly()
+      {
+        TestStatus success  = true;
+        auto       system   = coupledSystem();
+        success            *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(system, COUPLED_X);
+        success *= system.evaluateEqualities() == 0;
+        success *= system.evaluateEqualityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const RealT* c     = system.c().getData();
+        success           *= isEqual(c[0], 20.0);
+        success           *= isEqual(c[1], -4.0);
+        success           *= isEqual(c[2], 15.0);
+        const auto actual  = MapFromCsr(system.getCsrEqualityJacobian());
+        success           *= isEqual(actual.at(0), DependencyMap{{0, 5.0}, {2, 2.0}}, DERIVATIVE_TOL);
+        success           *= isEqual(actual.at(1), DependencyMap{{0, 3.0}, {1, 2.0}}, DERIVATIVE_TOL);
+        success           *= isEqual(actual.at(2), DependencyMap{{1, 5.0}, {2, 3.0}}, DERIVATIVE_TOL);
+        return success.report(__func__);
+      }
 
-        const auto& gen_3 = data.generator[2].parameters;
+      TestOutcome inequalityAssembly()
+      {
+        TestStatus success  = true;
+        auto       system   = coupledSystem();
+        success            *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(system, COUPLED_X);
+        success *= system.evaluateInequalities() == 0;
+        success *= system.evaluateInequalityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success           *= isEqual(system.d().getData()[0], 31.0);
+        const auto actual  = MapFromCsr(system.getCsrInequalityJacobian());
+        success           *= isEqual(actual.at(0), DependencyMap{{0, 3.0}, {1, 2.0}, {2, 10.0}}, DERIVATIVE_TOL);
+        return success.report(__func__);
+      }
 
-        success *= isEqual(gen_3.at(OPF::GeneratorParameters::c0), 7.0);
-        success *= isEqual(gen_3.at(OPF::GeneratorParameters::c1), 1400.0);
-        success *= isEqual(gen_3.at(OPF::GeneratorParameters::c2), 200.0);
+      TestOutcome hessianAssembly()
+      {
+        TestStatus success  = true;
+        auto       system   = coupledSystem();
+        success            *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(system, COUPLED_X);
+        success *= system.evaluateHessian(2.0, COUPLED_LAMBDA_C.data(), COUPLED_LAMBDA_D.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const auto actual  = MapFromCsr(system.getCsrHessian());
+        success           *= actual.at(0).empty();
+        success           *= isEqual(actual.at(1), DependencyMap{{0, 18.0}}, DERIVATIVE_TOL);
+        success           *= isEqual(actual.at(2), DependencyMap{{0, 3.0}, {1, 7.0}, {2, 24.0}}, DERIVATIVE_TOL);
+        return success.report(__func__);
+      }
 
-        // An isolated bus, angle-difference limits, a piecewise-linear cost, a cubic cost, and a missing cost
-        const std::string isolated     = MATPOWER_BUS + "\n4 4 0 0 0 0 1 1 0 230 1 1.04 0.96";
-        const std::string angle_limits = MATPOWER_BRANCH + "\n1 3 0.02 0.2 0 0 0 0 0 0 1 -30 30";
-        const std::string piecewise    = "1 0 0 2 0 0 100 1000;\n2 0 0 2 20 0;\n2 0 0 2 14 7";
-        const std::string cubic        = "2 0 0 4 1 0.02 14 7;\n2 0 0 2 20 0;\n2 0 0 2 14 7";
-        const std::string missing      = "2 0 0 3 0.01 12 5;\n2 0 0 2 20 0";
+      TestOutcome repeatedVariables()
+      {
+        TestStatus success  = true;
+        auto       system   = coupledSystem(true);
+        success            *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(system, COUPLED_X);
+        success *= system.evaluateGradient() == 0;
+        success *= system.evaluateHessian(2.0, COUPLED_LAMBDA_C.data(), COUPLED_LAMBDA_D.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const RealT* gradient  = system.gradient().getData();
+        success               *= isEqual(gradient[0], 0.0);
+        success               *= isEqual(gradient[1], 6.0);
+        success               *= isEqual(gradient[2], 5.0);
+        const auto actual      = MapFromCsr(system.getCsrHessian());
+        success               *= actual.at(0).empty();
+        success               *= isEqual(actual.at(1), DependencyMap{{1, 36.0}}, DERIVATIVE_TOL);
+        success               *= isEqual(actual.at(2), DependencyMap{{1, 10.0}, {2, 24.0}}, DERIVATIVE_TOL);
+        return success.report(__func__);
+      }
 
-        success *= throws<std::invalid_argument>(parse, matpowerCase(MATPOWER_BRANCH, MATPOWER_GENCOST, isolated));
-        success *= throws<std::invalid_argument>(parse, matpowerCase(angle_limits, MATPOWER_GENCOST));
-        success *= throws<std::invalid_argument>(parse, matpowerCase(MATPOWER_BRANCH, piecewise));
-        success *= throws<std::invalid_argument>(parse, matpowerCase(MATPOWER_BRANCH, cubic));
-        success *= throws<std::invalid_argument>(parse, matpowerCase(MATPOWER_BRANCH, missing));
-
+      TestOutcome connectionOwnership()
+      {
+        TestStatus    success = true;
+        EqualityOwner owner;
+        auto          component = std::make_unique<CoupledComponent>();
+        for (IdxT port = 0; port < CoupledComponent::NUM_PORTS; ++port)
+        {
+          success *= component->connect(port, owner) == 0;
+          if (!success)
+          {
+            return success.report(__func__);
+          }
+        }
+        auto system  = makeSystem<RealT>(std::move(component));
+        success     *= !system.verify().passed();
+        success     *= system.allocate() != 0;
         return success.report(__func__);
       }
 
     private:
+      static constexpr std::array<RealT, 3> COUPLED_X{2.0, 3.0, 5.0};
+      static constexpr std::array<RealT, 3> COUPLED_LAMBDA_C{3.0, 5.0, 7.0};
+      static constexpr std::array<RealT, 1> COUPLED_LAMBDA_D{11.0};
+
+      static SystemT coupledSystem(bool repeated = false)
+      {
+        auto       owner           = std::make_unique<EqualityOwner>();
+        auto       component       = std::make_unique<CoupledComponent>();
+        const IdxT variable_offset = repeated ? 1 : 0;
+        if (component->connect(0, *owner, {1, 1, 0}) != 0
+            || component->connect(1, *owner, {variable_offset, 0, 0}) != 0
+            || component->connect(2, *owner) != 0)
+        {
+          throw std::invalid_argument("Invalid component test connections");
+        }
+        return makeSystem<RealT>(std::move(owner), std::move(component));
+      }
+
+      static constexpr RealT SIGMA          = 0.7;
+      static constexpr RealT LAMBDA_SCALE   = 0.25;
+      static constexpr RealT DERIVATIVE_TOL = 100 * std::numeric_limits<RealT>::epsilon();
+
       static OPF::SystemModelData<RealT, IdxT> parse(const std::string& text)
       {
         std::istringstream input(text);
-        return OPF::parseMatpowerCase(input);
+        return OPF::parseSystemModelData(input);
       }
 
-      /// MATPOWER case with the given branch, cost, and bus rows
-      static std::string matpowerCase(const std::string& branch, const std::string& gencost, const std::string& bus = MATPOWER_BUS)
+      /// Two-bus case with `extra` appended to its devices
+      static std::string jsonCase(const std::string& extra = "")
       {
-        return "mpc.version = '2';\nmpc.baseMVA = 100;\nmpc.bus = [\n" + bus + "\n];\nmpc.gen = [\n" + MATPOWER_GEN
-               + "\n];\nmpc.branch = [\n" + branch + "\n];\nmpc.gencost = [\n" + gencost + "\n];\n";
+        return R"({
+          "params": {"freq_base": 60.0, "va_base": 100.0e6},
+          "buses": [
+            {"number": 1, "class": "Bus", "name": "1", "params": {"Vmin": 0.94, "Vmax": 1.06, "reference": true}},
+            {"number": 2, "class": "Bus", "name": "2", "params": {"Vmin": 0.95, "Vmax": 1.05, "B": 0.1}}
+          ],
+          "devices": [
+            {"class": "Branch", "id": "branch_1_2", "ports": {"bus1": 1, "bus2": 2}, "params": {"R": 0.01, "X": 0.1, "Smax": 0.6}},
+            {"class": "Generator", "id": "gen_1", "ports": {"bus": 1}, "params": {"Pmax": 1.5, "c1": 12.0, "in_service": false}},
+            {"class": "Load", "id": "load_2", "ports": {"bus": 2}, "params": {"P": 1.2, "Q": 0.3}})"
+               + extra + "]}";
       }
 
-      static inline const std::string MATPOWER_BUS = "1 3 0 0 0 0 1 1 0 230 1 1.06 0.94;\n"
-                                                     "2 1 120 30 0 0 1 1 0 230 1 1.05 0.95;\n"
-                                                     "3 2 0 0 0 10 1 1 0 230 1 1.04 0.96;";
-
-      static inline const std::string MATPOWER_GEN = "1 0 0 50 -50 1 100 1 150 10\n"
-                                                     "3 0 0 80 -40 1 100 0 90 0\n"
-                                                     "3 0 0 80 -40 1 100 1 180 30";
-
-      static inline const std::string MATPOWER_BRANCH = "1 2 0.01 0.1 0 60 0 0 0 0 1 -360 360\n"
-                                                        "2 3 0.01 0.1 0 90 0 0 0 0 0 -360 360\n"
-                                                        "1 3 0.02 0.2 0.02 0 0 0 1.05 10 1 0 0";
-
-      static inline const std::string MATPOWER_GENCOST = "2 0.0 0.0 3 0.01 12 5;\n"
-                                                         "2 0 0 2 20 0;\n"
-                                                         "2 0 0 4 0 0.02 14 7";
-
-      /// Values within `tol` relative to one plus the reference magnitude
-      static bool isEqual(RealT value, RealT reference, RealT tol = std::numeric_limits<RealT>::epsilon())
+      /// Hessian values at `sigma`, `lambda_c`, and `lambda_d`, or none if the evaluation fails
+      static std::vector<RealT> hessianValues(SystemT&                  system,
+                                              RealT                     sigma,
+                                              const std::vector<RealT>& lambda_c,
+                                              const std::vector<RealT>& lambda_d)
       {
-        if (Testing::isEqual(value, reference, tol))
-        {
-          return true;
-        }
-        std::cerr << std::setprecision(std::numeric_limits<RealT>::max_digits10) << value << " differs from "
-                  << reference << " by " << std::abs(value - reference) / (ONE<RealT> + std::abs(reference)) / std::numeric_limits<RealT>::epsilon()
-                  << " eps\n";
-        return false;
-      }
-
-      /// Dependency maps with the same keys and values within `tol`
-      static bool isEqual(const DependencyTracking::Variable::DependencyMap& actual,
-                          const DependencyTracking::Variable::DependencyMap& expected,
-                          RealT                                              tol)
-      {
-        bool equal = actual.size() == expected.size();
-        for (const auto& [variable, value] : expected)
-        {
-          const auto entry = actual.find(variable);
-          if (entry == actual.end())
-          {
-            std::cerr << "Derivative with respect to " << variable << " is missing\n";
-            equal = false;
-          }
-          else
-          {
-            equal = isEqual(entry->second, value, tol) && equal;
-          }
-        }
-        return equal;
-      }
-
-      static constexpr RealT SMAX         = 0.6;
-      static constexpr RealT VMIN         = 0.95;
-      static constexpr RealT VMAX         = 1.05;
-      static constexpr RealT LOAD_P       = 1.2;
-      static constexpr RealT LOAD_Q       = 0.3;
-      static constexpr RealT SIGMA        = 0.7;
-      static constexpr RealT LAMBDA_SCALE = 0.25;
-
-      static constexpr RealT DERIVATIVE_TOL = 8 * std::numeric_limits<RealT>::epsilon();
-      static constexpr RealT BALANCE_TOL    = 1.0e-12;
-
-      /// Rows of the buses in order, then of the rated branch
-      static inline const std::vector<IdxT> BALANCE_ROWS   = {0, 1, 3, 4, 6, 7};
-      static inline const std::vector<IdxT> MAGNITUDE_ROWS = {2, 5, 8};
-      static inline const std::vector<IdxT> FLOW_ROWS      = {9, 10};
-
-      /// A point away from the flat start
-      static inline const std::vector<RealT> POINT = {1.02, 0.0, 0.97, -0.07, 1.01, -0.03, 0.8, 0.2, 0.4, -0.1};
-
-      static OPF::SystemModelData<RealT, IdxT> data()
-      {
-        OPF::SystemModelData<RealT, IdxT> data;
-
-        for (IdxT number = 1; number <= 3; ++number)
-        {
-          auto& bus                                = data.bus.emplace_back();
-          bus.number                               = number;
-          bus.reference                            = number == 1;
-          bus.parameters[OPF::BusParameters::Vmin] = VMIN;
-          bus.parameters[OPF::BusParameters::Vmax] = VMAX;
-        }
-
-        addBranch(data, "branch_1_2", 1, 2, 0.01, 0.1, 0.02);
-        addBranch(data, "branch_2_3", 2, 3, 0.01, 0.1, 0.0);
-        addBranch(data, "branch_1_3", 1, 3, 0.02, 0.2, 0.0);
-        data.branch[0].parameters[OPF::BranchParameters::Smax] = SMAX;
-
-        addGenerator(data, "gen_1", 1, 10.0);
-        addGenerator(data, "gen_3", 3, 20.0);
-
-        auto& load                              = data.load.emplace_back();
-        load.id                                 = "load_2";
-        load.buses[OPF::LoadBuses::bus]         = 2;
-        load.parameters[OPF::LoadParameters::P] = LOAD_P;
-        load.parameters[OPF::LoadParameters::Q] = LOAD_Q;
-
-        auto& shunt                               = data.shunt.emplace_back();
-        shunt.id                                  = "shunt_3";
-        shunt.buses[OPF::ShuntBuses::bus]         = 3;
-        shunt.parameters[OPF::ShuntParameters::B] = 0.1;
-
-        return data;
-      }
-
-      static void addBranch(OPF::SystemModelData<RealT, IdxT>& data,
-                            const char*                        id,
-                            IdxT                               bus1,
-                            IdxT                               bus2,
-                            RealT                              r,
-                            RealT                              x,
-                            RealT                              b)
-      {
-        auto& branch                                = data.branch.emplace_back();
-        branch.id                                   = id;
-        branch.buses[OPF::BranchBuses::bus1]        = bus1;
-        branch.buses[OPF::BranchBuses::bus2]        = bus2;
-        branch.parameters[OPF::BranchParameters::R] = r;
-        branch.parameters[OPF::BranchParameters::X] = x;
-        branch.parameters[OPF::BranchParameters::B] = b;
-      }
-
-      static void addGenerator(OPF::SystemModelData<RealT, IdxT>& data, const char* id, IdxT bus, RealT c1)
-      {
-        auto& generator                                      = data.generator.emplace_back();
-        generator.id                                         = id;
-        generator.buses[OPF::GeneratorBuses::bus]            = bus;
-        generator.parameters[OPF::GeneratorParameters::Pmin] = 0.0;
-        generator.parameters[OPF::GeneratorParameters::Pmax] = 2.0;
-        generator.parameters[OPF::GeneratorParameters::Qmin] = -1.0;
-        generator.parameters[OPF::GeneratorParameters::Qmax] = 1.0;
-        generator.parameters[OPF::GeneratorParameters::c1]   = c1;
-        generator.parameters[OPF::GeneratorParameters::c2]   = 0.01;
-      }
-
-      /// Move the variables to `POINT`
-      template <typename ModelT>
-      static void setVariables(ModelT& system)
-      {
-        auto* x = system.x().getData();
-        for (IdxT j = 0; j < POINT.size(); ++j)
-        {
-          x[j] = POINT[j];
-          if constexpr (std::is_same_v<typename ModelT::ScalarT, VariableT>)
-          {
-            x[j].setVariableNumber(j);
-          }
-        }
-        system.x().setDataUpdated();
-      }
-
-      /// Hessian values at `sigma` and `lambda`, or none if the evaluation fails
-      static std::vector<RealT> hessianValues(SystemT& system, RealT sigma, const std::vector<RealT>& lambda)
-      {
-        if (system.evaluateHessian(sigma, lambda.data()) != 0)
+        if (system.evaluateHessian(sigma, lambda_c.data(), lambda_d.data()) != 0)
         {
           return {};
         }
         auto* hessian = system.getCsrHessian();
         return std::vector<RealT>(hessian->getValues(), hessian->getValues() + hessian->getNnz());
-      }
-
-      static bool optimize(SystemT& system)
-      {
-        Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
-        app->Options()->SetIntegerValue("print_level", 0);
-        app->Options()->SetNumericValue("bound_relax_factor", 0.0);
-        app->Options()->SetNumericValue("tol", 1.0e-10);
-        if (app->Initialize() != Ipopt::Solve_Succeeded)
-        {
-          return false;
-        }
-
-        Ipopt::SmartPtr<Ipopt::TNLP> problem = new AnalysisManager::IpoptInterface::SteadyState<RealT, IdxT>(&system);
-        return app->OptimizeTNLP(problem) == Ipopt::Solve_Succeeded;
       }
     };
   } // namespace Testing

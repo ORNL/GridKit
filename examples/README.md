@@ -3,6 +3,7 @@
 GridKit™ usage examples are organized as follows:
 
 - [EMT](EMT/README.md) contains architecture skeletons for future EMT examples.
+- `Enzyme` directory contains Enzyme automatic differentiation examples.
 - `Experimental` directory contains examples of dynamic-constrained
 optimization.
 - `LinearAlgebra` has examples and tests for dense and sparse matrices in

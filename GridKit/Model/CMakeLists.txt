@@ -8,10 +8,7 @@
 add_subdirectory(PhasorDynamics)
 add_subdirectory(PowerFlow)
 add_subdirectory(PowerElectronics)
-
-if(GRIDKIT_ENABLE_ENZYME)
-  add_subdirectory(OptimalPowerFlow)
-endif()
+add_subdirectory(OptimalPowerFlow)
 
 install(
   FILES ConfigurationChecks.hpp

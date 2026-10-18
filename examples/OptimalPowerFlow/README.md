@@ -1,7 +1,7 @@
 # OptimalPowerFlow
 
 The economic dispatch examples
-use the reusable MATPOWER cases in `cases/OptimalPowerFlow/`.
+use the reusable cases in `cases/OptimalPowerFlow/`.
 
 | Examples | Purpose |
 | --- | --- |
@@ -16,8 +16,10 @@ For an installation under `/path/to/install`, run:
 
 ```bash
 cd /path/to/install/share/gridkit/examples/OptimalPowerFlow/EconomicDispatch
-/path/to/install/bin/EconomicDispatch IEEE39.m
+/path/to/install/bin/EconomicDispatch --case-file IEEE39.case.json
 ```
 
-A second argument, a reference cost in \$/h, makes the study fail when the
-optimal cost differs from it.
+`--solver-tolerance` sets the Ipopt convergence tolerance and defaults to 1e-8.
+
+With `--reference-cost` in \$/h, the study fails when the optimal cost differs
+from it by more than `--tolerance`, relative, which defaults to 1e-6.

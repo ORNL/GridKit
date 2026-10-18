@@ -5,13 +5,17 @@
 
 #pragma once
 
+#include <array>
+#include <concepts>
+#include <cstddef>
 #include <limits>
+#include <numeric>
 #include <string>
-#include <utility>
+#include <type_traits>
 #include <vector>
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/CooEntries.hpp>
 #include <GridKit/Constants.hpp>
+#include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/Model/ConfigurationChecks.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -22,77 +26,186 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    /// Limit of a variable or constraint function without one
+    /// Limit of a variable or inequality constraint function without one
     template <typename RealT>
     inline constexpr RealT UNBOUNDED = std::numeric_limits<RealT>::infinity();
+
+    /// Sum of the counts at each port
+    template <typename IdxT, std::size_t N>
+    constexpr IdxT total(const std::array<IdxT, N>& counts)
+    {
+      return std::accumulate(counts.begin(), counts.end(), IdxT{0});
+    }
+
+    template <typename scalar_type, typename index_type>
+    class Component;
+
+    template <typename scalar_type, typename index_type>
+    class SystemModel;
+
+    /**
+     * @brief Requirements on a component
+     *
+     * A component declares its ports, its internal variables and rows, and at
+     * each port the variables it reads and the equality rows it contributes
+     * to. It is `final`, so Enzyme calls its kernels directly. Local variables
+     * and equality contributions are internal first, then those of each port.
+     */
+    template <typename ModelT, typename ScalarT, typename IdxT>
+    concept ComponentKernels =
+        std::derived_from<ModelT, Component<ScalarT, IdxT>>
+        && std::is_final_v<ModelT>
+        && ModelT::NUM_PORT_VARIABLES.size() == ModelT::NUM_PORTS
+        && ModelT::NUM_PORT_EQUALITIES.size() == ModelT::NUM_PORTS
+        && requires {
+             ModelT::NUM_INTERNAL_VARIABLES;
+             ModelT::NUM_INTERNAL_EQUALITIES;
+             ModelT::NUM_INTERNAL_INEQUALITIES;
+           };
 
     /**
      * @brief Optimal power flow component
      *
-     * Internal constraints limit the internal variables or the internal
-     * constraint functions. External constraint functions add the active and
-     * reactive power into each terminal bus to its balance. Local variables
-     * are the internal variables followed by the real and imaginary voltage
-     * of each terminal bus, and local constraint functions are the internal
-     * ones followed by the external ones. The system model maps local indices
-     * to global ones.
+     * `SystemModel` binds the internal blocks of each component to the system
+     * vectors. Each port reads variables of another component and contributes
+     * to its equality rows. A component overrides the kernels it has; the
+     * others contribute nothing.
      */
     template <typename scalar_type, typename index_type>
     class Component
     {
-    public:
-      using ScalarT     = scalar_type;
-      using IdxT        = index_type;
-      using RealT       = typename ScalarTraits<ScalarT>::RealT;
-      using CooEntriesT = Enzyme::Sparse::CooEntries;
+      friend class SystemModel<scalar_type, index_type>;
 
-      /// Local variables and constraint functions per terminal
-      static constexpr IdxT TERMINAL_SIZE = 2;
+    protected:
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using RealT        = typename ScalarTraits<ScalarT>::RealT;
+      using VectorT      = LinearAlgebra::Vector<ScalarT, IdxT>;
+      using RealVectorT  = LinearAlgebra::Vector<RealT, IdxT>;
+      using IndexVectorT = LinearAlgebra::Vector<IdxT, IdxT>;
+
+    public:
+      /// Numbers of variables, equality rows, and inequality rows, or the first global index of each
+      struct Block
+      {
+        IdxT variables{0};
+        IdxT equalities{0};
+        IdxT inequalities{0};
+
+        constexpr Block& operator+=(const Block& other)
+        {
+          variables    += other.variables;
+          equalities   += other.equalities;
+          inequalities += other.inequalities;
+          return *this;
+        }
+      };
+
+      /// Variables a port reads and equality rows it contributes to, in the internal blocks of `component`
+      struct Port
+      {
+        Block      size;               ///< Numbers of variables read and equality rows contributed to
+        Component* component{nullptr}; ///< Owner of those variables and rows, after `connect()`
+        Block      offset{};           ///< First of them in the internal blocks of `component`
+      };
+
+      /**
+       * @brief Derivative entries in global indices
+       *
+       * Enzyme's `sparse_store` fills the first `nnz` entries of buffers sized
+       * for the dense local block. Assembly sums duplicate coordinates.
+       */
+      struct CooBuffer
+      {
+        /// Room for `capacity` entries
+        int resize(IdxT capacity)
+        {
+          if (rows.resize(capacity) != 0
+              || cols.resize(capacity) != 0
+              || values.resize(capacity) != 0)
+          {
+            return 1;
+          }
+          return 0;
+        }
+
+        IndexVectorT rows;
+        IndexVectorT cols;
+        RealVectorT  values;
+        IdxT         nnz{0};
+      };
 
       virtual ~Component() = default;
 
+      /// Every problem with the parameters
       virtual Model::ConfigurationChecks verify() const = 0;
 
-      /**
-       * @brief Set the starting point of the internal variables
-       *
-       * @param[out] x - Variables
-       */
-      virtual int initialize(ScalarT* x) = 0;
-
-      /// Add the objective contribution at `x` to `f`
-      virtual int evaluateObjective(const ScalarT* x, ScalarT& f) = 0;
-
-      /// Add the objective gradient at `x` to `gradient`
-      virtual int evaluateGradient(const ScalarT* x, RealT* gradient) = 0;
-
-      /// Add the constraint contributions at `x` to `g`
-      virtual int evaluateConstraints(const ScalarT* x, ScalarT* g) = 0;
-
-      /// Evaluate the constraint Jacobian entries at `x` into `jacobian()`
-      virtual int evaluateJacobian(const ScalarT* x) = 0;
-
-      /// Evaluate the lower Lagrangian Hessian entries at `x` into `hessian()`
-      virtual int evaluateHessian(const ScalarT* x, RealT sigma, const RealT* lambda) = 0;
-
-      IdxT size() const
+      /// Components set their limits in their views
+      virtual int allocate()
       {
-        return static_cast<IdxT>(variable_indices_.size());
+        return 0;
       }
 
-      IdxT sizeConstraints() const
+      /// Components set their starting point in their views
+      virtual int initialize()
       {
-        return static_cast<IdxT>(constraint_indices_.size());
+        return 0;
       }
 
-      IdxT sizeInternalVariables() const
+      int evaluateObjective();
+      int evaluateEqualities();
+      int evaluateInequalities();
+
+      virtual int evaluateGradient()
       {
-        return static_cast<IdxT>(variable_lower_.size());
+        return 0;
       }
 
-      IdxT sizeInternalConstraints() const
+      virtual int evaluateEqualityJacobian()
       {
-        return static_cast<IdxT>(constraint_lower_.size());
+        return 0;
+      }
+
+      virtual int evaluateInequalityJacobian()
+      {
+        return 0;
+      }
+
+      virtual int evaluateHessian([[maybe_unused]] RealT        sigma,
+                                  [[maybe_unused]] const RealT* lambda_c,
+                                  [[maybe_unused]] const RealT* lambda_d)
+      {
+        return 0;
+      }
+
+      /// Objective contribution over the local variables `x`
+      virtual ScalarT objective([[maybe_unused]] const ScalarT* x) const
+      {
+        return ScalarT{ZERO<RealT>};
+      }
+
+      /// Contributions `c` to the equality rows this component owns
+      virtual void internalEqualities([[maybe_unused]] const ScalarT* x, [[maybe_unused]] ScalarT* c) const
+      {
+      }
+
+      /// Inequality rows `d` this component owns, over the local variables `x`
+      virtual void internalInequalities([[maybe_unused]] const ScalarT* x, [[maybe_unused]] ScalarT* d) const
+      {
+      }
+
+      /// Contributions `c` to the equality rows at each port, in port order
+      virtual void externalEqualities([[maybe_unused]] const ScalarT* x, [[maybe_unused]] ScalarT* c) const
+      {
+      }
+
+      /// Read the variables and contribute to the equality rows of `component` at port `port`
+      int connect(IdxT port, Component& component, const Block& offset = {});
+
+      /// Objective contribution at the last `evaluateObjective()`
+      const ScalarT& f() const
+      {
+        return f_;
       }
 
       const std::string& id() const
@@ -100,110 +213,89 @@ namespace GridKit
         return id_;
       }
 
-      bool inService() const
+      const std::vector<Port>& ports() const
       {
-        return in_service_ > ZERO<RealT>;
+        return ports_;
       }
 
-      /// Bus number of each terminal
-      const std::vector<IdxT>& terminals() const
+      /// Equality Jacobian entries at the last `evaluateEqualityJacobian()`, in global indices
+      const CooBuffer& equalityEntries() const
       {
-        return terminals_;
+        return equality_entries_;
       }
 
-      /// Lower limits of the internal variables
-      const std::vector<RealT>& variableLower() const
+      /// Inequality Jacobian entries at the last `evaluateInequalityJacobian()`, in global indices
+      const CooBuffer& inequalityEntries() const
       {
-        return variable_lower_;
+        return inequality_entries_;
       }
 
-      /// Upper limits of the internal variables
-      const std::vector<RealT>& variableUpper() const
+      /// Lower Lagrangian Hessian entries at the last `evaluateHessian()`, in global indices
+      const CooBuffer& hessianEntries() const
       {
-        return variable_upper_;
-      }
-
-      /// Lower limits of the internal constraint functions
-      const std::vector<RealT>& constraintLower() const
-      {
-        return constraint_lower_;
-      }
-
-      /// Upper limits of the internal constraint functions
-      const std::vector<RealT>& constraintUpper() const
-      {
-        return constraint_upper_;
-      }
-
-      std::vector<IdxT>& variableIndices()
-      {
-        return variable_indices_;
-      }
-
-      const std::vector<IdxT>& variableIndices() const
-      {
-        return variable_indices_;
-      }
-
-      std::vector<IdxT>& constraintIndices()
-      {
-        return constraint_indices_;
-      }
-
-      const std::vector<IdxT>& constraintIndices() const
-      {
-        return constraint_indices_;
-      }
-
-      const CooEntriesT& jacobian() const
-      {
-        return jacobian_;
-      }
-
-      const CooEntriesT& hessian() const
-      {
-        return hessian_;
+        return hessian_entries_;
       }
 
     protected:
-      /**
-       * @param[in] id - Device `id`
-       * @param[in] terminals - Bus number of each terminal
-       * @param[in] in_service - Service status
-       * @param[in] size_internal_variables - Number of internal variables
-       * @param[in] size_internal_constraints - Number of internal constraint functions
-       */
-      Component(std::string       id,
-                std::vector<IdxT> terminals,
-                bool              in_service,
-                IdxT              size_internal_variables,
-                IdxT              size_internal_constraints)
-        : id_(std::move(id)),
-          terminals_(std::move(terminals)),
-          variable_lower_(size_internal_variables, -UNBOUNDED<RealT>),
-          variable_upper_(size_internal_variables, UNBOUNDED<RealT>),
-          constraint_lower_(size_internal_constraints, -UNBOUNDED<RealT>),
-          constraint_upper_(size_internal_constraints, UNBOUNDED<RealT>),
-          variable_indices_(size_internal_variables + TERMINAL_SIZE * terminals_.size(), INVALID_INDEX<IdxT>),
-          constraint_indices_(size_internal_constraints + TERMINAL_SIZE * terminals_.size(), INVALID_INDEX<IdxT>)
+      /// Sizes from the counts that `ModelT` declares
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      Component(std::type_identity<ModelT>, std::string id);
+
+      // Enzyme derivatives of `model`, the derived component
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      int evaluateGradient(const ModelT& model);
+
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      int evaluateEqualityJacobian(const ModelT& model);
+
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      int evaluateInequalityJacobian(const ModelT& model);
+
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      int evaluateHessian(const ModelT& model, RealT sigma, const RealT* lambda_c, const RealT* lambda_d);
+
+      ScalarT     f_{};
+      VectorT     x_;
+      RealVectorT x_lower_;
+      RealVectorT x_upper_;
+      RealVectorT gradient_;
+      VectorT     c_;
+      VectorT     d_;
+      RealVectorT d_lower_;
+      RealVectorT d_upper_;
+
+    private:
+      /// Numbers of local variables, equality contributions, and inequality rows of `ModelT`
+      template <typename ModelT>
+      static constexpr Block localSize()
       {
-        if (!in_service)
-        {
-          in_service_ = ZERO<RealT>;
-        }
+        return {ModelT::NUM_INTERNAL_VARIABLES + total(ModelT::NUM_PORT_VARIABLES),
+                ModelT::NUM_INTERNAL_EQUALITIES + total(ModelT::NUM_PORT_EQUALITIES),
+                ModelT::NUM_INTERNAL_INEQUALITIES};
       }
 
-      std::string        id_;
-      std::vector<IdxT>  terminals_;
-      RealT              in_service_{ONE<RealT>}; ///< \f$u\f$ Service status, 1 in service and 0 out of service
-      std::vector<RealT> variable_lower_;
-      std::vector<RealT> variable_upper_;
-      std::vector<RealT> constraint_lower_;
-      std::vector<RealT> constraint_upper_;
-      std::vector<IdxT>  variable_indices_;
-      std::vector<IdxT>  constraint_indices_;
-      CooEntriesT        jacobian_;
-      CooEntriesT        hessian_;
+      void gather(ScalarT* x) const;
+      void globalIndices(IdxT Block::* block, IdxT* indices) const;
+
+      template <typename ValueT, typename MemberT>
+      void scatter(IdxT Block::* block, MemberT Component::* vector, const ValueT* local);
+
+      template <typename DriverT, typename ModelT>
+      int evaluateJacobian(const ModelT& model, const IdxT* rows, CooBuffer& entries);
+
+      template <typename Keep>
+      static void filter(CooBuffer& entries, Keep keep);
+
+      std::string       id_;
+      std::vector<Port> ports_;
+      Block             size_;   ///< Numbers of internal variables and rows
+      Block             offset_; ///< First global index of each internal block
+      bool              bound_{false};
+      VectorT           local_x_; ///< Local variables
+      VectorT           local_c_; ///< Local equality contributions
+      CooBuffer         equality_entries_;
+      CooBuffer         inequality_entries_;
+      CooBuffer         hessian_entries_;
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

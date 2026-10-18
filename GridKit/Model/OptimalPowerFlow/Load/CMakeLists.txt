@@ -1,11 +1,19 @@
 set(_install_headers Load.hpp LoadData.hpp)
 
-# Constant kernels have no derivatives, so no Enzyme is needed
 gridkit_add_library(
   optimal_power_flow_load
-  SOURCES Load.cpp
+  SOURCES LoadEnzyme.cpp
   HEADERS ${_install_headers}
-  LINK_LIBRARIES PUBLIC GridKit::optimal_power_flow_core)
+  LINK_LIBRARIES
+    PRIVATE
+    ClangEnzymeFlags
+    PUBLIC
+    GridKit::optimal_power_flow_core
+  COMPILE_OPTIONS
+    PRIVATE
+    -mllvm
+    -enzyme-auto-sparsity=1
+    -fno-math-errno)
 
 gridkit_add_library(
   optimal_power_flow_load_dependency_tracking

@@ -5,63 +5,72 @@
 
 #pragma once
 
+#include <array>
+
 #include <GridKit/Model/OptimalPowerFlow/Bus/BusData.hpp>
-#include <GridKit/Model/OptimalPowerFlow/ComponentModel.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Component.hpp>
 
 namespace GridKit
 {
   namespace OptimalPowerFlow
   {
     /**
-     * @brief Bus voltage in Cartesian coordinates and power balance
+     * @brief Bus voltage in Cartesian coordinates, power balance, and shunt
+     * admittance to ground
      *
-     * The bus owns the balance rows. Devices add the power they inject into
-     * the bus, so the bus contributes zero.
+     * A port to the bus reads its voltage, the internal variables, and
+     * contributes to its power balance, the internal equality rows. Each
+     * balance row is the power into the bus from its shunt and from its ports.
      */
     template <typename scalar_type, typename index_type>
-    class Bus : public ComponentModel<Bus<scalar_type, index_type>, scalar_type, index_type>
+    class Bus final : public Component<scalar_type, index_type>
     {
-      using ComponentModelT = ComponentModel<Bus<scalar_type, index_type>, scalar_type, index_type>;
-
-      using ComponentModelT::constraint_lower_;
-      using ComponentModelT::constraint_upper_;
-      using ComponentModelT::variable_indices_;
-      using ComponentModelT::variable_lower_;
-      using ComponentModelT::variable_upper_;
-
-    public:
+      using ComponentT = Component<scalar_type, index_type>;
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
-      using RealT      = typename ComponentModelT::RealT;
+      using RealT      = typename ComponentT::RealT;
       using ModelDataT = BusData<RealT, IdxT>;
 
-      /// Local variables: real and imaginary voltage
-      static constexpr IdxT VARIABLE_SIZE            = 2;
-      /// Local constraint functions: active and reactive power balance, and squared voltage magnitude
-      static constexpr IdxT CONSTRAINT_SIZE          = 3;
-      /// Internal variables: real and imaginary voltage
-      static constexpr IdxT INTERNAL_VARIABLE_SIZE   = 2;
-      /// Internal constraint functions: active and reactive power balance, and squared voltage magnitude
-      static constexpr IdxT INTERNAL_CONSTRAINT_SIZE = 3;
-      static constexpr bool CONSTANT                 = false;
+      using ComponentT::d_lower_;
+      using ComponentT::d_upper_;
+      using ComponentT::x_;
+      using ComponentT::x_lower_;
+      using ComponentT::x_upper_;
+
+    public:
+      static constexpr IdxT NUM_PORTS                 = 0;
+      static constexpr IdxT NUM_INTERNAL_VARIABLES    = 2;
+      static constexpr IdxT NUM_INTERNAL_EQUALITIES   = 2;
+      static constexpr IdxT NUM_INTERNAL_INEQUALITIES = 1;
+
+      static constexpr std::array<IdxT, NUM_PORTS> NUM_PORT_VARIABLES{};
+      static constexpr std::array<IdxT, NUM_PORTS> NUM_PORT_EQUALITIES{};
 
       explicit Bus(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
-      int                        initialize(ScalarT* x) override;
+      int                        allocate() override;
+      int                        initialize() override;
 
+      int evaluateEqualityJacobian() override;
+      int evaluateInequalityJacobian() override;
+      int evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d) override;
+
+      [[gnu::always_inline]] void internalEqualities(const ScalarT* x, ScalarT* c) const override;
+      [[gnu::always_inline]] void internalInequalities(const ScalarT* x, ScalarT* d) const override;
+
+      /// Angle reference, with zero imaginary voltage
       bool reference() const
       {
         return reference_;
       }
 
-      __attribute__((always_inline)) inline ScalarT objective(const ScalarT* x) const;
-      __attribute__((always_inline)) inline void    constraints(const ScalarT* x, ScalarT* g) const;
-
     private:
       bool  reference_{false};
       RealT Vmin_{0.0};
       RealT Vmax_{0.0};
+      RealT G_{0.0};
+      RealT B_{0.0};
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

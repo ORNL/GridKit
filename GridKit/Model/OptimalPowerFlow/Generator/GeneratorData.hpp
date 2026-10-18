@@ -25,10 +25,10 @@ namespace GridKit
       c2,   ///< \f$c_2\f$ Quadratic cost coefficient
     };
 
-    /// Buses for a generator
-    enum class GeneratorBuses : size_t
+    /// Ports of a generator
+    enum class GeneratorPorts : size_t
     {
-      bus, ///< Terminal bus
+      bus, ///< Port bus
     };
 
     /**
@@ -38,6 +38,6 @@ namespace GridKit
      * @tparam index_type Integer data type
      */
     template <typename real_type, typename index_type>
-    using GeneratorData = ComponentData<real_type, index_type, GeneratorParameters, GeneratorBuses>;
+    using GeneratorData = ComponentData<real_type, index_type, GeneratorParameters, GeneratorPorts>;
   } // namespace OptimalPowerFlow
 } // namespace GridKit

@@ -274,7 +274,7 @@ namespace GridKit
         {
           // If model file already specifies a CSV output file, then the study
           // output file must be a symlink to the model output file
-          if (exists(symlink_status(data.output_file)))
+          if (exists(data.output_file))
           {
             if ((!is_symlink(data.output_file)) || (read_symlink(data.output_file) != model_output_file))
             {

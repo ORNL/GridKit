@@ -8,7 +8,7 @@
 #include <cmath>
 
 #include <GridKit/Model/OptimalPowerFlow/ComponentData.hpp>
-#include <GridKit/Model/OptimalPowerFlow/ComponentModelImpl.hpp>
+#include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Generator/Generator.hpp>
 
 namespace GridKit
@@ -17,7 +17,8 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     Generator<scalar_type, index_type>::Generator(const ModelDataT& data)
-      : ComponentModelT(data.id, busNumbers(data), data.in_service),
+      : ComponentT(std::type_identity<Generator>{}, data.id),
+        in_service_(data.in_service),
         Pmin_(parameter(data, GeneratorParameters::Pmin, -UNBOUNDED<RealT>)),
         Pmax_(parameter(data, GeneratorParameters::Pmax, UNBOUNDED<RealT>)),
         Qmin_(parameter(data, GeneratorParameters::Qmin, -UNBOUNDED<RealT>)),
@@ -26,14 +27,6 @@ namespace GridKit
         c1_(parameter(data, GeneratorParameters::c1, ZERO<RealT>)),
         c2_(parameter(data, GeneratorParameters::c2, ZERO<RealT>))
     {
-      // Out of service, the internal constraints fix the power at zero
-      variable_lower_ = {ZERO<RealT>, ZERO<RealT>};
-      variable_upper_ = {ZERO<RealT>, ZERO<RealT>};
-      if (data.in_service)
-      {
-        variable_lower_ = {Pmin_, Qmin_};
-        variable_upper_ = {Pmax_, Qmax_};
-      }
     }
 
     template <typename scalar_type, typename index_type>
@@ -49,30 +42,50 @@ namespace GridKit
     }
 
     /**
+     * @brief The power limits bound the power, which is zero out of service
+     */
+    template <typename scalar_type, typename index_type>
+    int Generator<scalar_type, index_type>::allocate()
+    {
+      const bool in_service = in_service_ > ZERO<RealT>;
+      RealT*     lower      = x_lower_.getData();
+      RealT*     upper      = x_upper_.getData();
+      lower[0]              = in_service ? Pmin_ : ZERO<RealT>;
+      lower[1]              = in_service ? Qmin_ : ZERO<RealT>;
+      upper[0]              = in_service ? Pmax_ : ZERO<RealT>;
+      upper[1]              = in_service ? Qmax_ : ZERO<RealT>;
+      return 0;
+    }
+
+    /**
      * @brief Start from zero power
      */
     template <typename scalar_type, typename index_type>
-    int Generator<scalar_type, index_type>::initialize(ScalarT* x)
+    int Generator<scalar_type, index_type>::initialize()
     {
-      x[variable_indices_[0]] = ZERO<RealT>;
-      x[variable_indices_[1]] = ZERO<RealT>;
+      ScalarT* x = x_.getData();
+      x[0]       = ZERO<RealT>;
+      x[1]       = ZERO<RealT>;
       return 0;
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline typename Generator<scalar_type, index_type>::ScalarT
+    [[gnu::always_inline]] typename Generator<scalar_type, index_type>::ScalarT
     Generator<scalar_type, index_type>::objective(const ScalarT* x) const
     {
       const ScalarT p = x[0];
       return in_service_ * (c0_ + c1_ * p + c2_ * p * p);
     }
 
+    /**
+     * @brief Active and reactive power into the bus
+     */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void
-    Generator<scalar_type, index_type>::constraints(const ScalarT* x, ScalarT* g) const
+    [[gnu::always_inline]] void
+    Generator<scalar_type, index_type>::externalEqualities(const ScalarT* x, ScalarT* c) const
     {
-      g[0] = x[0];
-      g[1] = x[1];
+      c[0] = x[0];
+      c[1] = x[1];
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit

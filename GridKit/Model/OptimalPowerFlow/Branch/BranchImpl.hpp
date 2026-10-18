@@ -5,24 +5,21 @@
 
 #pragma once
 
+#include <array>
 #include <cmath>
 
 #include <GridKit/Model/OptimalPowerFlow/Branch/Branch.hpp>
 #include <GridKit/Model/OptimalPowerFlow/ComponentData.hpp>
-#include <GridKit/Model/OptimalPowerFlow/ComponentModelImpl.hpp>
+#include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
 
 namespace GridKit
 {
   namespace OptimalPowerFlow
   {
-    /**
-     * @brief Construct a branch from data
-     *
-     * A terminal apparent power row exists only with a rating `Smax`.
-     */
     template <typename scalar_type, typename index_type>
     Branch<scalar_type, index_type>::Branch(const ModelDataT& data)
-      : ComponentModelT(data.id, busNumbers(data), data.in_service),
+      : ComponentT(std::type_identity<Branch>{}, data.id),
+        in_service_(data.in_service),
         R_(parameter(data, BranchParameters::R, ZERO<RealT>)),
         X_(parameter(data, BranchParameters::X, ZERO<RealT>)),
         G_(parameter(data, BranchParameters::G, ZERO<RealT>)),
@@ -33,7 +30,6 @@ namespace GridKit
         phase_(parameter(data, BranchParameters::phase, ZERO<RealT>)),
         Smax_(parameter(data, BranchParameters::Smax, UNBOUNDED<RealT>))
     {
-      constraint_upper_ = {Smax_ * Smax_, Smax_ * Smax_};
       setDerivedParams();
     }
 
@@ -56,30 +52,51 @@ namespace GridKit
     }
 
     /**
-     * @brief No internal variables
+     * @brief Apparent power at most the rating at each port
      */
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::initialize([[maybe_unused]] ScalarT* x)
+    int Branch<scalar_type, index_type>::allocate()
     {
+      RealT* upper = d_upper_.getData();
+      upper[0]     = Smax_ * Smax_;
+      upper[1]     = Smax_ * Smax_;
       return 0;
     }
 
+    /**
+     * @brief Active and reactive power into bus 1, then into bus 2, added to
+     * their balances
+     */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline typename Branch<scalar_type, index_type>::ScalarT
-    Branch<scalar_type, index_type>::objective([[maybe_unused]] const ScalarT* x) const
+    [[gnu::always_inline]] void
+    Branch<scalar_type, index_type>::externalEqualities(const ScalarT* x, ScalarT* c) const
     {
-      return ScalarT{ZERO<RealT>};
+      power(x, c);
     }
 
     /**
-     * @brief Squared apparent power and power into each bus
-     *
-     * Terminal currents are those of `PhasorDynamics::Branch`, and the power
-     * into each bus is \f$P + jQ = V I^*\f$.
+     * @brief Squared apparent power at bus 1 and at bus 2, limited by the
+     * rating
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void
-    Branch<scalar_type, index_type>::constraints(const ScalarT* x, ScalarT* g) const
+    [[gnu::always_inline]] void
+    Branch<scalar_type, index_type>::internalInequalities(const ScalarT* x, ScalarT* d) const
+    {
+      std::array<ScalarT, 4> s;
+      power(x, s.data());
+
+      d[0] = s[0] * s[0] + s[1] * s[1];
+      d[1] = s[2] * s[2] + s[3] * s[3];
+    }
+
+    /**
+     * @brief Active and reactive power into bus 1, then into bus 2
+     *
+     * The power into each bus is \f$P + jQ = V I^*\f$.
+     */
+    template <typename scalar_type, typename index_type>
+    [[gnu::always_inline]] void
+    Branch<scalar_type, index_type>::power(const ScalarT* x, ScalarT* s) const
     {
       const ScalarT vr1 = x[0];
       const ScalarT vi1 = x[1];
@@ -91,21 +108,15 @@ namespace GridKit
       const ScalarT ir2 = g21_ * vr1 - b21_ * vi1 + g22_ * vr2 - b22_ * vi2;
       const ScalarT ii2 = b21_ * vr1 + g21_ * vi1 + b22_ * vr2 + g22_ * vi2;
 
-      const ScalarT p1 = vr1 * ir1 + vi1 * ii1;
-      const ScalarT q1 = vi1 * ir1 - vr1 * ii1;
-      const ScalarT p2 = vr2 * ir2 + vi2 * ii2;
-      const ScalarT q2 = vi2 * ir2 - vr2 * ii2;
-
-      g[0] = p1 * p1 + q1 * q1;
-      g[1] = p2 * p2 + q2 * q2;
-      g[2] = p1;
-      g[3] = q1;
-      g[4] = p2;
-      g[5] = q2;
+      s[0] = vr1 * ir1 + vi1 * ii1;
+      s[1] = vi1 * ir1 - vr1 * ii1;
+      s[2] = vr2 * ir2 + vi2 * ii2;
+      s[3] = vi2 * ir2 - vr2 * ii2;
     }
 
     /**
-     * @brief Admittance of `PhasorDynamics::Branch`
+     * @brief Pi-model admittance with the off-nominal tap and phase shift on
+     * the bus-1 side
      */
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::setDerivedParams()

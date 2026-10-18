@@ -53,14 +53,11 @@ endmacro()
 add_subdirectory(PowerFlow)
 add_subdirectory(PowerElectronics)
 add_subdirectory(Experimental)
+add_subdirectory(OptimalPowerFlow)
 
 if(TARGET SUNDIALS::idas)
   add_subdirectory(PhasorDynamics)
   add_subdirectory(Network)
-endif()
-
-if(GRIDKIT_ENABLE_ENZYME)
-  add_subdirectory(OptimalPowerFlow)
 endif()
 
 add_subdirectory(Consumer)

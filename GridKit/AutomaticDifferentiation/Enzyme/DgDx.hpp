@@ -7,7 +7,6 @@
 
 #include <array>
 #include <cstddef>
-#include <type_traits>
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/EnzymeDefinitions.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/LowerSparseStorage.hpp>
@@ -25,47 +24,55 @@ namespace GridKit
        * One forward sweep per local variable. Only structural entries are
        * stored, in global indices.
        *
-       * @tparam ModelT - model type with `CONSTRAINT_SIZE` local constraints
+       * @tparam ModelT - model type with internal and external local variables
+       * @tparam function - constraint functions, `Equalities` or `Inequalities`
        */
-      template <typename ModelT>
+      template <typename ModelT, MemberFunctions function>
       struct DgDx
       {
-        using ScalarT = typename ModelT::ScalarT;
-        using IdxT    = typename ModelT::IdxT;
-
-        static_assert(std::is_same_v<ScalarT, double> && std::is_same_v<IdxT, size_t>,
-                      "DgDx supports double values and size_t indices");
-
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_var - Number of local variables
-         * @param[in] constraint_indices - Global row of each local constraint
-         * @param[in] variable_indices - Global column of each local variable
+         * @param[in] row_indices - Global row of each local constraint function
+         * @param[in] col_indices - Global column of each local variable
          * @param[in] x - Local variables
-         * @param[in,out] entries - Jacobian entries
+         * @param[out] rows - Row indices
+         * @param[out] cols - Column indices
+         * @param[out] vals - Values
+         * @param[out] nnz - Number of nonzeros
          */
+        template <typename ScalarT, typename IdxT>
         static void eval(const ModelT*  model,
                          const size_t   n_var,
-                         const IdxT*    constraint_indices,
-                         const IdxT*    variable_indices,
+                         const IdxT*    row_indices,
+                         const IdxT*    col_indices,
                          const ScalarT* x,
-                         CooEntries*    entries)
+                         IdxT*          rows,
+                         IdxT*          cols,
+                         ScalarT*       vals,
+                         IdxT&          nnz)
         {
-          std::array<ScalarT, ModelT::CONSTRAINT_SIZE> g{};
+          using WrapperT = ModelWrapper<ModelT, function>;
+
+          std::array<ScalarT, WrapperT::NUM_OUTPUTS> g{};
           for (size_t var_i = 0; var_i < n_var; ++var_i)
           {
             // Sparse storage. @see LowerSparseStorage.hpp
             ScalarT* seed = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
                                                        (void*) ident_store<ScalarT, IdxT>,
                                                        var_i);
-            ScalarT* dg   = __enzyme_todense<ScalarT*>((void*) mapped_load,
-                                                     (void*) mapped_store,
+            ScalarT* dg   = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
+                                                     (void*) sparse_store<ScalarT, IdxT>,
                                                      var_i,
-                                                     constraint_indices,
-                                                     variable_indices,
-                                                     entries);
+                                                     1.0, // value scaling
+                                                     row_indices,
+                                                     col_indices,
+                                                     rows,
+                                                     cols,
+                                                     vals,
+                                                     &nnz);
 
-            __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, MemberFunctions::Constraints>::eval,
+            __enzyme_fwddiff<void>((void*) WrapperT::template eval<ScalarT>,
                                    enzyme_const,
                                    model,
                                    enzyme_dup,

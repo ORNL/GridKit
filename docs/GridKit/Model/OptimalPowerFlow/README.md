@@ -9,7 +9,6 @@ Branch <Branch/README>
 Bus <Bus/README>
 Generator <Generator/README>
 Load <Load/README>
-Shunt <Shunt/README>
 ```
 
 ```{include} ../../../../GridKit/Model/OptimalPowerFlow/README.md
