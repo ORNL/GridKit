@@ -1,10 +1,9 @@
 /**
  * @file ComponentEnzyme.hpp
- * @brief Definition of the `Component` Enzyme derivative evaluations.
+ * @brief Definition of the `Component` Enzyme derivatives.
  *
- * The derivatives gather the local variables onto the stack, where Enzyme's
- * sparsity analysis is more accurate than over the heap buffer, and pass
- * their count at run time, which Enzyme needs to find the derivative loop.
+ * Local variables live on the stack, where Enzyme's sparsity analysis works,
+ * and their count is a run-time argument, which Enzyme needs for the loop.
  */
 
 #pragma once
@@ -67,10 +66,6 @@ namespace GridKit
       }
     }
 
-    /**
-     * @brief Lower triangle of the Hessian of the component Lagrangian at the
-     * multipliers of the constraints it contributes to
-     */
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
     int Component<scalar_type, index_type>::evaluateHessian(const ModelT& model, RealT sigma)
@@ -99,11 +94,7 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Keep the entries on or below the diagonal in global indices
-     *
-     * The symmetric entries above it carry the same values.
-     */
+    /// Keep the entries on or below the diagonal, which the others mirror
     template <typename scalar_type, typename index_type>
     void Component<scalar_type, index_type>::keepLowerTriangle(CooBuffer& entries)
     {

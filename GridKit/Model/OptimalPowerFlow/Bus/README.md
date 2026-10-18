@@ -17,7 +17,6 @@ $B$        | [p.u.] | `B`         | Shunt susceptance to ground                 
 
 - $V^{\min} \ge 0$
 - $V^{\max} \ge V^{\min}$
-- $G$ and $B$ are finite
 
 ### Model Derived Parameters
 
@@ -50,8 +49,7 @@ None.
 
 #### Equality
 
-Power balance, the power into the bus from its shunt plus the power that the
-devices at its ports add:
+Power balance:
 
 ```math
 \begin{aligned}
@@ -60,10 +58,10 @@ devices at its ports add:
 \end{aligned}
 ```
 
-The reference condition is imposed as a variable bound:
+At a reference bus:
 
 ```math
-0 = V_\mathrm{i} \qquad \text{reference bus}
+0 = V_\mathrm{i}
 ```
 
 #### Inequality

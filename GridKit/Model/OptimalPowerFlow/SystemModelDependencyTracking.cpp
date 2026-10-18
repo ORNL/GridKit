@@ -13,12 +13,7 @@ namespace GridKit
   {
     namespace
     {
-      /**
-       * @brief Jacobian of `functions` from their dependencies
-       *
-       * @param[in] functions - Constraints evaluated at the current variables
-       * @param[in] cols - Number of variables
-       */
+      /// CSR Jacobian of `functions` from their dependencies
       template <typename CsrMatrixT, typename RealT, typename VectorT, typename IdxT>
       std::unique_ptr<CsrMatrixT> dependencyJacobian(const VectorT& functions, IdxT cols)
       {
@@ -50,9 +45,7 @@ namespace GridKit
       }
     } // namespace
 
-    /**
-     * @brief Gradient from the objective dependencies
-     */
+    /// Gradient from the objective dependencies
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateGradient()
     {
@@ -72,9 +65,7 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Constraint Jacobian from the dependencies
-     */
+    /// Jacobian from the constraint dependencies
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
@@ -88,9 +79,7 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Not available, because dependencies hold first derivatives only
-     */
+    /// Not available, because dependencies hold first derivatives only
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateHessian([[maybe_unused]] RealT sigma)
     {
@@ -98,9 +87,7 @@ namespace GridKit
       return 1;
     }
 
-    /**
-     * @brief Derivatives are built from dependencies on each evaluation
-     */
+    /// Derivatives come from the dependencies at each evaluation
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocateDerivatives()
     {

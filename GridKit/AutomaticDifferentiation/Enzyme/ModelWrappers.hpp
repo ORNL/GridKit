@@ -234,8 +234,6 @@ namespace GridKit
 
       /**
        * @brief Wrapper partial template specialization for an optimization objective
-       *
-       * Local variables are the internal variables, then the external ones.
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::Objective>
@@ -260,8 +258,6 @@ namespace GridKit
 
       /**
        * @brief Wrapper partial template specialization for optimization constraints
-       *
-       * Local contributions are those to the internal constraints, then those at the ports.
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::Constraints>

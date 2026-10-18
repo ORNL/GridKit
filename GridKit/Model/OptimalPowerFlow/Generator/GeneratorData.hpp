@@ -32,12 +32,7 @@ namespace GridKit
       bus, ///< Port bus
     };
 
-    /**
-     * @brief Contains modeling data for a Generator
-     *
-     * @tparam real_type  Real parameter data type
-     * @tparam index_type Integer data type
-     */
+    /// Data of a `Generator`
     template <typename real_type, typename index_type>
     using GeneratorData = ComponentData<real_type, index_type, GeneratorParameters, GeneratorPorts>;
   } // namespace OptimalPowerFlow

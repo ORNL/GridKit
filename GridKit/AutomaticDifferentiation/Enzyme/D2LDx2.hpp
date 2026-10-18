@@ -19,14 +19,10 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme automatic differentiation Hessian evaluator: Lagrangian Hessian, d2L/dx2
+       * @brief Enzyme sparse Hessian of \f$L = \sigma f + \lambda^T g\f$, by one
+       * forward sweep per local variable over the reverse gradient of \f$L\f$
        *
-       * Hessian of \f$L = \sigma f(x) + \lambda^T g(x)\f$ by one forward sweep
-       * per local variable over the reverse-mode gradient of \f$L\f$. Only
-       * structural entries are stored, in global indices.
-       *
-       * @tparam ModelT - model type with internal and external local variables
-       * and constraints
+       * @tparam ModelT - optimization component model
        */
       template <typename ModelT>
       struct D2LDx2
@@ -110,11 +106,7 @@ namespace GridKit
           return value;
         }
 
-        /**
-         * @brief Add the gradient of the Lagrangian to `gradient`
-         *
-         * Only the tangent of `gradient` is used, so it is not reset.
-         */
+        /// Add the Lagrangian gradient to `gradient`, whose tangent alone is used
         template <typename ScalarT, typename RealT>
         [[gnu::always_inline]] inline static void lagrangianGradient(const ModelT*  model,
                                                                      const ScalarT* x,

@@ -31,10 +31,6 @@ namespace GridKit
       return checks;
     }
 
-    /**
-     * @brief The power balance is an equality, and the squared voltage
-     * magnitude an inequality
-     */
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::tagInequality()
     {
@@ -48,10 +44,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Unit real voltage for the flat start, the voltage limits on the
-     * squared magnitude, and zero imaginary voltage at a reference bus
-     */
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::initialize()
     {
@@ -81,10 +73,7 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Power into the bus from its shunt, which starts the balance, and
-     * the squared voltage magnitude
-     */
+    /// Shunt power into the bus, which starts its balance, and the squared voltage magnitude
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
     Bus<scalar_type, index_type>::internalConstraints(const ScalarT*                  x,

@@ -34,9 +34,6 @@ namespace GridKit
       return checks;
     }
 
-    /**
-     * @brief The squared apparent power at each port is an inequality
-     */
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::tagInequality()
     {
@@ -48,9 +45,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief The rating bounds the squared apparent power at each port
-     */
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::initialize()
     {
@@ -64,9 +58,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Squared apparent power at bus 1 and at bus 2
-     */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
     Branch<scalar_type, index_type>::internalConstraints([[maybe_unused]] const ScalarT* x,
@@ -87,10 +78,6 @@ namespace GridKit
       g[S2] = s[DP2] * s[DP2] + s[DQ2] * s[DQ2];
     }
 
-    /**
-     * @brief Active and reactive power into bus 1, then into bus 2, added to
-     * their balances
-     */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
     Branch<scalar_type, index_type>::externalConstraints([[maybe_unused]] const ScalarT* x,
@@ -120,10 +107,7 @@ namespace GridKit
       setDerivedParameters();
     }
 
-    /**
-     * @brief Pi-model admittance with the off-nominal tap and phase shift on
-     * the bus-1 side, zero out of service
-     */
+    /// Pi-model admittance with the tap and phase shift on the bus-1 side, zero out of service
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::setDerivedParameters()
     {
@@ -150,11 +134,7 @@ namespace GridKit
       b22_ = u * (-b_br - HALF<RealT> * B_);
     }
 
-    /**
-     * @brief Active and reactive power into bus 1, then into bus 2
-     *
-     * The power into each bus is \f$P + jQ = V I^*\f$.
-     */
+    /// Power \f$P + jQ = V I^*\f$ into bus 1, then into bus 2
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
     Branch<scalar_type, index_type>::power(const ScalarT* external, ScalarT* s) const

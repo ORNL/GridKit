@@ -15,14 +15,14 @@ namespace GridKit
 {
   namespace OptimalPowerFlow
   {
-    /// Internal variables of a `Bus`, its voltage, which a port reads
+    /// Internal variables of a `Bus`
     enum class BusInternalVariables : size_t
     {
       VR, ///< \f$V_\mathrm{r}\f$ Real voltage [p.u.]
       VI, ///< \f$V_\mathrm{i}\f$ Imaginary voltage [p.u.]
     };
 
-    /// Internal constraints of a `Bus`, its power balance first, which a port contributes to
+    /// Internal constraints of a `Bus`, its power balance first
     enum class BusInternalConstraints : size_t
     {
       P,   ///< Active power balance [p.u.]
@@ -33,10 +33,6 @@ namespace GridKit
     /**
      * @brief Bus voltage in Cartesian coordinates, power balance, and shunt
      * admittance to ground
-     *
-     * A port to the bus reads its voltage and contributes to its power
-     * balance. Each balance equality is the power into the bus from its shunt
-     * and from its ports.
      */
     template <typename scalar_type, typename index_type>
     class Bus final : public Component<scalar_type, index_type>

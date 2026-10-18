@@ -24,11 +24,6 @@ namespace GridKit
     /**
      * @brief AC optimal power flow in Cartesian coordinates
      *
-     * Minimizes the generation cost subject to the constraints of the
-     * components: the power balance at every bus, which are equalities, and
-     * the limits, which are inequalities and variable bounds. Each reference
-     * bus has zero imaginary voltage, and every island needs one.
-     *
      * @todo Replace the temporary STL containers of system-level data.
      */
     template <typename scalar_type, typename index_type>

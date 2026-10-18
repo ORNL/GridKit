@@ -1,7 +1,7 @@
 # EconomicDispatch
 
-These examples solve the AC optimal power flow of each case with Ipopt, using
-the exact sparse derivatives of the `OptimalPowerFlow` model.
+AC optimal power flow of each case, solved by Ipopt with exact sparse
+derivatives.
 
 | Case | Buses | Optimal cost [\$/h] |
 | --- | --- | --- |

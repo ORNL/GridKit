@@ -35,12 +35,7 @@ namespace GridKit
       bus2, ///< Bus-2 port
     };
 
-    /**
-     * @brief Contains modeling data for a Branch
-     *
-     * @tparam real_type  Real parameter data type
-     * @tparam index_type Integer data type
-     */
+    /// Data of a `Branch`
     template <typename real_type, typename index_type>
     using BranchData = ComponentData<real_type, index_type, BranchParameters, BranchPorts>;
   } // namespace OptimalPowerFlow

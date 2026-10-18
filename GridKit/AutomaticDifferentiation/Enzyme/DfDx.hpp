@@ -18,11 +18,9 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme automatic differentiation gradient evaluator: objective gradient, df/dx
+       * @brief Enzyme objective gradient, df/dx, by one reverse sweep
        *
-       * One reverse sweep.
-       *
-       * @tparam ModelT - model type with internal and external local variables
+       * @tparam ModelT - optimization component model
        */
       template <typename ModelT>
       struct DfDx

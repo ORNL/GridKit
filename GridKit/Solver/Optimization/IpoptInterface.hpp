@@ -14,13 +14,8 @@ namespace AnalysisManager
   namespace SteadyState
   {
     /**
-     * @brief Implementation of Ipopt's pure virtual TNLP class for a
-     * nonlinear program with exact sparse derivatives
-     *
-     * The constraint Jacobian and the lower triangle of the Lagrangian Hessian
-     * come from the model in CSR format, with the patterns set by the model's
-     * `allocate()`. The solve leaves the variables and the multipliers in the
-     * model.
+     * @brief Ipopt problem over a `Model::OptimizationEvaluator`, which holds
+     * the solution and its multipliers after the solve
      */
     template <typename scalar_type, typename index_type>
     class IpoptInterface : public Ipopt::TNLP
@@ -36,19 +31,16 @@ namespace AnalysisManager
       using IpoptData                 = Ipopt::IpoptData;
 
     public:
-      /**
-       * @param[in] model - Allocated and initialized model, which holds the
-       * solution after the solve
-       */
+      /// Solve `model`, which must be allocated and initialized
       explicit IpoptInterface(ModelT* model);
 
-      /// Sizes of the variables, the constraints, and the derivative nonzeros, with C-style indices
+      /// Sizes and nonzero counts, with C-style indices
       bool get_nlp_info(ipindex& n, ipindex& m, ipindex& nnz_jac_g, ipindex& nnz_h_lag, IndexStyleEnum& index_style) override;
 
       /// Variable and constraint bounds
       bool get_bounds_info(ipindex n, ipnumber* x_l, ipnumber* x_u, ipindex m, ipnumber* g_l, ipnumber* g_u) override;
 
-      /// Variables from the model's `x()`, with no initial multipliers
+      /// Variables from `x()`, without initial multipliers
       bool get_starting_point(ipindex   n,
                               bool      init_x,
                               ipnumber* x,

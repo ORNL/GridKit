@@ -15,11 +15,10 @@ $B_\mathrm{mag}$ | [p.u.] | `Bmag`       | Magnetizing shunt susceptance at bus 
 $\tau$           | [p.u.] | `tap`        | Off-nominal tap magnitude on the bus-1 side           |               | Default 1
 $\theta$         | [rad]  | `phase`      | Phase-shift angle                                     |               | Default 0
 $S^{\max}$       | [p.u.] | `Smax`       | Apparent power limit at each port                     |               | Default unbounded
-$u$              | [-]    | `in_service` | Service status, 1 in service and 0 out of service     |               | Default true
+$u$              | [-]    | `in_service` | Service status                                        |               | Default true
 
 ### Parameter Validation
 
-- $R$, $X$, $G$, $B$, $G_\mathrm{mag}$, $B_\mathrm{mag}$, $\tau$, and $\theta$ are finite
 - $R^2 + X^2 > 0$
 - $\tau > 0$
 - $S^{\max} > 0$

@@ -19,14 +19,7 @@ namespace GridKit
     template <typename Parameters, typename RealT, typename IdxT>
     using ParameterMap = std::map<Parameters, std::variant<std::string, bool, RealT, IdxT>>;
 
-    /**
-     * @brief Unified interface for `Component` data containers
-     *
-     * @tparam real_type  Real parameter data type
-     * @tparam index_type Integer data type
-     * @tparam parameters_enum Enumeration over parameters
-     * @tparam ports_enum Enumeration over ports
-     */
+    /// Data of a device: its `id`, parameter values, and the bus number at each port
     template <typename real_type, typename index_type, typename parameters_enum, typename ports_enum>
       requires Utilities::SizedEnum<parameters_enum> && Utilities::SizedEnum<ports_enum>
     struct ComponentData
@@ -36,13 +29,10 @@ namespace GridKit
       using Parameters = parameters_enum;
       using Ports      = ports_enum;
 
-      /// Component `id`
       std::string id;
 
-      /// Mapping of parameters to parameter values
       ParameterMap<Parameters, RealT, IdxT> parameters;
 
-      /// Mapping of ports to the numbers of the buses they connect to
       std::map<Ports, IdxT> ports;
     };
   } // namespace OptimalPowerFlow

@@ -31,12 +31,7 @@ namespace GridKit
       bus, ///< Port bus
     };
 
-    /**
-     * @brief Contains modeling data for a Load
-     *
-     * @tparam real_type  Real parameter data type
-     * @tparam index_type Integer data type
-     */
+    /// Data of a `Load`
     template <typename real_type, typename index_type>
     using LoadData = ComponentData<real_type, index_type, LoadParameters, LoadPorts>;
   } // namespace OptimalPowerFlow
