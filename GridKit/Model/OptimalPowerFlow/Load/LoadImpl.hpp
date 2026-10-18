@@ -43,7 +43,7 @@ namespace GridKit
       const auto DQ = static_cast<size_t>(LoadExternalConstraints::DQ);
 
       const ScalarT v2 = external[VR] * external[VR] + external[VI] * external[VI];
-      const ScalarT v  = std::sqrt(current_on_ * v2 + (ONE<RealT> - current_on_));
+      const ScalarT v  = std::sqrt(v2);
 
       g[DP] = -u_ * (P_ + Pi_ * v + Pz_ * v2);
       g[DQ] = -u_ * (Q_ + Qi_ * v + Qz_ * v2);
@@ -73,14 +73,6 @@ namespace GridKit
       if (in_service_)
       {
         u_ = ONE<RealT>;
-      }
-
-      const bool current_part = Pi_ < ZERO<RealT> || Pi_ > ZERO<RealT> || Qi_ < ZERO<RealT> || Qi_ > ZERO<RealT>;
-
-      current_on_ = ZERO<RealT>;
-      if (in_service_ && current_part)
-      {
-        current_on_ = ONE<RealT>;
       }
     }
   } // namespace OptimalPowerFlow
