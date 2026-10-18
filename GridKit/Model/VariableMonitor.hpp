@@ -106,16 +106,6 @@ namespace GridKit
       {
       };
 
-      /// Type used for dispatch
-      struct Wide
-      {
-      };
-
-      /// Type used for dispatch
-      struct Long
-      {
-      };
-
       /// Short alias for local use
       using Format = VariableMonitorFormat;
       /// Short alias for local use

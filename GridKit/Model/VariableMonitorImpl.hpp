@@ -90,6 +90,9 @@ namespace GridKit
       template <typename FuncT>
       void set(VariableEnum v, FuncT f)
       {
+        using RetT = std::remove_cvref_t<std::invoke_result_t<FuncT>>;
+        static_assert(std::is_floating_point_v<RetT> || std::is_same_v<RetT, ScalarT>,
+                      "Monitored variables must be real valued");
         f_[static_cast<size_t>(enum_integer(v))] = [f]
         { return static_cast<RealT>(f()); };
       }
