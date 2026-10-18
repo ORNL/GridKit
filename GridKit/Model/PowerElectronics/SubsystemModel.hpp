@@ -180,11 +180,11 @@ namespace GridKit
       }
 
       // Store the global indices of all external coupling variables.
-      size_t counter = 0;
+      size_t index = 0;
       for (size_t i = n_intern_; i < (n_intern_ + n_extern_); i++)
       {
-        external_data_indices_[counter] = this->getNodeConnection(i);
-        counter++;
+        external_data_indices_[index] = this->getNodeConnection(i);
+        index++;
       }
 
       // Map each node's global connection indices to subsystem-local indices,
@@ -322,7 +322,7 @@ namespace GridKit
       IdxT*  cols_dup = new IdxT[nnz_dup];
       RealT* vals_dup = new RealT[nnz_dup];
 
-      counter = 0;
+      index = 0;
       for (const component_type* component : components_)
       {
         const IdxT*  r   = component->jacobianCooRows();
@@ -340,11 +340,11 @@ namespace GridKit
             continue;
           }
 
-          rows_dup[counter] = row;
-          cols_dup[counter] = col;
-          vals_dup[counter] = v[i];
+          rows_dup[index] = row;
+          cols_dup[index] = col;
+          vals_dup[index] = v[i];
 
-          ++counter;
+          ++index;
         }
       }
 
