@@ -20,13 +20,12 @@ namespace GridKit
       static constexpr RealT LOAD_P = 1.2;
       static constexpr RealT LOAD_Q = 0.3;
 
-      /// Equality rows of the buses in order
-      static constexpr std::array<IdxT, 6> BALANCE_ROWS{0, 1, 2, 3, 4, 5};
-      /// Inequality rows of the buses in order, then of the rated branch, then
-      /// of the unrated branches
-      static constexpr std::array<IdxT, 3> MAGNITUDE_ROWS{0, 1, 2};
-      static constexpr std::array<IdxT, 2> FLOW_ROWS{3, 4};
-      static constexpr std::array<IdxT, 4> UNRATED_ROWS{5, 6, 7, 8};
+      /// Constraints of the buses in order, P, Q, and VM2 each, then S1 and S2
+      /// of the rated branch, then of the unrated branches
+      static constexpr std::array<IdxT, 6> BALANCE_ROWS{0, 1, 3, 4, 6, 7};
+      static constexpr std::array<IdxT, 3> MAGNITUDE_ROWS{2, 5, 8};
+      static constexpr std::array<IdxT, 2> FLOW_ROWS{9, 10};
+      static constexpr std::array<IdxT, 4> UNRATED_ROWS{11, 12, 13, 14};
 
       /// A point away from the flat start
       static constexpr std::array<RealT, 10> POINT{1.02, 0.0, 0.97, -0.07, 1.01, -0.03, 0.8, 0.2, 0.4, -0.1};

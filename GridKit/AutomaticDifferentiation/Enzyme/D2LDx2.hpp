@@ -21,12 +21,12 @@ namespace GridKit
       /**
        * @brief Enzyme automatic differentiation Hessian evaluator: Lagrangian Hessian, d2L/dx2
        *
-       * Hessian of \f$L = \sigma f(x) + \lambda_c^T c(x) + \lambda_d^T d(x)\f$
-       * by one forward sweep per local variable over the reverse-mode gradient
-       * of \f$L\f$. Only structural entries are stored, in global indices.
+       * Hessian of \f$L = \sigma f(x) + \lambda^T g(x)\f$ by one forward sweep
+       * per local variable over the reverse-mode gradient of \f$L\f$. Only
+       * structural entries are stored, in global indices.
        *
        * @tparam ModelT - model type with internal and external local variables
-       * and equality constraints, and inequality constraints
+       * and constraints
        */
       template <typename ModelT>
       struct D2LDx2
@@ -37,8 +37,7 @@ namespace GridKit
          * @param[in] variable_indices - Global index of each local variable
          * @param[in] x - Local variables
          * @param[in] sigma - Objective factor
-         * @param[in] lambda_c - Local equality constraint multipliers
-         * @param[in] lambda_d - Local inequality constraint multipliers
+         * @param[in] lambda - Multipliers of the local constraint contributions
          * @param[out] rows - Row indices
          * @param[out] cols - Column indices
          * @param[out] vals - Values
@@ -50,8 +49,7 @@ namespace GridKit
                          const IdxT*    variable_indices,
                          const ScalarT* x,
                          const RealT    sigma,
-                         const RealT*   lambda_c,
-                         const RealT*   lambda_d,
+                         const RealT*   lambda,
                          IdxT*          rows,
                          IdxT*          cols,
                          ScalarT*       vals,
@@ -87,38 +85,27 @@ namespace GridKit
                                    enzyme_const,
                                    sigma,
                                    enzyme_const,
-                                   lambda_c,
-                                   enzyme_const,
-                                   lambda_d);
+                                   lambda);
           }
         }
 
       private:
-        using ObjectiveT    = ModelWrapper<ModelT, MemberFunctions::Objective>;
-        using EqualitiesT   = ModelWrapper<ModelT, MemberFunctions::Equalities>;
-        using InequalitiesT = ModelWrapper<ModelT, MemberFunctions::Inequalities>;
+        using ObjectiveT   = ModelWrapper<ModelT, MemberFunctions::Objective>;
+        using ConstraintsT = ModelWrapper<ModelT, MemberFunctions::Constraints>;
 
         template <typename ScalarT, typename RealT>
         [[gnu::always_inline]] inline static ScalarT lagrangian(const ModelT*  model,
                                                                 const ScalarT* x,
                                                                 const RealT    sigma,
-                                                                const RealT*   lambda_c,
-                                                                const RealT*   lambda_d)
+                                                                const RealT*   lambda)
         {
-          std::array<ScalarT, EqualitiesT::NUM_OUTPUTS> c{};
-          EqualitiesT::eval(model, x, c.data());
-
-          std::array<ScalarT, InequalitiesT::NUM_OUTPUTS> d{};
-          InequalitiesT::eval(model, x, d.data());
+          std::array<ScalarT, ConstraintsT::NUM_OUTPUTS> g{};
+          ConstraintsT::eval(model, x, g.data());
 
           ScalarT value = sigma * ObjectiveT::eval(model, x);
-          for (size_t i = 0; i < EqualitiesT::NUM_OUTPUTS; ++i)
+          for (size_t i = 0; i < ConstraintsT::NUM_OUTPUTS; ++i)
           {
-            value += lambda_c[i] * c[i];
-          }
-          for (size_t i = 0; i < InequalitiesT::NUM_OUTPUTS; ++i)
-          {
-            value += lambda_d[i] * d[i];
+            value += lambda[i] * g[i];
           }
           return value;
         }
@@ -133,8 +120,7 @@ namespace GridKit
                                                                      const ScalarT* x,
                                                                      ScalarT*       gradient,
                                                                      const RealT    sigma,
-                                                                     const RealT*   lambda_c,
-                                                                     const RealT*   lambda_d)
+                                                                     const RealT*   lambda)
         {
           __enzyme_autodiff<void>((void*) lagrangian<ScalarT, RealT>,
                                   enzyme_const,
@@ -145,9 +131,7 @@ namespace GridKit
                                   enzyme_const,
                                   sigma,
                                   enzyme_const,
-                                  lambda_c,
-                                  enzyme_const,
-                                  lambda_d);
+                                  lambda);
         }
       };
     } // namespace Sparse

@@ -5,11 +5,12 @@ operating point within the component limits.
 
 ## Formulation
 
-Minimize $f(x)$ subject to the equality constraints $c(x) = 0$, the inequality
-constraints $d_l \le d(x) \le d_u$, and the variable bounds
-$x_l \le x \le x_u$. The objective and equality rows sum component contributions.
-Each inequality row and variable bound belongs to one component. An inequality
-without a finite limit has infinite bounds. Every island needs a reference bus.
+Minimize $f(x)$ subject to the constraints $g_l \le g(x) \le g_u$ and the
+variable bounds $x_l \le x \le x_u$. The objective and each constraint sum
+component contributions. Each constraint and variable bound belongs to one
+component, which tags the constraint as an inequality or leaves it an equality
+with $g_l = g_u = 0$. An inequality without a finite limit has infinite bounds.
+Every island needs a reference bus.
 
 Cartesian voltages make a solution directly a starting point for a phasor
 dynamics simulation. Branch power is quadratic in these voltages; ZIP
@@ -23,43 +24,38 @@ of those vectors. Components do not inherit the complete nonlinear program.
 Service status is a parameter of each component that uses it.
 
 Each model enumerates its internal variables, its external variables, its
-internal equality rows, its external equality contributions, and its inequality
-rows as `InternalVariablesT`, `ExternalVariablesT`, `InternalEqualitiesT`,
-`ExternalEqualitiesT`, and `InequalitiesT`. Inequality rows always belong to
-the component that evaluates them.
-`NUM_PORT_VARIABLES` and `NUM_PORT_EQUALITIES` split the external entries among
-the ports. `Component` derives every size from these. Each kernel receives the
-internal variables `x` and the external variables `external`, each indexed by
-its enumeration. A bus defines what a port to it shares: its voltage and its power
-balance. `connect(port, component, offset)` selects contiguous blocks owned by
-any component; variable and equality offsets are independent. Connections must
+internal constraints, and its external constraint contributions as
+`InternalVariablesT`, `ExternalVariablesT`, `InternalConstraintsT`, and
+`ExternalConstraintsT`. `NUM_PORT_VARIABLES` and `NUM_PORT_CONSTRAINTS` split
+the external entries among the ports. `Component` derives every size from
+these. Each kernel receives the internal variables `x` and the external
+variables `external`, each indexed by its enumeration. A bus defines what a
+port to it shares: its voltage and its power balance.
+`connect(port, component, offset)` selects contiguous blocks owned by any
+component; variable and constraint offsets are independent. Connections must
 target components owned by the same system. `allocate()` binds the views,
-which prevents further connection changes, and builds the derivative patterns.
-`initialize()` sets the bounds and the flat start. Every variable starts at
-zero, and a model overrides `initialize()` for its bounds and any nonzero
-initial value.
+which prevents further connection changes, tags the inequalities, and builds
+the derivative patterns. `initialize()` sets the bounds and the flat start.
+Every variable and multiplier starts at zero, every equality at zero, and every
+inequality unbounded, and a model overrides `initialize()` for its limits and
+any nonzero initial value.
 
 ### Internal Constraints
 
-#### Equality
-
-`internalEqualities(x, external, c)` contributes to rows owned by the component. Each
-equality row is owned by one component and is the sum of its owner's
-contribution and those of every component with a port to it; the assembled row
-equals zero.
-
-#### Inequality
-
-`inequalities(x, external, d)` evaluates the rows of the component. These may
-depend on both internal and external variables. Variable bounds remain separate
-from these function bounds.
+`internalConstraints(x, external, g)` contributes to the constraints owned by
+the component. These may depend on both internal and external variables. Each
+constraint is the sum of its owner's contribution and those of every component
+with a port to it. `tagInequality()` tags each of them as an inequality or an
+equality, as `tagDifferentiable()` tags each variable in PhasorDynamics.
+Variable bounds remain separate from these constraint bounds.
 
 ### External Constraints
 
-`externalEqualities(x, external, c)` contributes to equality rows owned by the connected
-components. These contributions are added to the owning rows; they are not
-separate constraints equated to zero. For example, a generator contributes
-power to a bus's balance rows without reading its voltage.
+`externalConstraints(x, external, g)` contributes to constraints owned by the
+connected components, equalities and inequalities alike. These contributions
+are added to the owning constraints; they are not separate constraints. For
+example, a generator contributes power to a bus's balance without reading its
+voltage.
 
 Case bus numbers are resolved when constructing the system. Electrical islands
 follow in-service branches, independently of component dependencies.
@@ -72,16 +68,18 @@ constructor.
 ## Derivatives
 
 Each component supplies `objective(x, external)` and the constraint kernels above,
-which `Component` differentiates with Enzyme. Internal and external equality
+which `Component` differentiates with Enzyme. Internal and external
 contributions share one differentiation pass:
 
-Driver   | Derivative                                            | Mode
----------|-------------------------------------------------------|-----
-`DfDx`   | Objective gradient                                    | Reverse
-`DgDx`   | Equality or inequality constraint Jacobian            | Forward
-`D2LDx2` | Hessian of $\sigma f + \lambda_c^T c + \lambda_d^T d$ | Forward over reverse
+Driver   | Derivative                          | Mode
+---------|-------------------------------------|-----
+`DfDx`   | Objective gradient                  | Reverse
+`DgDx`   | Constraint Jacobian                 | Forward
+`D2LDx2` | Hessian of $\sigma f + \lambda^T g$ | Forward over reverse
 
-`Component` retains the lower triangle in global indices for assembly.
+`Component` retains the lower triangle in global indices for assembly. The
+Hessian is at the multipliers `lambda()`. A solver sets them, and leaves them at
+the solution with the bound multipliers `zLower()` and `zUpper()`.
 
 ## Data
 
@@ -92,13 +90,12 @@ Driver   | Derivative                                            | Mode
 per unit on the system base `va_base`.
 
 The parser reads `params.va_base`, the `number` and `params` of each bus, and
-the `class`, `id`, `ports`, and `params` of each device. It ignores `header`,
-`freq_base`, `name`, and `extension`, and rejects `signals`, `monitors`,
-`init`, and `mon`, because every study starts flat. Each model reads its parameters with `Model::ParameterReader`,
-so a real accepts an integer, `reference` and `in_service` must be booleans,
-and an error names the bus or device. `Bus` and `Branch` share their class
-names with PhasorDynamics but not their parameters, so a case file belongs to
-one family.
+the `class`, `id`, `ports`, and `params` of each device, and ignores every
+other key. An unknown device class, parameter, or port is an error. Each model
+reads its parameters with `Model::ParameterReader`, so a real accepts an
+integer, and `reference` and `in_service` must be booleans. `Bus` and `Branch`
+share their class names with PhasorDynamics but not their parameters, so a
+case file belongs to one family.
 
 A bus carries its shunt admittance to ground in `G` and `B`. Loads use `P`,
 `Q`, `Pi`, `Qi`, `Pz`, and `Qz`: the constant-power, constant-current, and

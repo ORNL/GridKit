@@ -35,19 +35,56 @@ namespace GridKit
     }
 
     /**
+     * @brief The squared apparent power at each port is an inequality
+     */
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::tagInequality()
+    {
+      const auto S1 = static_cast<size_t>(BranchInternalConstraints::S1);
+      const auto S2 = static_cast<size_t>(BranchInternalConstraints::S2);
+
+      tag_[S1] = true;
+      tag_[S2] = true;
+      return 0;
+    }
+
+    /**
      * @brief The rating bounds the squared apparent power at each port
      */
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::initialize()
     {
-      const auto S1 = static_cast<size_t>(BranchInequalities::S1);
-      const auto S2 = static_cast<size_t>(BranchInequalities::S2);
+      const auto S1 = static_cast<size_t>(BranchInternalConstraints::S1);
+      const auto S2 = static_cast<size_t>(BranchInternalConstraints::S2);
 
-      RealT* d_upper = d_upper_.getData();
+      RealT* g_upper = g_upper_.getData();
 
-      d_upper[S1] = Smax_ * Smax_;
-      d_upper[S2] = Smax_ * Smax_;
+      g_upper[S1] = Smax_ * Smax_;
+      g_upper[S2] = Smax_ * Smax_;
       return 0;
+    }
+
+    /**
+     * @brief Squared apparent power at bus 1 and at bus 2
+     */
+    template <typename scalar_type, typename index_type>
+    [[gnu::always_inline]] void
+    Branch<scalar_type, index_type>::internalConstraints([[maybe_unused]] const ScalarT* x,
+                                                         const ScalarT*                  external,
+                                                         ScalarT*                        g) const
+    {
+      const auto DP1 = static_cast<size_t>(BranchExternalConstraints::DP1);
+      const auto DQ1 = static_cast<size_t>(BranchExternalConstraints::DQ1);
+      const auto DP2 = static_cast<size_t>(BranchExternalConstraints::DP2);
+      const auto DQ2 = static_cast<size_t>(BranchExternalConstraints::DQ2);
+      const auto S1  = static_cast<size_t>(BranchInternalConstraints::S1);
+      const auto S2  = static_cast<size_t>(BranchInternalConstraints::S2);
+
+      std::array<ScalarT, Utilities::enum_size<BranchExternalConstraints>()> s;
+      power(external, s.data());
+
+      g[S1] = s[DP1] * s[DP1] + s[DQ1] * s[DQ1];
+      g[S2] = s[DP2] * s[DP2] + s[DQ2] * s[DQ2];
     }
 
     /**
@@ -56,34 +93,11 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
-    Branch<scalar_type, index_type>::externalEqualities([[maybe_unused]] const ScalarT* x,
-                                                        const ScalarT*                  external,
-                                                        ScalarT*                        c) const
+    Branch<scalar_type, index_type>::externalConstraints([[maybe_unused]] const ScalarT* x,
+                                                         const ScalarT*                  external,
+                                                         ScalarT*                        g) const
     {
-      power(external, c);
-    }
-
-    /**
-     * @brief Squared apparent power at bus 1 and at bus 2
-     */
-    template <typename scalar_type, typename index_type>
-    [[gnu::always_inline]] void
-    Branch<scalar_type, index_type>::inequalities([[maybe_unused]] const ScalarT* x,
-                                                  const ScalarT*                  external,
-                                                  ScalarT*                        d) const
-    {
-      const auto DP1 = static_cast<size_t>(BranchExternalEqualities::DP1);
-      const auto DQ1 = static_cast<size_t>(BranchExternalEqualities::DQ1);
-      const auto DP2 = static_cast<size_t>(BranchExternalEqualities::DP2);
-      const auto DQ2 = static_cast<size_t>(BranchExternalEqualities::DQ2);
-      const auto S1  = static_cast<size_t>(BranchInequalities::S1);
-      const auto S2  = static_cast<size_t>(BranchInequalities::S2);
-
-      std::array<ScalarT, Utilities::enum_size<BranchExternalEqualities>()> s;
-      power(external, s.data());
-
-      d[S1] = s[DP1] * s[DP1] + s[DQ1] * s[DQ1];
-      d[S2] = s[DP2] * s[DP2] + s[DQ2] * s[DQ2];
+      power(external, g);
     }
 
     template <typename scalar_type, typename index_type>
@@ -149,10 +163,10 @@ namespace GridKit
       const auto VI1 = static_cast<size_t>(BranchExternalVariables::VI1);
       const auto VR2 = static_cast<size_t>(BranchExternalVariables::VR2);
       const auto VI2 = static_cast<size_t>(BranchExternalVariables::VI2);
-      const auto DP1 = static_cast<size_t>(BranchExternalEqualities::DP1);
-      const auto DQ1 = static_cast<size_t>(BranchExternalEqualities::DQ1);
-      const auto DP2 = static_cast<size_t>(BranchExternalEqualities::DP2);
-      const auto DQ2 = static_cast<size_t>(BranchExternalEqualities::DQ2);
+      const auto DP1 = static_cast<size_t>(BranchExternalConstraints::DP1);
+      const auto DQ1 = static_cast<size_t>(BranchExternalConstraints::DQ1);
+      const auto DP2 = static_cast<size_t>(BranchExternalConstraints::DP2);
+      const auto DQ2 = static_cast<size_t>(BranchExternalConstraints::DQ2);
 
       const ScalarT vr1 = external[VR1];
       const ScalarT vi1 = external[VI1];

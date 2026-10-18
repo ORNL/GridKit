@@ -32,45 +32,30 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateEqualityJacobian()
+    int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
       for (auto& component : components_)
       {
-        const int status = component->evaluateEqualityJacobian();
+        const int status = component->evaluateJacobian();
         if (status != 0)
         {
           return status;
         }
       }
 
-      return refill(*equality_jacobian_, equality_jacobian_assembly_);
-    }
-
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateInequalityJacobian()
-    {
-      for (auto& component : components_)
-      {
-        const int status = component->evaluateInequalityJacobian();
-        if (status != 0)
-        {
-          return status;
-        }
-      }
-
-      return refill(*inequality_jacobian_, inequality_jacobian_assembly_);
+      return refill(*jacobian_, jacobian_assembly_);
     }
 
     /**
-     * @brief Lower triangle of the Hessian of
-     * \f$\sigma f + \lambda_c^T c + \lambda_d^T d\f$
+     * @brief Lower triangle of the Hessian of \f$\sigma f + \lambda^T g\f$ at
+     * the multipliers `lambda()`
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d)
+    int SystemModel<scalar_type, index_type>::evaluateHessian(RealT sigma)
     {
       for (auto& component : components_)
       {
-        const int status = component->evaluateHessian(sigma, lambda_c, lambda_d);
+        const int status = component->evaluateHessian(sigma);
         if (status != 0)
         {
           return status;
@@ -89,33 +74,21 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocateDerivatives()
     {
-      RealVectorT lambda_c;
-      RealVectorT lambda_d;
-      if (lambda_c.resize(c_.getSize()) != 0 || lambda_d.resize(d_.getSize()) != 0)
-      {
-        return 1;
-      }
-
-      equality_jacobian_assembly_.entries.clear();
-      inequality_jacobian_assembly_.entries.clear();
+      jacobian_assembly_.entries.clear();
       hessian_assembly_.entries.clear();
       for (auto& component : components_)
       {
-        if (component->evaluateEqualityJacobian() != 0
-            || component->evaluateInequalityJacobian() != 0
-            || component->evaluateHessian(ONE<RealT>, lambda_c.getData(), lambda_d.getData()) != 0)
+        if (component->evaluateJacobian() != 0 || component->evaluateHessian(ONE<RealT>) != 0)
         {
           return 1;
         }
 
-        equality_jacobian_assembly_.entries.push_back(&component->equalityEntries());
-        inequality_jacobian_assembly_.entries.push_back(&component->inequalityEntries());
+        jacobian_assembly_.entries.push_back(&component->jacobianEntries());
         hessian_assembly_.entries.push_back(&component->hessianEntries());
       }
 
-      equality_jacobian_   = assemble(c_.getSize(), x_.getSize(), equality_jacobian_assembly_);
-      inequality_jacobian_ = assemble(d_.getSize(), x_.getSize(), inequality_jacobian_assembly_);
-      hessian_             = assemble(x_.getSize(), x_.getSize(), hessian_assembly_);
+      jacobian_ = assemble(g_.getSize(), x_.getSize(), jacobian_assembly_);
+      hessian_  = assemble(x_.getSize(), x_.getSize(), hessian_assembly_);
 
       return 0;
     }

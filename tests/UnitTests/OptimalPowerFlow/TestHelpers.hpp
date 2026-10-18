@@ -51,6 +51,17 @@ namespace GridKit
       system.x().setDataUpdated();
     }
 
+    template <typename ScalarT>
+    void setMultipliers(OPF::SystemModel<ScalarT, size_t>& system, std::span<const double> values)
+    {
+      if (values.size() != system.sizeConstraints())
+      {
+        throw std::invalid_argument("Incorrect number of test multipliers");
+      }
+      std::copy(values.begin(), values.end(), system.lambda().getData());
+      system.lambda().setDataUpdated();
+    }
+
     inline EntryMap sum(const OPF::Component<double, size_t>::CooBuffer& entries)
     {
       EntryMap result;

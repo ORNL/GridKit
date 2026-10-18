@@ -11,19 +11,14 @@ namespace GridKit
       return Component::evaluateGradient(*this);
     }
 
-    int CoupledComponent::evaluateEqualityJacobian()
+    int CoupledComponent::evaluateJacobian()
     {
-      return Component::evaluateEqualityJacobian(*this);
+      return Component::evaluateJacobian(*this);
     }
 
-    int CoupledComponent::evaluateInequalityJacobian()
+    int CoupledComponent::evaluateHessian(RealT sigma)
     {
-      return Component::evaluateInequalityJacobian(*this);
-    }
-
-    int CoupledComponent::evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d)
-    {
-      return Component::evaluateHessian(*this, sigma, lambda_c, lambda_d);
+      return Component::evaluateHessian(*this, sigma);
     }
   } // namespace Testing
 } // namespace GridKit

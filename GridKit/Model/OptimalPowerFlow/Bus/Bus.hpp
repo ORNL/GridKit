@@ -15,23 +15,18 @@ namespace GridKit
 {
   namespace OptimalPowerFlow
   {
-    /// Internal variables of a `Bus`
+    /// Internal variables of a `Bus`, its voltage, which a port reads
     enum class BusInternalVariables : size_t
     {
       VR, ///< \f$V_\mathrm{r}\f$ Real voltage [p.u.]
       VI, ///< \f$V_\mathrm{i}\f$ Imaginary voltage [p.u.]
     };
 
-    /// Internal equality rows of a `Bus`, its power balance
-    enum class BusInternalEqualities : size_t
+    /// Internal constraints of a `Bus`, its power balance first, which a port contributes to
+    enum class BusInternalConstraints : size_t
     {
-      P, ///< Active power balance [p.u.]
-      Q, ///< Reactive power balance [p.u.]
-    };
-
-    /// Inequality rows of a `Bus`
-    enum class BusInequalities : size_t
-    {
+      P,   ///< Active power balance [p.u.]
+      Q,   ///< Reactive power balance [p.u.]
       VM2, ///< \f$V_\mathrm{r}^2 + V_\mathrm{i}^2\f$ Squared voltage magnitude [p.u.]
     };
 
@@ -40,8 +35,8 @@ namespace GridKit
      * admittance to ground
      *
      * A port to the bus reads its voltage and contributes to its power
-     * balance. Each balance row is the power into the bus from its shunt and
-     * from its ports.
+     * balance. Each balance equality is the power into the bus from its shunt
+     * and from its ports.
      */
     template <typename scalar_type, typename index_type>
     class Bus final : public Component<scalar_type, index_type>
@@ -52,34 +47,37 @@ namespace GridKit
       using RealT      = typename ComponentT::RealT;
       using ModelDataT = BusData<RealT, IdxT>;
 
-      using ComponentT::d_lower_;
-      using ComponentT::d_upper_;
+      using ComponentT::g_lower_;
+      using ComponentT::g_upper_;
+      using ComponentT::tag_;
       using ComponentT::x_;
       using ComponentT::x_lower_;
       using ComponentT::x_upper_;
 
     public:
-      using InternalVariablesT  = BusInternalVariables;
-      using ExternalVariablesT  = Utilities::EmptyEnum;
-      using InternalEqualitiesT = BusInternalEqualities;
-      using ExternalEqualitiesT = Utilities::EmptyEnum;
-      using InequalitiesT       = BusInequalities;
+      using InternalVariablesT   = BusInternalVariables;
+      using ExternalVariablesT   = Utilities::EmptyEnum;
+      using InternalConstraintsT = BusInternalConstraints;
+      using ExternalConstraintsT = Utilities::EmptyEnum;
 
       static constexpr std::array<IdxT, 0> NUM_PORT_VARIABLES{};
-      static constexpr std::array<IdxT, 0> NUM_PORT_EQUALITIES{};
+      static constexpr std::array<IdxT, 0> NUM_PORT_CONSTRAINTS{};
+
+      /// A port to the bus reads its voltage and contributes to its power balance, the constraints before `VM2`
+      static constexpr IdxT NUM_SHARED_VARIABLES   = Utilities::enum_size<BusInternalVariables>();
+      static constexpr IdxT NUM_SHARED_CONSTRAINTS = static_cast<IdxT>(BusInternalConstraints::VM2);
 
       explicit Bus(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
+      int                        tagInequality() override;
       int                        initialize() override;
 
       int evaluateGradient() override;
-      int evaluateEqualityJacobian() override;
-      int evaluateInequalityJacobian() override;
-      int evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d) override;
+      int evaluateJacobian() override;
+      int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] void internalEqualities(const ScalarT* x, const ScalarT* external, ScalarT* c) const override;
-      [[gnu::always_inline]] void inequalities(const ScalarT* x, const ScalarT* external, ScalarT* d) const override;
+      [[gnu::always_inline]] void internalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
 
       /// Angle reference, with zero imaginary voltage
       bool reference() const

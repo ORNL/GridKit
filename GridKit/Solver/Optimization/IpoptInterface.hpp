@@ -17,11 +17,10 @@ namespace AnalysisManager
      * @brief Implementation of Ipopt's pure virtual TNLP class for a
      * nonlinear program with exact sparse derivatives
      *
-     * Ipopt sees the constraints \f$g = [c; d]\f$, the equality constraints
-     * followed by the inequality constraints, with the bounds \f$[0; d_l]\f$
-     * and \f$[0; d_u]\f$. The constraint Jacobians and the lower triangle of
-     * the Lagrangian Hessian come from the model in CSR format, with the
-     * patterns set by the model's `allocate()`.
+     * The constraint Jacobian and the lower triangle of the Lagrangian Hessian
+     * come from the model in CSR format, with the patterns set by the model's
+     * `allocate()`. The solve leaves the variables and the multipliers in the
+     * model.
      */
     template <typename scalar_type, typename index_type>
     class IpoptInterface : public Ipopt::TNLP
@@ -46,7 +45,7 @@ namespace AnalysisManager
       /// Sizes of the variables, the constraints, and the derivative nonzeros, with C-style indices
       bool get_nlp_info(ipindex& n, ipindex& m, ipindex& nnz_jac_g, ipindex& nnz_h_lag, IndexStyleEnum& index_style) override;
 
-      /// Variable bounds, then zero bounds on the equality constraints followed by the inequality constraint bounds
+      /// Variable and constraint bounds
       bool get_bounds_info(ipindex n, ipnumber* x_l, ipnumber* x_u, ipindex m, ipnumber* g_l, ipnumber* g_u) override;
 
       /// Variables from the model's `x()`, with no initial multipliers
@@ -66,10 +65,10 @@ namespace AnalysisManager
       /// Objective gradient \f$\nabla f(x)\f$
       bool eval_grad_f(ipindex n, const ipnumber* x, bool new_x, ipnumber* grad_f) override;
 
-      /// Equality constraints followed by the inequality constraints, \f$g = [c; d]\f$
+      /// Constraints \f$g(x)\f$
       bool eval_g(ipindex n, const ipnumber* x, bool new_x, ipindex m, ipnumber* g) override;
 
-      /// Equality constraint Jacobian rows followed by the inequality ones, or their structure when `values` is null
+      /// Constraint Jacobian, or its structure when `values` is null
       bool eval_jac_g(ipindex         n,
                       const ipnumber* x,
                       bool            new_x,
@@ -79,7 +78,7 @@ namespace AnalysisManager
                       ipindex*        jCol,
                       ipnumber*       values) override;
 
-      /// Lower Lagrangian Hessian with the equality multipliers followed by the inequality ones, or its structure when `values` is null
+      /// Lower Lagrangian Hessian, or its structure when `values` is null
       bool eval_h(ipindex         n,
                   const ipnumber* x,
                   bool            new_x,
@@ -92,7 +91,7 @@ namespace AnalysisManager
                   ipindex*        jCol,
                   ipnumber*       values) override;
 
-      /// Leave the final point and its objective in the model
+      /// Leave the final point, its multipliers, and its objective in the model
       void finalize_solution(SolverReturn               status,
                              ipindex                    n,
                              const ipnumber*            x,
@@ -106,11 +105,12 @@ namespace AnalysisManager
                              IpoptCalculatedQuantities* ip_cq) override;
 
     private:
-      /// Copy `x` into the model variables
-      void setVariables(const ipnumber* x);
+      /// Copy `values` from Ipopt into a model vector
+      template <typename VectorT>
+      static void copyInto(VectorT& vector, const ipnumber* values);
 
-      /// Coordinates of the entries of `matrix` in storage order, with the rows shifted by `row_offset`
-      static void structure(CsrMatrixT& matrix, ipindex row_offset, ipindex* iRow, ipindex* jCol);
+      /// Coordinates of the entries of `matrix` in storage order
+      static void structure(CsrMatrixT& matrix, ipindex* iRow, ipindex* jCol);
 
       ModelT* model_;
     };

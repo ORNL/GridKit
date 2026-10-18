@@ -25,20 +25,20 @@ namespace GridKit
       VI2, ///< \f$V_{\mathrm{i}2}\f$ Bus-2 imaginary voltage [p.u.]
     };
 
-    /// External equality contributions of a `Branch`, the power into the buses at its ports
-    enum class BranchExternalEqualities : size_t
+    /// Internal constraints of a `Branch`
+    enum class BranchInternalConstraints : size_t
+    {
+      S1, ///< \f$P_1^2 + Q_1^2\f$ Squared apparent power at bus 1 [p.u.]
+      S2, ///< \f$P_2^2 + Q_2^2\f$ Squared apparent power at bus 2 [p.u.]
+    };
+
+    /// External constraint contributions of a `Branch`, the power into the buses at its ports
+    enum class BranchExternalConstraints : size_t
     {
       DP1, ///< \f$\Delta P_1^\mathrm{bus}\f$ Active power into bus 1 [p.u.]
       DQ1, ///< \f$\Delta Q_1^\mathrm{bus}\f$ Reactive power into bus 1 [p.u.]
       DP2, ///< \f$\Delta P_2^\mathrm{bus}\f$ Active power into bus 2 [p.u.]
       DQ2, ///< \f$\Delta Q_2^\mathrm{bus}\f$ Reactive power into bus 2 [p.u.]
-    };
-
-    /// Inequality rows of a `Branch`
-    enum class BranchInequalities : size_t
-    {
-      S1, ///< \f$P_1^2 + Q_1^2\f$ Squared apparent power at bus 1 [p.u.]
-      S2, ///< \f$P_2^2 + Q_2^2\f$ Squared apparent power at bus 2 [p.u.]
     };
 
     /**
@@ -56,34 +56,34 @@ namespace GridKit
       using ModelDataT = BranchData<RealT, IdxT>;
       using BusT       = Bus<scalar_type, index_type>;
 
-      using ComponentT::d_upper_;
+      using ComponentT::g_upper_;
+      using ComponentT::tag_;
 
     public:
-      using InternalVariablesT  = Utilities::EmptyEnum;
-      using ExternalVariablesT  = BranchExternalVariables;
-      using InternalEqualitiesT = Utilities::EmptyEnum;
-      using ExternalEqualitiesT = BranchExternalEqualities;
-      using InequalitiesT       = BranchInequalities;
+      using InternalVariablesT   = Utilities::EmptyEnum;
+      using ExternalVariablesT   = BranchExternalVariables;
+      using InternalConstraintsT = BranchInternalConstraints;
+      using ExternalConstraintsT = BranchExternalConstraints;
 
       static constexpr std::array<IdxT, Utilities::enum_size<BranchPorts>()> NUM_PORT_VARIABLES{
-          Utilities::enum_size<typename BusT::InternalVariablesT>(),
-          Utilities::enum_size<typename BusT::InternalVariablesT>()};
-      static constexpr std::array<IdxT, Utilities::enum_size<BranchPorts>()> NUM_PORT_EQUALITIES{
-          Utilities::enum_size<typename BusT::InternalEqualitiesT>(),
-          Utilities::enum_size<typename BusT::InternalEqualitiesT>()};
+          BusT::NUM_SHARED_VARIABLES,
+          BusT::NUM_SHARED_VARIABLES};
+      static constexpr std::array<IdxT, Utilities::enum_size<BranchPorts>()> NUM_PORT_CONSTRAINTS{
+          BusT::NUM_SHARED_CONSTRAINTS,
+          BusT::NUM_SHARED_CONSTRAINTS};
 
       explicit Branch(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
+      int                        tagInequality() override;
       int                        initialize() override;
 
       int evaluateGradient() override;
-      int evaluateEqualityJacobian() override;
-      int evaluateInequalityJacobian() override;
-      int evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d) override;
+      int evaluateJacobian() override;
+      int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] void externalEqualities(const ScalarT* x, const ScalarT* external, ScalarT* c) const override;
-      [[gnu::always_inline]] void inequalities(const ScalarT* x, const ScalarT* external, ScalarT* d) const override;
+      [[gnu::always_inline]] void internalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
+      [[gnu::always_inline]] void externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
 
       bool inService() const
       {

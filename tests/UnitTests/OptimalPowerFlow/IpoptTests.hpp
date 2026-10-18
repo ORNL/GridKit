@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <vector>
 
 #include <IpIpoptApplication.hpp>
 
@@ -21,7 +22,7 @@ namespace GridKit
       using SystemT = OPF::SystemModel<RealT, IdxT>;
 
     public:
-      // Ipopt stops with every constraint within its tolerance. The balance rows reach 4e-13.
+      // Ipopt stops with the constraints and the stationarity within its tolerance. They reach 5e-13 and 2e-13.
       static constexpr RealT kTol = static_cast<RealT>(1.0e-10);
 
       TestOutcome reference()
@@ -64,24 +65,65 @@ namespace GridKit
           return success.report(__func__);
         }
 
-        success *= system.evaluateEqualities() == 0;
-        success *= system.evaluateInequalities() == 0;
+        success *= system.evaluateConstraints() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
-        const RealT* c = system.c().getData();
-        const RealT* d = system.d().getData();
+        const RealT* g = system.g().getData();
         for (const IdxT i : SystemTestData::BALANCE_ROWS)
         {
-          success *= isEqual(c[i], ZERO<RealT>, kTol);
+          success *= isEqual(g[i], ZERO<RealT>, kTol);
         }
-        success *= isEqual(d[SystemTestData::FLOW_ROWS[0]], SystemTestData::SMAX * SystemTestData::SMAX, kTol);
+        success *= isEqual(g[SystemTestData::FLOW_ROWS[0]], SystemTestData::SMAX * SystemTestData::SMAX, kTol);
 
         const RealT* x = system.x().getData();
 
         success *= x[6] > x[8];
         success *= x[8] > ZERO<RealT>;
+
+        return success.report(__func__);
+      }
+
+      /// The multipliers left in the model make the Lagrangian stationary,
+      /// \f$\nabla f + J^T \lambda - z_l + z_u = 0\f$
+      TestOutcome multipliers()
+      {
+        TestStatus success = true;
+
+        SystemT system(SystemTestData::data());
+        success *= system.allocate() == 0 && system.initialize() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= optimize(system);
+        success *= system.evaluateGradient() == 0 && system.evaluateJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        std::vector<RealT> stationarity(system.gradient().getData(), system.gradient().getData() + system.size());
+        auto*              jacobian = system.getCsrJacobian();
+        const IdxT*        row_ptrs = jacobian->getRowData();
+        const IdxT*        cols     = jacobian->getColData();
+        const RealT*       values   = jacobian->getValues();
+        const RealT*       lambda   = system.lambda().getData();
+        for (IdxT row = 0; row < jacobian->getNumRows(); ++row)
+        {
+          for (IdxT k = row_ptrs[row]; k < row_ptrs[row + 1]; ++k)
+          {
+            stationarity[cols[k]] += values[k] * lambda[row];
+          }
+        }
+
+        const RealT* z_lower = system.zLower().getData();
+        const RealT* z_upper = system.zUpper().getData();
+        for (IdxT j = 0; j < system.size(); ++j)
+        {
+          success *= isEqual(stationarity[j] - z_lower[j] + z_upper[j], ZERO<RealT>, kTol);
+        }
 
         return success.report(__func__);
       }
