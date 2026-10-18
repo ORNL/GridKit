@@ -14,7 +14,6 @@
 #include <GridKit/Model/OptimalPowerFlow/Bus/BusData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Generator/GeneratorData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Load/LoadData.hpp>
-#include <GridKit/Model/OptimalPowerFlow/Shunt/ShuntData.hpp>
 
 namespace GridKit
 {
@@ -32,7 +31,6 @@ namespace GridKit
       using BranchDataT    = BranchData<RealT, IdxT>;
       using GeneratorDataT = GeneratorData<RealT, IdxT>;
       using LoadDataT      = LoadData<RealT, IdxT>;
-      using ShuntDataT     = ShuntData<RealT, IdxT>;
 
       RealT va_base{100.0e6}; ///< System power base in VA
 
@@ -40,21 +38,14 @@ namespace GridKit
       std::vector<BranchDataT>    branch;    ///< Branches within the model
       std::vector<GeneratorDataT> generator; ///< Generators within the model
       std::vector<LoadDataT>      load;      ///< Loads within the model
-      std::vector<ShuntDataT>     shunt;     ///< Shunts within the model
     };
 
     /**
-     * @brief Read a MATPOWER case
+     * @brief Generate system model data from a JSON input file
      *
-     * Reference buses are MATPOWER bus type 3, and bus demand and bus shunts
-     * become loads and shunts. Generator and branch status sets `in_service`.
-     * Values in MW, Mvar, and MVA, and costs in P [MW], become system base
-     * values.
-     *
-     * @throw std::invalid_argument for isolated buses, branch angle-difference
-     * limits, or costs that are not polynomials of at most second order
+     * @throw std::invalid_argument for an unknown class, parameter, or port, or an invalid bus number
      */
-    SystemModelData<double, size_t> parseMatpowerCase(std::istream& stream);
-    SystemModelData<double, size_t> parseMatpowerCase(const std::filesystem::path& file);
+    SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);
+    SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& file);
   } // namespace OptimalPowerFlow
 } // namespace GridKit

@@ -1,22 +1,21 @@
 # Branch
 
-Line or off-nominal transformer between two buses, with the admittance of the
-PhasorDynamics [Branch](../../PhasorDynamics/Branch/README.md).
+Line or off-nominal transformer between two buses.
 
 ## Model Parameters
 
-Symbol           | Units  | Data         | Description                                               | Typical Value | Note
------------------|--------|--------------|-----------------------------------------------------------|---------------|-----
-$R$              | [p.u.] | `R`          | Series resistance                                         |               | Default 0
-$X$              | [p.u.] | `X`          | Series reactance                                          |               | Default 0
-$G$              | [p.u.] | `G`          | Total line shunt conductance, split between the terminals |               | Default 0
-$B$              | [p.u.] | `B`          | Total line shunt susceptance, split between the terminals |               | Default 0
-$G_\mathrm{mag}$ | [p.u.] | `Gmag`       | Magnetizing shunt conductance at bus 1                    |               | Default 0
-$B_\mathrm{mag}$ | [p.u.] | `Bmag`       | Magnetizing shunt susceptance at bus 1                    |               | Default 0
-$\tau$           | [p.u.] | `tap`        | Off-nominal tap magnitude on the bus-1 side               |               | Default 1
-$\theta$         | [rad]  | `phase`      | Phase-shift angle                                         |               | Default 0
-$S^{\max}$       | [p.u.] | `Smax`       | Apparent power limit at each terminal                     |               | Default unbounded
-$u$              | [-]    | `in_service` | Service status, 1 in service and 0 out of service         |               | Default 1
+Symbol           | Units  | Data         | Description                                           | Typical Value | Note
+-----------------|--------|--------------|-------------------------------------------------------|---------------|-----
+$R$              | [p.u.] | `R`          | Series resistance                                     |               | Default 0
+$X$              | [p.u.] | `X`          | Series reactance                                      |               | Default 0
+$G$              | [p.u.] | `G`          | Total line shunt conductance, split between the ports |               | Default 0
+$B$              | [p.u.] | `B`          | Total line shunt susceptance, split between the ports |               | Default 0
+$G_\mathrm{mag}$ | [p.u.] | `Gmag`       | Magnetizing shunt conductance at bus 1                |               | Default 0
+$B_\mathrm{mag}$ | [p.u.] | `Bmag`       | Magnetizing shunt susceptance at bus 1                |               | Default 0
+$\tau$           | [p.u.] | `tap`        | Off-nominal tap magnitude on the bus-1 side           |               | Default 1
+$\theta$         | [rad]  | `phase`      | Phase-shift angle                                     |               | Default 0
+$S^{\max}$       | [p.u.] | `Smax`       | Apparent power limit at each port                     |               | Default unbounded
+$u$              | [-]    | `in_service` | Service status, 1 in service and 0 out of service     |               | Default true
 
 ### Parameter Validation
 
@@ -46,8 +45,8 @@ b_{22} &= u (-b - B / 2)
 
 Name   | Port | Description
 -------|------|------------
-`bus1` | Bus  | Bus-1 terminal, the tapped side
-`bus2` | Bus  | Bus-2 terminal
+`bus1` | Bus  | Bus-1 port, the tapped side
+`bus2` | Bus  | Bus-2 port
 
 ## Model Variables
 
@@ -85,6 +84,14 @@ None.
 
 ### Internal Constraints
 
+#### Equality
+
+None.
+
+#### Inequality
+
+With a finite rating $S^{\max}$:
+
 ```math
 \begin{aligned}
 P_1^2 + Q_1^2 &\le (S^{\max})^2 \\
@@ -93,6 +100,8 @@ P_2^2 + Q_2^2 &\le (S^{\max})^2
 ```
 
 ### External Constraints
+
+Power into each bus, added to its balance:
 
 ```math
 \begin{aligned}

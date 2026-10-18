@@ -3,11 +3,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
 #include <limits>
 #include <map>
 #include <numbers>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -17,8 +16,11 @@
 #include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Generator/Generator.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Load/Load.hpp>
-#include <GridKit/Model/OptimalPowerFlow/Shunt/Shunt.hpp>
+#include <GridKit/Model/OptimalPowerFlow/SystemModel.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
+
+#include "TestHelpers.hpp"
 
 namespace GridKit
 {
@@ -28,6 +30,9 @@ namespace GridKit
 
     /**
      * @brief Component derivatives against dependency tracking and closed forms
+     *
+     * Each device is composed ahead of its buses, so its local indices are the
+     * global indices.
      */
     class ComponentTests
     {
@@ -35,7 +40,8 @@ namespace GridKit
       using IdxT          = size_t;
       using VariableT     = DependencyTracking::Variable;
       using DependencyMap = VariableT::DependencyMap;
-      using EntryMap      = std::map<std::pair<IdxT, IdxT>, RealT>;
+      using CooBufferT    = OPF::Component<RealT, IdxT>::CooBuffer;
+      using BranchT       = OPF::Branch<RealT, IdxT>;
 
     public:
       /// Power into each bus at V1 = 1 and V2 = j, from the admittances by hand
@@ -43,19 +49,31 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        OPF::Branch<RealT, IdxT> branch(branchData());
-        const auto               x = variables(branch, POWER_X);
+        auto branch_owner  = std::make_unique<BranchT>(branchData());
+        auto system        = branchSystem(std::move(branch_owner));
+        success           *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(system, POWER_X);
+        success *= system.evaluateEqualities() == 0;
+        success *= system.evaluateInequalities() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
 
-        std::vector<RealT> g(branch.sizeConstraints());
-        branch.evaluateConstraints(x.data(), g.data());
+        const RealT* c = system.c().getData();
+        const RealT* d = system.d().getData();
 
         // S1 = -3.9 - j3.45 and S2 = -7.6 - j7.3
-        success *= isEqual(g[0], 27.1125, POWER_TOL);
-        success *= isEqual(g[1], 111.05, POWER_TOL);
-        success *= isEqual(g[2], -3.9, POWER_TOL);
-        success *= isEqual(g[3], -3.45, POWER_TOL);
-        success *= isEqual(g[4], -7.6, POWER_TOL);
-        success *= isEqual(g[5], -7.3, POWER_TOL);
+        success *= isEqual(c[0], -3.9, TOL);
+        success *= isEqual(c[1], -3.45, TOL);
+        success *= isEqual(c[2], -7.6, TOL);
+        success *= isEqual(c[3], -7.3, TOL);
+        success *= isEqual(d[0], 27.1125, TOL);
+        success *= isEqual(d[1], 111.05, TOL);
 
         return success.report(__func__);
       }
@@ -65,21 +83,51 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        OPF::Branch<RealT, IdxT> branch(branchData());
-        const auto               x = variables(branch, BRANCH_X);
-        branch.evaluateJacobian(x.data());
-
-        OPF::Branch<VariableT, IdxT> tracked(branchData());
-        const auto                   x_tracked = variables(tracked, BRANCH_X);
-        std::vector<VariableT>       g(tracked.sizeConstraints());
-        tracked.evaluateConstraints(x_tracked.data(), g.data());
-
-        const auto enzyme = rowsOf(branch.jacobian(), branch.sizeConstraints());
-        for (IdxT i = 0; i < g.size(); ++i)
+        auto  branch_owner  = std::make_unique<BranchT>(branchData());
+        auto& branch        = *branch_owner;
+        auto  system        = branchSystem(std::move(branch_owner));
+        success            *= system.allocate() == 0;
+        if (!success)
         {
-          success *= isEqual(enzyme[i], g[i].getDependencies(), JACOBIAN_TOL);
+          return success.report(__func__);
         }
-        success *= branch.jacobian().values.size() == BRANCH_JACOBIAN_SIZE;
+        setVariables(system, BRANCH_X);
+        success *= branch.evaluateEqualityJacobian() == 0;
+        success *= branch.evaluateInequalityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto tracked  = branchSystem(std::make_unique<OPF::Branch<VariableT, IdxT>>(branchData()));
+        success      *= tracked.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(tracked, BRANCH_X);
+        success *= tracked.evaluateEqualities() == 0;
+        success *= tracked.evaluateInequalities() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        const VariableT* c = tracked.c().getData();
+        const VariableT* d = tracked.d().getData();
+
+        const auto enzyme_c = rowsOf(sum(branch.equalityEntries()));
+        for (IdxT i = 0; i < BranchT::NUM_INTERNAL_EQUALITIES + OPF::total(BranchT::NUM_PORT_EQUALITIES); ++i)
+        {
+          success *= isEqual(enzyme_c.at(i), c[i].getDependencies(), TOL);
+        }
+        const auto enzyme_d = rowsOf(sum(branch.inequalityEntries()));
+        for (IdxT i = 0; i < BranchT::NUM_INTERNAL_INEQUALITIES; ++i)
+        {
+          success *= isEqual(enzyme_d.at(i), d[i].getDependencies(), TOL);
+        }
+        success *= branch.equalityEntries().nnz == BRANCH_EQUALITY_JACOBIAN_NNZ;
+        success *= branch.inequalityEntries().nnz == BRANCH_INEQUALITY_JACOBIAN_NNZ;
 
         return success.report(__func__);
       }
@@ -89,36 +137,56 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        OPF::Branch<RealT, IdxT> branch(branchData());
-        const auto               x = variables(branch, BRANCH_X);
-        branch.evaluateHessian(x.data(), ONE<RealT>, BRANCH_LAMBDA.data());
-
-        // Rows 2 to 5: P1, Q1, P2, Q2
-        EntryMap expected;
-        addPowerHessian(expected, 0, BUS1_ADMITTANCE, BRANCH_LAMBDA[2], BRANCH_LAMBDA[3]);
-        addPowerHessian(expected, 1, BUS2_ADMITTANCE, BRANCH_LAMBDA[4], BRANCH_LAMBDA[5]);
-
-        // Rows 0 and 1: |S|^2 = P^2 + Q^2 by the chain rule over tracked gradients
-        OPF::Branch<VariableT, IdxT> tracked(branchData());
-        const auto                   x_tracked = variables(tracked, BRANCH_X);
-        std::vector<VariableT>       g(tracked.sizeConstraints());
-        tracked.evaluateConstraints(x_tracked.data(), g.data());
-
-        for (IdxT terminal = 0; terminal < 2; ++terminal)
+        auto  branch_owner  = std::make_unique<BranchT>(branchData());
+        auto& branch        = *branch_owner;
+        auto  system        = branchSystem(std::move(branch_owner));
+        success            *= system.allocate() == 0;
+        if (!success)
         {
-          const RealT     weight = TWO<RealT> * BRANCH_LAMBDA[terminal];
-          const VariableT p      = g[2 + 2 * terminal];
-          const VariableT q      = g[3 + 2 * terminal];
+          return success.report(__func__);
+        }
+        setVariables(system, BRANCH_X);
+        success *= branch.evaluateHessian(ONE<RealT>, BRANCH_LAMBDA_C.data(), BRANCH_LAMBDA_D.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        // Equalities: P1, Q1, P2, Q2
+        EntryMap expected;
+        addPowerHessian(expected, 0, BUS1_ADMITTANCE, BRANCH_LAMBDA_C[0], BRANCH_LAMBDA_C[1]);
+        addPowerHessian(expected, 1, BUS2_ADMITTANCE, BRANCH_LAMBDA_C[2], BRANCH_LAMBDA_C[3]);
+
+        // Inequalities: |S|^2 = P^2 + Q^2 by the chain rule over tracked gradients
+        auto tracked  = branchSystem(std::make_unique<OPF::Branch<VariableT, IdxT>>(branchData()));
+        success      *= tracked.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(tracked, BRANCH_X);
+        success *= tracked.evaluateEqualities() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        const VariableT* c = tracked.c().getData();
+        for (IdxT port = 0; port < 2; ++port)
+        {
+          const RealT     weight = TWO<RealT> * BRANCH_LAMBDA_D[port];
+          const VariableT p      = c[2 * port];
+          const VariableT q      = c[1 + 2 * port];
           addOuterProduct(expected, p.getDependencies(), weight);
           addOuterProduct(expected, q.getDependencies(), weight);
         }
-        const RealT weight1 = TWO<RealT> * BRANCH_LAMBDA[0];
-        const RealT weight2 = TWO<RealT> * BRANCH_LAMBDA[1];
-        addPowerHessian(expected, 0, BUS1_ADMITTANCE, weight1 * g[2].getValue(), weight1 * g[3].getValue());
-        addPowerHessian(expected, 1, BUS2_ADMITTANCE, weight2 * g[4].getValue(), weight2 * g[5].getValue());
+        const RealT weight1 = TWO<RealT> * BRANCH_LAMBDA_D[0];
+        const RealT weight2 = TWO<RealT> * BRANCH_LAMBDA_D[1];
+        addPowerHessian(expected, 0, BUS1_ADMITTANCE, weight1 * c[0].getValue(), weight1 * c[1].getValue());
+        addPowerHessian(expected, 1, BUS2_ADMITTANCE, weight2 * c[2].getValue(), weight2 * c[3].getValue());
 
-        success *= isEqual(sum(branch.hessian()), expected, HESSIAN_TOL);
-        success *= branch.hessian().values.size() == BRANCH_HESSIAN_SIZE;
+        success *= matches(sum(branch.hessianEntries()), expected, TOL);
+        success *= branch.hessianEntries().nnz == BRANCH_HESSIAN_NNZ;
 
         return success.report(__func__);
       }
@@ -129,23 +197,60 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        auto  active_owner   = std::make_unique<BranchT>(branchData());
+        auto& active_branch  = *active_owner;
+        auto  active         = branchSystem(std::move(active_owner));
+        success             *= active.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(active, BRANCH_X);
+        success *= active_branch.evaluateEqualityJacobian() == 0;
+        success *= active_branch.evaluateInequalityJacobian() == 0;
+        success *= active_branch.evaluateHessian(ONE<RealT>, BRANCH_LAMBDA_C.data(), BRANCH_LAMBDA_D.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
         auto data       = branchData();
         data.in_service = false;
 
-        OPF::Branch<RealT, IdxT> branch(data);
-        const auto               x = variables(branch, FLAT_START);
+        auto  branch_owner  = std::make_unique<BranchT>(data);
+        auto& branch        = *branch_owner;
+        auto  system        = branchSystem(std::move(branch_owner));
+        success            *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        setVariables(system, FLAT_START);
 
-        const std::vector<RealT> lambda(branch.sizeConstraints(), ZERO<RealT>);
-        branch.evaluateJacobian(x.data());
-        branch.evaluateHessian(x.data(), ONE<RealT>, lambda.data());
+        const std::vector<RealT> lambda_c(system.sizeEqualities(), ZERO<RealT>);
+        const std::vector<RealT> lambda_d(system.sizeInequalities(), ZERO<RealT>);
+        success *= branch.evaluateEqualityJacobian() == 0;
+        success *= branch.evaluateInequalityJacobian() == 0;
+        success *= branch.evaluateHessian(ONE<RealT>, lambda_c.data(), lambda_d.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
 
-        success *= branch.jacobian().values.size() == BRANCH_JACOBIAN_SIZE;
-        success *= branch.hessian().values.size() == BRANCH_HESSIAN_SIZE;
-        for (const RealT value : branch.jacobian().values)
+        success *= pattern(branch.equalityEntries()) == pattern(active_branch.equalityEntries());
+        success *= pattern(branch.inequalityEntries()) == pattern(active_branch.inequalityEntries());
+        success *= pattern(branch.hessianEntries()) == pattern(active_branch.hessianEntries());
+        success *= branch.equalityEntries().nnz == BRANCH_EQUALITY_JACOBIAN_NNZ;
+        success *= branch.inequalityEntries().nnz == BRANCH_INEQUALITY_JACOBIAN_NNZ;
+        success *= branch.hessianEntries().nnz == BRANCH_HESSIAN_NNZ;
+        for (const RealT value : values(branch.equalityEntries()))
         {
           success *= isEqual(value, ZERO<RealT>);
         }
-        for (const RealT value : branch.hessian().values)
+        for (const RealT value : values(branch.inequalityEntries()))
+        {
+          success *= isEqual(value, ZERO<RealT>);
+        }
+        for (const RealT value : values(branch.hessianEntries()))
         {
           success *= isEqual(value, ZERO<RealT>);
         }
@@ -158,35 +263,71 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        OPF::Generator<RealT, IdxT> generator(generatorData());
-        std::vector<RealT>          x(generator.size());
-        numberLocally(generator);
-        success *= generator.initialize(x.data()) == 0;
+        auto  bus_owner        = std::make_unique<OPF::Bus<RealT, IdxT>>(busData(1));
+        auto& bus              = *bus_owner;
+        auto  generator_owner  = std::make_unique<OPF::Generator<RealT, IdxT>>(generatorData());
+        auto& generator        = *generator_owner;
+        success               *= generator.connect(0, bus) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        auto system  = makeSystem<RealT>(std::move(generator_owner), std::move(bus_owner));
+        success     *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const RealT* x = system.x().getData();
+
+        setVariables(system, GENERATOR_X);
+        success *= system.initialize() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
         success *= isEqual(x[0], ZERO<RealT>) && isEqual(x[1], ZERO<RealT>);
 
-        const auto& lower = generator.variableLower();
-        const auto& upper = generator.variableUpper();
+        const RealT* lower = system.xLower().getData();
+        const RealT* upper = system.xUpper().getData();
 
         success *= isEqual(lower[0], PMIN) && isEqual(upper[0], PMAX);
         success *= isEqual(lower[1], QMIN) && isEqual(upper[1], QMAX);
 
-        x             = GENERATOR_X;
-        const RealT p = x[0];
+        setVariables(system, GENERATOR_X);
+        const RealT p = GENERATOR_X[0];
 
-        RealT f = ZERO<RealT>;
-        generator.evaluateObjective(x.data(), f);
-        success *= isEqual(f, C0 + C1 * p + C2 * p * p);
+        success *= generator.evaluateObjective() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= isEqual(generator.f(), C0 + C1 * p + C2 * p * p);
 
-        std::vector<RealT> gradient(generator.size(), ZERO<RealT>);
-        generator.evaluateGradient(x.data(), gradient.data());
-        success *= isEqual(gradient[0], C1 + TWO<RealT> * C2 * p);
+        success *= system.evaluateGradient() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= isEqual(system.gradient().getData()[0], C1 + TWO<RealT> * C2 * p);
 
-        generator.evaluateJacobian(x.data());
-        success *= isEqual(sum(generator.jacobian()), EntryMap{{{0, 0}, ONE<RealT>}, {{1, 1}, ONE<RealT>}});
+        success *= generator.evaluateEqualityJacobian() == 0;
+        success *= generator.evaluateInequalityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= matches(sum(generator.equalityEntries()), EntryMap{{{0, 0}, ONE<RealT>}, {{1, 1}, ONE<RealT>}}, TOL);
+        success *= generator.inequalityEntries().nnz == 0;
 
-        const std::vector<RealT> lambda(generator.sizeConstraints(), ONE<RealT>);
-        generator.evaluateHessian(x.data(), SIGMA, lambda.data());
-        success *= isEqual(sum(generator.hessian()), EntryMap{{{0, 0}, TWO<RealT> * C2 * SIGMA}});
+        const std::vector<RealT> lambda_c(system.sizeEqualities(), ONE<RealT>);
+        const std::vector<RealT> lambda_d(system.sizeInequalities(), ONE<RealT>);
+        success *= generator.evaluateHessian(SIGMA, lambda_c.data(), lambda_d.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= matches(sum(generator.hessianEntries()), EntryMap{{{0, 0}, TWO<RealT> * C2 * SIGMA}}, TOL);
 
         return success.report(__func__);
       }
@@ -199,156 +340,522 @@ namespace GridKit
         auto data       = generatorData();
         data.in_service = false;
 
-        OPF::Generator<RealT, IdxT> generator(data);
-        numberLocally(generator);
+        auto  bus_owner        = std::make_unique<OPF::Bus<RealT, IdxT>>(busData(1));
+        auto& bus              = *bus_owner;
+        auto  generator_owner  = std::make_unique<OPF::Generator<RealT, IdxT>>(data);
+        auto& generator        = *generator_owner;
+        success               *= generator.connect(0, bus) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        auto system  = makeSystem<RealT>(std::move(generator_owner), std::move(bus_owner));
+        success     *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
 
-        const auto& lower = generator.variableLower();
-        const auto& upper = generator.variableUpper();
+        const RealT* lower = system.xLower().getData();
+        const RealT* upper = system.xUpper().getData();
 
         success *= isEqual(lower[0], ZERO<RealT>) && isEqual(upper[0], ZERO<RealT>);
         success *= isEqual(lower[1], ZERO<RealT>) && isEqual(upper[1], ZERO<RealT>);
 
-        std::vector<RealT> x = GENERATOR_X;
-        RealT              f = ZERO<RealT>;
-        generator.evaluateObjective(x.data(), f);
-        success *= isEqual(f, ZERO<RealT>);
+        setVariables(system, GENERATOR_X);
+        success *= generator.evaluateObjective() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= isEqual(generator.f(), ZERO<RealT>);
 
-        const std::vector<RealT> lambda(generator.sizeConstraints(), ZERO<RealT>);
-        generator.evaluateJacobian(x.data());
-        generator.evaluateHessian(x.data(), ONE<RealT>, lambda.data());
-        success *= generator.jacobian().values.size() == 2;
-        success *= generator.hessian().values.size() == 1;
+        const std::vector<RealT> lambda_c(system.sizeEqualities(), ZERO<RealT>);
+        const std::vector<RealT> lambda_d(system.sizeInequalities(), ZERO<RealT>);
+        success *= generator.evaluateEqualityJacobian() == 0;
+        success *= generator.evaluateHessian(ONE<RealT>, lambda_c.data(), lambda_d.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= generator.equalityEntries().nnz == 2;
+        success *= generator.hessianEntries().nnz == 1;
 
         return success.report(__func__);
       }
 
-      /// Shunt derivatives in closed form, and no power out of service
-      TestOutcome shunt()
+      /// The bus shunt adds its power to the balance, with derivatives in closed form
+      TestOutcome busShunt()
       {
         TestStatus success = true;
 
-        OPF::ShuntData<RealT, IdxT> data;
-        data.id                                  = "shunt_1";
-        data.buses[OPF::ShuntBuses::bus]         = 1;
-        data.parameters[OPF::ShuntParameters::G] = SHUNT_G;
-        data.parameters[OPF::ShuntParameters::B] = SHUNT_B;
+        auto data                              = busData(1);
+        data.parameters[OPF::BusParameters::G] = SHUNT_G;
+        data.parameters[OPF::BusParameters::B] = SHUNT_B;
 
-        OPF::Shunt<RealT, IdxT> shunt(data);
-        const auto              x  = variables(shunt, SHUNT_X);
-        const RealT             vr = x[0];
-        const RealT             vi = x[1];
+        auto  bus_owner  = std::make_unique<OPF::Bus<RealT, IdxT>>(data);
+        auto& bus        = *bus_owner;
+        auto  system     = makeSystem<RealT>(std::move(bus_owner));
+        success         *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const RealT* c = system.c().getData();
 
-        std::vector<RealT> g(shunt.sizeConstraints(), ZERO<RealT>);
-        shunt.evaluateConstraints(x.data(), g.data());
-        success *= isEqual(g[0], -SHUNT_G * (vr * vr + vi * vi));
-        success *= isEqual(g[1], SHUNT_B * (vr * vr + vi * vi));
+        setVariables(system, SHUNT_X);
+        const RealT vr = SHUNT_X[0];
+        const RealT vi = SHUNT_X[1];
 
-        shunt.evaluateJacobian(x.data());
-        success *= isEqual(sum(shunt.jacobian()),
+        success *= system.evaluateEqualities() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= isEqual(c[0], -SHUNT_G * (vr * vr + vi * vi));
+        success *= isEqual(c[1], SHUNT_B * (vr * vr + vi * vi));
+
+        success *= bus.evaluateEqualityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= matches(sum(bus.equalityEntries()),
                            EntryMap{{{0, 0}, -TWO<RealT> * SHUNT_G * vr},
                                     {{0, 1}, -TWO<RealT> * SHUNT_G * vi},
                                     {{1, 0}, TWO<RealT> * SHUNT_B * vr},
-                                    {{1, 1}, TWO<RealT> * SHUNT_B * vi}});
+                                    {{1, 1}, TWO<RealT> * SHUNT_B * vi}},
+                           TOL);
 
-        shunt.evaluateHessian(x.data(), ONE<RealT>, SHUNT_LAMBDA.data());
+        const std::vector<RealT> lambda_d(system.sizeInequalities(), ZERO<RealT>);
+        success *= bus.evaluateHessian(ONE<RealT>, SHUNT_LAMBDA.data(), lambda_d.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
         const RealT hessian = TWO<RealT> * (-SHUNT_G * SHUNT_LAMBDA[0] + SHUNT_B * SHUNT_LAMBDA[1]);
 
-        success *= isEqual(sum(shunt.hessian()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}});
-
-        data.in_service = false;
-        OPF::Shunt<RealT, IdxT> out_of_service(data);
-        const auto              x_out = variables(out_of_service, SHUNT_X);
-        std::vector<RealT>      g_out(out_of_service.sizeConstraints(), ZERO<RealT>);
-        out_of_service.evaluateConstraints(x_out.data(), g_out.data());
-        success *= isEqual(g_out[0], ZERO<RealT>) && isEqual(g_out[1], ZERO<RealT>);
+        success *= matches(sum(bus.hessianEntries()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}}, TOL);
 
         return success.report(__func__);
       }
 
-      /// Bus rows follow the limits, and a reference bus fixes its imaginary voltage at zero
+      /// Devices supply the bus balance, the squared magnitude has the limits,
+      /// and a reference bus fixes its imaginary voltage at zero
       TestOutcome bus()
       {
         TestStatus success = true;
 
-        OPF::BusData<RealT, IdxT> data;
-        data.number                               = 3;
+        auto data                                 = busData(3);
         data.parameters[OPF::BusParameters::Vmin] = VMIN;
         data.parameters[OPF::BusParameters::Vmax] = VMAX;
 
-        OPF::Bus<RealT, IdxT> bus(data);
-        std::vector<RealT>    x(bus.size());
-        numberLocally(bus);
-
-        bus.initialize(x.data());
-        success *= isEqual(x[0], ONE<RealT>) && isEqual(x[1], ZERO<RealT>);
-        for (IdxT j = 0; j < bus.sizeInternalVariables(); ++j)
+        auto  bus_owner  = std::make_unique<OPF::Bus<RealT, IdxT>>(data);
+        auto& bus        = *bus_owner;
+        auto  system     = makeSystem<RealT>(std::move(bus_owner));
+        success         *= system.allocate() == 0;
+        if (!success)
         {
-          success *= std::isinf(bus.variableLower()[j]) && std::isinf(bus.variableUpper()[j]);
+          return success.report(__func__);
+        }
+        const RealT* x = system.x().getData();
+
+        success *= system.initialize() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= isEqual(x[0], ONE<RealT>) && isEqual(x[1], ZERO<RealT>);
+        for (IdxT j = 0; j < system.size(); ++j)
+        {
+          success *= std::isinf(system.xLower().getData()[j]) && std::isinf(system.xUpper().getData()[j]);
         }
 
-        const auto& lower = bus.constraintLower();
-        const auto& upper = bus.constraintUpper();
+        success *= system.sizeEqualities() == 2;
+        success *= system.sizeInequalities() == 1;
+        success *= isEqual(system.dLower().getData()[0], VMIN * VMIN);
+        success *= isEqual(system.dUpper().getData()[0], VMAX * VMAX);
 
-        success *= isEqual(lower[0], ZERO<RealT>) && isEqual(upper[0], ZERO<RealT>);
-        success *= isEqual(lower[1], ZERO<RealT>) && isEqual(upper[1], ZERO<RealT>);
-        success *= isEqual(lower[2], VMIN * VMIN) && isEqual(upper[2], VMAX * VMAX);
+        setVariables(system, BUS_X);
+        const RealT vr = BUS_X[0];
+        const RealT vi = BUS_X[1];
 
-        x = BUS_X;
-        std::vector<RealT> g(bus.sizeConstraints());
-        bus.evaluateConstraints(x.data(), g.data());
-        success *= isEqual(g[2], x[0] * x[0] + x[1] * x[1]);
+        success *= system.evaluateEqualities() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        for (IdxT i = 0; i < system.sizeEqualities(); ++i)
+        {
+          success *= isEqual(system.c().getData()[i], ZERO<RealT>);
+        }
 
-        bus.evaluateJacobian(x.data());
-        success *= isEqual(sum(bus.jacobian()), EntryMap{{{2, 0}, TWO<RealT> * x[0]}, {{2, 1}, TWO<RealT> * x[1]}});
+        success *= system.evaluateInequalities() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= isEqual(system.d().getData()[0], vr * vr + vi * vi);
 
-        bus.evaluateHessian(x.data(), ONE<RealT>, BUS_LAMBDA.data());
-        const RealT hessian = TWO<RealT> * BUS_LAMBDA[2];
+        success *= bus.evaluateEqualityJacobian() == 0;
+        success *= bus.evaluateInequalityJacobian() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        // A bus without a shunt contributes nothing to its balance
+        for (const RealT value : values(bus.equalityEntries()))
+        {
+          success *= isEqual(value, ZERO<RealT>);
+        }
+        success *= matches(sum(bus.inequalityEntries()), EntryMap{{{0, 0}, TWO<RealT> * vr}, {{0, 1}, TWO<RealT> * vi}}, TOL);
 
-        success *= isEqual(sum(bus.hessian()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}});
+        const std::vector<RealT> lambda_c(system.sizeEqualities(), ZERO<RealT>);
+        success *= bus.evaluateHessian(ONE<RealT>, lambda_c.data(), BUS_LAMBDA_D.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const RealT hessian = TWO<RealT> * BUS_LAMBDA_D[0];
 
-        data.reference = true;
-        OPF::Bus<RealT, IdxT> reference(data);
-        success *= std::isinf(reference.variableLower()[0]) && std::isinf(reference.variableUpper()[0]);
-        success *= isEqual(reference.variableLower()[1], ZERO<RealT>) && isEqual(reference.variableUpper()[1], ZERO<RealT>);
+        success *= matches(sum(bus.hessianEntries()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}}, TOL);
+
+        data.reference         = true;
+        auto reference_owner   = std::make_unique<OPF::Bus<RealT, IdxT>>(data);
+        auto reference_system  = makeSystem<RealT>(std::move(reference_owner));
+        success               *= reference_system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= std::isinf(reference_system.xLower().getData()[0]) && std::isinf(reference_system.xUpper().getData()[0]);
+        success *= isEqual(reference_system.xLower().getData()[1], ZERO<RealT>) && isEqual(reference_system.xUpper().getData()[1], ZERO<RealT>);
 
         return success.report(__func__);
       }
 
-      /// Load demand comes from its parameters, with no entries, and is zero
-      /// out of service
-      TestOutcome load()
+      /// Constant-power demand has zero derivatives and is zero out of service
+      TestOutcome loadConstantPower()
       {
         TestStatus success = true;
 
         OPF::LoadData<RealT, IdxT> data;
         data.id                                 = "load_2";
-        data.buses[OPF::LoadBuses::bus]         = 2;
+        data.ports[OPF::LoadPorts::bus]         = 2;
         data.parameters[OPF::LoadParameters::P] = LOAD_P;
         data.parameters[OPF::LoadParameters::Q] = LOAD_Q;
 
-        OPF::Load<RealT, IdxT> load(data);
-        const auto             x = variables(load, LOAD_X);
+        auto  bus_owner             = std::make_unique<OPF::Bus<RealT, IdxT>>(busData(2));
+        auto& bus                   = *bus_owner;
+        auto  load_owner            = std::make_unique<OPF::Load<RealT, IdxT>>(data);
+        auto& load                  = *load_owner;
+        data.in_service             = false;
+        auto  out_of_service_owner  = std::make_unique<OPF::Load<RealT, IdxT>>(data);
+        auto& out_of_service        = *out_of_service_owner;
+        success                    *= load.connect(0, bus) == 0;
+        success                    *= out_of_service.connect(0, bus) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        auto system  = makeSystem<RealT>(std::move(load_owner), std::move(out_of_service_owner), std::move(bus_owner));
+        success     *= system.allocate() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        const RealT* c = system.c().getData();
 
-        std::vector<RealT> g(load.sizeConstraints(), ZERO<RealT>);
-        load.evaluateConstraints(x.data(), g.data());
-        success *= isEqual(g[0], -LOAD_P) && isEqual(g[1], -LOAD_Q);
+        setVariables(system, LOAD_X);
 
-        const std::vector<RealT> lambda(load.sizeConstraints(), ONE<RealT>);
-        load.evaluateJacobian(x.data());
-        load.evaluateHessian(x.data(), ONE<RealT>, lambda.data());
-        success *= load.jacobian().values.empty() && load.hessian().values.empty();
+        // The out-of-service load adds no demand
+        success *= system.evaluateEqualities() == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        success *= isEqual(c[0], -LOAD_P) && isEqual(c[1], -LOAD_Q);
 
-        data.in_service = false;
-        OPF::Load<RealT, IdxT> out_of_service(data);
-        const auto             x_out = variables(out_of_service, LOAD_X);
-        std::vector<RealT>     g_out(out_of_service.sizeConstraints(), ZERO<RealT>);
-        out_of_service.evaluateConstraints(x_out.data(), g_out.data());
-        success *= isEqual(g_out[0], ZERO<RealT>) && isEqual(g_out[1], ZERO<RealT>);
+        const std::vector<RealT> lambda_c(system.sizeEqualities(), ONE<RealT>);
+        const std::vector<RealT> lambda_d(system.sizeInequalities(), ONE<RealT>);
+        success *= load.evaluateEqualityJacobian() == 0;
+        success *= load.evaluateInequalityJacobian() == 0;
+        success *= load.evaluateHessian(ONE<RealT>, lambda_c.data(), lambda_d.data()) == 0;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+        for (const RealT value : values(load.equalityEntries()))
+        {
+          success *= isEqual(value, ZERO<RealT>);
+        }
+        for (const RealT value : values(load.hessianEntries()))
+        {
+          success *= isEqual(value, ZERO<RealT>);
+        }
+        success *= load.inequalityEntries().nnz == 0;
 
         return success.report(__func__);
       }
 
+      /// ZIP demand at each voltage, in closed form, and none out of service
+      TestOutcome loadEqualities()
+      {
+        TestStatus success = true;
+        for (const bool in_service : {true, false})
+        {
+          for (const ZipParts& zip : ZIP_PARTS)
+          {
+            auto system  = loadSystem<RealT>(loadData(in_service, zip));
+            success     *= system.allocate() == 0;
+            if (!success)
+            {
+              return success.report(__func__);
+            }
+            for (const auto& voltage : ZIP_VOLTAGES)
+            {
+              setVariables(system, voltage);
+              success *= system.evaluateEqualities() == 0;
+              if (!success)
+              {
+                return success.report(__func__);
+              }
+              const RealT v2 = voltage[0] * voltage[0] + voltage[1] * voltage[1];
+              const RealT v  = std::sqrt(v2);
+              const RealT u  = in_service ? ONE<RealT> : ZERO<RealT>;
+
+              success *= isEqual(system.c().getData()[0], -u * (LOAD_P + zip.Pi * v + zip.Pz * v2), TOL);
+              success *= isEqual(system.c().getData()[1], -u * (LOAD_Q + zip.Qi * v + zip.Qz * v2), TOL);
+            }
+          }
+        }
+        return success.report(__func__);
+      }
+
+      /// Enzyme Jacobian entries equal the dependency-tracking and closed-form derivatives
+      TestOutcome loadJacobian()
+      {
+        TestStatus success = true;
+        for (const bool in_service : {true, false})
+        {
+          for (const ZipParts& zip : ZIP_PARTS)
+          {
+            const auto data     = loadData(in_service, zip);
+            auto       system   = loadSystem<RealT>(data);
+            auto       tracked  = loadSystem<VariableT>(data);
+            success            *= system.allocate() == 0;
+            success            *= tracked.allocate() == 0;
+            if (!success)
+            {
+              return success.report(__func__);
+            }
+            for (const auto& voltage : ZIP_VOLTAGES)
+            {
+              setVariables(system, voltage);
+              setVariables(tracked, voltage);
+              success *= system.evaluateEqualityJacobian() == 0;
+              success *= tracked.evaluateEqualityJacobian() == 0;
+              if (!success)
+              {
+                return success.report(__func__);
+              }
+              const auto  actual   = MapFromCsr(system.getCsrEqualityJacobian());
+              const auto  expected = MapFromCsr(tracked.getCsrEqualityJacobian());
+              const RealT v        = std::hypot(voltage[0], voltage[1]);
+              const RealT u        = in_service ? ONE<RealT> : ZERO<RealT>;
+
+              // Derivative of the demand over each voltage component, divided by that component
+              const std::array<RealT, 2> slope{u * (zip.Pi / v + TWO<RealT> * zip.Pz),
+                                               u * (zip.Qi / v + TWO<RealT> * zip.Qz)};
+              for (IdxT row = 0; row < slope.size(); ++row)
+              {
+                success *= isEqual(actual.at(row), expected.at(row), TOL);
+                success *= isEqual(actual.at(row), DependencyMap{{0, -slope[row] * voltage[0]}, {1, -slope[row] * voltage[1]}}, TOL);
+              }
+            }
+          }
+        }
+        return success.report(__func__);
+      }
+
+      /// Enzyme Hessian entries equal the closed-form second derivatives
+      TestOutcome loadHessian()
+      {
+        TestStatus success = true;
+        for (const bool in_service : {true, false})
+        {
+          for (const ZipParts& zip : ZIP_PARTS)
+          {
+            auto system  = loadSystem<RealT>(loadData(in_service, zip));
+            success     *= system.allocate() == 0;
+            if (!success)
+            {
+              return success.report(__func__);
+            }
+            const auto [current, impedance] = loadWeights(in_service, zip);
+            for (const auto& voltage : ZIP_VOLTAGES)
+            {
+              setVariables(system, voltage);
+              success *= system.evaluateHessian(ONE<RealT>, LOAD_LAMBDA_C.data(), LOAD_LAMBDA_D.data()) == 0;
+              if (!success)
+              {
+                return success.report(__func__);
+              }
+              const RealT vr = voltage[0];
+              const RealT vi = voltage[1];
+              const RealT v2 = vr * vr + vi * vi;
+              const RealT v3 = v2 * std::sqrt(v2);
+
+              const DependencyMap row0{{0, current * vi * vi / v3 + TWO<RealT> * impedance}};
+              const DependencyMap row1{{0, -current * vr * vi / v3}, {1, current * vr * vr / v3 + TWO<RealT> * impedance}};
+
+              const auto actual  = MapFromCsr(system.getCsrHessian());
+              success           *= isEqual(actual.at(0), row0, TOL);
+              success           *= isEqual(actual.at(1), row1, TOL);
+            }
+          }
+        }
+        return success.report(__func__);
+      }
+
+      /// A load without a constant-current part is smooth at zero voltage
+      TestOutcome loadZeroVoltage()
+      {
+        TestStatus                     success = true;
+        constexpr std::array<RealT, 2> voltage{0.0, 0.0};
+        for (const bool in_service : {true, false})
+        {
+          for (const ZipParts& zip : ZIP_PARTS)
+          {
+            if (in_service && zip.current)
+            {
+              continue;
+            }
+            const auto data     = loadData(in_service, zip);
+            auto       system   = loadSystem<RealT>(data);
+            auto       tracked  = loadSystem<VariableT>(data);
+            success            *= system.allocate() == 0;
+            success            *= tracked.allocate() == 0;
+            if (!success)
+            {
+              return success.report(__func__);
+            }
+            setVariables(system, voltage);
+            setVariables(tracked, voltage);
+            success *= system.evaluateEqualityJacobian() == 0;
+            success *= tracked.evaluateEqualityJacobian() == 0;
+            success *= system.evaluateHessian(ONE<RealT>, LOAD_LAMBDA_C.data(), LOAD_LAMBDA_D.data()) == 0;
+            if (!success)
+            {
+              return success.report(__func__);
+            }
+            const auto jacobian = MapFromCsr(system.getCsrEqualityJacobian());
+            const auto expected = MapFromCsr(tracked.getCsrEqualityJacobian());
+            for (IdxT row = 0; row < 2; ++row)
+            {
+              success *= isEqual(jacobian.at(row), expected.at(row), TOL);
+              success *= isEqual(jacobian.at(row), DependencyMap{{0, ZERO<RealT>}, {1, ZERO<RealT>}}, TOL);
+            }
+
+            const RealT diagonal  = TWO<RealT> * loadWeights(in_service, zip).second;
+            const auto  hessian   = MapFromCsr(system.getCsrHessian());
+            success              *= isEqual(hessian.at(0), DependencyMap{{0, diagonal}}, TOL);
+            success              *= isEqual(hessian.at(1), DependencyMap{{0, ZERO<RealT>}, {1, diagonal}}, TOL);
+          }
+        }
+        return success.report(__func__);
+      }
+
+      /// Every demand must be finite
+      TestOutcome loadConfiguration()
+      {
+        TestStatus                 success = true;
+        OPF::LoadData<RealT, IdxT> data;
+        success *= OPF::Load<RealT, IdxT>(data).verify().passed();
+        for (const auto parameter : {OPF::LoadParameters::P,
+                                     OPF::LoadParameters::Q,
+                                     OPF::LoadParameters::Pi,
+                                     OPF::LoadParameters::Qi,
+                                     OPF::LoadParameters::Pz,
+                                     OPF::LoadParameters::Qz})
+        {
+          data.parameters  = {{parameter, std::numeric_limits<RealT>::infinity()}};
+          success         *= !OPF::Load<RealT, IdxT>(data).verify().passed();
+        }
+        return success.report(__func__);
+      }
+
     private:
+      /// Constant-current and constant-impedance demands of a ZIP load
+      struct ZipParts
+      {
+        bool  current; ///< Whether the data sets the constant-current part
+        RealT Pi;
+        RealT Qi;
+        RealT Pz;
+        RealT Qz;
+      };
+
+      /// Constant power only, constant current, constant impedance, and all three parts
+      static constexpr std::array<ZipParts, 4> ZIP_PARTS{{{false, 0.0, 0.0, 0.0, 0.0},
+                                                          {true, 0.5, -0.2, 0.0, 0.0},
+                                                          {false, 0.0, 0.0, 0.3, 0.1},
+                                                          {true, 0.4, 0.15, 0.25, -0.05}}};
+
+      static constexpr std::array<std::array<RealT, 2>, 3> ZIP_VOLTAGES{{{1.1, 0.0}, {0.8, -0.6}, {1.15, 0.2}}};
+      static constexpr std::array<RealT, 2>                LOAD_LAMBDA_C{0.7, -0.4};
+      static constexpr std::array<RealT, 1>                LOAD_LAMBDA_D{0.0};
+
+      static OPF::LoadData<RealT, IdxT> loadData(bool in_service, const ZipParts& zip)
+      {
+        OPF::LoadData<RealT, IdxT> data;
+        data.id         = "zip";
+        data.in_service = in_service;
+        data.parameters = {{OPF::LoadParameters::P, LOAD_P},
+                           {OPF::LoadParameters::Q, LOAD_Q},
+                           {OPF::LoadParameters::Pz, zip.Pz},
+                           {OPF::LoadParameters::Qz, zip.Qz}};
+        if (zip.current)
+        {
+          data.parameters[OPF::LoadParameters::Pi] = zip.Pi;
+          data.parameters[OPF::LoadParameters::Qi] = zip.Qi;
+        }
+        return data;
+      }
+
+      /// Multiplier-weighted constant-current and constant-impedance demands, signed as power into the bus
+      static std::pair<RealT, RealT> loadWeights(bool in_service, const ZipParts& zip)
+      {
+        const RealT u = in_service ? ONE<RealT> : ZERO<RealT>;
+        return {-u * (LOAD_LAMBDA_C[0] * zip.Pi + LOAD_LAMBDA_C[1] * zip.Qi),
+                -u * (LOAD_LAMBDA_C[0] * zip.Pz + LOAD_LAMBDA_C[1] * zip.Qz)};
+      }
+
+      template <typename ScalarT>
+      static OPF::SystemModel<ScalarT, IdxT> loadSystem(const OPF::LoadData<RealT, IdxT>& data)
+      {
+        auto bus  = std::make_unique<OPF::Bus<ScalarT, IdxT>>(busData(1));
+        auto load = std::make_unique<OPF::Load<ScalarT, IdxT>>(data);
+        if (load->connect(0, *bus) != 0)
+        {
+          throw std::invalid_argument("Invalid load test connection");
+        }
+        return makeSystem<ScalarT>(std::move(load), std::move(bus));
+      }
+
+      template <typename ScalarT>
+      static OPF::SystemModel<ScalarT, IdxT>
+      branchSystem(std::unique_ptr<OPF::Branch<ScalarT, IdxT>> branch)
+      {
+        auto bus1 = std::make_unique<OPF::Bus<ScalarT, IdxT>>(busData(1));
+        auto bus2 = std::make_unique<OPF::Bus<ScalarT, IdxT>>(busData(2));
+        if (branch->connect(0, *bus1) != 0 || branch->connect(1, *bus2) != 0)
+        {
+          throw std::invalid_argument("Invalid branch test connections");
+        }
+        return makeSystem<ScalarT>(std::move(branch), std::move(bus1), std::move(bus2));
+      }
+
       static constexpr const char* BRANCH_ID = "branch_1_2";
 
       static constexpr RealT R     = 0.1;
@@ -366,8 +873,9 @@ namespace GridKit
       static constexpr std::array<RealT, 4> BUS1_ADMITTANCE = {-1.4, 0.95, 2.5, 2.5};
       static constexpr std::array<RealT, 4> BUS2_ADMITTANCE = {-2.5, -2.5, -5.1, 4.8};
 
-      static constexpr IdxT BRANCH_JACOBIAN_SIZE = 24;
-      static constexpr IdxT BRANCH_HESSIAN_SIZE  = 10;
+      static constexpr IdxT BRANCH_EQUALITY_JACOBIAN_NNZ   = 16;
+      static constexpr IdxT BRANCH_INEQUALITY_JACOBIAN_NNZ = 8;
+      static constexpr IdxT BRANCH_HESSIAN_NNZ             = 10;
 
       static constexpr RealT PMIN  = 0.1;
       static constexpr RealT PMAX  = 0.9;
@@ -387,28 +895,34 @@ namespace GridKit
       static constexpr RealT LOAD_P = 0.6;
       static constexpr RealT LOAD_Q = 0.2;
 
-      static inline const std::vector<RealT> POWER_X       = {1.0, 0.0, 0.0, 1.0};
-      static inline const std::vector<RealT> BRANCH_X      = {1.02, 0.12, 0.96, -0.08};
-      static inline const std::vector<RealT> BRANCH_LAMBDA = {0.3, -0.2, 1.5, -0.7, 2.1, 0.4};
-      static inline const std::vector<RealT> FLAT_START    = {1.0, 0.0, 1.0, 0.0};
-      static inline const std::vector<RealT> GENERATOR_X   = {0.3, 0.1, 1.01, 0.05};
-      static inline const std::vector<RealT> SHUNT_X       = {0.98, 0.1};
-      static inline const std::vector<RealT> SHUNT_LAMBDA  = {1.3, -0.6};
-      static inline const std::vector<RealT> BUS_X         = {1.02, -0.05};
-      static inline const std::vector<RealT> BUS_LAMBDA    = {0.7, -0.4, 1.3};
-      static inline const std::vector<RealT> LOAD_X        = {1.01, -0.05};
+      static constexpr std::array<RealT, 4> POWER_X{1.0, 0.0, 0.0, 1.0};
+      static constexpr std::array<RealT, 4> BRANCH_X{1.02, 0.12, 0.96, -0.08};
+      static constexpr std::array<RealT, 4> BRANCH_LAMBDA_C{1.5, -0.7, 2.1, 0.4};
+      static constexpr std::array<RealT, 2> BRANCH_LAMBDA_D{0.3, -0.2};
+      static constexpr std::array<RealT, 4> FLAT_START{1.0, 0.0, 1.0, 0.0};
+      static constexpr std::array<RealT, 4> GENERATOR_X{0.3, 0.1, 1.01, 0.05};
+      static constexpr std::array<RealT, 2> SHUNT_X{0.98, 0.1};
+      static constexpr std::array<RealT, 2> SHUNT_LAMBDA{1.3, -0.6};
+      static constexpr std::array<RealT, 2> BUS_X{1.02, -0.05};
+      static constexpr std::array<RealT, 1> BUS_LAMBDA_D{1.3};
+      static constexpr std::array<RealT, 2> LOAD_X{1.01, -0.05};
 
       // Allow roundoff in the independent power and derivative references.
-      static constexpr RealT POWER_TOL    = 2 * std::numeric_limits<RealT>::epsilon();
-      static constexpr RealT JACOBIAN_TOL = 2 * std::numeric_limits<RealT>::epsilon();
-      static constexpr RealT HESSIAN_TOL  = 9 * std::numeric_limits<RealT>::epsilon();
+      static constexpr RealT TOL = 10 * std::numeric_limits<RealT>::epsilon();
+
+      static OPF::BusData<RealT, IdxT> busData(IdxT number)
+      {
+        OPF::BusData<RealT, IdxT> data;
+        data.number = number;
+        return data;
+      }
 
       static OPF::BranchData<RealT, IdxT> branchData()
       {
         OPF::BranchData<RealT, IdxT> data;
         data.id                                       = BRANCH_ID;
-        data.buses[OPF::BranchBuses::bus1]            = 1;
-        data.buses[OPF::BranchBuses::bus2]            = 2;
+        data.ports[OPF::BranchPorts::bus1]            = 1;
+        data.ports[OPF::BranchPorts::bus2]            = 2;
         data.parameters[OPF::BranchParameters::R]     = R;
         data.parameters[OPF::BranchParameters::X]     = X;
         data.parameters[OPF::BranchParameters::G]     = G;
@@ -425,7 +939,7 @@ namespace GridKit
       {
         OPF::GeneratorData<RealT, IdxT> data;
         data.id                                         = "gen_1";
-        data.buses[OPF::GeneratorBuses::bus]            = 1;
+        data.ports[OPF::GeneratorPorts::bus]            = 1;
         data.parameters[OPF::GeneratorParameters::Pmin] = PMIN;
         data.parameters[OPF::GeneratorParameters::Pmax] = PMAX;
         data.parameters[OPF::GeneratorParameters::Qmin] = QMIN;
@@ -436,114 +950,21 @@ namespace GridKit
         return data;
       }
 
-      /// Local indices are global indices
-      template <typename ComponentT>
-      static void numberLocally(ComponentT& component)
+      /// Stored values
+      static std::vector<RealT> values(const CooBufferT& entries)
       {
-        for (IdxT j = 0; j < component.size(); ++j)
-        {
-          component.variableIndices()[j] = j;
-        }
-        for (IdxT i = 0; i < component.sizeConstraints(); ++i)
-        {
-          component.constraintIndices()[i] = i;
-        }
+        return {entries.values.getData(), entries.values.getData() + entries.nnz};
       }
 
-      /// Initialized component variables set to `values`, tracked by index
-      template <typename ComponentT>
-      static std::vector<typename ComponentT::ScalarT> variables(ComponentT& component, const std::vector<RealT>& values)
+      /// Entries of each row
+      static std::map<IdxT, DependencyMap> rowsOf(const EntryMap& entries)
       {
-        using ScalarT = typename ComponentT::ScalarT;
-
-        numberLocally(component);
-        std::vector<ScalarT> x(values.size());
-        component.initialize(x.data());
-
-        for (IdxT j = 0; j < values.size(); ++j)
-        {
-          x[j] = values[j];
-          if constexpr (std::is_same_v<ScalarT, VariableT>)
-          {
-            x[j].setVariableNumber(j);
-          }
-        }
-        return x;
-      }
-
-      /// Entries summed by coordinate
-      static EntryMap sum(const Enzyme::Sparse::CooEntries& entries)
-      {
-        EntryMap result;
-        for (IdxT k = 0; k < entries.values.size(); ++k)
-        {
-          result[{entries.rows[k], entries.cols[k]}] += entries.values[k];
-        }
-        return result;
-      }
-
-      /// Rows of the summed entries
-      static std::vector<DependencyMap> rowsOf(const Enzyme::Sparse::CooEntries& entries, IdxT count)
-      {
-        std::vector<DependencyMap> rows(count);
-        for (const auto& [coordinate, value] : sum(entries))
+        std::map<IdxT, DependencyMap> rows;
+        for (const auto& [coordinate, value] : entries)
         {
           rows[coordinate.first][coordinate.second] = value;
         }
         return rows;
-      }
-
-      /// Coordinate maps with the same keys and values within `tol`
-      static bool isEqual(const EntryMap& actual, const EntryMap& expected, RealT tol = std::numeric_limits<RealT>::epsilon())
-      {
-        bool equal = actual.size() == expected.size();
-        for (const auto& [coordinate, value] : expected)
-        {
-          const auto entry = actual.find(coordinate);
-          if (entry == actual.end())
-          {
-            std::cerr << "Entry (" << coordinate.first << ", " << coordinate.second << ") is missing\n";
-            equal = false;
-          }
-          else
-          {
-            equal = isEqual(entry->second, value, tol) && equal;
-          }
-        }
-        return equal;
-      }
-
-      /// Values within `tol` relative to one plus the reference magnitude
-      static bool isEqual(RealT value, RealT reference, RealT tol = std::numeric_limits<RealT>::epsilon())
-      {
-        if (Testing::isEqual(value, reference, tol))
-        {
-          return true;
-        }
-        std::cerr << std::setprecision(std::numeric_limits<RealT>::max_digits10) << value << " differs from "
-                  << reference << " by " << std::abs(value - reference) / (ONE<RealT> + std::abs(reference)) / std::numeric_limits<RealT>::epsilon()
-                  << " eps\n";
-        return false;
-      }
-
-      /// Dependency maps with the same keys and values within `tol`
-      static bool isEqual(const DependencyMap& actual, const DependencyMap& expected, RealT tol)
-      {
-        bool equal = actual.size() == expected.size();
-        for (const auto& [variable, value] : expected)
-        {
-          const auto entry = actual.find(variable);
-          if (entry == actual.end())
-          {
-            std::cerr << "Derivative with respect to " << variable << " is missing\n";
-            equal = false;
-          }
-          else
-          {
-            equal = isEqual(entry->second, value, tol) && equal;
-          }
-        }
-        return equal;
       }
 
       /// Add `value` at the lower-triangle coordinate of (i, j)

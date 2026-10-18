@@ -19,8 +19,8 @@ endif()
 
 gridkit_add_library(
   solvers_opt_steady
-  SOURCES SteadyState.cpp
-  HEADERS SteadyState.hpp
+  SOURCES IpoptInterface.cpp
+  HEADERS IpoptInterface.hpp
   LINK_LIBRARIES
     PUBLIC
     IPOPT

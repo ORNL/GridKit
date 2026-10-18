@@ -11,9 +11,14 @@ int main()
   result += test.branchPattern();
   result += test.generator();
   result += test.outOfServiceGenerator();
-  result += test.shunt();
   result += test.bus();
-  result += test.load();
+  result += test.busShunt();
+  result += test.loadConstantPower();
+  result += test.loadEqualities();
+  result += test.loadJacobian();
+  result += test.loadHessian();
+  result += test.loadZeroVoltage();
+  result += test.loadConfiguration();
 
   return result.summary();
 }

@@ -8,7 +8,7 @@ Figure 1: One-line diagram of the IEEE 39-Bus case.[^1]
 
 ## Development
 
-The complete optimal power flow of this MATPOWER case is modeled in GridKit.
+The complete optimal power flow of this case is modeled in GridKit.
 
 The economic dispatch results are provided [here](../../../examples/OptimalPowerFlow/EconomicDispatch/README.md).
 

@@ -1,0 +1,1542 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "IEEE39",
+    "case_description": "",
+    "case_comments": ""
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "buses": [
+    {
+      "number": 1,
+      "class": "Bus",
+      "name": "1",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 2,
+      "class": "Bus",
+      "name": "2",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 3,
+      "class": "Bus",
+      "name": "3",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 4,
+      "class": "Bus",
+      "name": "4",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 5,
+      "class": "Bus",
+      "name": "5",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 6,
+      "class": "Bus",
+      "name": "6",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 7,
+      "class": "Bus",
+      "name": "7",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 8,
+      "class": "Bus",
+      "name": "8",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 9,
+      "class": "Bus",
+      "name": "9",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 10,
+      "class": "Bus",
+      "name": "10",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 11,
+      "class": "Bus",
+      "name": "11",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 12,
+      "class": "Bus",
+      "name": "12",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 13,
+      "class": "Bus",
+      "name": "13",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 14,
+      "class": "Bus",
+      "name": "14",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 15,
+      "class": "Bus",
+      "name": "15",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 16,
+      "class": "Bus",
+      "name": "16",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 17,
+      "class": "Bus",
+      "name": "17",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 18,
+      "class": "Bus",
+      "name": "18",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 19,
+      "class": "Bus",
+      "name": "19",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 20,
+      "class": "Bus",
+      "name": "20",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 21,
+      "class": "Bus",
+      "name": "21",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 22,
+      "class": "Bus",
+      "name": "22",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 23,
+      "class": "Bus",
+      "name": "23",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 24,
+      "class": "Bus",
+      "name": "24",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 25,
+      "class": "Bus",
+      "name": "25",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 26,
+      "class": "Bus",
+      "name": "26",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 27,
+      "class": "Bus",
+      "name": "27",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 28,
+      "class": "Bus",
+      "name": "28",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 29,
+      "class": "Bus",
+      "name": "29",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 30,
+      "class": "Bus",
+      "name": "30",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 31,
+      "class": "Bus",
+      "name": "31",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06,
+        "reference": true
+      }
+    },
+    {
+      "number": 32,
+      "class": "Bus",
+      "name": "32",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 33,
+      "class": "Bus",
+      "name": "33",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 34,
+      "class": "Bus",
+      "name": "34",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 35,
+      "class": "Bus",
+      "name": "35",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 36,
+      "class": "Bus",
+      "name": "36",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 37,
+      "class": "Bus",
+      "name": "37",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 38,
+      "class": "Bus",
+      "name": "38",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    },
+    {
+      "number": 39,
+      "class": "Bus",
+      "name": "39",
+      "params": {
+        "Vmin": 0.94,
+        "Vmax": 1.06
+      }
+    }
+  ],
+  "devices": [
+    {
+      "class": "Branch",
+      "id": "branch_1",
+      "ports": {
+        "bus1": 1,
+        "bus2": 2
+      },
+      "params": {
+        "R": 0.0035,
+        "X": 0.0411,
+        "B": 0.6987,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_2",
+      "ports": {
+        "bus1": 1,
+        "bus2": 39
+      },
+      "params": {
+        "R": 0.001,
+        "X": 0.025,
+        "B": 0.75,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 10.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_3",
+      "ports": {
+        "bus1": 2,
+        "bus2": 3
+      },
+      "params": {
+        "R": 0.0013,
+        "X": 0.0151,
+        "B": 0.2572,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 5.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_4",
+      "ports": {
+        "bus1": 2,
+        "bus2": 25
+      },
+      "params": {
+        "R": 0.007,
+        "X": 0.0086,
+        "B": 0.146,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 5.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_5",
+      "ports": {
+        "bus1": 2,
+        "bus2": 30
+      },
+      "params": {
+        "R": 0.0,
+        "X": 0.0181,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.025,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_6",
+      "ports": {
+        "bus1": 3,
+        "bus2": 4
+      },
+      "params": {
+        "R": 0.0013,
+        "X": 0.0213,
+        "B": 0.2214,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 5.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_7",
+      "ports": {
+        "bus1": 3,
+        "bus2": 18
+      },
+      "params": {
+        "R": 0.0011,
+        "X": 0.0133,
+        "B": 0.2138,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 5.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_8",
+      "ports": {
+        "bus1": 4,
+        "bus2": 5
+      },
+      "params": {
+        "R": 0.0008,
+        "X": 0.0128,
+        "B": 0.1342,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_9",
+      "ports": {
+        "bus1": 4,
+        "bus2": 14
+      },
+      "params": {
+        "R": 0.0008,
+        "X": 0.0129,
+        "B": 0.1382,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 5.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_10",
+      "ports": {
+        "bus1": 5,
+        "bus2": 6
+      },
+      "params": {
+        "R": 0.0002,
+        "X": 0.0026,
+        "B": 0.0434,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 12.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_11",
+      "ports": {
+        "bus1": 5,
+        "bus2": 8
+      },
+      "params": {
+        "R": 0.0008,
+        "X": 0.0112,
+        "B": 0.1476,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_12",
+      "ports": {
+        "bus1": 6,
+        "bus2": 7
+      },
+      "params": {
+        "R": 0.0006,
+        "X": 0.0092,
+        "B": 0.113,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_13",
+      "ports": {
+        "bus1": 6,
+        "bus2": 11
+      },
+      "params": {
+        "R": 0.0007,
+        "X": 0.0082,
+        "B": 0.1389,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 4.8
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_14",
+      "ports": {
+        "bus1": 6,
+        "bus2": 31
+      },
+      "params": {
+        "R": 0.0,
+        "X": 0.025,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.07,
+        "phase": 0.0,
+        "Smax": 18.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_15",
+      "ports": {
+        "bus1": 7,
+        "bus2": 8
+      },
+      "params": {
+        "R": 0.0004,
+        "X": 0.0046,
+        "B": 0.078,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_16",
+      "ports": {
+        "bus1": 8,
+        "bus2": 9
+      },
+      "params": {
+        "R": 0.0023,
+        "X": 0.0363,
+        "B": 0.3804,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_17",
+      "ports": {
+        "bus1": 9,
+        "bus2": 39
+      },
+      "params": {
+        "R": 0.001,
+        "X": 0.025,
+        "B": 1.2,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_18",
+      "ports": {
+        "bus1": 10,
+        "bus2": 11
+      },
+      "params": {
+        "R": 0.0004,
+        "X": 0.0043,
+        "B": 0.0729,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_19",
+      "ports": {
+        "bus1": 10,
+        "bus2": 13
+      },
+      "params": {
+        "R": 0.0004,
+        "X": 0.0043,
+        "B": 0.0729,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_20",
+      "ports": {
+        "bus1": 10,
+        "bus2": 32
+      },
+      "params": {
+        "R": 0.0,
+        "X": 0.02,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.07,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_21",
+      "ports": {
+        "bus1": 12,
+        "bus2": 11
+      },
+      "params": {
+        "R": 0.0016,
+        "X": 0.0435,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.006,
+        "phase": 0.0,
+        "Smax": 5.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_22",
+      "ports": {
+        "bus1": 12,
+        "bus2": 13
+      },
+      "params": {
+        "R": 0.0016,
+        "X": 0.0435,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.006,
+        "phase": 0.0,
+        "Smax": 5.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_23",
+      "ports": {
+        "bus1": 13,
+        "bus2": 14
+      },
+      "params": {
+        "R": 0.0009,
+        "X": 0.0101,
+        "B": 0.1723,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_24",
+      "ports": {
+        "bus1": 14,
+        "bus2": 15
+      },
+      "params": {
+        "R": 0.0018,
+        "X": 0.0217,
+        "B": 0.366,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_25",
+      "ports": {
+        "bus1": 15,
+        "bus2": 16
+      },
+      "params": {
+        "R": 0.0009,
+        "X": 0.0094,
+        "B": 0.171,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_26",
+      "ports": {
+        "bus1": 16,
+        "bus2": 17
+      },
+      "params": {
+        "R": 0.0007,
+        "X": 0.0089,
+        "B": 0.1342,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_27",
+      "ports": {
+        "bus1": 16,
+        "bus2": 19
+      },
+      "params": {
+        "R": 0.0016,
+        "X": 0.0195,
+        "B": 0.304,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_28",
+      "ports": {
+        "bus1": 16,
+        "bus2": 21
+      },
+      "params": {
+        "R": 0.0008,
+        "X": 0.0135,
+        "B": 0.2548,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_29",
+      "ports": {
+        "bus1": 16,
+        "bus2": 24
+      },
+      "params": {
+        "R": 0.0003,
+        "X": 0.0059,
+        "B": 0.068,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_30",
+      "ports": {
+        "bus1": 17,
+        "bus2": 18
+      },
+      "params": {
+        "R": 0.0007,
+        "X": 0.0082,
+        "B": 0.1319,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_31",
+      "ports": {
+        "bus1": 17,
+        "bus2": 27
+      },
+      "params": {
+        "R": 0.0013,
+        "X": 0.0173,
+        "B": 0.3216,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_32",
+      "ports": {
+        "bus1": 19,
+        "bus2": 20
+      },
+      "params": {
+        "R": 0.0007,
+        "X": 0.0138,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.06,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_33",
+      "ports": {
+        "bus1": 19,
+        "bus2": 33
+      },
+      "params": {
+        "R": 0.0007,
+        "X": 0.0142,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.07,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_34",
+      "ports": {
+        "bus1": 20,
+        "bus2": 34
+      },
+      "params": {
+        "R": 0.0009,
+        "X": 0.018,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.009,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_35",
+      "ports": {
+        "bus1": 21,
+        "bus2": 22
+      },
+      "params": {
+        "R": 0.0008,
+        "X": 0.014,
+        "B": 0.2565,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_36",
+      "ports": {
+        "bus1": 22,
+        "bus2": 23
+      },
+      "params": {
+        "R": 0.0006,
+        "X": 0.0096,
+        "B": 0.1846,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_37",
+      "ports": {
+        "bus1": 22,
+        "bus2": 35
+      },
+      "params": {
+        "R": 0.0,
+        "X": 0.0143,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.025,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_38",
+      "ports": {
+        "bus1": 23,
+        "bus2": 24
+      },
+      "params": {
+        "R": 0.0022,
+        "X": 0.035,
+        "B": 0.361,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_39",
+      "ports": {
+        "bus1": 23,
+        "bus2": 36
+      },
+      "params": {
+        "R": 0.0005,
+        "X": 0.0272,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_40",
+      "ports": {
+        "bus1": 25,
+        "bus2": 26
+      },
+      "params": {
+        "R": 0.0032,
+        "X": 0.0323,
+        "B": 0.531,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_41",
+      "ports": {
+        "bus1": 25,
+        "bus2": 37
+      },
+      "params": {
+        "R": 0.0006,
+        "X": 0.0232,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.025,
+        "phase": 0.0,
+        "Smax": 9.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_42",
+      "ports": {
+        "bus1": 26,
+        "bus2": 27
+      },
+      "params": {
+        "R": 0.0014,
+        "X": 0.0147,
+        "B": 0.2396,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_43",
+      "ports": {
+        "bus1": 26,
+        "bus2": 28
+      },
+      "params": {
+        "R": 0.0043,
+        "X": 0.0474,
+        "B": 0.7802,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_44",
+      "ports": {
+        "bus1": 26,
+        "bus2": 29
+      },
+      "params": {
+        "R": 0.0057,
+        "X": 0.0625,
+        "B": 1.029,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_45",
+      "ports": {
+        "bus1": 28,
+        "bus2": 29
+      },
+      "params": {
+        "R": 0.0014,
+        "X": 0.0151,
+        "B": 0.249,
+        "Bmag": 0.0,
+        "tap": 1.0,
+        "phase": 0.0,
+        "Smax": 6.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "branch_46",
+      "ports": {
+        "bus1": 29,
+        "bus2": 38
+      },
+      "params": {
+        "R": 0.0008,
+        "X": 0.0156,
+        "B": 0.0,
+        "Bmag": 0.0,
+        "tap": 1.025,
+        "phase": 0.0,
+        "Smax": 12.0
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_1",
+      "ports": {
+        "bus": 1
+      },
+      "params": {
+        "P": 0.976,
+        "Q": 0.442
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_3",
+      "ports": {
+        "bus": 3
+      },
+      "params": {
+        "P": 3.22,
+        "Q": 0.024
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_4",
+      "ports": {
+        "bus": 4
+      },
+      "params": {
+        "P": 5.0,
+        "Q": 1.84
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_7",
+      "ports": {
+        "bus": 7
+      },
+      "params": {
+        "P": 2.338,
+        "Q": 0.84
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_8",
+      "ports": {
+        "bus": 8
+      },
+      "params": {
+        "P": 5.22,
+        "Q": 1.766
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_9",
+      "ports": {
+        "bus": 9
+      },
+      "params": {
+        "P": 0.065,
+        "Q": -0.666
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_12",
+      "ports": {
+        "bus": 12
+      },
+      "params": {
+        "P": 0.0853,
+        "Q": 0.88
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_15",
+      "ports": {
+        "bus": 15
+      },
+      "params": {
+        "P": 3.2,
+        "Q": 1.53
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_16",
+      "ports": {
+        "bus": 16
+      },
+      "params": {
+        "P": 3.29,
+        "Q": 0.323
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_18",
+      "ports": {
+        "bus": 18
+      },
+      "params": {
+        "P": 1.58,
+        "Q": 0.3
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_20",
+      "ports": {
+        "bus": 20
+      },
+      "params": {
+        "P": 6.8,
+        "Q": 1.03
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_21",
+      "ports": {
+        "bus": 21
+      },
+      "params": {
+        "P": 2.74,
+        "Q": 1.15
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_23",
+      "ports": {
+        "bus": 23
+      },
+      "params": {
+        "P": 2.475,
+        "Q": 0.846
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_24",
+      "ports": {
+        "bus": 24
+      },
+      "params": {
+        "P": 3.086,
+        "Q": -0.922
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_25",
+      "ports": {
+        "bus": 25
+      },
+      "params": {
+        "P": 2.24,
+        "Q": 0.472
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_26",
+      "ports": {
+        "bus": 26
+      },
+      "params": {
+        "P": 1.39,
+        "Q": 0.17
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_27",
+      "ports": {
+        "bus": 27
+      },
+      "params": {
+        "P": 2.81,
+        "Q": 0.755
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_28",
+      "ports": {
+        "bus": 28
+      },
+      "params": {
+        "P": 2.06,
+        "Q": 0.276
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_29",
+      "ports": {
+        "bus": 29
+      },
+      "params": {
+        "P": 2.835,
+        "Q": 0.269
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_31",
+      "ports": {
+        "bus": 31
+      },
+      "params": {
+        "P": 0.092,
+        "Q": 0.046
+      }
+    },
+    {
+      "class": "Load",
+      "id": "load_39",
+      "ports": {
+        "bus": 39
+      },
+      "params": {
+        "P": 11.04,
+        "Q": 2.5
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_1",
+      "ports": {
+        "bus": 30
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 10.4,
+        "Qmin": 1.4,
+        "Qmax": 4.0,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_2",
+      "ports": {
+        "bus": 31
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 6.46,
+        "Qmin": -1.0,
+        "Qmax": 3.0,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_3",
+      "ports": {
+        "bus": 32
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 7.25,
+        "Qmin": 1.5,
+        "Qmax": 3.0,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_4",
+      "ports": {
+        "bus": 33
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 6.52,
+        "Qmin": 0.0,
+        "Qmax": 2.5,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_5",
+      "ports": {
+        "bus": 34
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 5.08,
+        "Qmin": 0.0,
+        "Qmax": 1.67,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_6",
+      "ports": {
+        "bus": 35
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 6.87,
+        "Qmin": -1.0,
+        "Qmax": 3.0,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_7",
+      "ports": {
+        "bus": 36
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 5.8,
+        "Qmin": 0.0,
+        "Qmax": 2.4,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_8",
+      "ports": {
+        "bus": 37
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 5.64,
+        "Qmin": 0.0,
+        "Qmax": 2.5,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_9",
+      "ports": {
+        "bus": 38
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 8.65,
+        "Qmin": -1.5,
+        "Qmax": 3.0,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    },
+    {
+      "class": "Generator",
+      "id": "gen_10",
+      "ports": {
+        "bus": 39
+      },
+      "params": {
+        "Pmin": 0.0,
+        "Pmax": 11.0,
+        "Qmin": -1.0,
+        "Qmax": 3.0,
+        "c0": 0.2,
+        "c1": 30.0,
+        "c2": 100.0
+      }
+    }
+  ]
+}

@@ -168,8 +168,8 @@ namespace GridKit
     struct GenCostData
     {
       IdxT               kind;
-      RealT              startup;
-      RealT              shutdown;
+      IdxT               startup;
+      IdxT               shutdown;
       IdxT               n;
       std::vector<RealT> rest;
 

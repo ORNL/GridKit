@@ -5,44 +5,27 @@
 
 #pragma once
 
+#include <cmath>
 #include <format>
+#include <type_traits>
 
 #include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
 #include <GridKit/Model/OptimalPowerFlow/ComponentData.hpp>
-#include <GridKit/Model/OptimalPowerFlow/ComponentModelImpl.hpp>
+#include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
 
 namespace GridKit
 {
   namespace OptimalPowerFlow
   {
-    /**
-     * @brief Construct a bus from data
-     *
-     * The power balance is an equality, the squared voltage magnitude has the
-     * voltage limits, and a reference bus limits its imaginary voltage to zero.
-     */
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus(const ModelDataT& data)
-      : ComponentModelT(std::format("bus_{}", data.number), {}),
+      : ComponentT(std::type_identity<Bus>{}, std::format("bus {}", data.number)),
         reference_(data.reference),
         Vmin_(parameter(data, BusParameters::Vmin, ZERO<RealT>)),
-        Vmax_(parameter(data, BusParameters::Vmax, UNBOUNDED<RealT>))
+        Vmax_(parameter(data, BusParameters::Vmax, UNBOUNDED<RealT>)),
+        G_(parameter(data, BusParameters::G, ZERO<RealT>)),
+        B_(parameter(data, BusParameters::B, ZERO<RealT>))
     {
-      constraint_lower_[0] = ZERO<RealT>;
-      constraint_upper_[0] = ZERO<RealT>;
-      constraint_lower_[1] = ZERO<RealT>;
-      constraint_upper_[1] = ZERO<RealT>;
-      constraint_upper_[2] = Vmax_ * Vmax_;
-      if (Vmin_ > ZERO<RealT>)
-      {
-        constraint_lower_[2] = Vmin_ * Vmin_;
-      }
-
-      if (reference_)
-      {
-        variable_lower_[1] = ZERO<RealT>;
-        variable_upper_[1] = ZERO<RealT>;
-      }
     }
 
     template <typename scalar_type, typename index_type>
@@ -51,41 +34,69 @@ namespace GridKit
       Model::ConfigurationChecks checks("Bus");
       checks.check(Vmin_ >= ZERO<RealT>, "Vmin must be nonnegative");
       checks.check(Vmax_ >= Vmin_, "Vmax must not be less than Vmin");
+      checks.check(std::isfinite(G_), "G must be finite");
+      checks.check(std::isfinite(B_), "B must be finite");
       return checks;
+    }
+
+    /**
+     * @brief The voltage limits bound the squared magnitude, and a reference
+     * bus fixes its imaginary voltage at zero
+     */
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::allocate()
+    {
+      d_upper_.getData()[0] = Vmax_ * Vmax_;
+      if (Vmin_ > ZERO<RealT>)
+      {
+        d_lower_.getData()[0] = Vmin_ * Vmin_;
+      }
+
+      if (reference_)
+      {
+        x_lower_.getData()[1] = ZERO<RealT>;
+        x_upper_.getData()[1] = ZERO<RealT>;
+      }
+      return 0;
     }
 
     /**
      * @brief Flat start
      */
     template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::initialize(ScalarT* x)
+    int Bus<scalar_type, index_type>::initialize()
     {
-      x[variable_indices_[0]] = ONE<RealT>;
-      x[variable_indices_[1]] = ZERO<RealT>;
+      ScalarT* x = x_.getData();
+      x[0]       = ONE<RealT>;
+      x[1]       = ZERO<RealT>;
       return 0;
     }
 
+    /**
+     * @brief Active and reactive power into the bus from its shunt; the
+     * ports add the rest of the balance
+     */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline typename Bus<scalar_type, index_type>::ScalarT
-    Bus<scalar_type, index_type>::objective([[maybe_unused]] const ScalarT* x) const
+    [[gnu::always_inline]] void
+    Bus<scalar_type, index_type>::internalEqualities(const ScalarT* x, ScalarT* c) const
     {
-      return ScalarT{ZERO<RealT>};
+      const ScalarT v2 = x[0] * x[0] + x[1] * x[1];
+
+      c[0] = -G_ * v2;
+      c[1] = B_ * v2;
     }
 
     /**
      * @brief Squared voltage magnitude
-     *
-     * Devices add their injections to the balance rows, which the bus leaves
-     * at zero.
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void
-    Bus<scalar_type, index_type>::constraints(const ScalarT* x, ScalarT* g) const
+    [[gnu::always_inline]] void
+    Bus<scalar_type, index_type>::internalInequalities(const ScalarT* x, ScalarT* d) const
     {
       const ScalarT vr = x[0];
       const ScalarT vi = x[1];
 
-      g[2] = vr * vr + vi * vi;
+      d[0] = vr * vr + vi * vi;
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit

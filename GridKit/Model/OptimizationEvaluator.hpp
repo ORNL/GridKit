@@ -18,9 +18,13 @@ namespace GridKit
     /**
      * @brief Abstract class describing a nonlinear program
      *
-     * Minimize \f$f(x)\f$ subject to \f$g_l \le g(x) \le g_u\f$ and
-     * \f$x_l \le x \le x_u\f$. The constraint Jacobian and the lower triangle
-     * of the Lagrangian Hessian keep the sparsity pattern set by `allocate()`.
+     * Minimize \f$f(x)\f$ subject to \f$c(x) = 0\f$,
+     * \f$d_l \le d(x) \le d_u\f$, and \f$x_l \le x \le x_u\f$.
+     * The Lagrangian is
+     * \f$L = \sigma f + \lambda_c^T c + \lambda_d^T d\f$.
+     * Jacobians and the lower Lagrangian Hessian retain the sparsity
+     * patterns set by `allocate()`. Evaluations are at `x()`, and methods
+     * returning `int` return 0 on success.
      */
     template <typename scalar_type, typename index_type>
     class OptimizationEvaluator
@@ -35,77 +39,133 @@ namespace GridKit
 
       virtual ~OptimizationEvaluator() = default;
 
-      virtual int allocate()   = 0;
+      /// Number the variables and constraints, and set the bounds, the starting point, and the sparsity patterns
+      virtual int allocate() = 0;
+
+      /// Set the starting point `x()`
       virtual int initialize() = 0;
 
-      virtual int evaluateObjective()   = 0;
-      virtual int evaluateGradient()    = 0;
-      virtual int evaluateConstraints() = 0;
-      virtual int evaluateJacobian()    = 0;
+      /// Evaluate \f$f(x)\f$ into `f()`
+      virtual int evaluateObjective() = 0;
 
-      /// Evaluate the Hessian of \f$\sigma f(x) + \lambda^T g(x)\f$
-      virtual int evaluateHessian(RealT sigma, const RealT* lambda) = 0;
+      /// Evaluate \f$\nabla f(x)\f$ into `gradient()`
+      virtual int evaluateGradient() = 0;
 
+      /// Evaluate \f$c(x)\f$ into `c()`
+      virtual int evaluateEqualities() = 0;
+
+      /// Evaluate \f$d(x)\f$ into `d()`
+      virtual int evaluateInequalities() = 0;
+
+      /// Evaluate the Jacobian of \f$c(x)\f$ into `getCsrEqualityJacobian()`
+      virtual int evaluateEqualityJacobian() = 0;
+
+      /// Evaluate the Jacobian of \f$d(x)\f$ into `getCsrInequalityJacobian()`
+      virtual int evaluateInequalityJacobian() = 0;
+
+      /**
+       * @brief Evaluate the lower triangle of the Hessian of \f$L\f$ into
+       * `getCsrHessian()`
+       *
+       * @param[in] sigma - Objective factor \f$\sigma\f$
+       * @param[in] lambda_c - Equality multipliers \f$\lambda_c\f$, `sizeEqualities()` values
+       * @param[in] lambda_d - Inequality multipliers \f$\lambda_d\f$, `sizeInequalities()` values
+       */
+      virtual int evaluateHessian(RealT        sigma,
+                                  const RealT* lambda_c,
+                                  const RealT* lambda_d) = 0;
+
+      /// Number of variables
       IdxT size() const
       {
         return x_.getSize();
       }
 
-      IdxT sizeConstraints() const
+      /// Number of equality constraints
+      IdxT sizeEqualities() const
       {
-        return g_.getSize();
+        return c_.getSize();
       }
 
-      const ScalarT& objective() const
+      /// Number of inequality constraints
+      IdxT sizeInequalities() const
+      {
+        return d_.getSize();
+      }
+
+      /// Objective at the last `evaluateObjective()`
+      const ScalarT& f() const
       {
         return f_;
       }
 
+      /// Variables
       VectorT& x()
       {
         return x_;
       }
 
+      /// Variables
       const VectorT& x() const
       {
         return x_;
       }
 
+      /// Variable lower bounds
       const RealVectorT& xLower() const
       {
         return x_lower_;
       }
 
+      /// Variable upper bounds
       const RealVectorT& xUpper() const
       {
         return x_upper_;
       }
 
+      /// Objective gradient at the last `evaluateGradient()`
       const RealVectorT& gradient() const
       {
         return gradient_;
       }
 
-      const VectorT& g() const
+      /// Equality constraints at the last `evaluateEqualities()`
+      const VectorT& c() const
       {
-        return g_;
+        return c_;
       }
 
-      const RealVectorT& gLower() const
+      /// Inequality constraints at the last `evaluateInequalities()`
+      const VectorT& d() const
       {
-        return g_lower_;
+        return d_;
       }
 
-      const RealVectorT& gUpper() const
+      /// Inequality constraint lower bounds
+      const RealVectorT& dLower() const
       {
-        return g_upper_;
+        return d_lower_;
       }
 
-      CsrMatrixT* getCsrJacobian() const
+      /// Inequality constraint upper bounds
+      const RealVectorT& dUpper() const
       {
-        return jacobian_.get();
+        return d_upper_;
       }
 
+      /// Jacobian of the equality constraints
+      CsrMatrixT* getCsrEqualityJacobian() const
+      {
+        return equality_jacobian_.get();
+      }
+
+      /// Jacobian of the inequality constraints
+      CsrMatrixT* getCsrInequalityJacobian() const
+      {
+        return inequality_jacobian_.get();
+      }
+
+      /// Lower triangle of the Lagrangian Hessian
       CsrMatrixT* getCsrHessian() const
       {
         return hessian_.get();
@@ -117,11 +177,13 @@ namespace GridKit
       RealVectorT x_lower_;
       RealVectorT x_upper_;
       RealVectorT gradient_;
-      VectorT     g_;
-      RealVectorT g_lower_;
-      RealVectorT g_upper_;
+      VectorT     c_;
+      VectorT     d_;
+      RealVectorT d_lower_;
+      RealVectorT d_upper_;
 
-      std::unique_ptr<CsrMatrixT> jacobian_;
+      std::unique_ptr<CsrMatrixT> equality_jacobian_;
+      std::unique_ptr<CsrMatrixT> inequality_jacobian_;
       std::unique_ptr<CsrMatrixT> hessian_;
     };
   } // namespace Model

@@ -6,13 +6,19 @@ int main()
   GridKit::Testing::SystemTests    test;
 
   result += test.allocation();
-  result += test.reference();
   result += test.jacobian();
   result += test.gradient();
-  result += test.hessian();
-  result += test.solve();
+  result += test.hessianLinearity();
+  result += test.unboundedInequalities();
   result += test.configuration();
-  result += test.parseMatpowerCase();
+  result += test.parseCase();
+  result += test.connections();
+  result += test.objectiveAssembly();
+  result += test.equalityAssembly();
+  result += test.inequalityAssembly();
+  result += test.hessianAssembly();
+  result += test.repeatedVariables();
+  result += test.connectionOwnership();
 
   return result.summary();
 }

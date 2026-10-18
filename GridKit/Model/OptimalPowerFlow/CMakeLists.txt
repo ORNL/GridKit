@@ -1,58 +1,71 @@
-add_library(optimal_power_flow_components INTERFACE)
-add_library(optimal_power_flow_components_dependency_tracking INTERFACE)
+if(GRIDKIT_ENABLE_ENZYME)
+  add_library(optimal_power_flow_components INTERFACE)
+  add_library(optimal_power_flow_components_dependency_tracking INTERFACE)
 
-gridkit_add_library(
-  optimal_power_flow_core
-  INTERFACE_TARGET
-  HEADERS Component.hpp ComponentData.hpp ComponentModel.hpp
-  LINK_LIBRARIES
-    INTERFACE
-    GridKit::definitions
-    INTERFACE
-    GridKit::Utilities
-    INTERFACE
-    GridKit::utilities_logger)
+  gridkit_add_library(
+    optimal_power_flow_core
+    INTERFACE_TARGET
+    HEADERS Component.hpp ComponentData.hpp
+    LINK_LIBRARIES
+      INTERFACE
+      GridKit::definitions
+      INTERFACE
+      GridKit::Utilities
+      INTERFACE
+      GridKit::dense_vector
+      INTERFACE
+      GridKit::sparse_matrix
+      INTERFACE
+      GridKit::utilities_logger)
 
-target_link_libraries(
-  optimal_power_flow_components
-  INTERFACE GridKit::optimal_power_flow_core)
-target_link_libraries(
-  optimal_power_flow_components_dependency_tracking
-  INTERFACE GridKit::optimal_power_flow_core)
+  gridkit_add_library(
+    optimal_power_flow_data
+    SOURCES SystemModelData.cpp
+    HEADERS SystemModelData.hpp
+    LINK_LIBRARIES PUBLIC GridKit::optimal_power_flow_core
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
-add_subdirectory(Branch)
-add_subdirectory(Bus)
-add_subdirectory(Generator)
-add_subdirectory(Load)
-add_subdirectory(Shunt)
+  target_link_libraries(optimal_power_flow_components INTERFACE GridKit::optimal_power_flow_core)
+  target_link_libraries(optimal_power_flow_components_dependency_tracking
+                        INTERFACE GridKit::optimal_power_flow_core)
 
-add_library(GridKit::optimal_power_flow_components ALIAS optimal_power_flow_components)
-add_library(GridKit::optimal_power_flow_components_dependency_tracking ALIAS
-            optimal_power_flow_components_dependency_tracking)
+  add_subdirectory(Branch)
+  add_subdirectory(Bus)
+  add_subdirectory(Generator)
+  add_subdirectory(Load)
 
-gridkit_add_library(
-  optimal_power_flow_systemmodel
-  SOURCES SystemModelEnzyme.cpp SystemModelData.cpp
-  HEADERS SystemModel.hpp SystemModelData.hpp
-  LINK_LIBRARIES
-    PUBLIC
-    GridKit::optimal_power_flow_components
-    PUBLIC
-    GridKit::dense_vector
-    PUBLIC
-    GridKit::sparse_matrix)
+  add_library(GridKit::optimal_power_flow_components ALIAS optimal_power_flow_components)
+  add_library(GridKit::optimal_power_flow_components_dependency_tracking ALIAS
+              optimal_power_flow_components_dependency_tracking)
 
-gridkit_add_library(
-  optimal_power_flow_systemmodel_dependency_tracking
-  SOURCES SystemModelDependencyTracking.cpp
-  HEADERS SystemModel.hpp
-  LINK_LIBRARIES
-    PUBLIC
-    GridKit::optimal_power_flow_components_dependency_tracking
-    PUBLIC
-    GridKit::dense_vector
-    PUBLIC
-    GridKit::sparse_matrix)
+  gridkit_add_library(
+    optimal_power_flow_systemmodel
+    SOURCES SystemModelEnzyme.cpp
+    HEADERS SystemModel.hpp
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::optimal_power_flow_components
+      PUBLIC
+      GridKit::optimal_power_flow_data
+      PUBLIC
+      GridKit::dense_vector
+      PUBLIC
+      GridKit::sparse_matrix)
 
-install(TARGETS optimal_power_flow_components optimal_power_flow_components_dependency_tracking
-        EXPORT gridkit-targets)
+  gridkit_add_library(
+    optimal_power_flow_systemmodel_dependency_tracking
+    SOURCES SystemModelDependencyTracking.cpp
+    HEADERS SystemModel.hpp
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::optimal_power_flow_components_dependency_tracking
+      PUBLIC
+      GridKit::optimal_power_flow_data
+      PUBLIC
+      GridKit::dense_vector
+      PUBLIC
+      GridKit::sparse_matrix)
+
+  install(TARGETS optimal_power_flow_components optimal_power_flow_components_dependency_tracking
+          EXPORT gridkit-targets)
+endif()

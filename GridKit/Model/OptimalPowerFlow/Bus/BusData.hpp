@@ -17,6 +17,8 @@ namespace GridKit
     {
       Vmin, ///< \f$V^{\min}\f$ Voltage magnitude lower limit [p.u.]
       Vmax, ///< \f$V^{\max}\f$ Voltage magnitude upper limit [p.u.]
+      G,    ///< \f$G\f$ Shunt conductance to ground [p.u.]
+      B,    ///< \f$B\f$ Shunt susceptance to ground [p.u.]
     };
 
     /**

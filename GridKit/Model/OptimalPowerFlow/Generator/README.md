@@ -13,7 +13,7 @@ $Q^{\max}$ | [p.u.] | `Qmax`       | Reactive power upper limit                 
 $c_0$      | [\$/h] | `c0`         | Constant cost coefficient                         |               | Default 0
 $c_1$      | [\$/h] | `c1`         | Linear cost coefficient                           | 1000          | Default 0
 $c_2$      | [\$/h] | `c2`         | Quadratic cost coefficient                        | 100           | Default 0
-$u$        | [-]    | `in_service` | Service status, 1 in service and 0 out of service |               | Default 1
+$u$        | [-]    | `in_service` | Service status, 1 in service and 0 out of service |               | Default true
 
 ### Parameter Validation
 
@@ -29,7 +29,7 @@ None.
 
 Name  | Port | Description
 ------|------|------------
-`bus` | Bus  | Terminal bus
+`bus` | Bus  | Port bus
 
 ## Model Variables
 
@@ -42,10 +42,7 @@ $Q$    | [p.u.] | Reactive power into the bus |
 
 ### External Variables
 
-Symbol         | Units  | Description                | Note
----------------|--------|----------------------------|-----
-$V_\mathrm{r}$ | [p.u.] | Terminal real voltage      | Owned by the bus
-$V_\mathrm{i}$ | [p.u.] | Terminal imaginary voltage | Owned by the bus
+None.
 
 ## Model Equations
 
@@ -59,16 +56,31 @@ f &\mathrel{+}= u (c_0 + c_1 P + c_2 P^2)
 
 ### Internal Constraints
 
+#### Equality
+
+Out of service, imposed as fixed variable bounds:
+
 ```math
 \begin{aligned}
-P^{\min} &\le P \le P^{\max} && \text{in service} \\
-Q^{\min} &\le Q \le Q^{\max} && \text{in service} \\
-0 &= P && \text{out of service} \\
-0 &= Q && \text{out of service}
+0 &= P \\
+0 &= Q
+\end{aligned}
+```
+
+#### Inequality
+
+In service, imposed as variable bounds:
+
+```math
+\begin{aligned}
+P^{\min} &\le P \le P^{\max} \\
+Q^{\min} &\le Q \le Q^{\max}
 \end{aligned}
 ```
 
 ### External Constraints
+
+Power into the bus, added to its balance:
 
 ```math
 \begin{aligned}

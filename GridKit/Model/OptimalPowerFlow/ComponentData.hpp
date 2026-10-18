@@ -5,10 +5,10 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <map>
 #include <string>
-#include <vector>
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/Utilities/Enum.hpp>
@@ -23,28 +23,28 @@ namespace GridKit
      * @tparam real_type  Real parameter data type
      * @tparam index_type Integer data type
      * @tparam parameters_enum Enumeration over parameters
-     * @tparam buses_enum Enumeration over terminal buses
+     * @tparam ports_enum Enumeration over ports
      */
-    template <typename real_type, typename index_type, typename parameters_enum, typename buses_enum>
-      requires Utilities::SizedEnum<parameters_enum> && Utilities::SizedEnum<buses_enum>
+    template <typename real_type, typename index_type, typename parameters_enum, typename ports_enum>
+      requires Utilities::SizedEnum<parameters_enum> && Utilities::SizedEnum<ports_enum>
     struct ComponentData
     {
       using RealT      = real_type;
       using IdxT       = index_type;
       using Parameters = parameters_enum;
-      using Buses      = buses_enum;
+      using Ports      = ports_enum;
 
-      /// Device `id`
+      /// Component `id`
       std::string id;
 
-      /// An out-of-service device keeps its entries and carries no power
+      /// An out-of-service component keeps its entries and contributes nothing
       bool in_service{true};
 
       /// Mapping of parameters to parameter values
       std::map<Parameters, RealT> parameters;
 
-      /// Mapping of terminals to bus numbers
-      std::map<Buses, IdxT> buses;
+      /// Mapping of ports to the numbers of the components they connect to
+      std::map<Ports, IdxT> ports;
     };
 
     /**
@@ -64,19 +64,20 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus number of each terminal in `Buses` order
+     * @brief Number at each port in `Ports` order
      *
-     * A terminal without a bus gets `INVALID_INDEX`.
+     * A port without one gets `INVALID_INDEX`.
      */
     template <typename DataT>
-    std::vector<typename DataT::IdxT> busNumbers(const DataT& data)
+    auto portNumbers(const DataT& data)
     {
       using IdxT = typename DataT::IdxT;
 
-      std::vector<IdxT> numbers(Utilities::enum_size<typename DataT::Buses>(), INVALID_INDEX<IdxT>);
-      for (const auto& [terminal, number] : data.buses)
+      std::array<IdxT, Utilities::enum_size<typename DataT::Ports>()> numbers;
+      numbers.fill(INVALID_INDEX<IdxT>);
+      for (const auto& [port, number] : data.ports)
       {
-        numbers[static_cast<size_t>(terminal)] = number;
+        numbers[static_cast<size_t>(port)] = number;
       }
       return numbers;
     }

@@ -5,7 +5,10 @@
 
 #pragma once
 
-#include <GridKit/Model/OptimalPowerFlow/ComponentModel.hpp>
+#include <array>
+
+#include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Component.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Load/LoadData.hpp>
 
 namespace GridKit
@@ -13,42 +16,46 @@ namespace GridKit
   namespace OptimalPowerFlow
   {
     /**
-     * @brief Constant power demand
+     * @brief ZIP demand: constant-power, constant-current, and
+     * constant-impedance parts
      */
     template <typename scalar_type, typename index_type>
-    class Load : public ComponentModel<Load<scalar_type, index_type>, scalar_type, index_type>
+    class Load final : public Component<scalar_type, index_type>
     {
-      using ComponentModelT = ComponentModel<Load<scalar_type, index_type>, scalar_type, index_type>;
-
-      using ComponentModelT::in_service_;
-
-    public:
+      using ComponentT = Component<scalar_type, index_type>;
+      using BusT       = Bus<scalar_type, index_type>;
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
-      using RealT      = typename ComponentModelT::RealT;
+      using RealT      = typename ComponentT::RealT;
       using ModelDataT = LoadData<RealT, IdxT>;
 
-      /// Local variables: terminal real and imaginary voltage
-      static constexpr IdxT VARIABLE_SIZE            = 2;
-      /// Local constraint functions: power into the bus
-      static constexpr IdxT CONSTRAINT_SIZE          = 2;
-      /// Internal variables: none
-      static constexpr IdxT INTERNAL_VARIABLE_SIZE   = 0;
-      /// Internal constraint functions: none
-      static constexpr IdxT INTERNAL_CONSTRAINT_SIZE = 0;
-      static constexpr bool CONSTANT                 = true;
+    public:
+      static constexpr IdxT NUM_PORTS                 = 1;
+      static constexpr IdxT NUM_INTERNAL_VARIABLES    = 0;
+      static constexpr IdxT NUM_INTERNAL_EQUALITIES   = 0;
+      static constexpr IdxT NUM_INTERNAL_INEQUALITIES = 0;
+
+      static constexpr std::array<IdxT, NUM_PORTS> NUM_PORT_VARIABLES{BusT::NUM_INTERNAL_VARIABLES};
+      static constexpr std::array<IdxT, NUM_PORTS> NUM_PORT_EQUALITIES{BusT::NUM_INTERNAL_EQUALITIES};
 
       explicit Load(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
-      int                        initialize(ScalarT* x) override;
 
-      __attribute__((always_inline)) inline ScalarT objective(const ScalarT* x) const;
-      __attribute__((always_inline)) inline void    constraints(const ScalarT* x, ScalarT* g) const;
+      int evaluateEqualityJacobian() override;
+      int evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d) override;
+
+      [[gnu::always_inline]] void externalEqualities(const ScalarT* x, ScalarT* c) const override;
 
     private:
+      RealT in_service_{ONE<RealT>};
+      RealT current_part_{ZERO<RealT>}; ///< 1 with a constant-current part, which needs the voltage magnitude, else 0
       RealT P_{0.0};
       RealT Q_{0.0};
+      RealT Pi_{0.0};
+      RealT Qi_{0.0};
+      RealT Pz_{0.0};
+      RealT Qz_{0.0};
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

@@ -38,10 +38,11 @@ namespace GridKit
                         PowerFlowData::GenCostData<RealT, IdxT> b,
                         RealT                                   tol = tol_)
     {
+      (void) tol; // suppress warning
       int fail  = 0;
       fail     += a.kind != b.kind;
-      fail     += !isEqual(a.startup, b.startup, tol);
-      fail     += !isEqual(a.shutdown, b.shutdown, tol);
+      fail     += a.startup != b.startup;
+      fail     += a.shutdown != b.shutdown;
       fail     += a.n != b.n;
       if (fail)
       {
