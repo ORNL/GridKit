@@ -25,12 +25,7 @@ namespace GridKit
       reference, ///< Angle reference, with zero imaginary voltage
     };
 
-    /**
-     * @brief Contains modeling data for a Bus
-     *
-     * @tparam real_type  Real parameter data type
-     * @tparam index_type Integer data type
-     */
+    /// Data of a `Bus`, identified by its number
     template <typename real_type, typename index_type>
     struct BusData
     {
@@ -41,7 +36,6 @@ namespace GridKit
       /// Bus number
       IdxT number{0};
 
-      /// Mapping of parameters to parameter values
       ParameterMap<Parameters, RealT, IdxT> parameters;
 
       /// Bus `id`, from its number

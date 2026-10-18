@@ -31,10 +31,6 @@ namespace GridKit
       return checks;
     }
 
-    /**
-     * @brief The power limits bound the power, which is fixed at zero out of
-     * service
-     */
     template <typename scalar_type, typename index_type>
     int Generator<scalar_type, index_type>::initialize()
     {
@@ -67,9 +63,6 @@ namespace GridKit
       return u_ * (c0_ + c1_ * x[P] + c2_ * x[P] * x[P]);
     }
 
-    /**
-     * @brief Active and reactive power into the bus
-     */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
     Generator<scalar_type, index_type>::externalConstraints(const ScalarT*                  x,

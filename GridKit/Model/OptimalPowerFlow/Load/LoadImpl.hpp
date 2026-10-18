@@ -23,21 +23,14 @@ namespace GridKit
       initializeParameters(data);
     }
 
-    /**
-     * @brief Every demand is valid, so a load has no checks
-     */
+    /// Every demand is valid
     template <typename scalar_type, typename index_type>
     Model::ConfigurationChecks Load<scalar_type, index_type>::verify() const
     {
       return Model::ConfigurationChecks("Load");
     }
 
-    /**
-     * @brief Active and reactive power into the bus, the negative of the demand
-     *
-     * A load without a constant-current part uses a unit magnitude in its
-     * place, so it stays smooth at zero voltage.
-     */
+    /// Power into the bus, the negative of the demand
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
     Load<scalar_type, index_type>::externalConstraints([[maybe_unused]] const ScalarT* x,

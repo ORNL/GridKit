@@ -19,9 +19,7 @@ namespace GridKit
 {
   namespace OptimalPowerFlow
   {
-    /**
-     * @brief All data needed to build an optimal power flow system model
-     */
+    /// Data of an optimal power flow system
     template <typename real_type = double, typename index_type = size_t>
     struct SystemModelData
     {
@@ -34,14 +32,14 @@ namespace GridKit
 
       RealT va_base{100.0e6}; ///< System power base in VA
 
-      std::vector<BusDataT>       bus;       ///< Buses within the model
-      std::vector<BranchDataT>    branch;    ///< Branches within the model
-      std::vector<GeneratorDataT> generator; ///< Generators within the model
-      std::vector<LoadDataT>      load;      ///< Loads within the model
+      std::vector<BusDataT>       bus;
+      std::vector<BranchDataT>    branch;
+      std::vector<GeneratorDataT> generator;
+      std::vector<LoadDataT>      load;
     };
 
     /**
-     * @brief Generate system model data from a JSON input file
+     * @brief System data from a JSON case
      *
      * @throw nlohmann::json::exception for a missing or mistyped value, and
      * std::invalid_argument for an unknown device class, parameter, or port

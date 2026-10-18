@@ -27,10 +27,8 @@ namespace GridKit
   namespace OptimalPowerFlow
   {
     /**
-     * @param[in] data - Network, demand, limits, and costs
-     *
-     * @throw std::invalid_argument for a duplicate bus, a parameter that
-     * cannot be read, a port without a bus, or a bus that does not exist
+     * @throw std::invalid_argument for a duplicate bus, an invalid parameter,
+     * or a port without a bus of this system
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
@@ -69,9 +67,7 @@ namespace GridKit
       }
     }
 
-    /**
-     * @brief Every problem with the data
-     */
+    /// Every problem with the data
     template <typename scalar_type, typename index_type>
     Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
     {
@@ -111,10 +107,6 @@ namespace GridKit
       return checks;
     }
 
-    /**
-     * @brief Verify the components, bind them to the system vectors, tag the
-     * inequalities, and build the derivative patterns
-     */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
     {
@@ -136,9 +128,6 @@ namespace GridKit
       return allocateDerivatives();
     }
 
-    /**
-     * @brief Each component tags its own constraints
-     */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::tagInequality()
     {
@@ -160,13 +149,7 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Bounds and the flat start
-     *
-     * Every variable and multiplier starts at zero and every variable
-     * unbounded, every equality at zero, and every inequality unbounded. Each
-     * component then sets its limits and any nonzero initial value.
-     */
+    /// Equalities at zero and inequalities unbounded until the components set their limits
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
@@ -262,9 +245,7 @@ namespace GridKit
       components_.push_back(std::move(bus));
     }
 
-    /**
-     * @brief Device from `data`, connected at each port to the bus it names
-     */
+    /// Device from `data`, connected at each port to the bus it names
     template <typename scalar_type, typename index_type>
     template <typename ModelT, typename DataT>
     void SystemModel<scalar_type, index_type>::addDevice(const DataT& data)
@@ -298,10 +279,7 @@ namespace GridKit
       components_.push_back(std::move(device));
     }
 
-    /**
-     * @brief Size the vectors for the components and bind each to the next
-     * blocks
-     */
+    /// Size the system vectors and bind each component to its blocks
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::compose()
     {

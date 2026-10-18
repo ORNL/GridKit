@@ -41,11 +41,7 @@ namespace GridKit
       DQ2, ///< \f$\Delta Q_2^\mathrm{bus}\f$ Reactive power into bus 2 [p.u.]
     };
 
-    /**
-     * @brief Line or off-nominal transformer between two buses
-     *
-     * Power is positive into the buses.
-     */
+    /// Line or off-nominal transformer between two buses, with power positive into the buses
     template <typename scalar_type, typename index_type>
     class Branch final : public Component<scalar_type, index_type>
     {

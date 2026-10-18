@@ -25,7 +25,7 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    /// Limit of a variable or inequality constraint without one
+    /// Limit of a variable or inequality without one
     template <typename RealT>
     inline constexpr RealT UNBOUNDED = std::numeric_limits<RealT>::infinity();
 
@@ -36,13 +36,8 @@ namespace GridKit
     class SystemModel;
 
     /**
-     * @brief Requirements on a component model
-     *
-     * A model enumerates its internal variables, the external variables it
-     * reads at its ports, the internal constraints it owns, and its
-     * contributions to the constraints at its ports. The counts at each port
-     * add up to the external enumerations. It is `final`, so Enzyme calls its
-     * kernels directly.
+     * @brief Layout of a component model: enumerations whose port counts add
+     * up, and `final`, so Enzyme calls the kernels directly
      */
     template <typename ModelT, typename ScalarT, typename IdxT>
     concept ComponentKernels =
@@ -59,12 +54,8 @@ namespace GridKit
                == Utilities::enum_size<typename ModelT::ExternalConstraintsT>();
 
     /**
-     * @brief Optimal power flow component
-     *
-     * `SystemModel` binds the internal blocks of each component to the system
-     * vectors. Each port reads variables of another component and contributes
-     * to its constraints, equalities or inequalities alike. A component
-     * overrides the kernels it has; the others contribute nothing.
+     * @brief Optimal power flow component, which views its blocks of the
+     * system vectors and reads and adds to those of the components at its ports
      */
     template <typename scalar_type, typename index_type>
     class Component
@@ -94,23 +85,17 @@ namespace GridKit
         }
       };
 
-      /// Variables a port reads and constraints it contributes to, in the internal blocks of `component`
+      /// Blocks of `component` that a port reads and adds to
       struct Port
       {
-        Block      size;               ///< Numbers of variables read and constraints contributed to
-        Component* component{nullptr}; ///< Owner of those variables and constraints, after `connect()`
-        Block      offset{};           ///< First of them in the internal blocks of `component`
+        Block      size;
+        Component* component{nullptr};
+        Block      offset{};
       };
 
-      /**
-       * @brief Derivative entries in global indices
-       *
-       * Enzyme's `sparse_store` fills the first `nnz` entries of buffers sized
-       * for the dense local block. Assembly sums duplicate coordinates.
-       */
+      /// Derivative entries in global indices, with room for the dense local block
       struct CooBuffer
       {
-        /// Room for `capacity` entries
         int resize(IdxT capacity)
         {
           if (rows.resize(capacity) != 0
@@ -133,16 +118,16 @@ namespace GridKit
       /// Every problem with the parameters
       virtual Model::ConfigurationChecks verify() const = 0;
 
-      /// Read the variables and contribute to the constraints of `component` at port `port`
+      /// Read and add to the blocks of `component` from `offset` at `port`
       int connect(IdxT port, Component& component, const Block& offset = {});
 
-      /// Tag the internal constraints that are inequalities; the others are equalities
+      /// Tag each internal constraint as an inequality or an equality
       virtual int tagInequality()
       {
         return 0;
       }
 
-      /// Set the bounds and the initial values in the internal blocks
+      /// Set the bounds and any nonzero initial value
       virtual int initialize()
       {
         return 0;
@@ -151,35 +136,35 @@ namespace GridKit
       /// Evaluate the objective contribution into `f()`
       int evaluateObjective();
 
-      /// Add the objective gradient to the system gradient
+      /// Add the objective gradient
       virtual int evaluateGradient()
       {
         return 0;
       }
 
-      /// Add the constraint contributions to the system constraints
+      /// Add the constraint contributions
       int evaluateConstraints();
 
-      /// Evaluate the constraint Jacobian entries into `jacobianEntries()`
+      /// Evaluate the constraint Jacobian into `jacobianEntries()`
       virtual int evaluateJacobian()
       {
         return 0;
       }
 
-      /// Evaluate the lower Lagrangian Hessian entries at the system multipliers into `hessianEntries()`
+      /// Evaluate the lower Lagrangian Hessian into `hessianEntries()`
       virtual int evaluateHessian([[maybe_unused]] RealT sigma)
       {
         return 0;
       }
 
-      /// Objective contribution over the internal variables `x` and the external variables `external`
+      /// Objective contribution
       virtual ScalarT objective([[maybe_unused]] const ScalarT* x,
                                 [[maybe_unused]] const ScalarT* external) const
       {
         return ScalarT{ZERO<RealT>};
       }
 
-      /// Contributions `g` to the constraints this component owns
+      /// Contributions `g` to the internal constraints
       virtual void internalConstraints([[maybe_unused]] const ScalarT* x,
                                        [[maybe_unused]] const ScalarT* external,
                                        [[maybe_unused]] ScalarT*       g) const
@@ -203,36 +188,34 @@ namespace GridKit
         return ports_;
       }
 
-      /// Objective contribution at the last `evaluateObjective()`
+      /// Objective contribution
       const ScalarT& f() const
       {
         return f_;
       }
 
-      /// Inequality tag of each internal constraint, set by `tagInequality()`
+      /// True for each internal inequality
       const std::vector<bool>& tag() const
       {
         return tag_;
       }
 
-      /// Constraint Jacobian entries at the last `evaluateJacobian()`, in global indices
       const CooBuffer& jacobianEntries() const
       {
         return jacobian_entries_;
       }
 
-      /// Lower Lagrangian Hessian entries at the last `evaluateHessian()`, in global indices
       const CooBuffer& hessianEntries() const
       {
         return hessian_entries_;
       }
 
     protected:
-      /// Sizes from the enumerations that `ModelT` declares
+      /// Sizes from the enumerations of `ModelT`
       template <ComponentKernels<scalar_type, index_type> ModelT>
       Component(std::type_identity<ModelT>, std::string id);
 
-      // Enzyme derivatives of `model`, the derived component
+      // Enzyme derivatives of the derived model
 
       template <ComponentKernels<scalar_type, index_type> ModelT>
       int evaluateGradient(const ModelT& model);
@@ -243,10 +226,9 @@ namespace GridKit
       template <ComponentKernels<scalar_type, index_type> ModelT>
       int evaluateHessian(const ModelT& model, RealT sigma);
 
-      /// Inequality tag of each internal constraint, which `tagInequality()` sets
       std::vector<bool> tag_;
 
-      // Views of the internal blocks that `initialize()` sets
+      // Views that `initialize()` sets
       VectorT     x_;
       RealVectorT x_lower_;
       RealVectorT x_upper_;
@@ -254,7 +236,6 @@ namespace GridKit
       RealVectorT g_upper_;
 
     private:
-      /// Numbers of internal variables and constraints of `ModelT`
       template <typename ModelT>
       static constexpr Block internalSize()
       {
@@ -262,7 +243,7 @@ namespace GridKit
                 static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalConstraintsT>())};
       }
 
-      /// Numbers of local variables and constraint contributions of `ModelT`
+      /// Internal plus external sizes of `ModelT`
       template <typename ModelT>
       static constexpr Block localSize()
       {
@@ -283,18 +264,18 @@ namespace GridKit
 
       std::string       id_;
       std::vector<Port> ports_;
-      Block             size_;   ///< Numbers of internal variables and constraints
-      Block             offset_; ///< First global index of each internal block
+      Block             size_;   ///< Internal sizes
+      Block             offset_; ///< Global index of each internal block
       bool              bound_{false};
 
-      // Views of the internal blocks that the evaluations set, and of their multipliers
+      // Views that the evaluations set, and the multipliers
       ScalarT     f_{};
       RealVectorT gradient_;
       VectorT     g_;
       RealVectorT lambda_;
 
-      VectorT   local_x_; ///< Local variables: internal, then external
-      VectorT   local_g_; ///< Local constraint contributions: internal, then external
+      VectorT   local_x_; ///< Internal, then external variables
+      VectorT   local_g_; ///< Internal, then external contributions
       CooBuffer jacobian_entries_;
       CooBuffer hessian_entries_;
     };

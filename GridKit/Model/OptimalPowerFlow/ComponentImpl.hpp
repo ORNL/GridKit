@@ -38,10 +38,6 @@ namespace GridKit
       }
     }
 
-    /**
-     * @brief Read the variables and contribute to the constraints of
-     * `component` from `offset` in its internal blocks
-     */
     template <typename scalar_type, typename index_type>
     int Component<scalar_type, index_type>::connect(IdxT port, Component& component, const Block& offset)
     {
@@ -86,7 +82,7 @@ namespace GridKit
       return 0;
     }
 
-    /// Local variables: internal, then those each port reads
+    /// Internal, then each port's variables
     template <typename scalar_type, typename index_type>
     void Component<scalar_type, index_type>::gather(ScalarT* x) const
     {
@@ -97,7 +93,7 @@ namespace GridKit
       }
     }
 
-    /// Multipliers of the local constraint contributions: internal, then those at each port
+    /// Multipliers of the internal, then each port's constraints
     template <typename scalar_type, typename index_type>
     void Component<scalar_type, index_type>::gatherMultipliers(RealT* lambda) const
     {
@@ -134,7 +130,7 @@ namespace GridKit
       }
     }
 
-    /// Add the local gradient to the gradient of each variable it belongs to
+    /// Add the local gradient to the system gradient
     template <typename scalar_type, typename index_type>
     void Component<scalar_type, index_type>::scatterGradient(const RealT* gradient)
     {
@@ -153,7 +149,7 @@ namespace GridKit
       }
     }
 
-    /// Add the local constraint contributions to the constraint each belongs to
+    /// Add the local contributions to the system constraints
     template <typename scalar_type, typename index_type>
     void Component<scalar_type, index_type>::scatterConstraints(const ScalarT* g)
     {

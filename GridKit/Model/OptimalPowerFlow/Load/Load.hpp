@@ -78,7 +78,7 @@ namespace GridKit
       bool  in_service_{true};
 
       RealT u_{ONE<RealT>};           ///< Service status as a factor
-      RealT current_on_{ZERO<RealT>}; ///< 1 with an in-service constant-current part, which needs the voltage magnitude
+      RealT current_on_{ZERO<RealT>}; ///< 1 with an in-service constant-current part, else the magnitude is taken as 1
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

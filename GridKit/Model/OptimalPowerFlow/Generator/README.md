@@ -4,22 +4,21 @@ Dispatchable active and reactive power injection with a quadratic cost.
 
 ## Model Parameters
 
-Symbol     | Units        | Data         | Description                                       | Typical Value | Note
------------|--------------|--------------|---------------------------------------------------|---------------|-----
-$P^{\min}$ | [p.u.]       | `Pmin`       | Active power lower limit                          | 0             | Default unbounded
-$P^{\max}$ | [p.u.]       | `Pmax`       | Active power upper limit                          | 1             | Default unbounded
-$Q^{\min}$ | [p.u.]       | `Qmin`       | Reactive power lower limit                        | -0.5          | Default unbounded
-$Q^{\max}$ | [p.u.]       | `Qmax`       | Reactive power upper limit                        | 0.5           | Default unbounded
-$c_0$      | [\$/h]       | `c0`         | Constant cost coefficient                         |               | Default 0
-$c_1$      | [\$/h/p.u.]  | `c1`         | Linear cost coefficient                           | 1000          | Default 0
-$c_2$      | [\$/h/p.u.²] | `c2`         | Quadratic cost coefficient                        | 100           | Default 0
-$u$        | [-]          | `in_service` | Service status, 1 in service and 0 out of service |               | Default true
+Symbol     | Units        | Data         | Description                | Typical Value | Note
+-----------|--------------|--------------|----------------------------|---------------|-----
+$P^{\min}$ | [p.u.]       | `Pmin`       | Active power lower limit   | 0             | Default unbounded
+$P^{\max}$ | [p.u.]       | `Pmax`       | Active power upper limit   | 1             | Default unbounded
+$Q^{\min}$ | [p.u.]       | `Qmin`       | Reactive power lower limit | -0.5          | Default unbounded
+$Q^{\max}$ | [p.u.]       | `Qmax`       | Reactive power upper limit | 0.5           | Default unbounded
+$c_0$      | [\$/h]       | `c0`         | Constant cost coefficient  |               | Default 0
+$c_1$      | [\$/h/p.u.]  | `c1`         | Linear cost coefficient    | 1000          | Default 0
+$c_2$      | [\$/h/p.u.²] | `c2`         | Quadratic cost coefficient | 100           | Default 0
+$u$        | [-]          | `in_service` | Service status             |               | Default true
 
 ### Parameter Validation
 
 - $P^{\min} \le P^{\max}$
 - $Q^{\min} \le Q^{\max}$
-- $c_0$, $c_1$, and $c_2$ are finite
 
 ### Model Derived Parameters
 
@@ -58,7 +57,7 @@ f &\mathrel{+}= u (c_0 + c_1 P + c_2 P^2)
 
 #### Equality
 
-Out of service, imposed as fixed variable bounds:
+Out of service:
 
 ```math
 \begin{aligned}
@@ -69,7 +68,7 @@ Out of service, imposed as fixed variable bounds:
 
 #### Inequality
 
-In service, imposed as variable bounds:
+In service:
 
 ```math
 \begin{aligned}

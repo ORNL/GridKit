@@ -19,13 +19,10 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme automatic differentiation Jacobian evaluator: constraint Jacobian, dg/dx
+       * @brief Enzyme sparse constraint Jacobian, dg/dx, by one forward sweep
+       * per local variable
        *
-       * One forward sweep per local variable. Only structural entries are
-       * stored, in global indices.
-       *
-       * @tparam ModelT - model type with internal and external local variables
-       * and constraints
+       * @tparam ModelT - optimization component model
        */
       template <typename ModelT>
       struct DgDx

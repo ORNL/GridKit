@@ -46,10 +46,6 @@ namespace GridKit
       return refill(*jacobian_, jacobian_assembly_);
     }
 
-    /**
-     * @brief Lower triangle of the Hessian of \f$\sigma f + \lambda^T g\f$ at
-     * the multipliers `lambda()`
-     */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateHessian(RealT sigma)
     {
@@ -65,12 +61,7 @@ namespace GridKit
       return refill(*hessian_, hessian_assembly_);
     }
 
-    /**
-     * @brief Construct the CSR patterns from the component entries
-     *
-     * Component entries are structural, so the patterns hold at every point
-     * and every multiplier, including zero.
-     */
+    /// CSR patterns from the component entries, which are structural
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocateDerivatives()
     {
@@ -93,13 +84,7 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Sort and deduplicate the component entries into a CSR matrix
-     *
-     * @param[in] rows - Number of rows
-     * @param[in] cols - Number of columns
-     * @param[in,out] assembly - Component entries, and the CSR entry of each on return
-     */
+    /// Sort and deduplicate the entries of `assembly` into a CSR matrix, and record the CSR entry of each
     template <typename scalar_type, typename index_type>
     std::unique_ptr<typename SystemModel<scalar_type, index_type>::CsrMatrixT>
     SystemModel<scalar_type, index_type>::assemble(IdxT rows, IdxT cols, Assembly& assembly) const
@@ -153,11 +138,7 @@ namespace GridKit
       return std::make_unique<CsrMatrixT>(rows, cols, nnz, &row_ptrs, &csr_cols, &csr_vals);
     }
 
-    /**
-     * @brief Sum the component entries into the CSR values
-     *
-     * @return 1 if the number of component entries changed since assembly
-     */
+    /// Sum the component entries into the CSR values, or fail if their number changed
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::refill(CsrMatrixT& matrix, const Assembly& assembly) const
     {
