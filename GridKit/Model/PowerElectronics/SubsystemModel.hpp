@@ -112,6 +112,8 @@ namespace GridKit
 
     ~SubsystemModel() override
     {
+      restoreGlobalConnection();
+
       for (auto* comp : interfaces_)
       {
         delete comp;
@@ -409,6 +411,8 @@ namespace GridKit
         y_ext_data_.setDataUpdated();
         yp_ext_data_.setDataUpdated();
       }
+
+      f_ext_data_.setToZero();
 
       return 0;
     }
