@@ -31,9 +31,6 @@ namespace GridKit
       using Format   = VariableMonitorFormat;
       using Layout   = VariableMonitorLayout;
       using SinkSpec = VariableMonitorBase::SinkSpec;
-      using Csv      = VariableMonitorBase::Csv;
-      using Json     = VariableMonitorBase::Json;
-      using Yaml     = VariableMonitorBase::Yaml;
       ///@}
 
       /// Default to empty monitor
@@ -120,20 +117,13 @@ namespace GridKit
       /**
        * @brief Organize header output for this and all submonitors
        */
-      template <Layout layout, typename FormatT>
-      void printFullHeader(std::ostream& os, const FormatT& fmt) const
+      template <typename SinkT>
+      void printFullHeader(const SinkT& sink) const
       {
         buffer_.clear();
-        if constexpr (layout == Layout::LONG && std::is_same_v<FormatT, Csv>)
-        {
-          appendRecordHeader(buffer_, fmt);
-        }
-        else
-        {
-          appendHeader(buffer_, fmt);
-        }
+        appendHeader(buffer_, sink);
         buffer_ += '\n';
-        os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
+        sink.os->write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
       }
 
       /**
@@ -144,9 +134,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     {
-              using T = std::remove_cvref_t<decltype(sink)>;
-              this->printFullHeader<T::layout>(*sink.os, sink.format); },
+                     { this->printFullHeader(sink); },
                      sink);
         }
       }
@@ -154,26 +142,26 @@ namespace GridKit
       /**
        * @brief Organize variable output for this and all submonitors
        */
-      template <Layout layout, typename FormatT>
-      void printFull(std::ostream& os, const FormatT& fmt) const
+      template <typename SinkT>
+      void printFull(const SinkT& sink) const
       {
         buffer_.clear();
-        if constexpr (layout == Layout::LONG)
+        if constexpr (SinkT::layout == Layout::LONG)
         {
           const auto  sample = std::to_string(sample_);
           std::string t;
           VariableMonitorDetail::formatReal(t, *time_);
           for (auto&& entry : entries_)
           {
-            appendRecord(buffer_, fmt, sample, t, entry);
+            appendRecord(buffer_, sink, sample, t, entry);
           }
         }
         else
         {
-          append(buffer_, fmt);
+          append(buffer_, sink);
           buffer_ += '\n';
         }
-        os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
+        sink.os->write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
       }
 
       /**
@@ -184,13 +172,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     {
-              using T = std::remove_cvref_t<decltype(sink)>;
-              this->printFull<T::layout>(*sink.os, sink.format);
-              if constexpr (std::is_same_v<T, Sink<Json, Layout::WIDE>>)
-              {
-                sink.format.after_first = true;
-              } },
+                     { this->printFull(sink); },
                      sink);
         }
         ++sample_;
@@ -199,12 +181,12 @@ namespace GridKit
       /**
        * @brief Organize footer output for this and all submonitors
        */
-      template <typename FormatT>
-      void printFullFooter(std::ostream& os, FormatT fmt) const
+      template <typename SinkT>
+      void printFullFooter(const SinkT& sink) const
       {
         buffer_.clear();
-        appendFooter(buffer_, fmt);
-        os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
+        appendFooter(buffer_, sink);
+        sink.os->write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
       }
 
       /**
@@ -215,204 +197,204 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { this->printFullFooter(*sink.os, sink.format); },
+                     { this->printFullFooter(sink); },
                      sink);
         }
       }
 
     protected:
-      void appendHeader(std::string& out, Csv csv) const
+      /**
+       * @brief Append column names (CSV) or the opening bracket (JSON)
+       */
+      template <typename SinkT>
+      void appendHeader(std::string& out, const SinkT& sink) const
       {
-        out += "t";
-        for (auto&& entry : entries_)
+        if constexpr (SinkT::format == Format::CSV && SinkT::layout == Layout::WIDE)
         {
-          out += csv.delim;
-          out += entry.device_class;
-          out += '_';
-          out += entry.id;
-          out += '_';
-          out += entry.variable;
-        }
-      }
-
-      void appendHeader(std::string& out, Json) const
-      {
-        out += "[\n";
-      }
-
-      void appendHeader(std::string&, Yaml) const
-      {
-      }
-
-      void append(std::string& out, Csv csv) const
-      {
-        VariableMonitorDetail::formatReal(out, *time_);
-        for (auto&& entry : entries_)
-        {
-          out += csv.delim;
-          VariableMonitorDetail::formatReal(out, entry.value());
-        }
-      }
-
-      void append(std::string& out, Json json) const
-      {
-        if (json.after_first)
-        {
-          out += "  ,\n";
-        }
-        out += "  {\n    \"t\": ";
-        VariableMonitorDetail::formatReal(out, *time_);
-
-        const Entry* previous = nullptr;
-        for (auto&& entry : entries_)
-        {
-          if (previous && previous->device_class == entry.device_class && previous->id == entry.id)
+          out += "t";
+          for (auto&& entry : entries_)
           {
-            out += ",\n      \"";
+            out += sink.delim;
+            out += entry.device_class;
+            out += '_';
+            out += entry.id;
+            out += '_';
+            out += entry.variable;
           }
-          else
+        }
+        else if constexpr (SinkT::format == Format::CSV)
+        {
+          for (auto* column : {"sample", "t", "class", "id", "variable"})
           {
-            if (previous)
+            out += column;
+            out += sink.delim;
+          }
+          out += "value";
+        }
+        else if constexpr (SinkT::format == Format::JSON)
+        {
+          out += "[\n";
+        }
+      }
+
+      /**
+       * @brief Append one wide layout row for the current sample
+       */
+      template <typename SinkT>
+      void append(std::string& out, const SinkT& sink) const
+      {
+        if constexpr (SinkT::format == Format::CSV)
+        {
+          VariableMonitorDetail::formatReal(out, *time_);
+          for (auto&& entry : entries_)
+          {
+            out += sink.delim;
+            VariableMonitorDetail::formatReal(out, entry.value());
+          }
+        }
+        else if constexpr (SinkT::format == Format::JSON)
+        {
+          if (sample_ > 0)
+          {
+            out += "  ,\n";
+          }
+          out += "  {\n    \"t\": ";
+          VariableMonitorDetail::formatReal(out, *time_);
+
+          const Entry* previous = nullptr;
+          for (auto&& entry : entries_)
+          {
+            if (previous && previous->device_class == entry.device_class && previous->id == entry.id)
             {
-              out += "\n    }";
+              out += ",\n      \"";
             }
-            out += ",\n    \"";
-            out += entry.device_class;
-            out += '_';
-            out += entry.id;
-            out += "\": {\n      \"";
+            else
+            {
+              if (previous)
+              {
+                out += "\n    }";
+              }
+              out += ",\n    \"";
+              out += entry.device_class;
+              out += '_';
+              out += entry.id;
+              out += "\": {\n      \"";
+            }
+            out += entry.variable;
+            out += "\": ";
+            VariableMonitorDetail::formatReal(out, entry.value());
+
+            previous = &entry;
           }
-          out += entry.variable;
-          out += "\": ";
-          VariableMonitorDetail::formatReal(out, entry.value());
-
-          previous = &entry;
-        }
-        if (previous)
-        {
-          out += "\n    }";
-        }
-        out += "\n  }";
-      }
-
-      void append(std::string& out, Yaml) const
-      {
-        out += "  - t: ";
-        VariableMonitorDetail::formatReal(out, *time_);
-        out += '\n';
-
-        const Entry* previous = nullptr;
-        for (auto&& entry : entries_)
-        {
-          if (!previous || previous->device_class != entry.device_class || previous->id != entry.id)
+          if (previous)
           {
-            out += "    ";
-            out += entry.device_class;
-            out += '_';
-            out += entry.id;
-            out += ":\n";
+            out += "\n    }";
           }
-          out += "      ";
-          out += entry.variable;
-          out += ": ";
-          VariableMonitorDetail::formatReal(out, entry.value());
+          out += "\n  }";
+        }
+        else
+        {
+          out += "  - t: ";
+          VariableMonitorDetail::formatReal(out, *time_);
           out += '\n';
 
-          previous = &entry;
+          const Entry* previous = nullptr;
+          for (auto&& entry : entries_)
+          {
+            if (!previous || previous->device_class != entry.device_class || previous->id != entry.id)
+            {
+              out += "    ";
+              out += entry.device_class;
+              out += '_';
+              out += entry.id;
+              out += ":\n";
+            }
+            out += "      ";
+            out += entry.variable;
+            out += ": ";
+            VariableMonitorDetail::formatReal(out, entry.value());
+            out += '\n';
+
+            previous = &entry;
+          }
+        }
+      }
+
+      /**
+       * @brief Append one record of the long layout
+       */
+      template <typename SinkT>
+      void appendRecord(std::string& out, const SinkT& sink, const std::string& sample, const std::string& t, const Entry& entry) const
+      {
+        if constexpr (SinkT::format == Format::CSV)
+        {
+          out += sample;
+          out += sink.delim;
+          out += t;
+          out += sink.delim;
+          out += entry.device_class;
+          out += sink.delim;
+          out += entry.id;
+          out += sink.delim;
+          out += entry.variable;
+          out += sink.delim;
+          VariableMonitorDetail::formatReal(out, entry.value());
+          out += '\n';
+        }
+        else if constexpr (SinkT::format == Format::JSON)
+        {
+          // Comma before every record but the first
+          if (sample_ > 0 || &entry != &entries_.front())
+          {
+            out += ",\n";
+          }
+          out += "  {\"sample\": ";
+          out += sample;
+          out += ", \"t\": ";
+          out += t;
+          out += ", \"class\": \"";
+          out += entry.device_class;
+          out += "\", \"id\": \"";
+          out += entry.id;
+          out += "\", \"variable\": \"";
+          out += entry.variable;
+          out += "\", \"value\": ";
+          VariableMonitorDetail::formatReal(out, entry.value());
+          out += '}';
+        }
+        else
+        {
+          out += "- {sample: ";
+          out += sample;
+          out += ", t: ";
+          out += t;
+          out += ", class: ";
+          out += entry.device_class;
+          out += ", id: \"";
+          out += entry.id;
+          out += "\", variable: ";
+          out += entry.variable;
+          out += ", value: ";
+          VariableMonitorDetail::formatReal(out, entry.value());
+          out += "}\n";
+        }
+      }
+
+      /**
+       * @brief Append the closing bracket (JSON)
+       */
+      template <typename SinkT>
+      void appendFooter(std::string& out, const SinkT&) const
+      {
+        if constexpr (SinkT::format == Format::JSON)
+        {
+          out += "\n]\n";
         }
       }
 
       void appendEntries(std::vector<Entry>& entries) const override
       {
         entries.insert(entries.end(), entries_.begin(), entries_.end());
-      }
-
-      /**
-       * @brief Append the long layout column names
-       */
-      void appendRecordHeader(std::string& out, const Csv& csv) const
-      {
-        for (auto* column : {"sample", "t", "class", "id", "variable"})
-        {
-          out += column;
-          out += csv.delim;
-        }
-        out += "value";
-      }
-
-      ///@{
-      /**
-       * @brief Append one record of the long layout
-       */
-      void appendRecord(std::string& out, const Csv& csv, const std::string& sample, const std::string& t, const Entry& entry) const
-      {
-        out += sample;
-        out += csv.delim;
-        out += t;
-        out += csv.delim;
-        out += entry.device_class;
-        out += csv.delim;
-        out += entry.id;
-        out += csv.delim;
-        out += entry.variable;
-        out += csv.delim;
-        VariableMonitorDetail::formatReal(out, entry.value());
-        out += '\n';
-      }
-
-      void appendRecord(std::string& out, const Json& json, const std::string& sample, const std::string& t, const Entry& entry) const
-      {
-        if (json.after_first)
-        {
-          out += ",\n";
-        }
-        json.after_first = true;
-
-        out += "  {\"sample\": ";
-        out += sample;
-        out += ", \"t\": ";
-        out += t;
-        out += ", \"class\": \"";
-        out += entry.device_class;
-        out += "\", \"id\": \"";
-        out += entry.id;
-        out += "\", \"variable\": \"";
-        out += entry.variable;
-        out += "\", \"value\": ";
-        VariableMonitorDetail::formatReal(out, entry.value());
-        out += '}';
-      }
-
-      void appendRecord(std::string& out, const Yaml&, const std::string& sample, const std::string& t, const Entry& entry) const
-      {
-        out += "- {sample: ";
-        out += sample;
-        out += ", t: ";
-        out += t;
-        out += ", class: ";
-        out += entry.device_class;
-        out += ", id: \"";
-        out += entry.id;
-        out += "\", variable: ";
-        out += entry.variable;
-        out += ", value: ";
-        VariableMonitorDetail::formatReal(out, entry.value());
-        out += "}\n";
-      }
-
-      ///@}
-
-      void appendFooter(std::string&, Csv) const
-      {
-      }
-
-      void appendFooter(std::string& out, Json) const
-      {
-        out += "\n]\n";
-      }
-
-      void appendFooter(std::string&, Yaml) const
-      {
       }
 
     private:
@@ -422,11 +404,11 @@ namespace GridKit
       /**
        * @brief Define sink for a specific output format and layout
        */
-      template <typename format_type, Layout layout_type>
+      template <Format format_type, Layout layout_type>
       struct Sink
       {
-        using FormatT = format_type;
-
+        /// Output format
+        static constexpr Format format = format_type;
         /// Output layout
         static constexpr Layout layout = layout_type;
 
@@ -435,17 +417,17 @@ namespace GridKit
         /**
          * @brief Version for an output stream that already exists
          */
-        Sink(std::ostream& out, FormatT fmt)
-          : os(&out), format(fmt)
+        Sink(std::ostream& out, const std::string& delimiter)
+          : os(&out), delim(delimiter)
         {
         }
 
         /**
          * @brief Version for opening an output stream for the given file
          */
-        Sink(const std::string& fileName, FormatT fmt)
+        Sink(const std::string& fileName, const std::string& delimiter)
           : file_name(fileName),
-            format(fmt)
+            delim(delimiter)
         {
         }
 
@@ -484,55 +466,34 @@ namespace GridKit
         std::unique_ptr<std::ofstream> file_stream;
         /// Output stream for printing
         std::ostream*                  os{nullptr};
-        /// Output format object which may have useful members
-        FormatT                        format;
+        /// Delimiter for CSV output
+        std::string                    delim;
       };
 
       /// Variant type for all possible sink types
-      using SinkVariant = std::variant<Sink<Csv, Layout::WIDE>,
-                                       Sink<Json, Layout::WIDE>,
-                                       Sink<Yaml, Layout::WIDE>,
-                                       Sink<Csv, Layout::LONG>,
-                                       Sink<Json, Layout::LONG>,
-                                       Sink<Yaml, Layout::LONG>>;
+      using SinkVariant = std::variant<Sink<Format::CSV, Layout::WIDE>,
+                                       Sink<Format::JSON, Layout::WIDE>,
+                                       Sink<Format::YAML, Layout::WIDE>,
+                                       Sink<Format::CSV, Layout::LONG>,
+                                       Sink<Format::JSON, Layout::LONG>,
+                                       Sink<Format::YAML, Layout::LONG>>;
 
       /**
-       * @brief Factory function mapping format enum value to sink type
+       * @brief Construct the sink type whose format and layout match the spec
        */
-      template <typename T>
-      static SinkVariant make_sink(SinkSpec spec, T&& arg)
+      template <std::size_t index = 0, typename T>
+      static SinkVariant make_sink(const SinkSpec& spec, T&& arg)
       {
-        switch (spec.format)
+        using SinkT = std::variant_alternative_t<index, SinkVariant>;
+        if (spec.format == SinkT::format && spec.layout == SinkT::layout)
         {
-        case Format::CSV:
-          return make_sink(std::forward<T>(arg), Csv{spec.delim}, spec.layout);
-          break;
-        case Format::JSON:
-          return make_sink(std::forward<T>(arg), Json{}, spec.layout);
-          break;
-        case Format::YAML:
-          return make_sink(std::forward<T>(arg), Yaml{}, spec.layout);
-          break;
+          return SinkT(std::forward<T>(arg), spec.delim);
         }
-        throw std::runtime_error("Invalid monitor output format");
-      }
-
-      /**
-       * @brief Factory function mapping layout enum value to sink type
-       */
-      template <typename T, typename FormatT>
-      static SinkVariant make_sink(T&& arg, FormatT fmt, Layout layout)
-      {
-        switch (layout)
+        if constexpr (index + 1 < std::variant_size_v<SinkVariant>)
         {
-        case Layout::WIDE:
-          return Sink<FormatT, Layout::WIDE>(std::forward<T>(arg), fmt);
-          break;
-        case Layout::LONG:
-          return Sink<FormatT, Layout::LONG>(std::forward<T>(arg), fmt);
-          break;
+          return make_sink<index + 1>(spec, std::forward<T>(arg));
         }
-        throw std::runtime_error("Invalid monitor output layout");
+        throw std::invalid_argument("Invalid monitor output format or layout");
       }
 
       /**

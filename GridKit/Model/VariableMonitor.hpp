@@ -87,25 +87,6 @@ namespace GridKit
       friend class VariableMonitorController;
 
     public:
-      /// Type used for dispatch
-      struct Csv
-      {
-        /// Delimiter for CSV line output
-        std::string delim{","};
-      };
-
-      /// Type used for dispatch
-      struct Json
-      {
-        /// Implementation detail used to prevent a comma before the first block
-        mutable bool after_first{false};
-      };
-
-      /// Type used for dispatch
-      struct Yaml
-      {
-      };
-
       /// Short alias for local use
       using Format = VariableMonitorFormat;
       /// Short alias for local use
