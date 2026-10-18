@@ -6,7 +6,6 @@
 #pragma once
 
 #include <format>
-#include <map>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -43,7 +42,7 @@ namespace GridKit
 
       for (const auto& branch : data.branch)
       {
-        branches_.push_back(&addDevice<BranchT>(branch));
+        addDevice<Branch<ScalarT, IdxT>>(branch);
       }
 
       for (const auto& generator : data.generator)
@@ -71,8 +70,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Every problem with the data, including an island without a
-     * reference bus
+     * @brief Every problem with the data
      */
     template <typename scalar_type, typename index_type>
     Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
@@ -89,11 +87,6 @@ namespace GridKit
       {
         checks.check(number != INVALID_INDEX<IdxT>,
                      std::format("{}: invalid bus number", bus->id()));
-      }
-
-      for (const IdxT number : unreferencedIslands())
-      {
-        checks.fail(std::format("OptimalPowerFlow::SystemModel: the island of bus {} has no reference bus", number));
       }
 
       std::set<std::string> ids;
@@ -274,7 +267,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     template <typename ModelT, typename DataT>
-    ModelT& SystemModel<scalar_type, index_type>::addDevice(const DataT& data)
+    void SystemModel<scalar_type, index_type>::addDevice(const DataT& data)
     {
       using Ports = typename DataT::Ports;
       static_assert(ModelT::NUM_PORT_VARIABLES.size() == Utilities::enum_size<Ports>());
@@ -302,9 +295,7 @@ namespace GridKit
         }
       }
 
-      ModelT& added = *device;
       components_.push_back(std::move(device));
-      return added;
     }
 
     /**
@@ -370,62 +361,6 @@ namespace GridKit
       }
       component.bound_ = true;
       return 0;
-    }
-
-    /**
-     * @brief Lowest bus number of each island without a reference bus
-     *
-     * In-service branches connect the buses of their ports.
-     */
-    template <typename scalar_type, typename index_type>
-    std::vector<index_type> SystemModel<scalar_type, index_type>::unreferencedIslands() const
-    {
-      // Each bus points toward the root bus of its island
-      std::map<const ComponentT*, const ComponentT*> parent;
-      for (const auto& [number, bus] : buses_)
-      {
-        parent[bus] = bus;
-      }
-
-      const auto root = [&parent](const ComponentT* bus)
-      {
-        while (parent.at(bus) != bus)
-        {
-          bus = parent.at(bus);
-        }
-        return bus;
-      };
-
-      for (const auto* branch : branches_)
-      {
-        const auto& ports = branch->ports();
-        if (!branch->inService() || ports[0].component == nullptr || ports[1].component == nullptr)
-        {
-          continue;
-        }
-        parent[root(ports[1].component)] = root(ports[0].component);
-      }
-
-      std::set<const ComponentT*> referenced;
-      for (const auto& [number, bus] : buses_)
-      {
-        if (bus->reference())
-        {
-          referenced.insert(root(bus));
-        }
-      }
-
-      std::vector<IdxT>           unreferenced;
-      std::set<const ComponentT*> reported;
-      for (const auto& [number, bus] : buses_)
-      {
-        const auto* island = root(bus);
-        if (!referenced.contains(island) && reported.insert(island).second)
-        {
-          unreferenced.push_back(number);
-        }
-      }
-      return unreferenced;
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit

@@ -85,11 +85,6 @@ namespace GridKit
       [[gnu::always_inline]] void internalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
       [[gnu::always_inline]] void externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
 
-      bool inService() const
-      {
-        return in_service_;
-      }
-
     private:
       void initializeParameters(const ModelDataT& data);
       void setDerivedParameters();

@@ -21,9 +21,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class Bus;
 
-    template <typename scalar_type, typename index_type>
-    class Branch;
-
     /**
      * @brief AC optimal power flow in Cartesian coordinates
      *
@@ -46,7 +43,6 @@ namespace GridKit
       using IndexVectorT = LinearAlgebra::Vector<IdxT, IdxT>;
       using CsrMatrixT   = typename EvaluatorT::CsrMatrixT;
       using BusT         = Bus<ScalarT, IdxT>;
-      using BranchT      = Branch<ScalarT, IdxT>;
       using Block        = typename ComponentT::Block;
       using CooBufferT   = typename ComponentT::CooBuffer;
 
@@ -92,12 +88,11 @@ namespace GridKit
       void addBus(const BusData<RealT, IdxT>& data);
 
       template <typename ModelT, typename DataT>
-      ModelT& addDevice(const DataT& data);
+      void addDevice(const DataT& data);
 
-      int               compose();
-      int               bind(ComponentT& component, const Block& offset);
-      std::vector<IdxT> unreferencedIslands() const;
-      int               allocateDerivatives();
+      int compose();
+      int bind(ComponentT& component, const Block& offset);
+      int allocateDerivatives();
 
       std::unique_ptr<CsrMatrixT> assemble(IdxT rows, IdxT cols, Assembly& assembly) const;
       int                         refill(CsrMatrixT& matrix, const Assembly& assembly) const;
@@ -107,9 +102,6 @@ namespace GridKit
 
       /// Buses by number
       std::map<IdxT, BusT*> buses_;
-
-      /// Electrical connectivity, independent of component dependencies
-      std::vector<BranchT*> branches_;
 
       Assembly jacobian_assembly_;
       Assembly hessian_assembly_;
