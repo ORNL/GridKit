@@ -14,50 +14,6 @@ namespace GridKit
 {
   namespace OptimalPowerFlow
   {
-    /**
-     * @brief Construct the CSR patterns from the component entries at the
-     * starting point
-     *
-     * Component entries are structural, so the patterns hold at every point
-     * and every multiplier, including zero.
-     */
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::allocateDerivatives()
-    {
-      RealVectorT lambda_c;
-      RealVectorT lambda_d;
-      if (lambda_c.resize(c_.getSize()) != 0 || lambda_d.resize(d_.getSize()) != 0)
-      {
-        return 1;
-      }
-      for (auto& component : components_)
-      {
-        int status = component->evaluateEqualityJacobian();
-        if (status != 0)
-        {
-          return status;
-        }
-
-        status = component->evaluateInequalityJacobian();
-        if (status != 0)
-        {
-          return status;
-        }
-
-        status = component->evaluateHessian(ONE<RealT>, lambda_c.getData(), lambda_d.getData());
-        if (status != 0)
-        {
-          return status;
-        }
-      }
-
-      equality_jacobian_   = assemble(c_.getSize(), x_.getSize(), &ComponentT::equalityEntries, equality_jacobian_map_);
-      inequality_jacobian_ = assemble(d_.getSize(), x_.getSize(), &ComponentT::inequalityEntries, inequality_jacobian_map_);
-      hessian_             = assemble(x_.getSize(), x_.getSize(), &ComponentT::hessianEntries, hessian_map_);
-
-      return 0;
-    }
-
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateGradient()
     {
@@ -87,7 +43,7 @@ namespace GridKit
         }
       }
 
-      return refill(*equality_jacobian_, &ComponentT::equalityEntries, equality_jacobian_map_);
+      return refill(*equality_jacobian_, equality_jacobian_assembly_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -102,7 +58,7 @@ namespace GridKit
         }
       }
 
-      return refill(*inequality_jacobian_, &ComponentT::inequalityEntries, inequality_jacobian_map_);
+      return refill(*inequality_jacobian_, inequality_jacobian_assembly_);
     }
 
     /**
@@ -121,7 +77,47 @@ namespace GridKit
         }
       }
 
-      return refill(*hessian_, &ComponentT::hessianEntries, hessian_map_);
+      return refill(*hessian_, hessian_assembly_);
+    }
+
+    /**
+     * @brief Construct the CSR patterns from the component entries
+     *
+     * Component entries are structural, so the patterns hold at every point
+     * and every multiplier, including zero.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::allocateDerivatives()
+    {
+      RealVectorT lambda_c;
+      RealVectorT lambda_d;
+      if (lambda_c.resize(c_.getSize()) != 0 || lambda_d.resize(d_.getSize()) != 0)
+      {
+        return 1;
+      }
+
+      equality_jacobian_assembly_.entries.clear();
+      inequality_jacobian_assembly_.entries.clear();
+      hessian_assembly_.entries.clear();
+      for (auto& component : components_)
+      {
+        if (component->evaluateEqualityJacobian() != 0
+            || component->evaluateInequalityJacobian() != 0
+            || component->evaluateHessian(ONE<RealT>, lambda_c.getData(), lambda_d.getData()) != 0)
+        {
+          return 1;
+        }
+
+        equality_jacobian_assembly_.entries.push_back(&component->equalityEntries());
+        inequality_jacobian_assembly_.entries.push_back(&component->inequalityEntries());
+        hessian_assembly_.entries.push_back(&component->hessianEntries());
+      }
+
+      equality_jacobian_   = assemble(c_.getSize(), x_.getSize(), equality_jacobian_assembly_);
+      inequality_jacobian_ = assemble(d_.getSize(), x_.getSize(), inequality_jacobian_assembly_);
+      hessian_             = assemble(x_.getSize(), x_.getSize(), hessian_assembly_);
+
+      return 0;
     }
 
     /**
@@ -129,23 +125,19 @@ namespace GridKit
      *
      * @param[in] rows - Number of rows
      * @param[in] cols - Number of columns
-     * @param[in] entries - Component entries to assemble
-     * @param[out] map_to_csr - CSR index of each component entry
+     * @param[in,out] assembly - Component entries, and the CSR entry of each on return
      */
     template <typename scalar_type, typename index_type>
     std::unique_ptr<typename SystemModel<scalar_type, index_type>::CsrMatrixT>
-    SystemModel<scalar_type, index_type>::assemble(IdxT          rows,
-                                                   IdxT          cols,
-                                                   EntriesT      entries,
-                                                   IndexVectorT& map_to_csr) const
+    SystemModel<scalar_type, index_type>::assemble(IdxT rows, IdxT cols, Assembly& assembly) const
     {
       IdxT nnz_dup = 0;
-      for (const auto& component : components_)
+      for (const CooBufferT* entries : assembly.entries)
       {
-        nnz_dup += ((*component).*entries)().nnz;
+        nnz_dup += entries->nnz;
       }
 
-      if (map_to_csr.resize(nnz_dup) != 0)
+      if (assembly.map_to_csr.resize(nnz_dup) != 0)
       {
         throw std::bad_alloc{};
       }
@@ -156,13 +148,12 @@ namespace GridKit
       RealT* vals_dup = new RealT[nnz_dup];
 
       IdxT counter = 0;
-      for (const auto& component : components_)
+      for (const CooBufferT* entries : assembly.entries)
       {
-        const CooBufferT& buffer = ((*component).*entries)();
-        std::copy_n(buffer.rows.getData(), buffer.nnz, rows_dup + counter);
-        std::copy_n(buffer.cols.getData(), buffer.nnz, cols_dup + counter);
-        std::copy_n(buffer.values.getData(), buffer.nnz, vals_dup + counter);
-        counter += buffer.nnz;
+        std::copy_n(entries->rows.getData(), entries->nnz, rows_dup + counter);
+        std::copy_n(entries->cols.getData(), entries->nnz, cols_dup + counter);
+        std::copy_n(entries->values.getData(), entries->nnz, vals_dup + counter);
+        counter += entries->nnz;
       }
 
       LinearAlgebra::CooMatrix<RealT, IdxT> coo(rows, cols, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
@@ -179,12 +170,12 @@ namespace GridKit
       const IdxT* map_to_sorted = coo.getMapToSorted();
       const IdxT* map_to_dedup  = coo.getMapToDeduplicated();
 
-      IdxT* map = map_to_csr.getData();
+      IdxT* map = assembly.map_to_csr.getData();
       for (IdxT i = 0; i < nnz_dup; ++i)
       {
         map[map_to_sorted[i]] = map_to_dedup[i];
       }
-      map_to_csr.setDataUpdated();
+      assembly.map_to_csr.setDataUpdated();
 
       return std::make_unique<CsrMatrixT>(rows, cols, nnz, &row_ptrs, &csr_cols, &csr_vals);
     }
@@ -195,35 +186,32 @@ namespace GridKit
      * @return 1 if the number of component entries changed since assembly
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::refill(CsrMatrixT&         matrix,
-                                                     EntriesT            entries,
-                                                     const IndexVectorT& map_to_csr) const
+    int SystemModel<scalar_type, index_type>::refill(CsrMatrixT& matrix, const Assembly& assembly) const
     {
       IdxT nnz_dup = 0;
-      for (const auto& component : components_)
+      for (const CooBufferT* entries : assembly.entries)
       {
-        nnz_dup += ((*component).*entries)().nnz;
+        nnz_dup += entries->nnz;
       }
 
-      if (nnz_dup != map_to_csr.getSize())
+      if (nnz_dup != assembly.map_to_csr.getSize())
       {
         Log::error() << "OptimalPowerFlow::SystemModel: " << nnz_dup << " derivative entries, but "
-                     << map_to_csr.getSize() << " at assembly\n";
+                     << assembly.map_to_csr.getSize() << " at assembly\n";
         return 1;
       }
 
-      const IdxT* map    = map_to_csr.getData();
+      const IdxT* map    = assembly.map_to_csr.getData();
       RealT*      values = matrix.getValues();
       std::fill_n(values, matrix.getNnz(), ZERO<RealT>);
 
       IdxT counter = 0;
-      for (const auto& component : components_)
+      for (const CooBufferT* entries : assembly.entries)
       {
-        const CooBufferT& buffer           = ((*component).*entries)();
-        const RealT*      component_values = buffer.values.getData();
-        for (IdxT k = 0; k < buffer.nnz; ++k)
+        const RealT* entry_values = entries->values.getData();
+        for (IdxT k = 0; k < entries->nnz; ++k)
         {
-          values[map[counter++]] += component_values[k];
+          values[map[counter++]] += entry_values[k];
         }
       }
 

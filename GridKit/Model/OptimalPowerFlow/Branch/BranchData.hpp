@@ -16,15 +16,16 @@ namespace GridKit
     /// Parameters for a branch
     enum class BranchParameters : size_t
     {
-      R,     ///< \f$R\f$ Series resistance [p.u.]
-      X,     ///< \f$X\f$ Series reactance [p.u.]
-      G,     ///< \f$G\f$ Total line shunt conductance, split between the ports [p.u.]
-      B,     ///< \f$B\f$ Total line shunt susceptance, split between the ports [p.u.]
-      Gmag,  ///< \f$G_\mathrm{mag}\f$ Magnetizing shunt conductance at bus 1 [p.u.]
-      Bmag,  ///< \f$B_\mathrm{mag}\f$ Magnetizing shunt susceptance at bus 1 [p.u.]
-      tap,   ///< \f$\tau\f$ Off-nominal tap magnitude on the bus-1 side [p.u.]
-      phase, ///< \f$\theta\f$ Phase-shift angle [rad]
-      Smax,  ///< \f$S^{\max}\f$ Apparent power limit at each port [p.u.]
+      R,          ///< \f$R\f$ Series resistance [p.u.]
+      X,          ///< \f$X\f$ Series reactance [p.u.]
+      G,          ///< \f$G\f$ Total line shunt conductance, split between the ports [p.u.]
+      B,          ///< \f$B\f$ Total line shunt susceptance, split between the ports [p.u.]
+      Gmag,       ///< \f$G_\mathrm{mag}\f$ Magnetizing shunt conductance at bus 1 [p.u.]
+      Bmag,       ///< \f$B_\mathrm{mag}\f$ Magnetizing shunt susceptance at bus 1 [p.u.]
+      tap,        ///< \f$\tau\f$ Off-nominal tap magnitude on the bus-1 side [p.u.]
+      phase,      ///< \f$\theta\f$ Phase-shift angle [rad]
+      Smax,       ///< \f$S^{\max}\f$ Apparent power limit at each port [p.u.]
+      in_service, ///< \f$u\f$ Service status
     };
 
     /// Ports of a branch

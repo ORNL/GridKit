@@ -24,6 +24,12 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    int Generator<scalar_type, index_type>::evaluateInequalityJacobian()
+    {
+      return ComponentT::evaluateInequalityJacobian(*this);
+    }
+
+    template <typename scalar_type, typename index_type>
     int Generator<scalar_type, index_type>::evaluateHessian(RealT sigma, const RealT* lambda_c, const RealT* lambda_d)
     {
       return ComponentT::evaluateHessian(*this, sigma, lambda_c, lambda_d);

@@ -21,12 +21,15 @@ namespace GridKit
       using SystemT = OPF::SystemModel<RealT, IdxT>;
 
     public:
+      // Ipopt stops with every constraint within its tolerance. The balance rows reach 4e-13.
+      static constexpr RealT kTol = static_cast<RealT>(1.0e-10);
+
       TestOutcome reference()
       {
         TestStatus success = true;
 
         SystemT system(SystemTestData::data());
-        success *= system.allocate() == 0;
+        success *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -39,8 +42,8 @@ namespace GridKit
 
         const RealT* x = system.x().getData();
 
-        success *= isEqual(x[1], ZERO<RealT>, BALANCE_TOL);
-        success *= !isEqual(x[3], ZERO<RealT>, BALANCE_TOL) && !isEqual(x[5], ZERO<RealT>, BALANCE_TOL);
+        success *= isEqual(x[1], ZERO<RealT>, kTol);
+        success *= !isEqual(x[3], ZERO<RealT>, kTol) && !isEqual(x[5], ZERO<RealT>, kTol);
 
         return success.report(__func__);
       }
@@ -50,7 +53,7 @@ namespace GridKit
         TestStatus success = true;
 
         SystemT system(SystemTestData::data());
-        success *= system.allocate() == 0;
+        success *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -71,9 +74,9 @@ namespace GridKit
         const RealT* d = system.d().getData();
         for (const IdxT i : SystemTestData::BALANCE_ROWS)
         {
-          success *= isEqual(c[i], ZERO<RealT>, BALANCE_TOL);
+          success *= isEqual(c[i], ZERO<RealT>, kTol);
         }
-        success *= isEqual(d[SystemTestData::FLOW_ROWS[0]], SystemTestData::SMAX * SystemTestData::SMAX, BALANCE_TOL);
+        success *= isEqual(d[SystemTestData::FLOW_ROWS[0]], SystemTestData::SMAX * SystemTestData::SMAX, kTol);
 
         const RealT* x = system.x().getData();
 
@@ -84,14 +87,13 @@ namespace GridKit
       }
 
     private:
-      static constexpr RealT BALANCE_TOL = 1.0e4 * std::numeric_limits<RealT>::epsilon();
-
       static bool optimize(SystemT& system)
       {
         Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
         app->Options()->SetIntegerValue("print_level", 0);
         app->Options()->SetNumericValue("bound_relax_factor", 0.0);
-        app->Options()->SetNumericValue("tol", 1.0e-10);
+        app->Options()->SetNumericValue("tol", kTol);
+        app->Options()->SetNumericValue("constr_viol_tol", kTol);
         if (app->Initialize() != Ipopt::Solve_Succeeded)
         {
           return false;

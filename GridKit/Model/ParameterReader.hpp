@@ -16,12 +16,23 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include <GridKit/Constants.hpp>
-#include <GridKit/Model/PhasorDynamics/ModelData.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
   namespace Model
   {
+    /// Model data container with a map from each parameter to its value
+    template <typename T>
+    concept ParameterData =
+        requires(const T& data) {
+          typename T::RealT;
+          typename T::IdxT;
+          typename T::Parameters;
+          data.parameters;
+        }
+        && Utilities::SizedEnum<typename T::Parameters>;
+
     /**
      * @brief Reads typed parameters out of a model data container.
      *
@@ -31,10 +42,9 @@ namespace GridKit
      * model and parameter. Real parameters accept integer values and must
      * be finite.
      *
-     * @tparam ModelDataT A model data container satisfying
-     *         PhasorDynamics::ModelData.
+     * @tparam ModelDataT A model data container satisfying ParameterData.
      */
-    template <PhasorDynamics::ModelData ModelDataT>
+    template <ParameterData ModelDataT>
     class ParameterReader
     {
     public:

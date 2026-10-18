@@ -5,6 +5,7 @@
 
 #include "SystemModelData.hpp"
 
+#include <format>
 #include <fstream>
 #include <stdexcept>
 
@@ -16,7 +17,14 @@ namespace GridKit
   {
     SystemModelData<double, size_t> parseSystemModelData(std::istream& stream)
     {
-      return json::parse(stream).get<SystemModelData<double, size_t>>();
+      try
+      {
+        return json::parse(stream).get<SystemModelData<double, size_t>>();
+      }
+      catch (const json::exception& error)
+      {
+        throw std::invalid_argument(std::format("OptimalPowerFlow: {}", error.what()));
+      }
     }
 
     SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& file)

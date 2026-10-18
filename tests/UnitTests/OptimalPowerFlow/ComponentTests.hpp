@@ -44,6 +44,10 @@ namespace GridKit
       using BranchT       = OPF::Branch<RealT, IdxT>;
 
     public:
+      // Branch Hessian rows reach 5.4 eps, and 8.2 eps on x86-64-v4 with ASan.
+      static constexpr RealT kTol =
+          static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
+
       /// Power into each bus at V1 = 1 and V2 = j, from the admittances by hand
       TestOutcome branchPower()
       {
@@ -51,7 +55,7 @@ namespace GridKit
 
         auto branch_owner  = std::make_unique<BranchT>(branchData());
         auto system        = branchSystem(std::move(branch_owner));
-        success           *= system.allocate() == 0;
+        success           *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -68,12 +72,12 @@ namespace GridKit
         const RealT* d = system.d().getData();
 
         // S1 = -3.9 - j3.45 and S2 = -7.6 - j7.3
-        success *= isEqual(c[0], -3.9, TOL);
-        success *= isEqual(c[1], -3.45, TOL);
-        success *= isEqual(c[2], -7.6, TOL);
-        success *= isEqual(c[3], -7.3, TOL);
-        success *= isEqual(d[0], 27.1125, TOL);
-        success *= isEqual(d[1], 111.05, TOL);
+        success *= isEqual(c[0], -3.9, kTol);
+        success *= isEqual(c[1], -3.45, kTol);
+        success *= isEqual(c[2], -7.6, kTol);
+        success *= isEqual(c[3], -7.3, kTol);
+        success *= isEqual(d[0], 3.9 * 3.9 + 3.45 * 3.45, kTol);
+        success *= isEqual(d[1], 7.6 * 7.6 + 7.3 * 7.3, kTol);
 
         return success.report(__func__);
       }
@@ -86,7 +90,7 @@ namespace GridKit
         auto  branch_owner  = std::make_unique<BranchT>(branchData());
         auto& branch        = *branch_owner;
         auto  system        = branchSystem(std::move(branch_owner));
-        success            *= system.allocate() == 0;
+        success            *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -100,7 +104,7 @@ namespace GridKit
         }
 
         auto tracked  = branchSystem(std::make_unique<OPF::Branch<VariableT, IdxT>>(branchData()));
-        success      *= tracked.allocate() == 0;
+        success      *= tracked.allocate() == 0 && tracked.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -117,14 +121,14 @@ namespace GridKit
         const VariableT* d = tracked.d().getData();
 
         const auto enzyme_c = rowsOf(sum(branch.equalityEntries()));
-        for (IdxT i = 0; i < BranchT::NUM_INTERNAL_EQUALITIES + OPF::total(BranchT::NUM_PORT_EQUALITIES); ++i)
+        for (IdxT i = 0; i < Utilities::enum_size<OPF::BranchExternalEqualities>(); ++i)
         {
-          success *= isEqual(enzyme_c.at(i), c[i].getDependencies(), TOL);
+          success *= isEqual(enzyme_c.at(i), c[i].getDependencies(), kTol);
         }
         const auto enzyme_d = rowsOf(sum(branch.inequalityEntries()));
-        for (IdxT i = 0; i < BranchT::NUM_INTERNAL_INEQUALITIES; ++i)
+        for (IdxT i = 0; i < Utilities::enum_size<OPF::BranchInequalities>(); ++i)
         {
-          success *= isEqual(enzyme_d.at(i), d[i].getDependencies(), TOL);
+          success *= isEqual(enzyme_d.at(i), d[i].getDependencies(), kTol);
         }
         success *= branch.equalityEntries().nnz == BRANCH_EQUALITY_JACOBIAN_NNZ;
         success *= branch.inequalityEntries().nnz == BRANCH_INEQUALITY_JACOBIAN_NNZ;
@@ -140,7 +144,7 @@ namespace GridKit
         auto  branch_owner  = std::make_unique<BranchT>(branchData());
         auto& branch        = *branch_owner;
         auto  system        = branchSystem(std::move(branch_owner));
-        success            *= system.allocate() == 0;
+        success            *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -159,7 +163,7 @@ namespace GridKit
 
         // Inequalities: |S|^2 = P^2 + Q^2 by the chain rule over tracked gradients
         auto tracked  = branchSystem(std::make_unique<OPF::Branch<VariableT, IdxT>>(branchData()));
-        success      *= tracked.allocate() == 0;
+        success      *= tracked.allocate() == 0 && tracked.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -185,7 +189,7 @@ namespace GridKit
         addPowerHessian(expected, 0, BUS1_ADMITTANCE, weight1 * c[0].getValue(), weight1 * c[1].getValue());
         addPowerHessian(expected, 1, BUS2_ADMITTANCE, weight2 * c[2].getValue(), weight2 * c[3].getValue());
 
-        success *= matches(sum(branch.hessianEntries()), expected, TOL);
+        success *= matches(sum(branch.hessianEntries()), expected, kTol);
         success *= branch.hessianEntries().nnz == BRANCH_HESSIAN_NNZ;
 
         return success.report(__func__);
@@ -200,7 +204,7 @@ namespace GridKit
         auto  active_owner   = std::make_unique<BranchT>(branchData());
         auto& active_branch  = *active_owner;
         auto  active         = branchSystem(std::move(active_owner));
-        success             *= active.allocate() == 0;
+        success             *= active.allocate() == 0 && active.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -213,13 +217,13 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        auto data       = branchData();
-        data.in_service = false;
+        auto data                                          = branchData();
+        data.parameters[OPF::BranchParameters::in_service] = false;
 
         auto  branch_owner  = std::make_unique<BranchT>(data);
         auto& branch        = *branch_owner;
         auto  system        = branchSystem(std::move(branch_owner));
-        success            *= system.allocate() == 0;
+        success            *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -273,7 +277,7 @@ namespace GridKit
           return success.report(__func__);
         }
         auto system  = makeSystem<RealT>(std::move(generator_owner), std::move(bus_owner));
-        success     *= system.allocate() == 0;
+        success     *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -317,7 +321,7 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success *= matches(sum(generator.equalityEntries()), EntryMap{{{0, 0}, ONE<RealT>}, {{1, 1}, ONE<RealT>}}, TOL);
+        success *= matches(sum(generator.equalityEntries()), EntryMap{{{0, 0}, ONE<RealT>}, {{1, 1}, ONE<RealT>}}, kTol);
         success *= generator.inequalityEntries().nnz == 0;
 
         const std::vector<RealT> lambda_c(system.sizeEqualities(), ONE<RealT>);
@@ -327,7 +331,7 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success *= matches(sum(generator.hessianEntries()), EntryMap{{{0, 0}, TWO<RealT> * C2 * SIGMA}}, TOL);
+        success *= matches(sum(generator.hessianEntries()), EntryMap{{{0, 0}, TWO<RealT> * C2 * SIGMA}}, kTol);
 
         return success.report(__func__);
       }
@@ -337,8 +341,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto data       = generatorData();
-        data.in_service = false;
+        auto data                                             = generatorData();
+        data.parameters[OPF::GeneratorParameters::in_service] = false;
 
         auto  bus_owner        = std::make_unique<OPF::Bus<RealT, IdxT>>(busData(1));
         auto& bus              = *bus_owner;
@@ -350,7 +354,7 @@ namespace GridKit
           return success.report(__func__);
         }
         auto system  = makeSystem<RealT>(std::move(generator_owner), std::move(bus_owner));
-        success     *= system.allocate() == 0;
+        success     *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -396,7 +400,7 @@ namespace GridKit
         auto  bus_owner  = std::make_unique<OPF::Bus<RealT, IdxT>>(data);
         auto& bus        = *bus_owner;
         auto  system     = makeSystem<RealT>(std::move(bus_owner));
-        success         *= system.allocate() == 0;
+        success         *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -425,7 +429,7 @@ namespace GridKit
                                     {{0, 1}, -TWO<RealT> * SHUNT_G * vi},
                                     {{1, 0}, TWO<RealT> * SHUNT_B * vr},
                                     {{1, 1}, TWO<RealT> * SHUNT_B * vi}},
-                           TOL);
+                           kTol);
 
         const std::vector<RealT> lambda_d(system.sizeInequalities(), ZERO<RealT>);
         success *= bus.evaluateHessian(ONE<RealT>, SHUNT_LAMBDA.data(), lambda_d.data()) == 0;
@@ -435,7 +439,7 @@ namespace GridKit
         }
         const RealT hessian = TWO<RealT> * (-SHUNT_G * SHUNT_LAMBDA[0] + SHUNT_B * SHUNT_LAMBDA[1]);
 
-        success *= matches(sum(bus.hessianEntries()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}}, TOL);
+        success *= matches(sum(bus.hessianEntries()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}}, kTol);
 
         return success.report(__func__);
       }
@@ -453,7 +457,7 @@ namespace GridKit
         auto  bus_owner  = std::make_unique<OPF::Bus<RealT, IdxT>>(data);
         auto& bus        = *bus_owner;
         auto  system     = makeSystem<RealT>(std::move(bus_owner));
-        success         *= system.allocate() == 0;
+        success         *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -508,7 +512,7 @@ namespace GridKit
         {
           success *= isEqual(value, ZERO<RealT>);
         }
-        success *= matches(sum(bus.inequalityEntries()), EntryMap{{{0, 0}, TWO<RealT> * vr}, {{0, 1}, TWO<RealT> * vi}}, TOL);
+        success *= matches(sum(bus.inequalityEntries()), EntryMap{{{0, 0}, TWO<RealT> * vr}, {{0, 1}, TWO<RealT> * vi}}, kTol);
 
         const std::vector<RealT> lambda_c(system.sizeEqualities(), ZERO<RealT>);
         success *= bus.evaluateHessian(ONE<RealT>, lambda_c.data(), BUS_LAMBDA_D.data()) == 0;
@@ -518,12 +522,12 @@ namespace GridKit
         }
         const RealT hessian = TWO<RealT> * BUS_LAMBDA_D[0];
 
-        success *= matches(sum(bus.hessianEntries()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}}, TOL);
+        success *= matches(sum(bus.hessianEntries()), EntryMap{{{0, 0}, hessian}, {{1, 1}, hessian}}, kTol);
 
-        data.reference         = true;
-        auto reference_owner   = std::make_unique<OPF::Bus<RealT, IdxT>>(data);
-        auto reference_system  = makeSystem<RealT>(std::move(reference_owner));
-        success               *= reference_system.allocate() == 0;
+        data.parameters[OPF::BusParameters::reference]  = true;
+        auto reference_owner                            = std::make_unique<OPF::Bus<RealT, IdxT>>(data);
+        auto reference_system                           = makeSystem<RealT>(std::move(reference_owner));
+        success                                        *= reference_system.allocate() == 0 && reference_system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -545,21 +549,22 @@ namespace GridKit
         data.parameters[OPF::LoadParameters::P] = LOAD_P;
         data.parameters[OPF::LoadParameters::Q] = LOAD_Q;
 
-        auto  bus_owner             = std::make_unique<OPF::Bus<RealT, IdxT>>(busData(2));
-        auto& bus                   = *bus_owner;
-        auto  load_owner            = std::make_unique<OPF::Load<RealT, IdxT>>(data);
-        auto& load                  = *load_owner;
-        data.in_service             = false;
-        auto  out_of_service_owner  = std::make_unique<OPF::Load<RealT, IdxT>>(data);
-        auto& out_of_service        = *out_of_service_owner;
-        success                    *= load.connect(0, bus) == 0;
-        success                    *= out_of_service.connect(0, bus) == 0;
+        auto  bus_owner                                   = std::make_unique<OPF::Bus<RealT, IdxT>>(busData(2));
+        auto& bus                                         = *bus_owner;
+        auto  load_owner                                  = std::make_unique<OPF::Load<RealT, IdxT>>(data);
+        auto& load                                        = *load_owner;
+        data.id                                           = "load_2_out_of_service";
+        data.parameters[OPF::LoadParameters::in_service]  = false;
+        auto  out_of_service_owner                        = std::make_unique<OPF::Load<RealT, IdxT>>(data);
+        auto& out_of_service                              = *out_of_service_owner;
+        success                                          *= load.connect(0, bus) == 0;
+        success                                          *= out_of_service.connect(0, bus) == 0;
         if (!success)
         {
           return success.report(__func__);
         }
         auto system  = makeSystem<RealT>(std::move(load_owner), std::move(out_of_service_owner), std::move(bus_owner));
-        success     *= system.allocate() == 0;
+        success     *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -607,7 +612,7 @@ namespace GridKit
           for (const ZipParts& zip : ZIP_PARTS)
           {
             auto system  = loadSystem<RealT>(loadData(in_service, zip));
-            success     *= system.allocate() == 0;
+            success     *= system.allocate() == 0 && system.initialize() == 0;
             if (!success)
             {
               return success.report(__func__);
@@ -622,10 +627,10 @@ namespace GridKit
               }
               const RealT v2 = voltage[0] * voltage[0] + voltage[1] * voltage[1];
               const RealT v  = std::sqrt(v2);
-              const RealT u  = in_service ? ONE<RealT> : ZERO<RealT>;
+              const RealT u  = status(in_service);
 
-              success *= isEqual(system.c().getData()[0], -u * (LOAD_P + zip.Pi * v + zip.Pz * v2), TOL);
-              success *= isEqual(system.c().getData()[1], -u * (LOAD_Q + zip.Qi * v + zip.Qz * v2), TOL);
+              success *= isEqual(system.c().getData()[0], -u * (LOAD_P + zip.Pi * v + zip.Pz * v2), kTol);
+              success *= isEqual(system.c().getData()[1], -u * (LOAD_Q + zip.Qi * v + zip.Qz * v2), kTol);
             }
           }
         }
@@ -643,8 +648,8 @@ namespace GridKit
             const auto data     = loadData(in_service, zip);
             auto       system   = loadSystem<RealT>(data);
             auto       tracked  = loadSystem<VariableT>(data);
-            success            *= system.allocate() == 0;
-            success            *= tracked.allocate() == 0;
+            success            *= system.allocate() == 0 && system.initialize() == 0;
+            success            *= tracked.allocate() == 0 && tracked.initialize() == 0;
             if (!success)
             {
               return success.report(__func__);
@@ -662,15 +667,15 @@ namespace GridKit
               const auto  actual   = MapFromCsr(system.getCsrEqualityJacobian());
               const auto  expected = MapFromCsr(tracked.getCsrEqualityJacobian());
               const RealT v        = std::hypot(voltage[0], voltage[1]);
-              const RealT u        = in_service ? ONE<RealT> : ZERO<RealT>;
+              const RealT u        = status(in_service);
 
               // Derivative of the demand over each voltage component, divided by that component
               const std::array<RealT, 2> slope{u * (zip.Pi / v + TWO<RealT> * zip.Pz),
                                                u * (zip.Qi / v + TWO<RealT> * zip.Qz)};
               for (IdxT row = 0; row < slope.size(); ++row)
               {
-                success *= isEqual(actual.at(row), expected.at(row), TOL);
-                success *= isEqual(actual.at(row), DependencyMap{{0, -slope[row] * voltage[0]}, {1, -slope[row] * voltage[1]}}, TOL);
+                success *= isEqual(actual.at(row), expected.at(row), kTol);
+                success *= isEqual(actual.at(row), DependencyMap{{0, -slope[row] * voltage[0]}, {1, -slope[row] * voltage[1]}}, kTol);
               }
             }
           }
@@ -687,7 +692,7 @@ namespace GridKit
           for (const ZipParts& zip : ZIP_PARTS)
           {
             auto system  = loadSystem<RealT>(loadData(in_service, zip));
-            success     *= system.allocate() == 0;
+            success     *= system.allocate() == 0 && system.initialize() == 0;
             if (!success)
             {
               return success.report(__func__);
@@ -710,8 +715,8 @@ namespace GridKit
               const DependencyMap row1{{0, -current * vr * vi / v3}, {1, current * vr * vr / v3 + TWO<RealT> * impedance}};
 
               const auto actual  = MapFromCsr(system.getCsrHessian());
-              success           *= isEqual(actual.at(0), row0, TOL);
-              success           *= isEqual(actual.at(1), row1, TOL);
+              success           *= isEqual(actual.at(0), row0, kTol);
+              success           *= isEqual(actual.at(1), row1, kTol);
             }
           }
         }
@@ -734,8 +739,8 @@ namespace GridKit
             const auto data     = loadData(in_service, zip);
             auto       system   = loadSystem<RealT>(data);
             auto       tracked  = loadSystem<VariableT>(data);
-            success            *= system.allocate() == 0;
-            success            *= tracked.allocate() == 0;
+            success            *= system.allocate() == 0 && system.initialize() == 0;
+            success            *= tracked.allocate() == 0 && tracked.initialize() == 0;
             if (!success)
             {
               return success.report(__func__);
@@ -753,25 +758,29 @@ namespace GridKit
             const auto expected = MapFromCsr(tracked.getCsrEqualityJacobian());
             for (IdxT row = 0; row < 2; ++row)
             {
-              success *= isEqual(jacobian.at(row), expected.at(row), TOL);
-              success *= isEqual(jacobian.at(row), DependencyMap{{0, ZERO<RealT>}, {1, ZERO<RealT>}}, TOL);
+              success *= isEqual(jacobian.at(row), expected.at(row), kTol);
+              success *= isEqual(jacobian.at(row), DependencyMap{{0, ZERO<RealT>}, {1, ZERO<RealT>}}, kTol);
             }
 
             const RealT diagonal  = TWO<RealT> * loadWeights(in_service, zip).second;
             const auto  hessian   = MapFromCsr(system.getCsrHessian());
-            success              *= isEqual(hessian.at(0), DependencyMap{{0, diagonal}}, TOL);
-            success              *= isEqual(hessian.at(1), DependencyMap{{0, ZERO<RealT>}, {1, diagonal}}, TOL);
+            success              *= isEqual(hessian.at(0), DependencyMap{{0, diagonal}}, kTol);
+            success              *= isEqual(hessian.at(1), DependencyMap{{0, ZERO<RealT>}, {1, diagonal}}, kTol);
           }
         }
         return success.report(__func__);
       }
 
-      /// Every demand must be finite
+      /// Demands are finite reals, integers count as reals, and the service status is a boolean
       TestOutcome loadConfiguration()
       {
         TestStatus                 success = true;
         OPF::LoadData<RealT, IdxT> data;
         success *= OPF::Load<RealT, IdxT>(data).verify().passed();
+
+        data.parameters  = {{OPF::LoadParameters::P, IdxT{1}}};
+        success         *= OPF::Load<RealT, IdxT>(data).verify().passed();
+
         for (const auto parameter : {OPF::LoadParameters::P,
                                      OPF::LoadParameters::Q,
                                      OPF::LoadParameters::Pi,
@@ -780,8 +789,17 @@ namespace GridKit
                                      OPF::LoadParameters::Qz})
         {
           data.parameters  = {{parameter, std::numeric_limits<RealT>::infinity()}};
-          success         *= !OPF::Load<RealT, IdxT>(data).verify().passed();
+          success         *= configurationRejected([&]()
+                                           { return OPF::Load<RealT, IdxT>(data).verify(); });
+          data.parameters  = {{parameter, true}};
+          success         *= configurationRejected([&]()
+                                           { return OPF::Load<RealT, IdxT>(data).verify(); });
         }
+
+        data.parameters  = {{OPF::LoadParameters::in_service, IdxT{1}}};
+        success         *= configurationRejected([&]()
+                                         { return OPF::Load<RealT, IdxT>(data).verify(); });
+
         return success.report(__func__);
       }
 
@@ -810,11 +828,11 @@ namespace GridKit
       {
         OPF::LoadData<RealT, IdxT> data;
         data.id         = "zip";
-        data.in_service = in_service;
         data.parameters = {{OPF::LoadParameters::P, LOAD_P},
                            {OPF::LoadParameters::Q, LOAD_Q},
                            {OPF::LoadParameters::Pz, zip.Pz},
-                           {OPF::LoadParameters::Qz, zip.Qz}};
+                           {OPF::LoadParameters::Qz, zip.Qz},
+                           {OPF::LoadParameters::in_service, in_service}};
         if (zip.current)
         {
           data.parameters[OPF::LoadParameters::Pi] = zip.Pi;
@@ -823,10 +841,20 @@ namespace GridKit
         return data;
       }
 
+      /// Service status as the factor the models apply
+      static RealT status(bool in_service)
+      {
+        if (in_service)
+        {
+          return ONE<RealT>;
+        }
+        return ZERO<RealT>;
+      }
+
       /// Multiplier-weighted constant-current and constant-impedance demands, signed as power into the bus
       static std::pair<RealT, RealT> loadWeights(bool in_service, const ZipParts& zip)
       {
-        const RealT u = in_service ? ONE<RealT> : ZERO<RealT>;
+        const RealT u = status(in_service);
         return {-u * (LOAD_LAMBDA_C[0] * zip.Pi + LOAD_LAMBDA_C[1] * zip.Qi),
                 -u * (LOAD_LAMBDA_C[0] * zip.Pz + LOAD_LAMBDA_C[1] * zip.Qz)};
       }
@@ -906,9 +934,6 @@ namespace GridKit
       static constexpr std::array<RealT, 2> BUS_X{1.02, -0.05};
       static constexpr std::array<RealT, 1> BUS_LAMBDA_D{1.3};
       static constexpr std::array<RealT, 2> LOAD_X{1.01, -0.05};
-
-      // Allow roundoff in the independent power and derivative references.
-      static constexpr RealT TOL = 10 * std::numeric_limits<RealT>::epsilon();
 
       static OPF::BusData<RealT, IdxT> busData(IdxT number)
       {

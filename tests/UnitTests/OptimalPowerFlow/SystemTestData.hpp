@@ -37,11 +37,11 @@ namespace GridKit
 
         for (IdxT number = 1; number <= 3; ++number)
         {
-          auto& bus                                = data.bus.emplace_back();
-          bus.number                               = number;
-          bus.reference                            = number == 1;
-          bus.parameters[OPF::BusParameters::Vmin] = VMIN;
-          bus.parameters[OPF::BusParameters::Vmax] = VMAX;
+          auto& bus                                     = data.bus.emplace_back();
+          bus.number                                    = number;
+          bus.parameters[OPF::BusParameters::reference] = number == 1;
+          bus.parameters[OPF::BusParameters::Vmin]      = VMIN;
+          bus.parameters[OPF::BusParameters::Vmax]      = VMAX;
         }
         data.bus[2].parameters[OPF::BusParameters::B] = 0.1;
 

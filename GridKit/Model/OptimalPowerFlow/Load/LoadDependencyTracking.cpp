@@ -13,7 +13,19 @@ namespace GridKit
   namespace OptimalPowerFlow
   {
     template <typename scalar_type, typename index_type>
+    int Load<scalar_type, index_type>::evaluateGradient()
+    {
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
     int Load<scalar_type, index_type>::evaluateEqualityJacobian()
+    {
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    int Load<scalar_type, index_type>::evaluateInequalityJacobian()
     {
       return 0;
     }

@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include <cmath>
+#include <type_traits>
 
-#include <GridKit/Model/OptimalPowerFlow/ComponentData.hpp>
 #include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Generator/Generator.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -17,16 +17,9 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     Generator<scalar_type, index_type>::Generator(const ModelDataT& data)
-      : ComponentT(std::type_identity<Generator>{}, data.id),
-        in_service_(data.in_service),
-        Pmin_(parameter(data, GeneratorParameters::Pmin, -UNBOUNDED<RealT>)),
-        Pmax_(parameter(data, GeneratorParameters::Pmax, UNBOUNDED<RealT>)),
-        Qmin_(parameter(data, GeneratorParameters::Qmin, -UNBOUNDED<RealT>)),
-        Qmax_(parameter(data, GeneratorParameters::Qmax, UNBOUNDED<RealT>)),
-        c0_(parameter(data, GeneratorParameters::c0, ZERO<RealT>)),
-        c1_(parameter(data, GeneratorParameters::c1, ZERO<RealT>)),
-        c2_(parameter(data, GeneratorParameters::c2, ZERO<RealT>))
+      : ComponentT(std::type_identity<Generator>{}, data.id)
     {
+      initializeParameters(data);
     }
 
     template <typename scalar_type, typename index_type>
@@ -35,46 +28,43 @@ namespace GridKit
       Model::ConfigurationChecks checks("Generator");
       checks.check(Pmin_ <= Pmax_, "Pmin must not exceed Pmax");
       checks.check(Qmin_ <= Qmax_, "Qmin must not exceed Qmax");
-      checks.check(std::isfinite(c0_), "c0 must be finite");
-      checks.check(std::isfinite(c1_), "c1 must be finite");
-      checks.check(std::isfinite(c2_), "c2 must be finite");
       return checks;
     }
 
     /**
-     * @brief The power limits bound the power, which is zero out of service
-     */
-    template <typename scalar_type, typename index_type>
-    int Generator<scalar_type, index_type>::allocate()
-    {
-      const bool in_service = in_service_ > ZERO<RealT>;
-      RealT*     lower      = x_lower_.getData();
-      RealT*     upper      = x_upper_.getData();
-      lower[0]              = in_service ? Pmin_ : ZERO<RealT>;
-      lower[1]              = in_service ? Qmin_ : ZERO<RealT>;
-      upper[0]              = in_service ? Pmax_ : ZERO<RealT>;
-      upper[1]              = in_service ? Qmax_ : ZERO<RealT>;
-      return 0;
-    }
-
-    /**
-     * @brief Start from zero power
+     * @brief The power limits bound the power, which is fixed at zero out of
+     * service
      */
     template <typename scalar_type, typename index_type>
     int Generator<scalar_type, index_type>::initialize()
     {
-      ScalarT* x = x_.getData();
-      x[0]       = ZERO<RealT>;
-      x[1]       = ZERO<RealT>;
+      const auto P = static_cast<size_t>(GeneratorInternalVariables::P);
+      const auto Q = static_cast<size_t>(GeneratorInternalVariables::Q);
+
+      RealT* x_lower = x_lower_.getData();
+      RealT* x_upper = x_upper_.getData();
+
+      x_lower[P] = ZERO<RealT>;
+      x_upper[P] = ZERO<RealT>;
+      x_lower[Q] = ZERO<RealT>;
+      x_upper[Q] = ZERO<RealT>;
+      if (in_service_)
+      {
+        x_lower[P] = Pmin_;
+        x_upper[P] = Pmax_;
+        x_lower[Q] = Qmin_;
+        x_upper[Q] = Qmax_;
+      }
       return 0;
     }
 
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] typename Generator<scalar_type, index_type>::ScalarT
-    Generator<scalar_type, index_type>::objective(const ScalarT* x) const
+    Generator<scalar_type, index_type>::objective(const ScalarT* x, [[maybe_unused]] const ScalarT* external) const
     {
-      const ScalarT p = x[0];
-      return in_service_ * (c0_ + c1_ * p + c2_ * p * p);
+      const auto P = static_cast<size_t>(GeneratorInternalVariables::P);
+
+      return u_ * (c0_ + c1_ * x[P] + c2_ * x[P] * x[P]);
     }
 
     /**
@@ -82,10 +72,45 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
-    Generator<scalar_type, index_type>::externalEqualities(const ScalarT* x, ScalarT* c) const
+    Generator<scalar_type, index_type>::externalEqualities(const ScalarT*                  x,
+                                                           [[maybe_unused]] const ScalarT* external,
+                                                           ScalarT*                        c) const
     {
-      c[0] = x[0];
-      c[1] = x[1];
+      const auto P  = static_cast<size_t>(GeneratorInternalVariables::P);
+      const auto Q  = static_cast<size_t>(GeneratorInternalVariables::Q);
+      const auto DP = static_cast<size_t>(GeneratorExternalEqualities::DP);
+      const auto DQ = static_cast<size_t>(GeneratorExternalEqualities::DQ);
+
+      c[DP] = x[P];
+      c[DQ] = x[Q];
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Generator<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    {
+      using Params = GeneratorParameters;
+
+      const Model::ParameterReader reader(data, "Generator");
+
+      Pmin_       = reader.readReal(Params::Pmin).value_or(Pmin_);
+      Pmax_       = reader.readReal(Params::Pmax).value_or(Pmax_);
+      Qmin_       = reader.readReal(Params::Qmin).value_or(Qmin_);
+      Qmax_       = reader.readReal(Params::Qmax).value_or(Qmax_);
+      c0_         = reader.readReal(Params::c0).value_or(c0_);
+      c1_         = reader.readReal(Params::c1).value_or(c1_);
+      c2_         = reader.readReal(Params::c2).value_or(c2_);
+      in_service_ = reader.readBool(Params::in_service).value_or(in_service_);
+      setDerivedParameters();
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Generator<scalar_type, index_type>::setDerivedParameters()
+    {
+      u_ = ZERO<RealT>;
+      if (in_service_)
+      {
+        u_ = ONE<RealT>;
+      }
     }
   } // namespace OptimalPowerFlow
 } // namespace GridKit

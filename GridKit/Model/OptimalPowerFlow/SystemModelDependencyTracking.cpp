@@ -51,20 +51,6 @@ namespace GridKit
     } // namespace
 
     /**
-     * @brief Derivatives are built from dependencies on each evaluation
-     */
-    template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::allocateDerivatives()
-    {
-      const int status = evaluateEqualityJacobian();
-      if (status != 0)
-      {
-        return status;
-      }
-      return evaluateInequalityJacobian();
-    }
-
-    /**
      * @brief Gradient from the objective dependencies
      */
     template <typename scalar_type, typename index_type>
@@ -128,6 +114,20 @@ namespace GridKit
     {
       Log::error() << "OptimalPowerFlow::SystemModel: no Hessian for DependencyTracking::Variable\n";
       return 1;
+    }
+
+    /**
+     * @brief Derivatives are built from dependencies on each evaluation
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::allocateDerivatives()
+    {
+      const int status = evaluateEqualityJacobian();
+      if (status != 0)
+      {
+        return status;
+      }
+      return evaluateInequalityJacobian();
     }
 
     // Available template instantiations

@@ -12,6 +12,12 @@ namespace GridKit
   namespace OptimalPowerFlow
   {
     template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::evaluateGradient()
+    {
+      return ComponentT::evaluateGradient(*this);
+    }
+
+    template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::evaluateEqualityJacobian()
     {
       return ComponentT::evaluateEqualityJacobian(*this);

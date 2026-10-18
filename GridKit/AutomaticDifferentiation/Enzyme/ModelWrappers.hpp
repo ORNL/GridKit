@@ -7,10 +7,10 @@
 #pragma once
 
 #include <cstddef>
-#include <numeric>
 #include <vector>
 
 #include <GridKit/Model/EvaluatorTraits.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -31,9 +31,9 @@ namespace GridKit
         BusResidual12, //< Special case for branches that are connected to two buses
         BusResidual21, //< Special case for branches that are connected to two buses
         BusResidual22, //< Special case for branches that are connected to two buses
-        Objective,     //< Optimization objective, `objective(x)`
+        Objective,     //< Optimization objective
         Equalities,    //< Optimization internal and external equality contributions
-        Inequalities   //< Optimization internal inequality constraints
+        Inequalities   //< Optimization inequality rows
       };
 
       /**
@@ -236,14 +236,16 @@ namespace GridKit
       /**
        * @brief Wrapper partial template specialization for an optimization objective
        *
+       * Local variables are the internal variables, then the external ones.
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::Objective>
       {
-        /// Number of local variables: internal, then those each port reads
-        static constexpr auto NUM_INPUTS =
-            ModelT::NUM_INTERNAL_VARIABLES
-            + std::accumulate(ModelT::NUM_PORT_VARIABLES.begin(), ModelT::NUM_PORT_VARIABLES.end(), std::size_t{0});
+        /// Number of internal variables
+        static constexpr std::size_t NUM_INTERNAL_INPUTS = Utilities::enum_size<typename ModelT::InternalVariablesT>();
+
+        /// Number of local variables
+        static constexpr std::size_t NUM_INPUTS = NUM_INTERNAL_INPUTS + Utilities::enum_size<typename ModelT::ExternalVariablesT>();
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -253,54 +255,61 @@ namespace GridKit
         template <typename ScalarT>
         [[gnu::always_inline]] inline static ScalarT eval(const ModelT* model, const ScalarT* x)
         {
-          return model->objective(x);
+          return model->objective(x, x + NUM_INTERNAL_INPUTS);
         }
       };
 
       /**
-       * @brief Wrapper partial template specialization for optimization equality constraints
+       * @brief Wrapper partial template specialization for optimization equality contributions
        *
+       * Local contributions are those to the internal rows, then those at the ports.
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::Equalities>
       {
-        /// Number of local equality contributions: internal, then those at each port
-        static constexpr auto NUM_OUTPUTS =
-            ModelT::NUM_INTERNAL_EQUALITIES
-            + std::accumulate(ModelT::NUM_PORT_EQUALITIES.begin(), ModelT::NUM_PORT_EQUALITIES.end(), std::size_t{0});
+        /// Number of internal variables
+        static constexpr std::size_t NUM_INTERNAL_INPUTS = Utilities::enum_size<typename ModelT::InternalVariablesT>();
+
+        /// Number of contributions to the internal rows
+        static constexpr std::size_t NUM_INTERNAL_OUTPUTS = Utilities::enum_size<typename ModelT::InternalEqualitiesT>();
+
+        /// Number of local equality contributions
+        static constexpr std::size_t NUM_OUTPUTS = NUM_INTERNAL_OUTPUTS + Utilities::enum_size<typename ModelT::ExternalEqualitiesT>();
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] x - Local variables
-         * @param[out] c - Local equality constraint functions
+         * @param[out] c - Local equality contributions
          */
         template <typename ScalarT>
         [[gnu::always_inline]] inline static void eval(const ModelT* model, const ScalarT* x, ScalarT* c)
         {
-          model->internalEqualities(x, c);
-          model->externalEqualities(x, c + ModelT::NUM_INTERNAL_EQUALITIES);
+          model->internalEqualities(x, x + NUM_INTERNAL_INPUTS, c);
+          model->externalEqualities(x, x + NUM_INTERNAL_INPUTS, c + NUM_INTERNAL_OUTPUTS);
         }
       };
 
       /**
-       * @brief Wrapper partial template specialization for optimization inequality constraints
-       *
+       * @brief Wrapper partial template specialization for optimization inequality rows
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::Inequalities>
       {
-        /// Number of inequality rows, all internal
-        static constexpr auto NUM_OUTPUTS = ModelT::NUM_INTERNAL_INEQUALITIES;
+        /// Number of internal variables
+        static constexpr std::size_t NUM_INTERNAL_INPUTS = Utilities::enum_size<typename ModelT::InternalVariablesT>();
+
+        /// Number of inequality rows
+        static constexpr std::size_t NUM_OUTPUTS = Utilities::enum_size<typename ModelT::InequalitiesT>();
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] x - Local variables
-         * @param[out] d - Local inequality constraint functions
+         * @param[out] d - Inequality rows
          */
         template <typename ScalarT>
         [[gnu::always_inline]] inline static void eval(const ModelT* model, const ScalarT* x, ScalarT* d)
         {
-          model->internalInequalities(x, d);
+          model->inequalities(x, x + NUM_INTERNAL_INPUTS, d);
         }
       };
     } // namespace Sparse

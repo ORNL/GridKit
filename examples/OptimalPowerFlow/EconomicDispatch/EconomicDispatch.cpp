@@ -37,7 +37,7 @@ int runApplication(int argc, const char* argv[])
   args.parseArgs(argc, argv);
 
   OPF::SystemModel<double, size_t> model(OPF::parseSystemModelData(args["case-file"]()));
-  if (model.allocate() != 0)
+  if (model.allocate() != 0 || model.initialize() != 0)
   {
     return 1;
   }

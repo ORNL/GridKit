@@ -26,7 +26,7 @@ namespace GridKit
        * of \f$L\f$. Only structural entries are stored, in global indices.
        *
        * @tparam ModelT - model type with internal and external local variables
-       * and equality constraints, and internal inequality constraints
+       * and equality constraints, and inequality constraints
        */
       template <typename ModelT>
       struct D2LDx2
