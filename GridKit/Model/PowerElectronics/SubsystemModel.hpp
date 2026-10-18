@@ -54,13 +54,7 @@ namespace GridKit
   class SubsystemModel : public PowerElectronicsModel<ScalarT, IdxT>
   {
   public:
-    struct ForcingData
-    {
-      std::vector<ScalarT> y;
-      std::vector<ScalarT> yp;
-    };
-
-    using TimeFunction = std::function<ForcingData(ScalarT)>;
+    using TimeFunction = std::function<void(ScalarT)>;
 
   protected:
     using SystemModel    = PowerElectronicsModel<ScalarT, IdxT>;
@@ -153,7 +147,10 @@ namespace GridKit
     {
       if (this->isAllocated())
       {
-        restoreGlobalConnection();
+        if (int err_code = restoreGlobalConnection())
+        {
+          return err_code;
+        }
       }
 
       if (int err_code = buildConnectionMap())
@@ -172,12 +169,7 @@ namespace GridKit
 
       // Contains internal and external connection indicies
       connection_nodes_ = std::make_unique<IdxT[]>(n_intern_ + n_extern_);
-      if (!this->isAllocated())
-      {
-        // Allocate internal subsystem vectors.
-        allocateVectors(static_cast<IdxT>(size_), true);
-        abs_tol_.setToZero(memory::HOST);
-      }
+      allocateVectors(static_cast<IdxT>(size_), true); // Allocate internal subsystem vectors.
 
       tag_.resize(size_);
 
@@ -392,14 +384,18 @@ namespace GridKit
     /**
      * @brief Update the subsystem external state and derivative data.
      *
-     * If a forcing function is provided, evaluate it at the current subsystem
-     * time and copy the returned coupling values into the external state vectors.
+     * If a forcing function is provided, invoke it at the current subsystem
+     * time to update the external coupling variables.
      *
-     * @post y_ext_data_ and yp_ext_data_ contain the external coupling values
-     *       returned by the forcing function, if one is set.
+     * @note The user can supply external coupling data in two ways:
+     *       - Through a forcing function that updates getExternalDataY()
+     *         and getExternalDataYP() before each evaluation. This is useful
+     *         for time-dependent or streaming external data.
+     *       - By directly updating these vectors when no forcing function
+     *         is provided, as in zero-order hold (ZOH) coupling.
      *
-     * @throws std::runtime_error If the forcing function returns vectors whose
-     *         sizes do not match the subsystem external-data vectors.
+     * @post If a forcing function is set, y_ext_data_ and yp_ext_data_
+     *       contain the external coupling values supplied by the function.
      *
      * @return 0 on success.
      */
@@ -408,17 +404,10 @@ namespace GridKit
 
       if (forcing_function_)
       {
-        const auto forcing = (*forcing_function_)(time_);
+        (*forcing_function_)(time_);
 
-        if (forcing.y.size() != y_ext_data_.getSize() || forcing.yp.size() != yp_ext_data_.getSize())
-        {
-          throw std::runtime_error(
-              "SubsystemModel::distributeExternalVectors: forcing function "
-              "returned vectors with incorrect sizes.");
-        }
-
-        std::copy(forcing.y.begin(), forcing.y.end(), y_ext_data_.getData());
-        std::copy(forcing.yp.begin(), forcing.yp.end(), yp_ext_data_.getData());
+        y_ext_data_.setDataUpdated();
+        yp_ext_data_.setDataUpdated();
       }
 
       return 0;
@@ -468,10 +457,14 @@ namespace GridKit
      */
     void addComponent(component_type* component)
     {
+      if (this->isAllocated())
+      {
+        throw std::logic_error("SubsystemModel::addComponent: cannot add a component to an allocated subsystem.");
+      }
+
       if (!component->isAllocated())
       {
-        throw std::logic_error(
-            "SubsystemModel::addComponent: cannot add an unallocated component.");
+        throw std::logic_error("SubsystemModel::addComponent: cannot add an unallocated component.");
       }
 
       SystemModel::addComponent(component);
@@ -488,6 +481,11 @@ namespace GridKit
      */
     void addNode(node_type* node)
     {
+      if (this->isAllocated())
+      {
+        throw std::logic_error("SubsystemModel::addNode: cannot add a node to an allocated subsystem.");
+      }
+
       if (!node->isAllocated())
       {
         throw std::logic_error(
@@ -740,9 +738,9 @@ namespace GridKit
     VectorT f_ext_data_;
 
     /**
-     * @brief Optional forcing function used to provide external subsystem data.
+     * @brief Optional time-dependent callback for updating external coupling data.
      *
-     * It is continuous function that can be sampled at different times
+     * The callback is invoked before residual and Jacobian evaluations.
      */
     std::optional<TimeFunction> forcing_function_;
 
