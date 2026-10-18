@@ -2,7 +2,7 @@
 
 ## v.03
 
-- Added long monitor output layout and an ACTIVSg2000 PostgreSQL example.
+- Added `output_layout` solver option for long monitor output and a PostgreSQL example.
 - Removed unused `VariableMonitorController::addVariable`.
 - Added `BusSignalVoltageOut` bus model with voltage signal outlets and current signal inlets.
 - Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.

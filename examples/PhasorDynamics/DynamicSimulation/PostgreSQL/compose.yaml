@@ -1,0 +1,19 @@
+services:
+  db:
+    image: docker.io/library/postgres:17
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    tmpfs: /var/lib/postgresql/data
+
+  psql:
+    image: docker.io/library/postgres:17
+    depends_on: [db]
+    volumes:
+      - .:/example:z
+    working_dir: /example
+    command:
+      - sh
+      - -c
+      - |
+        until pg_isready -q -h db; do sleep 1; done
+        psql -h db -U postgres -P pager=off -f ACTIVSg2000.sql
