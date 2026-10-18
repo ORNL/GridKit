@@ -34,8 +34,6 @@ namespace GridKit
       using Csv      = VariableMonitorBase::Csv;
       using Json     = VariableMonitorBase::Json;
       using Yaml     = VariableMonitorBase::Yaml;
-      using Wide     = VariableMonitorBase::Wide;
-      using Long     = VariableMonitorBase::Long;
       ///@}
 
       /// Default to empty monitor
@@ -122,33 +120,19 @@ namespace GridKit
       /**
        * @brief Organize header output for this and all submonitors
        */
-      template <typename FormatT>
-      void printFullHeader(std::ostream& os, const FormatT& fmt, Wide) const
+      template <Layout layout, typename FormatT>
+      void printFullHeader(std::ostream& os, const FormatT& fmt) const
       {
         buffer_.clear();
-        appendHeader(buffer_, fmt);
-        buffer_ += '\n';
-        os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
-      }
-
-      /**
-       * @brief Organize long layout header output; only CSV adds column names
-       */
-      template <typename FormatT>
-      void printFullHeader(std::ostream& os, const FormatT& fmt, Long) const
-      {
-        printFullHeader(os, fmt, Wide{});
-      }
-
-      void printFullHeader(std::ostream& os, const Csv& csv, Long) const
-      {
-        buffer_.clear();
-        for (auto* column : {"sample", "t", "class", "id", "variable"})
+        if constexpr (layout == Layout::LONG && std::is_same_v<FormatT, Csv>)
         {
-          buffer_ += column;
-          buffer_ += csv.delim;
+          appendRecordHeader(buffer_, fmt);
         }
-        buffer_ += "value\n";
+        else
+        {
+          appendHeader(buffer_, fmt);
+        }
+        buffer_ += '\n';
         os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
       }
 
@@ -160,7 +144,9 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { this->printFullHeader(*sink.os, sink.format, sink.layout); },
+                     {
+              using T = std::remove_cvref_t<decltype(sink)>;
+              this->printFullHeader<T::layout>(*sink.os, sink.format); },
                      sink);
         }
       }
@@ -168,28 +154,24 @@ namespace GridKit
       /**
        * @brief Organize variable output for this and all submonitors
        */
-      template <typename FormatT>
-      void printFull(std::ostream& os, const FormatT& fmt, Wide) const
+      template <Layout layout, typename FormatT>
+      void printFull(std::ostream& os, const FormatT& fmt) const
       {
         buffer_.clear();
-        append(buffer_, fmt);
-        buffer_ += '\n';
-        os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
-      }
-
-      /**
-       * @brief Organize long layout variable output, one record per variable
-       */
-      template <typename FormatT>
-      void printFull(std::ostream& os, const FormatT& fmt, Long) const
-      {
-        const auto  sample = std::to_string(sample_);
-        std::string t;
-        VariableMonitorDetail::formatReal(t, *time_);
-        buffer_.clear();
-        for (auto&& entry : entries_)
+        if constexpr (layout == Layout::LONG)
         {
-          appendRecord(buffer_, fmt, sample, t, entry);
+          const auto  sample = std::to_string(sample_);
+          std::string t;
+          VariableMonitorDetail::formatReal(t, *time_);
+          for (auto&& entry : entries_)
+          {
+            appendRecord(buffer_, fmt, sample, t, entry);
+          }
+        }
+        else
+        {
+          append(buffer_, fmt);
+          buffer_ += '\n';
         }
         os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
       }
@@ -203,9 +185,9 @@ namespace GridKit
         {
           std::visit([this](auto&& sink)
                      {
-              this->printFull(*sink.os, sink.format, sink.layout);
               using T = std::remove_cvref_t<decltype(sink)>;
-              if constexpr (std::is_same_v<T, Sink<Json, Wide>>)
+              this->printFull<T::layout>(*sink.os, sink.format);
+              if constexpr (std::is_same_v<T, Sink<Json, Layout::WIDE>>)
               {
                 sink.format.after_first = true;
               } },
@@ -218,20 +200,11 @@ namespace GridKit
        * @brief Organize footer output for this and all submonitors
        */
       template <typename FormatT>
-      void printFullFooter(std::ostream& os, const FormatT& fmt, Wide) const
+      void printFullFooter(std::ostream& os, FormatT fmt) const
       {
         buffer_.clear();
         appendFooter(buffer_, fmt);
         os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
-      }
-
-      /**
-       * @brief Organize long layout footer output, the same as wide
-       */
-      template <typename FormatT>
-      void printFullFooter(std::ostream& os, const FormatT& fmt, Long) const
-      {
-        printFullFooter(os, fmt, Wide{});
       }
 
       /**
@@ -242,7 +215,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { this->printFullFooter(*sink.os, sink.format, sink.layout); },
+                     { this->printFullFooter(*sink.os, sink.format); },
                      sink);
         }
       }
@@ -354,6 +327,19 @@ namespace GridKit
         entries.insert(entries.end(), entries_.begin(), entries_.end());
       }
 
+      /**
+       * @brief Append the long layout column names
+       */
+      void appendRecordHeader(std::string& out, const Csv& csv) const
+      {
+        for (auto* column : {"sample", "t", "class", "id", "variable"})
+        {
+          out += column;
+          out += csv.delim;
+        }
+        out += "value";
+      }
+
       ///@{
       /**
        * @brief Append one record of the long layout
@@ -436,29 +422,30 @@ namespace GridKit
       /**
        * @brief Define sink for a specific output format and layout
        */
-      template <typename format_type, typename layout_type>
+      template <typename format_type, Layout layout_type>
       struct Sink
       {
         using FormatT = format_type;
-        using LayoutT = layout_type;
+
+        /// Output layout
+        static constexpr Layout layout = layout_type;
 
         Sink() = delete;
 
         /**
          * @brief Version for an output stream that already exists
          */
-        Sink(std::ostream& out, FormatT fmt, LayoutT layout)
-          : os(&out), format(fmt), layout(layout)
+        Sink(std::ostream& out, FormatT fmt)
+          : os(&out), format(fmt)
         {
         }
 
         /**
          * @brief Version for opening an output stream for the given file
          */
-        Sink(const std::string& fileName, FormatT fmt, LayoutT layout)
+        Sink(const std::string& fileName, FormatT fmt)
           : file_name(fileName),
-            format(fmt),
-            layout(layout)
+            format(fmt)
         {
         }
 
@@ -499,15 +486,15 @@ namespace GridKit
         std::ostream*                  os{nullptr};
         /// Output format object which may have useful members
         FormatT                        format;
-        /// Output layout
-        LayoutT                        layout;
       };
 
-      template <typename ArgT, typename FormatT, typename LayoutT>
-      Sink(ArgT&&, FormatT, LayoutT) -> Sink<FormatT, LayoutT>;
-
       /// Variant type for all possible sink types
-      using SinkVariant = std::variant<Sink<Csv, Wide>, Sink<Json, Wide>, Sink<Yaml, Wide>, Sink<Csv, Long>, Sink<Json, Long>, Sink<Yaml, Long>>;
+      using SinkVariant = std::variant<Sink<Csv, Layout::WIDE>,
+                                       Sink<Json, Layout::WIDE>,
+                                       Sink<Yaml, Layout::WIDE>,
+                                       Sink<Csv, Layout::LONG>,
+                                       Sink<Json, Layout::LONG>,
+                                       Sink<Yaml, Layout::LONG>>;
 
       /**
        * @brief Factory function mapping format enum value to sink type
@@ -539,10 +526,10 @@ namespace GridKit
         switch (layout)
         {
         case Layout::WIDE:
-          return Sink(std::forward<T>(arg), fmt, Wide{});
+          return Sink<FormatT, Layout::WIDE>(std::forward<T>(arg), fmt);
           break;
         case Layout::LONG:
-          return Sink(std::forward<T>(arg), fmt, Long{});
+          return Sink<FormatT, Layout::LONG>(std::forward<T>(arg), fmt);
           break;
         }
         throw std::runtime_error("Invalid monitor output layout");

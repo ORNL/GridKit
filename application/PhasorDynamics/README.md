@@ -15,6 +15,7 @@
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
   `events`             | An array of event groups (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
+  `output_layout`      | Layout of `output_file`; one of { "wide", "long" } (default: "wide"). "long" writes one row per variable and sample. Event times are written twice, before and after the event, so use `sample` rather than `t` to identify a sample. Not supported with `reference_file`
   `reference_file`     | A string containing the name of the case (optional)
   `error_type`         | One of { "relative" (default), "absolute" }
   `error_tolerance`    | A floating-point value for highest allowable total error (default: 1.0e-4)

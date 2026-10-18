@@ -19,7 +19,6 @@ namespace GridKit
     using json          = nlohmann::json;
     using Log           = ::GridKit::Utilities::Logger;
     using MonitorFormat = ::GridKit::Model::VariableMonitorFormat;
-    using MonitorLayout = ::GridKit::Model::VariableMonitorLayout;
 
     template <typename RealT, typename IdxT>
     void parseSystemContents(const json& j, SystemModelData<RealT, IdxT>& sm);
@@ -69,14 +68,13 @@ namespace GridKit
           auto fmt_str   = raw_mon.at("format").get<std::string>();
           auto format    = enum_parse(MonitorFormat{}, fmt_str);
           auto delim     = raw_mon.value("delim", std::string(","));
-          auto layout    = enum_parse(MonitorLayout{}, raw_mon.value("layout", std::string("wide")));
-          if (format.has_value() && layout.has_value())
+          if (format.has_value())
           {
-            sm.monitor_sink.emplace_back(format.value(), file_name, delim, layout.value());
+            sm.monitor_sink.emplace_back(format.value(), file_name, delim);
           }
           else
           {
-            Log::error() << "\n\tInvalid monitor format or layout: " << raw_mon.dump()
+            Log::error() << "\n\tInvalid monitor format: \"" << fmt_str << "\"."
                          << "\n\tSee the \"monitors\" list in your JSON file."
                          << std::endl;
           }
