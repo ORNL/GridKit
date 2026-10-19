@@ -221,6 +221,12 @@ namespace AnalysisManager
       void setBackwardMaxOrder(int max_order);
 
       IdaStats getStats() const;
+      /// BDF order of the last accepted step (diagnostic).
+      int getLastOrder() const;
+      /// IDAS's estimated local errors of the last step, per variable (diagnostic).
+      std::vector<RealT> getEstimatedLocalErrors() const;
+      /// IDAS's current error weights, per variable (diagnostic).
+      std::vector<RealT> getErrorWeights() const;
 
     private:
       static int             CheckStep(RealT begin, RealT end, N_Vector y, N_Vector yp, RealT* hnext, void* data);

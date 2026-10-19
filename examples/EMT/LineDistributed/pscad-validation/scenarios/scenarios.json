@@ -1,0 +1,2207 @@
+{
+  "models": {
+    "fd": "Frequency-dependent (GridKit vector fits / PSCAD FD phase model)",
+    "bg": "Lossless Bergeron (constant 60 Hz L and C in both tools)"
+  },
+  "pscad_steps_s": {
+    "energize": [
+      1e-06,
+      2e-06
+    ],
+    "fault": [
+      2e-06,
+      1e-05
+    ],
+    "pulse": [
+      5e-07,
+      1e-06
+    ],
+    "sag": [
+      2e-06,
+      1e-05
+    ]
+  },
+  "pscad_startup_s": 1.0,
+  "lines": {
+    "69kv-wood-pole": {
+      "sequence": {
+        "frequency_hz": 60.0,
+        "R1": 0.0001099680514441924,
+        "L1": 1.1663086533214442e-06,
+        "C1": 9.982346326295679e-12,
+        "R0": 0.00036360472326509556,
+        "L0": 3.333223501281862e-06,
+        "C0": 4.861657273606853e-12,
+        "G": 1e-11,
+        "length_m": 16000.0,
+        "voltage_kv": 69.0,
+        "short_circuit_mva": 1000.0,
+        "surge_impedance_ohm": {
+          "zero": 828.01851460887,
+          "positive": 341.81446104817513
+        },
+        "bergeron_delays_s": {
+          "zero": 6.440867574766968e-05,
+          "positive": 5.4593765272303816e-05
+        },
+        "wavefront_delays_s": {
+          "ground": 5.340196650628763e-05,
+          "aerial": 5.338635395510234e-05
+        },
+        "characteristic_admittance_60hz_S": {
+          "ground": [
+            0.0011724068344938342,
+            0.0001629514329700583
+          ],
+          "aerial": [
+            0.0028603857635557555,
+            0.0003484152745781769
+          ]
+        }
+      },
+      "runs": {
+        "fd": {
+          "energize": {
+            "name": "energize",
+            "description": "Energization of the open-ended line from zero state: the source amplitude rises from 0 to 1 over 50 us at 1 ms, launching a steep front that reflects off the open receiving end.",
+            "source": {
+              "rms": [
+                39837.16857408418,
+                39837.16857408418,
+                39837.16857408418
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.47373720625897586,
+                0.47373720625897586,
+                0.47373720625897586
+              ],
+              "inductance": [
+                0.0125662696837768,
+                0.0125662696837768,
+                0.0125662696837768
+              ]
+            },
+            "load": {
+              "resistance": [
+                100000.0,
+                100000.0,
+                100000.0
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "source",
+                "value": 1.0,
+                "on": 0.001,
+                "off": 1.0,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.031,
+              "dt": 2e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "fault": {
+            "name": "fault",
+            "description": "Sinusoidal steady state into the R-L load (2 Zc, pf 0.95), then a phase-A 6.8 ohm receiving-end fault applied at 20 ms (50 us transition) and removed over 2 ms at 60 ms.",
+            "source": {
+              "rms": [
+                39837.16857408418,
+                39837.16857408418,
+                39837.16857408418
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.47373720625897586,
+                0.47373720625897586,
+                0.47373720625897586
+              ],
+              "inductance": [
+                0.0125662696837768,
+                0.0125662696837768,
+                0.0125662696837768
+              ]
+            },
+            "load": {
+              "resistance": [
+                683.6289220963503,
+                683.6289220963503,
+                683.6289220963503
+              ],
+              "inductance": [
+                0.5960298520265797,
+                0.5960298520265797,
+                0.5960298520265797
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "fault",
+                "value": 0.14627818801660655,
+                "on": 0.02,
+                "off": 0.06,
+                "rise": 5e-05,
+                "fall": 0.002,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.12,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "pulse": {
+            "name": "pulse",
+            "description": "Surge test from zero state: a phase-A pulse of 5.6 kV (5 us rise, 50 us FWHM) from a 30 ohm + 20 uH source into a 410 ohm termination.",
+            "source": {
+              "rms": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                30.0,
+                30.0,
+                30.0
+              ],
+              "inductance": [
+                2e-05,
+                2e-05,
+                2e-05
+              ]
+            },
+            "load": {
+              "resistance": [
+                410.1773532578101,
+                410.1773532578101,
+                410.1773532578101
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "voltage",
+                "value": 5633.82640840131,
+                "on": 0.001,
+                "off": 0.00105,
+                "rise": 5e-06,
+                "fall": 5e-06,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.0035,
+              "dt": 1e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "sag": {
+            "name": "sag",
+            "description": "Sinusoidal steady state into the R-L load (2 Zc, pf 0.95); the phase-A source amplitude sags by 40% from 20 to 50 ms (50 us transitions). Smooth operation lets the adaptive solver step over the line delay.",
+            "source": {
+              "rms": [
+                39837.16857408418,
+                39837.16857408418,
+                39837.16857408418
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.47373720625897586,
+                0.47373720625897586,
+                0.47373720625897586
+              ],
+              "inductance": [
+                0.0125662696837768,
+                0.0125662696837768,
+                0.0125662696837768
+              ]
+            },
+            "load": {
+              "resistance": [
+                683.6289220963503,
+                683.6289220963503,
+                683.6289220963503
+              ],
+              "inductance": [
+                0.5960298520265797,
+                0.5960298520265797,
+                0.5960298520265797
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "source",
+                "value": -0.4,
+                "on": 0.02,
+                "off": 0.05,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.1,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          }
+        },
+        "bg": {
+          "energize": {
+            "name": "energize",
+            "description": "Energization of the open-ended line from zero state: the source amplitude rises from 0 to 1 over 50 us at 1 ms, launching a steep front that reflects off the open receiving end.",
+            "source": {
+              "rms": [
+                39837.16857408418,
+                39837.16857408418,
+                39837.16857408418
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.47373720625897586,
+                0.47373720625897586,
+                0.47373720625897586
+              ],
+              "inductance": [
+                0.0125662696837768,
+                0.0125662696837768,
+                0.0125662696837768
+              ]
+            },
+            "load": {
+              "resistance": [
+                100000.0,
+                100000.0,
+                100000.0
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "source",
+                "value": 1.0,
+                "on": 0.001,
+                "off": 1.0,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.031,
+              "dt": 2e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "fault": {
+            "name": "fault",
+            "description": "Sinusoidal steady state into the resistive load (2 Zc), then a phase-A 6.8 ohm receiving-end fault applied at 20 ms (50 us transition) and removed over 2 ms at 60 ms.",
+            "source": {
+              "rms": [
+                39837.16857408418,
+                39837.16857408418,
+                39837.16857408418
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.47373720625897586,
+                0.47373720625897586,
+                0.47373720625897586
+              ],
+              "inductance": [
+                0.0125662696837768,
+                0.0125662696837768,
+                0.0125662696837768
+              ]
+            },
+            "load": {
+              "resistance": [
+                683.6289220963503,
+                683.6289220963503,
+                683.6289220963503
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "fault",
+                "value": 0.14627818801660655,
+                "on": 0.02,
+                "off": 0.06,
+                "rise": 5e-05,
+                "fall": 0.002,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.12,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "pulse": {
+            "name": "pulse",
+            "description": "Surge test from zero state: a phase-A pulse of 5.6 kV (5 us rise, 50 us FWHM) from a 30 ohm + 20 uH source into a 410 ohm termination.",
+            "source": {
+              "rms": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                30.0,
+                30.0,
+                30.0
+              ],
+              "inductance": [
+                2e-05,
+                2e-05,
+                2e-05
+              ]
+            },
+            "load": {
+              "resistance": [
+                410.1773532578101,
+                410.1773532578101,
+                410.1773532578101
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "voltage",
+                "value": 5633.82640840131,
+                "on": 0.001,
+                "off": 0.00105,
+                "rise": 5e-06,
+                "fall": 5e-06,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.0035,
+              "dt": 1e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "sag": {
+            "name": "sag",
+            "description": "Sinusoidal steady state into the resistive load (2 Zc); the phase-A source amplitude sags by 40% from 20 to 50 ms (50 us transitions). Smooth operation lets the adaptive solver step over the line delay.",
+            "source": {
+              "rms": [
+                39837.16857408418,
+                39837.16857408418,
+                39837.16857408418
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.47373720625897586,
+                0.47373720625897586,
+                0.47373720625897586
+              ],
+              "inductance": [
+                0.0125662696837768,
+                0.0125662696837768,
+                0.0125662696837768
+              ]
+            },
+            "load": {
+              "resistance": [
+                683.6289220963503,
+                683.6289220963503,
+                683.6289220963503
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "source",
+                "value": -0.4,
+                "on": 0.02,
+                "off": 0.05,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.1,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          }
+        }
+      }
+    },
+    "138kv-delta": {
+      "sequence": {
+        "frequency_hz": 60.0,
+        "R1": 7.830214124050647e-05,
+        "L1": 1.2969805503244392e-06,
+        "C1": 8.9863081768085e-12,
+        "R0": 0.0003729083918978775,
+        "L0": 4.132520445492048e-06,
+        "C0": 5.193279078609808e-12,
+        "G": 1e-11,
+        "length_m": 40000.0,
+        "voltage_kv": 138.0,
+        "short_circuit_mva": 3000.0,
+        "surge_impedance_ohm": {
+          "zero": 892.04481800092,
+          "positive": 379.9059343936934
+        },
+        "bergeron_delays_s": {
+          "zero": 0.00018530550762025887,
+          "positive": 0.00013655807218640483
+        },
+        "wavefront_delays_s": {
+          "ground": 0.00013343184712946208,
+          "aerial": 0.00013344648743009489
+        },
+        "characteristic_admittance_60hz_S": {
+          "ground": [
+            0.0010982297503916822,
+            0.00012676398894190632
+          ],
+          "aerial": [
+            0.002607688417787717,
+            0.00020360762248926146
+          ]
+        }
+      },
+      "runs": {
+        "fd": {
+          "energize": {
+            "name": "energize",
+            "description": "Energization of the open-ended line from zero state: the source amplitude rises from 0 to 1 over 50 us at 1 ms, launching a steep front that reflects off the open receiving end.",
+            "source": {
+              "rms": [
+                79674.33714816836,
+                79674.33714816836,
+                79674.33714816836
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.6316496083453012,
+                0.6316496083453012,
+                0.6316496083453012
+              ],
+              "inductance": [
+                0.01675502624503573,
+                0.01675502624503573,
+                0.01675502624503573
+              ]
+            },
+            "load": {
+              "resistance": [
+                100000.0,
+                100000.0,
+                100000.0
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "source",
+                "value": 1.0,
+                "on": 0.001,
+                "off": 1.0,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.031,
+              "dt": 2e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0003,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "fault": {
+            "name": "fault",
+            "description": "Sinusoidal steady state into the R-L load (2 Zc, pf 0.95), then a three-phase 7.6 ohm receiving-end fault applied at 20 ms (50 us transition) and removed over 2 ms at 60 ms.",
+            "source": {
+              "rms": [
+                79674.33714816836,
+                79674.33714816836,
+                79674.33714816836
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.6316496083453012,
+                0.6316496083453012,
+                0.6316496083453012
+              ],
+              "inductance": [
+                0.01675502624503573,
+                0.01675502624503573,
+                0.01675502624503573
+              ]
+            },
+            "load": {
+              "resistance": [
+                759.8118687873869,
+                759.8118687873869,
+                759.8118687873869
+              ],
+              "inductance": [
+                0.6624508429699787,
+                0.6624508429699787,
+                0.6624508429699787
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "fault",
+                "value": 0.13161152662644487,
+                "on": 0.02,
+                "off": 0.06,
+                "rise": 5e-05,
+                "fall": 0.002,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.12,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0003,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "pulse": {
+            "name": "pulse",
+            "description": "Surge test from zero state: a phase-A pulse of 11.3 kV (5 us rise, 50 us FWHM) from a 30 ohm + 20 uH source into a 456 ohm termination.",
+            "source": {
+              "rms": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                30.0,
+                30.0,
+                30.0
+              ],
+              "inductance": [
+                2e-05,
+                2e-05,
+                2e-05
+              ]
+            },
+            "load": {
+              "resistance": [
+                455.8871212724321,
+                455.8871212724321,
+                455.8871212724321
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "voltage",
+                "value": 11267.65281680262,
+                "on": 0.001,
+                "off": 0.00105,
+                "rise": 5e-06,
+                "fall": 5e-06,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.0035,
+              "dt": 1e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0003,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "sag": {
+            "name": "sag",
+            "description": "Sinusoidal steady state into the R-L load (2 Zc, pf 0.95); the phase-A source amplitude sags by 40% from 20 to 50 ms (50 us transitions). Smooth operation lets the adaptive solver step over the line delay.",
+            "source": {
+              "rms": [
+                79674.33714816836,
+                79674.33714816836,
+                79674.33714816836
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.6316496083453012,
+                0.6316496083453012,
+                0.6316496083453012
+              ],
+              "inductance": [
+                0.01675502624503573,
+                0.01675502624503573,
+                0.01675502624503573
+              ]
+            },
+            "load": {
+              "resistance": [
+                759.8118687873869,
+                759.8118687873869,
+                759.8118687873869
+              ],
+              "inductance": [
+                0.6624508429699787,
+                0.6624508429699787,
+                0.6624508429699787
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "source",
+                "value": -0.4,
+                "on": 0.02,
+                "off": 0.05,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.1,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0003,
+              "h_max": 0.0,
+              "compress": true
+            }
+          }
+        },
+        "bg": {
+          "energize": {
+            "name": "energize",
+            "description": "Energization of the open-ended line from zero state: the source amplitude rises from 0 to 1 over 50 us at 1 ms, launching a steep front that reflects off the open receiving end.",
+            "source": {
+              "rms": [
+                79674.33714816836,
+                79674.33714816836,
+                79674.33714816836
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.6316496083453012,
+                0.6316496083453012,
+                0.6316496083453012
+              ],
+              "inductance": [
+                0.01675502624503573,
+                0.01675502624503573,
+                0.01675502624503573
+              ]
+            },
+            "load": {
+              "resistance": [
+                100000.0,
+                100000.0,
+                100000.0
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "source",
+                "value": 1.0,
+                "on": 0.001,
+                "off": 1.0,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.031,
+              "dt": 2e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0003,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "fault": {
+            "name": "fault",
+            "description": "Sinusoidal steady state into the resistive load (2 Zc), then a three-phase 7.6 ohm receiving-end fault applied at 20 ms (50 us transition) and removed over 2 ms at 60 ms.",
+            "source": {
+              "rms": [
+                79674.33714816836,
+                79674.33714816836,
+                79674.33714816836
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.6316496083453012,
+                0.6316496083453012,
+                0.6316496083453012
+              ],
+              "inductance": [
+                0.01675502624503573,
+                0.01675502624503573,
+                0.01675502624503573
+              ]
+            },
+            "load": {
+              "resistance": [
+                759.8118687873869,
+                759.8118687873869,
+                759.8118687873869
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "fault",
+                "value": 0.13161152662644487,
+                "on": 0.02,
+                "off": 0.06,
+                "rise": 5e-05,
+                "fall": 0.002,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.12,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0003,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "pulse": {
+            "name": "pulse",
+            "description": "Surge test from zero state: a phase-A pulse of 11.3 kV (5 us rise, 50 us FWHM) from a 30 ohm + 20 uH source into a 456 ohm termination.",
+            "source": {
+              "rms": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                30.0,
+                30.0,
+                30.0
+              ],
+              "inductance": [
+                2e-05,
+                2e-05,
+                2e-05
+              ]
+            },
+            "load": {
+              "resistance": [
+                455.8871212724321,
+                455.8871212724321,
+                455.8871212724321
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "voltage",
+                "value": 11267.65281680262,
+                "on": 0.001,
+                "off": 0.00105,
+                "rise": 5e-06,
+                "fall": 5e-06,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.0035,
+              "dt": 1e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0003,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "sag": {
+            "name": "sag",
+            "description": "Sinusoidal steady state into the resistive load (2 Zc); the phase-A source amplitude sags by 40% from 20 to 50 ms (50 us transitions). Smooth operation lets the adaptive solver step over the line delay.",
+            "source": {
+              "rms": [
+                79674.33714816836,
+                79674.33714816836,
+                79674.33714816836
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                0.6316496083453012,
+                0.6316496083453012,
+                0.6316496083453012
+              ],
+              "inductance": [
+                0.01675502624503573,
+                0.01675502624503573,
+                0.01675502624503573
+              ]
+            },
+            "load": {
+              "resistance": [
+                759.8118687873869,
+                759.8118687873869,
+                759.8118687873869
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "source",
+                "value": -0.4,
+                "on": 0.02,
+                "off": 0.05,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.1,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.0003,
+              "h_max": 0.0,
+              "compress": true
+            }
+          }
+        }
+      }
+    },
+    "345kv-h-frame": {
+      "sequence": {
+        "frequency_hz": 60.0,
+        "R1": 2.7408579875402178e-05,
+        "L1": 9.646970373233764e-07,
+        "C1": 1.2009452143367963e-11,
+        "R0": 0.00036891599031422807,
+        "L0": 3.3137425288487912e-06,
+        "C0": 7.154318580552608e-12,
+        "G": 1e-11,
+        "length_m": 100000.0,
+        "voltage_kv": 345.0,
+        "short_circuit_mva": 10000.0,
+        "surge_impedance_ohm": {
+          "zero": 680.5738267388615,
+          "positive": 283.4222062814478
+        },
+        "bergeron_delays_s": {
+          "zero": 0.0004869041974075628,
+          "positive": 0.000340374542270481
+        },
+        "wavefront_delays_s": {
+          "ground": 0.00033384577619091784,
+          "aerial": 0.0003350309375148852
+        },
+        "characteristic_admittance_60hz_S": {
+          "ground": [
+            0.0014249206978748999,
+            0.00020060849842872387
+          ],
+          "aerial": [
+            0.003521122278474127,
+            0.00012470763319353626
+          ]
+        }
+      },
+      "runs": {
+        "fd": {
+          "energize": {
+            "name": "energize",
+            "description": "Energization of the open-ended line from zero state: the source amplitude rises from 0 to 1 over 50 us at 1 ms, launching a steep front that reflects off the open receiving end.",
+            "source": {
+              "rms": [
+                199185.8428704209,
+                199185.8428704209,
+                199185.8428704209
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                1.1843430156474395,
+                1.1843430156474395,
+                1.1843430156474395
+              ],
+              "inductance": [
+                0.03141567420944199,
+                0.03141567420944199,
+                0.03141567420944199
+              ]
+            },
+            "load": {
+              "resistance": [
+                100000.0,
+                100000.0,
+                100000.0
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "source",
+                "value": 1.0,
+                "on": 0.001,
+                "off": 1.0,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.031,
+              "dt": 2e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.001,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "fault": {
+            "name": "fault",
+            "description": "Sinusoidal steady state into the R-L load (2 Zc, pf 0.95), then a phase-A 5.7 ohm receiving-end fault applied at 20 ms (50 us transition) and removed over 2 ms at 60 ms.",
+            "source": {
+              "rms": [
+                199185.8428704209,
+                199185.8428704209,
+                199185.8428704209
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                1.1843430156474395,
+                1.1843430156474395,
+                1.1843430156474395
+              ],
+              "inductance": [
+                0.03141567420944199,
+                0.03141567420944199,
+                0.03141567420944199
+              ]
+            },
+            "load": {
+              "resistance": [
+                566.8444125628956,
+                566.8444125628956,
+                566.8444125628956
+              ],
+              "inductance": [
+                0.4942099147969326,
+                0.4942099147969326,
+                0.4942099147969326
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "fault",
+                "value": 0.17641525219921658,
+                "on": 0.02,
+                "off": 0.06,
+                "rise": 5e-05,
+                "fall": 0.002,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.12,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.001,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "pulse": {
+            "name": "pulse",
+            "description": "Surge test from zero state: a phase-A pulse of 28.2 kV (5 us rise, 50 us FWHM) from a 30 ohm + 20 uH source into a 340 ohm termination.",
+            "source": {
+              "rms": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                30.0,
+                30.0,
+                30.0
+              ],
+              "inductance": [
+                2e-05,
+                2e-05,
+                2e-05
+              ]
+            },
+            "load": {
+              "resistance": [
+                340.1066475377374,
+                340.1066475377374,
+                340.1066475377374
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "voltage",
+                "value": 28169.13204200655,
+                "on": 0.001,
+                "off": 0.00105,
+                "rise": 5e-06,
+                "fall": 5e-06,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.0035,
+              "dt": 1e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.001,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "sag": {
+            "name": "sag",
+            "description": "Sinusoidal steady state into the R-L load (2 Zc, pf 0.95); the phase-A source amplitude sags by 40% from 20 to 50 ms (50 us transitions). Smooth operation lets the adaptive solver step over the line delay.",
+            "source": {
+              "rms": [
+                199185.8428704209,
+                199185.8428704209,
+                199185.8428704209
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                1.1843430156474395,
+                1.1843430156474395,
+                1.1843430156474395
+              ],
+              "inductance": [
+                0.03141567420944199,
+                0.03141567420944199,
+                0.03141567420944199
+              ]
+            },
+            "load": {
+              "resistance": [
+                566.8444125628956,
+                566.8444125628956,
+                566.8444125628956
+              ],
+              "inductance": [
+                0.4942099147969326,
+                0.4942099147969326,
+                0.4942099147969326
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "source",
+                "value": -0.4,
+                "on": 0.02,
+                "off": 0.05,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.1,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.001,
+              "h_max": 0.0,
+              "compress": true
+            }
+          }
+        },
+        "bg": {
+          "energize": {
+            "name": "energize",
+            "description": "Energization of the open-ended line from zero state: the source amplitude rises from 0 to 1 over 50 us at 1 ms, launching a steep front that reflects off the open receiving end.",
+            "source": {
+              "rms": [
+                199185.8428704209,
+                199185.8428704209,
+                199185.8428704209
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                1.1843430156474395,
+                1.1843430156474395,
+                1.1843430156474395
+              ],
+              "inductance": [
+                0.03141567420944199,
+                0.03141567420944199,
+                0.03141567420944199
+              ]
+            },
+            "load": {
+              "resistance": [
+                100000.0,
+                100000.0,
+                100000.0
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "source",
+                "value": 1.0,
+                "on": 0.001,
+                "off": 1.0,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.031,
+              "dt": 2e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.001,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "fault": {
+            "name": "fault",
+            "description": "Sinusoidal steady state into the resistive load (2 Zc), then a phase-A 5.7 ohm receiving-end fault applied at 20 ms (50 us transition) and removed over 2 ms at 60 ms.",
+            "source": {
+              "rms": [
+                199185.8428704209,
+                199185.8428704209,
+                199185.8428704209
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                1.1843430156474395,
+                1.1843430156474395,
+                1.1843430156474395
+              ],
+              "inductance": [
+                0.03141567420944199,
+                0.03141567420944199,
+                0.03141567420944199
+              ]
+            },
+            "load": {
+              "resistance": [
+                566.8444125628956,
+                566.8444125628956,
+                566.8444125628956
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "fault",
+                "value": 0.17641525219921658,
+                "on": 0.02,
+                "off": 0.06,
+                "rise": 5e-05,
+                "fall": 0.002,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.12,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.001,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "pulse": {
+            "name": "pulse",
+            "description": "Surge test from zero state: a phase-A pulse of 28.2 kV (5 us rise, 50 us FWHM) from a 30 ohm + 20 uH source into a 340 ohm termination.",
+            "source": {
+              "rms": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                30.0,
+                30.0,
+                30.0
+              ],
+              "inductance": [
+                2e-05,
+                2e-05,
+                2e-05
+              ]
+            },
+            "load": {
+              "resistance": [
+                340.1066475377374,
+                340.1066475377374,
+                340.1066475377374
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "voltage",
+                "value": 28169.13204200655,
+                "on": 0.001,
+                "off": 0.00105,
+                "rise": 5e-06,
+                "fall": 5e-06,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.0035,
+              "dt": 1e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.001,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "sag": {
+            "name": "sag",
+            "description": "Sinusoidal steady state into the resistive load (2 Zc); the phase-A source amplitude sags by 40% from 20 to 50 ms (50 us transitions). Smooth operation lets the adaptive solver step over the line delay.",
+            "source": {
+              "rms": [
+                199185.8428704209,
+                199185.8428704209,
+                199185.8428704209
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                1.1843430156474395,
+                1.1843430156474395,
+                1.1843430156474395
+              ],
+              "inductance": [
+                0.03141567420944199,
+                0.03141567420944199,
+                0.03141567420944199
+              ]
+            },
+            "load": {
+              "resistance": [
+                566.8444125628956,
+                566.8444125628956,
+                566.8444125628956
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "source",
+                "value": -0.4,
+                "on": 0.02,
+                "off": 0.05,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.1,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.001,
+              "h_max": 0.0,
+              "compress": true
+            }
+          }
+        }
+      }
+    },
+    "765kv-horizontal": {
+      "sequence": {
+        "frequency_hz": 60.0,
+        "R1": 1.4668726128879034e-05,
+        "L1": 8.919354854043709e-07,
+        "C1": 1.3005449285332731e-11,
+        "R0": 0.0003312923416910299,
+        "L0": 2.9210208135024643e-06,
+        "C0": 7.996804223275675e-12,
+        "G": 1e-11,
+        "length_m": 322000.0,
+        "voltage_kv": 765.0,
+        "short_circuit_mva": 25000.0,
+        "surge_impedance_ohm": {
+          "zero": 604.3786216137761,
+          "positive": 261.88103057762515
+        },
+        "bergeron_delays_s": {
+          "zero": 0.0015562573994367015,
+          "positive": 0.0010966935087536875
+        },
+        "wavefront_delays_s": {
+          "ground": 0.0010751765289497377,
+          "aerial": 0.001078537795440126
+        },
+        "characteristic_admittance_60hz_S": {
+          "ground": [
+            0.0016034825164909356,
+            0.0002251205615428932
+          ],
+          "aerial": [
+            0.003816177585876479,
+            6.762669826601476e-05
+          ]
+        }
+      },
+      "runs": {
+        "fd": {
+          "energize": {
+            "name": "energize",
+            "description": "Energization of the open-ended line from zero state: the source amplitude rises from 0 to 1 over 50 us at 1 ms, launching a steep front that reflects off the open receiving end.",
+            "source": {
+              "rms": [
+                441672.95593006373,
+                441672.95593006373,
+                441672.95593006373
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                2.3292825585625634,
+                2.3292825585625634,
+                2.3292825585625634
+              ],
+              "inductance": [
+                0.06178613884216153,
+                0.06178613884216153,
+                0.06178613884216153
+              ]
+            },
+            "load": {
+              "resistance": [
+                100000.0,
+                100000.0,
+                100000.0
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "source",
+                "value": 1.0,
+                "on": 0.001,
+                "off": 1.0,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.031,
+              "dt": 2e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "fault": {
+            "name": "fault",
+            "description": "Sinusoidal steady state into the R-L load (2 Zc, pf 0.95), then a three-phase 5.2 ohm receiving-end fault applied at 20 ms (50 us transition) and removed over 2 ms at 60 ms.",
+            "source": {
+              "rms": [
+                441672.95593006373,
+                441672.95593006373,
+                441672.95593006373
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                2.3292825585625634,
+                2.3292825585625634,
+                2.3292825585625634
+              ],
+              "inductance": [
+                0.06178613884216153,
+                0.06178613884216153,
+                0.06178613884216153
+              ]
+            },
+            "load": {
+              "resistance": [
+                523.7620611552503,
+                523.7620611552503,
+                523.7620611552503
+              ],
+              "inductance": [
+                0.45664806405528585,
+                0.45664806405528585,
+                0.45664806405528585
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "fault",
+                "value": 0.19092639084899016,
+                "on": 0.02,
+                "off": 0.06,
+                "rise": 5e-05,
+                "fall": 0.002,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.12,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "pulse": {
+            "name": "pulse",
+            "description": "Surge test from zero state: a phase-A pulse of 62.5 kV (5 us rise, 50 us FWHM) from a 30 ohm + 20 uH source into a 314 ohm termination.",
+            "source": {
+              "rms": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                30.0,
+                30.0,
+                30.0
+              ],
+              "inductance": [
+                2e-05,
+                2e-05,
+                2e-05
+              ]
+            },
+            "load": {
+              "resistance": [
+                314.25723669315016,
+                314.25723669315016,
+                314.25723669315016
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "voltage",
+                "value": 62461.98844097104,
+                "on": 0.001,
+                "off": 0.00105,
+                "rise": 5e-06,
+                "fall": 5e-06,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.008781286997183509,
+              "dt": 1e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "sag": {
+            "name": "sag",
+            "description": "Sinusoidal steady state into the R-L load (2 Zc, pf 0.95); the phase-A source amplitude sags by 40% from 20 to 50 ms (50 us transitions). Smooth operation lets the adaptive solver step over the line delay.",
+            "source": {
+              "rms": [
+                441672.95593006373,
+                441672.95593006373,
+                441672.95593006373
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                2.3292825585625634,
+                2.3292825585625634,
+                2.3292825585625634
+              ],
+              "inductance": [
+                0.06178613884216153,
+                0.06178613884216153,
+                0.06178613884216153
+              ]
+            },
+            "load": {
+              "resistance": [
+                523.7620611552503,
+                523.7620611552503,
+                523.7620611552503
+              ],
+              "inductance": [
+                0.45664806405528585,
+                0.45664806405528585,
+                0.45664806405528585
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "source",
+                "value": -0.4,
+                "on": 0.02,
+                "off": 0.05,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.1,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          }
+        },
+        "bg": {
+          "energize": {
+            "name": "energize",
+            "description": "Energization of the open-ended line from zero state: the source amplitude rises from 0 to 1 over 50 us at 1 ms, launching a steep front that reflects off the open receiving end.",
+            "source": {
+              "rms": [
+                441672.95593006373,
+                441672.95593006373,
+                441672.95593006373
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                2.3292825585625634,
+                2.3292825585625634,
+                2.3292825585625634
+              ],
+              "inductance": [
+                0.06178613884216153,
+                0.06178613884216153,
+                0.06178613884216153
+              ]
+            },
+            "load": {
+              "resistance": [
+                100000.0,
+                100000.0,
+                100000.0
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "source",
+                "value": 1.0,
+                "on": 0.001,
+                "off": 1.0,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.031,
+              "dt": 2e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "fault": {
+            "name": "fault",
+            "description": "Sinusoidal steady state into the resistive load (2 Zc), then a three-phase 5.2 ohm receiving-end fault applied at 20 ms (50 us transition) and removed over 2 ms at 60 ms.",
+            "source": {
+              "rms": [
+                441672.95593006373,
+                441672.95593006373,
+                441672.95593006373
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                2.3292825585625634,
+                2.3292825585625634,
+                2.3292825585625634
+              ],
+              "inductance": [
+                0.06178613884216153,
+                0.06178613884216153,
+                0.06178613884216153
+              ]
+            },
+            "load": {
+              "resistance": [
+                523.7620611552503,
+                523.7620611552503,
+                523.7620611552503
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "fault",
+                "value": 0.19092639084899016,
+                "on": 0.02,
+                "off": 0.06,
+                "rise": 5e-05,
+                "fall": 0.002,
+                "phases": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.12,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "pulse": {
+            "name": "pulse",
+            "description": "Surge test from zero state: a phase-A pulse of 62.5 kV (5 us rise, 50 us FWHM) from a 30 ohm + 20 uH source into a 314 ohm termination.",
+            "source": {
+              "rms": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                30.0,
+                30.0,
+                30.0
+              ],
+              "inductance": [
+                2e-05,
+                2e-05,
+                2e-05
+              ]
+            },
+            "load": {
+              "resistance": [
+                314.25723669315016,
+                314.25723669315016,
+                314.25723669315016
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "zero",
+            "events": [
+              {
+                "type": "voltage",
+                "value": 62461.98844097104,
+                "on": 0.001,
+                "off": 0.00105,
+                "rise": 5e-06,
+                "fall": 5e-06,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.008781286997183509,
+              "dt": 1e-06,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          },
+          "sag": {
+            "name": "sag",
+            "description": "Sinusoidal steady state into the resistive load (2 Zc); the phase-A source amplitude sags by 40% from 20 to 50 ms (50 us transitions). Smooth operation lets the adaptive solver step over the line delay.",
+            "source": {
+              "rms": [
+                441672.95593006373,
+                441672.95593006373,
+                441672.95593006373
+              ],
+              "phase": [
+                0.0,
+                -2.0943951023931953,
+                2.0943951023931953
+              ],
+              "frequency": 60.0,
+              "resistance": [
+                2.3292825585625634,
+                2.3292825585625634,
+                2.3292825585625634
+              ],
+              "inductance": [
+                0.06178613884216153,
+                0.06178613884216153,
+                0.06178613884216153
+              ]
+            },
+            "load": {
+              "resistance": [
+                523.7620611552503,
+                523.7620611552503,
+                523.7620611552503
+              ],
+              "inductance": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "initialization": "sinusoidal",
+            "events": [
+              {
+                "type": "source",
+                "value": -0.4,
+                "on": 0.02,
+                "off": 0.05,
+                "rise": 5e-05,
+                "fall": 5e-05,
+                "phases": [
+                  1
+                ]
+              }
+            ],
+            "solver": {
+              "t0": 0.0,
+              "tf": 0.1,
+              "dt": 1e-05,
+              "rel_tol": 1e-06,
+              "history_abs_tol": 0.002,
+              "h_max": 0.0,
+              "compress": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

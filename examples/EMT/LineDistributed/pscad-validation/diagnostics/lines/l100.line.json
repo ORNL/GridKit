@@ -1,0 +1,81 @@
+{
+  "name": "69 kV wood pole, vertical with grounded neutral variant l100",
+  "description": "16 km distribution-class line: alternating davit arms, one conductor per phase, underbuilt neutral treated as a continuously grounded (eliminated) wire. Short line: the aerial travel time (about 54 us) is well below a 60 Hz quarter cycle, so adaptive steps exceed the delay during smooth operation.",
+  "source": "GridWorkbench examples/emt/geometry/69kv-wood-pole.line.json; neutral phase changed from n to g",
+  "voltage_kv": 69.0,
+  "short_circuit_mva": 1000.0,
+  "include": [],
+  "tower": "69kv-wood-pole",
+  "conductors": [
+    {
+      "at": "top",
+      "phase": "a",
+      "type": "distribution-acsr"
+    },
+    {
+      "at": "middle",
+      "phase": "b",
+      "type": "distribution-acsr"
+    },
+    {
+      "at": "bottom",
+      "phase": "c",
+      "type": "distribution-acsr"
+    },
+    {
+      "at": "neutral",
+      "phase": "g",
+      "type": "neutral-acsr"
+    }
+  ],
+  "path": {
+    "span": 90.0,
+    "length": 100000.0
+  },
+  "earth": {
+    "conductivity": 0.01
+  },
+  "catalog": {
+    "conductors": {
+      "distribution-acsr": {
+        "description": "Illustrative distribution-class phase ACSR",
+        "radius": {
+          "outer": 0.00915
+        },
+        "conductivity": 35000000.0,
+        "weight": 6.7
+      },
+      "neutral-acsr": {
+        "description": "Illustrative reduced underbuilt neutral, treated as continuously grounded",
+        "radius": {
+          "outer": 0.00501
+        },
+        "conductivity": 35000000.0,
+        "weight": 2.1
+      }
+    },
+    "towers": {
+      "69kv-wood-pole": {
+        "description": "Wood pole with alternating davit arms and an underbuilt neutral",
+        "attachments": {
+          "top": {
+            "x": -1.0668,
+            "h": 14.9352
+          },
+          "middle": {
+            "x": 1.0668,
+            "h": 13.716
+          },
+          "bottom": {
+            "x": -1.0668,
+            "h": 12.4968
+          },
+          "neutral": {
+            "x": 0.0,
+            "h": 10.3632
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <numeric>
 #include <set>
 
 #include <GridKit/Model/PhasorDynamics/SignalDelay/SignalDelayControl.hpp>
@@ -100,11 +102,27 @@ void run(Json input, const std::filesystem::path& directory, const std::filesyst
   // In particular, delayed algebraic variables must resolve history_abs_tol.
   solver.setTolerance(data.rtol * .1);
   solver.setMaxSteps(1000000);
+  solver.setMaxOrder(data.max_order);
+  solver.setSuppressAlgebraicErrors(data.suppress_algebraic);
   GridKit::PhasorDynamics::configureSignalDelays(system, solver, {.rel_tol = data.rtol, .abs_tol = data.history_atol, .compress = data.compress});
 
-  std::ofstream samples(output / "samples.csv"), steps(output / "steps.csv");
+  std::ofstream samples(output / "samples.csv"), steps(output / "steps.csv"), errors(output / "errors.csv");
   samples << std::setprecision(17);
-  steps << std::setprecision(17) << "t,h,h_over_tau,history_error,segments\n";
+  steps << std::setprecision(17) << "t,h,h_over_tau,history_error,segments,order\n";
+  // Diagnostic: the variables dominating IDAS's weighted local error estimate.
+  errors << std::setprecision(6) << "t,h,order,wrms,name1,w1,name2,w2,name3,w3,name4,w4\n";
+  std::vector<std::string> names(system.size(), "?");
+  for (size_t i = 0; i < circuit->localCount(); ++i)
+  {
+    names.at(circuit->globalIndex(i)) = circuit->variableName(i);
+  }
+  for (size_t i = 0; i < 2 * data.line.K; ++i)
+  {
+    if (data.line.delays[i % data.line.K] > 0)
+    {
+      names.at(system.getSignalNode(2 * data.line.K + i)->getVariableIndex()) = "delayed_" + std::to_string(i / data.line.K + 1) + "_k" + std::to_string(i % data.line.K + 1);
+    }
+  }
   const auto columns = circuit->columns();
   for (size_t i = 0; i < columns.size(); ++i)
   {
@@ -155,7 +173,29 @@ void run(Json input, const std::filesystem::path& directory, const std::filesyst
       max_segments   = std::max(max_segments, segments);
       ++accepted;
       steps << candidate_end << ',' << h << ',' << h / min_delay << ','
-            << solver.getLastStepAssessment().error << ',' << segments << '\n';
+            << solver.getLastStepAssessment().error << ',' << segments << ',' << solver.getLastOrder() << '\n';
+      if (accepted % 50 == 0)
+      {
+        const auto          ele = solver.getEstimatedLocalErrors();
+        const auto          ewt = solver.getErrorWeights();
+        std::vector<double> weighted(ele.size());
+        double              sum = 0;
+        for (size_t i = 0; i < ele.size(); ++i)
+        {
+          weighted[i] = std::abs(ele[i]) * ewt[i];
+          sum += weighted[i] * weighted[i];
+        }
+        std::vector<size_t> order(ele.size());
+        std::iota(order.begin(), order.end(), 0);
+        std::partial_sort(order.begin(), order.begin() + 4, order.end(), [&](size_t a, size_t b)
+                          { return weighted[a] > weighted[b]; });
+        errors << candidate_end << ',' << h << ',' << solver.getLastOrder() << ',' << std::sqrt(sum / ele.size());
+        for (size_t j = 0; j < 4; ++j)
+        {
+          errors << ',' << names[order[j]] << ',' << weighted[order[j]];
+        }
+        errors << '\n';
+      }
     };
     solver.setStepControl(std::move(control));
   }

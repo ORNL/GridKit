@@ -60,6 +60,32 @@ namespace GridKit::Examples::EMT
       return line_;
     }
 
+    /// Diagnostic name of a local circuit variable.
+    std::string variableName(size_t local) const
+    {
+      for (size_t p = 0; p < 3; ++p)
+      {
+        const char phase = "abc"[p];
+        if (local == voltage_[0] + p) return std::string("v1_") + phase;
+        if (local == voltage_[1] + p) return std::string("v2_") + phase;
+        if (local == load_ + p) return std::string("iload_") + phase;
+        if (local == source_ + p) return std::string("isource_") + phase;
+      }
+      const std::string name = line_.name(local);
+      return name.empty() ? "local_" + std::to_string(local) : name;
+    }
+
+    /// Global solver index of a local circuit variable (after allocation).
+    size_t globalIndex(size_t local)
+    {
+      return getVariableIndex(local);
+    }
+
+    size_t localCount() const
+    {
+      return size_;
+    }
+
   private:
     void                 gather();
     size_t               globalColumn(size_t local);

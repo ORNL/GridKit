@@ -1,0 +1,400 @@
+{
+  "69kv-wood-pole/fd/energize": {
+    "tau_min_s": 5.338635395510234e-05,
+    "tau_max_s": 5.340196650628763e-05,
+    "accepted_steps": 66618,
+    "max_h_s": 0.0004879999999999996,
+    "median_h_s": 3.744025387679775e-07,
+    "max_h_over_tau_min": 9.140912683612093,
+    "max_h_over_tau_max": 9.138240254552082,
+    "median_h_over_tau_min": 0.007013075646313067,
+    "steps_above_tau_min": 4,
+    "steps_above_tau_max": 4,
+    "step_fraction_above_tau_min": 6.0043831997358074e-05,
+    "time_fraction_above_tau_min": 0.03019354838709676,
+    "time_fraction_above_tau_max": 0.03019354838709676,
+    "intervals_above_tau_min_s": [
+      [
+        6.4e-05,
+        0.0009999999999999996
+      ]
+    ],
+    "events": [
+      [
+        "source",
+        0.001,
+        1.0
+      ]
+    ]
+  },
+  "69kv-wood-pole/fd/pulse": {
+    "tau_min_s": 5.338635395510234e-05,
+    "tau_max_s": 5.340196650628763e-05,
+    "accepted_steps": 6435,
+    "max_h_s": 0.0004879999999999996,
+    "median_h_s": 5.23083724557772e-08,
+    "max_h_over_tau_min": 9.140912683612093,
+    "max_h_over_tau_max": 9.138240254552082,
+    "median_h_over_tau_min": 0.0009798079205740155,
+    "steps_above_tau_min": 4,
+    "steps_above_tau_max": 4,
+    "step_fraction_above_tau_min": 0.0006216006216006216,
+    "time_fraction_above_tau_min": 0.26742857142857124,
+    "time_fraction_above_tau_max": 0.26742857142857124,
+    "intervals_above_tau_min_s": [
+      [
+        6.4e-05,
+        0.0009999999999999996
+      ]
+    ],
+    "events": [
+      [
+        "voltage",
+        0.001,
+        0.00105
+      ]
+    ]
+  },
+  "69kv-wood-pole/fd/fault": {
+    "tau_min_s": 5.338635395510234e-05,
+    "tau_max_s": 5.340196650628763e-05,
+    "accepted_steps": 109974,
+    "max_h_s": 1.5823273339382257e-05,
+    "median_h_s": 6.520006012034063e-07,
+    "max_h_over_tau_min": 0.29639172123815666,
+    "max_h_over_tau_max": 0.296305068419516,
+    "median_h_over_tau_min": 0.012212870010784695,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "fault",
+        0.02,
+        0.06
+      ]
+    ]
+  },
+  "69kv-wood-pole/fd/sag": {
+    "tau_min_s": 5.338635395510234e-05,
+    "tau_max_s": 5.340196650628763e-05,
+    "accepted_steps": 108341,
+    "max_h_s": 1.5823273339382257e-05,
+    "median_h_s": 6.449942889785731e-07,
+    "max_h_over_tau_min": 0.29639172123815666,
+    "max_h_over_tau_max": 0.296305068419516,
+    "median_h_over_tau_min": 0.01208163212496231,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "source",
+        0.02,
+        0.05
+      ]
+    ]
+  },
+  "138kv-delta/fd/energize": {
+    "tau_min_s": 0.00013343184712946208,
+    "tau_max_s": 0.00013344648743009489,
+    "accepted_steps": 41476,
+    "max_h_s": 0.0004879999999999996,
+    "median_h_s": 5.888233329150172e-07,
+    "max_h_over_tau_min": 3.6572977928314088,
+    "max_h_over_tau_max": 3.6568965538012783,
+    "median_h_over_tau_min": 0.004412914499667475,
+    "steps_above_tau_min": 2,
+    "steps_above_tau_max": 2,
+    "step_fraction_above_tau_min": 4.8220657729771434e-05,
+    "time_fraction_above_tau_min": 0.02399999999999999,
+    "time_fraction_above_tau_max": 0.02399999999999999,
+    "intervals_above_tau_min_s": [
+      [
+        0.000256,
+        0.0009999999999999996
+      ]
+    ],
+    "events": [
+      [
+        "source",
+        0.001,
+        1.0
+      ]
+    ]
+  },
+  "138kv-delta/fd/pulse": {
+    "tau_min_s": 0.00013343184712946208,
+    "tau_max_s": 0.00013344648743009489,
+    "accepted_steps": 8417,
+    "max_h_s": 0.0004879999999999996,
+    "median_h_s": 8.82002233518718e-08,
+    "max_h_over_tau_min": 3.6572977928314088,
+    "max_h_over_tau_max": 3.6568965538012783,
+    "median_h_over_tau_min": 0.0006610132831804063,
+    "steps_above_tau_min": 2,
+    "steps_above_tau_max": 2,
+    "step_fraction_above_tau_min": 0.00023761435190685517,
+    "time_fraction_above_tau_min": 0.2125714285714285,
+    "time_fraction_above_tau_max": 0.2125714285714285,
+    "intervals_above_tau_min_s": [
+      [
+        0.000256,
+        0.0009999999999999996
+      ]
+    ],
+    "events": [
+      [
+        "voltage",
+        0.001,
+        0.00105
+      ]
+    ]
+  },
+  "138kv-delta/fd/fault": {
+    "tau_min_s": 0.00013343184712946208,
+    "tau_max_s": 0.00013344648743009489,
+    "accepted_steps": 94599,
+    "max_h_s": 3.864641877841888e-05,
+    "median_h_s": 8.834616805203366e-07,
+    "max_h_over_tau_min": 0.28963414364579876,
+    "max_h_over_tau_max": 0.2896023681302482,
+    "median_h_over_tau_min": 0.006621070602906059,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "fault",
+        0.02,
+        0.06
+      ]
+    ]
+  },
+  "138kv-delta/fd/sag": {
+    "tau_min_s": 0.00013343184712946208,
+    "tau_max_s": 0.00013344648743009489,
+    "accepted_steps": 68162,
+    "max_h_s": 3.864641877841888e-05,
+    "median_h_s": 9.847870448415064e-07,
+    "max_h_over_tau_min": 0.28963414364579876,
+    "max_h_over_tau_max": 0.2896023681302482,
+    "median_h_over_tau_min": 0.007380449765384856,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "source",
+        0.02,
+        0.05
+      ]
+    ]
+  },
+  "345kv-h-frame/fd/energize": {
+    "tau_min_s": 0.00033384577619091784,
+    "tau_max_s": 0.0003350309375148852,
+    "accepted_steps": 29211,
+    "max_h_s": 0.0004879999999999996,
+    "median_h_s": 9.721122048323566e-07,
+    "max_h_over_tau_min": 1.4617528056455773,
+    "max_h_over_tau_max": 1.456581901420128,
+    "median_h_over_tau_min": 0.002911860128721325,
+    "steps_above_tau_min": 1,
+    "steps_above_tau_max": 1,
+    "step_fraction_above_tau_min": 3.4233679093492176e-05,
+    "time_fraction_above_tau_min": 0.015741935483870956,
+    "time_fraction_above_tau_max": 0.015741935483870956,
+    "intervals_above_tau_min_s": [
+      [
+        0.000512,
+        0.0009999999999999996
+      ]
+    ],
+    "events": [
+      [
+        "source",
+        0.001,
+        1.0
+      ]
+    ]
+  },
+  "345kv-h-frame/fd/pulse": {
+    "tau_min_s": 0.00033384577619091784,
+    "tau_max_s": 0.0003350309375148852,
+    "accepted_steps": 7401,
+    "max_h_s": 0.0004879999999999996,
+    "median_h_s": 1.0433732188864023e-07,
+    "max_h_over_tau_min": 1.4617528056455773,
+    "max_h_over_tau_max": 1.456581901420128,
+    "median_h_over_tau_min": 0.00031253150205792145,
+    "steps_above_tau_min": 1,
+    "steps_above_tau_max": 1,
+    "step_fraction_above_tau_min": 0.00013511687609782462,
+    "time_fraction_above_tau_min": 0.13942857142857132,
+    "time_fraction_above_tau_max": 0.13942857142857132,
+    "intervals_above_tau_min_s": [
+      [
+        0.000512,
+        0.0009999999999999996
+      ]
+    ],
+    "events": [
+      [
+        "voltage",
+        0.001,
+        0.00105
+      ]
+    ]
+  },
+  "345kv-h-frame/fd/fault": {
+    "tau_min_s": 0.00033384577619091784,
+    "tau_max_s": 0.0003350309375148852,
+    "accepted_steps": 44944,
+    "max_h_s": 5.330084376833043e-05,
+    "median_h_s": 1.6004522728485515e-06,
+    "max_h_over_tau_min": 0.15965708590498698,
+    "max_h_over_tau_max": 0.15909230402330324,
+    "median_h_over_tau_min": 0.004793986885529125,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "fault",
+        0.02,
+        0.06
+      ]
+    ]
+  },
+  "345kv-h-frame/fd/sag": {
+    "tau_min_s": 0.00033384577619091784,
+    "tau_max_s": 0.0003350309375148852,
+    "accepted_steps": 47618,
+    "max_h_s": 5.330084376833043e-05,
+    "median_h_s": 1.605202992679966e-06,
+    "max_h_over_tau_min": 0.15965708590498698,
+    "max_h_over_tau_max": 0.15909230402330324,
+    "median_h_over_tau_min": 0.004808217168402908,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "source",
+        0.02,
+        0.05
+      ]
+    ]
+  },
+  "765kv-horizontal/fd/energize": {
+    "tau_min_s": 0.0010751765289497377,
+    "tau_max_s": 0.001078537795440126,
+    "accepted_steps": 12211,
+    "max_h_s": 0.0004879999999999996,
+    "median_h_s": 2.2240380905067664e-06,
+    "max_h_over_tau_min": 0.4538789555578297,
+    "max_h_over_tau_max": 0.45246444034059863,
+    "median_h_over_tau_min": 0.002068532962377135,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "source",
+        0.001,
+        1.0
+      ]
+    ]
+  },
+  "765kv-horizontal/fd/pulse": {
+    "tau_min_s": 0.0010751765289497377,
+    "tau_max_s": 0.001078537795440126,
+    "accepted_steps": 8118,
+    "max_h_s": 0.0004879999999999996,
+    "median_h_s": 1.725322234377366e-07,
+    "max_h_over_tau_min": 0.4538789555578297,
+    "max_h_over_tau_max": 0.45246444034059863,
+    "median_h_over_tau_min": 0.00016046874052047145,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "voltage",
+        0.001,
+        0.00105
+      ]
+    ]
+  },
+  "765kv-horizontal/fd/fault": {
+    "tau_min_s": 0.0010751765289497377,
+    "tau_max_s": 0.001078537795440126,
+    "accepted_steps": 49034,
+    "max_h_s": 5.9061732007844594e-05,
+    "median_h_s": 1.9903559307921093e-06,
+    "max_h_over_tau_min": 0.05493212548597739,
+    "max_h_over_tau_max": 0.05476092934113903,
+    "median_h_over_tau_min": 0.001851189899705441,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "fault",
+        0.02,
+        0.06
+      ]
+    ]
+  },
+  "765kv-horizontal/fd/sag": {
+    "tau_min_s": 0.0010751765289497377,
+    "tau_max_s": 0.001078537795440126,
+    "accepted_steps": 25011,
+    "max_h_s": 5.9061732007844594e-05,
+    "median_h_s": 3.156790978370294e-06,
+    "max_h_over_tau_min": 0.05493212548597739,
+    "max_h_over_tau_max": 0.05476092934113903,
+    "median_h_over_tau_min": 0.002936067606920266,
+    "steps_above_tau_min": 0,
+    "steps_above_tau_max": 0,
+    "step_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_min": 0.0,
+    "time_fraction_above_tau_max": 0.0,
+    "intervals_above_tau_min_s": [],
+    "events": [
+      [
+        "source",
+        0.02,
+        0.05
+      ]
+    ]
+  }
+}

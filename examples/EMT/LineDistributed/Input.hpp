@@ -38,7 +38,8 @@ namespace GridKit::Examples::EMT
     LineData              line;
     std::array<double, 3> rms, phase, rs, ls, resistance, inductance;
     double                frequency, t0, tf, dt, rtol, history_atol, hmax;
-    bool                  compress, steady;
+    int                   max_order;
+    bool                  compress, steady, suppress_algebraic;
     std::vector<Event>    events;
 
     static CircuitData parse(const Json& j, const std::filesystem::path& directory)
@@ -68,7 +69,9 @@ namespace GridKit::Examples::EMT
       }
       d.steady           = initialization == "sinusoidal";
       const auto& solver = j.at("solver");
-      fields(solver, {"t0", "tf", "dt", "rel_tol", "history_abs_tol", "h_max", "compress"});
+      fields(solver, {"t0", "tf", "dt", "rel_tol", "history_abs_tol", "h_max", "compress", "max_order", "suppress_algebraic"});
+      // Optional: exclude algebraic variables from IDAS's local error test (IDASetSuppressAlg).
+      d.suppress_algebraic = solver.value("suppress_algebraic", false);
       d.t0           = real(solver.at("t0"));
       d.tf           = real(solver.at("tf"));
       d.dt           = real(solver.at("dt"));
@@ -76,6 +79,12 @@ namespace GridKit::Examples::EMT
       d.history_atol = real(solver.at("history_abs_tol"));
       d.hmax         = real(solver.at("h_max"));
       d.compress     = solver.at("compress").get<bool>();
+      // Optional BDF order cap (1 to 5); IDAS's default maximum is 5.
+      d.max_order = solver.contains("max_order") ? static_cast<int>(dimension(solver.at("max_order"))) : 5;
+      if (d.max_order > 5)
+      {
+        throw std::invalid_argument("max_order must be between 1 and 5");
+      }
       if (!(d.frequency > 0 && d.tf > d.t0 && d.dt > 0 && d.rtol > 0 && d.rtol < 1 && d.history_atol > 0 && d.hmax >= 0))
       {
         throw std::invalid_argument("Invalid source frequency or solver settings");

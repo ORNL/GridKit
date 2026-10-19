@@ -5,8 +5,33 @@ namespace GridKit::Examples::EMT
   LineCircuit::LineCircuit(CircuitData data, DelayPorts ports)
     : data_(std::move(data)), ports_(std::move(ports)), line_(data_.line)
   {
-    const double voltage_scale = std::max(1.0, std::sqrt(2.0) * *std::max_element(data_.rms.begin(), data_.rms.end()));
-    const double current_scale = std::max(1.0, voltage_scale / *std::min_element(data_.resistance.begin(), data_.resistance.end()));
+    // Absolute tolerances follow the circuit's voltage and current scales. Voltage
+    // pulses count as well as the sinusoidal source, and travelling-wave currents
+    // scale with the characteristic admittance, not only with the load: an open or
+    // lightly loaded line still carries incident and reflected waves of V times Yc.
+    // Scaling currents by the load alone demanded near-exact zero crossings of every
+    // wave variable on an open-ended line and collapsed the step size.
+    double voltage_scale = std::sqrt(2.0) * *std::max_element(data_.rms.begin(), data_.rms.end());
+    for (const auto& event : data_.events)
+    {
+      if (event.type == "voltage")
+      {
+        voltage_scale = std::max(voltage_scale, std::abs(event.value));
+      }
+    }
+    voltage_scale      = std::max(1.0, voltage_scale);
+    double admittance  = 1.0 / *std::min_element(data_.resistance.begin(), data_.resistance.end());
+    const auto& yc     = data_.line.yc;
+    for (size_t n = 0; n < yc.rows; ++n)
+    {
+      double row = 0;
+      for (size_t k = 0; k < yc.cols; ++k)
+      {
+        row += std::abs(yc.D[n * yc.cols + k]);
+      }
+      admittance = std::max(admittance, row);
+    }
+    const double current_scale = std::max(1.0, voltage_scale * admittance);
     voltage_[0]                = dae_.variables(3, false, voltage_scale);
     voltage_[1]                = dae_.variables(3, false, voltage_scale);
     load_                      = dae_.variables(3, false, current_scale);

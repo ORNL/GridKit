@@ -1,0 +1,72 @@
+{
+  "line": "69 kV wood pole, vertical with grounded neutral variant l50",
+  "length_m": 50000.0,
+  "fit_band_Hz": [
+    0.0,
+    1000000.0
+  ],
+  "fit_points": 603,
+  "held_out_points": 1202,
+  "wavefront_delays_s": [
+    0.00016688114533214884,
+    0.00016683235610969482
+  ],
+  "Yc": {
+    "poles": 20,
+    "max_relative_error": 0.00019738849100596703,
+    "target": 0.0002
+  },
+  "H": {
+    "poles": 32,
+    "max_scaled_error": 0.0002655006256542325,
+    "target": 0.002,
+    "magnitude_floor": 0.001
+  },
+  "passivity_scan": {
+    "sampled_min_eigenvalue_S": 2.498963760661044e-07,
+    "violations_beyond_roundoff": 0,
+    "max_roundoff_allowance_S": 1.7240370976933058e-11,
+    "excluded_nodal_poles": 0,
+    "reciprocity_error_S": 2.5322827444613945e-14,
+    "frequency_Hz": [
+      0.01,
+      10000000.0
+    ],
+    "points": 2000
+  },
+  "sequence_60Hz": {
+    "frequency_hz": 60.0,
+    "R1": 0.0001099680514441924,
+    "L1": 1.1663086533214442e-06,
+    "C1": 9.97632684995603e-12,
+    "R0": 0.00036360472326509556,
+    "L0": 3.333223501281862e-06,
+    "C0": 4.855885065023118e-12,
+    "G": 1e-11,
+    "length_m": 50000.0,
+    "voltage_kv": 69.0,
+    "short_circuit_mva": 1000.0,
+    "surge_impedance_ohm": {
+      "zero": 828.5105027846678,
+      "positive": 341.91756682133115
+    },
+    "bergeron_delays_s": {
+      "zero": 0.00020115758883434314,
+      "positive": 0.00017055407011756408
+    },
+    "wavefront_delays_s": {
+      "ground": 0.00016688114533214884,
+      "aerial": 0.00016683235610969482
+    },
+    "characteristic_admittance_60hz_S": {
+      "ground": [
+        0.0011717111817758027,
+        0.00016285087204538003
+      ],
+      "aerial": [
+        0.0028595234951069434,
+        0.0003483079177825292
+      ]
+    }
+  }
+}

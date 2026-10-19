@@ -148,6 +148,33 @@ namespace GridKit::Examples::EMT
       }
     }
 
+    /// Diagnostic name of a local variable owned by the line, or an empty string.
+    std::string name(size_t local) const
+    {
+      for (size_t end = 0; end < 2; ++end)
+      {
+        const std::string e = std::to_string(end + 1);
+        const struct
+        {
+          const char* label;
+          size_t      first, count;
+        } blocks[] = {{"ref", reflected[end], data.K},
+                      {"modal", modal[end], data.K},
+                      {"yc_state", yc_state_[end], data.K * data.yc.poles.size()},
+                      {"hin_state", input_state_[end], data.K * data.input.poles.size()},
+                      {"hout_state", output_state_[end], data.K * data.output.poles.size()}};
+        for (const auto& block : blocks)
+        {
+          if (local >= block.first && local < block.first + block.count)
+          {
+            const size_t offset = local - block.first;
+            return std::string(block.label) + e + "_p" + std::to_string(offset / data.K) + "_k" + std::to_string(offset % data.K + 1);
+          }
+        }
+      }
+      return "";
+    }
+
   private:
     std::array<size_t, 2> yc_state_, input_state_, output_state_;
   };

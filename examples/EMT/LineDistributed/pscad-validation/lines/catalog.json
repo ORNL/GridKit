@@ -1,0 +1,92 @@
+{
+  "catalog": "1.0",
+  "name": "Conductor and tower catalog for the PSCAD validation lines",
+  "source": "Illustrative North American overhead types (GridWorkbench examples/emt/geometry); not manufacturer data.",
+
+  "conductors": {
+    "hawk-acsr": {
+      "description": "Hawk 477 kcmil 26/7 ACSR, solid-aluminium equivalent",
+      "radius": { "outer": 0.01092 },
+      "conductivity": 3.5e7,
+      "weight": 9.6
+    },
+    "drake-acsr": {
+      "description": "Drake 795 kcmil 26/7 ACSR, tubular aluminium over a steel core",
+      "radius": { "outer": 0.01407, "inner": 0.00514 },
+      "conductivity": 3.5e7,
+      "weight": 16.0
+    },
+    "distribution-acsr": {
+      "description": "Illustrative distribution-class phase ACSR",
+      "radius": { "outer": 0.00915 },
+      "conductivity": 3.5e7,
+      "weight": 6.7
+    },
+    "neutral-acsr": {
+      "description": "Illustrative reduced underbuilt neutral, treated as continuously grounded",
+      "radius": { "outer": 0.00501 },
+      "conductivity": 3.5e7,
+      "weight": 2.1
+    },
+    "ehs-3-8-steel": {
+      "description": "3/8 in EHS steel shield wire; relative permeability 1 is illustrative",
+      "radius": { "outer": 0.00457 },
+      "conductivity": 5.8e6,
+      "permeability": 1.0,
+      "weight": 4.0
+    }
+  },
+
+  "towers": {
+    "69kv-wood-pole": {
+      "description": "Wood pole with alternating davit arms and an underbuilt neutral",
+      "attachments": {
+        "top":     { "x": -1.0668, "h": 14.9352 },
+        "middle":  { "x":  1.0668, "h": 13.7160 },
+        "bottom":  { "x": -1.0668, "h": 12.4968 },
+        "neutral": { "x":  0.0,    "h": 10.3632 }
+      }
+    },
+    "138kv-delta": {
+      "description": "Delta arrangement with a single shield-wire peak",
+      "attachments": {
+        "left":   { "x": -3.0, "h": 17.0 },
+        "right":  { "x":  3.0, "h": 17.0 },
+        "top":    { "x":  0.0, "h": 21.5 },
+        "shield": { "x":  0.0, "h": 25.0 }
+      }
+    },
+    "345kv-h-frame": {
+      "description": "345 kV single-circuit horizontal H-frame; twin-bundle attachment pairs 0.457 m apart, two shield-wire peaks",
+      "attachments": {
+        "left-1":       { "x": -7.4285, "h": 24.0 },
+        "left-2":       { "x": -6.9715, "h": 24.0 },
+        "center-1":     { "x": -0.2285, "h": 24.0 },
+        "center-2":     { "x":  0.2285, "h": 24.0 },
+        "right-1":      { "x":  6.9715, "h": 24.0 },
+        "right-2":      { "x":  7.4285, "h": 24.0 },
+        "shield-left":  { "x": -4.3,    "h": 29.5 },
+        "shield-right": { "x":  4.3,    "h": 29.5 }
+      }
+    },
+    "765kv-horizontal": {
+      "description": "765 kV single-circuit horizontal; four-conductor square bundles 0.457 m on a side, two shield-wire peaks",
+      "attachments": {
+        "left-1":       { "x": -13.9285, "h": 31.7715 },
+        "left-2":       { "x": -13.4715, "h": 31.7715 },
+        "left-3":       { "x": -13.9285, "h": 32.2285 },
+        "left-4":       { "x": -13.4715, "h": 32.2285 },
+        "center-1":     { "x": -0.2285,  "h": 31.7715 },
+        "center-2":     { "x":  0.2285,  "h": 31.7715 },
+        "center-3":     { "x": -0.2285,  "h": 32.2285 },
+        "center-4":     { "x":  0.2285,  "h": 32.2285 },
+        "right-1":      { "x":  13.4715, "h": 31.7715 },
+        "right-2":      { "x":  13.9285, "h": 31.7715 },
+        "right-3":      { "x":  13.4715, "h": 32.2285 },
+        "right-4":      { "x":  13.9285, "h": 32.2285 },
+        "shield-left":  { "x": -9.8,     "h": 40.0 },
+        "shield-right": { "x":  9.8,     "h": 40.0 }
+      }
+    }
+  }
+}

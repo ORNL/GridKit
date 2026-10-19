@@ -1,0 +1,48 @@
+{
+  "conductors": [
+    {
+      "phase": "a",
+      "x": -13.7,
+      "h": 32.0
+    },
+    {
+      "phase": "b",
+      "x": 0.0,
+      "h": 32.0
+    },
+    {
+      "phase": "c",
+      "x": 13.7,
+      "h": 32.0
+    }
+  ],
+  "sub_conductors": 4,
+  "bundle_spacing_m": 0.4569999999999972,
+  "conductor": {
+    "radius_m": 0.01407,
+    "inner_radius_m": 0.00514,
+    "dc_resistance_ohm_per_km": 0.05301554852671414,
+    "relative_permeability": 1.0
+  },
+  "ground_wires": [
+    {
+      "x": -9.8,
+      "h": 40.0,
+      "radius": 0.00457,
+      "dc_resistance_ohm_per_km": 2.6277844212456962,
+      "relative_permeability": 1.0
+    },
+    {
+      "x": 9.8,
+      "h": 40.0,
+      "radius": 0.00457,
+      "dc_resistance_ohm_per_km": 2.6277844212456962,
+      "relative_permeability": 1.0
+    }
+  ],
+  "earth_resistivity_ohm_m": 100.0,
+  "earth_relative_permittivity": 1.0,
+  "shunt_conductance_S_per_m": 1e-11,
+  "length_m": 322000.0,
+  "ideal_transposition": true
+}

@@ -1,0 +1,30 @@
+{
+  "name": "345 kV single-circuit horizontal H-frame, twin bundle",
+  "description": "100 km transmission line: twin Drake ACSR bundles 0.457 m apart, two EHS shield wires. Tensions are supplied, so the average conductor heights follow the catenary sag over a 350 m span; the same sagged heights are given to PSCAD with zero additional sag.",
+  "source": "GridWorkbench examples/emt/geometry/345kv-horizontal.line.json",
+  "voltage_kv": 345.0,
+  "short_circuit_mva": 10000.0,
+
+  "include": ["catalog.json"],
+  "tower": "345kv-h-frame",
+
+  "conductors": [
+    { "at": "left-1",       "phase": "a", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "left-2",       "phase": "a", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "center-1",     "phase": "b", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "center-2",     "phase": "b", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "right-1",      "phase": "c", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "right-2",      "phase": "c", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "shield-left",  "phase": "g", "type": "ehs-3-8-steel", "tension": 12000.0 },
+    { "at": "shield-right", "phase": "g", "type": "ehs-3-8-steel", "tension": 12000.0 }
+  ],
+
+  "path": {
+    "span": 350.0,
+    "length": 100000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01
+  }
+}

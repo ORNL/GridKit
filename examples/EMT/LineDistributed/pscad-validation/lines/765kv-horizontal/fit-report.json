@@ -1,0 +1,72 @@
+{
+  "line": "765 kV single-circuit horizontal, quad bundle",
+  "length_m": 322000.0,
+  "fit_band_Hz": [
+    0.0,
+    1000000.0
+  ],
+  "fit_points": 603,
+  "held_out_points": 1202,
+  "wavefront_delays_s": [
+    0.0010751765289497377,
+    0.001078537795440126
+  ],
+  "Yc": {
+    "poles": 24,
+    "max_relative_error": 0.00010063376234856662,
+    "target": 0.0002
+  },
+  "H": {
+    "poles": 24,
+    "max_scaled_error": 0.00043917174632208104,
+    "target": 0.002,
+    "magnitude_floor": 0.001
+  },
+  "passivity_scan": {
+    "sampled_min_eigenvalue_S": 6.431160810645076e-06,
+    "violations_beyond_roundoff": 0,
+    "max_roundoff_allowance_S": 3.832885646861788e-12,
+    "excluded_nodal_poles": 0,
+    "reciprocity_error_S": 4.4143201220085735e-15,
+    "frequency_Hz": [
+      0.01,
+      10000000.0
+    ],
+    "points": 2000
+  },
+  "sequence_60Hz": {
+    "frequency_hz": 60.0,
+    "R1": 1.4668726128879034e-05,
+    "L1": 8.919354854043709e-07,
+    "C1": 1.3005449285332731e-11,
+    "R0": 0.0003312923416910299,
+    "L0": 2.9210208135024643e-06,
+    "C0": 7.996804223275675e-12,
+    "G": 1e-11,
+    "length_m": 322000.0,
+    "voltage_kv": 765.0,
+    "short_circuit_mva": 25000.0,
+    "surge_impedance_ohm": {
+      "zero": 604.3786216137761,
+      "positive": 261.88103057762515
+    },
+    "bergeron_delays_s": {
+      "zero": 0.0015562573994367015,
+      "positive": 0.0010966935087536875
+    },
+    "wavefront_delays_s": {
+      "ground": 0.0010751765289497377,
+      "aerial": 0.001078537795440126
+    },
+    "characteristic_admittance_60hz_S": {
+      "ground": [
+        0.0016034825164909356,
+        0.0002251205615428932
+      ],
+      "aerial": [
+        0.003816177585876479,
+        6.762669826601476e-05
+      ]
+    }
+  }
+}

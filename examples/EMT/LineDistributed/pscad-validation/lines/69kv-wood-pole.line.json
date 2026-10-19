@@ -1,0 +1,26 @@
+{
+  "name": "69 kV wood pole, vertical with grounded neutral",
+  "description": "16 km distribution-class line: alternating davit arms, one conductor per phase, underbuilt neutral treated as a continuously grounded (eliminated) wire. Short line: the aerial travel time (about 54 us) is well below a 60 Hz quarter cycle, so adaptive steps exceed the delay during smooth operation.",
+  "source": "GridWorkbench examples/emt/geometry/69kv-wood-pole.line.json; neutral phase changed from n to g",
+  "voltage_kv": 69.0,
+  "short_circuit_mva": 1000.0,
+
+  "include": ["catalog.json"],
+  "tower": "69kv-wood-pole",
+
+  "conductors": [
+    { "at": "top",     "phase": "a", "type": "distribution-acsr" },
+    { "at": "middle",  "phase": "b", "type": "distribution-acsr" },
+    { "at": "bottom",  "phase": "c", "type": "distribution-acsr" },
+    { "at": "neutral", "phase": "g", "type": "neutral-acsr" }
+  ],
+
+  "path": {
+    "span": 90.0,
+    "length": 16000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01
+  }
+}

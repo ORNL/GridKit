@@ -1,0 +1,1274 @@
+[
+  {
+    "line": "69kv-wood-pole",
+    "model": "fd",
+    "scenario": "energize",
+    "tf_s": 0.031,
+    "pscad_step_s": 1e-06,
+    "gridkit": {
+      "seconds": 2.460274339,
+      "unknowns": 222,
+      "accepted_steps": 66618,
+      "min_delay_s": 5.338635395510234e-05,
+      "max_delay_s": 5.340196650628763e-05,
+      "median_h_over_min_delay": 0.007013075646313067,
+      "max_h_over_max_delay": 9.138240254552082,
+      "time_fraction_above_all_delays": 0.03019354838709676,
+      "max_history_segments": 177,
+      "history_rejections": 0,
+      "error_test_failures": 2072
+    },
+    "forcing_check_percent": 8.874836692958403e-10,
+    "errors": {
+      "v1": {
+        "peak_percent": 1.3421670448184593,
+        "rms_percent": 0.3672235864331872,
+        "reference_peak": 86457.938377,
+        "max_abs_difference": 1160.4099565255456,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 1.4615217624458423,
+        "rms_percent": 0.599122190327493,
+        "reference_peak": 116109.58223999997,
+        "max_abs_difference": 1696.9668127225523,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 1.7872284521688102,
+        "rms_percent": 1.9535764445641037,
+        "reference_peak": 150.88990458,
+        "max_abs_difference": 2.696747306104129,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.8758847605380966,
+        "rms_percent": 0.8314873421413165,
+        "reference_peak": 1.1613106566,
+        "max_abs_difference": 0.010171743063664307,
+        "worst_phase": "a"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 0.6947551145942852,
+        "gridkit_vs_fine_peak_percent": 0.6474291755612358
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 0.744465521602459,
+        "gridkit_vs_fine_peak_percent": 0.7165563574114004
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 0.9789647095302757,
+        "gridkit_vs_fine_peak_percent": 1.1994696599782217
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.1414223313924927,
+        "gridkit_vs_fine_peak_percent": 0.8824094296922125
+      }
+    }
+  },
+  {
+    "line": "69kv-wood-pole",
+    "model": "fd",
+    "scenario": "pulse",
+    "tf_s": 0.0035,
+    "pscad_step_s": 5e-07,
+    "gridkit": {
+      "seconds": 0.312663663,
+      "unknowns": 222,
+      "accepted_steps": 6435,
+      "min_delay_s": 5.338635395510234e-05,
+      "max_delay_s": 5.340196650628763e-05,
+      "median_h_over_min_delay": 0.0009798079205740155,
+      "max_h_over_max_delay": 9.138240254552082,
+      "time_fraction_above_all_delays": 0.26742857142857124,
+      "max_history_segments": 153,
+      "history_rejections": 0,
+      "error_test_failures": 409
+    },
+    "forcing_check_percent": 4.742465230051569e-10,
+    "errors": {
+      "v1": {
+        "peak_percent": 18.355909080925183,
+        "rms_percent": 5.369095366831058,
+        "reference_peak": 5257.5464027,
+        "max_abs_difference": 965.0704375670646,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 13.741572723541218,
+        "rms_percent": 4.800246354364104,
+        "reference_peak": 4974.055723,
+        "max_abs_difference": 683.513484485509,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 18.469083908603025,
+        "rms_percent": 5.359275986706194,
+        "reference_peak": 12.762036398,
+        "max_abs_difference": 2.357031210793079,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.667892019136621,
+        "rms_percent": 0.2401296271660327,
+        "reference_peak": 12.127175016,
+        "max_abs_difference": 0.08099643407859425,
+        "worst_phase": "a"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 9.331183349590786,
+        "gridkit_vs_fine_peak_percent": 9.02498448207944
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 7.095275719390332,
+        "gridkit_vs_fine_peak_percent": 6.859525495321071
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 9.384838199134698,
+        "gridkit_vs_fine_peak_percent": 9.091675232864475
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.22390035733416608,
+        "gridkit_vs_fine_peak_percent": 0.5503633348294662
+      }
+    }
+  },
+  {
+    "line": "69kv-wood-pole",
+    "model": "fd",
+    "scenario": "fault",
+    "tf_s": 0.12,
+    "pscad_step_s": 2e-06,
+    "gridkit": {
+      "seconds": 2.655608705,
+      "unknowns": 222,
+      "accepted_steps": 109974,
+      "min_delay_s": 5.338635395510234e-05,
+      "max_delay_s": 5.340196650628763e-05,
+      "median_h_over_min_delay": 0.012212870010784695,
+      "max_h_over_max_delay": 0.296305068419516,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 162,
+      "history_rejections": 0,
+      "error_test_failures": 4263
+    },
+    "forcing_check_percent": 8.934825802788786e-10,
+    "errors": {
+      "v1": {
+        "peak_percent": 5.423313948165145,
+        "rms_percent": 0.4766193573428294,
+        "reference_peak": 114120.87701,
+        "max_abs_difference": 6189.13344065172,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 2.01633549109008,
+        "rms_percent": 0.8475251522232838,
+        "reference_peak": 315377.56268999935,
+        "max_abs_difference": 6359.069727453323,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 0.4643955424032714,
+        "rms_percent": 0.14979133184489113,
+        "reference_peak": 3483.7130412,
+        "max_abs_difference": 16.178208073454243,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.18664511610494805,
+        "rms_percent": 0.14843833174676133,
+        "reference_peak": 3484.9190452,
+        "max_abs_difference": 6.504431198076986,
+        "worst_phase": "a"
+      }
+    },
+    "steady_state_errors": {
+      "v1": {
+        "peak_percent": 0.07543904642318489,
+        "rms_percent": 0.07542738550011613,
+        "reference_peak": 56200.435983,
+        "max_abs_difference": 42.39707299124768,
+        "worst_phase": "c"
+      },
+      "v2": {
+        "peak_percent": 0.07434881312083431,
+        "rms_percent": 0.07432935083915157,
+        "reference_peak": 55910.009752,
+        "max_abs_difference": 41.56842866635472,
+        "worst_phase": "c"
+      },
+      "source": {
+        "peak_percent": 0.07635133364328256,
+        "rms_percent": 0.0763315004327465,
+        "reference_peak": 76.702546043,
+        "max_abs_difference": 0.05856341684218336,
+        "worst_phase": "c"
+      },
+      "i2": {
+        "peak_percent": 0.0012565000002874576,
+        "rms_percent": 0.001245675119168197,
+        "reference_peak": 77.694995915,
+        "max_abs_difference": 0.0009762376238953152,
+        "worst_phase": "c"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 2.751861433856371,
+        "gridkit_vs_fine_peak_percent": 2.6694628992931677
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 1.0464810002455343,
+        "gridkit_vs_fine_peak_percent": 0.9691531070044007
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 0.2361169417338343,
+        "gridkit_vs_fine_peak_percent": 0.22829072524083052
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.014466389696451006,
+        "gridkit_vs_fine_peak_percent": 0.18792129140364128
+      }
+    }
+  },
+  {
+    "line": "69kv-wood-pole",
+    "model": "fd",
+    "scenario": "sag",
+    "tf_s": 0.1,
+    "pscad_step_s": 2e-06,
+    "gridkit": {
+      "seconds": 2.739811988,
+      "unknowns": 222,
+      "accepted_steps": 108341,
+      "min_delay_s": 5.338635395510234e-05,
+      "max_delay_s": 5.340196650628763e-05,
+      "median_h_over_min_delay": 0.01208163212496231,
+      "max_h_over_max_delay": 0.296305068419516,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 123,
+      "history_rejections": 0,
+      "error_test_failures": 4199
+    },
+    "forcing_check_percent": 8.907381915083821e-10,
+    "errors": {
+      "v1": {
+        "peak_percent": 1.335361254688076,
+        "rms_percent": 0.13649048768583838,
+        "reference_peak": 69854.62320699944,
+        "max_abs_difference": 932.8115729146157,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 1.966645899301493,
+        "rms_percent": 0.19588536571678114,
+        "reference_peak": 79975.62569399807,
+        "max_abs_difference": 1572.8373631517243,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 1.9102461156360198,
+        "rms_percent": 0.29379921570397205,
+        "reference_peak": 106.0846917899991,
+        "max_abs_difference": 2.0264787042029013,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.04013834328818904,
+        "rms_percent": 0.012591664905259039,
+        "reference_peak": 78.34953089,
+        "max_abs_difference": 0.03144820367331391,
+        "worst_phase": "a"
+      }
+    },
+    "steady_state_errors": {
+      "v1": {
+        "peak_percent": 0.07543904642318489,
+        "rms_percent": 0.07542738550011613,
+        "reference_peak": 56200.435983,
+        "max_abs_difference": 42.39707299124768,
+        "worst_phase": "c"
+      },
+      "v2": {
+        "peak_percent": 0.07434881312083431,
+        "rms_percent": 0.07432935083915157,
+        "reference_peak": 55910.009752,
+        "max_abs_difference": 41.56842866635472,
+        "worst_phase": "c"
+      },
+      "source": {
+        "peak_percent": 0.07635133364328256,
+        "rms_percent": 0.0763315004327465,
+        "reference_peak": 76.702546043,
+        "max_abs_difference": 0.05856341684218336,
+        "worst_phase": "c"
+      },
+      "i2": {
+        "peak_percent": 0.0012565000002874576,
+        "rms_percent": 0.001245675119168197,
+        "reference_peak": 77.694995915,
+        "max_abs_difference": 0.0009762376238953152,
+        "worst_phase": "c"
+      }
+    }
+  },
+  {
+    "line": "138kv-delta",
+    "model": "fd",
+    "scenario": "energize",
+    "tf_s": 0.031,
+    "pscad_step_s": 1e-06,
+    "gridkit": {
+      "seconds": 1.909125409,
+      "unknowns": 294,
+      "accepted_steps": 41476,
+      "min_delay_s": 0.00013343184712946208,
+      "max_delay_s": 0.00013344648743009489,
+      "median_h_over_min_delay": 0.004412914499667475,
+      "max_h_over_max_delay": 3.6568965538012783,
+      "time_fraction_above_all_delays": 0.02399999999999999,
+      "max_history_segments": 235,
+      "history_rejections": 0,
+      "error_test_failures": 605
+    },
+    "forcing_check_percent": 4.437373144703042e-09,
+    "errors": {
+      "v1": {
+        "peak_percent": 1.1627574737821749,
+        "rms_percent": 0.23439244656665711,
+        "reference_peak": 171107.28771999996,
+        "max_abs_difference": 1989.5627761502692,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 1.270409643989999,
+        "rms_percent": 0.47528440985819476,
+        "reference_peak": 233280.73261,
+        "max_abs_difference": 2963.620924647963,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 1.2734928026603813,
+        "rms_percent": 1.2504559784230753,
+        "reference_peak": 327.03435508,
+        "max_abs_difference": 4.164758974170596,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.6141958511104747,
+        "rms_percent": 0.5762254550103528,
+        "reference_peak": 2.3327300034,
+        "max_abs_difference": 0.014327530898492036,
+        "worst_phase": "a"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 0.6026627417809728,
+        "gridkit_vs_fine_peak_percent": 0.5599557990236256
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 0.6480835445282184,
+        "gridkit_vs_fine_peak_percent": 0.6232273263614225
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 0.6641666062698871,
+        "gridkit_vs_fine_peak_percent": 0.8116987800816944
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.04809423272200709,
+        "gridkit_vs_fine_peak_percent": 0.6092103285183293
+      }
+    }
+  },
+  {
+    "line": "138kv-delta",
+    "model": "fd",
+    "scenario": "pulse",
+    "tf_s": 0.0035,
+    "pscad_step_s": 5e-07,
+    "gridkit": {
+      "seconds": 0.367649715,
+      "unknowns": 294,
+      "accepted_steps": 8417,
+      "min_delay_s": 0.00013343184712946208,
+      "max_delay_s": 0.00013344648743009489,
+      "median_h_over_min_delay": 0.0006610132831804063,
+      "max_h_over_max_delay": 3.6568965538012783,
+      "time_fraction_above_all_delays": 0.2125714285714285,
+      "max_history_segments": 214,
+      "history_rejections": 0,
+      "error_test_failures": 429
+    },
+    "forcing_check_percent": 3.0759270773812735e-09,
+    "errors": {
+      "v1": {
+        "peak_percent": 18.346909984863714,
+        "rms_percent": 5.3687333436441085,
+        "reference_peak": 10564.185129,
+        "max_abs_difference": 1938.2015362519887,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 11.382846163946965,
+        "rms_percent": 4.483104166628306,
+        "reference_peak": 9968.9904384,
+        "max_abs_difference": 1134.7548457016542,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 18.457396149443397,
+        "rms_percent": 5.388276166850443,
+        "reference_peak": 23.92962106,
+        "max_abs_difference": 4.416784956104836,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.5746344489039161,
+        "rms_percent": 0.21589027625202115,
+        "reference_peak": 21.864411524,
+        "max_abs_difference": 0.12564044066702174,
+        "worst_phase": "a"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 9.32838348935075,
+        "gridkit_vs_fine_peak_percent": 9.018789481518857
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 6.069985671011004,
+        "gridkit_vs_fine_peak_percent": 5.676247437777622
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 9.38820291592509,
+        "gridkit_vs_fine_peak_percent": 9.0739880054417
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.12533349046774492,
+        "gridkit_vs_fine_peak_percent": 0.5433132502106878
+      }
+    }
+  },
+  {
+    "line": "138kv-delta",
+    "model": "fd",
+    "scenario": "fault",
+    "tf_s": 0.12,
+    "pscad_step_s": 2e-06,
+    "gridkit": {
+      "seconds": 2.713618853,
+      "unknowns": 294,
+      "accepted_steps": 94599,
+      "min_delay_s": 0.00013343184712946208,
+      "max_delay_s": 0.00013344648743009489,
+      "median_h_over_min_delay": 0.006621070602906059,
+      "max_h_over_max_delay": 0.2896023681302482,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 420,
+      "history_rejections": 0,
+      "error_test_failures": 2798
+    },
+    "forcing_check_percent": 4.42856527109624e-09,
+    "errors": {
+      "v1": {
+        "peak_percent": 15.297758448277044,
+        "rms_percent": 0.7783528421947243,
+        "reference_peak": 283741.90425,
+        "max_abs_difference": 43406.15112870654,
+        "worst_phase": "c"
+      },
+      "v2": {
+        "peak_percent": 1.8132890401239237,
+        "rms_percent": 1.0858083065813682,
+        "reference_peak": 790031.55797,
+        "max_abs_difference": 14325.555654190292,
+        "worst_phase": "c"
+      },
+      "source": {
+        "peak_percent": 0.6146475612363358,
+        "rms_percent": 0.19539749059521627,
+        "reference_peak": 5066.1405476,
+        "max_abs_difference": 31.13890932462855,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.23380989514449754,
+        "rms_percent": 0.07771045703281391,
+        "reference_peak": 5075.231617,
+        "max_abs_difference": 11.866393722048088,
+        "worst_phase": "c"
+      }
+    },
+    "steady_state_errors": {
+      "v1": {
+        "peak_percent": 0.075428733485799,
+        "rms_percent": 0.0754223316000986,
+        "reference_peak": 112393.72003,
+        "max_abs_difference": 84.77715953620378,
+        "worst_phase": "b"
+      },
+      "v2": {
+        "peak_percent": 0.07349707813818568,
+        "rms_percent": 0.07348105958974831,
+        "reference_peak": 111253.44653,
+        "max_abs_difference": 81.76803252757873,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 0.0745787784260429,
+        "rms_percent": 0.0745590709517774,
+        "reference_peak": 135.02022401,
+        "max_abs_difference": 0.10069643369476466,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.0028443471432433387,
+        "rms_percent": 0.0028402173720882403,
+        "reference_peak": 139.10134767,
+        "max_abs_difference": 0.00395652520866463,
+        "worst_phase": "c"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 7.737453530410237,
+        "gridkit_vs_fine_peak_percent": 7.5545487038731345
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 1.0115667993668915,
+        "gridkit_vs_fine_peak_percent": 0.8009847496916842
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 0.3042529239583203,
+        "gridkit_vs_fine_peak_percent": 0.3111420320029504
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.16892204461148871,
+        "gridkit_vs_fine_peak_percent": 0.09728732548619158
+      }
+    }
+  },
+  {
+    "line": "138kv-delta",
+    "model": "fd",
+    "scenario": "sag",
+    "tf_s": 0.1,
+    "pscad_step_s": 2e-06,
+    "gridkit": {
+      "seconds": 2.0352158,
+      "unknowns": 294,
+      "accepted_steps": 68162,
+      "min_delay_s": 0.00013343184712946208,
+      "max_delay_s": 0.00013344648743009489,
+      "median_h_over_min_delay": 0.007380449765384856,
+      "max_h_over_max_delay": 0.2896023681302482,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 150,
+      "history_rejections": 0,
+      "error_test_failures": 1290
+    },
+    "forcing_check_percent": 4.428513612013502e-09,
+    "errors": {
+      "v1": {
+        "peak_percent": 1.1378720127133375,
+        "rms_percent": 0.1017198523952839,
+        "reference_peak": 137857.53922,
+        "max_abs_difference": 1568.6423561996926,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 1.742453503368628,
+        "rms_percent": 0.13486741495458818,
+        "reference_peak": 151859.01831,
+        "max_abs_difference": 2646.0727847238013,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 1.6854498597242369,
+        "rms_percent": 0.20053374925557368,
+        "reference_peak": 200.75071411,
+        "max_abs_difference": 3.3835526293623985,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.03221143884380316,
+        "rms_percent": 0.009879463972827537,
+        "reference_peak": 141.00752921,
+        "max_abs_difference": 0.04542055403663703,
+        "worst_phase": "a"
+      }
+    },
+    "steady_state_errors": {
+      "v1": {
+        "peak_percent": 0.075428733485799,
+        "rms_percent": 0.0754223316000986,
+        "reference_peak": 112393.72003,
+        "max_abs_difference": 84.77715953620378,
+        "worst_phase": "b"
+      },
+      "v2": {
+        "peak_percent": 0.07349707813818568,
+        "rms_percent": 0.07348105958974831,
+        "reference_peak": 111253.44653,
+        "max_abs_difference": 81.76803252757873,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 0.0745787784260429,
+        "rms_percent": 0.0745590709517774,
+        "reference_peak": 135.02022401,
+        "max_abs_difference": 0.10069643369476466,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.0028443471432433387,
+        "rms_percent": 0.0028402173720882403,
+        "reference_peak": 139.10134767,
+        "max_abs_difference": 0.00395652520866463,
+        "worst_phase": "c"
+      }
+    }
+  },
+  {
+    "line": "345kv-h-frame",
+    "model": "fd",
+    "scenario": "energize",
+    "tf_s": 0.031,
+    "pscad_step_s": 1e-06,
+    "gridkit": {
+      "seconds": 1.957768708,
+      "unknowns": 318,
+      "accepted_steps": 29211,
+      "min_delay_s": 0.00033384577619091784,
+      "max_delay_s": 0.0003350309375148852,
+      "median_h_over_min_delay": 0.002911860128721325,
+      "max_h_over_max_delay": 1.456581901420128,
+      "time_fraction_above_all_delays": 0.015741935483870956,
+      "max_history_segments": 274,
+      "history_rejections": 0,
+      "error_test_failures": 319
+    },
+    "forcing_check_percent": 1.7750164147202825e-09,
+    "errors": {
+      "v1": {
+        "peak_percent": 12.346280707155847,
+        "rms_percent": 6.643041310378646,
+        "reference_peak": 420644.56191,
+        "max_abs_difference": 51933.958392794564,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 14.011592942239362,
+        "rms_percent": 11.199504663858908,
+        "reference_peak": 592929.2915,
+        "max_abs_difference": 83078.83876028386,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 19.331354275128934,
+        "rms_percent": 20.108339753714414,
+        "reference_peak": 1190.1125959,
+        "max_abs_difference": 230.0648821863626,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 14.195212639541857,
+        "rms_percent": 11.364667998142409,
+        "reference_peak": 5.930037466,
+        "max_abs_difference": 0.8417814279031997,
+        "worst_phase": "a"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 0.3544852044916218,
+        "gridkit_vs_fine_peak_percent": 12.44730060728691
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 0.3152804205523255,
+        "gridkit_vs_fine_peak_percent": 14.10603261619857
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 0.289367647327167,
+        "gridkit_vs_fine_peak_percent": 19.410744846356568
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.007554124117871286,
+        "gridkit_vs_fine_peak_percent": 14.199838358798837
+      }
+    }
+  },
+  {
+    "line": "345kv-h-frame",
+    "model": "fd",
+    "scenario": "pulse",
+    "tf_s": 0.0035,
+    "pscad_step_s": 5e-07,
+    "gridkit": {
+      "seconds": 0.347922515,
+      "unknowns": 318,
+      "accepted_steps": 7401,
+      "min_delay_s": 0.00033384577619091784,
+      "max_delay_s": 0.0003350309375148852,
+      "median_h_over_min_delay": 0.00031253150205792145,
+      "max_h_over_max_delay": 1.456581901420128,
+      "time_fraction_above_all_delays": 0.13942857142857132,
+      "max_history_segments": 216,
+      "history_rejections": 0,
+      "error_test_failures": 293
+    },
+    "forcing_check_percent": 1.450109196788999e-09,
+    "errors": {
+      "v1": {
+        "peak_percent": 18.374837287679277,
+        "rms_percent": 5.370211624066107,
+        "reference_peak": 25872.641801,
+        "max_abs_difference": 4754.055832957843,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 22.025166769466214,
+        "rms_percent": 8.164950619220424,
+        "reference_peak": 22072.325694,
+        "max_abs_difference": 4861.46654400324,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 18.694613089636626,
+        "rms_percent": 5.997625040236144,
+        "reference_peak": 78.002552113,
+        "max_abs_difference": 14.582275317567529,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 31.389880838971283,
+        "rms_percent": 12.072646309367801,
+        "reference_peak": 64.974941672,
+        "max_abs_difference": 20.395556766031895,
+        "worst_phase": "a"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 9.333481083343774,
+        "gridkit_vs_fine_peak_percent": 9.0416440633411
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 5.5570264377892435,
+        "gridkit_vs_fine_peak_percent": 27.134447167005934
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 9.40179394540563,
+        "gridkit_vs_fine_peak_percent": 9.299712669992607
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.18294288534952294,
+        "gridkit_vs_fine_peak_percent": 31.556444112379143
+      }
+    }
+  },
+  {
+    "line": "345kv-h-frame",
+    "model": "fd",
+    "scenario": "fault",
+    "tf_s": 0.12,
+    "pscad_step_s": 2e-06,
+    "gridkit": {
+      "seconds": 1.741712007,
+      "unknowns": 318,
+      "accepted_steps": 44944,
+      "min_delay_s": 0.00033384577619091784,
+      "max_delay_s": 0.0003350309375148852,
+      "median_h_over_min_delay": 0.004793986885529125,
+      "max_h_over_max_delay": 0.15909230402330324,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 367,
+      "history_rejections": 0,
+      "error_test_failures": 723
+    },
+    "forcing_check_percent": 1.7771447689291192e-09,
+    "errors": {
+      "v1": {
+        "peak_percent": 9.47678379910659,
+        "rms_percent": 4.424662279453946,
+        "reference_peak": 620235.94969,
+        "max_abs_difference": 58778.419996456825,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 6.148579164928777,
+        "rms_percent": 5.863200205775281,
+        "reference_peak": 1320889.2416,
+        "max_abs_difference": 81215.92070080334,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 3.4250422932986146,
+        "rms_percent": 2.973410642983724,
+        "reference_peak": 5681.3336614,
+        "max_abs_difference": 194.58808072636072,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.6442638263380259,
+        "rms_percent": 0.405459439088232,
+        "reference_peak": 5723.0846799,
+        "max_abs_difference": 36.8717643432891,
+        "worst_phase": "a"
+      }
+    },
+    "steady_state_errors": {
+      "v1": {
+        "peak_percent": 0.07356193343630009,
+        "rms_percent": 0.07354888709988577,
+        "reference_peak": 280611.09742,
+        "max_abs_difference": 206.4229486989716,
+        "worst_phase": "c"
+      },
+      "v2": {
+        "peak_percent": 0.08049640863670288,
+        "rms_percent": 0.08048906935164071,
+        "reference_peak": 275973.7747,
+        "max_abs_difference": 222.14897741264576,
+        "worst_phase": "b"
+      },
+      "source": {
+        "peak_percent": 0.33897443837818825,
+        "rms_percent": 0.3389632637586281,
+        "reference_peak": 436.59612742,
+        "max_abs_difference": 1.479949270902864,
+        "worst_phase": "c"
+      },
+      "i2": {
+        "peak_percent": 0.01531299608856187,
+        "rms_percent": 0.015300209196925759,
+        "reference_peak": 462.51709627,
+        "max_abs_difference": 0.07082522486075504,
+        "worst_phase": "c"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 1.681696704064629,
+        "gridkit_vs_fine_peak_percent": 9.641037045551883
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 0.5872347296291459,
+        "gridkit_vs_fine_peak_percent": 6.244329468182331
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 0.35464634580362403,
+        "gridkit_vs_fine_peak_percent": 3.5191824063780253
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.030786323636997605,
+        "gridkit_vs_fine_peak_percent": 0.6619709698550178
+      }
+    }
+  },
+  {
+    "line": "345kv-h-frame",
+    "model": "fd",
+    "scenario": "sag",
+    "tf_s": 0.1,
+    "pscad_step_s": 2e-06,
+    "gridkit": {
+      "seconds": 1.672801355,
+      "unknowns": 318,
+      "accepted_steps": 47618,
+      "min_delay_s": 0.00033384577619091784,
+      "max_delay_s": 0.0003350309375148852,
+      "median_h_over_min_delay": 0.004808217168402908,
+      "max_h_over_max_delay": 0.15909230402330324,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 162,
+      "history_rejections": 0,
+      "error_test_failures": 545
+    },
+    "forcing_check_percent": 1.7771447689291192e-09,
+    "errors": {
+      "v1": {
+        "peak_percent": 3.750863024753199,
+        "rms_percent": 0.9653975384616705,
+        "reference_peak": 331429.20695,
+        "max_abs_difference": 12431.45557672031,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 4.62154016114246,
+        "rms_percent": 1.26546372498544,
+        "reference_peak": 345453.15619,
+        "max_abs_difference": 15965.25635125504,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 6.041985291110203,
+        "rms_percent": 1.8293721043848397,
+        "reference_peak": 589.92078729,
+        "max_abs_difference": 35.642927197263305,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.813705157823915,
+        "rms_percent": 0.1948780502951588,
+        "reference_peak": 468.3701757,
+        "max_abs_difference": 3.8111522773798328,
+        "worst_phase": "a"
+      }
+    },
+    "steady_state_errors": {
+      "v1": {
+        "peak_percent": 0.07356193343630009,
+        "rms_percent": 0.07354888709988577,
+        "reference_peak": 280611.09742,
+        "max_abs_difference": 206.4229486989716,
+        "worst_phase": "c"
+      },
+      "v2": {
+        "peak_percent": 0.08049640863670288,
+        "rms_percent": 0.08048906935164071,
+        "reference_peak": 275973.7747,
+        "max_abs_difference": 222.14897741264576,
+        "worst_phase": "b"
+      },
+      "source": {
+        "peak_percent": 0.33897443837818825,
+        "rms_percent": 0.3389632637586281,
+        "reference_peak": 436.59612742,
+        "max_abs_difference": 1.479949270902864,
+        "worst_phase": "c"
+      },
+      "i2": {
+        "peak_percent": 0.01531299608856187,
+        "rms_percent": 0.015300209196925759,
+        "reference_peak": 462.51709627,
+        "max_abs_difference": 0.07082522486075504,
+        "worst_phase": "c"
+      }
+    }
+  },
+  {
+    "line": "765kv-horizontal",
+    "model": "fd",
+    "scenario": "energize",
+    "tf_s": 0.031,
+    "pscad_step_s": 1e-06,
+    "gridkit": {
+      "seconds": 1.590354681,
+      "unknowns": 318,
+      "accepted_steps": 12211,
+      "min_delay_s": 0.0010751765289497377,
+      "max_delay_s": 0.001078537795440126,
+      "median_h_over_min_delay": 0.002068532962377135,
+      "max_h_over_max_delay": 0.45246444034059863,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 363,
+      "history_rejections": 0,
+      "error_test_failures": 166
+    },
+    "forcing_check_percent": 8.004836204548291e-10,
+    "errors": {
+      "v1": {
+        "peak_percent": 6.925017854710668,
+        "rms_percent": 3.767696473735154,
+        "reference_peak": 968176.07217,
+        "max_abs_difference": 67046.36586280895,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 7.506697181272541,
+        "rms_percent": 5.32375057118983,
+        "reference_peak": 1402920.2081,
+        "max_abs_difference": 105312.97171694555,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 8.62860029971401,
+        "rms_percent": 7.029045321603801,
+        "reference_peak": 3619.5303799,
+        "max_abs_difference": 312.3148092082911,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 7.567398311645425,
+        "rms_percent": 5.399727048270609,
+        "reference_peak": 14.030522418,
+        "max_abs_difference": 1.061745516574765,
+        "worst_phase": "a"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 0.161832452792693,
+        "gridkit_vs_fine_peak_percent": 6.978816404421257
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 0.14359385381702824,
+        "gridkit_vs_fine_peak_percent": 7.538633865730279
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 0.11748354818911778,
+        "gridkit_vs_fine_peak_percent": 8.682131998810092
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.0016812990823238164,
+        "gridkit_vs_fine_peak_percent": 7.567831163497709
+      }
+    }
+  },
+  {
+    "line": "765kv-horizontal",
+    "model": "fd",
+    "scenario": "pulse",
+    "tf_s": 0.008781286997183509,
+    "pscad_step_s": 5e-07,
+    "gridkit": {
+      "seconds": 0.851758539,
+      "unknowns": 318,
+      "accepted_steps": 8118,
+      "min_delay_s": 0.0010751765289497377,
+      "max_delay_s": 0.001078537795440126,
+      "median_h_over_min_delay": 0.00016046874052047145,
+      "max_h_over_max_delay": 0.45246444034059863,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 237,
+      "history_rejections": 0,
+      "error_test_failures": 438
+    },
+    "forcing_check_percent": 7.526753678111617e-10,
+    "errors": {
+      "v1": {
+        "peak_percent": 18.383927488443376,
+        "rms_percent": 5.388094280880754,
+        "reference_peak": 56914.255076,
+        "max_abs_difference": 10463.075383759544,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 53.273129835250415,
+        "rms_percent": 23.80156143767891,
+        "reference_peak": 39266.43575799997,
+        "max_abs_difference": 20918.45930303452,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 18.67866027107305,
+        "rms_percent": 7.361358355618578,
+        "reference_peak": 188.31213664,
+        "max_abs_difference": 35.174184252184475,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 57.95513682213001,
+        "rms_percent": 26.340518487606104,
+        "reference_peak": 125.02615051999992,
+        "max_abs_difference": 72.45907659730815,
+        "worst_phase": "a"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 9.335199809450604,
+        "gridkit_vs_fine_peak_percent": 9.04905626633328
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 4.22255144927287,
+        "gridkit_vs_fine_peak_percent": 55.76640997728007
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 9.396476499540139,
+        "gridkit_vs_fine_peak_percent": 9.29008747865861
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.11810079181017825,
+        "gridkit_vs_fine_peak_percent": 57.99458302964644
+      }
+    }
+  },
+  {
+    "line": "765kv-horizontal",
+    "model": "fd",
+    "scenario": "fault",
+    "tf_s": 0.12,
+    "pscad_step_s": 2e-06,
+    "gridkit": {
+      "seconds": 2.303527026,
+      "unknowns": 318,
+      "accepted_steps": 49034,
+      "min_delay_s": 0.0010751765289497377,
+      "max_delay_s": 0.001078537795440126,
+      "median_h_over_min_delay": 0.001851189899705441,
+      "max_h_over_max_delay": 0.05476092934113903,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 472,
+      "history_rejections": 1,
+      "error_test_failures": 551
+    },
+    "forcing_check_percent": 8.050778348797261e-10,
+    "errors": {
+      "v1": {
+        "peak_percent": 27.970471506618594,
+        "rms_percent": 6.36739454828985,
+        "reference_peak": 1363589.7831,
+        "max_abs_difference": 381402.49174914777,
+        "worst_phase": "c"
+      },
+      "v2": {
+        "peak_percent": 8.258090449204442,
+        "rms_percent": 6.20312281051391,
+        "reference_peak": 1463981.8504,
+        "max_abs_difference": 120896.94536596886,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 3.329800227998329,
+        "rms_percent": 2.98979716829267,
+        "reference_peak": 8407.0747988,
+        "max_abs_difference": 279.9387958184325,
+        "worst_phase": "c"
+      },
+      "i2": {
+        "peak_percent": 17.784264853441748,
+        "rms_percent": 3.5941088838059643,
+        "reference_peak": 8775.3295438,
+        "max_abs_difference": 1560.6278478317136,
+        "worst_phase": "c"
+      }
+    },
+    "steady_state_errors": {
+      "v1": {
+        "peak_percent": 0.049195748126863,
+        "rms_percent": 0.049191265667602846,
+        "reference_peak": 631835.69862,
+        "max_abs_difference": 310.8362988687004,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 0.08758042239608055,
+        "rms_percent": 0.08757230783843202,
+        "reference_peak": 631487.70621,
+        "max_abs_difference": 553.0596004780382,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 0.9277938568294163,
+        "rms_percent": 0.9277883713464906,
+        "reference_peak": 1185.2250903,
+        "max_abs_difference": 10.996445577404302,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.11689500290654738,
+        "rms_percent": 0.11688305669811998,
+        "reference_peak": 1145.3934259,
+        "max_abs_difference": 1.3389076784972076,
+        "worst_phase": "b"
+      }
+    },
+    "pscad_refinement": {
+      "v1": {
+        "coarse_vs_fine_peak_percent": 3.5391595455176077,
+        "gridkit_vs_fine_peak_percent": 29.447672178369654
+      },
+      "v2": {
+        "coarse_vs_fine_peak_percent": 3.1408174596614966,
+        "gridkit_vs_fine_peak_percent": 8.3519818900189
+      },
+      "source": {
+        "coarse_vs_fine_peak_percent": 0.24278181003344937,
+        "gridkit_vs_fine_peak_percent": 3.3734231257815535
+      },
+      "i2": {
+        "coarse_vs_fine_peak_percent": 0.1525600892595162,
+        "gridkit_vs_fine_peak_percent": 17.85289386674396
+      }
+    }
+  },
+  {
+    "line": "765kv-horizontal",
+    "model": "fd",
+    "scenario": "sag",
+    "tf_s": 0.1,
+    "pscad_step_s": 2e-06,
+    "gridkit": {
+      "seconds": 1.600279746,
+      "unknowns": 318,
+      "accepted_steps": 25011,
+      "min_delay_s": 0.0010751765289497377,
+      "max_delay_s": 0.001078537795440126,
+      "median_h_over_min_delay": 0.002936067606920266,
+      "max_h_over_max_delay": 0.05476092934113903,
+      "time_fraction_above_all_delays": 0.0,
+      "max_history_segments": 216,
+      "history_rejections": 0,
+      "error_test_failures": 410
+    },
+    "forcing_check_percent": 8.050778348797261e-10,
+    "errors": {
+      "v1": {
+        "peak_percent": 1.8912423161414715,
+        "rms_percent": 0.5803672826173047,
+        "reference_peak": 664743.8242899999,
+        "max_abs_difference": 12571.916498909588,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 2.1273062051546687,
+        "rms_percent": 0.6957595193660449,
+        "reference_peak": 705719.40564,
+        "max_abs_difference": 15012.812707160367,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 2.6778793816796025,
+        "rms_percent": 1.205542602142584,
+        "reference_peak": 1459.8067382,
+        "max_abs_difference": 39.09186365462733,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.5978516205535617,
+        "rms_percent": 0.19497189242461002,
+        "reference_peak": 1207.3696642,
+        "max_abs_difference": 7.2182791034917955,
+        "worst_phase": "a"
+      }
+    },
+    "steady_state_errors": {
+      "v1": {
+        "peak_percent": 0.049195748126863,
+        "rms_percent": 0.049191265667602846,
+        "reference_peak": 631835.69862,
+        "max_abs_difference": 310.8362988687004,
+        "worst_phase": "a"
+      },
+      "v2": {
+        "peak_percent": 0.08758042239608055,
+        "rms_percent": 0.08757230783843202,
+        "reference_peak": 631487.70621,
+        "max_abs_difference": 553.0596004780382,
+        "worst_phase": "a"
+      },
+      "source": {
+        "peak_percent": 0.9277938568294163,
+        "rms_percent": 0.9277883713464906,
+        "reference_peak": 1185.2250903,
+        "max_abs_difference": 10.996445577404302,
+        "worst_phase": "a"
+      },
+      "i2": {
+        "peak_percent": 0.11689500290654738,
+        "rms_percent": 0.11688305669811998,
+        "reference_peak": 1145.3934259,
+        "max_abs_difference": 1.3389076784972076,
+        "worst_phase": "b"
+      }
+    }
+  }
+]

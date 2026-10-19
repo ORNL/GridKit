@@ -1,0 +1,62 @@
+{
+  "name": "l50__r__r",
+  "source": {
+    "rms": [
+      39837.16857408418,
+      39837.16857408418,
+      39837.16857408418
+    ],
+    "phase": [
+      0.0,
+      -2.0943951023931953,
+      2.0943951023931953
+    ],
+    "frequency": 60.0,
+    "resistance": [
+      4.761,
+      4.761,
+      4.761
+    ],
+    "inductance": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "load": {
+    "resistance": [
+      683.8351336426623,
+      683.8351336426623,
+      683.8351336426623
+    ],
+    "inductance": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "initialization": "sinusoidal",
+  "events": [
+    {
+      "type": "source",
+      "value": -0.4,
+      "on": 0.02,
+      "off": 0.05,
+      "rise": 5e-05,
+      "fall": 5e-05,
+      "phases": [
+        1
+      ]
+    }
+  ],
+  "solver": {
+    "t0": 0.0,
+    "tf": 0.1,
+    "dt": 1e-05,
+    "rel_tol": 1e-06,
+    "history_abs_tol": 0.0002,
+    "h_max": 0.0,
+    "compress": true
+  },
+  "line": "../lines/l50/fd.fit.json"
+}

@@ -1332,6 +1332,39 @@ namespace AnalysisManager
       return stats;
     }
 
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::getLastOrder() const
+    {
+      int order  = 0;
+      int retval = IDAGetLastOrder(solver_, &order);
+      checkOutput(retval, "IDAGetLastOrder");
+      return order;
+    }
+
+    template <class ScalarT, typename IdxT>
+    std::vector<typename Ida<ScalarT, IdxT>::RealT> Ida<ScalarT, IdxT>::getEstimatedLocalErrors() const
+    {
+      N_Vector  tmp    = N_VClone(yy_);
+      const int retval = IDAGetEstLocalErrors(solver_, tmp);
+      checkOutput(retval, "IDAGetEstLocalErrors");
+      const RealT*       data = N_VGetArrayPointer(tmp);
+      std::vector<RealT> result(data, data + N_VGetLength(tmp));
+      N_VDestroy(tmp);
+      return result;
+    }
+
+    template <class ScalarT, typename IdxT>
+    std::vector<typename Ida<ScalarT, IdxT>::RealT> Ida<ScalarT, IdxT>::getErrorWeights() const
+    {
+      N_Vector  tmp    = N_VClone(yy_);
+      const int retval = IDAGetErrWeights(solver_, tmp);
+      checkOutput(retval, "IDAGetErrWeights");
+      const RealT*       data = N_VGetArrayPointer(tmp);
+      std::vector<RealT> result(data, data + N_VGetLength(tmp));
+      N_VDestroy(tmp);
+      return result;
+    }
+
     /**
      * @brief Check SUNDIALS allocation
      *

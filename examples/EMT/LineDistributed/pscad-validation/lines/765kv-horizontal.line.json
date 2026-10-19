@@ -1,0 +1,36 @@
+{
+  "name": "765 kV single-circuit horizontal, quad bundle",
+  "description": "322 km EHV line: four-conductor square Drake ACSR bundles 0.457 m on a side, two EHS shield wires. The longest line of the set: about 1.1 ms of travel time and strong ground-mode dispersion.",
+  "source": "GridWorkbench examples/emt/geometry/765kv-horizontal.line.json",
+  "voltage_kv": 765.0,
+  "short_circuit_mva": 25000.0,
+
+  "include": ["catalog.json"],
+  "tower": "765kv-horizontal",
+
+  "conductors": [
+    { "at": "left-1",       "phase": "a", "type": "drake-acsr" },
+    { "at": "left-2",       "phase": "a", "type": "drake-acsr" },
+    { "at": "left-3",       "phase": "a", "type": "drake-acsr" },
+    { "at": "left-4",       "phase": "a", "type": "drake-acsr" },
+    { "at": "center-1",     "phase": "b", "type": "drake-acsr" },
+    { "at": "center-2",     "phase": "b", "type": "drake-acsr" },
+    { "at": "center-3",     "phase": "b", "type": "drake-acsr" },
+    { "at": "center-4",     "phase": "b", "type": "drake-acsr" },
+    { "at": "right-1",      "phase": "c", "type": "drake-acsr" },
+    { "at": "right-2",      "phase": "c", "type": "drake-acsr" },
+    { "at": "right-3",      "phase": "c", "type": "drake-acsr" },
+    { "at": "right-4",      "phase": "c", "type": "drake-acsr" },
+    { "at": "shield-left",  "phase": "g", "type": "ehs-3-8-steel" },
+    { "at": "shield-right", "phase": "g", "type": "ehs-3-8-steel" }
+  ],
+
+  "path": {
+    "span": 450.0,
+    "length": 322000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01
+  }
+}

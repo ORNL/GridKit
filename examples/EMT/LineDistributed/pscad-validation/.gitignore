@@ -1,0 +1,9 @@
+# Simulation output: regenerate with run_pscad.py, run_gridkit.sh and diagnostics/step_study.py.
+results/
+diagnostics/results/
+diagnostics/results_*/
+diagnostics/pscad-results/
+diagnostics/reference_short_recovery*.csv
+*.psout
+pscad-build/
+__pycache__/

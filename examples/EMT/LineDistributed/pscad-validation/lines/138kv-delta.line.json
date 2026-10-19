@@ -1,0 +1,27 @@
+{
+  "name": "138 kV single-circuit delta with one shield wire",
+  "description": "40 km subtransmission line: single Hawk ACSR per phase in a delta, one EHS steel shield wire at the peak, eliminated as continuously grounded.",
+  "source": "GridWorkbench examples/emt/geometry/138kv-delta.line.json; GIS route replaced by an explicit 40 km length",
+  "voltage_kv": 138.0,
+  "short_circuit_mva": 3000.0,
+
+  "include": ["catalog.json"],
+  "tower": "138kv-delta",
+
+  "conductors": [
+    { "at": "left",   "phase": "a", "type": "hawk-acsr" },
+    { "at": "right",  "phase": "b", "type": "hawk-acsr" },
+    { "at": "top",    "phase": "c", "type": "hawk-acsr" },
+    { "at": "shield", "phase": "g", "type": "ehs-3-8-steel" }
+  ],
+
+  "path": {
+    "span": 250.0,
+    "length": 40000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01,
+    "permittivity": 10.0
+  }
+}

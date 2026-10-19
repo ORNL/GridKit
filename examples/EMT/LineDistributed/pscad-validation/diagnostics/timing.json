@@ -1,0 +1,136 @@
+{
+  "description": "Runtime of the 100 ms resistive-sag cases (diagnostics/runs_timing, diagnostics/pscad/S_*.pscx). GridKit seconds include writing samples.csv at 10 us; PSCAD emtdc_cpu_s is EMTDC's reported total CPU time, fine = 2 us step, coarse = largest step PSCAD accepts for the line.",
+  "gridkit": {
+    "l16_dt1e-3": {
+      "rel_tol": 1e-06,
+      "seconds_including_csv": 0.164588698,
+      "steps": 6272,
+      "max_step": 0.00013546589694990452,
+      "unknowns": 270
+    },
+    "l16_dt1e-3_rtol1e-4": {
+      "rel_tol": 0.0001,
+      "seconds_including_csv": 0.061463638,
+      "steps": 2235,
+      "max_step": 0.0002269337289176887,
+      "unknowns": 270
+    },
+    "l16_dt1e-3_rtol1e-5": {
+      "rel_tol": 1e-05,
+      "seconds_including_csv": 0.097588742,
+      "steps": 4149,
+      "max_step": 0.00015522326605499348,
+      "unknowns": 270
+    },
+    "l2_dt1e-3": {
+      "rel_tol": 1e-06,
+      "seconds_including_csv": 0.121004301,
+      "steps": 5702,
+      "max_step": 0.0001284881490069001,
+      "unknowns": 222
+    },
+    "l2_dt1e-3_rtol1e-4": {
+      "rel_tol": 0.0001,
+      "seconds_including_csv": 0.045118477,
+      "steps": 1849,
+      "max_step": 0.0003949668584011922,
+      "unknowns": 222
+    },
+    "l2_dt1e-3_rtol1e-5": {
+      "rel_tol": 1e-05,
+      "seconds_including_csv": 0.053302588,
+      "steps": 2495,
+      "max_step": 0.00022695978460494926,
+      "unknowns": 222
+    },
+    "l4_dt1e-3": {
+      "rel_tol": 1e-06,
+      "seconds_including_csv": 0.109102194,
+      "steps": 5806,
+      "max_step": 0.00011679157524760453,
+      "unknowns": 222
+    },
+    "l4_dt1e-3_rtol1e-4": {
+      "rel_tol": 0.0001,
+      "seconds_including_csv": 0.041262159,
+      "steps": 1710,
+      "max_step": 0.000363050254619135,
+      "unknowns": 222
+    },
+    "l4_dt1e-3_rtol1e-5": {
+      "rel_tol": 1e-05,
+      "seconds_including_csv": 0.058921914,
+      "steps": 2916,
+      "max_step": 0.00022130846439138985,
+      "unknowns": 222
+    },
+    "l8_dt1e-3": {
+      "rel_tol": 1e-06,
+      "seconds_including_csv": 0.112306867,
+      "steps": 5520,
+      "max_step": 8.557224735573216e-05,
+      "unknowns": 222
+    },
+    "l8_dt1e-3_rtol1e-4": {
+      "rel_tol": 0.0001,
+      "seconds_including_csv": 0.052024971,
+      "steps": 2182,
+      "max_step": 0.00030817285765905034,
+      "unknowns": 222
+    },
+    "l8_dt1e-3_rtol1e-5": {
+      "rel_tol": 1e-05,
+      "seconds_including_csv": 0.071601815,
+      "steps": 3582,
+      "max_step": 0.00014581459048077644,
+      "unknowns": 222
+    }
+  },
+  "pscad": {
+    "S_l2_coarse": {
+      "build_s": 3.9711849689483643,
+      "run_wall_s": 6.736893653869629,
+      "emtdc_cpu_s": 1.844,
+      "emtdc_elapsed_s": 1
+    },
+    "S_l2_fine": {
+      "build_s": 4.576236248016357,
+      "run_wall_s": 16.018179416656494,
+      "emtdc_cpu_s": 11.359,
+      "emtdc_elapsed_s": 11
+    },
+    "S_l4_coarse": {
+      "build_s": 4.332218408584595,
+      "run_wall_s": 6.334922790527344,
+      "emtdc_cpu_s": 0.953,
+      "emtdc_elapsed_s": 0
+    },
+    "S_l4_fine": {
+      "build_s": 4.590175628662109,
+      "run_wall_s": 14.323217391967773,
+      "emtdc_cpu_s": 9.703,
+      "emtdc_elapsed_s": 9
+    },
+    "S_l8_fine": {
+      "build_s": 3.8444931507110596,
+      "run_wall_s": 14.046334266662598,
+      "emtdc_cpu_s": 9.937,
+      "emtdc_elapsed_s": 9
+    },
+    "S_l8_coarse": {
+      "build_s": 4.158766269683838,
+      "run_wall_s": 5.12484335899353,
+      "emtdc_cpu_s": 0.5
+    },
+    "S_l16_fine": {
+      "build_s": 4.692417860031128,
+      "run_wall_s": 14.67202353477478,
+      "emtdc_cpu_s": 10.25
+    },
+    "S_l16_coarse": {
+      "build_s": 3.6448192596435547,
+      "run_wall_s": 5.687846660614014,
+      "emtdc_cpu_s": 0.469
+    }
+  }
+}

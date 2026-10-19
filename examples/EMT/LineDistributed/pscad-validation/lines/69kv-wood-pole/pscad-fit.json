@@ -1,0 +1,36 @@
+{
+  "Yc": {
+    "max_error_percent": 0.0495,
+    "poles": 11
+  },
+  "H_attempts": 9,
+  "H_delay_groups": [
+    {
+      "group": 1,
+      "max_error_percent": 0.06888,
+      "poles": 8,
+      "delay_s": 5.3357000000000004e-05
+    },
+    {
+      "group": 2,
+      "max_error_percent": 0.07492,
+      "poles": 9,
+      "delay_s": 5.344200000000001e-05
+    }
+  ],
+  "H_phase_domain": {
+    "max_error_percent": 0.0389,
+    "rms_error_percent": 0.0091,
+    "residue_pole_ratio": 0.56
+  },
+  "gridkit": {
+    "Yc_poles": 20,
+    "Yc_max_relative_error": 0.00019739944301836086,
+    "H_poles": 12,
+    "H_max_scaled_error": 0.0010154770757284692,
+    "delays_s": [
+      5.340196650628763e-05,
+      5.338635395510234e-05
+    ]
+  }
+}
