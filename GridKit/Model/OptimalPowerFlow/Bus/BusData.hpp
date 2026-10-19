@@ -6,8 +6,6 @@
 #pragma once
 
 #include <cstddef>
-#include <format>
-#include <string>
 
 #include <GridKit/Model/OptimalPowerFlow/ComponentData.hpp>
 
@@ -37,12 +35,6 @@ namespace GridKit
       IdxT number{0};
 
       ParameterMap<Parameters, RealT, IdxT> parameters;
-
-      /// Bus `id`, from its number
-      std::string id() const
-      {
-        return std::format("bus {}", number);
-      }
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

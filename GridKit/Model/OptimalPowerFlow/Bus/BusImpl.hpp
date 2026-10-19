@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <format>
 #include <type_traits>
 
 #include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
@@ -17,7 +18,7 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus(const ModelDataT& data)
-      : ComponentT(std::type_identity<Bus>{}, data.id())
+      : ComponentT(std::type_identity<Bus>{}, std::format("bus {}", data.number))
     {
       initializeParameters(data);
     }

@@ -27,7 +27,7 @@ namespace GridKit
      * @todo Replace the temporary STL containers of system-level data.
      */
     template <typename scalar_type, typename index_type>
-    class SystemModel : public Model::OptimizationEvaluator<scalar_type, index_type>
+    class SystemModel : public Component<scalar_type, index_type>
     {
       using ComponentT   = Component<scalar_type, index_type>;
       using EvaluatorT   = Model::OptimizationEvaluator<scalar_type, index_type>;
@@ -60,7 +60,7 @@ namespace GridKit
       explicit SystemModel(const SystemModelData<RealT, IdxT>& data);
       explicit SystemModel(std::vector<std::unique_ptr<ComponentT>> components);
 
-      Model::ConfigurationChecks verify() const;
+      Model::ConfigurationChecks verify() const override;
 
       int allocate() override;
       int tagInequality() override;

@@ -233,6 +233,6 @@ namespace AnalysisManager
     }
 
     // Available template instantiations
-    template class IpoptInterface<double, size_t>;
+    template class IpoptInterface<ipnumber, size_t>;
   } // namespace SteadyState
 } // namespace AnalysisManager

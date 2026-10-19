@@ -15,6 +15,7 @@
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/OptimizationEvaluator.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -58,9 +59,11 @@ namespace GridKit
      * system vectors and reads and adds to those of the components at its ports
      */
     template <typename scalar_type, typename index_type>
-    class Component
+    class Component : public Model::OptimizationEvaluator<scalar_type, index_type>
     {
       friend class SystemModel<scalar_type, index_type>;
+
+      using EvaluatorT = Model::OptimizationEvaluator<scalar_type, index_type>;
 
     protected:
       using ScalarT      = scalar_type;
@@ -121,38 +124,44 @@ namespace GridKit
       /// Read and add to the blocks of `component` from `offset` at `port`
       int connect(IdxT port, Component& component, const Block& offset = {});
 
+      /// Nothing to allocate, since the system binds a component to its blocks
+      int allocate() override
+      {
+        return 0;
+      }
+
       /// Tag each internal constraint as an inequality or an equality
-      virtual int tagInequality()
+      int tagInequality() override
       {
         return 0;
       }
 
       /// Set the bounds and any nonzero initial value
-      virtual int initialize()
+      int initialize() override
       {
         return 0;
       }
 
       /// Evaluate the objective contribution into `f()`
-      int evaluateObjective();
+      int evaluateObjective() override;
 
       /// Add the objective gradient
-      virtual int evaluateGradient()
+      int evaluateGradient() override
       {
         return 0;
       }
 
       /// Add the constraint contributions
-      int evaluateConstraints();
+      int evaluateConstraints() override;
 
       /// Evaluate the constraint Jacobian into `jacobianEntries()`
-      virtual int evaluateJacobian()
+      int evaluateJacobian() override
       {
         return 0;
       }
 
       /// Evaluate the lower Lagrangian Hessian into `hessianEntries()`
-      virtual int evaluateHessian([[maybe_unused]] RealT sigma)
+      int evaluateHessian([[maybe_unused]] RealT sigma) override
       {
         return 0;
       }
@@ -188,18 +197,6 @@ namespace GridKit
         return ports_;
       }
 
-      /// Objective contribution
-      const ScalarT& f() const
-      {
-        return f_;
-      }
-
-      /// True for each internal inequality
-      const std::vector<bool>& tag() const
-      {
-        return tag_;
-      }
-
       const CooBuffer& jacobianEntries() const
       {
         return jacobian_entries_;
@@ -211,6 +208,9 @@ namespace GridKit
       }
 
     protected:
+      /// A system, which has no kernels
+      Component() = default;
+
       /// Sizes from the enumerations of `ModelT`
       template <ComponentKernels<scalar_type, index_type> ModelT>
       Component(std::type_identity<ModelT>, std::string id);
@@ -226,14 +226,18 @@ namespace GridKit
       template <ComponentKernels<scalar_type, index_type> ModelT>
       int evaluateHessian(const ModelT& model, RealT sigma);
 
-      std::vector<bool> tag_;
+      // Blocks of the system vectors, which a component views
 
-      // Views that `initialize()` sets
-      VectorT     x_;
-      RealVectorT x_lower_;
-      RealVectorT x_upper_;
-      RealVectorT g_lower_;
-      RealVectorT g_upper_;
+      using EvaluatorT::f_;
+      using EvaluatorT::g_;
+      using EvaluatorT::g_lower_;
+      using EvaluatorT::g_upper_;
+      using EvaluatorT::gradient_;
+      using EvaluatorT::lambda_;
+      using EvaluatorT::tag_;
+      using EvaluatorT::x_;
+      using EvaluatorT::x_lower_;
+      using EvaluatorT::x_upper_;
 
     private:
       template <typename ModelT>
@@ -267,12 +271,6 @@ namespace GridKit
       Block             size_;   ///< Internal sizes
       Block             offset_; ///< Global index of each internal block
       bool              bound_{false};
-
-      // Views that the evaluations set, and the multipliers
-      ScalarT     f_{};
-      RealVectorT gradient_;
-      VectorT     g_;
-      RealVectorT lambda_;
 
       VectorT   local_x_; ///< Internal, then external variables
       VectorT   local_g_; ///< Internal, then external contributions
