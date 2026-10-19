@@ -65,7 +65,7 @@ namespace GridKit
     void from_json(const json& j, BusData<RealT, IdxT>& bus)
     {
       j.at("number").get_to(bus.number);
-      bus.parameters = readParameters<BusParameters, RealT, IdxT>(j.at("params"), bus.id());
+      bus.parameters = readParameters<BusParameters, RealT, IdxT>(j.at("params"), std::format("bus {}", bus.number));
     }
 
     template <typename RealT, typename IdxT, typename Parameters, typename Ports>

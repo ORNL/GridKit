@@ -16,6 +16,14 @@ namespace AnalysisManager
     /**
      * @brief Ipopt problem over a `Model::OptimizationEvaluator`, which holds
      * the solution and its multipliers after the solve
+     *
+     * Unlike `IpoptInterface::DynamicObjective` and
+     * `IpoptInterface::DynamicConstraint`, which integrate a dynamic model to
+     * evaluate the problem, it takes the evaluator's functions and exact
+     * sparse derivatives.
+     *
+     * @tparam scalar_type - Scalar of the evaluator, which must be `ipnumber`
+     * @tparam index_type - Index of the evaluator
      */
     template <typename scalar_type, typename index_type>
     class IpoptInterface : public Ipopt::TNLP

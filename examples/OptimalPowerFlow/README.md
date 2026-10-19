@@ -14,6 +14,6 @@ cd /path/to/install/share/gridkit/examples/OptimalPowerFlow/EconomicDispatch
 /path/to/install/bin/EconomicDispatch --case-file IEEE39.case.json
 ```
 
-`--solver-tolerance` sets the Ipopt tolerance, 1e-8 by default. With
+`--solver-tolerance` sets the Ipopt tolerance, 1e-6 by default. With
 `--reference-cost` in \$/h, the study fails when the cost differs from it by
 more than `--tolerance`, relative, 1e-6 by default.

@@ -29,7 +29,7 @@ int runApplication(int argc, const char* argv[])
                {.name     = {"--solver-tolerance"},
                 .help     = "Ipopt convergence tolerance",
                 .type     = ArgType::Real,
-                .defaults = 1.0e-8},
+                .defaults = 1.0e-6},
                {.name     = {"--tolerance", "-t"},
                 .help     = "Relative tolerance of the cost check",
                 .type     = ArgType::Real,
