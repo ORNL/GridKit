@@ -207,15 +207,11 @@ int main(int argc, const char* argv[])
   Log::setVerbosity(Log::Verbosity::EVERYTHING);
 
   CliArgs args{{.name     = {"--case-file", "-c"},
-                .required = true},
-
-               {.name = {"--iface-bus", "-b"},
-                .type = ArgType::Integer}};
+                .required = true}};
 
   args.parseArgs(argc, argv);
 
   auto filepath = std::filesystem::path(args["case-file"]());
-  auto busid    = args["iface-bus"].as<IdxT>();
 
   // Instantiate system
   auto data = parseSystemModelData(filepath);
