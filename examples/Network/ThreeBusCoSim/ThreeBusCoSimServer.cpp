@@ -31,7 +31,7 @@ using Log = GridKit::Utilities::Logger;
 template <typename scalar_type, typename index_type>
 class CoSimServer
 {
-public:
+private:
   /// Type representing a scalar value
   using ScalarT      = scalar_type;
   /// Type representing an index
@@ -39,8 +39,9 @@ public:
   /// Alias for SystemModel
   using SystemModelT = SystemModel<ScalarT, IdxT>;
   /// Alias for SignalNode
-  using SignalT      = typename SystemModelT::SignalNodeT;
+  using SignalT      = SignalNode<ScalarT, IdxT>;
 
+public:
   CoSimServer() = delete;
 
   /**
