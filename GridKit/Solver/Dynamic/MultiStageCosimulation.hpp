@@ -48,8 +48,9 @@ namespace AnalysisManager
 
   public:
     MultiStageCosimulation(
-        size_t      max_iterations = 1,
-        size_t      num_stages     = 1,
+        size_t      max_iterations,
+        size_t      num_stages,
+        RealT       tolerance,
         MemorySpace memspace       = MemorySpace::HOST);
 
     ~MultiStageCosimulation();
@@ -74,26 +75,6 @@ namespace AnalysisManager
     State& yp()
     {
       return *yp_;
-    }
-
-    void maxNormReport(const ScalarT* r, size_t n, const char* label)
-    {
-      double max_abs = 0.0;
-      size_t argmax  = 0;
-      double l2      = 0.0;
-      for (size_t i = 0; i < n; ++i)
-      {
-        const double a  = std::abs(static_cast<double>(r[i]));
-        l2             += a * a;
-        if (a > max_abs)
-        {
-          max_abs = a;
-          argmax  = i;
-        }
-      }
-      std::cout << label << "  max|F| = " << max_abs
-                << " at index " << argmax
-                << "   ||F||_2 = " << std::sqrt(l2) << '\n';
     }
 
   private:
@@ -156,7 +137,7 @@ namespace AnalysisManager
     std::vector<std::shared_ptr<State>> next_stages_y_;
 
     /**
-     * @brief Global system states associated with the co-simulation stages.
+     * @brief Global system states derivatives associated with the current co-simulation stages.
      *
      */
     std::vector<std::shared_ptr<State>> curr_stages_yp_;
@@ -167,7 +148,7 @@ namespace AnalysisManager
     std::vector<std::shared_ptr<State>> next_stages_yp_;
 
     /**
-     * @brief Memory space used for vector storage and operations.
+     * @brief Memory space used for  operations.
      */
     MemorySpace memspace_;
 
@@ -177,13 +158,13 @@ namespace AnalysisManager
     GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT> vector_handler_;
 
     /**
-     * @brief Coupling data associated with each subsystem partition.
+     * @brief Coupling state data associated with each subsystem partition.
      *
      */
     std::vector<CouplingMatrix> coupling_mat_y_;
 
     /**
-     * @brief Coupling data associated with each subsystem partition.
+     * @brief Coupling state derivative data associated with each subsystem partition.
      *
      */
     std::vector<CouplingMatrix> coupling_mat_yp_;
@@ -198,12 +179,19 @@ namespace AnalysisManager
      */
     std::vector<std::unique_ptr<IdaSolver>> ida_solvers_;
 
+    /**
+     * @brief Interpolants associated with each partition and stage on the on current states.
+     */
     std::vector<std::vector<std::unique_ptr<Interpolant>>> interpolants_y_;
 
+    /**
+     * @brief Interpolants associated with each partition and stage on the on current states derivatives.
+     */
     std::vector<std::vector<std::unique_ptr<Interpolant>>> interpolants_yp_;
 
-    System* mono_system;
-
-    std::unique_ptr<IdaSolver> mono_solver;
+    /**
+     * @brief IDA sub-integrator tolerance.
+     */
+    RealT tol_;
   };
 } // namespace AnalysisManager

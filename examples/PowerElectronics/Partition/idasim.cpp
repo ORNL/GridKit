@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include <string>
 
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -16,34 +17,69 @@
 using index_type = size_t;
 using real_type  = double;
 
-std::vector<real_type> linspace(real_type start, real_type end, std::size_t num_points);
-
 struct GenDataIndex
 {
-  bool       refframe;
-  index_type idx_y11;
-  index_type idx_y12;
-  index_type idx_y13;
-  index_type idx_y14;
-  index_type idx_y15{};
+  bool refframe;
+  index_type  idx_y11;
+  index_type  idx_y12;
+  index_type  idx_y13;
+  index_type  idx_y14;
+  index_type  idx_y15;
 };
+
+std::vector<real_type> linspace(real_type start, real_type end, std::size_t num_points);
+int runMonolithic(index_type num_intervals_1, index_type num_intervals_2, real_type tol, index_type N_size, std::string type);
+
+constexpr bool WRITE_OUTPUT = true;
+
+ // Those generators whose data we want to output
+ const std::vector<size_t> generator_ids = {9, 10, 11, 99, 9999};
 
 int main()
 {
+
+  std::string timing = "timing" ;
+
+  if(WRITE_OUTPUT)
+  { 
+    timing = ""; //If output is to be written, we do not consider timing
+  } 
+
+  std::string info_type = "1e-11_ref_sol_" + timing;
+
+  runMonolithic(5,  20, 1e-11, 5000, info_type);
+  runMonolithic(10, 30, 1e-11, 5000, info_type);
+  runMonolithic(15, 40, 1e-11, 5000, info_type);
+  runMonolithic(20, 50, 1e-11, 5000, info_type);
+  runMonolithic(25, 60, 1e-11, 5000, info_type);
+  runMonolithic(30, 70, 1e-11, 5000, info_type);
+  runMonolithic(35, 80, 1e-11, 5000, info_type);
+
+  runMonolithic(0, 140, 1e-2, 5000, "1e-2_mono_" + timing);
+  runMonolithic(0, 140, 1e-3, 5000, "1e-3_mono_" + timing);
+  runMonolithic(0, 140, 1e-4, 5000, "1e-4_mono_" + timing);
+  runMonolithic(0, 140, 1e-5, 5000, "1e-5_mono_" + timing);
+  runMonolithic(0, 140, 1e-6, 5000, "1e-6_mono_" + timing);
+  runMonolithic(0, 140, 1e-7, 5000, "1e-7_mono_" + timing);
+  runMonolithic(0, 140, 1e-8, 5000, "1e-8_mono_" + timing);
+
+  runMonolithic(0, 140, 1e-11, 5000, "1e-11_mono_reference" + timing);
+}
+
+int runMonolithic(index_type num_intervals_1, index_type num_intervals_2, real_type tol, index_type N_size, std::string type)
+{
   using namespace GridKit;
 
-  constexpr index_type SCALE_MICROGRID_MAX_STEPS = 1000000;
-  constexpr index_type N_size                    = 50;
+  constexpr index_type SCALE_MICROGRID_MAX_STEPS = 100000;
   constexpr bool       use_jac                   = true;
 
   constexpr real_type t_init  = 0.0;
   constexpr real_type t_final = 1.0;
+  constexpr size_t load_faulted_index = 10;
 
-  constexpr real_type  rel_tol          = 1e-6;
-  constexpr real_type  abs_tol          = 1e-6;
-  constexpr index_type num_intervals_1  = 100;
-  constexpr index_type num_intervals_2  = 50;
-  constexpr size_t     MAX_STATE_OUTPUT = 1299;
+   real_type  rel_tol          = tol;
+   real_type  abs_tol          = tol;
+
 
   // ---------------------------------------------------------------------------
   // Build the microgrid
@@ -57,26 +93,37 @@ int main()
   system->allocate();
 
   // ---------------------------------------------------------------------------
-  // Identify generator variables used to compute delta, P, and Q
+  // Collect the indices of the generators to inspect
   // ---------------------------------------------------------------------------
+  std::vector<GenDataIndex> gen_data;
 
-  std::vector<GenDataIndex> genData(5);
-
-  // Identify the location for the variables required to compute delta, P and Q for each generator
-  for (int i = 0; i < 4; i++)
+  for (const auto i : generator_ids)
   {
-    auto* gen     = network.generators[i];
-    auto& gendata = genData[i];
+    const auto* gen = network.generators[i];
+    const bool refframe = (i == 0);
 
-    gendata.refframe = (i == 0);
-    gendata.idx_y11  = gen->getNodeConnection(11);
-    gendata.idx_y12  = gen->getNodeConnection(12);
-    gendata.idx_y13  = gen->getNodeConnection(13);
-    gendata.idx_y14  = gen->getNodeConnection(14);
+    gen_data.push_back({
+        refframe,
+        gen->getNodeConnection(11),
+        gen->getNodeConnection(12),
+        gen->getNodeConnection(13),
+        gen->getNodeConnection(14),
+        refframe ? -1 : gen->getNodeConnection(15)
+    });
+  }
 
-    if (!gendata.refframe)
+  // Apply a fault to the selected load
+  for (size_t i = 0; i < network.loads.size(); i += 2)
+  {
+    if(i == load_faulted_index)
     {
-      gendata.idx_y15 = gen->getNodeConnection(15);
+      network.loads[i]->setResistance(3);
+      network.loads[i]->setInductance(0.1);
+    }
+    else
+    {
+      network.loads[i]->setResistance(5);
+      network.loads[i]->setInductance(20);
     }
   }
 
@@ -127,67 +174,104 @@ int main()
   // Run monolithic IDA
   // ---------------------------------------------------------------------------
 
-  std::vector<real_type> Tspan1 = linspace(0.0, 0.01, num_intervals_1 + 1);
-  std::vector<real_type> Tspan2 = linspace(0.01, 1.0, num_intervals_2 + 1);
-  std::vector<real_type> Tspan  = Tspan1;
+  std::vector<real_type> Tspan1;
+  std::vector<real_type> Tspan2;
+  std::vector<real_type> Tspan;
 
-  Tspan.insert(Tspan.end(), Tspan2.begin() + 1, Tspan2.end());
+    if (num_intervals_1 == 0)
+  {
+    Tspan = linspace(t_init, t_final, num_intervals_2 + 1);
+  }
+  else
+  {
+    Tspan1 = linspace(t_init, 0.01, num_intervals_1 + 1);
+    Tspan2 = linspace(0.01, t_final, num_intervals_2 + 1);
+
+    Tspan = Tspan1;
+    Tspan.insert(Tspan.end(), Tspan2.begin() + 1, Tspan2.end());
+  }
+
 
   const std::string filename = "ida_solution_intervals_"
                                + std::to_string(num_intervals_1)
                                + "_" + std::to_string(num_intervals_2)
-                               + "_ref.csv";
+                               + "_" + type 
+                               + ".csv";
 
   std::ofstream output(filename);
 
-  output << std::setprecision(10);
+  output << std::setprecision(16);
+
+  if constexpr (WRITE_OUTPUT)
+  {
+    output << "time";
+
+    for (const auto i : generator_ids)
+    {
+      output << ",delta_" << i
+            << ",P_" << i
+            << ",Q_" << i;
+    }
+
+    output << '\n';
+  }
 
   auto out_cb = [&](const auto time) -> void
   {
     const auto* state_data = system->y().getData(GridKit::memory::HOST);
 
-    output << std::scientific << std::setprecision(8)
-           << std::setw(18) << time;
+    output << time;
 
-    for (int i = 0; i < static_cast<int>(system->size()); ++i)
+    for (const auto& gen : gen_data)
     {
-      output << "," << state_data[i];
+      const auto y11 = state_data[gen.idx_y11];
+      const auto y12 = state_data[gen.idx_y12];
+      const auto y13 = state_data[gen.idx_y13];
+      const auto y14 = state_data[gen.idx_y14];
+
+      const auto delta = gen.refframe ? 0.0 : state_data[gen.idx_y15];
+      const auto P     = y11 * y13 + y12 * y14;
+      const auto Q     = -y11 * y14 + y12 * y13;
+
+      output << "," << delta
+            << "," << P
+            << "," << Q;
     }
 
     output << '\n';
   };
 
-  out_cb(t_init);
+  if constexpr (WRITE_OUTPUT)
+  {
+    out_cb(t_init);
+  }
 
   const auto start = std::chrono::steady_clock::now();
 
-  // for (std::size_t i = 1; i < Tspan.size(); ++i)
-  // {
-  //   idas->runSimulation(Tspan[i]);
-  //   out_cb(Tspan[i]);
-  // }
-
-  idas->runSimulation(1.0, 0.001, out_cb);
-  for (size_t i = 0; i < network.loads.size(); i += 2)
+  for (std::size_t i = 1; i < Tspan.size(); ++i)
   {
-    network.loads[i]->setResistance(3);
-    network.loads[i]->setInductance(0.1);
+    idas->runSimulation(Tspan[i]);
+    if constexpr (WRITE_OUTPUT)
+    {
+      out_cb(Tspan[i]);
+    }
   }
-  idas->initializeSimulation(1.0, true);
-  idas->runSimulation(2.0, 0.001, out_cb);
 
   const auto                          end     = std::chrono::steady_clock::now();
   const std::chrono::duration<double> elapsed = end - start;
 
-  output << "\n# Metadata\n";
-  output << "# solver: Monolithic IDA\n";
-  output << "# rel_tol: " << rel_tol << '\n';
-  output << "# abs_tol: " << abs_tol << '\n';
-  output << "# num_intervals_1: " << num_intervals_1 << '\n';
-  output << "# num_intervals_2: " << num_intervals_2 << '\n';
-  output << "# num_output_steps: " << Tspan.size() - 1 << '\n';
-  output << "# runtime_seconds: " << elapsed.count() << '\n';
-
+  if constexpr (!WRITE_OUTPUT)
+  {
+    output << "\n# Metadata\n";
+    output << "# solver: Monolithic IDA\n";
+    output << "# rel_tol: " << rel_tol << '\n';
+    output << "# abs_tol: " << abs_tol << '\n';
+    output << "# num_intervals_1: " << num_intervals_1 << '\n';
+    output << "# num_intervals_2: " << num_intervals_2 << '\n';
+    output << "# num_output_steps: " << Tspan.size() - 1 << '\n';
+    output << "# runtime_seconds: " << elapsed.count() << '\n';
+  }
+ 
   output.close();
 
   std::cout << "\nIDA simulation time: "

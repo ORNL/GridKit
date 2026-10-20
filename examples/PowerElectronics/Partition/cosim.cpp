@@ -24,9 +24,6 @@ using Node      = GridKit::PowerElectronics::NodeBase<double, int>;
 using Subsystem = GridKit::SubsystemModel<double, int>;
 using System    = GridKit::PowerElectronicsModel<double, int>;
 
-template <typename ScalarT>
-std::vector<ScalarT> linspace(ScalarT start, ScalarT end, std::size_t num_points);
-
 struct GenDataIndex
 {
   bool refframe;
@@ -37,6 +34,18 @@ struct GenDataIndex
   int  idx_y15;
 };
 
+template <typename ScalarT>
+std::vector<ScalarT> linspace(ScalarT start, ScalarT end, std::size_t num_points);
+int runCosim(size_t num_intervals_1, 
+             size_t num_intervals_2,
+             size_t max_iterations,
+             size_t num_stages,
+             size_t num_partitions, 
+             double tol, 
+             size_t N_size, 
+             std::string type);
+
+
 /*
  * Verify partitioned residual and Jacobian evaluation against the
  *        monolithic microgrid model.
@@ -46,16 +55,100 @@ struct GenDataIndex
  * and 2. Each subsystem is evaluated independently, and its residuals are gathered
  * and compared with the monolithic reference.
  */
-int main()
+
+ constexpr bool WRITE_OUTPUT = true;
+
+ // Those generators whose data we want to output
+ const std::vector<size_t> generator_ids = {9, 10, 11, 99, 9999};
+
+ int main()
+ {
+    std::string timing = "timing" ;
+
+    if(WRITE_OUTPUT)
+    { 
+      timing = ""; //If output is to be written, we do not consider timing
+    } 
+
+    std::string info_type = "_tol_1e-6_" + timing;
+   // MS1_1(ZOH)
+    runCosim(5,  20, 1, 1, 100, 1e-6, 5000, info_type);
+    runCosim(10, 30, 1, 1, 100, 1e-6, 5000, info_type);
+    runCosim(15, 40, 1, 1, 100, 1e-6, 5000, info_type);
+    runCosim(20, 50, 1, 1, 100, 1e-6, 5000, info_type);
+    runCosim(25, 60, 1, 1, 100, 1e-6, 5000, info_type);
+    runCosim(30, 70, 1, 1, 100, 1e-6, 5000, info_type);
+    runCosim(35, 80, 1, 1, 100, 1e-6, 5000, info_type);
+
+    // MS1_2
+    runCosim(5,  20, 1, 2, 100, 1e-6, 5000, info_type);
+    runCosim(10, 30, 1, 2, 100, 1e-6, 5000, info_type);
+    runCosim(15, 40, 1, 2, 100, 1e-6, 5000, info_type);
+    runCosim(20, 50, 1, 2, 100, 1e-6, 5000, info_type);
+    runCosim(25, 60, 1, 2, 100, 1e-6, 5000, info_type);
+    runCosim(30, 70, 1, 2, 100, 1e-6, 5000, info_type);
+    runCosim(35, 80, 1, 2, 100, 1e-6, 5000, info_type);
+
+    //MS2_2
+    runCosim(5,  20, 2, 2, 100, 1e-6, 5000, info_type);
+    runCosim(10, 30, 2, 2, 100, 1e-6, 5000, info_type);
+    runCosim(15, 40, 2, 2, 100, 1e-6, 5000, info_type);
+    runCosim(20, 50, 2, 2, 100, 1e-6, 5000, info_type);
+    runCosim(25, 60, 2, 2, 100, 1e-6, 5000, info_type);
+    runCosim(30, 70, 2, 2, 100, 1e-6, 5000, info_type);
+    runCosim(35, 80, 2, 2, 100, 1e-6, 5000, info_type);
+
+    // MS1_3
+    runCosim(5,  20, 1, 3, 100, 1e-6, 5000, info_type);
+    runCosim(10, 30, 1, 3, 100, 1e-6, 5000, info_type);
+    runCosim(15, 40, 1, 3, 100, 1e-6, 5000, info_type);
+    runCosim(20, 50, 1, 3, 100, 1e-6, 5000, info_type);
+    runCosim(25, 60, 1, 3, 100, 1e-6, 5000, info_type);
+    runCosim(30, 70, 1, 3, 100, 1e-6, 5000, info_type);
+    runCosim(35, 80, 1, 3, 100, 1e-6, 5000, info_type);
+
+    // MS2_3
+    runCosim(5,  20, 2, 3, 100, 1e-6, 5000, info_type);
+    runCosim(10, 30, 2, 3, 100, 1e-6, 5000, info_type);
+    runCosim(15, 40, 2, 3, 100, 1e-6, 5000, info_type);
+    runCosim(20, 50, 2, 3, 100, 1e-6, 5000, info_type);
+    runCosim(25, 60, 2, 3, 100, 1e-6, 5000, info_type);
+    runCosim(30, 70, 2, 3, 100, 1e-6, 5000, info_type);
+    runCosim(35, 80, 2, 3, 100, 1e-6, 5000, info_type);
+
+    // MS1_4
+    runCosim(5,  20, 1, 4, 100, 1e-6, 5000, info_type);
+    runCosim(10, 30, 1, 4, 100, 1e-6, 5000, info_type);
+    runCosim(15, 40, 1, 4, 100, 1e-6, 5000, info_type);
+    runCosim(20, 50, 1, 4, 100, 1e-6, 5000, info_type);
+    runCosim(25, 60, 1, 4, 100, 1e-6, 5000, info_type);
+    runCosim(30, 70, 1, 4, 100, 1e-6, 5000, info_type);
+    runCosim(35, 80, 1, 4, 100, 1e-6, 5000, info_type);
+
+    // MS2_4
+    runCosim(5,  20, 2, 4, 100, 1e-6, 5000, info_type);
+    runCosim(10, 30, 2, 4, 100, 1e-6, 5000, info_type);
+    runCosim(15, 40, 2, 4, 100, 1e-6, 5000, info_type);
+    runCosim(20, 50, 2, 4, 100, 1e-6, 5000, info_type);
+    runCosim(25, 60, 2, 4, 100, 1e-6, 5000, info_type);
+    runCosim(30, 70, 2, 4, 100, 1e-6, 5000, info_type);
+    runCosim(35, 80, 2, 4, 100, 1e-6, 5000, info_type);
+
+    return 0;
+
+ }
+
+int runCosim(size_t num_intervals_1, 
+             size_t num_intervals_2,
+             size_t max_iterations,
+             size_t num_stages,
+             size_t num_partitions, 
+             double tol, 
+             size_t N_size, 
+             std::string type)
 {
 
-  constexpr int    N_size           = 1000;
-  constexpr size_t max_iterations   = 2;
-  constexpr size_t num_stages       = 2;
-  constexpr size_t num_intervals_1  = 50;
-  constexpr size_t num_intervals_2  = 100;
-  constexpr size_t num_partitions   = 128;
-  constexpr size_t MAX_STATE_OUTPUT = 1299;
+  constexpr size_t load_faulted_index = 10;
   bool             use_jac          = true;
 
   // ---------------------------------------------------------------------------
@@ -68,21 +161,40 @@ int main()
   assembleSystem(network, *system);
   system->allocate();
 
-  std::vector<GenDataIndex> genData(5);
+  // ---------------------------------------------------------------------------
+  // Collect the indices of the generators to inspect
+  // ---------------------------------------------------------------------------
+  std::vector<GenDataIndex> gen_data;
 
-  // Identify the location for the variables required to compute delta, P and Q for each generator
-  // for (int i = 0; i < 4; i++)
-  // {
-  //   auto* gen     = network.generators[i];
-  //   auto& gendata = genData[i];
+  for (const auto i : generator_ids)
+  {
+    const auto* gen = network.generators[i];
+    const bool refframe = (i == 0);
 
-  //   gendata.refframe = (i == 0);
-  //   gendata.idx_y11  = gen->getNodeConnection(11);
-  //   gendata.idx_y12  = gen->getNodeConnection(12);
-  //   gendata.idx_y13  = gen->getNodeConnection(13);
-  //   gendata.idx_y14  = gen->getNodeConnection(14);
-  //   gendata.idx_y15  = gendata.refframe ? -1 : gen->getNodeConnection(15);
-  // }
+    gen_data.push_back({
+        refframe,
+        gen->getNodeConnection(11),
+        gen->getNodeConnection(12),
+        gen->getNodeConnection(13),
+        gen->getNodeConnection(14),
+        refframe ? -1 : gen->getNodeConnection(15)
+    });
+  }
+
+  // Apply a fault to the selected load
+  for (size_t i = 0; i < network.loads.size(); i += 2)
+  {
+    if(i == load_faulted_index)
+    {
+      network.loads[i]->setResistance(3);
+      network.loads[i]->setInductance(0.1);
+    }
+    else
+    {
+      network.loads[i]->setResistance(5);
+      network.loads[i]->setInductance(20);
+    }
+  }
 
   std::cout << system->y().getSize() << std::endl;
 
@@ -114,13 +226,9 @@ int main()
   system->y().setDataUpdated();
   system->yp().setDataUpdated();
 
-  // Add fault to the system
-  for (size_t i = 0; i < network.loads.size(); i += 2)
-  {
-    network.loads[i]->setResistance(3);
-    network.loads[i]->setInductance(0.1);
-  }
-
+  // ---------------------------------------------------------------------------
+  // Check initial condition consistency
+  // ---------------------------------------------------------------------------
   system->updateTime(0.0, 0.0);
   system->evaluateResidual();
 
@@ -145,13 +253,13 @@ int main()
             << "  index  = " << max_index << '\n';
 
   // --------------------------------------------------------------------------------
-  // Create 2 Partitions and  a Partition interfaces to split to network
+  // Create Partitions and  a Partition interfaces to split to network
   // --------------------------------------------------------------------------------
   std::vector<Subsystem*> subsystems;
   partitionNetwork(network, subsystems, num_partitions);
 
   // ---------------------------------------------------------------------------
-  // cosim
+  // Configure co-simulation
   // ---------------------------------------------------------------------------
 
   std::vector<double> Tspan1 = linspace(0.0, 0.01, num_intervals_1 + 1);
@@ -160,7 +268,7 @@ int main()
 
   Tspan.insert(Tspan.end(), Tspan2.begin() + 1, Tspan2.end());
 
-  auto* cosim = new AnalysisManager::MultiStageCosimulation<double, int>(max_iterations, num_stages);
+  auto* cosim = new AnalysisManager::MultiStageCosimulation<double, int>(max_iterations, num_stages, tol);
 
   for (auto* partition : subsystems)
   {
@@ -170,15 +278,31 @@ int main()
   cosim->allocate();
   cosim->initializeSimulation(Tspan, &system->y(), &system->yp());
 
-  const std::string filename = "cosim_solution_stages_"
+  const std::string filename = "cosim_sol_stages_"
                                + std::to_string(num_stages)
                                + "_iterations_" + std::to_string(max_iterations)
                                + "_intervals_" + std::to_string(num_intervals_1)
-                               + "_" + std::to_string(num_intervals_2) + ".csv";
+                               + "_" + std::to_string(num_intervals_2)
+                               + "_partitions_" + std::to_string(num_partitions) 
+                               + type +  ".csv";
 
   std::ofstream output(filename);
 
   output << std::setprecision(16);
+
+  if constexpr (WRITE_OUTPUT)
+  {
+    output << "time";
+
+    for (const auto i : generator_ids)
+    {
+      output << ",delta_" << i
+            << ",P_" << i
+            << ",Q_" << i;
+    }
+
+    output << '\n';
+  }
 
   auto out_cb = [&](const auto time, const auto& state) -> void
   {
@@ -186,33 +310,57 @@ int main()
 
     output << time;
 
-    for (size_t i = 0; i < static_cast<size_t>(state.getSize()) && i < MAX_STATE_OUTPUT; ++i)
+    for (const auto& gen : gen_data)
     {
-      output << "," << state_data[i];
+      const auto y11 = state_data[gen.idx_y11];
+      const auto y12 = state_data[gen.idx_y12];
+      const auto y13 = state_data[gen.idx_y13];
+      const auto y14 = state_data[gen.idx_y14];
+
+      const auto delta = gen.refframe ? 0.0 : state_data[gen.idx_y15];
+      const auto P     = y11 * y13 + y12 * y14;
+      const auto Q     = -y11 * y14 + y12 * y13;
+
+      output << "," << delta
+            << "," << P
+            << "," << Q;
     }
 
     output << '\n';
   };
 
-  out_cb(0.0, system->y());
+  if constexpr (WRITE_OUTPUT)
+  {
+    out_cb(0.0, system->y());
+  }
   // Run co-simulation and write the solution at every macro step.
 
   const auto t_start = std::chrono::steady_clock::now();
 
-  cosim->runSimulation(out_cb);
+  if constexpr (WRITE_OUTPUT)
+  {
+    cosim->runSimulation(out_cb);
+  }
+  else
+  {
+    cosim->runSimulation();
+  }
 
   const auto   t_end     = std::chrono::steady_clock::now();
   const double elapsed_s = std::chrono::duration<double>(t_end - t_start).count();
 
-  output << "\n# Metadata\n";
-  output << "# solver: MultiStage Cosim\n";
-  output << "# num_stages: " << num_stages << '\n';
-  output << "# max_iterations: " << max_iterations << '\n';
-  output << "# num_intervals_1: " << num_intervals_1 << '\n';
-  output << "# num_intervals_2: " << num_intervals_2 << '\n';
-  output << "# num_macro_steps: " << Tspan.size() - 1 << '\n';
-  output << "# runtime_seconds: " << elapsed_s << '\n';
-  output << "# num_partitions: " << num_partitions << '\n';
+  if constexpr (!WRITE_OUTPUT)
+  {
+    output << "\n# Metadata\n";
+    output << "# solver: MultiStage Cosim\n";
+    output << "# num_stages: " << num_stages << '\n';
+    output << "# max_iterations: " << max_iterations << '\n';
+    output << "# num_intervals_1: " << num_intervals_1 << '\n';
+    output << "# num_intervals_2: " << num_intervals_2 << '\n';
+    output << "# num_macro_steps: " << Tspan.size() - 1 << '\n';
+    output << "# num_partitions: " << num_partitions << '\n';
+    output << "# runtime_seconds: " << elapsed_s  << '\n';
+  }
 
   output.close();
 

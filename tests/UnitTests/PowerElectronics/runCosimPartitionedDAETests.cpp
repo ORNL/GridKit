@@ -145,7 +145,11 @@ std::vector<double> solveCosim(int n_steps)
     time_points[k] = T_END * k / n_steps;
   }
 
-  auto* cosim = new Cosim(2, 3);
+  size_t num_iterations = 1;
+  size_t num_stages     = 4;
+  double  tol           = 1e-12;
+
+  auto* cosim = new Cosim(num_iterations, num_stages, tol);
   cosim->addSubsystems(partition1);
   cosim->addSubsystems(partition2);
   cosim->allocate();

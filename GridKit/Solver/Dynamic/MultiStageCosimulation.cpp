@@ -22,10 +22,12 @@ namespace AnalysisManager
   MultiStageCosimulation<ScalarT, IdxT>::MultiStageCosimulation(
       size_t      max_iterations,
       size_t      num_stages,
+      RealT       tolerance,
       MemorySpace memspace)
     : num_stages_(num_stages),
       max_iterations_(max_iterations),
-      memspace_(memspace)
+      memspace_(memspace),
+      tol_(tolerance)
   {
     if (num_stages_ == 0)
     {
@@ -166,7 +168,7 @@ namespace AnalysisManager
     for (size_t p = 0; p < num_partitions_; ++p)
     {
       ida_solvers_[p]->setMaxSteps(100000);
-      ida_solvers_[p]->setTolerance(1e-7);
+      ida_solvers_[p]->setTolerance(tol_);
       ida_solvers_[p]->configureSimulation();
     }
 
@@ -197,11 +199,8 @@ namespace AnalysisManager
         std::swap(curr_stages_yp_, next_stages_yp_);
       }
 
-      std::cout << "Time point: " << time_points_[t_idx + 1] << std::endl;
       y_->copyFromExternal(*curr_stages_y_.back(), memspace_);
       yp_->copyFromExternal(*curr_stages_yp_.back(), memspace_);
-
-      std::cout << "Finised steps" << std::endl;
 
       if (step_callback)
       {
@@ -331,8 +330,7 @@ namespace AnalysisManager
         Interpolant* poly_y  = interpolants_y_[p][curr_stage].get();
         Interpolant* poly_yp = interpolants_yp_[p][curr_stage].get();
 
-        partition->setForcingFunction(
-            [poly_y, poly_yp, partition](ScalarT t) mutable
+        partition->setForcingFunction([poly_y, poly_yp, partition](ScalarT t) mutable
             {
               poly_y->evaluate(t, partition->getExternalDataY());
               poly_yp->evaluate(t, partition->getExternalDataYP());
