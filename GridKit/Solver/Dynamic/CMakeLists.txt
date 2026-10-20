@@ -5,8 +5,12 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-set(_dynamic_solver_sources Ida.cpp Partitioned.cpp)
-set(_dynamic_solver_headers Ida.hpp Partitioned.hpp DynamicSolver.hpp)
+set(_dynamic_solver_sources Ida.cpp)
+set(_dynamic_solver_headers Ida.hpp DynamicSolver.hpp)
+if(GRIDKIT_ENABLE_SUNDIALS_PARTITIONED_DAE)
+  list(APPEND _dynamic_solver_sources Partitioned.cpp)
+  list(APPEND _dynamic_solver_headers Partitioned.hpp)
+endif()
 set(_dynamic_solver_libraries
     PUBLIC
     SUNDIALS::nvecserial
