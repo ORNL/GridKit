@@ -33,7 +33,7 @@ namespace GridKit
         if (J_rows_buffer_ == nullptr)
         {
           const auto size        = static_cast<size_t>(size_);
-          const auto bus_size    = static_cast<size_t>(bus_->size());
+          const auto bus_size    = static_cast<size_t>(bus()->size());
           const auto signal_size = static_cast<size_t>(ws_.getSize());
           const auto buffer_size = 2 * size * size + size * bus_size + size * signal_size;
 
@@ -81,9 +81,9 @@ namespace GridKit
         GridKit::Enzyme::Sparse::DfDwb<ModelT, Fn::InternalResidualWithSignal>::eval(
             this,
             static_cast<size_t>(f_.getSize()),
-            static_cast<size_t>(bus_->size()),
+            static_cast<size_t>(bus()->size()),
             this->getResidualIndices().data(),
-            bus_->getVariableIndices().data(),
+            bus()->getVariableIndices().data(),
             y_.getData(),
             yp_.getData(),
             wb_.getData(),

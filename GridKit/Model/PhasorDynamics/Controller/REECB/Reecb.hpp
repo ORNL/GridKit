@@ -110,7 +110,7 @@ namespace GridKit
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
-        Reecb(BusT* bus, const ModelDataT& data);
+        Reecb(const ModelDataT& data);
         ~Reecb();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -190,6 +190,11 @@ namespace GridKit
         static RealT logOneMinusExp(RealT x);
         bool         iclamp(RealT output, RealT lower, RealT upper, RealT& input) const;
 
+        BusT* bus() const
+        {
+          return ports_.bus.template port<ReecbBuses::bus>().node();
+        }
+
         ScalarT& Vr();
         ScalarT& Vi();
 
@@ -197,8 +202,6 @@ namespace GridKit
         static void            logTimeConstantWarning();
 
         static constexpr RealT VMEAS_MINIMUM = static_cast<RealT>(0.01);
-
-        BusT* bus_{nullptr};
 
         // Input parameters
         bool  PfFlag_{false};

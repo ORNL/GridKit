@@ -31,13 +31,11 @@ namespace GridKit
       /**
        * @brief Construct REPCA from model data
        *
-       * @param[in] bus Regulated bus measured by the controller.
        * @param[in] data Model parameters and monitor selections.
        */
       template <typename scalar_type, typename index_type>
-      Repca<scalar_type, index_type>::Repca(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Repca<scalar_type, index_type>::Repca(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -135,7 +133,7 @@ namespace GridKit
 
         checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
-        checks.check(bus_ != nullptr, "regulated bus is required");
+        checks.check(ports_.bus.template port<RepcaBuses::bus>().connected(), "regulated bus is required");
 
         const bool valid_component_base = std::isfinite(mva_base_)
                                           && mva_base_ > ZERO<RealT>
@@ -1160,7 +1158,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Repca<scalar_type, index_type>::Vr()
       {
-        return bus_->Vr();
+        return bus()->Vr();
       }
 
       /**
@@ -1171,7 +1169,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Repca<scalar_type, index_type>::Vi()
       {
-        return bus_->Vi();
+        return bus()->Vi();
       }
 
     } // namespace Controller

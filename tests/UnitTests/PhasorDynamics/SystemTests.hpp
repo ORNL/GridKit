@@ -235,7 +235,9 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
         system.addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B));
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(branchData(R, X, G, B));
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus1>().connect(&bus1);
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus2>().connect(&bus2);
         system.addComponent(&branch);
 
         system.allocate();
@@ -257,8 +259,10 @@ namespace GridKit
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> source(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus(1.0, 0.0);
-        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&source, &bus, branchData(0.1, 0.2, 0.0, 0.0));
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(branchData(0.1, 0.2, 0.0, 0.0));
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus1>().connect(&source);
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus2>().connect(&bus);
         system.addBus(&source);
         system.addBus(&bus);
         system.addComponent(&branch);
@@ -295,7 +299,8 @@ namespace GridKit
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus1, PhasorDynamics::LoadZData<RealT, IdxT>{});
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(PhasorDynamics::LoadZData<RealT, IdxT>{});
+        load.getPorts().bus.template port<PhasorDynamics::LoadZBuses::bus>().connect(&bus1);
 
         system.addBus(&bus1);
         system.addComponent(&load);
@@ -319,7 +324,9 @@ namespace GridKit
         }
 #endif
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(PhasorDynamics::BranchData<RealT, IdxT>{});
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus1>().connect(&bus1);
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus2>().connect(&bus2);
         system.addComponent(&branch);
         success *= system.allocate() == 0;
         success *= system.evaluateJacobian() == 0;
@@ -346,8 +353,11 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 2.0);
         PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
-        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, loadZData(1.0, 1.0));
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(PhasorDynamics::BranchData<RealT, IdxT>{});
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(loadZData(1.0, 1.0));
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus1>().connect(&bus1);
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus2>().connect(&bus2);
+        load.getPorts().bus.template port<PhasorDynamics::LoadZBuses::bus>().connect(&bus2);
 
         system.addBus(&bus1);
         system.addBus(&infinite_bus);

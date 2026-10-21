@@ -81,7 +81,7 @@ namespace GridKit
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
-        Ieeet1(BusT* bus, const ModelDataT& data);
+        Ieeet1(const ModelDataT& data);
         ~Ieeet1();
 
         int setGridKitComponentID(IdxT) override final;
@@ -108,8 +108,10 @@ namespace GridKit
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
 
-        // Signal pointers
-        BusT* bus_;
+        BusT* bus() const
+        {
+          return ports_.bus.template port<Ieeet1Buses::bus>().node();
+        }
 
         // Model Input parameters
         RealT Tr_{0.0};      ///< Time constant for voltage sensing

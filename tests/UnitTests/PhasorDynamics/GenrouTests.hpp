@@ -67,10 +67,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, GenrouDataT{});
+            new PhasorDynamics::Genrou<ScalarT, IdxT>(GenrouDataT{});
 
         success *= (machine != nullptr);
 
@@ -78,7 +76,6 @@ namespace GridKit
         {
           delete machine;
         }
-        delete bus;
 
         return success.report(__func__);
       }
@@ -97,7 +94,8 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, makeGenrouData());
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(makeGenrouData());
+        gen.getPorts().bus.template port<PhasorDynamics::GenrouBuses::bus>().connect(&bus);
 
         bus.allocate();
         bus.initialize();
@@ -137,7 +135,8 @@ namespace GridKit
         data.monitored_variables.insert(Variable::p);
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(data);
+        gen.getPorts().bus.template port<PhasorDynamics::GenrouBuses::bus>().connect(&bus);
 
         bus.allocate();
         bus.initialize();
@@ -222,7 +221,8 @@ namespace GridKit
         data.parameters[Parameter::S12]   = S12;
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(data);
+        gen.getPorts().bus.template port<PhasorDynamics::GenrouBuses::bus>().connect(&bus);
 
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
@@ -345,7 +345,8 @@ namespace GridKit
         DependencyTracking::Variable                               Vr1{1.0}; ///< Bus real voltage
         DependencyTracking::Variable                               Vi1{0.0}; ///< Bus imaginary voltage
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(&bus, makeGenrouData());
+        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(makeGenrouData());
+        gen.getPorts().bus.template port<PhasorDynamics::GenrouBuses::bus>().connect(&bus);
 
         bus.allocate();
         gen.allocate();
@@ -379,7 +380,8 @@ namespace GridKit
         ScalarT                               Vr1{1.0}; ///< Bus real voltage
         ScalarT                               Vi1{0.0}; ///< Bus imaginary voltage
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, makeGenrouData());
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(makeGenrouData());
+        gen.getPorts().bus.template port<PhasorDynamics::GenrouBuses::bus>().connect(&bus);
 
         bus.allocate();
         gen.allocate();

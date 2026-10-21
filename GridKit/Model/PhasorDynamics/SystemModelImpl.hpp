@@ -75,7 +75,8 @@ namespace GridKit
           bus_index = regcadata.buses.at(RegcaBuses::bus);
         }
 
-        auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
+        auto* regca = new Regca<ScalarT, IdxT>(regcadata);
+        regca->getPorts().bus.template port<RegcaBuses::bus>().connect(getBus(bus_index));
         regca->getPorts().connect(regcadata, signal_nodes_);
 
         addComponent(regca);
@@ -96,9 +97,9 @@ namespace GridKit
           bus2_index = branchdata.buses.at(BranchBuses::bus2);
         }
 
-        auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index),
-                                                 getBus(bus2_index),
-                                                 branchdata);
+        auto* branch = new Branch<ScalarT, IdxT>(branchdata);
+        branch->getPorts().bus.template port<BranchBuses::bus1>().connect(getBus(bus1_index));
+        branch->getPorts().bus.template port<BranchBuses::bus2>().connect(getBus(bus2_index));
 
         gridkit_branch_indices_[branchdata.disambiguation_string] = static_cast<IdxT>(components_.size());
         addComponent(branch);
@@ -113,7 +114,8 @@ namespace GridKit
         {
           bus_index = loaddata.buses.at(LoadZBuses::bus);
         }
-        auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
+        auto* load = new LoadZ<ScalarT, IdxT>(loaddata);
+        load->getPorts().bus.template port<LoadZBuses::bus>().connect(getBus(bus_index));
         addComponent(load);
       }
 
@@ -126,8 +128,8 @@ namespace GridKit
         {
           bus_index = loadzipdata.buses.at(LoadZIPBuses::bus);
         }
-        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
-                                                   loadzipdata);
+        auto* loadzip = new LoadZIP<ScalarT, IdxT>(loadzipdata);
+        loadzip->getPorts().bus.template port<LoadZIPBuses::bus>().connect(getBus(bus_index));
         addComponent(loadzip);
       }
 
@@ -139,7 +141,8 @@ namespace GridKit
         {
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
-        auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
+        auto* gen = new Genrou<ScalarT, IdxT>(gendata);
+        gen->getPorts().bus.template port<GenrouBuses::bus>().connect(getBus(bus_index));
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -153,7 +156,8 @@ namespace GridKit
           bus_index = gendata.buses.at(GensalBuses::bus);
         }
 
-        auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
+        auto* gen = new Gensal<ScalarT, IdxT>(gendata);
+        gen->getPorts().bus.template port<GensalBuses::bus>().connect(getBus(bus_index));
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -166,7 +170,8 @@ namespace GridKit
         {
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
-        auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
+        auto* gen = new GenClassical<ScalarT, IdxT>(gendata);
+        gen->getPorts().bus.template port<GenClassicalBuses::bus>().connect(getBus(bus_index));
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -175,13 +180,11 @@ namespace GridKit
       // components initialize in insertion order.
       for (const auto& reecbdata : data.reecb)
       {
-        BusT* bus = nullptr;
+        auto* reecb = new Reecb<ScalarT, IdxT>(reecbdata);
         if (reecbdata.buses.contains(ReecbBuses::bus))
         {
-          bus = getBus(reecbdata.buses.at(ReecbBuses::bus));
+          reecb->getPorts().bus.template port<ReecbBuses::bus>().connect(getBus(reecbdata.buses.at(ReecbBuses::bus)));
         }
-
-        auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
         reecb->getPorts().connect(reecbdata, signal_nodes_);
 
         addComponent(reecb);
@@ -231,7 +234,8 @@ namespace GridKit
           bus_index = excitedata.buses.at(Ieeet1Buses::bus);
         }
 
-        auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter = new Ieeet1<ScalarT, IdxT>(excitedata);
+        exciter->getPorts().bus.template port<Ieeet1Buses::bus>().connect(getBus(bus_index));
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -239,13 +243,11 @@ namespace GridKit
 
       for (const auto& excitedata : data.esdc1a)
       {
-        BusT* bus = nullptr;
+        auto* exciter = new Esdc1a<ScalarT, IdxT>(excitedata);
         if (excitedata.buses.contains(Esdc1aBuses::bus))
         {
-          bus = getBus(excitedata.buses.at(Esdc1aBuses::bus));
+          exciter->getPorts().bus.template port<Esdc1aBuses::bus>().connect(getBus(excitedata.buses.at(Esdc1aBuses::bus)));
         }
-
-        auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -259,7 +261,8 @@ namespace GridKit
           bus_index = excitedata.buses.at(SexsPtiBuses::bus);
         }
 
-        auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter = new SexsPti<ScalarT, IdxT>(excitedata);
+        exciter->getPorts().bus.template port<SexsPtiBuses::bus>().connect(getBus(bus_index));
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -269,13 +272,11 @@ namespace GridKit
       // initialization
       for (const auto& repcadata : data.repca)
       {
-        BusT* bus = nullptr;
+        auto* repca = new Repca<ScalarT, IdxT>(repcadata);
         if (repcadata.buses.contains(RepcaBuses::bus))
         {
-          bus = getBus(repcadata.buses.at(RepcaBuses::bus));
+          repca->getPorts().bus.template port<RepcaBuses::bus>().connect(getBus(repcadata.buses.at(RepcaBuses::bus)));
         }
-
-        auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
         repca->getPorts().connect(repcadata, signal_nodes_);
 
         addComponent(repca);

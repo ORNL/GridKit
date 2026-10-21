@@ -35,10 +35,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-
         PhasorDynamics::Component<ScalarT, IdxT>* load =
-            new PhasorDynamics::LoadZ<ScalarT, IdxT>(bus, DataT{});
+            new PhasorDynamics::LoadZ<ScalarT, IdxT>(DataT{});
 
         success *= (load != nullptr);
 
@@ -48,11 +46,12 @@ namespace GridKit
         }
 
         auto                                      data = makeData();
-        PhasorDynamics::LoadZ<ScalarT, IdxT>      monitored_load(bus, data);
+        PhasorDynamics::LoadZ<ScalarT, IdxT>      monitored_load(data);
         PhasorDynamics::Component<ScalarT, IdxT>& monitored_component  = monitored_load;
         success                                                       *= (monitored_component.getMonitor() != nullptr);
 
-        delete bus;
+        PhasorDynamics::LoadZ<ScalarT, IdxT> busless(DataT{});
+        success *= (!busless.verify().passed());
 
         return success.report(__func__);
       }
@@ -71,7 +70,8 @@ namespace GridKit
         const ScalarT Ii{0.0};  ///< Solution imaginary current
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus, loadZData(R, X));
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(loadZData(R, X));
+        load.getPorts().bus.template port<PhasorDynamics::LoadZBuses::bus>().connect(&bus);
 
         bus.allocate();
         load.allocate();
@@ -99,7 +99,8 @@ namespace GridKit
         DependencyTracking::Variable Vi{20.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>   bus(Vr, Vi);
-        PhasorDynamics::LoadZ<DependencyTracking::Variable, IdxT> load(&bus, loadZData(R, X));
+        PhasorDynamics::LoadZ<DependencyTracking::Variable, IdxT> load(loadZData(R, X));
+        load.getPorts().bus.template port<PhasorDynamics::LoadZBuses::bus>().connect(&bus);
 
         bus.allocate();
         load.allocate();
@@ -138,7 +139,8 @@ namespace GridKit
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(10.0, 20.0);
         auto                                       data = makeData();
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus, data);
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(data);
+        load.getPorts().bus.template port<PhasorDynamics::LoadZBuses::bus>().connect(&bus);
 
         bus.allocate();
         load.allocate();
@@ -181,7 +183,8 @@ namespace GridKit
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>   bus(Vr, Vi);
-        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus, loadZData(R, X));
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(loadZData(R, X));
+        load.getPorts().bus.template port<PhasorDynamics::LoadZBuses::bus>().connect(&bus);
 
         bus.allocate();
         load.allocate();

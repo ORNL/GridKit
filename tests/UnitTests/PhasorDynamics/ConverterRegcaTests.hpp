@@ -49,10 +49,12 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(&bus, Data{});
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(Data{});
+        minimal.getPorts().bus.template port<PhasorDynamics::Converter::RegcaBuses::bus>().connect(&bus);
         success *= (minimal.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(&bus, makeData());
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(makeData());
+        configured.getPorts().bus.template port<PhasorDynamics::Converter::RegcaBuses::bus>().connect(&bus);
         success *= (configured.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify().passed());
@@ -67,13 +69,15 @@ namespace GridKit
         {
           auto data = makeData();
           data.parameters.erase(parameter);
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing(&bus, data);
+          PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing(data);
+          missing.getPorts().bus.template port<PhasorDynamics::Converter::RegcaBuses::bus>().connect(&bus);
           success *= (!missing.verify().passed());
         }
 
         auto bad_switch                   = makeData();
         bad_switch.parameters[Params::sL] = static_cast<IdxT>(2);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(&bus, bad_switch);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(bad_switch);
+        bad_switch_model.getPorts().bus.template port<PhasorDynamics::Converter::RegcaBuses::bus>().connect(&bus);
         success *= (!bad_switch_model.verify().passed());
 
         success *= invalidParameterCase(bus, Params::mva, 0.0);
@@ -91,13 +95,14 @@ namespace GridKit
                                         Params::Khv,
                                         std::numeric_limits<RealT>::infinity());
 
-        // A null bus and an attached command with no linked source count as
+        // An unconnected bus and an attached command with no linked source count as
         // configuration errors on the same footing as bad parameters.
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> busless(nullptr, makeData());
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> busless(makeData());
         success *= (!busless.verify().passed());
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>       unlinked_node;
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> unlinked(&bus, makeData());
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> unlinked(makeData());
+        unlinked.getPorts().bus.template port<PhasorDynamics::Converter::RegcaBuses::bus>().connect(&bus);
         unlinked.getPorts().in.template port<Data::SignalInputs::ipcmd>().connect(&unlinked_node);
         success *= (!unlinked.verify().passed());
 
@@ -729,10 +734,11 @@ namespace GridKit
       {
         explicit Fixture(const Data& data, RealT vr = 1.0, RealT vi = 0.0)
           : bus(static_cast<T>(vr), static_cast<T>(vi)),
-            regca(&bus, data),
+            regca(data),
             ipcmd_index(regca.size() + bus.size()),
             iqcmd_index(ipcmd_index + 1)
         {
+          regca.getPorts().bus.template port<Data::Buses::bus>().connect(&bus);
         }
 
         Fixture(const Fixture&)            = delete;
@@ -952,7 +958,8 @@ namespace GridKit
       {
         auto data              = makeData();
         data.parameters[param] = value;
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(data);
+        model.getPorts().bus.template port<PhasorDynamics::Converter::RegcaBuses::bus>().connect(&bus);
         return !model.verify().passed();
       }
 

@@ -26,9 +26,8 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       template <typename scalar_type, typename index_type>
-      SexsPti<scalar_type, index_type>::SexsPti(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      SexsPti<scalar_type, index_type>::SexsPti(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initModelParams(data);
         initializeMonitor();
@@ -91,10 +90,7 @@ namespace GridKit
 
         checks.check(missing_param_count_ == 0, "model data is missing required parameters");
 
-        if (bus_ == nullptr)
-        {
-          checks.fail("bus pointer is null");
-        }
+        checks.check(ports_.bus.template port<SexsPtiBuses::bus>().connected(), "bus is not connected");
         if (Ta_ < 0.0)
         {
           checks.fail("Ta must be non-negative");
@@ -178,8 +174,8 @@ namespace GridKit
           oel_on_ = ONE<RealT>;
         }
 
-        ScalarT vreal = bus_->Vr();
-        ScalarT vimag = bus_->Vi();
+        ScalarT vreal = bus()->Vr();
+        ScalarT vimag = bus()->Vi();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
         ScalarT vtr   = efd0 / K_;
         ScalarT vr    = (Ta_ - Tb_) * vtr;
@@ -308,8 +304,8 @@ namespace GridKit
                                         SexsPtiExternalVariables::VOEL>(voel_set_);
 
         auto* wb = wb_.getData();
-        wb[0]    = bus_->Vr();
-        wb[1]    = bus_->Vi();
+        wb[0]    = bus()->Vr();
+        wb[1]    = bus()->Vi();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();

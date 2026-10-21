@@ -18,10 +18,11 @@ namespace GridKit
   {
     /// A type deriving from the `Port` class.
     template <typename T>
-    concept PortType = requires { typename T::ScalarT; typename T::IdxT; }
+    concept PortType = requires { typename T::ScalarT; typename T::IdxT; typename T::NodeT; }
                        && std::derived_from<T,
                                             Port<typename T::ScalarT,
-                                                 typename T::IdxT>>;
+                                                 typename T::IdxT,
+                                                 typename T::NodeT>>;
 
     /// Group of ports indexed by their associated signal-variable enum.
     template <PortType port_type, Utilities::SizedEnum signal_variable_type>

@@ -21,9 +21,8 @@ namespace GridKit
      * @brief Constructor for a GENSAL generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Gensal<scalar_type, index_type>::Gensal(BusT* bus, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    Gensal<scalar_type, index_type>::Gensal(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -228,6 +227,8 @@ namespace GridKit
     Model::ConfigurationChecks Gensal<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks("Gensal");
+
+      checks.check(ports_.bus.template port<GensalBuses::bus>().connected(), "bus is not connected");
 
       auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>();
       if (pmech_port.connected() && !pmech_port.linked())
@@ -485,9 +486,9 @@ namespace GridKit
       Ir() += h[0];
       Ii() += h[1];
 
-      if (bus_->size() > 0)
+      if (bus()->size() > 0)
       {
-        bus_->getResidual().setDataUpdated();
+        bus()->getResidual().setDataUpdated();
       }
       f_.setDataUpdated();
 

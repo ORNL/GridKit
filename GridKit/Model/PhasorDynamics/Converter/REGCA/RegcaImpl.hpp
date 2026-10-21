@@ -33,13 +33,11 @@ namespace GridKit
        * Parameters are loaded and the monitor is created. Model-data errors
        * are recorded for verify() rather than thrown.
        *
-       * @param[in] bus Terminal bus the converter injects into.
        * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      Regca<scalar_type, index_type>::Regca(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Regca<scalar_type, index_type>::Regca(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -114,7 +112,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Regca<scalar_type, index_type>::Vr()
       {
-        return bus_->Vr();
+        return bus()->Vr();
       }
 
       /**
@@ -123,7 +121,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Regca<scalar_type, index_type>::Vi()
       {
-        return bus_->Vi();
+        return bus()->Vi();
       }
 
       /**
@@ -132,7 +130,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Regca<scalar_type, index_type>::Ir()
       {
-        return bus_->Ir();
+        return bus()->Ir();
       }
 
       /**
@@ -141,7 +139,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Regca<scalar_type, index_type>::Ii()
       {
-        return bus_->Ii();
+        return bus()->Ii();
       }
 
       /**
@@ -364,10 +362,7 @@ namespace GridKit
 
         checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
-        if (bus_ == nullptr)
-        {
-          checks.fail("bus pointer is null");
-        }
+        checks.check(ports_.bus.template port<RegcaBuses::bus>().connected(), "bus is not connected");
 
         checks.check(mva_base_ > ZERO<RealT>, "mva must be positive");
         checks.check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
@@ -693,7 +688,7 @@ namespace GridKit
 
         Ir() += h[0];
         Ii() += h[1];
-        bus_->getResidual().setDataUpdated();
+        bus()->getResidual().setDataUpdated();
 
         return 0;
       }

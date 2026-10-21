@@ -82,7 +82,7 @@ namespace GridKit
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT       = Model::VariableMonitor<Gensal, GensalData>;
 
-      Gensal(BusT* bus, const ModelDataT& data);
+      Gensal(const ModelDataT& data);
       ~Gensal();
 
       int setGridKitComponentID(IdxT) override final;
@@ -110,24 +110,29 @@ namespace GridKit
       void initializeMonitor();
       void setDerivedParams();
 
+      BusT* bus() const
+      {
+        return ports_.bus.template port<GensalBuses::bus>().node();
+      }
+
       ScalarT& Vr()
       {
-        return bus_->Vr();
+        return bus()->Vr();
       }
 
       ScalarT& Vi()
       {
-        return bus_->Vi();
+        return bus()->Vi();
       }
 
       ScalarT& Ir()
       {
-        return bus_->Ir();
+        return bus()->Ir();
       }
 
       ScalarT& Ii()
       {
-        return bus_->Ii();
+        return bus()->Ii();
       }
 
     public:
@@ -137,9 +142,6 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      /* Identification */
-      BusT* bus_;
-
       /* Component ports */
       SignalPortsT ports_;
 

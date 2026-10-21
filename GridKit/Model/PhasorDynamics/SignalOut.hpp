@@ -25,7 +25,7 @@ namespace GridKit
       void link(ScalarT* signal_var, IdxT* global_index)
       {
         assert(this->connected());
-        this->signal_node_->link(signal_var, global_index);
+        this->node_->link(signal_var, global_index);
       }
 
     protected:

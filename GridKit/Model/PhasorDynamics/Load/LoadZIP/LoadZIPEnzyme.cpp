@@ -21,7 +21,7 @@ namespace GridKit
         // The size of the buffer is the sum of maximum capacities of the blocks.
         // Enzyme will compute the appropriate nnz from sparsification.
         auto size        = static_cast<size_t>(size_);
-        auto bus_size    = static_cast<size_t>(bus_->size());
+        auto bus_size    = static_cast<size_t>(bus()->size());
         auto buffer_size = size * size + 2 * size * bus_size;
         J_rows_buffer_   = new IdxT[buffer_size];
         J_cols_buffer_   = new IdxT[buffer_size];
@@ -47,12 +47,12 @@ namespace GridKit
       GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual>::eval(this,
                                                                                                        static_cast<size_t>(f_.getSize()),
-                                                                                                       static_cast<size_t>(bus_->size()),
+                                                                                                       static_cast<size_t>(bus()->size()),
                                                                                                        (this->getResidualIndices()).data(),
-                                                                                                       (bus_->getVariableIndices()).data(),
+                                                                                                       (bus()->getVariableIndices()).data(),
                                                                                                        y_.getData(),
                                                                                                        yp_.getData(),
-                                                                                                       bus_->y().getData(),
+                                                                                                       bus()->y().getData(),
                                                                                                        J_rows_buffer_,
                                                                                                        J_cols_buffer_,
                                                                                                        J_vals_buffer_,
@@ -60,9 +60,9 @@ namespace GridKit
 
       GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
-                                                                                                 static_cast<size_t>(bus_->size()),
+                                                                                                 static_cast<size_t>(bus()->size()),
                                                                                                  static_cast<size_t>(y_.getSize()),
-                                                                                                 (bus_->getResidualIndices()).data(),
+                                                                                                 (bus()->getResidualIndices()).data(),
                                                                                                  (this->getVariableIndices()).data(),
                                                                                                  y_.getData(),
                                                                                                  yp_.getData(),

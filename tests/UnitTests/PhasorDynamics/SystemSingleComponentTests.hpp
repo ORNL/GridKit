@@ -35,7 +35,9 @@ namespace GridKit
         system->addBus(&bus1);
         system->addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(PhasorDynamics::BranchData<RealT, IdxT>{});
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus1>().connect(&bus1);
+        branch.getPorts().bus.template port<PhasorDynamics::BranchBuses::bus2>().connect(&bus2);
         system->addComponent(&branch);
 
         success *= system->allocate() == 0;
@@ -85,7 +87,8 @@ namespace GridKit
         // Suppress the expected time-constant-floor warning from the default parameters.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT>{});
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT>{});
+        exciter.getPorts().bus.template port<PhasorDynamics::Exciter::Ieeet1Buses::bus>().connect(&bus);
         Log::setVerbosity(previous_verbosity);
         system->addComponent(&exciter);
 
@@ -175,7 +178,8 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus, PhasorDynamics::LoadZData<RealT, IdxT>{});
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(PhasorDynamics::LoadZData<RealT, IdxT>{});
+        load.getPorts().bus.template port<PhasorDynamics::LoadZBuses::bus>().connect(&bus);
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -199,7 +203,8 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.0, 0.0);
         system->addBus(&bus);
 
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, PhasorDynamics::LoadZIPData<RealT, IdxT>{});
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(PhasorDynamics::LoadZIPData<RealT, IdxT>{});
+        load.getPorts().bus.template port<PhasorDynamics::LoadZIPBuses::bus>().connect(&bus);
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -365,7 +370,8 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(PhasorDynamics::GenrouData<RealT, IdxT>{});
+        gen.getPorts().bus.template port<PhasorDynamics::GenrouBuses::bus>().connect(&bus);
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;
@@ -390,7 +396,8 @@ namespace GridKit
         system->addBus(&bus);
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> data;
-        PhasorDynamics::GenClassical<ScalarT, IdxT>   gen(&bus, data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT>   gen(data);
+        gen.getPorts().bus.template port<PhasorDynamics::GenClassicalBuses::bus>().connect(&bus);
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;

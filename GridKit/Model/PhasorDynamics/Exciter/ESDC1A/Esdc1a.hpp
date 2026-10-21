@@ -93,7 +93,7 @@ namespace GridKit
         using InternalVariablesT = Esdc1aInternalVariables;
         using ExternalVariablesT = Esdc1aExternalVariables;
 
-        Esdc1a(BusT* bus, const ModelDataT& data);
+        Esdc1a(const ModelDataT& data);
         ~Esdc1a();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -134,13 +134,16 @@ namespace GridKit
         /// requested strictly positive output.
         RealT inverseRamp(RealT ramp_output) const;
 
+        BusT* bus() const
+        {
+          return ports_.bus.template port<Esdc1aBuses::bus>().node();
+        }
+
         ScalarT& Vr();
         ScalarT& Vi();
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
-
-        BusT* bus_{nullptr};
 
         RealT Tr_{ZERO<RealT>};
         RealT Ka_{static_cast<RealT>(40.0)};

@@ -27,15 +27,11 @@ namespace GridKit
      * - Number of equations = 0
      * - Number of internal variables = 0
      *
-     * @param bus1 - pointer to bus-1
-     * @param bus2 - pointer to bus-2
      * @param data - branch parameters and monitored-variable selections
      */
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2, const ModelDataT& data)
-      : bus1_(bus1),
-        bus2_(bus2),
-        monitor_(std::make_unique<MonitorT>(data))
+    Branch<scalar_type, index_type>::Branch(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -111,8 +107,8 @@ namespace GridKit
 
       checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
-      checks.check(bus1_ != nullptr, "bus1 pointer is null");
-      checks.check(bus2_ != nullptr, "bus2 pointer is null");
+      checks.check(ports_.bus.template port<BranchBuses::bus1>().connected(), "bus1 is not connected");
+      checks.check(ports_.bus.template port<BranchBuses::bus2>().connected(), "bus2 is not connected");
 
       checks.check(std::isfinite(R_), "R must be finite");
       checks.check(std::isfinite(X_), "X must be finite");
@@ -273,13 +269,13 @@ namespace GridKit
       Ir2() += ir2;
       Ii2() += ii2;
 
-      if (bus1_->size() > 0)
+      if (bus1()->size() > 0)
       {
-        bus1_->getResidual().setDataUpdated();
+        bus1()->getResidual().setDataUpdated();
       }
-      if (bus2_->size() > 0)
+      if (bus2()->size() > 0)
       {
-        bus2_->getResidual().setDataUpdated();
+        bus2()->getResidual().setDataUpdated();
       }
 
       return 0;
@@ -309,7 +305,6 @@ namespace GridKit
     void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      using Buses     = typename ModelDataT::Buses;
 
       readRealParameter(data, Parameter::R, R_);
       readRealParameter(data, Parameter::X, X_);
@@ -319,16 +314,6 @@ namespace GridKit
       readRealParameter(data, Parameter::Bmag, Bmag_);
       readRealParameter(data, Parameter::tap, tap_);
       readRealParameter(data, Parameter::phase, phase_);
-
-      if (data.buses.contains(Buses::bus1))
-      {
-        bus1_id_ = data.buses.at(Buses::bus1);
-      }
-
-      if (data.buses.contains(Buses::bus2))
-      {
-        bus2_id_ = data.buses.at(Buses::bus2);
-      }
     }
 
     template <typename scalar_type, typename index_type>

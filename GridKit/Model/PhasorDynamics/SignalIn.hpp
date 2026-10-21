@@ -24,14 +24,14 @@ namespace GridKit
       const ScalarT& readSignal() const
       {
         assert(this->connected());
-        return this->signal_node_->read();
+        return this->node_->read();
       }
 
       /// Retrieve the variable index of the connected signal node.
       IdxT signalVariableIndex() const
       {
         assert(this->connected());
-        return this->signal_node_->getVariableIndex();
+        return this->node_->getVariableIndex();
       }
 
       /// Write a value to the connected signal node.
@@ -39,7 +39,7 @@ namespace GridKit
       /// @warning Use only during initialization as this violates assumptions.
       void writeValue(ScalarT value)
       {
-        this->signal_node_->init(value);
+        this->node_->init(value);
       }
     };
   } // namespace PhasorDynamics

@@ -11,6 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -46,14 +47,15 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = BranchData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using BusT         = BusBase<ScalarT, IdxT>;
+      using ModelDataT   = BranchData<RealT, IdxT>;
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+      using MonitorT     = Model::VariableMonitor<Branch, BranchData>;
 
-      Branch(BusT* bus1, BusT* bus2, const ModelDataT& data);
+      Branch(const ModelDataT& data);
       virtual ~Branch();
 
       virtual int setGridKitComponentID(IdxT) override final;
@@ -65,6 +67,11 @@ namespace GridKit
       virtual int evaluateJacobian() override final;
 
       virtual Model::ConfigurationChecks verify() const override final;
+
+      SignalPortsT& getPorts()
+      {
+        return ports_;
+      }
 
       int setInService(bool in_service);
 
@@ -128,44 +135,54 @@ namespace GridKit
                                                                                 const ScalarT* wb,
                                                                                 ScalarT*       h);
 
+      BusT* bus1() const
+      {
+        return ports_.bus.template port<BranchBuses::bus1>().node();
+      }
+
+      BusT* bus2() const
+      {
+        return ports_.bus.template port<BranchBuses::bus2>().node();
+      }
+
       ScalarT& Vr1()
       {
-        return bus1_->Vr();
+        return bus1()->Vr();
       }
 
       ScalarT& Vi1()
       {
-        return bus1_->Vi();
+        return bus1()->Vi();
       }
 
       ScalarT& Ir1()
       {
-        return bus1_->Ir();
+        return bus1()->Ir();
       }
 
       ScalarT& Ii1()
       {
-        return bus1_->Ii();
+        return bus1()->Ii();
       }
 
       ScalarT& Vr2()
       {
-        return bus2_->Vr();
+        return bus2()->Vr();
       }
 
       ScalarT& Vi2()
       {
-        return bus2_->Vi();
+        return bus2()->Vi();
       }
 
       ScalarT& Ir2()
       {
-        return bus2_->Ir();
+        return bus2()->Ir();
       }
 
       ScalarT& Ii2()
       {
-        return bus2_->Ii();
+        return bus2()->Ii();
       }
 
     public:
@@ -179,19 +196,16 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus1_;
-      BusT* bus2_;
-      RealT R_{0.0};
-      RealT X_{0.01};
-      RealT G_{0.0};
-      RealT B_{0.0};
-      RealT Gmag_{0.0};
-      RealT Bmag_{0.0};
-      RealT tap_{1.0};
-      RealT phase_{0.0};
-      RealT in_service_{1.0}; ///< 1 in service, 0 out of service
-      IdxT  bus1_id_{0};
-      IdxT  bus2_id_{0};
+      SignalPortsT ports_;
+      RealT        R_{0.0};
+      RealT        X_{0.01};
+      RealT        G_{0.0};
+      RealT        B_{0.0};
+      RealT        Gmag_{0.0};
+      RealT        Bmag_{0.0};
+      RealT        tap_{1.0};
+      RealT        phase_{0.0};
+      RealT        in_service_{1.0}; ///< 1 in service, 0 out of service
 
       RealT g11_{0.0};
       RealT b11_{0.0};

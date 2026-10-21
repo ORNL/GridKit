@@ -56,7 +56,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> empty(&bus, Data{});
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> empty(Data{});
+        empty.getPorts().bus.template port<PhasorDynamics::Exciter::Esdc1aBuses::bus>().connect(&bus);
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
         success *= (!empty.verify().passed());
 
@@ -72,7 +73,8 @@ namespace GridKit
         success *= defaultsMatchDocumentedValues();
 
         // A model without the required efd output assignment is rejected.
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> unassigned(&bus, makeData());
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> unassigned(makeData());
+        unassigned.getPorts().bus.template port<PhasorDynamics::Exciter::Esdc1aBuses::bus>().connect(&bus);
         success *= (!unassigned.verify().passed());
 
         success *= invalidParameterCase(Params::Ka, 0.0);
@@ -166,7 +168,7 @@ namespace GridKit
         success *= (!speed_required_fixture.esdc1a.verify().passed());
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>      busless_efd_node;
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> busless(nullptr, makeData());
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> busless(makeData());
         busless.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&busless_efd_node);
         success *= (!busless.verify().passed());
 
@@ -896,8 +898,9 @@ namespace GridKit
       public:
         explicit Fixture(const Data& data, RealT vr = 0.8, RealT vi = 0.6)
           : bus(static_cast<T>(vr), static_cast<T>(vi)),
-            esdc1a(&bus, data)
+            esdc1a(data)
         {
+          esdc1a.getPorts().bus.template port<Data::Buses::bus>().connect(&bus);
           esdc1a.getPorts().out.template port<Data::SignalOutputs::efd>().connect(&efd_node_);
         }
 

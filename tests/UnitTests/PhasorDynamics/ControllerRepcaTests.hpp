@@ -54,7 +54,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(&bus, Data{});
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(Data{});
+        empty.getPorts().bus.template port<PhasorDynamics::Controller::RepcaBuses::bus>().connect(&bus);
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (!empty.verify().passed());
 
@@ -75,7 +76,8 @@ namespace GridKit
         integer_parameter.attachAllInputs();
         success *= (integer_parameter.repca.verify().passed());
 
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> missing_signals(&bus, makeData());
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> missing_signals(makeData());
+        missing_signals.getPorts().bus.template port<PhasorDynamics::Controller::RepcaBuses::bus>().connect(&bus);
         success *= (!missing_signals.verify().passed());
 
         success *= invalidParameterCase(Params::mva, 0.0);
@@ -195,7 +197,7 @@ namespace GridKit
           }
         }
 
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> busless(nullptr, makeData());
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> busless(makeData());
         success *= (!busless.verify().passed());
 
         success *= unlinkedSignalRejected<Ext::ir>();
@@ -1340,8 +1342,9 @@ namespace GridKit
                          RealT       system_va_base         = 100.0e6,
                          bool        assign_command_outputs = true)
           : bus(static_cast<T>(vr), static_cast<T>(vi)),
-            repca(&bus, data)
+            repca(data)
         {
+          repca.getPorts().bus.template port<Data::Buses::bus>().connect(&bus);
           repca.setSystemBase(60.0, system_va_base);
           if (assign_command_outputs)
           {

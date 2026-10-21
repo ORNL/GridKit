@@ -20,10 +20,8 @@ namespace GridKit
      * - Number of independent variables = 2
      */
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT*             bus,
-                                          const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    LoadZ<scalar_type, index_type>::LoadZ(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
       if (data.parameters.contains(Parameter::R))
@@ -211,9 +209,9 @@ namespace GridKit
       evaluateBusResidual(y, yp, wb, h);
       Ir() += h[0];
       Ii() += h[1];
-      if (bus_->size() > 0)
+      if (bus()->size() > 0)
       {
-        bus_->getResidual().setDataUpdated();
+        bus()->getResidual().setDataUpdated();
       }
       f_.setDataUpdated();
 

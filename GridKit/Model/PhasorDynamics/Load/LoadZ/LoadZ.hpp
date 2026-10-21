@@ -3,6 +3,7 @@
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -36,14 +37,15 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = LoadZData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using BusT         = BusBase<ScalarT, IdxT>;
+      using ModelDataT   = LoadZData<RealT, IdxT>;
+      using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
+      using MonitorT     = Model::VariableMonitor<LoadZ, LoadZData>;
 
-      LoadZ(BusT* bus, const ModelDataT& data);
+      LoadZ(const ModelDataT& data);
       virtual ~LoadZ();
 
       virtual int setGridKitComponentID(IdxT) override final;
@@ -56,7 +58,14 @@ namespace GridKit
 
       Model::ConfigurationChecks verify() const override final
       {
-        return {};
+        Model::ConfigurationChecks checks("LoadZ");
+        checks.check(ports_.bus.template port<LoadZBuses::bus>().connected(), "bus is not connected");
+        return checks;
+      }
+
+      SignalPortsT& getPorts()
+      {
+        return ports_;
       }
 
     public:
@@ -76,24 +85,29 @@ namespace GridKit
       void initializeMonitor();
       void setDerivedParams();
 
+      BusT* bus() const
+      {
+        return ports_.bus.template port<LoadZBuses::bus>().node();
+      }
+
       ScalarT& Vr()
       {
-        return bus_->Vr();
+        return bus()->Vr();
       }
 
       ScalarT& Vi()
       {
-        return bus_->Vi();
+        return bus()->Vi();
       }
 
       ScalarT& Ir()
       {
-        return bus_->Ir();
+        return bus()->Ir();
       }
 
       ScalarT& Ii()
       {
-        return bus_->Ii();
+        return bus()->Ii();
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
@@ -105,9 +119,9 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus_{nullptr};
-      RealT R_{0.1};
-      RealT X_{0.01};
+      SignalPortsT ports_;
+      RealT        R_{0.1};
+      RealT        X_{0.01};
 
       /* Derived parameters */
       RealT b_;

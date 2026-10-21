@@ -98,7 +98,7 @@ namespace GridKit
         using InternalVariablesT = RegcaInternalVariables;
         using ExternalVariablesT = RegcaExternalVariables;
 
-        Regca(BusT* bus, const ModelDataT& data);
+        Regca(const ModelDataT& data);
         ~Regca();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -189,6 +189,11 @@ namespace GridKit
                        * gap_rate;
         }
 
+        BusT* bus() const
+        {
+          return ports_.bus.template port<RegcaBuses::bus>().node();
+        }
+
         ScalarT& Vr();
         ScalarT& Vi();
         ScalarT& Ir();
@@ -197,8 +202,6 @@ namespace GridKit
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static constexpr RealT KL_                   = static_cast<RealT>(100.0);
         static void            logTimeConstantWarning();
-
-        BusT* bus_{nullptr};
 
         // Input parameters
         RealT p0_{0};

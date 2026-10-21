@@ -1,7 +1,7 @@
 /**
  * @file Port.hpp
  * @author superwhiskers <whiskerdev@protonmail.com>
- * @brief A connection to a signal node.
+ * @brief A connection to a signal node or a bus.
  */
 
 #pragma once
@@ -14,48 +14,57 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /// Representation of a connection to a @ref SignalNode.
-    template <typename scalar_type, typename index_type>
+    /// Representation of a connection to a @ref SignalNode or a bus.
+    template <typename scalar_type,
+              typename index_type,
+              typename node_type = SignalNode<scalar_type, index_type>>
     class Port
     {
     public:
-      using ScalarT     = scalar_type;
-      using IdxT        = index_type;
-      using SignalNodeT = SignalNode<ScalarT, IdxT>;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using NodeT   = node_type;
 
-      /// Connect a signal node to this port.
-      void connect(SignalNodeT* node) noexcept
+      /// Connect a node to this port.
+      void connect(NodeT* node) noexcept
       {
         assert(node != nullptr);
-        signal_node_ = node;
+        node_ = node;
         assign(node);
       }
 
-      /// Overload indicating if a signal node is connected to this port.
+      /// Overload indicating if a node is connected to this port.
       operator bool() const noexcept
       {
         return connected();
       }
 
-      /// Whether or not a signal node is connected to this port.
+      /// Whether or not a node is connected to this port.
       bool connected() const noexcept
       {
-        return signal_node_ != nullptr;
+        return node_ != nullptr;
       }
 
       /// Whether or not the connected signal node has been linked to an output
       /// port.
       bool linked() const noexcept
       {
-        return connected() ? signal_node_->linked() : false;
+        return connected() ? node_->linked() : false;
+      }
+
+      /// The node connected to this port.
+      NodeT* node() const noexcept
+      {
+        assert(connected());
+        return node_;
       }
 
     protected:
-      virtual void assign([[maybe_unused]] SignalNodeT*) const
+      virtual void assign([[maybe_unused]] NodeT*) const
       {
       }
 
-      SignalNodeT* signal_node_{nullptr};
+      NodeT* node_{nullptr};
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -115,7 +115,7 @@ namespace GridKit
 
         static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-12);
 
-        Repca(BusT* bus, const ModelDataT& data);
+        Repca(const ModelDataT& data);
         ~Repca();
 
         int setGridKitComponentID(IdxT component_id) override final;
@@ -156,6 +156,11 @@ namespace GridKit
 
         static RealT logOneMinusExp(RealT x);
 
+        BusT* bus() const
+        {
+          return ports_.bus.template port<RepcaBuses::bus>().node();
+        }
+
         ScalarT& Vr();
         ScalarT& Vi();
 
@@ -163,8 +168,6 @@ namespace GridKit
         static void            logTimeConstantWarning();
 
         static constexpr RealT INITIALIZATION_LIMIT_OFFSET = static_cast<RealT>(0.1);
-
-        BusT* bus_{nullptr};
 
         RealT mva_base_{static_cast<RealT>(100.0)};
         bool  VcompFlag_{true};

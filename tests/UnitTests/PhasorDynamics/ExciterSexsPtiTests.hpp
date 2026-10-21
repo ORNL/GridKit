@@ -40,7 +40,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(3.0, 4.0);
         auto                               data    = makeTestData();
-        auto*                              exciter = new PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT>(&bus, data);
+        auto*                              exciter = new PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT>(data);
+        exciter->getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
 
         success *= (exciter != nullptr);
         success *= (exciter->size() == 3);
@@ -67,7 +68,8 @@ namespace GridKit
         using namespace GridKit::PhasorDynamics::Exciter;
 
         auto data    = makeTestData();
-        auto exciter = SexsPti<ScalarT, IdxT>(&bus, data);
+        auto exciter = SexsPti<ScalarT, IdxT>(data);
+        exciter.getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
         exciter.getPorts().out.template port<SexsPtiSignalOutputs::efd>().connect(&efd_node);
 
         exciter.allocate();
@@ -118,7 +120,8 @@ namespace GridKit
         using namespace GridKit::PhasorDynamics::Exciter;
 
         auto data    = makeTestData();
-        auto exciter = SexsPti<ScalarT, IdxT>(&bus, data);
+        auto exciter = SexsPti<ScalarT, IdxT>(data);
+        exciter.getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
         exciter.getPorts().out.template port<SexsPtiSignalOutputs::efd>().connect(&efd_node);
         exciter.getPorts().in.template port<SexsPtiSignalInputs::vs>().connect(&vs_node);
 
@@ -165,7 +168,8 @@ namespace GridKit
         voel_node.link(&voel_value, &voel_index);
 
         auto                                            data = makeTestData();
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(data);
+        exciter.getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
         exciter.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&efd_node);
         exciter.getPorts().in.template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::vref>().connect(&vref_node);
         exciter.getPorts().in.template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::vuel>().connect(&vuel_node);
@@ -202,7 +206,8 @@ namespace GridKit
         bus.initialize();
 
         auto                                            data = makeTestData();
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(data);
+        exciter.getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
         exciter.allocate();
         exciter.initialize();
         auto* y  = exciter.y().getData();
@@ -280,12 +285,14 @@ namespace GridKit
 
         auto missing = makeTestData();
         missing.parameters.erase(Parameter::K);
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> missing_model(&bus, missing);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> missing_model(missing);
+        missing_model.getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
         success *= (!missing_model.verify().passed());
 
         auto invalid                      = makeTestData();
         invalid.parameters[Parameter::Tb] = 0.0;
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> invalid_model(&bus, invalid);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> invalid_model(invalid);
+        invalid_model.getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
         success *= (!invalid_model.verify().passed());
 
         Log::setVerbosity(previous_verbosity);
@@ -425,7 +432,8 @@ namespace GridKit
         DependencyTracking::Variable                                         Vr1{3.0};
         DependencyTracking::Variable                                         Vi1{4.0};
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>              bus(Vr1, Vi1);
-        PhasorDynamics::Exciter::SexsPti<DependencyTracking::Variable, IdxT> exciter(&bus, data);
+        PhasorDynamics::Exciter::SexsPti<DependencyTracking::Variable, IdxT> exciter(data);
+        exciter.getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
 
         bus.allocate();
         exciter.allocate();
@@ -459,7 +467,8 @@ namespace GridKit
         auto data = makeTestData();
 
         PhasorDynamics::Bus<ScalarT, IdxT>              bus(3.0, 4.0);
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(data);
+        exciter.getPorts().bus.template port<PhasorDynamics::Exciter::SexsPtiBuses::bus>().connect(&bus);
 
         bus.allocate();
         exciter.allocate();

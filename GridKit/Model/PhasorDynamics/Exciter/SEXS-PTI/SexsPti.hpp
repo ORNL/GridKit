@@ -68,7 +68,7 @@ namespace GridKit
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<SexsPti, SexsPtiData>;
 
-        SexsPti(BusT* bus, const ModelDataT& data);
+        SexsPti(const ModelDataT& data);
         ~SexsPti();
 
         int setGridKitComponentID(IdxT) override final;
@@ -92,7 +92,10 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        BusT* bus_{nullptr};
+        BusT* bus() const
+        {
+          return ports_.bus.template port<SexsPtiBuses::bus>().node();
+        }
 
         RealT Ta_{0};
         RealT Tb_{0};

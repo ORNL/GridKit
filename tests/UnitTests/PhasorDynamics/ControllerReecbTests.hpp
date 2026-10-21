@@ -57,7 +57,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> empty(&bus, Data{});
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> empty(Data{});
+        empty.getPorts().bus.template port<PhasorDynamics::Controller::ReecbBuses::bus>().connect(&bus);
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
 
         const std::array<Vars, Utilities::enum_size<Vars>()> row_order{{
@@ -228,7 +229,7 @@ namespace GridKit
           }
         }
 
-        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> busless(nullptr, makeData());
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> busless(makeData());
         busless.setSystemBase(kNominalFrequency, kSystemBaseVa);
         success *= (!busless.verify().passed());
 
@@ -1826,8 +1827,9 @@ namespace GridKit
                          bool        assign_commands = true)
           : commands_assigned_(assign_commands),
             bus(static_cast<T>(vr), static_cast<T>(vi)),
-            reecb(&bus, data)
+            reecb(data)
         {
+          reecb.getPorts().bus.template port<Data::Buses::bus>().connect(&bus);
           reecb.setSystemBase(kNominalFrequency, system_va_base);
           if (commands_assigned_)
           {

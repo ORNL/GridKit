@@ -20,10 +20,8 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT*             bus,
-                                            const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    Genrou<scalar_type, index_type>::Genrou(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -43,7 +41,6 @@ namespace GridKit
     void Genrou<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      using Buses     = typename ModelDataT::Buses;
       if (data.parameters.contains(Parameter::p0))
       {
         p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
@@ -138,11 +135,6 @@ namespace GridKit
       {
         mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
       }
-
-      if (data.buses.contains(Buses::bus))
-      {
-        bus_id_ = data.buses.at(Buses::bus);
-      }
     }
 
     template <typename scalar_type, typename index_type>
@@ -231,6 +223,8 @@ namespace GridKit
     Model::ConfigurationChecks Genrou<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks("Genrou");
+
+      checks.check(ports_.bus.template port<GenrouBuses::bus>().connected(), "bus is not connected");
 
       auto pmech_port = ports_.in.template port<GenrouSignalInputs::pmech>();
       if (pmech_port.connected() && !pmech_port.linked())
@@ -511,9 +505,9 @@ namespace GridKit
       Ir() += h[0];
       Ii() += h[1];
 
-      if (bus_->size() > 0)
+      if (bus()->size() > 0)
       {
-        bus_->getResidual().setDataUpdated();
+        bus()->getResidual().setDataUpdated();
       }
       f_.setDataUpdated();
 

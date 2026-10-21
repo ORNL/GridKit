@@ -51,13 +51,11 @@ namespace GridKit
       /**
        * @brief Construct REECB from model data
        *
-       * @param[in] bus Terminal bus measured by the controller.
        * @param[in] data Model parameters and monitor selections.
        */
       template <typename scalar_type, typename index_type>
-      Reecb<scalar_type, index_type>::Reecb(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Reecb<scalar_type, index_type>::Reecb(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -155,7 +153,7 @@ namespace GridKit
 
         checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
-        checks.check(bus_ != nullptr, "terminal bus is required");
+        checks.check(ports_.bus.template port<ReecbBuses::bus>().connected(), "terminal bus is required");
 
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
@@ -1519,7 +1517,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Reecb<scalar_type, index_type>::Vr()
       {
-        return bus_->Vr();
+        return bus()->Vr();
       }
 
       /**
@@ -1530,7 +1528,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Reecb<scalar_type, index_type>::Vi()
       {
-        return bus_->Vi();
+        return bus()->Vi();
       }
     } // namespace Controller
   } // namespace PhasorDynamics

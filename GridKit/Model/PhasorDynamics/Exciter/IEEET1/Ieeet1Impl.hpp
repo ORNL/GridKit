@@ -31,13 +31,11 @@ namespace GridKit
       /**
        * @brief  Constructor for IEEET1 Exciter
        *
-       * @param bus   Signal used for terminal reference vmag
        * @param data  Data object to store parameters
        */
       template <typename scalar_type, typename index_type>
-      Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Ieeet1<scalar_type, index_type>::Ieeet1(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         // Parse data struct into model
         this->initModelParams(data);
@@ -121,6 +119,8 @@ namespace GridKit
       Model::ConfigurationChecks Ieeet1<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("Ieeet1");
+
+        checks.check(ports_.bus.template port<Ieeet1Buses::bus>().connected(), "bus is not connected");
 
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
         checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
@@ -237,8 +237,8 @@ namespace GridKit
         }
 
         // Terminal Voltage
-        ScalarT vreal = bus_->Vr();
-        ScalarT vimag = bus_->Vi();
+        ScalarT vreal = bus()->Vr();
+        ScalarT vimag = bus()->Vi();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
@@ -447,8 +447,8 @@ namespace GridKit
 
         // Bus voltages
         auto* wb = wb_.getData();
-        wb[0]    = bus_->Vr();
-        wb[1]    = bus_->Vi();
+        wb[0]    = bus()->Vr();
+        wb[1]    = bus()->Vi();
 
         // Residual evaluation
         const auto* y  = y_.getData();

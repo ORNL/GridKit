@@ -17,10 +17,8 @@ namespace GridKit
      * - Number of independent variables = 2
      */
     template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::LoadZIP(BusT*             bus,
-                                              const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    LoadZIP<scalar_type, index_type>::LoadZIP(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -212,9 +210,9 @@ namespace GridKit
       evaluateBusResidual(y, yp, wb, h);
       Ir() += h[0];
       Ii() += h[1];
-      if (bus_->size() > 0)
+      if (bus()->size() > 0)
       {
-        bus_->getResidual().setDataUpdated();
+        bus()->getResidual().setDataUpdated();
       }
       f_.setDataUpdated();
 

@@ -32,13 +32,11 @@ namespace GridKit
       /**
        * @brief Construct an ESDC1A exciter from model data
        *
-       * @param[in] bus Terminal bus the exciter measures.
        * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Esdc1a<scalar_type, index_type>::Esdc1a(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -132,10 +130,7 @@ namespace GridKit
       {
         Model::ConfigurationChecks checks("Esdc1a");
 
-        if (bus_ == nullptr)
-        {
-          checks.fail("bus pointer is null");
-        }
+        checks.check(ports_.bus.template port<Esdc1aBuses::bus>().connected(), "bus is not connected");
 
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
         checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
@@ -795,7 +790,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Esdc1a<scalar_type, index_type>::Vr()
       {
-        return bus_->Vr();
+        return bus()->Vr();
       }
 
       /**
@@ -806,7 +801,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type& Esdc1a<scalar_type, index_type>::Vi()
       {
-        return bus_->Vi();
+        return bus()->Vi();
       }
 
     } // namespace Exciter
