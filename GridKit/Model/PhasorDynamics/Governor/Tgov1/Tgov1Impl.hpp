@@ -26,43 +26,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Constructs a Tgov1 governor model without setting its parameters
-       *
-       */
-      template <typename scalar_type, typename index_type>
-      Tgov1<scalar_type, index_type>::Tgov1()
-        : Trate_(100.0)
-      {
-        size_ = 3;
-        setDerivedParams();
-      }
-
-      /**
-       * @brief Constructs a Tgov1 governor model from its parameters
-       *
-       * @param pmech $P_m$ internal variable signal node
-       * @param omega $\omega$ external variable signal node
-       */
-      template <typename scalar_type, typename index_type>
-      Tgov1<scalar_type, index_type>::Tgov1(SignalNodeT* pmech, SignalNodeT* omega)
-        : Trate_(100.0),
-          R_(0.05),
-          Pvmin_(0),
-          Pvmax_(1),
-          T1_(HALF<RealT>),
-          T2_(2.5),
-          T3_(7.5),
-          Dt_(0)
-      {
-        ports_.out.template port<Tgov1SignalOutputs::pmech>().connect(pmech);
-        ports_.in.template port<Tgov1SignalInputs::speed>().connect(omega);
-
-        // 3 internal variables
-        size_ = 3;
-        setDerivedParams();
-      }
-
-      /**
        * @brief Constructs a Tgov1 governor model from its parameters
        *
        * @param data Data to initialize the model from.

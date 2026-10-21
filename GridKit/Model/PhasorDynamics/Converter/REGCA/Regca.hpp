@@ -99,7 +99,6 @@ namespace GridKit
         using ExternalVariablesT = RegcaExternalVariables;
 
       public:
-        Regca(BusT* bus);
         Regca(BusT* bus, const ModelDataT& data);
         ~Regca();
 

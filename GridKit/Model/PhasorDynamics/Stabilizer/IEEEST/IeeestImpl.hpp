@@ -24,12 +24,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       template <typename scalar_type, typename index_type>
-      Ieeest<scalar_type, index_type>::Ieeest()
-      {
-        size_ = 12;
-      }
-
-      template <typename scalar_type, typename index_type>
       Ieeest<scalar_type, index_type>::Ieeest(const ModelDataT& data)
         : monitor_(std::make_unique<MonitorT>(data))
       {

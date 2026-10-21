@@ -94,7 +94,6 @@ namespace GridKit
         using ExternalVariablesT = Esdc1aExternalVariables;
 
       public:
-        Esdc1a(BusT* bus);
         Esdc1a(BusT* bus, const ModelDataT& data);
         ~Esdc1a();
 

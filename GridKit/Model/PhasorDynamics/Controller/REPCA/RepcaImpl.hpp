@@ -29,23 +29,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Construct REPCA with its documented parameter defaults
-       *
-       * The regulated bus is retained, the model is sized, and every
-       * parameter keeps its documented default. No monitor or signal
-       * connection is created.
-       *
-       * @param[in] bus Regulated bus measured by the controller.
-       */
-      template <typename scalar_type, typename index_type>
-      Repca<scalar_type, index_type>::Repca(BusT* bus)
-        : bus_(bus)
-      {
-        size_ = static_cast<IdxT>(Utilities::enum_size<RepcaInternalVariables>());
-        setDerivedParameters();
-      }
-
-      /**
        * @brief Construct REPCA from model data
        *
        * @param[in] bus Regulated bus measured by the controller.

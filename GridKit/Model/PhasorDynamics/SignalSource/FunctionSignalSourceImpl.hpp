@@ -10,15 +10,6 @@ namespace GridKit
     using Log = ::GridKit::Utilities::Logger;
 
     /**
-     * @brief Default construct with zero value
-     */
-    template <typename scalar_type, typename index_type>
-    FunctionSignalSource<scalar_type, index_type>::FunctionSignalSource()
-    {
-      size_ = 0;
-    }
-
-    /**
      * @brief Construct with values from input data
      */
     template <typename scalar_type, typename index_type>

@@ -43,7 +43,6 @@ namespace GridKit
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
     public:
-      FunctionSignalSource();
       FunctionSignalSource(const ModelDataT& data);
       ~FunctionSignalSource();
 

@@ -94,8 +94,7 @@ namespace GridKit
         using ExternalVariablesT = HygovExternalVariables;
 
       public:
-        Hygov();
-        explicit Hygov(const ModelDataT& data);
+        Hygov(const ModelDataT& data);
         ~Hygov();
 
         int setGridKitComponentID(IdxT component_id) override final;

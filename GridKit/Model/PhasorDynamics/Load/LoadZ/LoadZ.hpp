@@ -44,8 +44,6 @@ namespace GridKit
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
 
     public:
-      LoadZ(BusT* bus);
-      LoadZ(BusT* bus, RealT R, RealT X);
       LoadZ(BusT* bus, const ModelDataT& data);
       virtual ~LoadZ();
 

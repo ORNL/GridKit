@@ -82,7 +82,6 @@ namespace GridKit
         using MonitorT       = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
       public:
-        Ieeet1(BusT* bus);
         Ieeet1(BusT* bus, const ModelDataT& data);
         ~Ieeet1();
 
