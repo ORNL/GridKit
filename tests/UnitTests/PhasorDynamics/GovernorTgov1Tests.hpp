@@ -37,12 +37,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>        bus(1.0, 0.0);
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> omega;
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>* gov =
-            new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>(&pmech, &omega);
+            new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
 
         success *= (gov != nullptr);
 
@@ -99,8 +97,12 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
-        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
-        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, gendata);
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
+        gen.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::pmech>().connect(&pmech);
+        gen.getPorts().out.template port<PhasorDynamics::GenrouSignalOutputs::speed>().connect(&omega);
+        gov.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
+        gov.getPorts().in.template port<PhasorDynamics::Governor::Tgov1SignalInputs::speed>().connect(&omega);
 
         // Test answer keys
         const std::vector<ScalarT> res_answer = {static_cast<ScalarT>(2.0) / static_cast<ScalarT>(15.0),
@@ -202,9 +204,13 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
-        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, gendata);
         // Create governor to be tested
-        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
+        gen.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::pmech>().connect(&pmech);
+        gen.getPorts().out.template port<PhasorDynamics::GenrouSignalOutputs::speed>().connect(&omega);
+        gov.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
+        gov.getPorts().in.template port<PhasorDynamics::Governor::Tgov1SignalInputs::speed>().connect(&omega);
 
         bus.allocate();
         gov.allocate();
@@ -304,9 +310,13 @@ namespace GridKit
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>      pmech;
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>      omega;
-        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT>          gen(&bus, &omega, &pmech, gendata);
+        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT>          gen(&bus, gendata);
         // Create governor to be tested
-        PhasorDynamics::Governor::Tgov1<DependencyTracking::Variable, IdxT> gov(&pmech, &omega);
+        PhasorDynamics::Governor::Tgov1<DependencyTracking::Variable, IdxT> gov(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
+        gen.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::pmech>().connect(&pmech);
+        gen.getPorts().out.template port<PhasorDynamics::GenrouSignalOutputs::speed>().connect(&omega);
+        gov.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
+        gov.getPorts().in.template port<PhasorDynamics::Governor::Tgov1SignalInputs::speed>().connect(&omega);
 
         bus.allocate();
         gov.allocate();
@@ -340,9 +350,13 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
-        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, gendata);
         // Create governor to be tested
-        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
+        gen.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::pmech>().connect(&pmech);
+        gen.getPorts().out.template port<PhasorDynamics::GenrouSignalOutputs::speed>().connect(&omega);
+        gov.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
+        gov.getPorts().in.template port<PhasorDynamics::Governor::Tgov1SignalInputs::speed>().connect(&omega);
 
         bus.allocate();
         gov.allocate();

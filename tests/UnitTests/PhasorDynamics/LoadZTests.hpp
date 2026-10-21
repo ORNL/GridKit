@@ -38,7 +38,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* load =
-            new PhasorDynamics::LoadZ<ScalarT, IdxT>(bus);
+            new PhasorDynamics::LoadZ<ScalarT, IdxT>(bus, DataT{});
 
         success *= (load != nullptr);
 
@@ -71,7 +71,7 @@ namespace GridKit
         const ScalarT Ii{0.0};  ///< Solution imaginary current
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus, R, X);
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus, loadZData(R, X));
 
         bus.allocate();
         load.allocate();
@@ -99,7 +99,7 @@ namespace GridKit
         DependencyTracking::Variable Vi{20.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>   bus(Vr, Vi);
-        PhasorDynamics::LoadZ<DependencyTracking::Variable, IdxT> load(&bus, R, X);
+        PhasorDynamics::LoadZ<DependencyTracking::Variable, IdxT> load(&bus, loadZData(R, X));
 
         bus.allocate();
         load.allocate();
@@ -181,7 +181,7 @@ namespace GridKit
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>   bus(Vr, Vi);
-        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus, R, X);
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus, loadZData(R, X));
 
         bus.allocate();
         load.allocate();
@@ -236,6 +236,16 @@ namespace GridKit
         data.monitored_variables.insert(Variable::p);
         data.monitored_variables.insert(Variable::q);
 
+        return data;
+      }
+
+      static DataT loadZData(const RealT R, const RealT X)
+      {
+        using Params = PhasorDynamics::LoadZParameters;
+
+        DataT data;
+        data.parameters[Params::R] = R;
+        data.parameters[Params::X] = X;
         return data;
       }
 

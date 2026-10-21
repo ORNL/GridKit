@@ -59,7 +59,7 @@ namespace GridKit
             static_cast<ScalarT>(1.0),
             static_cast<ScalarT>(0.0));
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd;
-        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus);
+        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
 
         PhasorDynamics::Exciter::Esdc1aData<RealT, IdxT> exciter_data;
         exciter_data.parameters[ExciterParams::Tr] = static_cast<RealT>(0.02);
@@ -107,7 +107,7 @@ namespace GridKit
             static_cast<ScalarT>(1.0),
             static_cast<ScalarT>(0.0));
         PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
-        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus);
+        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
 
         PhasorDynamics::Governor::HygovData<RealT, IdxT> governor_data;
         governor_data.parameters[GovernorParams::Trate] = static_cast<RealT>(100.0);

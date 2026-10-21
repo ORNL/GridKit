@@ -38,6 +38,35 @@ namespace GridKit
       using ComponentT = PhasorDynamics::Component<ScalarT, IdxT>;
       using RealT      = typename ComponentT::RealT;
 
+      static PhasorDynamics::BranchData<RealT, IdxT> branchData(const RealT R,
+                                                                const RealT X,
+                                                                const RealT G,
+                                                                const RealT B,
+                                                                const RealT tap   = 1.0,
+                                                                const RealT phase = 0.0)
+      {
+        using Parameter = PhasorDynamics::BranchParameters;
+
+        PhasorDynamics::BranchData<RealT, IdxT> data;
+        data.parameters[Parameter::R]     = R;
+        data.parameters[Parameter::X]     = X;
+        data.parameters[Parameter::G]     = G;
+        data.parameters[Parameter::B]     = B;
+        data.parameters[Parameter::tap]   = tap;
+        data.parameters[Parameter::phase] = phase;
+        return data;
+      }
+
+      static PhasorDynamics::LoadZData<RealT, IdxT> loadZData(const RealT R, const RealT X)
+      {
+        using Params = PhasorDynamics::LoadZParameters;
+
+        PhasorDynamics::LoadZData<RealT, IdxT> data;
+        data.parameters[Params::R] = R;
+        data.parameters[Params::X] = X;
+        return data;
+      }
+
       class InitializationFailureComponent final : public ComponentT
       {
       public:
@@ -206,7 +235,7 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
         system.addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B));
         system.addComponent(&branch);
 
         system.allocate();
@@ -228,7 +257,7 @@ namespace GridKit
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> source(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus(1.0, 0.0);
-        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&source, &bus, 0.1, 0.2, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&source, &bus, branchData(0.1, 0.2, 0.0, 0.0));
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         system.addBus(&source);
         system.addBus(&bus);
@@ -266,7 +295,7 @@ namespace GridKit
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus1);
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus1, PhasorDynamics::LoadZData<RealT, IdxT>{});
 
         system.addBus(&bus1);
         system.addComponent(&load);
@@ -290,7 +319,7 @@ namespace GridKit
         }
 #endif
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
         system.addComponent(&branch);
         success *= system.allocate() == 0;
         success *= system.evaluateJacobian() == 0;
@@ -317,8 +346,8 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 2.0);
         PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
-        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, 1.0, 1.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, loadZData(1.0, 1.0));
 
         system.addBus(&bus1);
         system.addBus(&infinite_bus);

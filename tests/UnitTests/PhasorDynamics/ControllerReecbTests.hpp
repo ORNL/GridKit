@@ -57,9 +57,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> empty(&bus);
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> empty(&bus, Data{});
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
-        success *= (empty.getMonitor() == nullptr);
 
         const std::array<Vars, Utilities::enum_size<Vars>()> row_order{{
             Vars::VMEAS,

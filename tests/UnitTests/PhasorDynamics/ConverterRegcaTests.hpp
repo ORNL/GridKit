@@ -49,9 +49,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(&bus);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(&bus, Data{});
         success *= (minimal.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
-        success *= (minimal.getMonitor() == nullptr);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(&bus, makeData());
         success *= (configured.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));

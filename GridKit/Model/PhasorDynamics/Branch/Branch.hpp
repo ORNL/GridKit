@@ -183,7 +183,7 @@ namespace GridKit
       BusT* bus1_;
       BusT* bus2_;
       RealT R_{0.0};
-      RealT X_{0.0};
+      RealT X_{0.01};
       RealT G_{0.0};
       RealT B_{0.0};
       RealT Gmag_{0.0};

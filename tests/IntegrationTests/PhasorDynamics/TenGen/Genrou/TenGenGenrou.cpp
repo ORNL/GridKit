@@ -26,6 +26,39 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
+/// Machine data shared by the example generators
+GridKit::PhasorDynamics::GenrouData<real_type, index_type> genData(real_type p0, real_type q0)
+{
+  using Parameter = GridKit::PhasorDynamics::GenrouParameters;
+
+  GridKit::PhasorDynamics::GenrouData<real_type, index_type> data;
+  data.parameters[Parameter::p0] = p0;
+  data.parameters[Parameter::q0] = q0;
+
+  return data;
+}
+
+/// Branch data with the given line and transformer parameters
+GridKit::PhasorDynamics::BranchData<real_type, index_type> branchData(const real_type R,
+                                                                      const real_type X,
+                                                                      const real_type G,
+                                                                      const real_type B,
+                                                                      const real_type tap   = 1.0,
+                                                                      const real_type phase = 0.0)
+{
+  using Parameter = GridKit::PhasorDynamics::BranchParameters;
+
+  GridKit::PhasorDynamics::BranchData<real_type, index_type> data;
+  data.parameters[Parameter::R]     = R;
+  data.parameters[Parameter::X]     = X;
+  data.parameters[Parameter::G]     = G;
+  data.parameters[Parameter::B]     = B;
+  data.parameters[Parameter::tap]   = tap;
+  data.parameters[Parameter::phase] = phase;
+
+  return data;
+}
+
 int main()
 {
   using namespace GridKit::PhasorDynamics;
@@ -51,25 +84,25 @@ int main()
   Bus<scalar_type, index_type> bus9(0.938638861502395, 0.344901620288291);
   Bus<scalar_type, index_type> bus10(0.937739191669114, 0.347340277548916);
 
-  Branch<scalar_type, index_type> branch12(&bus1, &bus2, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch23(&bus2, &bus3, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch34(&bus3, &bus4, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch45(&bus4, &bus5, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch56(&bus5, &bus6, 0.001, 0.1, 0, 0);
-  Branch<scalar_type, index_type> branch67(&bus6, &bus7, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch78(&bus7, &bus8, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch89(&bus8, &bus9, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch12(&bus1, &bus2, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch23(&bus2, &bus3, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch34(&bus3, &bus4, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch45(&bus4, &bus5, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch56(&bus5, &bus6, branchData(0.001, 0.1, 0, 0));
+  Branch<scalar_type, index_type> branch67(&bus6, &bus7, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch78(&bus7, &bus8, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch89(&bus8, &bus9, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch910(&bus9, &bus10, branchData(0.001, 0.005, 0, 0));
 
-  Genrou<scalar_type, index_type> gen2(&bus2, 0.5, -0.00442101, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen3(&bus3, 0.5, -0.02510812, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen4(&bus4, 0.5, -0.04339553, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen5(&bus5, 0.5, -0.2334993, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen6(&bus6, 0.5, 0.69907194, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen7(&bus7, 0.5, -0.08318208, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen8(&bus8, 0.5, -0.09123614, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen9(&bus9, 0.5, -0.09662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen10(&bus10, 0.5, -0.09932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen2(&bus2, genData(0.5, -0.00442101));
+  Genrou<scalar_type, index_type> gen3(&bus3, genData(0.5, -0.02510812));
+  Genrou<scalar_type, index_type> gen4(&bus4, genData(0.5, -0.04339553));
+  Genrou<scalar_type, index_type> gen5(&bus5, genData(0.5, -0.2334993));
+  Genrou<scalar_type, index_type> gen6(&bus6, genData(0.5, 0.69907194));
+  Genrou<scalar_type, index_type> gen7(&bus7, genData(0.5, -0.08318208));
+  Genrou<scalar_type, index_type> gen8(&bus8, genData(0.5, -0.09123614));
+  Genrou<scalar_type, index_type> gen9(&bus9, genData(0.5, -0.09662372));
+  Genrou<scalar_type, index_type> gen10(&bus10, genData(0.5, -0.09932297));
 
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;

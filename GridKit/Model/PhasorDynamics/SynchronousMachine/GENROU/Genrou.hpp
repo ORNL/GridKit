@@ -154,20 +154,20 @@ namespace GridKit
       RealT q0_{0.0};
 
       /* Input parameters */
-      RealT H_{0.0};
+      RealT H_{3.0};
       RealT D_{0.0};
       RealT Ra_{0.0};
-      RealT Tdop_{0.0};
-      RealT Tdopp_{0.0};
-      RealT Tqopp_{0.0};
-      RealT Tqop_{0.0};
-      RealT Xd_{0.0};
-      RealT Xdp_{0.0};
-      RealT Xdpp_{0.0};
-      RealT Xq_{0.0};
-      RealT Xqp_{0.0};
-      RealT Xqpp_{0.0};
-      RealT Xl_{0.0};
+      RealT Tdop_{7.0};
+      RealT Tdopp_{0.04};
+      RealT Tqopp_{0.05};
+      RealT Tqop_{0.75};
+      RealT Xd_{2.1};
+      RealT Xdp_{0.2};
+      RealT Xdpp_{0.18};
+      RealT Xq_{0.5};
+      RealT Xqp_{0.5};
+      RealT Xqpp_{0.18};
+      RealT Xl_{0.15};
       RealT S10_{0.0};
       RealT S12_{0.0};
       RealT mva_base_{100.0};
