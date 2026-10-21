@@ -5,14 +5,13 @@ A definite-time relay with optional lockout. Each relay models one
 
 ## Notes
 
+- Designed to measure a [BranchBreakers](../../Branch/BranchBreakers/README.md)
+  terminal current, a bus voltage, or a frequency, and to drive a BranchBreakers
+  `trip1` or `trip2` input.
 - The element operates above $M_\mathrm{pickup}$ if
   $M_\mathrm{pickup} > M_\mathrm{ref}$ and below it otherwise.
-- With lockout, the latch commits at $x = 1/2$. A committed relay holds the
-  trip after the measured quantity recovers; an uncommitted relay resets.
-- With lockout, the trip rises at $x = 3/4$, after the latch commits, so the
-  relay may measure the current it interrupts, such as a
-  [BranchBreakers](../../Branch/BranchBreakers/README.md) terminal current.
-- Without lockout, the relay resets on recovery.
+- With lockout, the relay commits to trip once $x$ passes $1/2$, so it may
+  measure the current it interrupts.
 
 ## Model Parameters
 

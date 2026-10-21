@@ -4,15 +4,12 @@ An inverse-time overcurrent relay with optional lockout.
 
 ## Notes
 
-- Above pickup, the trip rises at $x = 3/4$ once
-  $\int t_\mathrm{op}^{-1}\,dt = 1$, the operate criterion of IEEE
-  C37.112[^inverse-time].
-- With lockout, the latch commits at $x = 1/2$. A committed relay holds the
-  trip after the current falls; an uncommitted relay resets.
-- With lockout, the trip rises at $x = 3/4$, after the latch commits, so the
-  relay may measure the current it interrupts, such as a
-  [BranchBreakers](../../Branch/BranchBreakers/README.md) terminal current.
-- Without lockout, the relay resets after the current falls.
+- Designed to measure a [BranchBreakers](../../Branch/BranchBreakers/README.md)
+  terminal current and to drive a BranchBreakers `trip1` or `trip2` input.
+- Above pickup, the trip rises once $\int t_\mathrm{op}^{-1}\,dt = 1$, the IEEE
+  C37.112[^inverse-time] operate criterion.
+- With lockout, the relay commits to trip once $x$ passes $1/2$, so it may
+  measure the current it interrupts.
 
 ## Model Parameters
 
