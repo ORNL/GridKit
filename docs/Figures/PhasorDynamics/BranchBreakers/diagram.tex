@@ -5,7 +5,7 @@
 \begin{tikzpicture}[emt diagram]
 
 % Branch network: shunts remain outside the bus-1 tap transformation.
-\node[hblock] (series) at (1.8, 0) {$Z$};
+\node[hblock] (series) at (1.8, 0) {$Y_\mathrm{br}$};
 \node[vblock] (mag) at (-4.8, -1.6) {$Y_\mathrm{mag}$};
 \node[vblock] (shunt1) at (-3.0, -1.6) {$\dfrac{Y_\mathrm{sh}}{2}$};
 \node[vblock] (shunt2) at (4.8, -1.6) {$\dfrac{Y_\mathrm{sh}}{2}$};
@@ -16,19 +16,22 @@
 \node[sig, anchor=south] at (-1.05, 0.6) {$\tau:1$};
 \node[sig, anchor=north] at (-1.05, -0.6) {$\theta$};
 
-% Single-line circuit breakers (device 52).
-\foreach \k/\x in {1/-6.5,2/6.5} {
-    \node[draw, semithick, fill=white, minimum size=0.85cm,
-          inner sep=0pt] (breaker\k) at (\x, 0) {52};
-    \draw[->, line] (\x-0.22, 2.1) -- ($(breaker\k.north)+(-0.22, 0)$);
-    \draw[->, line] (\x+0.22, 2.1) -- ($(breaker\k.north)+( 0.22, 0)$);
+% Single-line circuit breakers: switch contact with a cross at the fixed contact.
+\foreach \k/\x/\d in {1/-6.5/-1,2/6.5/1} {
+    \coordinate (pivot\k) at ({\x-\d*0.45}, 0);
+    \coordinate (contact\k) at ({\x+\d*0.45}, 0);
+    \draw[line] (pivot\k) -- ({\x+\d*0.32}, 0.55);
+    \draw[semithick] ($(contact\k)+(-0.12,-0.12)$) -- ($(contact\k)+(0.12,0.12)$);
+    \draw[semithick] ($(contact\k)+(-0.12,0.12)$) -- ($(contact\k)+(0.12,-0.12)$);
+    \draw[->, line] (\x-0.22, 2.1) -- (\x-0.22, 0.75);
+    \draw[->, line] (\x+0.22, 2.1) -- (\x+0.22, 0.75);
     \node[sig, anchor=south] at (\x-0.22, 2.2) {$s_\k$};
-    \node[sig, anchor=south] at (\x+0.22, 2.2) {$r_\k$};
+    \node[sig, anchor=south] at (\x+0.22, 2.2) {$c_\k$};
 }
 
-\draw[line] (breaker1.east) -- (-1.8, 0);
+\draw[line] (pivot1) -- (-1.8, 0);
 \draw[line] (-0.3, 0) -- (series.west);
-\draw[line] (series.east) -- (breaker2.west);
+\draw[line] (series.east) -- (pivot2);
 
 \foreach \shunt/\x in {mag/-4.8,shunt1/-3.0,shunt2/4.8} {
     \node[signal] at (\x, 0) {};
@@ -40,8 +43,8 @@
 }
 
 % Terminal voltages are bus-owned; current arrows point into the buses.
-\draw[->, line] (breaker1.west) -- (-9.0, 0);
-\draw[->, line] (breaker2.east) -- (9.0, 0);
+\draw[->, line] (contact1) -- (-9.0, 0);
+\draw[->, line] (contact2) -- (9.0, 0);
 \node[signal, label={[sig]above:$V_1$}] at (-8.2, 0) {};
 \node[signal, label={[sig]above:$V_2$}] at (8.2, 0) {};
 \node[sig, anchor=east] at (-9.2, 0) {$I_1$};
