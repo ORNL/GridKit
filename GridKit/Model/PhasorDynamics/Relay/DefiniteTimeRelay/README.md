@@ -1,15 +1,7 @@
 # DefiniteTimeRelay
 
-A definite-time relay with optional lockout. Each relay models one of the
-elements below.
-
-ID[^device-numbers] | Short Name | Long Name
---------------------|------------|---------------
-50                  | OC         | Overcurrent
-27                  | UV         | Undervoltage
-59                  | OV         | Overvoltage
-81U                 | UF         | Underfrequency
-81O                 | OF         | Overfrequency
+A definite-time relay with optional lockout. Each relay models one
+[element](../README.md#elements).
 
 ## Notes
 
@@ -21,7 +13,6 @@ ID[^device-numbers] | Short Name | Long Name
   relay may measure the current it interrupts, such as a
   [BranchBreakers](../../Branch/BranchBreakers/README.md) terminal current.
 - Without lockout, the relay resets on recovery.
-- Inverse-time overcurrent characteristics[^inverse-time] are not modeled.
 
 ## Model Parameters
 
@@ -148,7 +139,3 @@ Monitor | Units  | Description                 | Note
 `m`     | [p.u.] | Measured quantity magnitude | $\sqrt{m_r^2 + m_i^2}$
 `x`     | [-]    | Relay latch                 | $x$
 `trip`  | [-]    | Trip command                | $s$
-
-[^device-numbers]: [IEEE Std C37.2-2022, *IEEE Standard for Electrical Power System Device Function Numbers, Acronyms, and Contact Designations*](https://standards.ieee.org/ieee/C37.2/6043/).
-
-[^inverse-time]: [IEEE Std C37.112-2018, *IEEE Standard for Inverse-Time Characteristics Equations for Overcurrent Relays*](https://standards.ieee.org/ieee/C37.112/7036/).
