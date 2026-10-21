@@ -1,16 +1,113 @@
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <map>
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <variant>
+
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Manifest entry describing one parameter
+    template <Utilities::SizedEnum EnumT>
+    struct ParameterEntry
+    {
+      EnumT            key;
+      std::string_view units;
+      std::string_view symbol;
+      std::string_view description;
+
+      constexpr std::string_view name() const
+      {
+        return Utilities::enum_name(key);
+      }
+    };
+
+    /// Manifest entry describing one bus or signal port
+    template <Utilities::SizedEnum EnumT>
+    struct PortEntry
+    {
+      EnumT            key;
+      std::string_view description;
+
+      constexpr std::string_view name() const
+      {
+        return Utilities::enum_name(key);
+      }
+    };
+
+    /// Manifest entry describing one monitored variable
+    template <Utilities::SizedEnum EnumT>
+    struct MonitorEntry
+    {
+      EnumT            key;
+      std::string_view units;
+      std::string_view description;
+
+      constexpr std::string_view name() const
+      {
+        return Utilities::enum_name(key);
+      }
+    };
+
+    /// True when every enumeration value has exactly one described entry
+    template <typename EntryT, std::size_t N>
+    consteval bool entriesComplete(const std::array<EntryT, N>& entries)
+    {
+      for (std::size_t value = 0; value < N; ++value)
+      {
+        std::size_t described = 0;
+        for (const auto& entry : entries)
+        {
+          if (static_cast<std::size_t>(entry.key) == value && !entry.description.empty())
+          {
+            ++described;
+          }
+        }
+        if (described != 1)
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /// Units, symbols and descriptions of a component class, one entry per enumeration value
+    template <Utilities::SizedEnum ParametersT,
+              Utilities::SizedEnum BusesT,
+              Utilities::SizedEnum InputsT,
+              Utilities::SizedEnum OutputsT,
+              Utilities::SizedEnum MonitorsT>
+    struct ComponentManifest
+    {
+      template <typename EntryT, typename EnumT>
+      using Table = std::array<EntryT, Utilities::enum_size<EnumT>()>;
+
+      std::string_view                                class_name;
+      std::string_view                                description;
+      Table<ParameterEntry<ParametersT>, ParametersT> parameters;
+      Table<PortEntry<BusesT>, BusesT>                buses;
+      Table<PortEntry<InputsT>, InputsT>              inputs;
+      Table<PortEntry<OutputsT>, OutputsT>            outputs;
+      Table<MonitorEntry<MonitorsT>, MonitorsT>       monitors;
+
+      /// True when the class and description are set and every table is complete
+      consteval bool complete() const
+      {
+        return !class_name.empty() && !description.empty() && entriesComplete(parameters)
+               && entriesComplete(buses) && entriesComplete(inputs)
+               && entriesComplete(outputs) && entriesComplete(monitors);
+      }
+    };
+
     /**
      * @brief Unified interface for `Component` data containers
      *
@@ -51,6 +148,13 @@ namespace GridKit
 
       /// Enumeration over monitorable variables.
       using MonitorableVariables = monitorable_variables_enum;
+
+      /// Units, symbols and descriptions of this component class
+      using Manifest = ComponentManifest<Parameters,
+                                         Buses,
+                                         SignalInputs,
+                                         SignalOutputs,
+                                         MonitorableVariables>;
 
       /// Class of device this is for
       std::string device_class;
