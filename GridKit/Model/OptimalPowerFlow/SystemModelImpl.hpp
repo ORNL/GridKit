@@ -45,7 +45,7 @@ namespace GridKit
 
       for (const auto& generator : data.generator)
       {
-        addDevice<Generator<ScalarT, IdxT>>(generator);
+        generators_.emplace(generator.id, addDevice<GeneratorT>(generator));
       }
 
       for (const auto& load : data.load)
@@ -234,6 +234,21 @@ namespace GridKit
       return 0;
     }
 
+    /// @throw std::out_of_range for an unknown bus
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::BusT* SystemModel<scalar_type, index_type>::getBus(IdxT number)
+    {
+      return buses_.at(number);
+    }
+
+    /// @throw std::out_of_range for an unknown generator
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::GeneratorT*
+    SystemModel<scalar_type, index_type>::getGenerator(const std::string& id)
+    {
+      return generators_.at(id);
+    }
+
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::addBus(const BusData<RealT, IdxT>& data)
     {
@@ -248,7 +263,7 @@ namespace GridKit
     /// Device from `data`, connected at each port to the bus it names
     template <typename scalar_type, typename index_type>
     template <typename ModelT, typename DataT>
-    void SystemModel<scalar_type, index_type>::addDevice(const DataT& data)
+    ModelT* SystemModel<scalar_type, index_type>::addDevice(const DataT& data)
     {
       using Ports = typename DataT::Ports;
       static_assert(ModelT::NUM_PORT_VARIABLES.size() == Utilities::enum_size<Ports>());
@@ -276,7 +291,9 @@ namespace GridKit
         }
       }
 
+      ModelT* const added = device.get();
       components_.push_back(std::move(device));
+      return added;
     }
 
     /// Size the system vectors and bind each component to its blocks

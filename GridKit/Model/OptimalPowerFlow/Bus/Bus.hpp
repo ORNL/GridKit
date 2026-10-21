@@ -75,6 +75,18 @@ namespace GridKit
 
       [[gnu::always_inline]] void internalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
 
+      /// Real voltage [p.u.]
+      const ScalarT& Vr() const
+      {
+        return x_.getData()[static_cast<size_t>(BusInternalVariables::VR)];
+      }
+
+      /// Imaginary voltage [p.u.]
+      const ScalarT& Vi() const
+      {
+        return x_.getData()[static_cast<size_t>(BusInternalVariables::VI)];
+      }
+
     private:
       void initializeParameters(const ModelDataT& data);
 

@@ -7,10 +7,13 @@
 
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <GridKit/Model/ConfigurationChecks.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Component.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Generator/Generator.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModelData.hpp>
 #include <GridKit/Model/OptimizationEvaluator.hpp>
 
@@ -18,9 +21,6 @@ namespace GridKit
 {
   namespace OptimalPowerFlow
   {
-    template <typename scalar_type, typename index_type>
-    class Bus;
-
     /**
      * @brief AC optimal power flow in Cartesian coordinates
      *
@@ -38,6 +38,7 @@ namespace GridKit
       using IndexVectorT = LinearAlgebra::Vector<IdxT, IdxT>;
       using CsrMatrixT   = typename EvaluatorT::CsrMatrixT;
       using BusT         = Bus<ScalarT, IdxT>;
+      using GeneratorT   = Generator<ScalarT, IdxT>;
       using Block        = typename ComponentT::Block;
       using CooBufferT   = typename ComponentT::CooBuffer;
 
@@ -72,6 +73,12 @@ namespace GridKit
       int evaluateJacobian() override;
       int evaluateHessian(RealT sigma) override;
 
+      /// Bus by number, which views its solution after `allocate()`
+      BusT* getBus(IdxT number);
+
+      /// Generator by case-file `id`, which views its solution after `allocate()`
+      GeneratorT* getGenerator(const std::string& id);
+
     private:
       /// Component entries of one derivative matrix and the CSR entry of each
       struct Assembly
@@ -83,7 +90,7 @@ namespace GridKit
       void addBus(const BusData<RealT, IdxT>& data);
 
       template <typename ModelT, typename DataT>
-      void addDevice(const DataT& data);
+      ModelT* addDevice(const DataT& data);
 
       int compose();
       int bind(ComponentT& component, const Block& offset);
@@ -97,6 +104,9 @@ namespace GridKit
 
       /// Buses by number
       std::map<IdxT, BusT*> buses_;
+
+      /// Generators by id
+      std::map<std::string, GeneratorT*> generators_;
 
       Assembly jacobian_assembly_;
       Assembly hessian_assembly_;
