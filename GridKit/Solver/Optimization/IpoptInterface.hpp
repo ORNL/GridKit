@@ -91,7 +91,7 @@ namespace AnalysisManager
                   ipindex*        jCol,
                   ipnumber*       values) override;
 
-      /// Leave the final point, its multipliers, and its objective in the model
+      /// Leave the final point, its multipliers, its objective, and its constraints in the model
       void finalize_solution(SolverReturn               status,
                              ipindex                    n,
                              const ipnumber*            x,

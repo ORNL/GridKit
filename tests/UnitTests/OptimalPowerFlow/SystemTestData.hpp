@@ -20,6 +20,11 @@ namespace GridKit
       static constexpr RealT LOAD_P = 1.2;
       static constexpr RealT LOAD_Q = 0.3;
 
+      /// Linear costs of gen_1 and gen_3, and the quadratic cost of both
+      static constexpr RealT C1_GEN_1 = 10.0;
+      static constexpr RealT C1_GEN_3 = 20.0;
+      static constexpr RealT C2       = 0.01;
+
       /// Constraints of the buses in order, P, Q, and VM2 each, then S1 and S2
       /// of the rated branch, then of the unrated branches
       static constexpr std::array<IdxT, 6> BALANCE_ROWS{0, 1, 3, 4, 6, 7};
@@ -49,8 +54,8 @@ namespace GridKit
         addBranch(data, "branch_1_3", 1, 3, 0.02, 0.2, 0.0);
         data.branch[0].parameters[OPF::BranchParameters::Smax] = SMAX;
 
-        addGenerator(data, "gen_1", 1, 10.0);
-        addGenerator(data, "gen_3", 3, 20.0);
+        addGenerator(data, "gen_1", 1, C1_GEN_1);
+        addGenerator(data, "gen_3", 3, C1_GEN_3);
 
         auto& load                              = data.load.emplace_back();
         load.id                                 = "load_2";
@@ -88,7 +93,7 @@ namespace GridKit
         generator.parameters[OPF::GeneratorParameters::Qmin] = -1.0;
         generator.parameters[OPF::GeneratorParameters::Qmax] = 1.0;
         generator.parameters[OPF::GeneratorParameters::c1]   = c1;
-        generator.parameters[OPF::GeneratorParameters::c2]   = 0.01;
+        generator.parameters[OPF::GeneratorParameters::c2]   = C2;
       }
     };
   } // namespace Testing

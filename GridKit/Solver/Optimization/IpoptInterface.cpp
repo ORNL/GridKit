@@ -207,6 +207,7 @@ namespace AnalysisManager
       copyInto(model_->zLower(), z_L);
       copyInto(model_->zUpper(), z_U);
       model_->evaluateObjective();
+      model_->evaluateConstraints();
     }
 
     template <typename scalar_type, typename index_type>

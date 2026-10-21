@@ -44,6 +44,7 @@ namespace GridKit
       using ModelDataT = GeneratorData<RealT, IdxT>;
       using BusT       = Bus<scalar_type, index_type>;
 
+      using ComponentT::x_;
       using ComponentT::x_lower_;
       using ComponentT::x_upper_;
 
@@ -68,6 +69,18 @@ namespace GridKit
 
       [[gnu::always_inline]] ScalarT objective(const ScalarT* x, const ScalarT* external) const override;
       [[gnu::always_inline]] void    externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
+
+      /// Active power into the bus [p.u.]
+      const ScalarT& P() const
+      {
+        return x_.getData()[static_cast<size_t>(GeneratorInternalVariables::P)];
+      }
+
+      /// Reactive power into the bus [p.u.]
+      const ScalarT& Q() const
+      {
+        return x_.getData()[static_cast<size_t>(GeneratorInternalVariables::Q)];
+      }
 
     private:
       void initializeParameters(const ModelDataT& data);

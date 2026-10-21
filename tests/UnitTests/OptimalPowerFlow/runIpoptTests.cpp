@@ -8,6 +8,7 @@ int main()
   result += test.reference();
   result += test.solve();
   result += test.multipliers();
+  result += test.marginalPrices();
 
   return result.summary();
 }
