@@ -115,9 +115,9 @@ namespace GridKit
         std::size_t                visited = 0;
         std::set<std::string_view> class_names;
         PhasorDynamics::ComponentLibrary<>::forEach(
-            [&]<typename ModelT>(std::type_identity<ModelT>)
+            [&]<typename ModelT, typename DataT>(std::type_identity<ModelT>, std::type_identity<DataT>)
             {
-              class_names.insert(ModelT::ModelDataT::MANIFEST.class_name);
+              class_names.insert(DataT::MANIFEST.class_name);
               ++visited;
             });
 
