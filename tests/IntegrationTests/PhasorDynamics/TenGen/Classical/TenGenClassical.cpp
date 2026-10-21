@@ -43,6 +43,27 @@ GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> genData(real_ty
   return data;
 }
 
+/// Branch data with the given line and transformer parameters
+GridKit::PhasorDynamics::BranchData<real_type, index_type> branchData(const real_type R,
+                                                                      const real_type X,
+                                                                      const real_type G,
+                                                                      const real_type B,
+                                                                      const real_type tap   = 1.0,
+                                                                      const real_type phase = 0.0)
+{
+  using Parameter = GridKit::PhasorDynamics::BranchParameters;
+
+  GridKit::PhasorDynamics::BranchData<real_type, index_type> data;
+  data.parameters[Parameter::R]     = R;
+  data.parameters[Parameter::X]     = X;
+  data.parameters[Parameter::G]     = G;
+  data.parameters[Parameter::B]     = B;
+  data.parameters[Parameter::tap]   = tap;
+  data.parameters[Parameter::phase] = phase;
+
+  return data;
+}
+
 int main()
 {
   using namespace GridKit::PhasorDynamics;
@@ -68,15 +89,15 @@ int main()
   Bus<scalar_type, index_type> bus9(0.938638861502395, 0.344901620288291);
   Bus<scalar_type, index_type> bus10(0.937739191669114, 0.347340277548916);
 
-  Branch<scalar_type, index_type> branch12(&bus1, &bus2, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch23(&bus2, &bus3, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch34(&bus3, &bus4, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch45(&bus4, &bus5, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch56(&bus5, &bus6, 0.001, 0.1, 0, 0);
-  Branch<scalar_type, index_type> branch67(&bus6, &bus7, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch78(&bus7, &bus8, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch89(&bus8, &bus9, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch12(&bus1, &bus2, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch23(&bus2, &bus3, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch34(&bus3, &bus4, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch45(&bus4, &bus5, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch56(&bus5, &bus6, branchData(0.001, 0.1, 0, 0));
+  Branch<scalar_type, index_type> branch67(&bus6, &bus7, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch78(&bus7, &bus8, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch89(&bus8, &bus9, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch910(&bus9, &bus10, branchData(0.001, 0.005, 0, 0));
 
   GenClassical<scalar_type, index_type> gen2(&bus2, genData(0.5, -0.00442101));
   GenClassical<scalar_type, index_type> gen3(&bus3, genData(0.5, -0.02510812));

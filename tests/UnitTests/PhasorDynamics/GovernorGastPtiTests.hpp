@@ -53,9 +53,8 @@ namespace GridKit
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> empty;
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> empty(Data{});
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
-        success *= (empty.getMonitor() == nullptr);
         success *= (!empty.verify().passed()); // required pmech assignment is absent
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> configured(makeData());

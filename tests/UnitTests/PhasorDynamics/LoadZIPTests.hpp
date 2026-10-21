@@ -37,7 +37,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* load =
-            new PhasorDynamics::LoadZIP<ScalarT, IdxT>(bus);
+            new PhasorDynamics::LoadZIP<ScalarT, IdxT>(bus, DataT{});
 
         success *= (load != nullptr);
 
@@ -61,7 +61,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, loadZIPData(2.0, 0.5, 0.2, 0.4));
 
         bus.allocate();
         load.allocate();
@@ -89,7 +89,7 @@ namespace GridKit
         const RealT Qnom{0.5};
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.2, 0.9);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, Pnom, Qnom, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, loadZIPData(Pnom, Qnom, 0.2, 0.4));
 
         bus.allocate();
         load.allocate();
@@ -129,7 +129,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, loadZIPData(2.0, 0.5, 0.2, 0.4));
 
         bus.allocate();
         load.allocate();
@@ -222,7 +222,7 @@ namespace GridKit
         DependencyTracking::Variable Vi{0.4};
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(&bus, Pnom, Qnom, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(&bus, loadZIPData(Pnom, Qnom, alphaI, alphaP));
 
         bus.allocate();
         load.allocate();
@@ -256,7 +256,7 @@ namespace GridKit
         ScalarT Vi{0.4};
 
         PhasorDynamics::Bus<ScalarT, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, Pnom, Qnom, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, loadZIPData(Pnom, Qnom, alphaI, alphaP));
 
         bus.allocate();
         load.allocate();
@@ -310,6 +310,18 @@ namespace GridKit
         data.monitored_variables.insert(Variable::p);
         data.monitored_variables.insert(Variable::q);
 
+        return data;
+      }
+
+      static DataT loadZIPData(const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP)
+      {
+        using Params = PhasorDynamics::LoadZIPParameters;
+
+        DataT data;
+        data.parameters[Params::Pnom]   = Pnom;
+        data.parameters[Params::Qnom]   = Qnom;
+        data.parameters[Params::alphaI] = alphaI;
+        data.parameters[Params::alphaP] = alphaP;
         return data;
       }
     }; // class LoadZIPTests

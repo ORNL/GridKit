@@ -70,7 +70,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::Genrou<ScalarT, IdxT>(bus);
+            new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, GenrouDataT{});
 
         success *= (machine != nullptr);
 
@@ -97,25 +97,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
-                                                  1,
-                                                  0.05013,
-                                                  3,
-                                                  0,
-                                                  0,
-                                                  7,
-                                                  0.04,
-                                                  0.05,
-                                                  0.75,
-                                                  2.1,
-                                                  0.2,
-                                                  0.18,
-                                                  0.5,
-                                                  0.5,
-                                                  0.18,
-                                                  0.15,
-                                                  0,
-                                                  0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, makeGenrouData());
 
         bus.allocate();
         bus.initialize();
@@ -217,8 +199,30 @@ namespace GridKit
         ScalarT Vr1{1.0}; ///< Bus real voltage
         ScalarT Vi1{0};   ///< Bus imaginary voltage
 
+        using Parameter = typename GenrouDataT::Parameters;
+
+        GenrouDataT data;
+        data.parameters[Parameter::p0]    = p0;
+        data.parameters[Parameter::q0]    = q0;
+        data.parameters[Parameter::H]     = H;
+        data.parameters[Parameter::D]     = D;
+        data.parameters[Parameter::Ra]    = Ra;
+        data.parameters[Parameter::Tdop]  = Tdop;
+        data.parameters[Parameter::Tdopp] = Tdopp;
+        data.parameters[Parameter::Tqopp] = Tqopp;
+        data.parameters[Parameter::Tqop]  = Tqop;
+        data.parameters[Parameter::Xd]    = Xd;
+        data.parameters[Parameter::Xdp]   = Xdp;
+        data.parameters[Parameter::Xdpp]  = Xdpp;
+        data.parameters[Parameter::Xq]    = Xq;
+        data.parameters[Parameter::Xqp]   = Xqp;
+        data.parameters[Parameter::Xqpp]  = Xqpp;
+        data.parameters[Parameter::Xl]    = Xl;
+        data.parameters[Parameter::S10]   = S10;
+        data.parameters[Parameter::S12]   = S12;
+
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
 
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
@@ -341,25 +345,7 @@ namespace GridKit
         DependencyTracking::Variable                               Vr1{1.0}; ///< Bus real voltage
         DependencyTracking::Variable                               Vi1{0.0}; ///< Bus imaginary voltage
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(&bus,
-                                                                       1,
-                                                                       0.05013,
-                                                                       3,
-                                                                       0,
-                                                                       0,
-                                                                       7,
-                                                                       0.04,
-                                                                       0.05,
-                                                                       0.75,
-                                                                       2.1,
-                                                                       0.2,
-                                                                       0.18,
-                                                                       0.5,
-                                                                       0.5,
-                                                                       0.18,
-                                                                       0.15,
-                                                                       0,
-                                                                       0);
+        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(&bus, makeGenrouData());
 
         bus.allocate();
         gen.allocate();
@@ -393,25 +379,7 @@ namespace GridKit
         ScalarT                               Vr1{1.0}; ///< Bus real voltage
         ScalarT                               Vi1{0.0}; ///< Bus imaginary voltage
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
-                                                  1,
-                                                  0.05013,
-                                                  3,
-                                                  0,
-                                                  0,
-                                                  7,
-                                                  0.04,
-                                                  0.05,
-                                                  0.75,
-                                                  2.1,
-                                                  0.2,
-                                                  0.18,
-                                                  0.5,
-                                                  0.5,
-                                                  0.18,
-                                                  0.15,
-                                                  0,
-                                                  0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, makeGenrouData());
 
         bus.allocate();
         gen.allocate();

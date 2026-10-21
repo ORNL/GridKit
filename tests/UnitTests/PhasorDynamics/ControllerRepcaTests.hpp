@@ -54,9 +54,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(&bus);
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(&bus, Data{});
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
-        success *= (empty.getMonitor() == nullptr);
         success *= (!empty.verify().passed());
 
         Fixture<ScalarT> configured(makeData());

@@ -56,9 +56,8 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> empty(&bus);
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> empty(&bus, Data{});
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
-        success *= (empty.getMonitor() == nullptr);
         success *= (!empty.verify().passed());
 
         Fixture<ScalarT> configured(makeData());

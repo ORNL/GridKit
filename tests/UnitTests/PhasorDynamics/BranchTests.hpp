@@ -37,7 +37,7 @@ namespace GridKit
         auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
 
         PhasorDynamics::Component<ScalarT, IdxT>* branch =
-            new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2);
+            new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
 
         success *= (branch != nullptr);
 
@@ -80,7 +80,7 @@ namespace GridKit
         bus2.initialize();
         bus2.evaluateResidual();
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B));
         branch.allocate();
         branch.evaluateResidual();
 
@@ -178,7 +178,7 @@ namespace GridKit
         bus2.Vr().setVariableNumber(2);
         bus2.Vi().setVariableNumber(3);
 
-        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B));
         branch.allocate();
         branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                    ///< the dependencies
@@ -221,14 +221,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
         PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
 
-        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1,
-                                                                          &bus2,
-                                                                          R,
-                                                                          X,
-                                                                          G,
-                                                                          B,
-                                                                          tap,
-                                                                          phase);
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B, tap, phase));
         branch.allocate();
         branch.evaluateResidual();
 
@@ -265,7 +258,7 @@ namespace GridKit
           bus2.setResidualIndex(i, i + 2);
         }
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, 2.0, 4.0, 0.2, 1.2);
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, branchData(2.0, 4.0, 0.2, 1.2));
         branch.allocate();
         branch.evaluateJacobian();
         const IdxT nnz                     = branch.nnz();
@@ -334,7 +327,7 @@ namespace GridKit
         ref_bus2.allocate();
         ref_bus2.initialize();
         ref_bus2.evaluateResidual();
-        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, tap, phase);
+        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, branchData(R, X, G, B, tap, phase));
 
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus2(Vr2, Vi2);
@@ -344,7 +337,7 @@ namespace GridKit
         test_bus2.allocate();
         test_bus2.initialize();
         test_bus2.evaluateResidual();
-        PhasorDynamics::Branch<ScalarT, IdxT> test_branch(&test_bus1, &test_bus2, 1.0, 1.0, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> test_branch(&test_bus1, &test_bus2, branchData(1.0, 1.0, 0.0, 0.0));
 
         test_branch.setR(R);
         test_branch.setX(X);
@@ -372,7 +365,7 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(1.0, 0.0);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(&bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0));
         success *= (valid_branch.verify().passed());
 
         const auto previous_verbosity = Log::verbosity();
@@ -380,17 +373,17 @@ namespace GridKit
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, 0.0, 0.0, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, branchData(0.0, 0.0, 0.0, 0.0));
         success *= (!zero_impedance_branch.verify().passed());
 
-        PhasorDynamics::Branch<ScalarT, IdxT> zero_tap_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> zero_tap_branch(&bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0, 0.0, 0.0));
         success *= (!zero_tap_branch.verify().passed());
 
-        PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0, -1.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(&bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0, -1.0, 0.0));
         success *= (!negative_tap_branch.verify().passed());
 
         const RealT                           nan = std::numeric_limits<RealT>::quiet_NaN();
-        PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, nan, 0.1, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, branchData(nan, 0.1, 0.0, 0.0));
         success *= (!nonfinite_branch.verify().passed());
 
         Log::setVerbosity(previous_verbosity);
@@ -443,7 +436,7 @@ namespace GridKit
         ref_bus2.evaluateResidual();
 
         PhasorDynamics::Branch<ScalarT, IdxT> data_branch(&data_bus1, &data_bus2, data);
-        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, 1.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, branchData(R, X, G, B, 1.0, 0.0));
 
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();
@@ -457,6 +450,25 @@ namespace GridKit
       }
 
     private:
+      static PhasorDynamics::BranchData<RealT, IdxT> branchData(const RealT R,
+                                                                const RealT X,
+                                                                const RealT G,
+                                                                const RealT B,
+                                                                const RealT tap   = 1.0,
+                                                                const RealT phase = 0.0)
+      {
+        using Parameter = PhasorDynamics::BranchParameters;
+
+        PhasorDynamics::BranchData<RealT, IdxT> data;
+        data.parameters[Parameter::R]     = R;
+        data.parameters[Parameter::X]     = X;
+        data.parameters[Parameter::G]     = G;
+        data.parameters[Parameter::B]     = B;
+        data.parameters[Parameter::tap]   = tap;
+        data.parameters[Parameter::phase] = phase;
+        return data;
+      }
+
       std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
                                                                                   const RealT X,
                                                                                   const RealT G,
