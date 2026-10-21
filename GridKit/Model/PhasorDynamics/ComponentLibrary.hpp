@@ -26,6 +26,7 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
+#include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
 {
@@ -35,10 +36,15 @@ namespace GridKit
     template <typename ScalarT = double, typename IdxT = size_t>
     struct ComponentLibrary
     {
-      /// Calls `visit(std::type_identity<ModelT>{})` once per model, one line per model
+      /// Calls `visit` with each model type and its data type, in construction order
       template <typename Visitor>
-      static constexpr void forEach([[maybe_unused]] Visitor&& visit)
+      static constexpr void forEach(Visitor&& visit)
       {
+        using RealT = typename ScalarTraits<ScalarT>::RealT;
+        visit(std::type_identity<Genrou<ScalarT, IdxT>>{},
+              std::type_identity<GenrouData<RealT, IdxT>>{});
+        visit(std::type_identity<Exciter::Ieeet1<ScalarT, IdxT>>{},
+              std::type_identity<Exciter::Ieeet1Data<RealT, IdxT>>{});
       }
     };
   } // namespace PhasorDynamics
