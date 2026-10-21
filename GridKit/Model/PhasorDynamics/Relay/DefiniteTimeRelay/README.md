@@ -88,7 +88,7 @@ $m_i$  | [p.u.] | Measured quantity, imaginary component | `mi`
 ## Model Equations
 
 Smooth functions: [`above`](../../../../CommonMath.md#above),
-[`latch`](../../Branch/BranchBreakers/README.md#appendix-a-latch),
+[`latch`](../../../../CommonMath.md#latch),
 [`logistic`](../../../../CommonMath.md#logistic-function) ($\sigma$).
 
 For readability, define:
