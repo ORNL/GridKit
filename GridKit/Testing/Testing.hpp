@@ -235,7 +235,7 @@ namespace GridKit
           { func(std::forward<TArgs>(args)...); });
     }
 
-    /// True when building a model throws @ref std::invalid_argument or the
+    /// True when building a model throws `std::invalid_argument` or the
     /// configuration checks it returns report a problem.
     template <typename BuildT>
     inline bool configurationRejected(BuildT build)
