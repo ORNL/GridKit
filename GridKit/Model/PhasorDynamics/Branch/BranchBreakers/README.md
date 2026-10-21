@@ -51,13 +51,13 @@ $Y_k^\mathrm{o}$ is the admittance seen at terminal $k$ with the opposite breake
   \epsilon_T &= 10^{-3}\ \mathrm{s} \\
   T_\mathrm{brk} &\leftarrow \max(T_\mathrm{brk}, \epsilon_T) \\
   T_\mathrm{latch} &= \dfrac{T_\mathrm{brk}}{\ln 2} \\
-  Z &= R + jX \\
+  Y_\mathrm{br} &= \dfrac{1}{R + jX} \\
   Y_\mathrm{mag} &= G_\mathrm{mag} + jB_\mathrm{mag} \\
   Y_\mathrm{sh} &= G + jB \\
-  \mathbf{Y}_0 &= \dfrac{1}{Z}
+  \mathbf{Y}_0 &=
     \begin{bmatrix}
-      -1 & 1 \\
-      1 & -1
+      -Y_\mathrm{br} & Y_\mathrm{br} \\
+      Y_\mathrm{br} & -Y_\mathrm{br}
     \end{bmatrix} \\
   \mathbf{Y}_\mathrm{mag} &=
     \begin{bmatrix}
@@ -88,15 +88,15 @@ Name     | Port   | Init  | Description
 `bus1`   | Bus    | Known | Required bus-1 terminal; the tapped side
 `bus2`   | Bus    | Known | Required bus-2 terminal
 `trip1`  | Input  | Known | Bus-1 breaker trip command
-`reset1` | Input  | Known | Bus-1 breaker reset command
+`close1` | Input  | Known | Bus-1 breaker close command
 `trip2`  | Input  | Known | Bus-2 breaker trip command
-`reset2` | Input  | Known | Bus-2 breaker reset command
+`close2` | Input  | Known | Bus-2 breaker close command
 `ir1`    | Output | Known | Bus-1 terminal current, real component
 `ii1`    | Output | Known | Bus-1 terminal current, imaginary component
 `ir2`    | Output | Known | Bus-2 terminal current, real component
 `ii2`    | Output | Known | Bus-2 terminal current, imaginary component
 
-Signal ports are optional. Attached inputs must be linked. Trip and reset
+Signal ports are optional. Attached inputs must be linked. Trip and close
 commands lie in $[0,1]$; unattached inputs default to zero.
 
 ## Model Variables
@@ -129,14 +129,15 @@ $V_{i1}$ | [p.u.] | Terminal voltage, imaginary component, bus 1 | Owned by bus 
 $V_{r2}$ | [p.u.] | Terminal voltage, real component, bus 2      | Owned by bus object
 $V_{i2}$ | [p.u.] | Terminal voltage, imaginary component, bus 2 | Owned by bus object
 $s_1$    | [-]    | Bus-1 breaker trip command                   | `trip1`
-$r_1$    | [-]    | Bus-1 breaker reset command                  | `reset1`
+$c_1$    | [-]    | Bus-1 breaker close command                  | `close1`
 $s_2$    | [-]    | Bus-2 breaker trip command                   | `trip2`
-$r_2$    | [-]    | Bus-2 breaker reset command                  | `reset2`
+$c_2$    | [-]    | Bus-2 breaker close command                  | `close2`
 
 ## Model Equations
 
 Smooth functions: [`above`](../../../../CommonMath.md#above),
-[`below`](../../../../CommonMath.md#below), [`latch`](#appendix-a-latch).
+[`below`](../../../../CommonMath.md#below),
+[`latch`](../../../../CommonMath.md#latch).
 
 For readability, define:
 
@@ -155,12 +156,12 @@ For readability, define:
 
 ```math
 \begin{aligned}
-  0 &= -\dot{z}_1 + \dfrac{1}{T_\mathrm{latch}}\text{latch}(z_1, r_1, s_1) \\
-  0 &= -\dot{z}_2 + \dfrac{1}{T_\mathrm{latch}}\text{latch}(z_2, r_2, s_2)
+  0 &= -\dot{z}_1 + \dfrac{1}{T_\mathrm{latch}}\text{latch}(z_1, c_1, s_1) \\
+  0 &= -\dot{z}_2 + \dfrac{1}{T_\mathrm{latch}}\text{latch}(z_2, c_2, s_2)
 \end{aligned}
 ```
 
-Reset drives the latch toward closed; a full trip command overrides reset.
+A close command drives the latch toward closed; a full trip command overrides it.
 
 #### Algebraic
 
@@ -205,17 +206,3 @@ Monitor | Units  | Description                                  | Note
 `im2`   | [p.u.] | Terminal current magnitude, bus 2            | $\sqrt{I_{r2}^2 + I_{i2}^2}$
 `p2`    | [p.u.] | Active power entering bus 2                  | $V_{r2} I_{r2} + V_{i2} I_{i2}$
 `q2`    | [p.u.] | Reactive power entering bus 2                | $V_{i2} I_{r2} - V_{r2} I_{i2}$
-
-## Appendix A: `latch`
-
-For $x,a,b \in [0,1]$:
-
-```math
-\text{latch}(x, a, b)
-  = (1 - b)\left[a + (1 - a)\sigma(x - 1/2)\right] - x
-```
-
-where $\sigma$ is GridKit's smooth
-[`sigmoid`](../../../../CommonMath.md#logistic-function), with $\mu > 4$.
-Here $x$ is the state, $a$ the set drive, and $b$ the reset drive. Full reset has
-priority. With both drives zero, $x = 1/2$ separates the stable low and high states.
