@@ -30,15 +30,6 @@ namespace GridKit
 
       /**
        * @brief  Constructor for IEEET1 Exciter
-       */
-      template <typename scalar_type, typename index_type>
-      Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus)
-        : Ieeet1(bus, ModelDataT{})
-      {
-      }
-
-      /**
-       * @brief  Constructor for IEEET1 Exciter
        *
        * @param bus   Signal used for terminal reference vmag
        * @param data  Data object to store parameters

@@ -28,15 +28,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Construct an unconfigured HYGOV governor
-       */
-      template <typename scalar_type, typename index_type>
-      Hygov<scalar_type, index_type>::Hygov()
-      {
-        size_ = static_cast<IdxT>(Utilities::enum_size<HygovInternalVariables>());
-      }
-
-      /**
        * @brief Construct a HYGOV governor from model data
        *
        * @param[in] data Parameters and monitored-variable selections.

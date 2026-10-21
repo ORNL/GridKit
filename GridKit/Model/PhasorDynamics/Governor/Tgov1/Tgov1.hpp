@@ -71,9 +71,7 @@ namespace GridKit
         using SignalNodeT    = SignalNodeSetT::SignalNodeT;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
-        Tgov1();
-        Tgov1(SignalNodeT*, SignalNodeT*);
-        Tgov1(const ModelDataT&);
+        Tgov1(const ModelDataT& data);
         ~Tgov1() = default;
 
         int setGridKitComponentID(IdxT) override final;

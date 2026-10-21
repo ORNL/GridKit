@@ -42,7 +42,6 @@ namespace GridKit
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
-      FunctionSignalSource();
       FunctionSignalSource(const ModelDataT& data);
       ~FunctionSignalSource();
 

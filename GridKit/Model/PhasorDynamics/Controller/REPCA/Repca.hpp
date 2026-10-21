@@ -115,7 +115,6 @@ namespace GridKit
 
         static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-12);
 
-        Repca(BusT* bus);
         Repca(BusT* bus, const ModelDataT& data);
         ~Repca();
 

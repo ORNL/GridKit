@@ -18,92 +18,6 @@ namespace GridKit
 
     /**
      * @brief Constructor for a GENROU generator model with saturation
-     *
-     * Arguments passed to ModelEvaluatorImpl:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
-     */
-    template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus)
-      : bus_(bus),
-        bus_id_(0),
-        p0_(0.),
-        q0_(0.),
-        H_(3.),
-        D_(0.),
-        Ra_(0.),
-        Tdop_(7.),
-        Tdopp_(.04),
-        Tqopp_(.05),
-        Tqop_(.75),
-        Xd_(2.1),
-        Xdp_(0.2),
-        Xdpp_(0.18),
-        Xq_(.5),
-        Xqp_(.5),
-        Xqpp_(.18),
-        Xl_(.15),
-        S10_(0.),
-        S12_(0.),
-        mva_base_(100.)
-    {
-      size_ = 17;
-      setDerivedParams();
-    }
-
-    /**
-     * @brief Constructor for a GENROU generator model with saturation
-     */
-    template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus,
-                                            RealT p0,
-                                            RealT q0,
-                                            RealT H,
-                                            RealT D,
-                                            RealT Ra,
-                                            RealT Tdop,
-                                            RealT Tdopp,
-                                            RealT Tqopp,
-                                            RealT Tqop,
-                                            RealT Xd,
-                                            RealT Xdp,
-                                            RealT Xdpp,
-                                            RealT Xq,
-                                            RealT Xqp,
-                                            RealT Xqpp,
-                                            RealT Xl,
-                                            RealT S10,
-                                            RealT S12)
-      : bus_(bus),
-        bus_id_(0),
-        p0_(p0),
-        q0_(q0),
-        H_(H),
-        D_(D),
-        Ra_(Ra),
-        Tdop_(Tdop),
-        Tdopp_(Tdopp),
-        Tqopp_(Tqopp),
-        Tqop_(Tqop),
-        Xd_(Xd),
-        Xdp_(Xdp),
-        Xdpp_(Xdpp),
-        Xq_(Xq),
-        Xqp_(Xqp),
-        Xqpp_(Xqpp),
-        Xl_(Xl),
-        S10_(S10),
-        S12_(S12),
-        mva_base_(100.)
-    {
-      size_ = 17;
-      setDerivedParams();
-    }
-
-    /**
-     * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT*             bus,
@@ -111,41 +25,6 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      initializeParameters(data);
-      initializeMonitor();
-
-      size_ = 17;
-      setDerivedParams();
-    }
-
-    /**
-     * @brief Constructor for a GENROU generator model with saturation
-     */
-    template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalNodeT* omega, SignalNodeT* pmech, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
-    {
-      ports_.in.template port<GenrouSignalInputs::pmech>().connect(pmech);
-      ports_.out.template port<GenrouSignalOutputs::speed>().connect(omega);
-      initializeParameters(data);
-      initializeMonitor();
-
-      size_ = 17;
-      setDerivedParams();
-    }
-
-    /**
-     * @brief Constructor for a GENROU generator model with saturation
-     */
-    template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalNodeT* omega, SignalNodeT* pmech, SignalNodeT* efd, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
-    {
-      ports_.in.template port<GenrouSignalInputs::pmech>().connect(pmech);
-      ports_.in.template port<GenrouSignalInputs::efd>().connect(efd);
-      ports_.out.template port<GenrouSignalOutputs::speed>().connect(omega);
       initializeParameters(data);
       initializeMonitor();
 

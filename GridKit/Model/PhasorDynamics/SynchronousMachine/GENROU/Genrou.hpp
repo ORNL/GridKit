@@ -86,37 +86,7 @@ namespace GridKit
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT       = Model::VariableMonitor<Genrou, GenrouData>;
 
-      Genrou(BusT* bus);
-      Genrou(BusT*             bus,
-             SignalNodeT*      omega,
-             SignalNodeT*      pmech,
-             const ModelDataT& data);
-      Genrou(BusT*             bus,
-             SignalNodeT*      omega,
-             SignalNodeT*      pmech,
-             SignalNodeT*      efd,
-             const ModelDataT& data);
-      Genrou(BusT*             bus,
-             const ModelDataT& data);
-      Genrou(BusT* bus,
-             RealT p0,
-             RealT q0,
-             RealT H,
-             RealT D,
-             RealT Ra,
-             RealT Tdop,
-             RealT Tdopp,
-             RealT Tqopp,
-             RealT Tqop,
-             RealT Xd,
-             RealT Xdp,
-             RealT Xdpp,
-             RealT Xq,
-             RealT Xqp,
-             RealT Xqpp,
-             RealT Xl,
-             RealT S10,
-             RealT S12);
+      Genrou(BusT* bus, const ModelDataT& data);
       ~Genrou();
 
       int setGridKitComponentID(IdxT) override final;

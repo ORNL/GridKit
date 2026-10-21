@@ -26,13 +26,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       template <typename scalar_type, typename index_type>
-      SexsPti<scalar_type, index_type>::SexsPti(BusT* bus)
-        : bus_(bus)
-      {
-        size_ = 3;
-      }
-
-      template <typename scalar_type, typename index_type>
       SexsPti<scalar_type, index_type>::SexsPti(BusT* bus, const ModelDataT& data)
         : bus_(bus),
           monitor_(std::make_unique<MonitorT>(data))

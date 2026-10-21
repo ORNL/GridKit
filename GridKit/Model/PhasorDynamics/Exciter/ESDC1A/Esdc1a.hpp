@@ -93,7 +93,6 @@ namespace GridKit
         using InternalVariablesT = Esdc1aInternalVariables;
         using ExternalVariablesT = Esdc1aExternalVariables;
 
-        Esdc1a(BusT* bus);
         Esdc1a(BusT* bus, const ModelDataT& data);
         ~Esdc1a();
 

@@ -74,7 +74,6 @@ namespace GridKit
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<Ieeest, IeeestData>;
 
-        Ieeest();
         Ieeest(const ModelDataT& data);
         ~Ieeest();
 

@@ -49,19 +49,6 @@ namespace GridKit
       };
 
       /**
-       * @brief Construct an unconfigured REECB controller
-       *
-       * @param[in] bus Terminal bus measured by the controller.
-       */
-      template <typename scalar_type, typename index_type>
-      Reecb<scalar_type, index_type>::Reecb(BusT* bus)
-        : bus_(bus)
-      {
-        size_ = static_cast<IdxT>(Utilities::enum_size<ReecbInternalVariables>());
-        setDerivedParameters();
-      }
-
-      /**
        * @brief Construct REECB from model data
        *
        * @param[in] bus Terminal bus measured by the controller.

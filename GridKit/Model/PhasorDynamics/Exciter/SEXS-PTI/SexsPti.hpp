@@ -68,7 +68,6 @@ namespace GridKit
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<SexsPti, SexsPtiData>;
 
-        SexsPti(BusT* bus);
         SexsPti(BusT* bus, const ModelDataT& data);
         ~SexsPti();
 

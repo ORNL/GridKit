@@ -26,60 +26,11 @@ namespace GridKit
      * Model size:
      * - Number of equations = 0
      * - Number of internal variables = 0
-     */
-    template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2)
-      : bus1_(bus1),
-        bus2_(bus2),
-        R_(0.0),
-        X_(0.01),
-        G_(0.0),
-        B_(0.0),
-        tap_(1.0),
-        phase_(0.0),
-        bus1_id_(0),
-        bus2_id_(0)
-    {
-      size_ = 0;
-      setDerivedParams();
-    }
-
-    /**
-     * @brief Construct a new Branch
      *
      * @param bus1 - pointer to bus-1
      * @param bus2 - pointer to bus-2
-     * @param R - line series resistance
-     * @param X - line series reactance
-     * @param G - total line shunt conductance
-     * @param B - total line shunt susceptance
-     * @param tap - off-nominal tap magnitude on bus1 side
-     * @param phase - phase shift angle in radians
+     * @param data - branch parameters and monitored-variable selections
      */
-    template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1,
-                                            BusT* bus2,
-                                            RealT R,
-                                            RealT X,
-                                            RealT G,
-                                            RealT B,
-                                            RealT tap,
-                                            RealT phase)
-      : bus1_(bus1),
-        bus2_(bus2),
-        R_(R),
-        X_(X),
-        G_(G),
-        B_(B),
-        tap_(tap),
-        phase_(phase),
-        bus1_id_(0),
-        bus2_id_(0)
-    {
-      size_ = 0;
-      setDerivedParams();
-    }
-
     template <typename scalar_type, typename index_type>
     Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2, const ModelDataT& data)
       : bus1_(bus1),

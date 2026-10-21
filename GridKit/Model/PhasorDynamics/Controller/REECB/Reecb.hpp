@@ -110,7 +110,6 @@ namespace GridKit
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
-        Reecb(BusT* bus);
         Reecb(BusT* bus, const ModelDataT& data);
         ~Reecb();
 

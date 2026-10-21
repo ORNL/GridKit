@@ -43,8 +43,6 @@ namespace GridKit
       using ModelDataT = LoadZIPData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
 
-      LoadZIP(BusT* bus);
-      LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP);
       LoadZIP(BusT* bus, const ModelDataT& data);
       ~LoadZIP();
 

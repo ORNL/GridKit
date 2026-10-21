@@ -39,7 +39,6 @@ namespace GridKit
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
-      ConstantSignalSource();
       ConstantSignalSource(const ModelDataT& data);
       ~ConstantSignalSource();
 
