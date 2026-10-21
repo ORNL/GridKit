@@ -5,6 +5,8 @@ breakers at both terminals.
 
 ## Notes
 
+- Designed for [relay](../../Relay/README.md) protection: relay `trip` outputs
+  drive `trip1` and `trip2`, and relays measure the terminal-current outputs.
 - Terminal-current outputs publish values without Jacobian coupling to the bus
   voltages or breaker states.
 
