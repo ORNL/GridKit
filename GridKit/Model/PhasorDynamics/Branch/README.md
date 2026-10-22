@@ -29,7 +29,7 @@ Figure 1: Branch model.
 Symbol           | Units  | JSON    | Description                             | Typical Value | Note
 -----------------|--------|---------|-----------------------------------------|---------------|-----
 $R$              | [p.u.] | `R`     | Branch series resistance                |               |
-$X$              | [p.u.] | `X`     | Branch series reactance                 |               |
+$X$              | [p.u.] | `X`     | Branch series reactance                 | 0.01          | Default when omitted
 $G$              | [p.u.] | `G`     | Total line shunt conductance            | 0.0           |
 $B$              | [p.u.] | `B`     | Total line shunt susceptance            | 0.0           |
 $G_\mathrm{mag}$ | [p.u.] | `Gmag`  | Magnetizing shunt conductance at bus 1  | 0.0           |
