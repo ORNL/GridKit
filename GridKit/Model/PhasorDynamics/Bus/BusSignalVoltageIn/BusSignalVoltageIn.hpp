@@ -51,7 +51,7 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::monitor_;
       using BusBase<scalar_type, index_type>::allocated_;
 
-    public:
+    private:
       using ScalarT      = scalar_type;
       using IdxT         = index_type;
       using RealT        = typename BusBase<ScalarT, IdxT>::RealT;
@@ -61,6 +61,7 @@ namespace GridKit
       using BusTypeT     = typename BusData<RealT, IdxT>::BusType;
       using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
 
+    public:
       BusSignalVoltageIn();
       /// Initial voltage arguments are ignored; the voltage comes from signals.
       BusSignalVoltageIn(ScalarT Vr, ScalarT Vi);

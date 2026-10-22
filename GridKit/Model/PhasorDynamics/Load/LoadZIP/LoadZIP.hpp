@@ -35,7 +35,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
 
-    public:
+    private:
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
@@ -43,6 +43,7 @@ namespace GridKit
       using ModelDataT = LoadZIPData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
 
+    public:
       LoadZIP(BusT* bus);
       LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP);
       LoadZIP(BusT* bus, const ModelDataT& data);

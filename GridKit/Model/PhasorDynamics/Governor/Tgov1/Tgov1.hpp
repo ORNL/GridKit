@@ -62,7 +62,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::allocated_;
 
-      public:
+      private:
         using ScalarT        = scalar_type;
         using IdxT           = index_type;
         using RealT          = typename Component<ScalarT, IdxT>::RealT;
@@ -71,6 +71,7 @@ namespace GridKit
         using SignalNodeT    = SignalNodeSetT::SignalNodeT;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
+      public:
         Tgov1();
         Tgov1(SignalNodeT*, SignalNodeT*);
         Tgov1(const ModelDataT&);

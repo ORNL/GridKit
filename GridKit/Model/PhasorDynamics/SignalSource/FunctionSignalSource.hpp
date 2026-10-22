@@ -33,7 +33,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::size_;
       using Component<scalar_type, index_type>::allocated_;
 
-    public:
+    private:
       using ScalarT        = scalar_type;
       using IdxT           = index_type;
       using RealT          = typename Component<ScalarT, IdxT>::RealT;
@@ -42,6 +42,7 @@ namespace GridKit
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
+    public:
       FunctionSignalSource();
       FunctionSignalSource(const ModelDataT& data);
       ~FunctionSignalSource();

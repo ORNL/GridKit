@@ -15,7 +15,7 @@ namespace GridKit
     template <typename scalar_type = double, typename index_type = int>
     class BusFactory
     {
-    public:
+    private:
       using ScalarT        = scalar_type;
       using IdxT           = index_type;
       using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
@@ -23,6 +23,7 @@ namespace GridKit
       using BusData        = GridKit::PhasorDynamics::BusData<RealT, IdxT>;
       using BusTypeT       = typename GridKit::PhasorDynamics::BusData<RealT, IdxT>::BusType;
 
+    public:
       BusFactory() = delete;
 
       static BusBase<ScalarT, IdxT>* create(const BusData& data, SignalNodeSetT& signal_nodes)

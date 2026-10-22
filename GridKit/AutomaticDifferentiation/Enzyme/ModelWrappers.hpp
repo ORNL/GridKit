@@ -8,6 +8,8 @@
 
 #include <vector>
 
+#include <GridKit/Model/EvaluatorTraits.hpp>
+
 namespace GridKit
 {
   namespace Enzyme
@@ -48,7 +50,7 @@ namespace GridKit
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::InternalResidual>
       {
-        using ScalarT = typename ModelT::ScalarT;
+        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -74,7 +76,7 @@ namespace GridKit
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::InternalResidualWithSignal>
       {
-        using ScalarT = typename ModelT::ScalarT;
+        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -102,7 +104,7 @@ namespace GridKit
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual>
       {
-        using ScalarT = typename ModelT::ScalarT;
+        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -128,7 +130,7 @@ namespace GridKit
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual11>
       {
-        using ScalarT = typename ModelT::ScalarT;
+        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -154,7 +156,7 @@ namespace GridKit
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual12>
       {
-        using ScalarT = typename ModelT::ScalarT;
+        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -180,7 +182,7 @@ namespace GridKit
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual21>
       {
-        using ScalarT = typename ModelT::ScalarT;
+        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -207,7 +209,7 @@ namespace GridKit
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual22>
       {
-        using ScalarT = typename ModelT::ScalarT;
+        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated

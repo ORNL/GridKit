@@ -33,7 +33,7 @@ using Log = GridKit::Utilities::Logger;
 template <typename scalar_type, typename index_type>
 class CoSimClient
 {
-public:
+private:
   /// Type representing a scalar value
   using ScalarT      = scalar_type;
   /// Type representing an index
@@ -43,10 +43,11 @@ public:
   /// Alias for SystemModel
   using SystemModelT = SystemModel<ScalarT, IdxT>;
   /// Alias for SignalNode
-  using SignalNodeT  = typename SystemModelT::SignalNodeT;
+  using SignalNodeT  = SignalNode<ScalarT, IdxT>;
   /// Alias for Ida
   using IdaT         = Ida<ScalarT, IdxT>;
 
+public:
   CoSimClient() = delete;
 
   /**
@@ -225,15 +226,11 @@ int main(int argc, const char* argv[])
   Log::setVerbosity(Log::Verbosity::EVERYTHING);
 
   CliArgs args{{.name     = {"--case-file", "-c"},
-                .required = true},
-
-               {.name = {"--iface-bus", "-b"},
-                .type = ArgType::Integer}};
+                .required = true}};
 
   args.parseArgs(argc, argv);
 
   auto filepath = std::filesystem::path(args["case-file"]());
-  auto busid    = args["iface-bus"].as<IdxT>();
 
   // Instantiate system
   auto data = parseSystemModelData(filepath);

@@ -348,25 +348,32 @@ rather than `class` for template type parameters.
 
   template <typename real_type> ...; // Yes
 ```
-Types used within class implementation code and provided in the public class
-interface should use `UpperCamelT` format, similar to class names, but with a
-`T` suffix.  For consistency, create aliases for template type parameters
-(*e.g.,* `using ScalarT = scalar_type;`) and use the same name everywhere the
-same type is used. This applies across multiple classes in which the type has
-the same meaning.
+Types used within class implementation code should use `UpperCamelT` format,
+similar to class names, but with a `T` suffix.  For consistency, create aliases
+for template type parameters (*e.g.,* `using ScalarT = scalar_type;`) and use
+the same name everywhere the same type is used. This applies across multiple
+classes in which the type has the same meaning.
+
+These aliases are implementation details of the class that declares them, so
+keep them `private`. Only make an alias `public` (or `protected`) when other
+code must name it through the class, for example a base class alias that
+derived classes re-export, a data struct whose aliases a concept inspects, or a
+type that another class reads as `OtherClass::SomeT`.
 
 ```c++
   template <typename scalar_type, typename index_type>
   class ExTemp
   {
+  private:
     // Convention used in all applicable classes for scalar, index, and
     // primitive floating-point types
     using ScalarT = scalar_type;
     using IdxT    = index_type;
     using RealT   = GridKit::ScalarTraits<ScalarT>::RealT;
 
+  public:
     // void foo(scalar_type value); // No, using template type parameter
-    void foo(ScalarT value); // Yes, using interface types in code
+    void foo(ScalarT value); // Yes, using the class aliases in code
   };
 ```
 

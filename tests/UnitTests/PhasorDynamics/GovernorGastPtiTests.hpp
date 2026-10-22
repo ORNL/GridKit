@@ -936,10 +936,10 @@ namespace GridKit
 
     private:
       using GastPtiT      = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
-      using Data          = typename GastPtiT::ModelDataT;
+      using Data          = PhasorDynamics::Governor::GastPtiData<RealT, IdxT>;
       using Params        = typename Data::Parameters;
       using Mon           = typename Data::MonitorableVariables;
-      using Internal      = typename GastPtiT::InternalVariablesT;
+      using Internal      = PhasorDynamics::Governor::GastPtiInternalVariables;
       using External      = typename Data::SignalInputs;
       using SignalInputs  = typename Data::SignalInputs;
       using SignalOutputs = typename Data::SignalOutputs;

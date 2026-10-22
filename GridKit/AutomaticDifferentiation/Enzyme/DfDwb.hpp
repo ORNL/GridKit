@@ -9,6 +9,7 @@
 #include <GridKit/AutomaticDifferentiation/Enzyme/EnzymeDefinitions.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/LowerSparseStorage.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/ModelWrappers.hpp>
+#include <GridKit/Model/EvaluatorTraits.hpp>
 
 namespace GridKit
 {
@@ -25,9 +26,9 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function>
       struct DfDwb
       {
-        using ScalarT = typename ModelT::ScalarT;
-        using IdxT    = typename ModelT::IdxT;
-        using RealT   = typename ModelT::RealT;
+        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using IdxT    = typename GridKit::Model::EvaluatorTraits<ModelT>::IdxT;
+        using RealT   = typename GridKit::Model::EvaluatorTraits<ModelT>::RealT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated

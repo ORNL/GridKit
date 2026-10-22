@@ -71,7 +71,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
 
-      public:
+      private:
         using ScalarT            = scalar_type;
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
@@ -82,6 +82,7 @@ namespace GridKit
         using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
         using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
 
+      public:
         GastPti();
         explicit GastPti(const ModelDataT& data);
         ~GastPti();

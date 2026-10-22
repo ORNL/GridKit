@@ -867,10 +867,10 @@ namespace GridKit
 
     private:
       using Esdc1aT  = PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT>;
-      using Data     = typename Esdc1aT::ModelDataT;
+      using Data     = PhasorDynamics::Exciter::Esdc1aData<RealT, IdxT>;
       using Params   = typename Data::Parameters;
       using Mon      = typename Data::MonitorableVariables;
-      using Internal = typename Esdc1aT::InternalVariablesT;
+      using Internal = PhasorDynamics::Exciter::Esdc1aInternalVariables;
       using External = typename Data::SignalInputs;
 
       using InternalRow  = std::pair<Internal, RealT>;

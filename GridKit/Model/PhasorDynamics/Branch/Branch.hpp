@@ -45,7 +45,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
 
-    public:
+    private:
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
@@ -53,6 +53,7 @@ namespace GridKit
       using ModelDataT = BranchData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
 
+    public:
       Branch(BusT* bus1, BusT* bus2);
       Branch(BusT* bus1,
              BusT* bus2,

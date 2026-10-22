@@ -28,7 +28,7 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::monitor_;
       using BusBase<scalar_type, index_type>::allocated_;
 
-    public:
+    private:
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename BusBase<ScalarT, IdxT>::RealT;
@@ -37,6 +37,7 @@ namespace GridKit
       using ModelDataT = BusData<RealT, IdxT>;
       using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
 
+    public:
       BusInfinite();
       BusInfinite(ScalarT Vr, ScalarT Vi);
       BusInfinite(const ModelDataT& data);
