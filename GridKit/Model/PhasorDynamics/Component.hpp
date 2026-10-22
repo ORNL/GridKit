@@ -222,6 +222,36 @@ namespace GridKit
         return residual_indices_;
       }
 
+      /// Number of computed outputs, published values that are not variables
+      IdxT sizeOutputs() const
+      {
+        return static_cast<IdxT>(output_indices_.size());
+      }
+
+      int setOutputIndex(IdxT local_index, IdxT output_index)
+      {
+        output_indices_[static_cast<size_t>(local_index)] = output_index;
+        return 0;
+      }
+
+      const std::vector<IdxT>& getOutputIndices() const
+      {
+        return output_indices_;
+      }
+
+      /**
+       * @brief Evaluate computed outputs at the current state.
+       *
+       * The system evaluates the outputs of every component before any
+       * residual, so consumers read outputs of the current state.
+       *
+       * @return 0 if successful, non-zero otherwise.
+       */
+      virtual int evaluateOutputs()
+      {
+        return 0;
+      }
+
       CsrMatrixT* getCsrJacobian() const override
       {
         return csr_jac_;
@@ -556,6 +586,8 @@ namespace GridKit
       std::vector<IdxT> variable_indices_;
       /// Global (system-level) residual indices
       std::vector<IdxT> residual_indices_;
+      /// System indices of computed outputs, past the system variables
+      std::vector<IdxT> output_indices_;
 
       VectorT           y_;
       VectorT           yp_;

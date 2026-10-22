@@ -22,6 +22,7 @@ namespace GridKit
       {
         InternalResidual,
         InternalResidualWithSignal,
+        Outputs,
         BusResidual,
         BusResidual11, //< Special case for branches that are connected to two buses
         BusResidual12, //< Special case for branches that are connected to two buses
@@ -92,6 +93,34 @@ namespace GridKit
                          ScalarT*       f)
         {
           model->evaluateInternalResidual(y, yp, wb, ws, f);
+        }
+      };
+
+      /**
+       * @brief Wrapper partial template specialization for computed Outputs
+       *
+       */
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::Outputs>
+      {
+        using ScalarT = typename ModelT::ScalarT;
+
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[in] ws - Signal variables
+         * @param[out] o - Computed outputs
+         */
+        static void eval(ModelT*        model,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         const ScalarT* ws,
+                         ScalarT*       o)
+        {
+          model->evaluateOutputs(y, yp, wb, ws, o);
         }
       };
 

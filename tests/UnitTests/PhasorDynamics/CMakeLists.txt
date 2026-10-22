@@ -201,6 +201,19 @@ target_link_libraries(
   GridKit::phasor_dynamics_systemmodel_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_system_computed_output runSystemComputedOutputTests.cpp)
+target_link_libraries(
+  test_phasor_system_computed_output
+  GridKit::definitions
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::testing)
+if(GRIDKIT_ENABLE_ENZYME)
+  # The test components carry their own Enzyme Jacobians
+  target_link_libraries(test_phasor_system_computed_output ClangEnzymeFlags)
+  target_compile_options(test_phasor_system_computed_output PRIVATE -mllvm -enzyme-auto-sparsity=1
+                                                                    -fno-math-errno)
+endif()
+
 add_executable(test_phasor_component_connection runComponentConnectionTests.cpp)
 target_link_libraries(
   test_phasor_component_connection
@@ -233,6 +246,7 @@ add_test(
   COMMAND test_phasor_system
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
+add_test(NAME PhasorDynamicsSystemComputedOutputTest COMMAND test_phasor_system_computed_output)
 add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
 
 install(
@@ -257,5 +271,6 @@ install(
           test_phasor_gen_classical
           test_phasor_system
           test_phasor_system_single_component
+          test_phasor_system_computed_output
           test_phasor_component_connection
   RUNTIME DESTINATION bin)

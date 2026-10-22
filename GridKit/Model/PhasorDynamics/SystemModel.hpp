@@ -121,6 +121,26 @@ namespace GridKit
 
       bool owns_components_{false};
 
+      /// Number of computed outputs, indexed after the system variables
+      IdxT output_count_{0};
+
+      /// Components with computed outputs
+      std::vector<ComponentT*> output_components_;
+
+      /// Chain-rule product of a consumer partial and an output gradient
+      struct ChainEntry
+      {
+        IdxT consumer; ///< Entry of a consumer partial with respect to an output
+        IdxT output;   ///< Entry of that output's gradient with respect to a variable
+        IdxT slot;     ///< CSR slot receiving the product
+      };
+
+      /// Chain-rule products replacing the computed-output Jacobian entries
+      std::vector<ChainEntry> chain_entries_;
+
+      /// Values of component and bus Jacobian entries in computed-output rows or columns
+      std::vector<RealT> output_entry_values_;
+
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
     }; // class SystemModel

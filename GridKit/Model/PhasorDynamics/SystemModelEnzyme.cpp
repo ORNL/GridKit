@@ -41,6 +41,8 @@ namespace GridKit
      * - If not already constructed, construct system-level Jacobian.
      *   This used a system-level CooMatrix to deduplicate and sort the sparsity pattern.
      * - If already constructed, reset Jacobian values to zero and accumulate contributions.
+     * - Entries of computed outputs enter through the chain rule,
+     *   \f$ J_{xx} + J_{xo} J_{ox} \f$, never as solver variables.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -143,8 +145,89 @@ namespace GridKit
           }
         }
 
+        // Computed outputs are not variables. Entries in their rows are output
+        // gradients and entries in their columns are consumer partials; the
+        // chain rule replaces each consumer partial with its products through
+        // the gradient of the output it reads.
+        std::vector<std::vector<IdxT>> output_gradients(static_cast<size_t>(output_count_));
+        IdxT                           nnz_direct = 0;
+        for (IdxT i = 0; i < nnz_dup; ++i)
+        {
+          const bool output_row    = rows_dup[i] >= size_;
+          const bool output_column = cols_dup[i] >= size_;
+
+          if (output_row && output_column)
+          {
+            Log::error() << "SystemModel: a computed output cannot depend on another computed output\n";
+            delete[] rows_dup;
+            delete[] cols_dup;
+            delete[] vals_dup;
+            return 1;
+          }
+
+          if (output_row)
+          {
+            output_gradients[static_cast<size_t>(rows_dup[i] - size_)].push_back(i);
+          }
+
+          if (!output_row && !output_column)
+          {
+            ++nnz_direct;
+          }
+        }
+
+        chain_entries_.clear();
+        for (IdxT i = 0; i < nnz_dup; ++i)
+        {
+          if (rows_dup[i] < size_ && cols_dup[i] >= size_)
+          {
+            for (const IdxT j : output_gradients[static_cast<size_t>(cols_dup[i] - size_)])
+            {
+              chain_entries_.push_back({i, j, INVALID_INDEX<IdxT>});
+            }
+          }
+        }
+
+        // Direct entries followed by chain-rule products
+        const IdxT nnz_coo  = nnz_direct + static_cast<IdxT>(chain_entries_.size());
+        IdxT*      rows_coo = new IdxT[static_cast<size_t>(nnz_coo)];
+        IdxT*      cols_coo = new IdxT[static_cast<size_t>(nnz_coo)];
+        RealT*     vals_coo = new RealT[static_cast<size_t>(nnz_coo)];
+
+        std::vector<IdxT> coo_entry(static_cast<size_t>(nnz_dup), INVALID_INDEX<IdxT>);
+        IdxT              k = 0;
+        for (IdxT i = 0; i < nnz_dup; ++i)
+        {
+          if (rows_dup[i] < size_ && cols_dup[i] < size_)
+          {
+            rows_coo[k]  = rows_dup[i];
+            cols_coo[k]  = cols_dup[i];
+            vals_coo[k]  = vals_dup[i];
+            coo_entry[i] = k;
+            ++k;
+          }
+        }
+
+        for (const auto& entry : chain_entries_)
+        {
+          rows_coo[k] = rows_dup[entry.consumer];
+          cols_coo[k] = cols_dup[entry.output];
+          vals_coo[k] = vals_dup[entry.consumer] * vals_dup[entry.output];
+          ++k;
+        }
+
+        output_entry_values_.clear();
+        if (nnz_direct < nnz_dup)
+        {
+          output_entry_values_.assign(static_cast<size_t>(nnz_dup), RealT{0.0});
+        }
+
+        delete[] rows_dup;
+        delete[] cols_dup;
+        delete[] vals_dup;
+
         // Build the system COO Jacobian
-        CooMatrixT jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+        CooMatrixT jac(size_, size_, nnz_coo, &rows_coo, &cols_coo, &vals_coo);
 
         // Populate CSR data with sort and deduplicate
         IdxT* row_ptrs = jac.getCsrRowData();
@@ -165,11 +248,28 @@ namespace GridKit
         const IdxT* map_to_sorted = jac.getMapToSorted();
         const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
 
-        // Build a mapping from original COO index to CSR index
+        // CSR slot of each system COO entry
+        std::vector<IdxT> coo_to_csr(static_cast<size_t>(nnz_coo));
+        for (IdxT i = 0; i < nnz_coo; ++i)
+        {
+          coo_to_csr[map_to_sorted[i]] = map_to_dedup[i];
+        }
+
+        // Build a mapping from original COO index to CSR index; entries in
+        // computed-output rows or columns reach the CSR through chain_entries_
         map_to_csr_ = new IdxT[static_cast<size_t>(nnz_dup)];
         for (IdxT i = 0; i < nnz_dup; ++i)
         {
-          map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
+          map_to_csr_[i] = INVALID_INDEX<IdxT>;
+          if (coo_entry[i] != INVALID_INDEX<IdxT>)
+          {
+            map_to_csr_[i] = coo_to_csr[coo_entry[i]];
+          }
+        }
+
+        for (size_t c = 0; c < chain_entries_.size(); ++c)
+        {
+          chain_entries_[c].slot = coo_to_csr[static_cast<size_t>(nnz_direct) + c];
         }
       }
       else
@@ -192,7 +292,15 @@ namespace GridKit
             const RealT* values = component_jacobian->getValues();
             for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
             {
-              vals[map_to_csr_[counter]] += values[i];
+              const IdxT slot = map_to_csr_[counter];
+              if (slot != INVALID_INDEX<IdxT>)
+              {
+                vals[slot] += values[i];
+              }
+              else
+              {
+                output_entry_values_[static_cast<size_t>(counter)] = values[i];
+              }
               counter++;
             }
           }
@@ -207,10 +315,25 @@ namespace GridKit
             const RealT* values = bus_jacobian->getValues();
             for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i)
             {
-              vals[map_to_csr_[counter]] += values[i];
+              const IdxT slot = map_to_csr_[counter];
+              if (slot != INVALID_INDEX<IdxT>)
+              {
+                vals[slot] += values[i];
+              }
+              else
+              {
+                output_entry_values_[static_cast<size_t>(counter)] = values[i];
+              }
               counter++;
             }
           }
+        }
+
+        // Chain rule for computed outputs
+        for (const auto& entry : chain_entries_)
+        {
+          vals[entry.slot] += output_entry_values_[static_cast<size_t>(entry.consumer)]
+                              * output_entry_values_[static_cast<size_t>(entry.output)];
         }
       }
 

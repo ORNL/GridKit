@@ -378,6 +378,9 @@ namespace GridKit
         delete[] map_to_csr_;
         map_to_csr_ = nullptr;
 
+        chain_entries_.clear();
+        output_entry_values_.clear();
+
         nnz_ = 0;
         this->allocateVectors(size_);
       }
@@ -458,6 +461,25 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
+      // Computed outputs are indexed after the variables. The Jacobian assembly
+      // applies the chain rule to them, so the solver never sees them.
+      IdxT output_index = size_;
+      output_components_.clear();
+      for (const auto& component : components_)
+      {
+        for (IdxT k = 0; k < component->sizeOutputs(); ++k)
+        {
+          component->setOutputIndex(k, output_index);
+          ++output_index;
+        }
+
+        if (component->sizeOutputs() > 0)
+        {
+          output_components_.push_back(component);
+        }
+      }
+      output_count_ = output_index - size_;
+
       // Verify component configuration
       if (!this->verifyAndLog())
       {
@@ -526,6 +548,9 @@ namespace GridKit
      * Also, generators may write to control devices (e.g. governors,
      * exciters, etc.) during the initialization.
      *
+     * Each component's computed outputs are evaluated right after it is
+     * initialized, so components added later read initialized outputs.
+     *
      * @todo Implement writing to system vectors in a thread-safe way.
      *
      * @note Currently assuming each component stores variables contiguously in memory and
@@ -544,6 +569,7 @@ namespace GridKit
       for (const auto& component : components_)
       {
         status += component->initialize();
+        status += component->evaluateOutputs();
       }
 
       y_.setDataUpdated();
@@ -679,6 +705,9 @@ namespace GridKit
      * from components. Buses assign their residual values, while components
      * add to those values by in-place addition. This is why (for now) bus
      * residuals need to be computed first.
+     *
+     * Computed outputs of all components are evaluated before any component
+     * residual, so a residual never reads an output of a previous state.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
@@ -686,6 +715,11 @@ namespace GridKit
       for (const auto& bus : buses_)
       {
         bus->evaluateResidual();
+      }
+
+      for (const auto& component : output_components_)
+      {
+        component->evaluateOutputs();
       }
 
       for (const auto& component : components_)
