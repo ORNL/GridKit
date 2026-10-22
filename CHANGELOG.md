@@ -10,6 +10,8 @@
 - Added `enable` and `disable` solver events that put a branch in or out of service.
 - `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
 - Added `Model::ParameterReader`
+- Added `Math::latch`, a smooth set-reset latch rate.
+- Added `BranchBreakers`, a pi branch with a circuit breaker at each terminal and terminal-current outputs.
 
 ## v0.2
 

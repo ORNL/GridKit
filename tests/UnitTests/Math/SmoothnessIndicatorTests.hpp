@@ -345,6 +345,31 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      TestOutcome latch()
+      {
+        TestStatus success = true;
+
+        const ScalarT zero = scalar(0.0);
+        const ScalarT one  = scalar(1.0);
+        const ScalarT low  = scalar(0.25);
+        const ScalarT high = scalar(0.75);
+
+        // A full set drive moves the state toward one.
+        success *= within(Math::latch(low, one, zero), one - low, scalar(kRoundoffTolerance));
+
+        // A full reset drive moves the state toward zero, even while set.
+        success *= within(Math::latch(high, one, one), -high, scalar(kRoundoffTolerance));
+        success *= within(Math::latch(high, zero, one), -high, scalar(kRoundoffTolerance));
+
+        // With both drives zero, each side of 1/2 moves to its held state.
+        success *= within(Math::latch(low, zero, zero), -low, scalar(kSmoothTolerance));
+        success *= within(Math::latch(high, zero, zero), one - high, scalar(kSmoothTolerance));
+        success *= within(Math::latch(zero, zero, zero), zero, scalar(kSmoothTolerance));
+        success *= within(Math::latch(one, zero, zero), zero, scalar(kSmoothTolerance));
+
+        return success.report(__func__);
+      }
     };
 
   } // namespace Testing

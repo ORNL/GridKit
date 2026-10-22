@@ -391,5 +391,33 @@ namespace GridKit
     {
       return indicator(x, f, limit_min, limit_max) * f;
     }
+
+    /**
+     * @brief Smooth set-reset latch rate
+     *
+     * Zero at a held state. A full set drive moves the stored state toward
+     * one and a full reset drive toward zero; full reset has priority. With
+     * both drives zero, states on either side of 1/2 are held.
+     *
+     * @tparam ScalarT - Scalar data type
+     *
+     * @param[in] x - Stored state
+     * @param[in] set_drive - Set drive in [0, 1]
+     * @param[in] reset_drive - Reset drive in [0, 1]
+     * @return Smooth latch rate
+     */
+    template <class ScalarT>
+    __attribute__((always_inline)) inline ScalarT latch(
+        const ScalarT x,
+        const ScalarT set_drive,
+        const ScalarT reset_drive)
+    {
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      static_assert(MU<RealT> > FOUR<RealT>, "latch holds two states only for MU > 4");
+
+      return (ONE<RealT> - reset_drive)
+                 * (set_drive + (ONE<RealT> - set_drive) * above(x, HALF<RealT>))
+             - x;
+    }
   } // namespace Math
 } // namespace GridKit
