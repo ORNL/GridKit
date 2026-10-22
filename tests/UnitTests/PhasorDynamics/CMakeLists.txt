@@ -208,6 +208,10 @@ target_link_libraries(
   GridKit::phasor_dynamics_systemmodel
   GridKit::testing)
 
+add_executable(test_phasor_component_manifest runComponentManifestTests.cpp)
+target_link_libraries(
+  test_phasor_component_manifest GridKit::phasor_dynamics_components GridKit::testing)
+
 add_test(NAME PhasorDynamicsModelConfigurationTest COMMAND test_phasor_model_configuration)
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBusSignalVoltageOutTest COMMAND test_phasor_bus_signal_voltage_out)
@@ -234,6 +238,7 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
+add_test(NAME PhasorDynamicsComponentManifestTest COMMAND test_phasor_component_manifest)
 
 install(
   TARGETS test_phasor_bus
@@ -258,4 +263,5 @@ install(
           test_phasor_system
           test_phasor_system_single_component
           test_phasor_component_connection
+          test_phasor_component_manifest
   RUNTIME DESTINATION bin)
