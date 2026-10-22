@@ -51,6 +51,22 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_definite_time_relay runDefiniteTimeRelayTests.cpp)
+target_link_libraries(
+  test_phasor_definite_time_relay
+  GridKit::definitions
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::phasor_dynamics_systemmodel_dependency_tracking
+  GridKit::testing)
+
+add_executable(test_phasor_inverse_time_relay runInverseTimeRelayTests.cpp)
+target_link_libraries(
+  test_phasor_inverse_time_relay
+  GridKit::definitions
+  GridKit::phasor_dynamics_inverse_time_relay
+  GridKit::phasor_dynamics_inverse_time_relay_dependency_tracking
+  GridKit::testing)
+
 add_executable(test_phasor_loadz runLoadZTests.cpp)
 target_link_libraries(
   test_phasor_loadz
@@ -238,6 +254,8 @@ add_test(NAME PhasorDynamicsBusSignalVoltageOutTest COMMAND test_phasor_bus_sign
 add_test(NAME PhasorDynamicsBusSignalVoltageInTest COMMAND test_phasor_bus_signal_voltage_in)
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsBranchBreakersTest COMMAND test_phasor_branch_breakers)
+add_test(NAME PhasorDynamicsDefiniteTimeRelayTest COMMAND test_phasor_definite_time_relay)
+add_test(NAME PhasorDynamicsInverseTimeRelayTest COMMAND test_phasor_inverse_time_relay)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
 add_test(NAME PhasorDynamicsGovernorGastPtiTest COMMAND test_phasor_governor_gastpti)
@@ -267,6 +285,8 @@ install(
           test_phasor_bus_signal_voltage_in
           test_phasor_branch
           test_phasor_branch_breakers
+          test_phasor_definite_time_relay
+          test_phasor_inverse_time_relay
           test_phasor_loadz
           test_phasor_loadzip
           test_phasor_genrou

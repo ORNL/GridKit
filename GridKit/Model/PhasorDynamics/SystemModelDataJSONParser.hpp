@@ -192,6 +192,18 @@ namespace GridKit
           raw_component.get_to(stabilizer);
           sm.stabilizer.push_back(stabilizer);
         }
+        else if (kind == "DefiniteTimeRelay")
+        {
+          typename SystemModelData<RealT, IdxT>::DefiniteTimeRelayDataT relay;
+          raw_component.get_to(relay);
+          sm.definite_time_relay.push_back(relay);
+        }
+        else if (kind == "InverseTimeRelay")
+        {
+          typename SystemModelData<RealT, IdxT>::InverseTimeRelayDataT relay;
+          raw_component.get_to(relay);
+          sm.inverse_time_relay.push_back(relay);
+        }
         else if (kind == "ConstantSignalSource")
         {
           typename SystemModelData<RealT, IdxT>::ConstantSourceT source;

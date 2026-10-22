@@ -20,6 +20,8 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/Relay/DefiniteTimeRelay/DefiniteTimeRelayData.hpp>
+#include <GridKit/Model/PhasorDynamics/Relay/InverseTimeRelay/InverseTimeRelayData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSourceData.hpp>
@@ -41,30 +43,32 @@ namespace GridKit
     template <typename real_type = double, typename index_type = size_t>
     struct SystemModelData
     {
-      using RealT               = real_type;
-      using IdxT                = index_type;
-      using BranchDataT         = BranchData<RealT, IdxT>;
-      using BranchBreakersDataT = BranchBreakersData<RealT, IdxT>;
-      using BusDataT            = BusData<RealT, IdxT>;
-      using RegcaDataT          = Converter::RegcaData<RealT, IdxT>;
-      using ReecbDataT          = Controller::ReecbData<RealT, IdxT>;
-      using RepcaDataT          = Controller::RepcaData<RealT, IdxT>;
-      using Tgov1DataT          = Governor::Tgov1Data<RealT, IdxT>;
-      using Esdc1aDataT         = Exciter::Esdc1aData<RealT, IdxT>;
-      using GastPtiDataT        = Governor::GastPtiData<RealT, IdxT>;
-      using HygovDataT          = Governor::HygovData<RealT, IdxT>;
-      using Ieeet1DataT         = Exciter::Ieeet1Data<RealT, IdxT>;
-      using SexsPtiDataT        = Exciter::SexsPtiData<RealT, IdxT>;
-      using IeeestDataT         = Stabilizer::IeeestData<RealT, IdxT>;
-      using GenrouDataT         = GenrouData<RealT, IdxT>;
-      using GensalDataT         = GensalData<RealT, IdxT>;
-      using GenClassicalDataT   = GenClassicalData<RealT, IdxT>;
-      using LoadZDataT          = LoadZData<RealT, IdxT>;
-      using LoadZIPDataT        = LoadZIPData<RealT, IdxT>;
-      using ConstantSourceT     = ConstantSignalSourceData<RealT, IdxT>;
-      using FunctionSourceT     = FunctionSignalSourceData<RealT, IdxT>;
-      using SignalDataT         = SignalNodeData<RealT, IdxT>;
-      using MonitorSinkSpec     = Model::VariableMonitorBase::SinkSpec;
+      using RealT                  = real_type;
+      using IdxT                   = index_type;
+      using BranchDataT            = BranchData<RealT, IdxT>;
+      using BranchBreakersDataT    = BranchBreakersData<RealT, IdxT>;
+      using BusDataT               = BusData<RealT, IdxT>;
+      using RegcaDataT             = Converter::RegcaData<RealT, IdxT>;
+      using ReecbDataT             = Controller::ReecbData<RealT, IdxT>;
+      using RepcaDataT             = Controller::RepcaData<RealT, IdxT>;
+      using Tgov1DataT             = Governor::Tgov1Data<RealT, IdxT>;
+      using Esdc1aDataT            = Exciter::Esdc1aData<RealT, IdxT>;
+      using GastPtiDataT           = Governor::GastPtiData<RealT, IdxT>;
+      using HygovDataT             = Governor::HygovData<RealT, IdxT>;
+      using Ieeet1DataT            = Exciter::Ieeet1Data<RealT, IdxT>;
+      using SexsPtiDataT           = Exciter::SexsPtiData<RealT, IdxT>;
+      using IeeestDataT            = Stabilizer::IeeestData<RealT, IdxT>;
+      using DefiniteTimeRelayDataT = Relay::DefiniteTimeRelayData<RealT, IdxT>;
+      using InverseTimeRelayDataT  = Relay::InverseTimeRelayData<RealT, IdxT>;
+      using GenrouDataT            = GenrouData<RealT, IdxT>;
+      using GensalDataT            = GensalData<RealT, IdxT>;
+      using GenClassicalDataT      = GenClassicalData<RealT, IdxT>;
+      using LoadZDataT             = LoadZData<RealT, IdxT>;
+      using LoadZIPDataT           = LoadZIPData<RealT, IdxT>;
+      using ConstantSourceT        = ConstantSignalSourceData<RealT, IdxT>;
+      using FunctionSourceT        = FunctionSignalSourceData<RealT, IdxT>;
+      using SignalDataT            = SignalNodeData<RealT, IdxT>;
+      using MonitorSinkSpec        = Model::VariableMonitorBase::SinkSpec;
 
       /// The version of the grid dynamics case format this system model was
       /// parsed from
@@ -103,27 +107,29 @@ namespace GridKit
       /// - Convert string to enum
       /// - Associate component type to its corresponding enum
       /// - Consolidate components to allow writing to them using the enum as the argument
-      std::vector<BusDataT>            bus;             ///< Buses within the model
-      std::vector<BranchDataT>         branch;          ///< Branches within the model
-      std::vector<BranchBreakersDataT> branch_breakers; ///< Branches with terminal breakers within the model
-      std::vector<RegcaDataT>          regca;           ///< REGCA converter instances within the model
-      std::vector<ReecbDataT>          reecb;           ///< REECB electrical controllers within the model
-      std::vector<RepcaDataT>          repca;           ///< REPCA plant controllers within the model
-      std::vector<GenrouDataT>         genrou;          ///< GENROU instances within the model
-      std::vector<GensalDataT>         gensal;          ///< GENSAL instances within the model
-      std::vector<GenClassicalDataT>   genclassical;    ///< Classical generator instances within the model
-      std::vector<LoadZDataT>          loadz;           ///< LoadZ instances within the model
-      std::vector<LoadZIPDataT>        loadzip;         ///< LoadZIP instances within the model
-      std::vector<Tgov1DataT>          gov;             ///< Governors within the model
-      std::vector<Esdc1aDataT>         esdc1a;          ///< ESDC1A exciters within the model
-      std::vector<GastPtiDataT>        gastpti;         ///< GASTPTI governors within the model
-      std::vector<HygovDataT>          hygov;           ///< HYGOV governors within the model
-      std::vector<Ieeet1DataT>         exciter;         ///< Exciters within the model
-      std::vector<SexsPtiDataT>        sexspti;         ///< SEXS-PTI exciters within the model
-      std::vector<IeeestDataT>         stabilizer;      ///< Stabilizers within the model
-      std::vector<ConstantSourceT>     constant_source; ///< Constant signal sources within the model
-      std::vector<FunctionSourceT>     function_source; ///< Function signal sources within the model
-      std::vector<SignalDataT>         signal;          ///< Signal nodes
+      std::vector<BusDataT>               bus;                 ///< Buses within the model
+      std::vector<BranchDataT>            branch;              ///< Branches within the model
+      std::vector<BranchBreakersDataT>    branch_breakers;     ///< Branches with terminal breakers within the model
+      std::vector<RegcaDataT>             regca;               ///< REGCA converter instances within the model
+      std::vector<ReecbDataT>             reecb;               ///< REECB electrical controllers within the model
+      std::vector<RepcaDataT>             repca;               ///< REPCA plant controllers within the model
+      std::vector<GenrouDataT>            genrou;              ///< GENROU instances within the model
+      std::vector<GensalDataT>            gensal;              ///< GENSAL instances within the model
+      std::vector<GenClassicalDataT>      genclassical;        ///< Classical generator instances within the model
+      std::vector<LoadZDataT>             loadz;               ///< LoadZ instances within the model
+      std::vector<LoadZIPDataT>           loadzip;             ///< LoadZIP instances within the model
+      std::vector<Tgov1DataT>             gov;                 ///< Governors within the model
+      std::vector<Esdc1aDataT>            esdc1a;              ///< ESDC1A exciters within the model
+      std::vector<GastPtiDataT>           gastpti;             ///< GASTPTI governors within the model
+      std::vector<HygovDataT>             hygov;               ///< HYGOV governors within the model
+      std::vector<Ieeet1DataT>            exciter;             ///< Exciters within the model
+      std::vector<SexsPtiDataT>           sexspti;             ///< SEXS-PTI exciters within the model
+      std::vector<IeeestDataT>            stabilizer;          ///< Stabilizers within the model
+      std::vector<DefiniteTimeRelayDataT> definite_time_relay; ///< Definite-time relays within the model
+      std::vector<InverseTimeRelayDataT>  inverse_time_relay;  ///< Inverse-time relays within the model
+      std::vector<ConstantSourceT>        constant_source;     ///< Constant signal sources within the model
+      std::vector<FunctionSourceT>        function_source;     ///< Function signal sources within the model
+      std::vector<SignalDataT>            signal;              ///< Signal nodes
 
       /// Monitor sink specs
       std::vector<MonitorSinkSpec> monitor_sink;

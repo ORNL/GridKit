@@ -47,6 +47,7 @@ namespace GridKit
       using namespace Stabilizer;
       using namespace Controller;
       using namespace Converter;
+      using namespace Relay;
 
       owns_components_ = true;
 
@@ -301,6 +302,22 @@ namespace GridKit
         repca->getPorts().connect(repcadata, signal_nodes_);
 
         addComponent(repca);
+      }
+
+      // Add definite-time relays
+      for (const auto& relaydata : data.definite_time_relay)
+      {
+        auto* relay = new DefiniteTimeRelay<ScalarT, IdxT>(relaydata);
+        relay->getPorts().connect(relaydata, signal_nodes_);
+        addComponent(relay);
+      }
+
+      // Add inverse-time relays
+      for (const auto& relaydata : data.inverse_time_relay)
+      {
+        auto* relay = new InverseTimeRelay<ScalarT, IdxT>(relaydata);
+        relay->getPorts().connect(relaydata, signal_nodes_);
+        addComponent(relay);
       }
 
       // Add constant signal sources
