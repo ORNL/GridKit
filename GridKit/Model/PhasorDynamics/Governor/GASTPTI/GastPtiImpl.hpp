@@ -29,16 +29,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Construct an unconfigured GASTPTI governor
-       */
-      template <typename scalar_type, typename index_type>
-      GastPti<scalar_type, index_type>::GastPti()
-      {
-        size_ = static_cast<IdxT>(Utilities::enum_size<GastPtiInternalVariables>());
-        setDerivedParameters();
-      }
-
-      /**
        * @brief Construct a GASTPTI governor from model data
        *
        * @param[in] data Parameters and monitored-variable selections.

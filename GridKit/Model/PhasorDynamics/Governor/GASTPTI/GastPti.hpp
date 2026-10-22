@@ -83,8 +83,7 @@ namespace GridKit
         using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
 
       public:
-        GastPti();
-        explicit GastPti(const ModelDataT& data);
+        GastPti(const ModelDataT& data);
         ~GastPti();
 
         int setGridKitComponentID(IdxT component_id) override final;

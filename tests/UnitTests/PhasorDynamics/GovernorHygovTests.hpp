@@ -50,9 +50,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Governor::Hygov<ScalarT, IdxT> empty;
+        PhasorDynamics::Governor::Hygov<ScalarT, IdxT> empty(Data{});
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
-        success *= (empty.getMonitor() == nullptr);
 
         Fixture<ScalarT> configured(makeData());
         success *= (configured.hygov.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));

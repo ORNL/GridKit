@@ -30,23 +30,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Construct an ESDC1A exciter without parameters
-       *
-       * The model is sized but left unconfigured. Every parameter keeps its
-       * documented default, and no monitor is created. verify() rejects the
-       * model until an `efd` output node is assigned.
-       *
-       * @param[in] bus Terminal bus the exciter measures.
-       */
-      template <typename scalar_type, typename index_type>
-      Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus)
-        : bus_(bus)
-      {
-        size_ = static_cast<IdxT>(Utilities::enum_size<Esdc1aInternalVariables>());
-        setDerivedParameters();
-      }
-
-      /**
        * @brief Construct an ESDC1A exciter from model data
        *
        * @param[in] bus Terminal bus the exciter measures.

@@ -54,15 +54,6 @@ namespace GridKit
       using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
 
     public:
-      Branch(BusT* bus1, BusT* bus2);
-      Branch(BusT* bus1,
-             BusT* bus2,
-             RealT R,
-             RealT X,
-             RealT G,
-             RealT B,
-             RealT tap   = 1.0,
-             RealT phase = 0.0);
       Branch(BusT* bus1, BusT* bus2, const ModelDataT& data);
       virtual ~Branch();
 
@@ -192,7 +183,7 @@ namespace GridKit
       BusT* bus1_;
       BusT* bus2_;
       RealT R_{0.0};
-      RealT X_{0.0};
+      RealT X_{0.01};
       RealT G_{0.0};
       RealT B_{0.0};
       RealT Gmag_{0.0};

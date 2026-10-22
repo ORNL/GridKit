@@ -28,18 +28,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Construct a sized but unconfigured REGCA converter.
-       *
-       * @param[in] bus Terminal bus the converter injects into.
-       */
-      template <typename scalar_type, typename index_type>
-      Regca<scalar_type, index_type>::Regca(BusT* bus)
-        : bus_(bus)
-      {
-        size_ = static_cast<IdxT>(Utilities::enum_size<RegcaInternalVariables>());
-      }
-
-      /**
        * @brief Construct a REGCA converter from model data.
        *
        * Parameters are loaded and the monitor is created. Model-data errors

@@ -75,7 +75,6 @@ namespace GridKit
         using MonitorT       = Model::VariableMonitor<Ieeest, IeeestData>;
 
       public:
-        Ieeest();
         Ieeest(const ModelDataT& data);
         ~Ieeest();
 

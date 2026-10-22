@@ -20,26 +20,6 @@ namespace GridKit
      * - Number of independent variables = 2
      */
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus)
-      : bus_(bus)
-    {
-      size_ = 2;
-      setDerivedParams();
-    }
-
-    template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus,
-                                          RealT R,
-                                          RealT X)
-      : bus_(bus),
-        R_(R),
-        X_(X)
-    {
-      size_ = 2;
-      setDerivedParams();
-    }
-
-    template <typename scalar_type, typename index_type>
     LoadZ<scalar_type, index_type>::LoadZ(BusT*             bus,
                                           const ModelDataT& data)
       : bus_(bus),

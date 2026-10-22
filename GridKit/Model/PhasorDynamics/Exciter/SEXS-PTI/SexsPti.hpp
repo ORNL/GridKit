@@ -69,7 +69,6 @@ namespace GridKit
         using MonitorT       = Model::VariableMonitor<SexsPti, SexsPtiData>;
 
       public:
-        SexsPti(BusT* bus);
         SexsPti(BusT* bus, const ModelDataT& data);
         ~SexsPti();
 

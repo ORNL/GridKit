@@ -40,7 +40,6 @@ namespace GridKit
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
     public:
-      ConstantSignalSource();
       ConstantSignalSource(const ModelDataT& data);
       ~ConstantSignalSource();
 

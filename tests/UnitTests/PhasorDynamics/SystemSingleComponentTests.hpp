@@ -35,7 +35,7 @@ namespace GridKit
         system->addBus(&bus1);
         system->addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
         system->addComponent(&branch);
 
         success *= system->allocate() == 0;
@@ -85,7 +85,7 @@ namespace GridKit
         // Suppress the expected time-constant-floor warning from the default parameters.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT>{});
         Log::setVerbosity(previous_verbosity);
         system->addComponent(&exciter);
 
@@ -175,7 +175,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus);
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus, PhasorDynamics::LoadZData<RealT, IdxT>{});
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -199,7 +199,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.0, 0.0);
         system->addBus(&bus);
 
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, PhasorDynamics::LoadZIPData<RealT, IdxT>{});
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -365,7 +365,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;
@@ -412,7 +412,7 @@ namespace GridKit
         PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
-        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> tgov1;
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> tgov1(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
         tgov1.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
         system->addComponent(&tgov1);
 
