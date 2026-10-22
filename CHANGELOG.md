@@ -13,6 +13,7 @@
 - Added `Math::latch`, a smooth set-reset latch rate.
 - Added `BranchBreakers`, a pi branch with a circuit breaker at each terminal and terminal-current outputs.
 - Added `DefiniteTimeRelay` and `InverseTimeRelay` protection relays with optional lockout.
+- Added the ThreeBusRelay and WECC240Relay cases and line-protection examples.
 
 ## v0.2
 

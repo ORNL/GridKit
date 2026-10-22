@@ -1,2 +1,3 @@
 add_subdirectory(ThreeBusBasic)
 add_subdirectory(ThreeBusConstantSource)
+add_subdirectory(ThreeBusRelay)

@@ -1,0 +1,277 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "ThreeBusRelay",
+    "case_description": "ThreeBusBasic with line BR_1_2 split at mid-line bus 4 and protected by relays",
+    "case_comments": ""
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "buses": [
+    {
+      "number": 0,
+      "class": "BusInfinite",
+      "name": "1",
+      "init": {
+        "Vr": 1.06,
+        "Vi": 0.0
+      },
+      "params": {
+        "kv": 138.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 1,
+      "class": "Bus",
+      "name": "2",
+      "init": {
+        "Vr": 1.0599558398065716,
+        "Vi": -0.009675621941024773
+      },
+      "params": {
+        "kv": 138.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 2,
+      "class": "Bus",
+      "name": "3",
+      "init": {
+        "Vr": 0.9610827543495831,
+        "Vi": -0.13122476630506485
+      },
+      "params": {
+        "kv": 138.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 3,
+      "class": "Bus",
+      "name": "4",
+      "init": {
+        "Vr": 1.0105192970780774,
+        "Vi": -0.07045019412304482
+      },
+      "params": {
+        "kv": 138.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "signal_id": 0,
+      "name": "BR_1_3_trip1"
+    },
+    {
+      "signal_id": 1,
+      "name": "BR_1_3_ir1"
+    },
+    {
+      "signal_id": 2,
+      "name": "BR_1_3_ii1"
+    },
+    {
+      "signal_id": 3,
+      "name": "BR_2_3_trip1"
+    },
+    {
+      "signal_id": 4,
+      "name": "BR_2_3_ir1"
+    },
+    {
+      "signal_id": 5,
+      "name": "BR_2_3_ii1"
+    }
+  ],
+  "devices": [
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 0,
+        "bus2": 1
+      },
+      "id": "BR_0_1",
+      "params": {
+        "R": 0.05,
+        "X": 0.21,
+        "G": 0.0,
+        "B": 0.1
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 0,
+        "bus2": 2
+      },
+      "id": "BR_0_2",
+      "params": {
+        "R": 0.06,
+        "X": 0.15,
+        "G": 0.0,
+        "B": 0.12
+      }
+    },
+    {
+      "class": "LoadZ",
+      "ports": {
+        "bus": 2
+      },
+      "id": "load_2_0",
+      "params": {
+        "R": 0.4447197839297772,
+        "X": 0.20330047265361242
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 1
+      },
+      "id": "genrou_2_1",
+      "params": {
+        "p0": 0.5,
+        "q0": -0.07588,
+        "H": 2.7,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 1.9,
+        "Xdp": 0.17,
+        "Xdpp": 0.15,
+        "Xq": 0.4,
+        "Xqp": 0.35,
+        "Xqpp": 0.15,
+        "Xl": 0.14999,
+        "S10": 0.0,
+        "S12": 0.0
+      },
+      "mon": [
+        "speed"
+      ]
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 2
+      },
+      "id": "genrou_3_1",
+      "params": {
+        "p0": 0.25,
+        "q0": 0.26587,
+        "H": 1.6,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.5,
+        "Tdopp": 0.04,
+        "Tqopp": 0.05,
+        "Tqop": 0.75,
+        "Xd": 2.3,
+        "Xdp": 0.2,
+        "Xdpp": 0.18,
+        "Xq": 0.5,
+        "Xqp": 0.5,
+        "Xqpp": 0.18,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0
+      },
+      "mon": [
+        "speed"
+      ]
+    },
+    {
+      "class": "BranchBreakers",
+      "ports": {
+        "bus1": 1,
+        "bus2": 3,
+        "trip1": 0,
+        "ir1": 1,
+        "ii1": 2
+      },
+      "id": "BR_1_3",
+      "params": {
+        "R": 0.04,
+        "X": 0.135,
+        "Bmag": 0.225,
+        "Tbrk": 0.05
+      }
+    },
+    {
+      "class": "BranchBreakers",
+      "ports": {
+        "bus1": 2,
+        "bus2": 3,
+        "trip1": 3,
+        "ir1": 4,
+        "ii1": 5
+      },
+      "id": "BR_2_3",
+      "params": {
+        "R": 0.04,
+        "X": 0.135,
+        "Bmag": 0.225,
+        "Tbrk": 0.05
+      }
+    },
+    {
+      "class": "DefiniteTimeRelay",
+      "ports": {
+        "mr": 1,
+        "mi": 2,
+        "trip": 0
+      },
+      "id": "OC_1",
+      "params": {
+        "Mpickup": 1.2,
+        "Mref": 0.0,
+        "Ttrip": 0.05
+      },
+      "mon": [
+        "m",
+        "x",
+        "trip"
+      ]
+    },
+    {
+      "class": "InverseTimeRelay",
+      "ports": {
+        "ir": 4,
+        "ii": 5,
+        "trip": 3
+      },
+      "id": "TOC_2",
+      "params": {
+        "Ipickup": 1.2,
+        "TD": 0.1,
+        "A": 19.61,
+        "B": 0.491,
+        "alpha": 2.0,
+        "tr": 21.6
+      },
+      "mon": [
+        "im",
+        "x",
+        "trip"
+      ]
+    }
+  ]
+}
