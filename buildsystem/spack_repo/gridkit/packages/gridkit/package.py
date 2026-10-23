@@ -14,6 +14,7 @@ class Gridkit(CMakePackage):
     maintainers("nkoukpaizan", "pelesh")
 
     version("develop", submodules=True, branch="develop")
+    version("0.2.0", tag="v0.2.0", commit="d443aeb19748bf17c264d1013c37bb466f6d0136", submodules=True)
 
     variant("asan", default=False, description="Enable/Disable address sanitizer")
     variant("enzyme", default=False, description="Enable/Disable Enzyme")
@@ -33,8 +34,10 @@ class Gridkit(CMakePackage):
     depends_on("ipopt", when="+ipopt")
     depends_on("resolve@gridkit-pinned+klu", when="+resolve+klu")
     depends_on("resolve@gridkit-pinned~klu", when="+resolve~klu")
-    depends_on("sundials@7.8.0+klu~mpi", when="+sundials+klu")
-    depends_on("sundials@7.8.0~klu~mpi", when="+sundials~klu")
+    depends_on("sundials@7.8.0+klu~mpi", when="@0.2.0+sundials+klu")
+    depends_on("sundials@7.8.0~klu~mpi", when="@0.2.0+sundials~klu")
+    depends_on("sundials@7.8.0,partitioned-dae+klu~mpi", when="@develop+sundials+klu")
+    depends_on("sundials@7.8.0,partitioned-dae~klu~mpi", when="@develop+sundials~klu")
 
     def cmake_args(self):
         args = []

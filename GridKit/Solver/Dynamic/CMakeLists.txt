@@ -5,35 +5,54 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
+set(_dynamic_solver_sources Ida.cpp)
+set(_dynamic_solver_headers Ida.hpp DynamicSolver.hpp)
+set(_dynamic_solver_libraries
+    PUBLIC
+    SUNDIALS::nvecserial
+    PUBLIC
+    SUNDIALS::idas
+    PUBLIC
+    GridKit::definitions
+    PUBLIC
+    GridKit::utilities_logger
+    PUBLIC
+    GridKit::sparse_matrix
+    GridKit::dense_vector)
+
 if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
+  list(
+    APPEND
+    _dynamic_solver_libraries
+    PUBLIC
+    SUNDIALS::sunlinsolklu)
+endif()
+
+gridkit_add_library(
+  solvers_dyn
+  SOURCES ${_dynamic_solver_sources}
+  HEADERS ${_dynamic_solver_headers}
+  LINK_LIBRARIES ${_dynamic_solver_libraries})
+
+# PDAEStep creates IDA memory, whereas Ida.cpp requires IDAS for adjoints.
+# IDA and IDAS export the same IDA* symbols but have incompatible memory layouts.
+# Keep their dependencies separate so partition calls bind to the IDA backend.
+if(GRIDKIT_ENABLE_SUNDIALS_PARTITIONED_DAE)
   gridkit_add_library(
-    solvers_dyn
-    SOURCES Ida.cpp
-    HEADERS Ida.hpp DynamicSolver.hpp
+    solvers_partitioned
+    SOURCES Partitioned.cpp
+    HEADERS Partitioned.hpp
     LINK_LIBRARIES
+      PUBLIC
+      SUNDIALS::ida
+      PUBLIC
+      SUNDIALS::arkode
       PUBLIC
       SUNDIALS::nvecserial
       PUBLIC
-      SUNDIALS::idas
+      SUNDIALS::nvecmanyvector
       PUBLIC
-      SUNDIALS::sunlinsolklu
-      PUBLIC
-      GridKit::definitions
-      PUBLIC
-      GridKit::utilities_logger
-      PUBLIC
-      GridKit::sparse_matrix
-      GridKit::dense_vector)
-else()
-  gridkit_add_library(
-    solvers_dyn
-    SOURCES Ida.cpp
-    HEADERS Ida.hpp DynamicSolver.hpp
-    LINK_LIBRARIES
-      PUBLIC
-      SUNDIALS::nvecserial
-      PUBLIC
-      SUNDIALS::idas
+      SUNDIALS::sunlinsolspgmr
       PUBLIC
       GridKit::definitions
       PUBLIC
