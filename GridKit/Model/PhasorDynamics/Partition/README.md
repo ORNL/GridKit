@@ -13,20 +13,21 @@ for multi-instantiation, etc.)
 is a fundamentally different goal. It is not
 appropriate to use divisions driven by modeling for solver acceleration.
 
-Partitions for a system are defined in a JSON file, usually called
-`[model_name].partition.json`, which is separate from the system model 
+Partitions for a system are defined in a JSON file withan extension of 
+`.partition.json`, which is separate from the system model 
 definition
 but refers to buses by number from the system model definition.
 Defining a partition file for a system is optional, but needed to enable
 parallel model evaluation for some solvers.
 
 This file defines a nested, hierarchical structure of containers
-of type `Partition` and `PartitionGroup`.
+of type `Partition`.
 The format is general and could accommodate any combination of nested
 partitions, including the common structure of a single level of partitions
 dividing the system for a single level of parallel evaluation.
-Any more complex structure can also be easily flattened 
-into a single level by solvers that require only a single level of partitioning.
+Any more complex structure can also be flattened 
+into a single level for solvers that require 
+only a single level of partitioning.
 The JSON file schema is defined in `partition.schema.json`, and is also
 described below.
 
@@ -40,54 +41,61 @@ For now, partitions need to be defined by the user-written JSON file.
 
 ## Partition Definitions and JSON Structure
 
-As mentioned above, there are two types of objects in a `partition.json` file:
-partitions and partition groups.
+A `Partition` is a container for buses and other partitions. 
+Each partition has the following properties:
+- `name` of type `string` identifying the partition
+- `external` of type `array of integers` containing the 
+  bus numbers external to the partition. These bus numbers must correspond to 
+  buses in the model JSON file. Any bus connecting to this partition and also
+  to other partitions is considered external. This property is optional:
+  omitting it implies there are no external buses.
+- `internal` of type `array of integers` containing the bus numbers internal 
+  to the partition. These bus numbers must correspond to 
+  buses in the model JSON file. Any bus completely unique to this partition
+  should go in this list. This property is optional:
+  omitting it implies there are no internal buses.
+- `partitions` of type `array of Partition` 
+  containing zero or more Partitions which are child partitions of this
+  partition. his property is optional:
+  omitting it implies there are no child partitions.
 
-1. A `Partition` is a container for buses that is a leaf node of the partition
-hierarchy. Each partition has the following properties:
-    - `name` of type `string` identifying the partition
-    - `external` of type `array of integers` containing the 
-bus numbers external to the partition. These bus numbers must correspond to 
-buses in the model JSON file. Any bus connecting to this partition and also
-to other partitions is considered external.
-    - `internal` of type `array of integers` containing the bus numbers internal 
-to the partition. These bus numbers must correspond to 
-buses in the model JSON file. Any bus completely unique to this partition
-should go in this list.
+The root-level object of the JSON file is a partition.
 
-2. A `PartitionGroup` is a container for partitions and other 
-partition groups. It functions as an intermediate node 
-in the partition hierarchy.
-Partition groups do not contain any buses directly.
-The root-level object of the JSON file is a partition group.
-Each partition group has the following properties:
-    - `name` of type `string` identifying the partition group.
-    - `partitions` of type `array of (Partition or PartitionGroup)` 
-    containing any combination of partitions and partition groups.
+The hierarchy is primarily for convenience. All internal buses are truly
+isolated to that partition and may not be connected to any other partition,
+even child partitions. All external buses are globally visible and may connect
+even across branches of the hierarchy. There is no requirement for the structure
+of the hierarchy to be balanced.
 
 ## Validation Rules and Component Assignment
 
-Any violation of the rules below results in a `BadPartition` exception.
+Any violation of the rules below results in a exception indicating a badly 
+formed partition.
 Component assignment is done automatically. This avoids the error-prone 
 requirement for the user to manually assign both buses and components and
 ensure they are compatible.
 
 1. The file must follow the `partition.schema.json` structure.
-2. The root object must be a `PartitionGroup`.
-3. Every bus must appear somewhere,
+2. Every bus must appear somewhere in the file,
 either as `external` or `internal`, but not both.
-4. Internal buses must only appear uniquely in one `Partition`.
-5. Each `Component` that has bus ports shall be assigned to the first 
-`Partition` containing all its bus ports. If none exists,
-raise a `BadPartition` exception. 
-6. Some components are connected to each other by signals.
-If a `Component` assigned to a partition is 
-connected to an unassigned `Component`, 
-assign to the same partition. This process needs to be repeated until no further
-assignments occur.
+3. Internal buses must only appear uniquely in one `Partition`.
+External buses may appear more than once.
+4. Each `Component` that has bus ports shall be assigned to the first 
+`Partition`, in the order partitions are listed in the file,
+which contains every one of the `Component`'s connected buses as either an
+internal or external bus in that partition itself. If no such partition exists,
+raise an exception indicating a badly 
+formed partition.
+5. Some components are connected to each other by signals.
+Place signal-connected devices together, 
+in the first partition containing all bus ports of all of them. 
+Signal nodes go with the devices that use them.
 If a `Component` is left unassigned or if two connected
 components are assigned to different partitions,
-raise a `BadPartition` exception.
+raise an exception indicating a badly 
+formed partition.
+
+Partition names are not required to be unique, though this is a recommended.
 
 In the future it is envisioned that signals may also be part of the 
 partition definition, allowing connected components to be in separate 
@@ -150,8 +158,8 @@ buses couple between partitions.*
 
 ### Sample Multi-Level Partition
 
-This example shows how multi-level hierarchical partitions can be implemented
-with partition groups.
+This example shows how a multi-level hierarchical structure can be implemented
+with partitions.
 
 File name: `deep.partition.json`
 
@@ -213,5 +221,7 @@ File name: `deep.partition.json`
 
 ![Sample multi-Level partition](deep.png)
 
-*Figure 3: Sample multi-level partition scheme. The partitions are
-A, B1, C1, and C2, whereas root, B and C are partition groups.*
+*Figure 3: Sample multi-level partition scheme. The partitions 
+containing buses are
+A, B1, C1, and C2, whereas root, B and C are partitions only 
+containing other partitions.*
