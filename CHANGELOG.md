@@ -10,6 +10,7 @@
 - Added `enable` and `disable` solver events that put a branch in or out of service.
 - `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
 - Added `Model::ParameterReader`
+- Added the `OptimalPowerFlow` model family, the `SteadyState::IpoptInterface`, and the `EconomicDispatch` example.
 - Removed legacy PhasorDynamics component constructors in favor of constructors taking model data.
 
 ## v0.2

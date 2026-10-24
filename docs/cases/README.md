@@ -1,5 +1,43 @@
 # Cases
 
+## OptimalPowerFlow
+
+::::{grid} 1 1 2 2
+:gutter: 3
+
+:::{grid-item-card} ACTIVSg2000
+:link: OptimalPowerFlow/ACTIVSg2000/README
+:link-type: doc
+:img-top: ../../cases/PhasorDynamics/ACTIVSg2000/ACTIVSg2000.png
+:class-card: gk-card
+:::
+
+:::{grid-item-card} Hawaii
+:link: OptimalPowerFlow/Hawaii/README
+:link-type: doc
+:img-top: ../../cases/PhasorDynamics/Hawaii/hawaii.png
+:class-card: gk-card
+:::
+
+:::{grid-item-card} IEEE39
+:link: OptimalPowerFlow/IEEE39/README
+:link-type: doc
+:img-top: ../../cases/PhasorDynamics/IEEE39/IEEE39.png
+:class-card: gk-card
+:::
+
+::::
+
+```{toctree}
+:maxdepth: 1
+:titlesonly:
+:hidden:
+
+ACTIVSg2000 <OptimalPowerFlow/ACTIVSg2000/README>
+Hawaii <OptimalPowerFlow/Hawaii/README>
+IEEE39 <OptimalPowerFlow/IEEE39/README>
+```
+
 ## PhasorDynamics
 
 ::::{grid} 1 1 2 2

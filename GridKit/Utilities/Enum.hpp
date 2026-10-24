@@ -80,6 +80,20 @@ namespace GridKit
       }
     }
 
+    /// Variant of `magic_enum::enum_name` that permits passing empty enums.
+    template <SizedEnum T>
+    constexpr auto enum_name([[maybe_unused]] T value) -> std::string_view
+    {
+      if constexpr (magic_enum::enum_count<T>() == 0)
+      {
+        return {};
+      }
+      else
+      {
+        return magic_enum::enum_name(value);
+      }
+    }
+
     /// Upper bound on attainable values of the specified @ref SizedEnum.
     template <SizedEnum T>
     consteval auto enum_size() -> std::size_t
