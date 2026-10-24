@@ -56,6 +56,8 @@ namespace GridKit
       params.at("freq_base").get_to(sm.freq_base);
       params.at("va_base").get_to(sm.va_base);
 
+      // TODO: REMOVE. Case files should not configure output; the solver file
+      // sets it with `output_file` and `output_layout`.
       if (j.contains("monitors"))
       {
         for (auto&& raw_mon : j.at("monitors"))

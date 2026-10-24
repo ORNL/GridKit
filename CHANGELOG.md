@@ -2,6 +2,8 @@
 
 ## v.03
 
+- Added `output_layout` solver option for long monitor output and a PostgreSQL example.
+- Removed unused `VariableMonitorController::addVariable`.
 - Added `BusSignalVoltageOut` bus model with voltage signal outlets and current signal inlets.
 - Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.
 - Removed `BusToSignalAdapter`. Prefer `BusSignalVoltageOut` or `BusSignalVoltageIn`.
