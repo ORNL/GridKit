@@ -1,0 +1,516 @@
+diff --git a/enzyme/Enzyme/Enzyme.cpp b/enzyme/Enzyme/Enzyme.cpp
+index 7649ba76..5137a54b 100644
+--- a/enzyme/Enzyme/Enzyme.cpp
++++ b/enzyme/Enzyme/Enzyme.cpp
+@@ -42,6 +42,7 @@
+ #if LLVM_VERSION_MAJOR <= 16
+ #include "llvm/ADT/Optional.h"
+ #endif
++#include "llvm/ADT/ScopeExit.h"
+ #include "llvm/ADT/SetVector.h"
+ #include "llvm/ADT/SmallSet.h"
+ #include "llvm/ADT/SmallVector.h"
+@@ -53,6 +54,7 @@
+ #include "llvm/IR/Function.h"
+ #include "llvm/IR/IRBuilder.h"
+ #include "llvm/IR/InstrTypes.h"
++#include "llvm/IR/InstIterator.h"
+ #include "llvm/IR/Instructions.h"
+ #include "llvm/IR/MDBuilder.h"
+ #include "llvm/IR/Metadata.h"
+@@ -68,6 +70,7 @@
+ #include "llvm/Analysis/InlineCost.h"
+ #include "llvm/Analysis/ScalarEvolution.h"
+ #include "llvm/Analysis/TargetLibraryInfo.h"
++#include "llvm/Analysis/ValueTracking.h"
+ #include "llvm/IR/AbstractCallSite.h"
+ #include "llvm/Support/CommandLine.h"
+ #include "llvm/Transforms/Utils/BasicBlockUtils.h"
+@@ -1997,6 +2000,24 @@ public:
+     if (F.empty())
+       return false;
+ 
++    bool is_optimize_none = F.hasFnAttribute(Attribute::OptimizeNone) &&
++                        llvm::any_of(instructions(F), [](const Instruction &I) {
++                          auto *CB = dyn_cast<CallBase>(&I);
++                          return CB &&
++                                 getFuncNameFromCall(CB).contains("__enzyme_");
++                        });
++    auto restore_optimize_none = make_scope_exit([&] {
++      if (is_optimize_none) {
++        F.addFnAttr(Attribute::OptimizeNone);
++      }
++    });
++    if (is_optimize_none) {
++      // expose spilled intrinsic arguments and permit derivative inlining
++      F.removeFnAttr(Attribute::OptimizeNone);
++      auto PA = PromotePass().run(F, Logic.PPC.FAM);
++      Logic.PPC.FAM.invalidate(F, PA);
++    }
++
+     if (handleFullModuleTrunc(F))
+       return true;
+ 
+@@ -2634,16 +2655,19 @@ public:
+               auto cst = llvm::getInlineCost(CB, Params, TTI, getAC, GetTLI);
+               return cst;
+             };
++            bool sparse_args = llvm::any_of(cur->args(), [](const Use &U) {
++              auto *CB = dyn_cast<CallBase>(getUnderlyingObject(U.get()));
++              return CB && getFuncNameFromCall(CB).contains("__enzyme_todense");
++            });
+ #if LLVM_VERSION_MAJOR >= 20
+-            if (llvm::shouldInline(*cur, TTI, GetInlineCost, ORE))
++            if (sparse_args || llvm::shouldInline(*cur, TTI, GetInlineCost, ORE))
+ #else
+-            if (llvm::shouldInline(*cur, GetInlineCost, ORE))
++            if (sparse_args || llvm::shouldInline(*cur, GetInlineCost, ORE))
+ #endif
+             {
+               InlineFunctionInfo IFI;
+               InlineResult IR = InlineFunction(*cur, IFI);
+               if (IR.isSuccess()) {
+-                LowerSparsification(outerFunc, /*replaceAll*/ false);
+                 for (auto U : outerFunc->users()) {
+                   if (auto CI = dyn_cast<CallInst>(U)) {
+                     if (CI->getCalledFunction() == outerFunc) {
+@@ -2957,6 +2981,12 @@ public:
+       pair.second->eraseFromParent();
+     Logic.clear();
+ 
++    for (auto &F : M) {
++      if (!F.empty()) {
++        changed |= LowerSparsification(&F);
++      }
++    }
++
+     if (changed && Logic.PostOpt) {
+       TimeTraceScope timeScope("Enzyme PostOpt", M.getName());
+ 
+@@ -2983,10 +3013,6 @@ public:
+       }
+     }
+ 
+-    for (auto &F : M) {
+-      if (!F.empty())
+-        changed |= LowerSparsification(&F);
+-    }
+     return changed;
+   }
+ };
+diff --git a/enzyme/Enzyme/FunctionUtils.cpp b/enzyme/Enzyme/FunctionUtils.cpp
+index 2401b471..de4f5526 100644
+--- a/enzyme/Enzyme/FunctionUtils.cpp
++++ b/enzyme/Enzyme/FunctionUtils.cpp
+@@ -35,13 +35,17 @@
+ #include "llvm/IR/DerivedTypes.h"
+ #include "llvm/IR/Function.h"
+ #include "llvm/IR/IRBuilder.h"
++#include "llvm/IR/InstIterator.h"
+ #include "llvm/IR/Module.h"
+ #include "llvm/IR/Type.h"
+ #include "llvm/IR/Verifier.h"
+ #include "llvm/Passes/PassBuilder.h"
++#include "llvm/Transforms/Scalar/LICM.h"
++#include "llvm/Transforms/Scalar/LoopPassManager.h"
+ 
+ #include "llvm/ADT/APSInt.h"
+ #include "llvm/ADT/DenseMapInfo.h"
++#include "llvm/ADT/ScopeExit.h"
+ #include "llvm/ADT/SetOperations.h"
+ #include "llvm/ADT/SetVector.h"
+ #include "llvm/ADT/SmallSet.h"
+@@ -1509,7 +1513,8 @@ static void SimplifyMPIQueries(Function &NewF, FunctionAnalysisManager &FAM) {
+ }
+ 
+ /// Perform recursive inlinining on NewF up to the given limit
+-static void ForceRecursiveInlining(Function *NewF, size_t Limit) {
++static void ForceRecursiveInlining(Function *NewF, size_t Limit,
++                                   bool InlineDebug = false) {
+   std::map<const Function *, RecurType> RecurResults;
+   for (size_t count = 0; count < Limit; count++) {
+     for (auto &BB : *NewF) {
+@@ -1529,7 +1534,9 @@ static void ForceRecursiveInlining(Function *NewF, size_t Limit) {
+             continue;
+           if (CI->getCalledFunction()->hasFnAttribute(
+                   Attribute::ReturnsTwice) ||
+-              CI->getCalledFunction()->hasFnAttribute(Attribute::NoInline))
++              (CI->getCalledFunction()->hasFnAttribute(Attribute::NoInline) &&
++               !(InlineDebug && CI->getCalledFunction()->hasFnAttribute(
++                                    Attribute::OptimizeNone))))
+             continue;
+           if (IsFunctionRecursive(CI->getCalledFunction(), RecurResults)) {
+             LLVM_DEBUG(llvm::dbgs()
+@@ -3646,6 +3653,21 @@ Function *PreProcessCache::preprocessForClone(Function *F,
+   }
+   CloneOrigin[NewF] = F;
+   NewF->setAttributes(F->getAttributes());
++  NewF->removeFnAttr(Attribute::OptimizeNone);
++  if (F->hasFnAttribute(Attribute::OptimizeNone)) {
++    NewF->removeFnAttr(Attribute::NoInline);
++  }
++
++  for (auto &BB : *NewF) {
++    for (auto &I : make_early_inc_range(BB)) {
++      if (auto *II = dyn_cast<IntrinsicInst>(&I)) {
++        if (II->getCalledFunction()->getName() == "llvm.fake.use") {
++          II->eraseFromParent();
++        }
++      }
++    }
++  }
++
+   if (EnzymeNoAlias)
+     for (auto j = NewF->arg_begin(); j != NewF->arg_end(); j++) {
+       if (j->getType()->isPointerTy()) {
+@@ -4096,6 +4118,15 @@ Function *PreProcessCache::preprocessForClone(Function *F,
+     UpgradeAllocasToMallocs(NewF, mode, unreachable);
+   }
+ 
++  if (EnzymePreopt && F->hasFnAttribute(Attribute::OptimizeNone)) {
++    ForceRecursiveInlining(NewF, EnzymeInlineCount, true);
++    FAM.invalidate(*NewF, PreservedAnalyses::none());
++    PassBuilder PB;
++    auto FPM = PB.buildFunctionSimplificationPipeline(
++        OptimizationLevel::O2, ThinOrFullLTOPhase::None);
++    FAM.invalidate(*NewF, FPM.run(*NewF, FAM));
++  }
++
+   CanonicalizeLoops(NewF, FAM);
+   RemoveRedundantPHI(NewF, FAM);
+ 
+@@ -5098,7 +5129,7 @@ std::optional<std::string> fixSparse_inner(Instruction *cur, llvm::Function &F,
+             candidate = dyn_cast<Instruction>(U);
+             if (!candidate)
+               continue;
+-            if (candidate == I && candidate->getType() != I->getType()) {
++            if (candidate == I || candidate->getType() != I->getType()) {
+               candidate = nullptr;
+               continue;
+             }
+@@ -5193,7 +5224,7 @@ std::optional<std::string> fixSparse_inner(Instruction *cur, llvm::Function &F,
+             candidate = dyn_cast<Instruction>(U);
+             if (!candidate)
+               continue;
+-            if (candidate == cur && candidate->getType() != cur->getType()) {
++            if (candidate == cur || candidate->getType() != cur->getType()) {
+               candidate = nullptr;
+               continue;
+             }
+@@ -7793,6 +7824,7 @@ std::optional<std::string> fixSparse_inner(Instruction *cur, llvm::Function &F,
+ 
+   if (auto PN = dyn_cast<PHINode>(cur)) {
+     B.SetInsertPoint(getFirstNonPHI(PN->getParent()));
++    IRBuilder<> PhiB(&PN->getParent()->front());
+     if (SE.isSCEVable(PN->getType())) {
+       auto S = SE.getSCEV(PN);
+ 
+@@ -7818,9 +7850,16 @@ std::optional<std::string> fixSparse_inner(Instruction *cur, llvm::Function &F,
+           push(U);
+         }
+         auto point = getFirstNonPHI(PN->getParent());
+-        auto tmp = cast<PHINode>(pushcse(B.CreatePHI(cur->getType(), 1)));
++        auto *tmp = PhiB.CreatePHI(cur->getType(), PN->getNumIncomingValues());
++        for (unsigned i = 0; i < PN->getNumIncomingValues(); ++i) {
++          tmp->addIncoming(UndefValue::get(tmp->getType()), PN->getIncomingBlock(i));
++        }
+         cur->replaceAllUsesWith(tmp);
++        if (Q.contains(cur)) {
++          Q.remove(cur);
++        }
+         cur->eraseFromParent();
++        SE.forgetValue(tmp);
+ 
+         Value *newIV = nullptr;
+         {
+@@ -7942,7 +7981,7 @@ std::optional<std::string> fixSparse_inner(Instruction *cur, llvm::Function &F,
+       }
+       if (legal) {
+         auto PN2 = cast<PHINode>(
+-            pushcse(B.CreatePHI(B.getInt64Ty(), PN->getNumIncomingValues())));
++            pushcse(PhiB.CreatePHI(B.getInt64Ty(), PN->getNumIncomingValues())));
+         PN2->takeName(PN);
+         for (auto val : llvm::enumerate(negOps))
+           PN2->addIncoming(val.value(), PN->getIncomingBlock(val.index()));
+@@ -8209,11 +8248,11 @@ std::optional<std::string> fixSparse_inner(Instruction *cur, llvm::Function &F,
+ 
+         if (legal && changed) {
+           auto lhsPN = cast<PHINode>(pushcse(
+-              B.CreatePHI(lhsOps[0]->getType(), PN->getNumIncomingValues())));
++              PhiB.CreatePHI(lhsOps[0]->getType(), PN->getNumIncomingValues())));
+           PHINode *rhsPN = nullptr;
+           if (numOps == 2)
+             rhsPN = cast<PHINode>(pushcse(
+-                B.CreatePHI(rhsOps[0]->getType(), PN->getNumIncomingValues())));
++                PhiB.CreatePHI(rhsOps[0]->getType(), PN->getNumIncomingValues())));
+ 
+           for (auto val : llvm::enumerate(lhsOps))
+             lhsPN->addIncoming(val.value(), PN->getIncomingBlock(val.index()));
+@@ -8361,8 +8400,8 @@ std::optional<std::string> fixSparse_inner(Instruction *cur, llvm::Function &F,
+     }
+   }
+ 
+-  // and a, b -> and a b[with a true]
+-  if (cur->getOpcode() == Instruction::And) {
++  // and a, b -> and a b[with a true] (boolean operands only)
++  if (cur->getOpcode() == Instruction::And && cur->getType()->isIntegerTy(1)) {
+     auto lhs = replace(cur->getOperand(0), cur->getOperand(1),
+                        ConstantInt::getTrue(cur->getContext()));
+     if (lhs != cur->getOperand(0)) {
+@@ -8381,8 +8420,8 @@ std::optional<std::string> fixSparse_inner(Instruction *cur, llvm::Function &F,
+     }
+   }
+ 
+-  // or a, b -> or a b[with a false]
+-  if (cur->getOpcode() == Instruction::Or) {
++  // or a, b -> or a b[with a false] (boolean operands only)
++  if (cur->getOpcode() == Instruction::Or && cur->getType()->isIntegerTy(1)) {
+     auto lhs = replace(cur->getOperand(0), cur->getOperand(1),
+                        ConstantInt::getFalse(cur->getContext()));
+     if (lhs != cur->getOperand(0)) {
+@@ -9613,7 +9652,7 @@ static void eraseSparseInbounds(llvm::Function &F) {
+ }
+ 
+ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+-                      SetVector<BasicBlock *> &toDenseBlocks) {
++                      ArrayRef<WeakTrackingVH> toDenseBlocks) {
+ 
+   auto &DT = FAM.getResult<DominatorTreeAnalysis>(F);
+   auto &SE = FAM.getResult<ScalarEvolutionAnalysis>(F);
+@@ -9623,7 +9662,11 @@ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+   QueueType Q(DT, LI);
+   {
+     llvm::SetVector<BasicBlock *> todoBlocks;
+-    for (auto b : toDenseBlocks) {
++    for (auto &V : toDenseBlocks) {
++      auto *b = dyn_cast_or_null<BasicBlock>(V);
++      if (!b) {
++        continue;
++      }
+       auto L = LI.getLoopFor(b);
+       if (L) {
+         for (auto B : L->getBlocks())
+@@ -9721,10 +9764,7 @@ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+ 
+             auto L = LI.getLoopFor(blk);
+             if (!L) {
+-              legalToSparse = false;
+-              EmitFailure("NoSparsification", br->getDebugLoc(), br, "F: ", F,
+-                          "\nCould not find loop for: ", *blk);
+-              break;
++              continue;
+             }
+             auto idx = L->getCanonicalInductionVariable();
+             if (!idx) {
+@@ -9831,12 +9871,8 @@ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+     }
+ 
+     if (solutions == Constraints::none() || solutions == Constraints::all()) {
+-      EmitFailure(
+-          "NoSparsification", context->getDebugLoc(), context, "F: ", F,
+-          "\nL: ", *L, "\ncond: ", *cond, " negated:", negated,
+-          "\n No sparsification: not sparse solvable(nosoltn): solutions:",
+-          *solutions);
+       sawError = true;
++      continue;
+     }
+     // llvm::errs() << " found solvable solutions " << *solutions << "\n";
+ 
+@@ -9887,6 +9923,17 @@ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+     forSparsification[L].second.emplace_back(blk, solutions);
+   }
+ 
++  for (const auto &Pair : forSparsification) {
++#if LLVM_VERSION_MAJOR >= 20
++    CodeExtractor Ext(Pair.first->getBlocks(), &DT);
++#else
++    CodeExtractor Ext(DT, *Pair.first);
++#endif
++    SetVector<Value *> Inputs, Outputs, Allocas;
++    Ext.findInputsOutputs(Inputs, Outputs, Allocas);
++    sawError |= !Outputs.empty();
++  }
++
+   if (sawError) {
+     // Undo the rewrite of the branches that were already sparsified.
+     for (auto &[br, cond] : origConditions)
+@@ -9907,9 +9954,6 @@ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+   }
+ 
+   if (forSparsification.size() == 0) {
+-    auto context = &F.getEntryBlock().front();
+-    EmitFailure("NoSparsification", context->getDebugLoc(), context, "F: ", F,
+-                "\n Found no stores for sparsification");
+     lowerSparsePlaceholders(F);
+     return;
+   }
+@@ -9928,8 +9972,13 @@ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+     SetVector<Value *> Inputs, Outputs;
+     auto F2 = ext.extractCodeRegion(cache, Inputs, Outputs);
+     assert(F2);
++    F2->removeFnAttr(Attribute::NoInline);
++    F2->removeFnAttr(Attribute::OptimizeNone);
+     F2->addFnAttr(Attribute::AlwaysInline);
+ 
++    auto *extracted_call  = cast<CallBase>(*F2->user_begin());
++    SmallVector<Value *, 4> CallArgs(extracted_call->arg_begin(),
++                                     extracted_call->arg_end());
+     for (auto U : F2->users())
+       cast<Instruction>(U)->eraseFromParent();
+ 
+@@ -10008,11 +10057,15 @@ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+ 
+     auto guard = L2->getLoopLatch()->getTerminator();
+     assert(guard);
++    auto *latch = guard->getParent();
++    new_lidx->replaceAllUsesWith(new_idx);
++    new_lidx->eraseFromParent();
++    for (auto *successor : successors(latch)) {
++      successor->removePredecessor(latch);
++    }
+     IRBuilder<> G(guard);
+     G.CreateRetVoid();
+     guard->eraseFromParent();
+-    new_lidx->replaceAllUsesWith(new_idx);
+-    new_lidx->eraseFromParent();
+ 
+     auto phterm = ph->getTerminator();
+     IRBuilder<> B(phterm);
+@@ -10035,7 +10088,7 @@ void fixSparseIndices(llvm::Function &F, llvm::FunctionAnalysisManager &FAM,
+       auto sols = solutions->allSolutions(Exp, idxty, phterm, ctx, B);
+       SmallVector<Value *, 1> prevSols;
+       for (auto [sol, condition] : sols) {
+-        SmallVector<Value *, 1> args(Inputs.begin(), Inputs.end());
++        SmallVector<Value *, 1> args(CallArgs.begin(), CallArgs.end());
+         args[off_idx] = ConstantInt::get(idxty, off);
+         args[induct_idx] = sol;
+         for (auto sol2 : prevSols)
+@@ -10171,8 +10224,29 @@ void replaceToDense(llvm::CallBase *CI, bool replaceAll, llvm::Function *F,
+       continue;
+     }
+     */
++    if (auto *MS = dyn_cast<MemSetInst>(U)) {
++      auto *length = dyn_cast<ConstantInt>(MS->getLength());
++      auto *byte = dyn_cast<ConstantInt>(MS->getValue());
++      auto *ty = store_fn->getFunctionType()->getParamType(0);
++      auto width = DL.getTypeStoreSize(ty).getFixedValue();
++      if (!MS->isVolatile() && MS->getRawDest() == val && length && byte &&
++          byte->isZero() && ty->isFloatingPointTy() && width &&
++          length->getZExtValue() % width == 0) {
++        for (uint64_t i = 0; i < length->getZExtValue(); i += width) {
++          auto *p = B.CreateGEP(ty, val, B.getInt64(i / width));
++          auto *SI = B.CreateStore(Constant::getNullValue(ty), p);
++          users.emplace_back(p == val ? SI : cast<Instruction>(p), val);
++        }
++        toErase.push_back(MS);
++        continue;
++      }
++    }
+     if (auto CI = dyn_cast<CallInst>(U)) {
+       auto funcName = getFuncNameFromCall(CI);
++      if (funcName == "llvm.fake.use") {
++        toErase.push_back(CI);
++        continue;
++      }
+       if (funcName == "julia.pointer_from_objref") {
+         for (auto U : CI->users()) {
+           users.push_back(std::make_pair(cast<Instruction>(U), CI));
+@@ -10230,6 +10304,30 @@ void replaceToDense(llvm::CallBase *CI, bool replaceAll, llvm::Function *F,
+       continue;
+     }
+     if (auto LI = dyn_cast<LoadInst>(U)) {
++      if (load_fn->size() == 1) {
++        auto &BB = load_fn->getEntryBlock();
++        auto *RI = dyn_cast<ReturnInst>(BB.getTerminator());
++        if (RI && RI->getReturnValue() && isa<Constant>(RI->getReturnValue()) &&
++            RI->getReturnValue()->getType() == LI->getType() &&
++            llvm::all_of(BB, [](const Instruction &I) {
++              if (isa<ReturnInst>(I) || isa<DbgInfoIntrinsic>(I)) {
++                return true;
++              }
++              if (auto *II = dyn_cast<IntrinsicInst>(&I)) {
++                return II->getCalledFunction()->getName() == "llvm.fake.use";
++              }
++              if (auto *AI = dyn_cast<AllocaInst>(&I)) {
++                return AI->isStaticAlloca();
++              }
++              auto *SI = dyn_cast<StoreInst>(&I);
++              return SI && SI->isSimple() &&
++                     isa<AllocaInst>(SI->getPointerOperand());
++            })) {
++          LI->replaceAllUsesWith(RI->getReturnValue());
++          toErase.push_back(LI);
++          continue;
++        }
++      }
+       auto diff = toInt(B, replacements[LI->getPointerOperand()]);
+       SmallVector<Value *, 2> args;
+       args.push_back(diff);
+@@ -10361,16 +10459,45 @@ void replaceToDense(llvm::CallBase *CI, bool replaceAll, llvm::Function *F,
+ }
+ 
+ bool LowerSparsification(llvm::Function *F, bool replaceAll) {
++  bool has_sparse_calls = llvm::any_of(instructions(F), [](const Instruction &I) {
++    auto *CB = dyn_cast<CallBase>(&I);
++    return CB && getFuncNameFromCall(CB).contains("__enzyme_todense");
++  });
++  bool is_optimize_none = has_sparse_calls && F->hasFnAttribute(Attribute::OptimizeNone);
++  auto restore_optimize_none  = make_scope_exit([&] {
++    if (is_optimize_none) {
++      F->addFnAttr(Attribute::OptimizeNone);
++    }
++  });
++  if (has_sparse_calls) {
++    ForceRecursiveInlining(F, EnzymeInlineCount);
++  }
++  if (is_optimize_none) {
++    F->removeFnAttr(Attribute::OptimizeNone);
++    PassBuilder PB;
++    LoopAnalysisManager LAM;
++    FunctionAnalysisManager FAM;
++    CGSCCAnalysisManager CGAM;
++    ModuleAnalysisManager MAM;
++    PB.registerModuleAnalyses(MAM);
++    PB.registerFunctionAnalyses(FAM);
++    PB.registerLoopAnalyses(LAM);
++    PB.registerCGSCCAnalyses(CGAM);
++    PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
++    auto Prepare = PB.buildFunctionSimplificationPipeline(
++        OptimizationLevel::O2, ThinOrFullLTOPhase::None);
++    Prepare.run(*F, FAM);
++  }
+   auto &DL = F->getParent()->getDataLayout();
+-  bool changed = false;
++  bool changed = has_sparse_calls;
+   SmallVector<CallBase *, 1> todo;
+-  SetVector<BasicBlock *> toDenseBlocks;
++  SmallVector<WeakTrackingVH, 4> toDenseBlocks;
+   for (auto &BB : *F) {
+     for (auto &I : BB) {
+       if (auto CI = dyn_cast<CallInst>(&I)) {
+         if (getFuncNameFromCall(CI).contains("__enzyme_todense")) {
+           todo.push_back(CI);
+-          toDenseBlocks.insert(&BB);
++          toDenseBlocks.push_back(&BB);
+         }
+       }
+     }
+@@ -10393,10 +10520,15 @@ bool LowerSparsification(llvm::Function *F, bool replaceAll) {
+     PB.registerCGSCCAnalyses(CGAM);
+     PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
+ 
+-    SimplifyCFGPass(SimplifyCFGOptions()).run(*F, FAM);
+-    InstCombinePass().run(*F, FAM);
++    FunctionPassManager Prepare;
++    Prepare.addPass(SimplifyCFGPass(SimplifyCFGOptions()));
++    Prepare.addPass(InstCombinePass());
+     // required to make preheaders
+-    LoopSimplifyPass().run(*F, FAM);
++    Prepare.addPass(LoopSimplifyPass());
++    Prepare.addPass(createFunctionToLoopPassAdaptor(
++        LICMPass(LICMOptions()), /*UseMemorySSA*/ true));
++    Prepare.run(*F, FAM);
++    CanonicalizeLoops(F, FAM);
+     fixSparseIndices(*F, FAM, toDenseBlocks);
+   }
+ 

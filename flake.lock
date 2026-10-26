@@ -1,0 +1,81 @@
+{
+  "nodes": {
+    "enzyme-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791756742,
+        "narHash": "sha256-L/Ais8bWWlst2r0qRrPyK5Rr3FqmmlKK0lpnDZPsPDM=",
+        "owner": "EnzymeAD",
+        "repo": "Enzyme",
+        "rev": "06da3b77d8ceaa9e260c7147a2e6bedf27b6d377",
+        "type": "github"
+      },
+      "original": {
+        "owner": "EnzymeAD",
+        "ref": "v0.0.303",
+        "repo": "Enzyme",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1792773339,
+        "narHash": "sha256-rZLrzrC6i+jnTAlvPZHogKDulY7WWDEv9hJeHieO7Zw=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "3ec636362e1816bc2f0888fa0fa2c69f1bc9e504",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nlohmann-json-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1750828817,
+        "narHash": "sha256-Ju5FofTJtzKA24/rGETBOSfVeYL/AjCYvf0olFkbitg=",
+        "owner": "nlohmann",
+        "repo": "json",
+        "rev": "d70e46bc65a21a8eb1ef0e3e9ba707b7b9b78378",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nlohmann",
+        "repo": "json",
+        "rev": "d70e46bc65a21a8eb1ef0e3e9ba707b7b9b78378",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "enzyme-src": "enzyme-src",
+        "nixpkgs": "nixpkgs",
+        "nlohmann-json-src": "nlohmann-json-src",
+        "sundials-src": "sundials-src"
+      }
+    },
+    "sundials-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1788462374,
+        "narHash": "sha256-gjzNSu6JZxhXziYmYdi3iEjHrEzJfLUGLJw/z5XOmHc=",
+        "owner": "LLNL",
+        "repo": "sundials",
+        "rev": "312fc0f3684f27209ca9dc9249d194436eb41a7a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LLNL",
+        "ref": "v7.9.0",
+        "repo": "sundials",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

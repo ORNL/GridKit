@@ -12,7 +12,6 @@ ConstructorInitializerIndentWidth: 2
 # Comments which match this regex will be unformatted (and therefore can be longer or have more whitespace than other comments)
 CommentPragmas: '^\*\*'
 
-
 # Alignment
 AlignConsecutiveAssignments:
   Enabled:          true
