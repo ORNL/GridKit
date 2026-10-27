@@ -1059,6 +1059,7 @@ namespace GridKit
         fixture.regca.updateTime(0.0, 1.0);
 
         success *= (fixture.evaluate() == 0);
+        success *= (fixture.regca.setSignalIndices() == 0);
         success *= (fixture.regca.evaluateJacobian() == 0);
         success *= (fixture.regca.constructCsr() == 0);
 

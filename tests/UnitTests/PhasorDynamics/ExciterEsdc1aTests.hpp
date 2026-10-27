@@ -1508,6 +1508,7 @@ namespace GridKit
         setAnswerKeyState(fixture.esdc1a);
         fixture.esdc1a.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
+        success *= (fixture.esdc1a.setSignalIndices() == 0);
         success *= (fixture.esdc1a.evaluateJacobian() == 0);
         success *= (fixture.esdc1a.constructCsr() == 0);
 

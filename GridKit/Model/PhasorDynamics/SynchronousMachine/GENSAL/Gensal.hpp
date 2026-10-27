@@ -94,6 +94,7 @@ namespace GridKit
       int evaluateResidual() override final;
 
       Model::ConfigurationChecks verify() const override final;
+      int                        setSignalIndices() override final;
 
       // Still to be implemented
       int evaluateJacobian() override final;

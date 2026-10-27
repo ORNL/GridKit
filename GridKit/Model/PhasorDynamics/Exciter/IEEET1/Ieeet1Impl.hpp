@@ -412,6 +412,44 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto OMEGA = static_cast<size_t>(Ieeet1ExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Ieeet1ExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Ieeet1ExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Ieeet1ExternalVariables::VUEL);
+        const auto VOEL  = static_cast<size_t>(Ieeet1ExternalVariables::VOEL);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        if (auto speed_port = ports_.in.template port<Ieeet1SignalInputs::speed>())
+        {
+          ws_indices_[OMEGA] = speed_port.signalVariableIndex();
+        }
+        if (auto vref_port = ports_.in.template port<Ieeet1SignalInputs::vref>())
+        {
+          ws_indices_[VREF] = vref_port.signalVariableIndex();
+        }
+        if (auto vs_port = ports_.in.template port<Ieeet1SignalInputs::vs>())
+        {
+          ws_indices_[VS] = vs_port.signalVariableIndex();
+        }
+        if (auto vuel_port = ports_.in.template port<Ieeet1SignalInputs::vuel>())
+        {
+          ws_indices_[VUEL] = vuel_port.signalVariableIndex();
+        }
+        if (auto voel_port = ports_.in.template port<Ieeet1SignalInputs::voel>())
+        {
+          ws_indices_[VOEL] = voel_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
+      /**
        * @brief Residual evaluation
        *
        */
@@ -424,13 +462,11 @@ namespace GridKit
         auto read_signal = [&]<Ieeet1SignalInputs      input,
                                Ieeet1ExternalVariables variable>(const ScalarT& latched)
         {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
+          const auto index = static_cast<size_t>(variable);
+          ws[index]        = latched;
           if (auto port = ports_.in.template port<input>())
           {
-            ws[index]          = port.readSignal();
-            ws_indices_[index] = port.signalVariableIndex();
+            ws[index] = port.readSignal();
           }
         };
 

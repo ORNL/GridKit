@@ -279,6 +279,39 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
+        const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);
+        const auto VUEL = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
+        const auto VOEL = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        if (auto vref_port = ports_.in.template port<SexsPtiSignalInputs::vref>())
+        {
+          ws_indices_[VREF] = vref_port.signalVariableIndex();
+        }
+        if (auto vs_port = ports_.in.template port<SexsPtiSignalInputs::vs>())
+        {
+          ws_indices_[VS] = vs_port.signalVariableIndex();
+        }
+        if (auto vuel_port = ports_.in.template port<SexsPtiSignalInputs::vuel>())
+        {
+          ws_indices_[VUEL] = vuel_port.signalVariableIndex();
+        }
+        if (auto voel_port = ports_.in.template port<SexsPtiSignalInputs::voel>())
+        {
+          ws_indices_[VOEL] = voel_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::evaluateResidual()
       {
@@ -288,13 +321,11 @@ namespace GridKit
         auto read_signal = [&]<SexsPtiSignalInputs      input,
                                SexsPtiExternalVariables variable>(const ScalarT& latched)
         {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
+          const auto index = static_cast<size_t>(variable);
+          ws[index]        = latched;
           if (auto port = ports_.in.template port<input>())
           {
-            ws[index]          = port.readSignal();
-            ws_indices_[index] = port.signalVariableIndex();
+            ws[index] = port.readSignal();
           }
         };
 

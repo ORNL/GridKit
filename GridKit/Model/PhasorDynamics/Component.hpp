@@ -65,6 +65,17 @@ namespace GridKit
       /// Report configuration problems.
       virtual Model::ConfigurationChecks verify() const = 0;
 
+      /**
+       * @brief Set the system variable indices of the connected signal inputs.
+       *
+       * Called by SystemModel::allocate() after verify(), once all variable
+       * indices are assigned. Unconnected inputs keep INVALID_INDEX.
+       */
+      virtual int setSignalIndices()
+      {
+        return 0;
+      }
+
       IdxT size() override final
       {
         return size_;

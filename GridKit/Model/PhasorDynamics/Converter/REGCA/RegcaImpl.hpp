@@ -646,6 +646,29 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
+        const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        if (auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>())
+        {
+          ws_indices_[IPCMD] = ipcmd_port.signalVariableIndex();
+        }
+        if (auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>())
+        {
+          ws_indices_[IQCMD] = iqcmd_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
+      /**
        * @brief Evaluate model residuals and accumulate the branch current.
        *
        * Refreshes the bus and signal interface buffers, evaluates the internal
@@ -664,18 +687,15 @@ namespace GridKit
 
         ws[IPCMD] = ipcmd_set_;
         ws[IQCMD] = iqcmd_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
-          ws[IPCMD]          = ipcmd_port.readSignal();
-          ws_indices_[IPCMD] = ipcmd_port.signalVariableIndex();
+          ws[IPCMD] = ipcmd_port.readSignal();
         }
 
         if (auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
-          ws[IQCMD]          = iqcmd_port.readSignal();
-          ws_indices_[IQCMD] = iqcmd_port.signalVariableIndex();
+          ws[IQCMD] = iqcmd_port.readSignal();
         }
 
         auto* wb = wb_.getData();

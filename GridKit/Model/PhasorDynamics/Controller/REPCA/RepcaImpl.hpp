@@ -567,6 +567,52 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Repca<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto IR      = static_cast<size_t>(RepcaExternalVariables::IR);
+        const auto II      = static_cast<size_t>(RepcaExternalVariables::II);
+        const auto P       = static_cast<size_t>(RepcaExternalVariables::P);
+        const auto Q       = static_cast<size_t>(RepcaExternalVariables::Q);
+        const auto FREQ    = static_cast<size_t>(RepcaExternalVariables::FREQ);
+        const auto VREF    = static_cast<size_t>(RepcaExternalVariables::VREF);
+        const auto PREF    = static_cast<size_t>(RepcaExternalVariables::PREF);
+        const auto QREF    = static_cast<size_t>(RepcaExternalVariables::QREF);
+        const auto FREQREF = static_cast<size_t>(RepcaExternalVariables::FREQREF);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        ws_indices_[IR] = ports_.in.template port<RepcaSignalInputs::ir>().signalVariableIndex();
+        ws_indices_[II] = ports_.in.template port<RepcaSignalInputs::ii>().signalVariableIndex();
+        ws_indices_[P]  = ports_.in.template port<RepcaSignalInputs::p>().signalVariableIndex();
+        ws_indices_[Q]  = ports_.in.template port<RepcaSignalInputs::q>().signalVariableIndex();
+        if (auto freq_port = ports_.in.template port<RepcaSignalInputs::freq>())
+        {
+          ws_indices_[FREQ] = freq_port.signalVariableIndex();
+        }
+        if (auto vref_port = ports_.in.template port<RepcaSignalInputs::vref>())
+        {
+          ws_indices_[VREF] = vref_port.signalVariableIndex();
+        }
+        if (auto pref_port = ports_.in.template port<RepcaSignalInputs::pref>())
+        {
+          ws_indices_[PREF] = pref_port.signalVariableIndex();
+        }
+        if (auto qref_port = ports_.in.template port<RepcaSignalInputs::qref>())
+        {
+          ws_indices_[QREF] = qref_port.signalVariableIndex();
+        }
+        if (auto freqref_port = ports_.in.template port<RepcaSignalInputs::freqref>())
+        {
+          ws_indices_[FREQREF] = freqref_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
+      /**
        * @brief Evaluate the REPCA-owned residual rows
        *
        * Refreshes required bus and measurement inputs, starts optional
@@ -593,41 +639,31 @@ namespace GridKit
         ws[QREF]    = qref_set_;
         ws[FREQ]    = static_cast<ScalarT>(ONE<RealT>);
         ws[FREQREF] = freqref_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        ws[IR]          = ports_.in.template port<RepcaSignalInputs::ir>().readSignal();
-        ws_indices_[IR] = ports_.in.template port<RepcaSignalInputs::ir>().signalVariableIndex();
-        ws[II]          = ports_.in.template port<RepcaSignalInputs::ii>().readSignal();
-        ws_indices_[II] = ports_.in.template port<RepcaSignalInputs::ii>().signalVariableIndex();
-        ws[P]           = ports_.in.template port<RepcaSignalInputs::p>().readSignal();
-        ws_indices_[P]  = ports_.in.template port<RepcaSignalInputs::p>().signalVariableIndex();
-        ws[Q]           = ports_.in.template port<RepcaSignalInputs::q>().readSignal();
-        ws_indices_[Q]  = ports_.in.template port<RepcaSignalInputs::q>().signalVariableIndex();
+        ws[IR] = ports_.in.template port<RepcaSignalInputs::ir>().readSignal();
+        ws[II] = ports_.in.template port<RepcaSignalInputs::ii>().readSignal();
+        ws[P]  = ports_.in.template port<RepcaSignalInputs::p>().readSignal();
+        ws[Q]  = ports_.in.template port<RepcaSignalInputs::q>().readSignal();
         if (auto freq_port = ports_.in.template port<RepcaSignalInputs::freq>())
         {
-          ws[FREQ]          = freq_port.readSignal();
-          ws_indices_[FREQ] = freq_port.signalVariableIndex();
+          ws[FREQ] = freq_port.readSignal();
         }
 
         if (auto vref_port = ports_.in.template port<RepcaSignalInputs::vref>())
         {
-          ws[VREF]          = vref_port.readSignal();
-          ws_indices_[VREF] = vref_port.signalVariableIndex();
+          ws[VREF] = vref_port.readSignal();
         }
         if (auto pref_port = ports_.in.template port<RepcaSignalInputs::pref>())
         {
-          ws[PREF]          = pref_port.readSignal();
-          ws_indices_[PREF] = pref_port.signalVariableIndex();
+          ws[PREF] = pref_port.readSignal();
         }
         if (auto qref_port = ports_.in.template port<RepcaSignalInputs::qref>())
         {
-          ws[QREF]          = qref_port.readSignal();
-          ws_indices_[QREF] = qref_port.signalVariableIndex();
+          ws[QREF] = qref_port.readSignal();
         }
         if (auto freqref_port = ports_.in.template port<RepcaSignalInputs::freqref>())
         {
-          ws[FREQREF]          = freqref_port.readSignal();
-          ws_indices_[FREQREF] = freqref_port.signalVariableIndex();
+          ws[FREQREF] = freqref_port.readSignal();
         }
 
         auto* wb = wb_.getData();

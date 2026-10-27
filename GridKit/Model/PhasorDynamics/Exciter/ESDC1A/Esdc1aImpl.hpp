@@ -416,6 +416,39 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        if (auto speed_port = ports_.in.template port<Esdc1aSignalInputs::speed>())
+        {
+          ws_indices_[OMEGA] = speed_port.signalVariableIndex();
+        }
+        if (auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>())
+        {
+          ws_indices_[VREF] = vref_port.signalVariableIndex();
+        }
+        if (auto vs_port = ports_.in.template port<Esdc1aSignalInputs::vs>())
+        {
+          ws_indices_[VS] = vs_port.signalVariableIndex();
+        }
+        if (auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>())
+        {
+          ws_indices_[VUEL] = vuel_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
+      /**
        * @brief Residuals of system equations
        *
        * Refreshes the bus and signal interface buffers and evaluates the
@@ -439,27 +472,22 @@ namespace GridKit
         ws[VREF]  = vref_set_;
         ws[VS]    = vs_set_;
         ws[VUEL]  = vuel_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (auto omega_port = ports_.in.template port<Esdc1aSignalInputs::speed>())
         {
-          ws[OMEGA]          = omega_port.readSignal();
-          ws_indices_[OMEGA] = omega_port.signalVariableIndex();
+          ws[OMEGA] = omega_port.readSignal();
         }
         if (auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>())
         {
-          ws[VREF]          = vref_port.readSignal();
-          ws_indices_[VREF] = vref_port.signalVariableIndex();
+          ws[VREF] = vref_port.readSignal();
         }
         if (auto vs_port = ports_.in.template port<Esdc1aSignalInputs::vs>())
         {
-          ws[VS]          = vs_port.readSignal();
-          ws_indices_[VS] = vs_port.signalVariableIndex();
+          ws[VS] = vs_port.readSignal();
         }
         if (auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>())
         {
-          ws[VUEL]          = vuel_port.readSignal();
-          ws_indices_[VUEL] = vuel_port.signalVariableIndex();
+          ws[VUEL] = vuel_port.readSignal();
         }
 
         auto* wb = wb_.getData();

@@ -339,6 +339,31 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Tgov1<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto DELTAOMEGA = static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
+        const auto PREF       = static_cast<size_t>(Tgov1ExternalVariables::PREF);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+
+        if (auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>())
+        {
+          ws_indices_[DELTAOMEGA] = speed_port.signalVariableIndex();
+        }
+
+        if (auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>())
+        {
+          ws_indices_[PREF] = pref_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
+      /**
        * @brief Residuals of system equations
        *
        */
@@ -352,19 +377,15 @@ namespace GridKit
 
         ws[DELTAOMEGA] = ScalarT{ZERO<RealT>};
         ws[PREF]       = pref_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>())
         {
           ws[DELTAOMEGA] = speed_port.readSignal();
-          ws_indices_[DELTAOMEGA] =
-              speed_port.signalVariableIndex();
         }
 
         if (auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>())
         {
-          ws[PREF]          = pref_port.readSignal();
-          ws_indices_[PREF] = pref_port.signalVariableIndex();
+          ws[PREF] = pref_port.readSignal();
         }
 
         const auto* y  = y_.getData();
