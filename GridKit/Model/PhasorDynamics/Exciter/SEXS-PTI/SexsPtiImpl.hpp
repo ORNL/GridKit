@@ -279,33 +279,71 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
+        const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);
+        const auto VUEL = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
+        const auto VOEL = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        if (auto vref_port = ports_.in.template port<SexsPtiSignalInputs::vref>())
+        {
+          ws_indices_[VREF] = vref_port.signalVariableIndex();
+        }
+        if (auto vs_port = ports_.in.template port<SexsPtiSignalInputs::vs>())
+        {
+          ws_indices_[VS] = vs_port.signalVariableIndex();
+        }
+        if (auto vuel_port = ports_.in.template port<SexsPtiSignalInputs::vuel>())
+        {
+          ws_indices_[VUEL] = vuel_port.signalVariableIndex();
+        }
+        if (auto voel_port = ports_.in.template port<SexsPtiSignalInputs::voel>())
+        {
+          ws_indices_[VOEL] = voel_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::evaluateResidual()
       {
+        const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
+        const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);
+        const auto VUEL = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
+        const auto VOEL = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
+
         auto* ws = ws_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
-        auto read_signal = [&]<SexsPtiSignalInputs      input,
-                               SexsPtiExternalVariables variable>(const ScalarT& latched)
-        {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
-          if (auto port = ports_.in.template port<input>())
-          {
-            ws[index]          = port.readSignal();
-            ws_indices_[index] = port.signalVariableIndex();
-          }
-        };
+        ws[VREF] = vref_set_;
+        ws[VS]   = vs_set_;
+        ws[VUEL] = vuel_set_;
+        ws[VOEL] = voel_set_;
 
-        read_signal.template operator()<SexsPtiSignalInputs::vref,
-                                        SexsPtiExternalVariables::VREF>(vref_set_);
-        read_signal.template operator()<SexsPtiSignalInputs::vs,
-                                        SexsPtiExternalVariables::VS>(vs_set_);
-        read_signal.template operator()<SexsPtiSignalInputs::vuel,
-                                        SexsPtiExternalVariables::VUEL>(vuel_set_);
-        read_signal.template operator()<SexsPtiSignalInputs::voel,
-                                        SexsPtiExternalVariables::VOEL>(voel_set_);
+        if (auto vref_port = ports_.in.template port<SexsPtiSignalInputs::vref>())
+        {
+          ws[VREF] = vref_port.readSignal();
+        }
+        if (auto vs_port = ports_.in.template port<SexsPtiSignalInputs::vs>())
+        {
+          ws[VS] = vs_port.readSignal();
+        }
+        if (auto vuel_port = ports_.in.template port<SexsPtiSignalInputs::vuel>())
+        {
+          ws[VUEL] = vuel_port.readSignal();
+        }
+        if (auto voel_port = ports_.in.template port<SexsPtiSignalInputs::voel>())
+        {
+          ws[VOEL] = voel_port.readSignal();
+        }
 
         auto* wb = wb_.getData();
         wb[0]    = bus_->Vr();

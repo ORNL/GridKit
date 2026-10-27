@@ -464,6 +464,16 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
+      // Signal input indices need all variable indices and a verified configuration
+      for (const auto& component : components_)
+      {
+        if (component->setSignalIndices() != 0)
+        {
+          Log::error() << "Failed to set component signal indices\n";
+          throw std::runtime_error("SystemModel allocation failed");
+        }
+      }
+
       // Sparse-pattern discovery requires an initialized operating point. A failed
       // initialization aborts allocation before residual/Jacobian evaluation or
       // monitor startup.

@@ -444,6 +444,28 @@ namespace GridKit
     }
 
     /**
+     * \brief Set the system variable indices of the connected signal inputs
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::setSignalIndices()
+    {
+      ws_indices_[0] = INVALID_INDEX<IdxT>;
+      if (auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>())
+      {
+        ws_indices_[0] = pmech_port.signalVariableIndex();
+      }
+
+      ws_indices_[1] = INVALID_INDEX<IdxT>;
+      if (auto efd_port = ports_.in.template port<GensalSignalInputs::efd>())
+      {
+        ws_indices_[1] = efd_port.signalVariableIndex();
+      }
+
+      return 0;
+    }
+
+    /**
      * \brief Residual evaluation and contribution to the connected bus
      *
      */
@@ -456,16 +478,14 @@ namespace GridKit
       ws[0] = pmech_set_;
       if (auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>())
       {
-        ws[0]          = pmech_port.readSignal();
-        ws_indices_[0] = pmech_port.signalVariableIndex();
+        ws[0] = pmech_port.readSignal();
       }
 
       // Exciter Efield
       ws[1] = efd_set_;
       if (auto efd_port = ports_.in.template port<GensalSignalInputs::efd>())
       {
-        ws[1]          = efd_port.readSignal();
-        ws_indices_[1] = efd_port.signalVariableIndex();
+        ws[1] = efd_port.readSignal();
       }
 
       // Bus voltages

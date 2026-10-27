@@ -94,6 +94,7 @@ namespace GridKit
         int evaluateJacobian() override final;
 
         Model::ConfigurationChecks verify() const override final;
+        int                        setSignalIndices() override final;
 
         SignalPortsT& getPorts()
         {

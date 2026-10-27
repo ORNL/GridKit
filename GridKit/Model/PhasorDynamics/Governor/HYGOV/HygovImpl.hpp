@@ -458,6 +458,34 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Hygov<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto OMEGA = static_cast<size_t>(HygovExternalVariables::OMEGA);
+        const auto PREF  = static_cast<size_t>(HygovExternalVariables::PREF);
+        const auto PAUX  = static_cast<size_t>(HygovExternalVariables::PAUX);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        if (auto speed_port = ports_.in.template port<HygovSignalInputs::speed>())
+        {
+          ws_indices_[OMEGA] = speed_port.signalVariableIndex();
+        }
+        if (auto pref_port = ports_.in.template port<HygovSignalInputs::pref>())
+        {
+          ws_indices_[PREF] = pref_port.signalVariableIndex();
+        }
+        if (auto paux_port = ports_.in.template port<HygovSignalInputs::paux>())
+        {
+          ws_indices_[PAUX] = paux_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
+      /**
        * @brief Residuals of system equations
        *
        * Refreshes the signal interface buffers and evaluates the internal
@@ -480,22 +508,18 @@ namespace GridKit
         ws[OMEGA] = ZERO<RealT>;
         ws[PREF]  = pref_set_;
         ws[PAUX]  = paux_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (auto omega_port = ports_.in.template port<HygovSignalInputs::speed>())
         {
-          ws[OMEGA]          = omega_port.readSignal();
-          ws_indices_[OMEGA] = omega_port.signalVariableIndex();
+          ws[OMEGA] = omega_port.readSignal();
         }
         if (auto pref_port = ports_.in.template port<HygovSignalInputs::pref>())
         {
-          ws[PREF]          = pref_port.readSignal();
-          ws_indices_[PREF] = pref_port.signalVariableIndex();
+          ws[PREF] = pref_port.readSignal();
         }
         if (auto paux_port = ports_.in.template port<HygovSignalInputs::paux>())
         {
-          ws[PAUX]          = paux_port.readSignal();
-          ws_indices_[PAUX] = paux_port.signalVariableIndex();
+          ws[PAUX] = paux_port.readSignal();
         }
 
         const auto* y  = y_.getData();

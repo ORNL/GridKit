@@ -2806,6 +2806,7 @@ namespace GridKit
         setJacobianState(fixture, capacity, epiv, ipcmd);
         fixture.reecb.updateTime(0.0, alpha);
         success *= (fixture.reecb.evaluateResidual() == 0);
+        success *= (fixture.reecb.setSignalIndices() == 0);
         success *= (fixture.reecb.evaluateJacobian() == 0);
         success *= (fixture.reecb.constructCsr() == 0);
 

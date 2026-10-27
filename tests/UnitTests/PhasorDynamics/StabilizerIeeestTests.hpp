@@ -264,6 +264,7 @@ namespace GridKit
         stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
 
         stab.evaluateResidual();
+        stab.setSignalIndices();
         stab.evaluateJacobian();
         stab.constructCsr();
         auto  model_jacobian = stab.getCsrJacobian();

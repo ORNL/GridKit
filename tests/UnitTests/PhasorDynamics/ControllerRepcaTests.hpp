@@ -2348,6 +2348,7 @@ namespace GridKit
         setAnswerKeyState(fixture.repca);
         fixture.repca.updateTime(0.0, alpha);
         success *= (fixture.repca.evaluateResidual() == 0);
+        success *= (fixture.repca.setSignalIndices() == 0);
         success *= (fixture.repca.evaluateJacobian() == 0);
         success *= (fixture.repca.constructCsr() == 0);
 

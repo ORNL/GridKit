@@ -226,7 +226,6 @@ namespace GridKit
         }
 
         ws_.getData()[0] = u;
-        ws_indices_[0]   = input_port.signalVariableIndex();
 
         y[0] = use_notch_ * u;
         y[4] = u;
@@ -341,6 +340,22 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Set the system variable index of the connected input signal
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::setSignalIndices()
+      {
+        ws_indices_[0] = INVALID_INDEX<IdxT>;
+        if (auto input_port = ports_.in.template port<IeeestSignalInputs::input>())
+        {
+          ws_indices_[0] = input_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::evaluateResidual()
       {
@@ -348,8 +363,7 @@ namespace GridKit
 
         if (auto input_port = ports_.in.template port<IeeestSignalInputs::input>())
         {
-          ws[0]          = input_port.readSignal();
-          ws_indices_[0] = input_port.signalVariableIndex();
+          ws[0] = input_port.readSignal();
         }
 
         const auto* y  = y_.getData();

@@ -772,9 +772,47 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Reecb<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
+        const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
+        const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
+        const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
+        const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        if (auto pe_port = ports_.in.template port<ReecbSignalInputs::pe>())
+        {
+          ws_indices_[PE] = pe_port.signalVariableIndex();
+        }
+        if (auto qgen_port = ports_.in.template port<ReecbSignalInputs::qgen>())
+        {
+          ws_indices_[QGEN] = qgen_port.signalVariableIndex();
+        }
+        if (auto qext_port = ports_.in.template port<ReecbSignalInputs::qext>())
+        {
+          ws_indices_[QEXT] = qext_port.signalVariableIndex();
+        }
+        if (auto pfaref_port = ports_.in.template port<ReecbSignalInputs::pfaref>())
+        {
+          ws_indices_[PFAREF] = pfaref_port.signalVariableIndex();
+        }
+        if (auto pref_port = ports_.in.template port<ReecbSignalInputs::pref>())
+        {
+          ws_indices_[PREF] = pref_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
+      /**
        * @brief Evaluate the model residuals
        *
-       * Starts from latched values, refreshes attached signals and their indices,
+       * Starts from latched values, refreshes attached signals,
        * refreshes terminal-bus voltage, and evaluates the internal residual.
        * REECB contributes no bus residual.
        */
@@ -794,32 +832,26 @@ namespace GridKit
         ws[QEXT]   = qext_set_;
         ws[PFAREF] = pfaref_set_;
         ws[PREF]   = pref_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (auto pe_port = ports_.in.template port<ReecbSignalInputs::pe>())
         {
-          ws[PE]          = pe_port.readSignal();
-          ws_indices_[PE] = pe_port.signalVariableIndex();
+          ws[PE] = pe_port.readSignal();
         }
         if (auto qgen_port = ports_.in.template port<ReecbSignalInputs::qgen>())
         {
-          ws[QGEN]          = qgen_port.readSignal();
-          ws_indices_[QGEN] = qgen_port.signalVariableIndex();
+          ws[QGEN] = qgen_port.readSignal();
         }
         if (auto qext_port = ports_.in.template port<ReecbSignalInputs::qext>())
         {
-          ws[QEXT]          = qext_port.readSignal();
-          ws_indices_[QEXT] = qext_port.signalVariableIndex();
+          ws[QEXT] = qext_port.readSignal();
         }
         if (auto pfaref_port = ports_.in.template port<ReecbSignalInputs::pfaref>())
         {
-          ws[PFAREF]          = pfaref_port.readSignal();
-          ws_indices_[PFAREF] = pfaref_port.signalVariableIndex();
+          ws[PFAREF] = pfaref_port.readSignal();
         }
         if (auto pref_port = ports_.in.template port<ReecbSignalInputs::pref>())
         {
-          ws[PREF]          = pref_port.readSignal();
-          ws_indices_[PREF] = pref_port.signalVariableIndex();
+          ws[PREF] = pref_port.readSignal();
         }
 
         auto* wb = wb_.getData();

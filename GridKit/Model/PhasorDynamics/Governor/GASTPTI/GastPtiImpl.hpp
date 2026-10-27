@@ -425,6 +425,29 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the system variable indices of the connected signal inputs
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int GastPti<scalar_type, index_type>::setSignalIndices()
+      {
+        const auto OMEGA = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
+        const auto PREF  = static_cast<size_t>(GastPtiExternalVariables::PREF);
+
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        if (auto speed_port = ports_.in.template port<GastPtiSignalInputs::speed>())
+        {
+          ws_indices_[OMEGA] = speed_port.signalVariableIndex();
+        }
+        if (auto pref_port = ports_.in.template port<GastPtiSignalInputs::pref>())
+        {
+          ws_indices_[PREF] = pref_port.signalVariableIndex();
+        }
+
+        return 0;
+      }
+
+      /**
        * @brief Evaluate the seven GASTPTI-owned residual rows
        *
        * Refreshes the signal interface buffers and evaluates the internal
@@ -443,17 +466,14 @@ namespace GridKit
 
         ws[OMEGA] = ZERO<RealT>;
         ws[PREF]  = pref_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (auto omega_port = ports_.in.template port<GastPtiSignalInputs::speed>())
         {
-          ws[OMEGA]          = omega_port.readSignal();
-          ws_indices_[OMEGA] = omega_port.signalVariableIndex();
+          ws[OMEGA] = omega_port.readSignal();
         }
         if (auto pref_port = ports_.in.template port<GastPtiSignalInputs::pref>())
         {
-          ws[PREF]          = pref_port.readSignal();
-          ws_indices_[PREF] = pref_port.signalVariableIndex();
+          ws[PREF] = pref_port.readSignal();
         }
 
         const auto* y  = y_.getData();

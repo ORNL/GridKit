@@ -374,6 +374,7 @@ namespace GridKit
         gen.evaluateResidual();
         gov.evaluateResidual();
 
+        gov.setSignalIndices();
         gov.evaluateJacobian();
         gov.constructCsr();
         auto* model_jacobian = gov.getCsrJacobian();
