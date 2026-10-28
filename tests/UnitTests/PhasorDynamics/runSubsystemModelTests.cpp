@@ -1,3 +1,10 @@
+/**
+ * @file runSubsystemModelTests.cpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
+ * @brief Driver for hierarchical system model tests.
+ *
+ */
+
 #include "SubsystemModelTests.hpp"
 
 int main()
