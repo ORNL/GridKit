@@ -3,6 +3,7 @@
 #include <exception>
 #include <fstream>
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -10,6 +11,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -102,6 +104,55 @@ namespace GridKit
         SystemT top(top_data);
 
         compareSystems(flat, top, success);
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Systems find components, branches and signals of their
+       * subsystems by label or ID, but not those of sibling subsystems.
+       */
+      TestOutcome hierarchicalLookup()
+      {
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing lookups of unknown components, branches and signals. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(previous_verbosity);
+
+        // Signal in subsystem C, added to any existing ones
+        json input = readJson("SubsystemHierarchical.json");
+        input["subsystems"][1]["subsystems"][0]["signals"].push_back({{"signal_id", 5}, {"name", "s"}});
+        SystemT top(input.template get<DataT>());
+
+        auto* a = top.getSubsystem(0);
+        auto* b = top.getSubsystem(1);
+        auto* c = b->getSubsystem(0);
+
+        // Labels in construction order
+        success *= top.numComponents() == 0;
+        success *= a->numComponents() == 1;
+        success *= a->getComponentLabel(0) == "Branch_1";
+        success *= c->numComponents() == 3;
+        success *= c->getComponentLabel(0) == "Branch_2";
+        success *= c->getComponentLabel(1) == "Branch_3";
+        success *= c->getComponentLabel(2) == "LoadZ_1";
+
+        success *= top.getComponent("LoadZ_1") == c->getComponent(2);
+        success *= b->getComponent("Branch_3") == c->getComponent(1);
+        success *= top.getBranch("1") == a->getComponent(0);
+        success *= top.getBranch("3") == c->getComponent(1);
+        success *= top.getSignalNode(5) == c->getSignalNode(5);
+
+        // Unknown labels and IDs, and those only in a sibling subsystem
+        success *= componentLookupThrows(top, "LoadZ_2");
+        success *= componentLookupThrows(*a, "LoadZ_1");
+        success *= branchLookupThrows(top, "4");
+        success *= branchLookupThrows(*a, "3");
+        success *= signalLookupThrows(top, 6);
+        success *= signalLookupThrows(*a, 5);
 
         return success.report(__func__);
       }
@@ -377,6 +428,51 @@ namespace GridKit
           return true;
         }
         return false;
+      }
+
+      /// Whether looking up component `label` from `system` throws
+      static bool componentLookupThrows(SystemT& system, const std::string& label)
+      {
+        bool throws = false;
+        try
+        {
+          system.getComponent(label);
+        }
+        catch (const std::runtime_error&)
+        {
+          throws = true;
+        }
+        return throws;
+      }
+
+      /// Whether looking up branch `id` from `system` throws
+      static bool branchLookupThrows(SystemT& system, const std::string& id)
+      {
+        bool throws = false;
+        try
+        {
+          system.getBranch(id);
+        }
+        catch (const std::runtime_error&)
+        {
+          throws = true;
+        }
+        return throws;
+      }
+
+      /// Whether looking up signal `signal_id` from `system` throws
+      static bool signalLookupThrows(SystemT& system, IdxT signal_id)
+      {
+        bool throws = false;
+        try
+        {
+          system.getSignalNode(signal_id);
+        }
+        catch (const std::runtime_error&)
+        {
+          throws = true;
+        }
+        return throws;
       }
 
       /**
