@@ -11,6 +11,7 @@ if(TARGET SUNDIALS::idas)
   install(TARGETS test_pd_integration)
 
   add_subdirectory(TenGen)
+  add_subdirectory(TwoArea)
 endif()
 
 if(GRIDKIT_ENABLE_ENZYME)

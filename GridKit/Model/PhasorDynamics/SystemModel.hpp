@@ -125,6 +125,8 @@ namespace GridKit
       ComponentT*  getComponent(const std::string& label);
       BranchT*     getBranch(const std::string& id);
 
+      IdxT               numBuses() const;
+      IdxT               getBusId(IdxT gridkit_bus_id) const;
       IdxT               numComponents() const;
       const std::string& getComponentLabel(IdxT gridkit_component_id) const;
       IdxT               numSubsystems() const;
