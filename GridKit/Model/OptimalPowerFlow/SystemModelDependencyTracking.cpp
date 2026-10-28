@@ -95,6 +95,7 @@ namespace GridKit
     }
 
     // Available template instantiations
+    template class Component<DependencyTracking::Variable, size_t>;
     template class SystemModel<DependencyTracking::Variable, size_t>;
   } // namespace OptimalPowerFlow
 } // namespace GridKit

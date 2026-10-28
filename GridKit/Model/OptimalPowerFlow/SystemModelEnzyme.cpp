@@ -173,6 +173,7 @@ namespace GridKit
     }
 
     // Available template instantiations
+    template class Component<double, size_t>;
     template class SystemModel<double, size_t>;
   } // namespace OptimalPowerFlow
 } // namespace GridKit
