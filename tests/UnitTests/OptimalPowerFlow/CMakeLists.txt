@@ -31,6 +31,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       GridKit::optimal_power_flow_systemmodel
       GridKit::solvers_opt_steady
       GridKit::testing)
+    # Fortran linker needed to link to HSL solvers
+    set_property(TARGET test_opf_ipopt PROPERTY LINKER_LANGUAGE Fortran)
     add_test(NAME OptimalPowerFlowIpoptTest COMMAND test_opf_ipopt)
     install(TARGETS test_opf_ipopt)
   endif()

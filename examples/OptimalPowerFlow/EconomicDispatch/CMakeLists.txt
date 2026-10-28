@@ -3,6 +3,8 @@ target_link_libraries(
   EconomicDispatch
   PUBLIC GridKit::optimal_power_flow_systemmodel GridKit::solvers_opt_steady
          GridKit::utilities_cli_args)
+# Fortran linker needed to link to HSL solvers
+set_property(TARGET EconomicDispatch PROPERTY LINKER_LANGUAGE Fortran)
 install(TARGETS EconomicDispatch RUNTIME DESTINATION bin)
 
 # Optimal costs [$/h] from PYPOWER 5.1.21
