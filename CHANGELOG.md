@@ -3,6 +3,7 @@
 ## v.03
 
 - Added `output_layout` solver option for long monitor output and a PostgreSQL example.
+- Restricted monitored bus names and device ids to letters, digits, spaces, `_`, `.` and `-`.
 - Removed unused `VariableMonitorController::addVariable`.
 - Added `BusSignalVoltageOut` bus model with voltage signal outlets and current signal inlets.
 - Added `BusSignalVoltageIn` bus model with voltage signal inlets and current signal outlets.

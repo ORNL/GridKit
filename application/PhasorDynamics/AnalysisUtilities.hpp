@@ -264,7 +264,7 @@ namespace GridKit
         }
       }
 
-      // Reference comparison reads the wide layout only
+      // TODO: Support reference comparison for the long layout
       if (data.output_layout == ::GridKit::Model::VariableMonitorLayout::LONG && !data.reference_file.empty())
       {
         throw std::invalid_argument("reference_file is not supported with the long output_layout");

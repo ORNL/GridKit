@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cctype>
+#include <format>
+#include <stdexcept>
+
 #include <magic_enum/magic_enum.hpp>
 
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -50,6 +54,9 @@ namespace GridKit
        * @param device_class Device class, such as `Genrou`
        * @param id Device identifier within its class
        * @param variables Variables selected for monitoring
+       *
+       * @throws std::invalid_argument if `variables` is not empty and `id` has
+       * characters other than letters, digits, spaces, `_`, `.` and `-`
        */
       VariableMonitor(const std::string&            device_class,
                       const std::string&            id,
@@ -57,6 +64,16 @@ namespace GridKit
         : device_class_(device_class),
           id_(id)
       {
+        // Monitored ids are written unescaped into CSV, JSON and YAML
+        auto writable = [](unsigned char c)
+        {
+          return std::isalnum(c) || c == ' ' || c == '_' || c == '.' || c == '-';
+        };
+        if (!variables.empty() && !std::ranges::all_of(id, writable))
+        {
+          throw std::invalid_argument(
+              std::format("{}: monitored id '{}' may contain only letters, digits, spaces, '_', '.' and '-'", device_class, id));
+        }
         std::ranges::copy(variables, std::back_inserter(variables_));
       }
 
