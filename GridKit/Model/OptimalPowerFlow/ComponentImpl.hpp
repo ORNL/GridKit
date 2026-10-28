@@ -1,6 +1,11 @@
 /**
  * @file ComponentImpl.hpp
  * @brief Definition of `Component`, included by model translation units.
+ *
+ * `gather` copies the internal variables, then those at each port, into a
+ * local array where the model evaluates, and the scatters add the results back.
+ * Devices at the same bus add to the same entries, so a parallel evaluation
+ * must synchronize those additions.
  */
 
 #pragma once
@@ -31,9 +36,12 @@ namespace GridKit
       constexpr Block local = localSize<ModelT>();
       if (local_x_.resize(local.variables) != 0
           || local_g_.resize(local.constraints) != 0
+          || variable_indices_.resize(local.variables) != 0
+          || constraint_indices_.resize(local.constraints) != 0
           || jacobian_entries_.resize(local.constraints * local.variables) != 0
           || hessian_entries_.resize(local.variables * local.variables) != 0)
       {
+        Log::error() << id_ << ": failed to allocate the local buffers\n";
         throw std::bad_alloc{};
       }
     }
@@ -46,11 +54,12 @@ namespace GridKit
         return 1;
       }
 
-      const Block& size = ports_[port].size;
-      const auto   fits = [](IdxT start, IdxT count, IdxT available)
-      { return start <= available && count <= available - start; };
-      if (!fits(offset.variables, size.variables, component.size_.variables)
-          || !fits(offset.constraints, size.constraints, component.size_.constraints))
+      const Block& size      = ports_[port].size;
+      const Block& available = component.size_;
+      if (offset.variables > available.variables
+          || size.variables > available.variables - offset.variables
+          || offset.constraints > available.constraints
+          || size.constraints > available.constraints - offset.constraints)
       {
         return 1;
       }
@@ -104,29 +113,22 @@ namespace GridKit
       }
     }
 
-    /// Global column of each local variable
+    /// Global column of each local variable and row of each local constraint contribution
     template <typename scalar_type, typename index_type>
-    void Component<scalar_type, index_type>::variableIndices(IdxT* columns) const
+    void Component<scalar_type, index_type>::setIndices()
     {
+      IdxT* columns = variable_indices_.getData();
+      IdxT* rows    = constraint_indices_.getData();
       std::iota(columns, columns + size_.variables, offset_.variables);
+      std::iota(rows, rows + size_.constraints, offset_.constraints);
       columns += size_.variables;
+      rows    += size_.constraints;
       for (const Port& port : ports_)
       {
         std::iota(columns, columns + port.size.variables, port.component->offset_.variables + port.offset.variables);
-        columns += port.size.variables;
-      }
-    }
-
-    /// Global row of each local constraint contribution
-    template <typename scalar_type, typename index_type>
-    void Component<scalar_type, index_type>::constraintIndices(IdxT* rows) const
-    {
-      std::iota(rows, rows + size_.constraints, offset_.constraints);
-      rows += size_.constraints;
-      for (const Port& port : ports_)
-      {
         std::iota(rows, rows + port.size.constraints, port.component->offset_.constraints + port.offset.constraints);
-        rows += port.size.constraints;
+        columns += port.size.variables;
+        rows    += port.size.constraints;
       }
     }
 

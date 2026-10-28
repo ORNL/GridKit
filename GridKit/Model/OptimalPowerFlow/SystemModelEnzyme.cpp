@@ -1,6 +1,10 @@
 /**
  * @file SystemModelEnzyme.cpp
  * @brief Optimal power flow system derivatives from component Enzyme entries.
+ *
+ * Each component writes its derivative entries to its own buffer. `refill`
+ * adds them into the CSR values, where entries of different components can
+ * share a value, so a parallel refill must synchronize those additions.
  */
 
 #include <algorithm>
@@ -97,6 +101,7 @@ namespace GridKit
 
       if (assembly.map_to_csr.resize(nnz_dup) != 0)
       {
+        Log::error() << "OptimalPowerFlow::SystemModel: failed to allocate the CSR map\n";
         throw std::bad_alloc{};
       }
 

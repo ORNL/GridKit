@@ -45,17 +45,13 @@ namespace GridKit
       else
       {
         std::array<ScalarT, localSize<ModelT>().variables> x;
-        std::array<IdxT, localSize<ModelT>().variables>    cols;
-        std::array<IdxT, localSize<ModelT>().constraints>  rows;
         gather(x.data());
-        variableIndices(cols.data());
-        constraintIndices(rows.data());
 
         jacobian_entries_.nnz = 0;
         Enzyme::Sparse::DgDx<ModelT>::eval(&model,
                                            local_x_.getSize(),
-                                           rows.data(),
-                                           cols.data(),
+                                           constraint_indices_.getData(),
+                                           variable_indices_.getData(),
                                            x.data(),
                                            jacobian_entries_.rows.getData(),
                                            jacobian_entries_.cols.getData(),
@@ -71,16 +67,14 @@ namespace GridKit
     int Component<scalar_type, index_type>::evaluateHessian(const ModelT& model, RealT sigma)
     {
       std::array<ScalarT, localSize<ModelT>().variables> x;
-      std::array<IdxT, localSize<ModelT>().variables>    cols;
       std::array<RealT, localSize<ModelT>().constraints> lambda;
       gather(x.data());
-      variableIndices(cols.data());
       gatherMultipliers(lambda.data());
 
       hessian_entries_.nnz = 0;
       Enzyme::Sparse::D2LDx2<ModelT>::eval(&model,
                                            local_x_.getSize(),
-                                           cols.data(),
+                                           variable_indices_.getData(),
                                            x.data(),
                                            sigma,
                                            lambda.data(),

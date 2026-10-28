@@ -259,8 +259,7 @@ namespace GridKit
 
       void gather(ScalarT* x) const;
       void gatherMultipliers(RealT* lambda) const;
-      void variableIndices(IdxT* columns) const;
-      void constraintIndices(IdxT* rows) const;
+      void setIndices();
       void scatterGradient(const RealT* gradient);
       void scatterConstraints(const ScalarT* g);
 
@@ -272,10 +271,12 @@ namespace GridKit
       Block             offset_; ///< Global index of each internal block
       bool              bound_{false};
 
-      VectorT   local_x_; ///< Internal, then external variables
-      VectorT   local_g_; ///< Internal, then external contributions
-      CooBuffer jacobian_entries_;
-      CooBuffer hessian_entries_;
+      VectorT      local_x_;            ///< Internal, then external variables
+      VectorT      local_g_;            ///< Internal, then external contributions
+      IndexVectorT variable_indices_;   ///< Global column of each local variable
+      IndexVectorT constraint_indices_; ///< Global row of each local constraint contribution
+      CooBuffer    jacobian_entries_;
+      CooBuffer    hessian_entries_;
     };
   } // namespace OptimalPowerFlow
 } // namespace GridKit

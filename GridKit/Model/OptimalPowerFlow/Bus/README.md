@@ -5,13 +5,13 @@ ground. A port to the bus reads its voltage and contributes to its balance.
 
 ## Model Parameters
 
-Symbol     | Units  | Data        | Description                                  | Typical Value | Note
------------|--------|-------------|----------------------------------------------|---------------|-----
-$V^{\min}$ | [p.u.] | `Vmin`      | Voltage magnitude lower limit                | 0.95          | Default 0
-$V^{\max}$ | [p.u.] | `Vmax`      | Voltage magnitude upper limit                | 1.05          | Default unbounded
-$G$        | [p.u.] | `G`         | Shunt conductance to ground                  |               | Default 0
-$B$        | [p.u.] | `B`         | Shunt susceptance to ground                  |               | Default 0
-           | [-]    | `reference` | Angle reference, with zero imaginary voltage |               | Default false
+Symbol         | Units  | Data        | Description                                  | Typical Value | Note
+---------------|--------|-------------|----------------------------------------------|---------------|-----
+$V^{\min}$     | [p.u.] | `Vmin`      | Voltage magnitude lower limit                | 0.95          | Default 0
+$V^{\max}$     | [p.u.] | `Vmax`      | Voltage magnitude upper limit                | 1.05          | Default unbounded
+$G$            | [p.u.] | `G`         | Shunt conductance to ground                  |               | Default 0
+$B$            | [p.u.] | `B`         | Shunt susceptance to ground                  |               | Default 0
+$\mathrm{ref}$ | [-]    | `reference` | Angle reference, with zero imaginary voltage |               | Default false
 
 ### Parameter Validation
 

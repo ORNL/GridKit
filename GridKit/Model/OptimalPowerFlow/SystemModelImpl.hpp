@@ -330,6 +330,12 @@ namespace GridKit
         }
         offset += component->size_;
       }
+
+      // Port indices need the offsets of every component
+      for (const auto& component : components_)
+      {
+        component->setIndices();
+      }
       return 0;
     }
 
