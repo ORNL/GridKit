@@ -441,13 +441,9 @@ namespace GridKit
       }
 
       // Signal input indices need all variable indices and a verified configuration
-      for (const auto& component : components_)
+      if (this->setSignalIndices() != 0)
       {
-        if (component->setSignalIndices() != 0)
-        {
-          Log::error() << "Failed to set component signal indices\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
+        throw std::runtime_error("SystemModel allocation failed");
       }
 
       // Sparse-pattern discovery requires an initialized operating point. A failed
@@ -636,6 +632,43 @@ namespace GridKit
       }
 
       return checks;
+    }
+
+    /**
+     * @brief Set signal input indices of all components, including those
+     * in subsystems.
+     *
+     * @pre All variable indices are assigned and the configuration is verified.
+     *
+     * Signal nodes belong to one system, so each signal source and its
+     * inputs are in the same subsystem.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::setSignalIndices()
+    {
+      int status = 0;
+
+      for (const auto& component : components_)
+      {
+        if (component->setSignalIndices() != 0)
+        {
+          Log::error() << "Failed to set signal indices of component "
+                       << component->getGridKitComponentID() << '\n';
+          status = 1;
+        }
+      }
+
+      for (const auto& subsystem : subsystems_)
+      {
+        if (subsystem->setSignalIndices() != 0)
+        {
+          Log::error() << "Failed to set signal indices in subsystem "
+                       << subsystem->getGridKitComponentID() << '\n';
+          status = 1;
+        }
+      }
+
+      return status;
     }
 
     /**

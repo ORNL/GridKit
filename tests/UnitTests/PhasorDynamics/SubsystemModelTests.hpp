@@ -33,7 +33,7 @@ namespace GridKit
       using RealT      = typename ComponentT::RealT;
       using DataT      = PhasorDynamics::SystemModelData<RealT, IdxT>;
       using SystemT    = PhasorDynamics::SystemModel<ScalarT, IdxT>;
-      using BusT       = typename SystemT::BusT;
+      using BusT       = PhasorDynamics::BusBase<ScalarT, IdxT>;
 
     public:
       SubsystemModelTests()  = default;

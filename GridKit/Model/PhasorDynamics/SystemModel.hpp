@@ -95,6 +95,7 @@ namespace GridKit
       int initialize() override;
 
       Model::ConfigurationChecks verify() const override;
+      int                        setSignalIndices() override;
 
       bool hasJacobian() override;
 
