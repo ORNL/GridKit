@@ -116,12 +116,6 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing lookups of unknown components, branches and signals. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
         // Signal in subsystem C, added to any existing ones
         json input = readJson("SubsystemHierarchical.json");
         input["subsystems"][1]["subsystems"][0]["signals"].push_back({{"signal_id", 5}, {"name", "s"}});
@@ -147,12 +141,17 @@ namespace GridKit
         success *= top.getSignalNode(5) == c->getSignalNode(5);
 
         // Unknown labels and IDs, and those only in a sibling subsystem
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the failed lookups below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
         success *= componentLookupThrows(top, "LoadZ_2");
         success *= componentLookupThrows(*a, "LoadZ_1");
         success *= branchLookupThrows(top, "4");
         success *= branchLookupThrows(*a, "3");
         success *= signalLookupThrows(top, 6);
         success *= signalLookupThrows(*a, 5);
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }
@@ -165,10 +164,9 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that invalid hierarchies are rejected. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
+        // Suppress expected errors from the invalid hierarchies below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         const json hierarchical = readJson("SubsystemHierarchical.json");
         json       input;
@@ -243,6 +241,7 @@ namespace GridKit
         input["subsystems"][1]["subsystems"][0]["level"]  = 1;
         success                                          *= constructionThrows(input);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -262,10 +261,9 @@ namespace GridKit
 
         b.setSystemBase(50.0, 100.0e6);
         const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that a subsystem with different bases is rejected. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
+        // Suppress the expected error from the mismatched bases below.
+        // Use EVERYTHING to inspect that diagnostic.
+        Log::setVerbosity(Log::Verbosity::NONE);
         try
         {
           a.addSubsystem(&b);
@@ -274,6 +272,7 @@ namespace GridKit
         catch (const std::exception&)
         {
         }
+        Log::setVerbosity(previous_verbosity);
 
         // A gets the new bases from top, so B now fits.
         top.setSystemBase(50.0, 100.0e6);
