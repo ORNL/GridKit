@@ -13,6 +13,7 @@
 - Removed legacy PhasorDynamics component constructors in favor of constructors taking model data.
 - Added hierarchical PhasorDynamics system models.
 - Migrated PhasorDynamics models with real and Boolean parameters to `Model::ParameterReader`.
+- Added component labels and lookups that search subsystems.
 
 ## v0.2
 
