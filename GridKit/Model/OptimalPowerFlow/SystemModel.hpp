@@ -24,6 +24,13 @@ namespace GridKit
     /**
      * @brief AC optimal power flow in Cartesian coordinates
      *
+     * `allocate()` gives each component a contiguous block of the system
+     * vectors. Each evaluation loops over the components, which gather,
+     * evaluate, and scatter as described in ComponentImpl.hpp.
+     *
+     * @todo Address thread safety. Constraint and gradient scatters and the
+     * derivative refill add to entries shared by devices at the same bus.
+     *
      * @todo Replace the temporary STL containers of system-level data.
      */
     template <typename scalar_type, typename index_type>

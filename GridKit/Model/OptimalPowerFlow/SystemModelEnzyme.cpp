@@ -2,9 +2,10 @@
  * @file SystemModelEnzyme.cpp
  * @brief Optimal power flow system derivatives from component Enzyme entries.
  *
- * Each component writes its derivative entries to its own buffer. `refill`
- * adds them into the CSR values, where entries of different components can
- * share a value, so a parallel refill must synchronize those additions.
+ * Each component writes its derivative entries to its own buffer, so the
+ * components can be differentiated in parallel. `refill` then adds every entry
+ * into the CSR values, and entries from devices at the same bus land on the
+ * same value, so a parallel refill must synchronize those additions.
  */
 
 #include <algorithm>

@@ -2,10 +2,14 @@
  * @file ComponentImpl.hpp
  * @brief Definition of `Component`, included by model translation units.
  *
- * `gather` copies the internal variables, then those at each port, into a
- * local array where the model evaluates, and the scatters add the results back.
- * Devices at the same bus add to the same entries, so a parallel evaluation
- * must synchronize those additions.
+ * A component evaluates on a local copy. `gather` copies its own variables,
+ * then the variables at each port, into one fixed-size array, the model
+ * evaluates there, and the scatter functions add the results back into the
+ * system vectors.
+ *
+ * Gathers only read, so they are safe in parallel. Scatters are not: every
+ * device at a bus adds to that bus's entries, so those additions must be
+ * synchronized, and buses with many devices are the likely bottleneck.
  */
 
 #pragma once
@@ -91,7 +95,7 @@ namespace GridKit
       return 0;
     }
 
-    /// Internal, then each port's variables
+    /// Copy the internal variables, then the variables each port reads from its component, into `x`
     template <typename scalar_type, typename index_type>
     void Component<scalar_type, index_type>::gather(ScalarT* x) const
     {
