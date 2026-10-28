@@ -605,7 +605,7 @@ namespace GridKit
         // An invalid configuration is rejected before any state is written.
         {
           auto invalid_data                    = data;
-          invalid_data.parameters[Params::Tfv] = -0.1;
+          invalid_data.parameters[Params::Ddn] = -0.1;
           Fixture<ScalarT> invalid_fixture(invalid_data);
           invalid_fixture.attachAllInputs();
           setInitializationInputs(invalid_fixture);
@@ -1718,9 +1718,13 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        Fixture<ScalarT> fixture(data);
-        fixture.attachAllInputs();
-        return !fixture.repca.verify().passed();
+        return configurationRejected(
+            [&]()
+            {
+              Fixture<ScalarT> fixture(data);
+              fixture.attachAllInputs();
+              return fixture.repca.verify();
+            });
       }
 
       template <Ext variable>

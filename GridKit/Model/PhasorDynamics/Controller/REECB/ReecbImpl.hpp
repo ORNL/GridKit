@@ -10,8 +10,8 @@
 #include <array>
 #include <atomic>
 #include <format>
-#include <variant>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
@@ -141,10 +141,9 @@ namespace GridKit
       /**
        * @brief Validate the REECB configuration
        *
-       * Checks parameter-loading errors, finiteness and static relationships,
-       * system/component bases and conversion ratios, the terminal bus, and
-       * attached optional signals. Operating-point feasibility is checked by
-       * initialize().
+       * Checks finiteness and static relationships, system/component bases
+       * and conversion ratios, the terminal bus, and attached optional
+       * signals. Operating-point feasibility is checked by initialize().
        *
        * @return The configuration checks; passed() when valid.
        */
@@ -152,8 +151,6 @@ namespace GridKit
       Model::ConfigurationChecks Reecb<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("Reecb");
-
-        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
         checks.check(bus_ != nullptr, "terminal bus is required");
 
@@ -1196,110 +1193,18 @@ namespace GridKit
       }
 
       /**
-       * @brief Load one real-valued parameter
+       * @brief Floor one explicit controller lag
        *
-       * Real and integer serialized values are accepted. Any other stored type
-       * records a loading error while preserving the existing value.
+       * A value below 1 ms is raised and reported through the return value,
+       * preserving an explicit Hessenberg residual and avoiding division by
+       * zero.
        *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored parameter value.
-       * @param[in] name Serialized parameter name for diagnostics.
+       * @param[in,out] value Time constant to floor.
+       * @return true when the value was raised to the floor.
        */
       template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::loadRealParameter(
-          const ModelDataT& data,
-          ReecbParameters   parameter,
-          RealT&            target,
-          const char*       name)
+      bool Reecb<scalar_type, index_type>::floorTimeConstant(RealT& value)
       {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* real_value = std::get_if<RealT>(&value))
-        {
-          target = *real_value;
-        }
-        else if (const auto* index_value = std::get_if<IdxT>(&value))
-        {
-          target = static_cast<RealT>(*index_value);
-        }
-        else
-        {
-          Log::error() << "Reecb: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
-       * @brief Load one optional Boolean parameter
-       *
-       * Any non-Boolean stored type records a loading error while preserving
-       * the existing default.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored Boolean value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::loadBooleanParameter(
-          const ModelDataT& data,
-          ReecbParameters   parameter,
-          bool&             target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* bool_value = std::get_if<bool>(&value))
-        {
-          target = *bool_value;
-        }
-        else
-        {
-          Log::error() << "Reecb: parameter '" << name << "' must be boolean\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
-       * @brief Validate and floor one explicit controller lag
-       *
-       * Nonfinite and negative values record errors before replacement so
-       * verify() retains the evidence. A valid value below 1 ms is raised and
-       * reported through the return value, preserving an explicit Hessenberg
-       * residual and avoiding division by zero.
-       *
-       * @param[in,out] value Time constant to validate and floor.
-       * @param[in] name Parameter name for diagnostics.
-       * @return true only when a valid nonnegative value was raised.
-       */
-      template <typename scalar_type, typename index_type>
-      bool Reecb<scalar_type, index_type>::floorTimeConstant(
-          RealT& value, const char* name)
-      {
-        if (!std::isfinite(value))
-        {
-          Log::error() << "Reecb: " << name << " must be finite\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
-        }
-        if (value < ZERO<RealT>)
-        {
-          Log::error() << "Reecb: " << name << " must be non-negative\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
-        }
-
         const bool raised = value < TIME_CONSTANT_MINIMUM;
         value             = std::max(value, TIME_CONSTANT_MINIMUM);
         return raised;
@@ -1308,8 +1213,8 @@ namespace GridKit
       /**
        * @brief Read parameters from model data
        *
-       * Omitted optional parameters retain their documented defaults. Loading
-       * errors are counted for verify() rather than thrown.
+       * Omitted optional parameters retain their documented defaults. Invalid
+       * values throw std::invalid_argument.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -1318,53 +1223,48 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
-        Vref0_given_           = false;
+        const Model::ParameterReader reader(data, "Reecb");
 
-        if (data.parameters.contains(Params::mva))
+        Vref0_given_ = false;
+
+        // A missing rating leaves the zero component base that verify() rejects
+        if (const auto mva = reader.readReal(Params::mva))
         {
-          RealT mva{};
-          loadRealParameter(data, Params::mva, mva, "mva");
-          this->setComponentBase(mva * static_cast<RealT>(1.0e6));
+          this->setComponentBase(*mva * static_cast<RealT>(1.0e6));
         }
-        else
+        PfFlag_ = reader.readBool(Params::PfFlag).value_or(PfFlag_);
+        VFlag_  = reader.readBool(Params::VFlag).value_or(VFlag_);
+        QFlag_  = reader.readBool(Params::QFlag).value_or(QFlag_);
+        Pqflag_ = reader.readBool(Params::Pqflag).value_or(Pqflag_);
+        Trv_    = reader.readNonNegative(Params::Trv).value_or(Trv_);
+        Tp_     = reader.readNonNegative(Params::Tp).value_or(Tp_);
+        if (const auto vref0 = reader.readReal(Params::Vref0))
         {
-          Log::error() << "Reecb: missing required parameter 'mva'\n";
-          ++parameter_error_count_;
-        }
-        loadBooleanParameter(data, Params::PfFlag, PfFlag_, "PfFlag");
-        loadBooleanParameter(data, Params::VFlag, VFlag_, "VFlag");
-        loadBooleanParameter(data, Params::QFlag, QFlag_, "QFlag");
-        loadBooleanParameter(data, Params::Pqflag, Pqflag_, "Pqflag");
-        loadRealParameter(data, Params::Trv, Trv_, "Trv");
-        loadRealParameter(data, Params::Tp, Tp_, "Tp");
-        if (data.parameters.contains(Params::Vref0))
-        {
-          loadRealParameter(data, Params::Vref0, Vref0_, "Vref0");
+          Vref0_       = *vref0;
           Vref0_given_ = true;
         }
-        loadRealParameter(data, Params::Vdip, Vdip_, "Vdip");
-        loadRealParameter(data, Params::Vup, Vup_, "Vup");
-        loadRealParameter(data, Params::dbd1, dbd1_, "dbd1");
-        loadRealParameter(data, Params::dbd2, dbd2_, "dbd2");
-        loadRealParameter(data, Params::kqv, kqv_, "kqv");
-        loadRealParameter(data, Params::Iql1, Iql1_, "Iql1");
-        loadRealParameter(data, Params::Iqh1, Iqh1_, "Iqh1");
-        loadRealParameter(data, Params::Qmax, Qmax_, "Qmax");
-        loadRealParameter(data, Params::Qmin, Qmin_, "Qmin");
-        loadRealParameter(data, Params::Kqp, Kqp_, "Kqp");
-        loadRealParameter(data, Params::Kqi, Kqi_, "Kqi");
-        loadRealParameter(data, Params::Vmax, Vmax_, "Vmax");
-        loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
-        loadRealParameter(data, Params::Kvp, Kvp_, "Kvp");
-        loadRealParameter(data, Params::Kvi, Kvi_, "Kvi");
-        loadRealParameter(data, Params::Tiq, Tiq_, "Tiq");
-        loadRealParameter(data, Params::Tpord, Tpord_, "Tpord");
-        loadRealParameter(data, Params::dPmax, dPmax_, "dPmax");
-        loadRealParameter(data, Params::dPmin, dPmin_, "dPmin");
-        loadRealParameter(data, Params::Pmax, Pmax_, "Pmax");
-        loadRealParameter(data, Params::Pmin, Pmin_, "Pmin");
-        loadRealParameter(data, Params::Imax, Imax_, "Imax");
+        Vdip_  = reader.readReal(Params::Vdip).value_or(Vdip_);
+        Vup_   = reader.readReal(Params::Vup).value_or(Vup_);
+        dbd1_  = reader.readReal(Params::dbd1).value_or(dbd1_);
+        dbd2_  = reader.readReal(Params::dbd2).value_or(dbd2_);
+        kqv_   = reader.readReal(Params::kqv).value_or(kqv_);
+        Iql1_  = reader.readReal(Params::Iql1).value_or(Iql1_);
+        Iqh1_  = reader.readReal(Params::Iqh1).value_or(Iqh1_);
+        Qmax_  = reader.readReal(Params::Qmax).value_or(Qmax_);
+        Qmin_  = reader.readReal(Params::Qmin).value_or(Qmin_);
+        Kqp_   = reader.readReal(Params::Kqp).value_or(Kqp_);
+        Kqi_   = reader.readReal(Params::Kqi).value_or(Kqi_);
+        Vmax_  = reader.readReal(Params::Vmax).value_or(Vmax_);
+        Vmin_  = reader.readReal(Params::Vmin).value_or(Vmin_);
+        Kvp_   = reader.readReal(Params::Kvp).value_or(Kvp_);
+        Kvi_   = reader.readReal(Params::Kvi).value_or(Kvi_);
+        Tiq_   = reader.readNonNegative(Params::Tiq).value_or(Tiq_);
+        Tpord_ = reader.readNonNegative(Params::Tpord).value_or(Tpord_);
+        dPmax_ = reader.readReal(Params::dPmax).value_or(dPmax_);
+        dPmin_ = reader.readReal(Params::dPmin).value_or(dPmin_);
+        Pmax_  = reader.readReal(Params::Pmax).value_or(Pmax_);
+        Pmin_  = reader.readReal(Params::Pmin).value_or(Pmin_);
+        Imax_  = reader.readReal(Params::Imax).value_or(Imax_);
 
         setDerivedParameters();
       }
@@ -1405,18 +1305,16 @@ namespace GridKit
        * @brief Resolve parameter-derived constants and selector masks
        *
        * Raises explicit controller lags in place and resolves selector masks.
-       * Invalid lag inputs are recorded before replacement so verify() retains
-       * each error.
        */
       template <typename scalar_type, typename index_type>
       void Reecb<scalar_type, index_type>::setDerivedParameters()
       {
         bool floor_warning = false;
 
-        floor_warning |= floorTimeConstant(Trv_, "Trv");
-        floor_warning |= floorTimeConstant(Tp_, "Tp");
-        floor_warning |= floorTimeConstant(Tiq_, "Tiq");
-        floor_warning |= floorTimeConstant(Tpord_, "Tpord");
+        floor_warning |= floorTimeConstant(Trv_);
+        floor_warning |= floorTimeConstant(Tp_);
+        floor_warning |= floorTimeConstant(Tiq_);
+        floor_warning |= floorTimeConstant(Tpord_);
 
         if (floor_warning)
         {

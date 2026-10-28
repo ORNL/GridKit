@@ -1,4 +1,5 @@
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSource.hpp>
@@ -33,13 +34,16 @@ namespace GridKit
     void ConstantSignalSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameters = ModelDataT::Parameters;
-      if (data.parameters.contains(Parameters::Sr))
+
+      const Model::ParameterReader reader(data, "ConstantSignalSource");
+
+      if (const auto sr = reader.readReal(Parameters::Sr))
       {
-        s_real_ = std::get<RealT>(data.parameters.at(Parameters::Sr));
+        s_real_ = *sr;
       }
-      if (data.parameters.contains(Parameters::Si))
+      if (const auto si = reader.readReal(Parameters::Si))
       {
-        s_imag_ = std::get<RealT>(data.parameters.at(Parameters::Si));
+        s_imag_ = *si;
       }
     }
 

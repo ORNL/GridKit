@@ -12,6 +12,7 @@
 #include <format>
 #include <iostream>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
@@ -516,62 +517,22 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Tr))
-        {
-          Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
-        }
-        if (data.parameters.contains(Parameter::Ka))
-        {
-          Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
-        }
-        if (data.parameters.contains(Parameter::Ta))
-        {
-          Ta_ = std::get<RealT>(data.parameters.at(Parameter::Ta));
-        }
-        if (data.parameters.contains(Parameter::Ke))
-        {
-          Ke_ = std::get<RealT>(data.parameters.at(Parameter::Ke));
-        }
-        if (data.parameters.contains(Parameter::Te))
-        {
-          Te_ = std::get<RealT>(data.parameters.at(Parameter::Te));
-        }
-        if (data.parameters.contains(Parameter::Kf))
-        {
-          Kf_ = std::get<RealT>(data.parameters.at(Parameter::Kf));
-        }
-        if (data.parameters.contains(Parameter::Tf))
-        {
-          Tf_ = std::get<RealT>(data.parameters.at(Parameter::Tf));
-        }
-        if (data.parameters.contains(Parameter::Vrmin))
-        {
-          Vrmin_ = std::get<RealT>(data.parameters.at(Parameter::Vrmin));
-        }
-        if (data.parameters.contains(Parameter::Vrmax))
-        {
-          Vrmax_ = std::get<RealT>(data.parameters.at(Parameter::Vrmax));
-        }
-        if (data.parameters.contains(Parameter::E1))
-        {
-          E1_ = std::get<RealT>(data.parameters.at(Parameter::E1));
-        }
-        if (data.parameters.contains(Parameter::E2))
-        {
-          E2_ = std::get<RealT>(data.parameters.at(Parameter::E2));
-        }
-        if (data.parameters.contains(Parameter::Se1))
-        {
-          Se1_ = std::get<RealT>(data.parameters.at(Parameter::Se1));
-        }
-        if (data.parameters.contains(Parameter::Se2))
-        {
-          Se2_ = std::get<RealT>(data.parameters.at(Parameter::Se2));
-        }
-        if (data.parameters.contains(Parameter::Ispdlim))
-        {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
-        }
+        const Model::ParameterReader reader(data, "Ieeet1");
+
+        Tr_      = reader.readNonNegative(Parameter::Tr).value_or(Tr_);
+        Ka_      = reader.readReal(Parameter::Ka).value_or(Ka_);
+        Ta_      = reader.readNonNegative(Parameter::Ta).value_or(Ta_);
+        Ke_      = reader.readReal(Parameter::Ke).value_or(Ke_);
+        Te_      = reader.readNonNegative(Parameter::Te).value_or(Te_);
+        Kf_      = reader.readReal(Parameter::Kf).value_or(Kf_);
+        Tf_      = reader.readNonNegative(Parameter::Tf).value_or(Tf_);
+        Vrmin_   = reader.readReal(Parameter::Vrmin).value_or(Vrmin_);
+        Vrmax_   = reader.readReal(Parameter::Vrmax).value_or(Vrmax_);
+        E1_      = reader.readReal(Parameter::E1).value_or(E1_);
+        E2_      = reader.readReal(Parameter::E2).value_or(E2_);
+        Se1_     = reader.readReal(Parameter::Se1).value_or(Se1_);
+        Se2_     = reader.readReal(Parameter::Se2).value_or(Se2_);
+        Ispdlim_ = reader.readReal(Parameter::Ispdlim).value_or(Ispdlim_);
 
         setDerivedParameters();
       }

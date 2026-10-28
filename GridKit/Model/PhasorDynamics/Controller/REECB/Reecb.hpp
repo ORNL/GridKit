@@ -176,15 +176,7 @@ namespace GridKit
         bool buildInitialPoint(InitialPoint& point);
         void commitInitialPoint(const InitialPoint& point);
 
-        void loadRealParameter(const ModelDataT& data,
-                               ReecbParameters   parameter,
-                               RealT&            target,
-                               const char*       name);
-        void loadBooleanParameter(const ModelDataT& data,
-                                  ReecbParameters   parameter,
-                                  bool&             target,
-                                  const char*       name);
-        bool floorTimeConstant(RealT& value, const char* name);
+        bool floorTimeConstant(RealT& value);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
@@ -234,7 +226,6 @@ namespace GridKit
         RealT Imax_{1.3};
 
         bool Vref0_given_{false};
-        IdxT parameter_error_count_{0};
 
         // Derived parameters
         RealT pf_on_{0};

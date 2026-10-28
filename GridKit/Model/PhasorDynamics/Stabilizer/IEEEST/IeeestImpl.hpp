@@ -8,6 +8,7 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
@@ -41,78 +42,27 @@ namespace GridKit
       void Ieeest<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Parameter = typename ModelDataT::Parameters;
-        if (data.parameters.contains(Parameter::A1))
-        {
-          A1_ = std::get<RealT>(data.parameters.at(Parameter::A1));
-        }
-        if (data.parameters.contains(Parameter::A2))
-        {
-          A2_ = std::get<RealT>(data.parameters.at(Parameter::A2));
-        }
-        if (data.parameters.contains(Parameter::A3))
-        {
-          A3_ = std::get<RealT>(data.parameters.at(Parameter::A3));
-        }
-        if (data.parameters.contains(Parameter::A4))
-        {
-          A4_ = std::get<RealT>(data.parameters.at(Parameter::A4));
-        }
-        if (data.parameters.contains(Parameter::A5))
-        {
-          A5_ = std::get<RealT>(data.parameters.at(Parameter::A5));
-        }
-        if (data.parameters.contains(Parameter::A6))
-        {
-          A6_ = std::get<RealT>(data.parameters.at(Parameter::A6));
-        }
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-        if (data.parameters.contains(Parameter::T4))
-        {
-          T4_ = std::get<RealT>(data.parameters.at(Parameter::T4));
-        }
-        if (data.parameters.contains(Parameter::T5))
-        {
-          T5_ = std::get<RealT>(data.parameters.at(Parameter::T5));
-        }
-        if (data.parameters.contains(Parameter::T6))
-        {
-          T6_ = std::get<RealT>(data.parameters.at(Parameter::T6));
-        }
-        if (data.parameters.contains(Parameter::Ks))
-        {
-          Ks_ = std::get<RealT>(data.parameters.at(Parameter::Ks));
-        }
-        if (data.parameters.contains(Parameter::Lsmin))
-        {
-          Lsmin_ = std::get<RealT>(data.parameters.at(Parameter::Lsmin));
-        }
-        if (data.parameters.contains(Parameter::Lsmax))
-        {
-          Lsmax_ = std::get<RealT>(data.parameters.at(Parameter::Lsmax));
-        }
-        if (data.parameters.contains(Parameter::Vcl))
-        {
-          Vcl_ = std::get<RealT>(data.parameters.at(Parameter::Vcl));
-        }
-        if (data.parameters.contains(Parameter::Vcu))
-        {
-          Vcu_ = std::get<RealT>(data.parameters.at(Parameter::Vcu));
-        }
-        if (data.parameters.contains(Parameter::Tdelay))
-        {
-          Tdelay_ = std::get<RealT>(data.parameters.at(Parameter::Tdelay));
-        }
+
+        const Model::ParameterReader reader(data, "Ieeest");
+
+        A1_     = reader.readReal(Parameter::A1).value_or(A1_);
+        A2_     = reader.readReal(Parameter::A2).value_or(A2_);
+        A3_     = reader.readReal(Parameter::A3).value_or(A3_);
+        A4_     = reader.readReal(Parameter::A4).value_or(A4_);
+        A5_     = reader.readReal(Parameter::A5).value_or(A5_);
+        A6_     = reader.readReal(Parameter::A6).value_or(A6_);
+        T1_     = reader.readReal(Parameter::T1).value_or(T1_);
+        T2_     = reader.readReal(Parameter::T2).value_or(T2_);
+        T3_     = reader.readReal(Parameter::T3).value_or(T3_);
+        T4_     = reader.readReal(Parameter::T4).value_or(T4_);
+        T5_     = reader.readReal(Parameter::T5).value_or(T5_);
+        T6_     = reader.readReal(Parameter::T6).value_or(T6_);
+        Ks_     = reader.readReal(Parameter::Ks).value_or(Ks_);
+        Lsmin_  = reader.readReal(Parameter::Lsmin).value_or(Lsmin_);
+        Lsmax_  = reader.readReal(Parameter::Lsmax).value_or(Lsmax_);
+        Vcl_    = reader.readReal(Parameter::Vcl).value_or(Vcl_);
+        Vcu_    = reader.readReal(Parameter::Vcu).value_or(Vcu_);
+        Tdelay_ = reader.readReal(Parameter::Tdelay).value_or(Tdelay_);
 
         a0_ = 1;
         a1_ = A1_ + A3_;

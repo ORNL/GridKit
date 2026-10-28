@@ -112,11 +112,7 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        void loadRealParameter(const ModelDataT& data,
-                               GastPtiParameters parameter,
-                               RealT&            target,
-                               const char*       name);
-        bool floorTimeConstant(RealT& value, const char* name);
+        bool floorTimeConstant(RealT& value);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
@@ -139,7 +135,6 @@ namespace GridKit
         RealT Vmax_response_{ONE<RealT>};
         RealT s_valve_{ONE<RealT>};
 
-        IdxT    parameter_error_count_{0};
         ScalarT pref_set_{0};
 
         SignalPortsT              ports_;

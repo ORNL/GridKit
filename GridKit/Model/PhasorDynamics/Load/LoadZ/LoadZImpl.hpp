@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
@@ -26,15 +27,11 @@ namespace GridKit
         monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::R))
-      {
-        R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-      }
 
-      if (data.parameters.contains(Parameter::X))
-      {
-        X_ = std::get<RealT>(data.parameters.at(Parameter::X));
-      }
+      const Model::ParameterReader reader(data, "LoadZ");
+
+      R_ = reader.readReal(Parameter::R).value_or(R_);
+      X_ = reader.readReal(Parameter::X).value_or(X_);
 
       size_ = 2;
       setDerivedParams();

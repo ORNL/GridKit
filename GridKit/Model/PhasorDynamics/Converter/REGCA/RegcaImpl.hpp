@@ -9,8 +9,8 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
-#include <variant>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
@@ -147,9 +147,9 @@ namespace GridKit
       /**
        * @brief Read parameters from the model data.
        *
-       * Missing required keys and invalid value types are counted for verify().
-       * Integer JSON values are accepted for real parameters, and the LVPL switch
-       * accepts a boolean or the integer values zero and one.
+       * Every parameter keeps its default when omitted. Invalid values throw
+       * std::invalid_argument. Integer JSON values are accepted for real
+       * parameters, and the LVPL switch must be boolean.
        *
        * @param[in] data REGCA parameter data.
        */
@@ -158,78 +158,24 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
+        const Model::ParameterReader reader(data, "Regca");
 
-        auto load_required_real = [&](auto key, RealT& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            Log::error() << "Regca: missing required parameter '" << name << "'\n";
-            ++parameter_error_count_;
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            target = *real_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            target = static_cast<RealT>(*index_value);
-          }
-          else
-          {
-            Log::error() << "Regca: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        auto load_required_switch = [&](auto key, bool& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            Log::error() << "Regca: missing required parameter '" << name << "'\n";
-            ++parameter_error_count_;
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* bool_value = std::get_if<bool>(&value))
-          {
-            target = *bool_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value);
-                   index_value && (*index_value == 0 || *index_value == 1))
-          {
-            target = (*index_value == 1);
-          }
-          else
-          {
-            Log::error() << "Regca: parameter '" << name << "' must be bool or 0/1\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        load_required_real(Params::p0, p0_, "p0");
-        load_required_real(Params::q0, q0_, "q0");
-        load_required_real(Params::mva, mva_base_, "mva");
-        load_required_real(Params::Tg, Tg_, "Tg");
-        load_required_real(Params::TM, TM_, "TM");
-        load_required_real(Params::Rqmax, Rqmax_, "Rqmax");
-        load_required_real(Params::Rqmin, Rqmin_, "Rqmin");
-        load_required_real(Params::Rpmax, Rpmax_, "Rpmax");
-        load_required_switch(Params::sL, sL_, "sL");
-        load_required_real(Params::IL1, IL1_, "IL1");
-        load_required_real(Params::VL0, VL0_, "VL0");
-        load_required_real(Params::VL1, VL1_, "VL1");
-        load_required_real(Params::VA0, VA0_, "VA0");
-        load_required_real(Params::VA1, VA1_, "VA1");
-        load_required_real(Params::Vhvmax, Vhvmax_, "Vhvmax");
-        if (data.parameters.contains(Params::Khv))
-        {
-          load_required_real(Params::Khv, Khv_, "Khv");
-        }
+        p0_       = reader.readReal(Params::p0).value_or(p0_);
+        q0_       = reader.readReal(Params::q0).value_or(q0_);
+        mva_base_ = reader.readReal(Params::mva).value_or(mva_base_);
+        Tg_       = reader.readNonNegative(Params::Tg).value_or(Tg_);
+        TM_       = reader.readNonNegative(Params::TM).value_or(TM_);
+        Rqmax_    = reader.readReal(Params::Rqmax).value_or(Rqmax_);
+        Rqmin_    = reader.readReal(Params::Rqmin).value_or(Rqmin_);
+        Rpmax_    = reader.readReal(Params::Rpmax).value_or(Rpmax_);
+        sL_       = reader.readBool(Params::sL).value_or(sL_);
+        IL1_      = reader.readReal(Params::IL1).value_or(IL1_);
+        VL0_      = reader.readReal(Params::VL0).value_or(VL0_);
+        VL1_      = reader.readReal(Params::VL1).value_or(VL1_);
+        VA0_      = reader.readReal(Params::VA0).value_or(VA0_);
+        VA1_      = reader.readReal(Params::VA1).value_or(VA1_);
+        Vhvmax_   = reader.readReal(Params::Vhvmax).value_or(Vhvmax_);
+        Khv_      = reader.readReal(Params::Khv).value_or(Khv_);
 
         setDerivedParameters();
       }
@@ -361,8 +307,6 @@ namespace GridKit
       Model::ConfigurationChecks Regca<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("Regca");
-
-        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
         if (bus_ == nullptr)
         {

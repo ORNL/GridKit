@@ -7,10 +7,7 @@
  *
  */
 
-#include <variant>
-
-#include <magic_enum/magic_enum.hpp>
-
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -108,8 +105,6 @@ namespace GridKit
     Model::ConfigurationChecks Branch<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks("Branch");
-
-      checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
       checks.check(bus1_ != nullptr, "bus1 pointer is null");
       checks.check(bus2_ != nullptr, "bus2 pointer is null");
@@ -311,14 +306,16 @@ namespace GridKit
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
 
-      readRealParameter(data, Parameter::R, R_);
-      readRealParameter(data, Parameter::X, X_);
-      readRealParameter(data, Parameter::G, G_);
-      readRealParameter(data, Parameter::B, B_);
-      readRealParameter(data, Parameter::Gmag, Gmag_);
-      readRealParameter(data, Parameter::Bmag, Bmag_);
-      readRealParameter(data, Parameter::tap, tap_);
-      readRealParameter(data, Parameter::phase, phase_);
+      const Model::ParameterReader reader(data, "Branch");
+
+      R_     = reader.readReal(Parameter::R).value_or(R_);
+      X_     = reader.readReal(Parameter::X).value_or(X_);
+      G_     = reader.readReal(Parameter::G).value_or(G_);
+      B_     = reader.readReal(Parameter::B).value_or(B_);
+      Gmag_  = reader.readReal(Parameter::Gmag).value_or(Gmag_);
+      Bmag_  = reader.readReal(Parameter::Bmag).value_or(Bmag_);
+      tap_   = reader.readReal(Parameter::tap).value_or(tap_);
+      phase_ = reader.readReal(Parameter::phase).value_or(phase_);
 
       if (data.buses.contains(Buses::bus1))
       {
@@ -329,35 +326,6 @@ namespace GridKit
       {
         bus2_id_ = data.buses.at(Buses::bus2);
       }
-    }
-
-    template <typename scalar_type, typename index_type>
-    bool Branch<scalar_type, index_type>::readRealParameter(const ModelDataT&               data,
-                                                            typename ModelDataT::Parameters parameter,
-                                                            RealT&                          target)
-    {
-      if (!data.parameters.contains(parameter))
-      {
-        return false;
-      }
-
-      const auto& value = data.parameters.at(parameter);
-      if (const auto* real_value = std::get_if<RealT>(&value))
-      {
-        target = *real_value;
-        return true;
-      }
-
-      if (const auto* integer_value = std::get_if<IdxT>(&value))
-      {
-        target = static_cast<RealT>(*integer_value);
-        return true;
-      }
-
-      Log::error() << "Branch: parameter " << magic_enum::enum_name(parameter)
-                   << " must be numeric\n";
-      parameter_error_count_ += 1;
-      return false;
     }
 
     template <typename scalar_type, typename index_type>

@@ -2294,8 +2294,12 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        Fixture<ScalarT> fixture(data);
-        return !fixture.reecb.verify().passed();
+        return configurationRejected(
+            [&]()
+            {
+              Fixture<ScalarT> fixture(data);
+              return fixture.reecb.verify();
+            });
       }
 
       template <Ext variable>

@@ -113,9 +113,6 @@ namespace GridKit
       void setDerivedParams();
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
-      bool readRealParameter(const ModelDataT&               data,
-                             typename ModelDataT::Parameters parameter,
-                             RealT&                          target);
 
       static __attribute__((always_inline)) inline void addAdmittanceContribution(const RealT   G,
                                                                                   const RealT   B,
@@ -202,8 +199,6 @@ namespace GridKit
       RealT b21_{0.0};
       RealT g22_{0.0};
       RealT b22_{0.0};
-
-      int parameter_error_count_{0};
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

@@ -220,8 +220,6 @@ namespace GridKit
         RealT Vhvmax_{0};
         RealT Khv_{0.7};
 
-        IdxT parameter_error_count_{0};
-
         // Derived parameters
         RealT use_lvpl_{0};
         RealT bypass_lvpl_{1};
