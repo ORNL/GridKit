@@ -194,6 +194,20 @@ target_link_libraries(
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
                ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasicBad.json COPYONLY)
 
+add_executable(test_phasor_subsystem_model runSubsystemModelTests.cpp)
+target_link_libraries(
+  test_phasor_subsystem_model
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::phasor_dynamics_systemmodel_dependency_tracking
+  GridKit::testing)
+target_include_directories(
+  test_phasor_subsystem_model
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/single_include)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemFlat.json
+               ${CMAKE_CURRENT_BINARY_DIR}/SubsystemFlat.json COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemHierarchical.json
+               ${CMAKE_CURRENT_BINARY_DIR}/SubsystemHierarchical.json COPYONLY)
+
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(
   test_phasor_system_single_component
@@ -232,6 +246,7 @@ add_test(
   NAME PhasorDynamicsSystemTest
   COMMAND test_phasor_system
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME PhasorDynamicsSubsystemModelTest COMMAND test_phasor_subsystem_model)
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
 
@@ -256,6 +271,7 @@ install(
           test_phasor_stabilizer_ieeest
           test_phasor_gen_classical
           test_phasor_system
+          test_phasor_subsystem_model
           test_phasor_system_single_component
           test_phasor_component_connection
   RUNTIME DESTINATION bin)

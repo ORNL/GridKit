@@ -1,0 +1,116 @@
+{
+    "header": {
+        "case_name": "SubsystemFlat",
+        "case_description": "Flat system of the subsystem model tests",
+        "case_comments": "None"
+    },
+    "params": {
+        "freq_base": 60.0,
+        "va_base": 100000000.0
+    },
+    "buses": [
+        {
+            "number": 1,
+            "class": "Bus",
+            "name": "1",
+            "init": {
+                "Vr": 1.01,
+                "Vi": 0.1
+            },
+            "params": {
+                "kv": 138.0
+            }
+        },
+        {
+            "number": 2,
+            "class": "Bus",
+            "name": "2",
+            "init": {
+                "Vr": 1.02,
+                "Vi": 0.2
+            },
+            "params": {
+                "kv": 138.0
+            }
+        },
+        {
+            "number": 3,
+            "class": "Bus",
+            "name": "3",
+            "init": {
+                "Vr": 1.03,
+                "Vi": 0.3
+            },
+            "params": {
+                "kv": 138.0
+            }
+        },
+        {
+            "number": 4,
+            "class": "Bus",
+            "name": "4",
+            "init": {
+                "Vr": 1.04,
+                "Vi": 0.4
+            },
+            "params": {
+                "kv": 138.0
+            }
+        }
+    ],
+    "devices": [
+        {
+            "class": "Branch",
+            "ports": {
+                "bus1": 1,
+                "bus2": 2
+            },
+            "id": "1",
+            "params": {
+                "R": 0.03,
+                "X": 0.1,
+                "G": 0.0,
+                "B": 0.04
+            }
+        },
+        {
+            "class": "Branch",
+            "ports": {
+                "bus1": 1,
+                "bus2": 3
+            },
+            "id": "2",
+            "params": {
+                "R": 0.04,
+                "X": 0.1,
+                "G": 0.0,
+                "B": 0.06
+            }
+        },
+        {
+            "class": "Branch",
+            "ports": {
+                "bus1": 3,
+                "bus2": 4
+            },
+            "id": "3",
+            "params": {
+                "R": 0.07,
+                "X": 0.3,
+                "G": 0.0,
+                "B": 0.08
+            }
+        },
+        {
+            "class": "LoadZ",
+            "ports": {
+                "bus": 4
+            },
+            "id": "1",
+            "params": {
+                "R": 5.0,
+                "X": 0.8
+            }
+        }
+    ]
+}

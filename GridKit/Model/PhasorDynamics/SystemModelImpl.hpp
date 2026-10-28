@@ -35,12 +35,26 @@ namespace GridKit
      * @pre SystemModelData contains consistent connectivity information
      * and physically meaningful model parameters.
      *
-     * @post All component models in SystemModelData are created, and
-     * correctly connected into the system model.
+     * @post All component models in SystemModelData, including its
+     * subsystems, are created, and correctly connected into the system model.
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
-      : monitor_(std::make_unique<MonitorT>(time_))
+      : SystemModel(data, {})
+    {
+    }
+
+    /**
+     * @brief Construct a subsystem connected to its parent's buses (external buses)
+     *
+     * @param[in] data           - Subsystem data with the buses it owns
+     * @param[in] external_buses - Parent's buses that subsystem devices may
+     * use
+     */
+    template <typename scalar_type, typename index_type>
+    SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data,
+                                                      const std::vector<BusT*>&           external_buses)
+      : SystemModel()
     {
       using namespace Governor;
       using namespace Exciter;
@@ -49,6 +63,7 @@ namespace GridKit
       using namespace Converter;
 
       owns_components_ = true;
+      monitor_         = std::make_unique<MonitorT>(time_);
 
       // Store parsed system bases before constructing data-driven components.
       this->setSystemBase(data.freq_base, data.va_base);
@@ -66,6 +81,18 @@ namespace GridKit
         addBus(bus);
       }
 
+      for (auto* bus : external_buses)
+      {
+        if (gridkit_bus_indices_.contains(bus->busID())
+            || !external_buses_.emplace(bus->busID(), bus).second)
+        {
+          Log::error() << "External bus " << bus->busID()
+                       << " is already in the subsystem\n";
+          throw std::runtime_error("SystemModel construction failed");
+        }
+        ordered_external_buses_.push_back(bus);
+      }
+
       // Add REGCA converters
       for (const auto& regcadata : data.regca)
       {
@@ -76,9 +103,9 @@ namespace GridKit
         }
 
         auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
-        regca->getPorts().connect(regcadata, signal_nodes_);
-
         addComponent(regca);
+
+        regca->getPorts().connect(regcadata, signal_nodes_);
       }
 
       // Add branches
@@ -140,8 +167,8 @@ namespace GridKit
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
         auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
+        gen->getPorts().connect(gendata, signal_nodes_);
       }
 
       // Add GENSAL generators
@@ -154,8 +181,8 @@ namespace GridKit
         }
 
         auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
+        gen->getPorts().connect(gendata, signal_nodes_);
       }
 
       // Add classical generators
@@ -167,8 +194,8 @@ namespace GridKit
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
+        gen->getPorts().connect(gendata, signal_nodes_);
       }
 
       // Add REECB after its current-command and feedback producers because
@@ -182,36 +209,36 @@ namespace GridKit
         }
 
         auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
-        reecb->getPorts().connect(reecbdata, signal_nodes_);
-
         addComponent(reecb);
+
+        reecb->getPorts().connect(reecbdata, signal_nodes_);
       }
 
       // Add Tgov1 governors
       for (const auto& govdata : data.gov)
       {
         auto* gov = new Tgov1<ScalarT, IdxT>(govdata);
-        gov->getPorts().connect(govdata, signal_nodes_);
-
         addComponent(gov);
+
+        gov->getPorts().connect(govdata, signal_nodes_);
       }
 
       // Add GASTPTI governors
       for (const auto& gastptidata : data.gastpti)
       {
         auto* gastpti = new GastPti<ScalarT, IdxT>(gastptidata);
-        gastpti->getPorts().connect(gastptidata, signal_nodes_);
-
         addComponent(gastpti);
+
+        gastpti->getPorts().connect(gastptidata, signal_nodes_);
       }
 
       // Add HYGOV governors
       for (const auto& hygovdata : data.hygov)
       {
         auto* hygov = new Hygov<ScalarT, IdxT>(hygovdata);
-        hygov->getPorts().connect(hygovdata, signal_nodes_);
-
         addComponent(hygov);
+
+        hygov->getPorts().connect(hygovdata, signal_nodes_);
       }
 
       // Add IEEEST stabilizers before exciters that consume their output during
@@ -219,8 +246,8 @@ namespace GridKit
       for (const auto& stabdata : data.stabilizer)
       {
         auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-        stabilizer->getPorts().connect(stabdata, signal_nodes_);
         addComponent(stabilizer);
+        stabilizer->getPorts().connect(stabdata, signal_nodes_);
       }
 
       for (const auto& excitedata : data.exciter)
@@ -232,9 +259,9 @@ namespace GridKit
         }
 
         auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
         addComponent(exciter);
+
+        exciter->getPorts().connect(excitedata, signal_nodes_);
       }
 
       for (const auto& excitedata : data.esdc1a)
@@ -246,9 +273,9 @@ namespace GridKit
         }
 
         auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
         addComponent(exciter);
+
+        exciter->getPorts().connect(excitedata, signal_nodes_);
       }
 
       for (const auto& excitedata : data.sexspti)
@@ -260,9 +287,9 @@ namespace GridKit
         }
 
         auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        exciter->getPorts().connect(excitedata, signal_nodes_);
-
         addComponent(exciter);
+
+        exciter->getPorts().connect(excitedata, signal_nodes_);
       }
 
       // Add REPCA plant controllers after the signal producers they read at
@@ -276,25 +303,39 @@ namespace GridKit
         }
 
         auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
-        repca->getPorts().connect(repcadata, signal_nodes_);
-
         addComponent(repca);
+
+        repca->getPorts().connect(repcadata, signal_nodes_);
       }
 
       // Add constant signal sources
       for (const auto& srcdata : data.constant_source)
       {
         auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
-        source->getPorts().connect(srcdata, signal_nodes_);
         addComponent(source);
+        source->getPorts().connect(srcdata, signal_nodes_);
       }
 
       // Add constant signal sources
       for (const auto& srcdata : data.function_source)
       {
         auto* source = new FunctionSignalSource<ScalarT, IdxT>(srcdata);
-        source->getPorts().connect(srcdata, signal_nodes_);
         addComponent(source);
+        source->getPorts().connect(srcdata, signal_nodes_);
+      }
+
+      // Add subsystems; they may use this system's buses and its external
+      // buses. Added after devices, so devices above cannot use subsystem buses.
+      if (!data.subsystems.empty())
+      {
+        std::vector<BusT*> visible_buses(external_buses);
+        visible_buses.insert(visible_buses.end(), buses_.begin(), buses_.end());
+        for (const auto& subsystem_data : data.subsystems)
+        {
+          auto subsystem = std::make_unique<SystemModel>(subsystem_data, visible_buses);
+          addSubsystem(subsystem.get());
+          subsystem.release();
+        }
       }
 
       for (const auto& sink : data.monitor_sink)
@@ -314,6 +355,12 @@ namespace GridKit
     {
       if (owns_components_)
       {
+        // Subsystem devices may hold this system's buses; delete them first.
+        for (auto subsystem : subsystems_)
+        {
+          delete subsystem;
+        }
+
         for (auto component : components_)
         {
           delete component;
@@ -329,8 +376,7 @@ namespace GridKit
     /**
      * @brief Set component ID
      *
-     * @note Should default to 0. Nested system models are not currently
-     * supported.
+     * @note Should default to 0.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
@@ -347,8 +393,7 @@ namespace GridKit
      *
      * @pre Buses and components with nonzero size are unallocated or already
      * bound to external system storage.
-     *
-     * @note System model composition is flat; nested systems are not supported.
+     * @pre This system is not a subsystem.
      *
      * @throws std::runtime_error if storage allocation, child binding, model
      * verification, or initialization for sparse Jacobian discovery fails.
@@ -356,17 +401,13 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
     {
-      size_ = 0;
-
-      for (const auto& bus : buses_)
+      if (is_subsystem_)
       {
-        size_ += bus->size();
+        Log::error() << "A subsystem is allocated by its top-level system\n";
+        throw std::runtime_error("SystemModel allocation failed");
       }
 
-      for (const auto& component : components_)
-      {
-        size_ += component->size();
-      }
+      computeSize();
 
       // Allocate global vectors
       if (!allocated_)
@@ -391,72 +432,7 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
-      tag_.resize(size_);
-      variable_indices_.resize(size_);
-      residual_indices_.resize(size_);
-
-      // Default variable and residual index mapping to local index
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
-
-      IdxT offset = 0;
-
-      for (const auto& bus : buses_)
-      {
-        const int bind_status = bus->bind(y_, yp_, f_, abs_tol_, offset);
-        if (bind_status != 0)
-        {
-          Log::error() << "Failed to bind bus vectors to system storage\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-
-        if (bus->allocate() != 0)
-        {
-          Log::error() << "Failed to allocate bus data\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          bus->setVariableIndex(j, offset + j);
-          bus->setResidualIndex(j, offset + j);
-        }
-
-        offset += bus->size();
-      }
-
-      for (const auto& component : components_)
-      {
-        const int bind_status = component->bind(y_, yp_, f_, abs_tol_, offset);
-        if (bind_status != 0)
-        {
-          Log::error() << "Failed to bind component vectors to system storage\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-
-        if (component->allocate() != 0)
-        {
-          Log::error() << "Failed to allocate component data\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          component->setVariableIndex(j, offset + j);
-          component->setResidualIndex(j, offset + j);
-        }
-
-        offset += component->size();
-      }
-
-      if (offset != size_)
-      {
-        Log::error() << "Bound vector sizes do not match the system size\n";
-        throw std::runtime_error("SystemModel allocation failed");
-      }
+      bindChildren(0);
 
       // Verify component configuration
       if (!this->verifyAndLog())
@@ -465,13 +441,9 @@ namespace GridKit
       }
 
       // Signal input indices need all variable indices and a verified configuration
-      for (const auto& component : components_)
+      if (this->setSignalIndices() != 0)
       {
-        if (component->setSignalIndices() != 0)
-        {
-          Log::error() << "Failed to set component signal indices\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
+        throw std::runtime_error("SystemModel allocation failed");
       }
 
       // Sparse-pattern discovery requires an initialized operating point. A failed
@@ -500,6 +472,136 @@ namespace GridKit
     }
 
     /**
+     * @brief Set and return the size of this system, including subsystems
+     */
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::IdxT
+    SystemModel<scalar_type, index_type>::computeSize()
+    {
+      size_ = 0;
+
+      for (const auto& bus : buses_)
+      {
+        size_ += bus->size();
+      }
+
+      for (const auto& component : components_)
+      {
+        size_ += component->size();
+      }
+
+      for (const auto& subsystem : subsystems_)
+      {
+        size_ += subsystem->computeSize();
+      }
+
+      return size_;
+    }
+
+    /**
+     * @brief Bind buses, components and subsystems to this system's vectors
+     *
+     * @param[in] global_offset - Global index of this system's first variable
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::bindChildren(IdxT global_offset)
+    {
+      offset_ = global_offset;
+
+      // New indices invalidate a subsystem's Jacobian.
+      if (is_subsystem_)
+      {
+        delete csr_jac_;
+        csr_jac_ = nullptr;
+
+        delete[] map_to_csr_;
+        map_to_csr_ = nullptr;
+
+        nnz_ = 0;
+      }
+
+      tag_.resize(size_);
+      variable_indices_.resize(size_);
+      residual_indices_.resize(size_);
+
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, global_offset + j);
+        this->setResidualIndex(j, global_offset + j);
+      }
+
+      IdxT offset = 0;
+
+      for (const auto& bus : buses_)
+      {
+        const int bind_status = bus->bind(y_, yp_, f_, abs_tol_, offset);
+        if (bind_status != 0)
+        {
+          Log::error() << "Failed to bind bus vectors to system storage\n";
+          throw std::runtime_error("SystemModel allocation failed");
+        }
+
+        if (bus->allocate() != 0)
+        {
+          Log::error() << "Failed to allocate bus data\n";
+          throw std::runtime_error("SystemModel allocation failed");
+        }
+
+        for (IdxT j = 0; j < bus->size(); ++j)
+        {
+          bus->setVariableIndex(j, global_offset + offset + j);
+          bus->setResidualIndex(j, global_offset + offset + j);
+        }
+
+        offset += bus->size();
+      }
+
+      for (const auto& component : components_)
+      {
+        const int bind_status = component->bind(y_, yp_, f_, abs_tol_, offset);
+        if (bind_status != 0)
+        {
+          Log::error() << "Failed to bind component vectors to system storage\n";
+          throw std::runtime_error("SystemModel allocation failed");
+        }
+
+        if (component->allocate() != 0)
+        {
+          Log::error() << "Failed to allocate component data\n";
+          throw std::runtime_error("SystemModel allocation failed");
+        }
+
+        for (IdxT j = 0; j < component->size(); ++j)
+        {
+          component->setVariableIndex(j, global_offset + offset + j);
+          component->setResidualIndex(j, global_offset + offset + j);
+        }
+
+        offset += component->size();
+      }
+
+      for (const auto& subsystem : subsystems_)
+      {
+        const int bind_status = subsystem->bind(y_, yp_, f_, abs_tol_, offset);
+        if (bind_status != 0)
+        {
+          Log::error() << "Failed to bind subsystem vectors to system storage\n";
+          throw std::runtime_error("SystemModel allocation failed");
+        }
+
+        subsystem->bindChildren(global_offset + offset);
+
+        offset += subsystem->size();
+      }
+
+      if (offset != size_)
+      {
+        Log::error() << "Bound vector sizes do not match the system size\n";
+        throw std::runtime_error("SystemModel allocation failed");
+      }
+    }
+
+    /**
      * @brief Verify all components are configured correctly
      *
      * Collects every problem reported by the components, each prefixed with
@@ -520,7 +622,53 @@ namespace GridKit
         }
       }
 
+      for (const auto& subsystem : subsystems_)
+      {
+        const auto subsystem_checks = subsystem->verify();
+        for (const auto& error : subsystem_checks.errors())
+        {
+          checks.fail(std::format("subsystem {}: {}", subsystem->getGridKitComponentID(), error));
+        }
+      }
+
       return checks;
+    }
+
+    /**
+     * @brief Set signal input indices of all components, including those
+     * in subsystems.
+     *
+     * @pre All variable indices are assigned and the configuration is verified.
+     *
+     * Signal nodes belong to one system, so each signal source and its
+     * inputs are in the same subsystem.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::setSignalIndices()
+    {
+      int status = 0;
+
+      for (const auto& component : components_)
+      {
+        if (component->setSignalIndices() != 0)
+        {
+          Log::error() << "Failed to set signal indices of component "
+                       << component->getGridKitComponentID() << '\n';
+          status = 1;
+        }
+      }
+
+      for (const auto& subsystem : subsystems_)
+      {
+        if (subsystem->setSignalIndices() != 0)
+        {
+          Log::error() << "Failed to set signal indices in subsystem "
+                       << subsystem->getGridKitComponentID() << '\n';
+          status = 1;
+        }
+      }
+
+      return status;
     }
 
     /**
@@ -556,13 +704,22 @@ namespace GridKit
         status += component->initialize();
       }
 
+      // Subsystem devices need the external buses initialized above.
+      for (const auto& subsystem : subsystems_)
+      {
+        status += subsystem->initialize();
+      }
+
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
-      // For DependencyTracking::Variable, set variable numbers
+      // For DependencyTracking::Variable, set variable numbers at the top level
       if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
       {
-        this->initializeDependencyTrackingVariableNumbers();
+        if (!is_subsystem_)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
       }
 
       return status;
@@ -574,12 +731,21 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::initializeMonitor()
     {
+      addMonitorsTo(*monitor_);
+    }
+
+    /**
+     * @brief Add monitors from buses, components and subsystems to `monitor`
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::addMonitorsTo(MonitorT& monitor) const
+    {
       for (const auto* bus : buses_)
       {
         auto* mon = bus->getMonitor();
         if (mon && !mon->empty())
         {
-          monitor_->addMonitor(mon);
+          monitor.addMonitor(mon);
         }
       }
 
@@ -588,8 +754,13 @@ namespace GridKit
         auto* mon = component->getMonitor();
         if (mon && !mon->empty())
         {
-          monitor_->addMonitor(mon);
+          monitor.addMonitor(mon);
         }
+      }
+
+      for (const auto* subsystem : subsystems_)
+      {
+        subsystem->addMonitorsTo(monitor);
       }
     }
 
@@ -627,13 +798,13 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::tagDifferentiable()
     {
-      // Set initial values for global solution vectors
+      // Set initial values for global solution vectors; tag_ starts at offset_
       for (const auto& bus : buses_)
       {
         bus->tagDifferentiable();
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          tag_[bus->getVariableIndex(j)] = bus->tag()[j];
+          tag_[bus->getVariableIndex(j) - offset_] = bus->tag()[j];
         }
       }
 
@@ -642,7 +813,16 @@ namespace GridKit
         component->tagDifferentiable();
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          tag_[component->getVariableIndex(j)] = component->tag()[j];
+          tag_[component->getVariableIndex(j) - offset_] = component->tag()[j];
+        }
+      }
+
+      for (const auto& subsystem : subsystems_)
+      {
+        subsystem->tagDifferentiable();
+        for (IdxT j = 0; j < subsystem->size(); ++j)
+        {
+          tag_[subsystem->getVariableIndex(j) - offset_] = subsystem->tag()[j];
         }
       }
 
@@ -672,6 +852,11 @@ namespace GridKit
         component->setAbsoluteTolerance(rel_tol);
       }
 
+      for (const auto& subsystem : subsystems_)
+      {
+        subsystem->setAbsoluteTolerance(rel_tol);
+      }
+
       abs_tol_.setDataUpdated();
 
       return 0;
@@ -689,6 +874,7 @@ namespace GridKit
      * from components. Buses assign their residual values, while components
      * add to those values by in-place addition. This is why (for now) bus
      * residuals need to be computed first.
+     * For the same reason, external buses are evaluated before subsystems.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
@@ -701,6 +887,11 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->evaluateResidual();
+      }
+
+      for (const auto& subsystem : subsystems_)
+      {
+        subsystem->evaluateResidual();
       }
 
       f_.setDataUpdated();
@@ -720,6 +911,11 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->updateTime(t, a);
+      }
+
+      for (const auto& subsystem : subsystems_)
+      {
+        subsystem->updateTime(t, a);
       }
     }
 
@@ -743,6 +939,8 @@ namespace GridKit
      *
      * Add component at the end of the components array and set GridKit's component ID
      *
+     * @pre This system has no subsystems.
+     *
      * @todo: No integer user-facing component_id for now, but we could map GridKit's
      * component ID to the disambiguation_string
      *
@@ -750,11 +948,51 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::addComponent(ComponentT* component)
     {
+      if (!subsystems_.empty())
+      {
+        Log::error() << "A system with subsystems cannot contain devices\n";
+        throw std::runtime_error("SystemModel::addComponent failed");
+      }
+
       IdxT gridkit_component_id = static_cast<IdxT>(components_.size());
       component->setGridKitComponentID(gridkit_component_id);
       component->setSystemBase(this->freq_system_base_,
                                this->va_system_base_);
       components_.push_back(component);
+      allocated_ = false;
+    }
+
+    /**
+     * @brief Add subsystem; deleted with this system if it owns its components
+     *
+     * @pre The subsystem is not allocated and not part of another system, and
+     * has the same system bases. This system has no devices.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::addSubsystem(SystemModel* subsystem)
+    {
+      if (subsystem == nullptr || subsystem == this || subsystem->is_subsystem_)
+      {
+        Log::error() << "Invalid subsystem or subsystem already in a system\n";
+        throw std::runtime_error("SystemModel::addSubsystem failed");
+      }
+
+      if (!components_.empty())
+      {
+        Log::error() << "A system with devices cannot contain subsystems\n";
+        throw std::runtime_error("SystemModel::addSubsystem failed");
+      }
+
+      if (subsystem->freq_system_base_ != this->freq_system_base_
+          || subsystem->va_system_base_ != this->va_system_base_)
+      {
+        Log::error() << "Subsystem bases differ from the parent's\n";
+        throw std::runtime_error("SystemModel::addSubsystem failed");
+      }
+
+      subsystem->is_subsystem_ = true;
+      subsystem->setGridKitComponentID(static_cast<IdxT>(subsystems_.size()));
+      subsystems_.push_back(subsystem);
       allocated_ = false;
     }
 
@@ -774,20 +1012,90 @@ namespace GridKit
       {
         component->setSystemBase(freq_system_base, va_system_base);
       }
+
+      for (auto* subsystem : subsystems_)
+      {
+        subsystem->setSystemBase(freq_system_base, va_system_base);
+      }
     }
 
     /**
-     * @brief Return pointer to a bus
+     * @brief Return pointer to a bus of this system, its subsystems, or an
+     * external bus
      *
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::BusT*
     SystemModel<scalar_type, index_type>::getBus(IdxT bus_id)
     {
-      // Should fail if user-provided bus_id is incorrect
-      IdxT gridkit_bus_id = gridkit_bus_indices_.at(bus_id);
-      assert((buses_[gridkit_bus_id])->busID() == bus_id);
-      return buses_[gridkit_bus_id];
+      BusT* bus = findBus(bus_id);
+      if (bus == nullptr)
+      {
+        // Should fail if user-provided bus_id is incorrect
+        return external_buses_.at(bus_id);
+      }
+      return bus;
+    }
+
+    /**
+     * @brief Return pointer to a bus of this system or its subsystems, or
+     * nullptr if there is none
+     */
+    template <typename scalar_type, typename index_type>
+    SystemModel<scalar_type, index_type>::BusT*
+    SystemModel<scalar_type, index_type>::findBus(IdxT bus_id)
+    {
+      const auto it = gridkit_bus_indices_.find(bus_id);
+      if (it != gridkit_bus_indices_.end())
+      {
+        IdxT gridkit_bus_id = it->second;
+        assert((buses_[gridkit_bus_id])->busID() == bus_id);
+        return buses_[gridkit_bus_id];
+      }
+
+      for (auto* subsystem : subsystems_)
+      {
+        BusT* bus = subsystem->findBus(bus_id);
+        if (bus != nullptr)
+        {
+          return bus;
+        }
+      }
+      return nullptr;
+    }
+
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::IdxT
+    SystemModel<scalar_type, index_type>::numSubsystems() const
+    {
+      return static_cast<IdxT>(subsystems_.size());
+    }
+
+    template <typename scalar_type, typename index_type>
+    SystemModel<scalar_type, index_type>*
+    SystemModel<scalar_type, index_type>::getSubsystem(IdxT index)
+    {
+      return subsystems_.at(index);
+    }
+
+    /**
+     * @brief Global index of this system's first variable and residual
+     */
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::IdxT
+    SystemModel<scalar_type, index_type>::offset() const
+    {
+      return offset_;
+    }
+
+    /**
+     * @brief External buses of this subsystem, in construction order
+     */
+    template <typename scalar_type, typename index_type>
+    const std::vector<typename SystemModel<scalar_type, index_type>::BusT*>&
+    SystemModel<scalar_type, index_type>::getExternalBuses() const
+    {
+      return ordered_external_buses_;
     }
 
     /**
