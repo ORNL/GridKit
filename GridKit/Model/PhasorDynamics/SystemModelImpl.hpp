@@ -103,7 +103,7 @@ namespace GridKit
         }
 
         auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
-        addComponent(regca, regcadata.device_class + "_" + regcadata.disambiguation_string);
+        addComponent(regca, regcadata.label());
 
         regca->getPorts().connect(regcadata, signal_nodes_);
       }
@@ -127,7 +127,7 @@ namespace GridKit
                                    getBus(bus2_index),
                                    branchdata);
 
-        addComponent(branch, branchdata.device_class + "_" + branchdata.disambiguation_string);
+        addComponent(branch, branchdata.label());
       }
 
       // Add loads
@@ -140,7 +140,7 @@ namespace GridKit
           bus_index = loaddata.buses.at(LoadZBuses::bus);
         }
         auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
-        addComponent(load, loaddata.device_class + "_" + loaddata.disambiguation_string);
+        addComponent(load, loaddata.label());
       }
 
       // Add zip loads
@@ -154,7 +154,7 @@ namespace GridKit
         }
         auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
                                                    loadzipdata);
-        addComponent(loadzip, loadzipdata.device_class + "_" + loadzipdata.disambiguation_string);
+        addComponent(loadzip, loadzipdata.label());
       }
 
       // Add GENROU generators
@@ -166,7 +166,7 @@ namespace GridKit
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
         auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
-        addComponent(gen, gendata.device_class + "_" + gendata.disambiguation_string);
+        addComponent(gen, gendata.label());
         gen->getPorts().connect(gendata, signal_nodes_);
       }
 
@@ -180,7 +180,7 @@ namespace GridKit
         }
 
         auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
-        addComponent(gen, gendata.device_class + "_" + gendata.disambiguation_string);
+        addComponent(gen, gendata.label());
         gen->getPorts().connect(gendata, signal_nodes_);
       }
 
@@ -193,7 +193,7 @@ namespace GridKit
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
-        addComponent(gen, gendata.device_class + "_" + gendata.disambiguation_string);
+        addComponent(gen, gendata.label());
         gen->getPorts().connect(gendata, signal_nodes_);
       }
 
@@ -208,7 +208,7 @@ namespace GridKit
         }
 
         auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
-        addComponent(reecb, reecbdata.device_class + "_" + reecbdata.disambiguation_string);
+        addComponent(reecb, reecbdata.label());
 
         reecb->getPorts().connect(reecbdata, signal_nodes_);
       }
@@ -217,7 +217,7 @@ namespace GridKit
       for (const auto& govdata : data.gov)
       {
         auto* gov = new Tgov1<ScalarT, IdxT>(govdata);
-        addComponent(gov, govdata.device_class + "_" + govdata.disambiguation_string);
+        addComponent(gov, govdata.label());
 
         gov->getPorts().connect(govdata, signal_nodes_);
       }
@@ -226,7 +226,7 @@ namespace GridKit
       for (const auto& gastptidata : data.gastpti)
       {
         auto* gastpti = new GastPti<ScalarT, IdxT>(gastptidata);
-        addComponent(gastpti, gastptidata.device_class + "_" + gastptidata.disambiguation_string);
+        addComponent(gastpti, gastptidata.label());
 
         gastpti->getPorts().connect(gastptidata, signal_nodes_);
       }
@@ -235,7 +235,7 @@ namespace GridKit
       for (const auto& hygovdata : data.hygov)
       {
         auto* hygov = new Hygov<ScalarT, IdxT>(hygovdata);
-        addComponent(hygov, hygovdata.device_class + "_" + hygovdata.disambiguation_string);
+        addComponent(hygov, hygovdata.label());
 
         hygov->getPorts().connect(hygovdata, signal_nodes_);
       }
@@ -245,7 +245,7 @@ namespace GridKit
       for (const auto& stabdata : data.stabilizer)
       {
         auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-        addComponent(stabilizer, stabdata.device_class + "_" + stabdata.disambiguation_string);
+        addComponent(stabilizer, stabdata.label());
         stabilizer->getPorts().connect(stabdata, signal_nodes_);
       }
 
@@ -258,7 +258,7 @@ namespace GridKit
         }
 
         auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        addComponent(exciter, excitedata.device_class + "_" + excitedata.disambiguation_string);
+        addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
       }
@@ -272,7 +272,7 @@ namespace GridKit
         }
 
         auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
-        addComponent(exciter, excitedata.device_class + "_" + excitedata.disambiguation_string);
+        addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
       }
@@ -286,7 +286,7 @@ namespace GridKit
         }
 
         auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        addComponent(exciter, excitedata.device_class + "_" + excitedata.disambiguation_string);
+        addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
       }
@@ -302,7 +302,7 @@ namespace GridKit
         }
 
         auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
-        addComponent(repca, repcadata.device_class + "_" + repcadata.disambiguation_string);
+        addComponent(repca, repcadata.label());
 
         repca->getPorts().connect(repcadata, signal_nodes_);
       }
@@ -311,7 +311,7 @@ namespace GridKit
       for (const auto& srcdata : data.constant_source)
       {
         auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
-        addComponent(source, srcdata.device_class + "_" + srcdata.disambiguation_string);
+        addComponent(source, srcdata.label());
         source->getPorts().connect(srcdata, signal_nodes_);
       }
 
@@ -319,7 +319,7 @@ namespace GridKit
       for (const auto& srcdata : data.function_source)
       {
         auto* source = new FunctionSignalSource<ScalarT, IdxT>(srcdata);
-        addComponent(source, srcdata.device_class + "_" + srcdata.disambiguation_string);
+        addComponent(source, srcdata.label());
         source->getPorts().connect(srcdata, signal_nodes_);
       }
 
@@ -939,8 +939,8 @@ namespace GridKit
      * Add component at the end of the components array and set GridKit's component ID
      *
      * @param[in] component - Component to add
-     * @param[in] label     - Device class and case-file ID (e.g. "Genrou_1"), or
-     *                        empty for components without a case-file ID
+     * @param[in] label     - ComponentData::label() of the device (e.g. "Genrou_1"),
+     *                        or empty for components without case-file data
      *
      * @pre This system has no subsystems.
      */
