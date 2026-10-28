@@ -17,6 +17,7 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
@@ -24,6 +25,7 @@ namespace GridKit
   namespace Testing
   {
     using json = nlohmann::json;
+    using Log  = ::GridKit::Utilities::Logger;
 
     template <class ScalarT, typename IdxT>
     class SubsystemModelTests
@@ -110,6 +112,12 @@ namespace GridKit
       TestOutcome invalidHierarchy()
       {
         TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing that invalid hierarchies are rejected. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(previous_verbosity);
 
         const json hierarchical = readJson("SubsystemHierarchical.json");
         json       input;
@@ -202,6 +210,11 @@ namespace GridKit
         top.addSubsystem(&a);
 
         b.setSystemBase(50.0, 100.0e6);
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing that a subsystem with different bases is rejected. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(previous_verbosity);
         try
         {
           a.addSubsystem(&b);
