@@ -70,6 +70,13 @@ namespace GridKit
         q,  ///< Branch reactive power on system base
       };
 
+      /// Initial values for the REGCA converter model.
+      enum class RegcaInitialValues : size_t
+      {
+        ir, ///< Initial real terminal current into the bus on system base
+        ii, ///< Initial imaginary terminal current into the bus on system base
+      };
+
       /**
        * @brief Model data for the REGCA converter: parameter values, the
        *        terminal bus, optional command and output signals, and

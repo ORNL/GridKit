@@ -64,6 +64,13 @@ namespace GridKit
       };
 
       /**
+       * @brief TGOV1 initial values.
+       */
+      enum class Tgov1InitialValues : size_t
+      {
+      };
+
+      /**
        * @brief Modeling data for TGOV1 Governor using ComponentData base.
        *
        * @tparam real_type  Real number type (e.g., double)

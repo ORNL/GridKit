@@ -41,8 +41,8 @@ namespace GridKit
     enum class GenClassicalSignalOutputs : size_t
     {
       speed, ///< \f$\omega\f$ Unique ID of the signal receiving speed deviation
-      ir,    ///< \f$I_r\f$ Real terminal current
-      ii,    ///< \f$I_i\f$ Imaginary terminal current
+      ir,    ///< \f$I_r\f$ Real terminal current on machine base
+      ii,    ///< \f$I_i\f$ Imaginary terminal current on machine base
     };
 
     /// Variables able to be monitored for a classical generator model
@@ -55,6 +55,13 @@ namespace GridKit
       delta, ///< \f$\delta\f$ Rotor angle
       omega, ///< \f$\omega\f$ Speed deviation
       speed, ///< \f$1+\omega\f$ Per-unit machine speed
+    };
+
+    /// Initial values for a classical generator model
+    enum class GenClassicalInitialValues : size_t
+    {
+      ir, ///< \f$I_r\f$ Initial real terminal current into the bus on system base
+      ii, ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
     };
 
     /**

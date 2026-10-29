@@ -53,8 +53,8 @@ namespace GridKit
     enum class GenrouSignalOutputs : size_t
     {
       speed, ///< Unique ID of the signal receiving speed deviation
-      ir,    ///< Real terminal current
-      ii,    ///< Imaginary terminal current
+      ir,    ///< Real terminal current on machine base
+      ii,    ///< Imaginary terminal current on machine base
     };
 
     /// Variables able to be monitored for a Genrou generator model
@@ -67,6 +67,13 @@ namespace GridKit
       delta,
       omega,
       speed,
+    };
+
+    /// Initial values for a Genrou generator model
+    enum class GenrouInitialValues : size_t
+    {
+      ir, ///< Initial real terminal current into the bus on system base
+      ii, ///< Initial imaginary terminal current into the bus on system base
     };
 
     /**

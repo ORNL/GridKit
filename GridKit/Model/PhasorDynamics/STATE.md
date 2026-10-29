@@ -12,6 +12,8 @@ For example `texas-summer2025.state.json` might be structured as:
 
 ```json
 "header":{
+    "format_version": 0.2,
+    "format_revision": 0,
     ...
 },
 "buses":{
@@ -34,8 +36,8 @@ RMS voltages use real and imaginary parts:
 
 ```json
 "bus_id_2533":{
-    "vr": 0.9289638822595822,
-    "vi": -0.39534548980249884
+    "Vr": 0.9289638822595822,
+    "Vi": -0.39534548980249884
 }
 ```
 
@@ -53,7 +55,7 @@ EMT bus entries give instantaneous phase voltages. Device entries give currents.
 
 ## Devices
 
-Device entries give initial outputs and settings such as `online`, `open`, `tap`, and `phase`.
+Device entries give initial outputs and settings such as `in_service`, `tap`, and `phase`.
 
 Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple terminals. Numbers follow the model's terminal numbering. Currents are positive into each connected bus. Phasor currents use the system base. EMT uses the model's phase output names and units.
 
@@ -61,12 +63,12 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 
 ```json
 "gen_id_2":{
-    "online": true,
+    "in_service": true,
     "ir": 0.8,
     "ii": -0.2
 },
 "br_id_2":{
-    "open": false,
+    "in_service": true,
     "tap": 1,
     "phase": 0
 }
@@ -76,6 +78,7 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 
 - Initialize components from output values and connected inputs.
 - Derive missing values and check the initialization equations.
+- Each model's `<Model>InitialValues` enum lists the initial outputs it accepts.
 
 `Bus`:
 
@@ -85,11 +88,11 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 `Branch`:
 
 - Expose `ir1`, `ii1`, `ir2`, and `ii2` as output ports.
-- Make `tap`, `phase`, and `open` input ports.
+- Make `tap`, `phase`, and `in_service` input ports.
 
 `REGCA`, `LoadZ`, `LoadZIP`, `GENROU`, `GENSAL`, `GenClassical`:
 
 - Expose `ir` and `ii` as output ports.
 - Initialize from terminal voltage and current.
 - Remove generator and converter `p0`/`q0` parameters.
-- Make `online` an input port.
+- Make `in_service` an input port.
