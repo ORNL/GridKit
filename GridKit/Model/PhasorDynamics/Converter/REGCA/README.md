@@ -18,8 +18,8 @@ Figure 1: REGCA generator/converter model. Figure courtesy of the
 
 Symbol                 | Units    | JSON     | Description                                   | Typical Value | Note
 -----------------------|----------|----------|-----------------------------------------------|---------------|--------------------------------------------------------
-$P_0$                            | [p.u.]   | `p0`     | Initial active power injection                   | 1.0           | System base; required initialization source
-$Q_0$                            | [p.u.]   | `q0`     | Initial reactive power injection                 | 0.0           | System base; required initialization source
+$P_0$                            | [p.u.]   | `p0`     | Initial active power injection                   | 1.0           | System base; initialization source
+$Q_0$                            | [p.u.]   | `q0`     | Initial reactive power injection                 | 0.0           | System base; initialization source
 $S^\mathrm{base}$      | [MVA]    | `mva`    | REGCA component power base                    | 100.0         |
 $T_\mathrm{g}$         | [s]      | `Tg`     | Converter current-control lag time constant   | 0.02          |
 $T_M$                  | [s]      | `TM`     | Terminal voltage sensor time constant         | 0.02          | Source label: `Tfltr`
@@ -37,7 +37,7 @@ $Q^{\min}$             | [p.u.]   | `Qmin`   | PowerWorld compatibility field   
 $K_\mathrm{hv}$        | [p.u.]   | `Khv`    | HV reactive management gain                   | 0.7           | Optional; defaults to 0.7; block name: `Khv`
 $X_\mathrm{e}$         | [p.u.]   | `Xe`     | PowerWorld compatibility field                |               | Optional; accepted but unused
 
-All listed JSON parameters are required unless marked optional.
+Omitted parameters default to 0 unless noted.
 
 ### Parameter Validation
 

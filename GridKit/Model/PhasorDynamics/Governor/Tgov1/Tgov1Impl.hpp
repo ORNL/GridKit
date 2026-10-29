@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <atomic>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -53,45 +54,16 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Trate))
-        {
-          Trate_ = std::get<RealT>(data.parameters.at(Parameter::Trate));
-        }
+        const Model::ParameterReader reader(data, "Tgov1");
 
-        if (data.parameters.contains(Parameter::R))
-        {
-          R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-        }
-
-        if (data.parameters.contains(Parameter::Pvmin))
-        {
-          Pvmin_ = std::get<RealT>(data.parameters.at(Parameter::Pvmin));
-        }
-
-        if (data.parameters.contains(Parameter::Pvmax))
-        {
-          Pvmax_ = std::get<RealT>(data.parameters.at(Parameter::Pvmax));
-        }
-
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-
-        if (data.parameters.contains(Parameter::Dt))
-        {
-          Dt_ = std::get<RealT>(data.parameters.at(Parameter::Dt));
-        }
+        Trate_ = reader.readReal(Parameter::Trate).value_or(Trate_);
+        R_     = reader.readReal(Parameter::R).value_or(R_);
+        Pvmin_ = reader.readReal(Parameter::Pvmin).value_or(Pvmin_);
+        Pvmax_ = reader.readReal(Parameter::Pvmax).value_or(Pvmax_);
+        T1_    = reader.readNonNegative(Parameter::T1).value_or(T1_);
+        T2_    = reader.readReal(Parameter::T2).value_or(T2_);
+        T3_    = reader.readNonNegative(Parameter::T3).value_or(T3_);
+        Dt_    = reader.readReal(Parameter::Dt).value_or(Dt_);
       }
 
       /**

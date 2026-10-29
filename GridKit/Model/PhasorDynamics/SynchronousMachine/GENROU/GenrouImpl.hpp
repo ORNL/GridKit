@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
@@ -44,100 +45,28 @@ namespace GridKit
     {
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
 
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
+      const Model::ParameterReader reader(data, "Genrou");
 
-      if (data.parameters.contains(Parameter::H))
-      {
-        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
-      }
-
-      if (data.parameters.contains(Parameter::D))
-      {
-        D_ = std::get<RealT>(data.parameters.at(Parameter::D));
-      }
-
-      if (data.parameters.contains(Parameter::Ra))
-      {
-        Ra_ = std::get<RealT>(data.parameters.at(Parameter::Ra));
-      }
-
-      if (data.parameters.contains(Parameter::Tdop))
-      {
-        Tdop_ = std::get<RealT>(data.parameters.at(Parameter::Tdop));
-      }
-
-      if (data.parameters.contains(Parameter::Tdopp))
-      {
-        Tdopp_ = std::get<RealT>(data.parameters.at(Parameter::Tdopp));
-      }
-
-      if (data.parameters.contains(Parameter::Tqopp))
-      {
-        Tqopp_ = std::get<RealT>(data.parameters.at(Parameter::Tqopp));
-      }
-
-      if (data.parameters.contains(Parameter::Tqop))
-      {
-        Tqop_ = std::get<RealT>(data.parameters.at(Parameter::Tqop));
-      }
-
-      if (data.parameters.contains(Parameter::Xd))
-      {
-        Xd_ = std::get<RealT>(data.parameters.at(Parameter::Xd));
-      }
-
-      if (data.parameters.contains(Parameter::Xdp))
-      {
-        Xdp_ = std::get<RealT>(data.parameters.at(Parameter::Xdp));
-      }
-
-      if (data.parameters.contains(Parameter::Xdpp))
-      {
-        Xdpp_ = std::get<RealT>(data.parameters.at(Parameter::Xdpp));
-      }
-
-      if (data.parameters.contains(Parameter::Xq))
-      {
-        Xq_ = std::get<RealT>(data.parameters.at(Parameter::Xq));
-      }
-
-      if (data.parameters.contains(Parameter::Xqp))
-      {
-        Xqp_ = std::get<RealT>(data.parameters.at(Parameter::Xqp));
-      }
-
-      if (data.parameters.contains(Parameter::Xqpp))
-      {
-        Xqpp_ = std::get<RealT>(data.parameters.at(Parameter::Xqpp));
-      }
-
-      if (data.parameters.contains(Parameter::Xl))
-      {
-        Xl_ = std::get<RealT>(data.parameters.at(Parameter::Xl));
-      }
-
-      if (data.parameters.contains(Parameter::S10))
-      {
-        S10_ = std::get<RealT>(data.parameters.at(Parameter::S10));
-      }
-
-      if (data.parameters.contains(Parameter::S12))
-      {
-        S12_ = std::get<RealT>(data.parameters.at(Parameter::S12));
-      }
-
-      if (data.parameters.contains(Parameter::mva))
-      {
-        mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
-      }
+      p0_       = reader.readReal(Parameter::p0).value_or(p0_);
+      q0_       = reader.readReal(Parameter::q0).value_or(q0_);
+      H_        = reader.readReal(Parameter::H).value_or(H_);
+      D_        = reader.readReal(Parameter::D).value_or(D_);
+      Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);
+      Tdop_     = reader.readReal(Parameter::Tdop).value_or(Tdop_);
+      Tdopp_    = reader.readReal(Parameter::Tdopp).value_or(Tdopp_);
+      Tqopp_    = reader.readReal(Parameter::Tqopp).value_or(Tqopp_);
+      Tqop_     = reader.readReal(Parameter::Tqop).value_or(Tqop_);
+      Xd_       = reader.readReal(Parameter::Xd).value_or(Xd_);
+      Xdp_      = reader.readReal(Parameter::Xdp).value_or(Xdp_);
+      Xdpp_     = reader.readReal(Parameter::Xdpp).value_or(Xdpp_);
+      Xq_       = reader.readReal(Parameter::Xq).value_or(Xq_);
+      Xqp_      = reader.readReal(Parameter::Xqp).value_or(Xqp_);
+      Xqpp_     = reader.readReal(Parameter::Xqpp).value_or(Xqpp_);
+      Xl_       = reader.readReal(Parameter::Xl).value_or(Xl_);
+      S10_      = reader.readReal(Parameter::S10).value_or(S10_);
+      S12_      = reader.readReal(Parameter::S12).value_or(S12_);
+      mva_base_ = reader.readReal(Parameter::mva).value_or(mva_base_);
 
       if (data.buses.contains(Buses::bus))
       {

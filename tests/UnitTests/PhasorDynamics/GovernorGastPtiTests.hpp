@@ -1230,7 +1230,8 @@ namespace GridKit
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
-        return !verifyData(data).passed();
+        return configurationRejected([&]()
+                                     { return verifyData(data); });
       }
 
       Model::ConfigurationChecks verifyData(const Data& data) const

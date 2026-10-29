@@ -103,8 +103,6 @@ namespace GridKit
         RealT Efdmax_{0};
         RealT Efdmin_{0};
 
-        int missing_param_count_{0};
-
         // Runtime connection masks keep the summing junction Enzyme sparse-solvable
         RealT uel_on_{0};
         RealT oel_on_{0};

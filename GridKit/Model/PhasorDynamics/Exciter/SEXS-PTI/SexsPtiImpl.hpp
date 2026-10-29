@@ -9,6 +9,7 @@
 #include <format>
 #include <iostream>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
@@ -88,8 +89,6 @@ namespace GridKit
       Model::ConfigurationChecks SexsPti<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("SexsPti");
-
-        checks.check(missing_param_count_ == 0, "model data is missing required parameters");
 
         if (bus_ == nullptr)
         {
@@ -364,27 +363,14 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        missing_param_count_ = 0;
+        const Model::ParameterReader reader(data, "SexsPti");
 
-        auto load = [&](auto param, RealT& member, const char* name)
-        {
-          if (data.parameters.contains(param))
-          {
-            member = std::get<RealT>(data.parameters.at(param));
-          }
-          else
-          {
-            Log::error() << "SexsPti: missing required parameter '" << name << "'\n";
-            ++missing_param_count_;
-          }
-        };
-
-        load(Params::Ta, Ta_, "Ta");
-        load(Params::Tb, Tb_, "Tb");
-        load(Params::Te, Te_, "Te");
-        load(Params::K, K_, "K");
-        load(Params::Efdmax, Efdmax_, "Efdmax");
-        load(Params::Efdmin, Efdmin_, "Efdmin");
+        Ta_     = reader.readReal(Params::Ta).value_or(Ta_);
+        Tb_     = reader.readReal(Params::Tb).value_or(Tb_);
+        Te_     = reader.readReal(Params::Te).value_or(Te_);
+        K_      = reader.readReal(Params::K).value_or(K_);
+        Efdmax_ = reader.readReal(Params::Efdmax).value_or(Efdmax_);
+        Efdmin_ = reader.readReal(Params::Efdmin).value_or(Efdmin_);
       }
 
       template <typename scalar_type, typename index_type>

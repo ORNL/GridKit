@@ -23,7 +23,7 @@ PowerWorld/PSS/E SEXS_PTI data often gives $T_A/T_B$ as a ratio. GridKit stores
 $T_A$ and $T_B$ separately, so convert ratio-format data with
 $T_A = (T_A/T_B)T_B$ before passing parameters to the model.
 
-All six parameters are required; there are no defaults.
+Omitted parameters default to 0.
 
 ### Parameter Validation
 

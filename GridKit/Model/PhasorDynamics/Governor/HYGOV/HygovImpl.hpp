@@ -10,8 +10,8 @@
 #include <atomic>
 #include <format>
 #include <numeric>
-#include <variant>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -110,11 +110,10 @@ namespace GridKit
       /**
        * @brief Validate the HYGOV configuration
        *
-       * Checks parameter-loading errors, static parameter relationships, the
-       * power-base domain, gate-curve shape, gate-limit domain, the assigned
-       * mechanical-power output, and attached external signals. Mechanical-
-       * power feasibility is operating-point dependent and is checked by
-       * initialize().
+       * Checks static parameter relationships, the power-base domain,
+       * gate-curve shape, gate-limit domain, the assigned mechanical-power
+       * output, and attached external signals. Mechanical-power feasibility
+       * is operating-point dependent and is checked by initialize().
        *
        * @return The configuration checks; passed() when valid.
        */
@@ -122,8 +121,6 @@ namespace GridKit
       Model::ConfigurationChecks Hygov<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("Hygov");
-
-        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
@@ -633,9 +630,9 @@ namespace GridKit
       /**
        * @brief Read the parameters out of the model data
        *
-       * Omitted optional parameters retain their documented defaults. Loading
-       * errors are counted for verify() rather than thrown. All-zero `Gv` and
-       * `Pgv` source points select the identity gate curve.
+       * Omitted optional parameters retain their documented defaults. Invalid
+       * values throw std::invalid_argument. All-zero `Gv` and `Pgv` source
+       * points select the identity gate curve.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -644,90 +641,48 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
+        const Model::ParameterReader reader(data, "Hygov");
 
-        auto load_real = [&](auto key, RealT& target, const char* name) -> bool
+        // A missing rating leaves the zero component base that verify() rejects
+        if (const auto trate = reader.readReal(Params::Trate))
         {
-          if (!data.parameters.contains(key))
-          {
-            return false;
-          }
-
-          const auto& value = data.parameters.at(key);
-          RealT       parsed_value{};
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            parsed_value = *real_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            parsed_value = static_cast<RealT>(*index_value);
-          }
-          else
-          {
-            Log::error() << "Hygov: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-            return false;
-          }
-
-          const bool ret = std::isfinite(parsed_value);
-          if (!ret)
-          {
-            Log::error() << "Hygov: parameter '" << name << "' must be finite\n";
-            ++parameter_error_count_;
-            return false;
-          }
-
-          target = parsed_value;
-          return true;
-        };
-
-        if (data.parameters.contains(Params::Trate))
-        {
-          RealT trate{};
-          if (load_real(Params::Trate, trate, "Trate"))
-          {
-            this->setComponentBase(trate * static_cast<RealT>(1.0e6));
-          }
+          this->setComponentBase(*trate * static_cast<RealT>(1.0e6));
         }
-        else
-        {
-          Log::error() << "Hygov: missing required parameter 'Trate'\n";
-          ++parameter_error_count_;
-        }
-        load_real(Params::Rperm, Rperm_, "Rperm");
-        load_real(Params::Rtemp, Rtemp_, "Rtemp");
-        load_real(Params::Tr, Tr_, "Tr");
-        load_real(Params::Tf, Tf_, "Tf");
-        load_real(Params::Tg, Tg_, "Tg");
-        load_real(Params::Velm, Velm_, "Velm");
-        load_real(Params::Gmax, Gmax_, "Gmax");
-        load_real(Params::Gmin, Gmin_, "Gmin");
-        load_real(Params::Tw, Tw_, "Tw");
-        load_real(Params::At, At_, "At");
-        load_real(Params::Dturb, Dturb_, "Dturb");
-        load_real(Params::Qnl, Qnl_, "Qnl");
-        load_real(Params::Tn, Tn_, "Tn");
-        load_real(Params::Tnp, Tnp_, "Tnp");
-        load_real(Params::db1, db1_, "db1");
-        if (load_real(Params::db2, db2_, "db2") && db2_ != ZERO<RealT>)
+        Rperm_  = reader.readReal(Params::Rperm).value_or(Rperm_);
+        Rtemp_  = reader.readReal(Params::Rtemp).value_or(Rtemp_);
+        Tr_     = reader.readNonNegative(Params::Tr).value_or(Tr_);
+        Tf_     = reader.readNonNegative(Params::Tf).value_or(Tf_);
+        Tg_     = reader.readNonNegative(Params::Tg).value_or(Tg_);
+        Velm_   = reader.readReal(Params::Velm).value_or(Velm_);
+        Gmax_   = reader.readReal(Params::Gmax).value_or(Gmax_);
+        Gmin_   = reader.readReal(Params::Gmin).value_or(Gmin_);
+        Tw_     = reader.readNonNegative(Params::Tw).value_or(Tw_);
+        At_     = reader.readReal(Params::At).value_or(At_);
+        Dturb_  = reader.readReal(Params::Dturb).value_or(Dturb_);
+        Qnl_    = reader.readReal(Params::Qnl).value_or(Qnl_);
+        Tn_     = reader.readReal(Params::Tn).value_or(Tn_);
+        Tnp_    = reader.readNonNegative(Params::Tnp).value_or(Tnp_);
+        db1_    = reader.readReal(Params::db1).value_or(db1_);
+        db2_    = reader.readReal(Params::db2).value_or(db2_);
+        Hdam_   = reader.readReal(Params::Hdam).value_or(Hdam_);
+        Gv_[0]  = reader.readReal(Params::Gv0).value_or(Gv_[0]);
+        Gv_[1]  = reader.readReal(Params::Gv1).value_or(Gv_[1]);
+        Gv_[2]  = reader.readReal(Params::Gv2).value_or(Gv_[2]);
+        Gv_[3]  = reader.readReal(Params::Gv3).value_or(Gv_[3]);
+        Gv_[4]  = reader.readReal(Params::Gv4).value_or(Gv_[4]);
+        Gv_[5]  = reader.readReal(Params::Gv5).value_or(Gv_[5]);
+        Pgv_[0] = reader.readReal(Params::Pgv0).value_or(Pgv_[0]);
+        Pgv_[1] = reader.readReal(Params::Pgv1).value_or(Pgv_[1]);
+        Pgv_[2] = reader.readReal(Params::Pgv2).value_or(Pgv_[2]);
+        Pgv_[3] = reader.readReal(Params::Pgv3).value_or(Pgv_[3]);
+        Pgv_[4] = reader.readReal(Params::Pgv4).value_or(Pgv_[4]);
+        Pgv_[5] = reader.readReal(Params::Pgv5).value_or(Pgv_[5]);
+
+        if (db2_ != ZERO<RealT>)
         {
           Log::warning() << "Hygov: nonzero db2 requests mechanical backlash, "
                             "but backlash is not implemented and db2 is ignored\n";
         }
-        load_real(Params::Hdam, Hdam_, "Hdam");
-        load_real(Params::Gv0, Gv_[0], "Gv0");
-        load_real(Params::Gv1, Gv_[1], "Gv1");
-        load_real(Params::Gv2, Gv_[2], "Gv2");
-        load_real(Params::Gv3, Gv_[3], "Gv3");
-        load_real(Params::Gv4, Gv_[4], "Gv4");
-        load_real(Params::Gv5, Gv_[5], "Gv5");
-        load_real(Params::Pgv0, Pgv_[0], "Pgv0");
-        load_real(Params::Pgv1, Pgv_[1], "Pgv1");
-        load_real(Params::Pgv2, Pgv_[2], "Pgv2");
-        load_real(Params::Pgv3, Pgv_[3], "Pgv3");
-        load_real(Params::Pgv4, Pgv_[4], "Pgv4");
-        load_real(Params::Pgv5, Pgv_[5], "Pgv5");
 
         setDerivedParameters();
       }
@@ -801,24 +756,6 @@ namespace GridKit
                   ONE<RealT>};
           Pgv_ = Gv_;
         }
-
-        // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
-        auto check_non_negative = [&](RealT value, const char* name)
-        {
-          if (value < ZERO<RealT>)
-          {
-            Log::error() << "Hygov: " << name << " must be non-negative\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        check_non_negative(Tr_, "Tr");
-        check_non_negative(Tf_, "Tf");
-        check_non_negative(Tg_, "Tg");
-        check_non_negative(Tw_, "Tw");
-        check_non_negative(Tnp_, "Tnp");
 
         if (Tr_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM
             || Tg_ < TIME_CONSTANT_MINIMUM || Tw_ < TIME_CONSTANT_MINIMUM

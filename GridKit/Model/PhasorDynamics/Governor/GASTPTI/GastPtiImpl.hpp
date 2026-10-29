@@ -10,8 +10,8 @@
 #include <atomic>
 #include <cassert>
 #include <format>
-#include <variant>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -114,10 +114,9 @@ namespace GridKit
       /**
        * @brief Validate the GASTPTI configuration
        *
-       * Checks parameter-loading and time-floor errors, finiteness and static
-       * parameter relationships, system/component bases, the required
-       * mechanical-power output assignment, attached external signals, and
-       * distinct indexed ports.
+       * Checks finiteness and static parameter relationships,
+       * system/component bases, the required mechanical-power output
+       * assignment, attached external signals, and distinct indexed ports.
        *
        * @return The configuration checks; passed() when valid.
        */
@@ -127,8 +126,6 @@ namespace GridKit
         const auto PMECH = static_cast<size_t>(GastPtiInternalVariables::PMECH);
 
         Model::ConfigurationChecks checks("GastPti");
-
-        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
         checks.check(std::isfinite(R_) && R_ > ZERO<RealT>, "R must be finite and positive");
         checks.check(std::isfinite(At_) && At_ >= ZERO<RealT>,
@@ -571,68 +568,17 @@ namespace GridKit
       //
 
       /**
-       * @brief Load one optional real-valued parameter
+       * @brief Floor one turbine time constant
        *
-       * Real and integer serialized values are accepted. Any other stored
-       * type records a loading error while preserving the existing default.
+       * A value below the floor is raised and reported through the return
+       * value.
        *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored parameter value.
-       * @param[in] name Serialized parameter name for diagnostics.
+       * @param[in,out] value Time constant to floor.
+       * @return true when the value was raised to the floor.
        */
       template <typename scalar_type, typename index_type>
-      void GastPti<scalar_type, index_type>::loadRealParameter(
-          const ModelDataT& data,
-          GastPtiParameters parameter,
-          RealT&            target,
-          const char*       name)
+      bool GastPti<scalar_type, index_type>::floorTimeConstant(RealT& value)
       {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* real_value = std::get_if<RealT>(&value))
-        {
-          target = *real_value;
-        }
-        else if (const auto* index_value = std::get_if<IdxT>(&value))
-        {
-          target = static_cast<RealT>(*index_value);
-        }
-        else
-        {
-          Log::error() << "GastPti: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
-       * @brief Validate and floor one turbine time constant
-       *
-       * Invalid or nonfinite values record a parameter error and are replaced
-       * by the floor so later calculations remain well posed. A valid value
-       * below the floor is raised and reported through the return value.
-       *
-       * @param[in,out] value Time constant to validate and floor.
-       * @param[in] name Parameter name for diagnostics.
-       * @return true when a valid value was raised to the floor.
-       */
-      template <typename scalar_type, typename index_type>
-      bool GastPti<scalar_type, index_type>::floorTimeConstant(
-          RealT& value, const char* name)
-      {
-        if (!std::isfinite(value) || value < ZERO<RealT>)
-        {
-          Log::error() << "GastPti: " << name
-                       << " must be finite and non-negative\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
-        }
-
         const bool raised = value < TIME_CONSTANT_MINIMUM;
         value             = std::max(value, TIME_CONSTANT_MINIMUM);
         return raised;
@@ -641,8 +587,8 @@ namespace GridKit
       /**
        * @brief Read the parameters out of the model data
        *
-       * Omitted optional parameters retain their documented defaults. Loading
-       * errors are counted for verify() rather than thrown.
+       * Omitted optional parameters retain their documented defaults. Invalid
+       * values throw std::invalid_argument.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -651,27 +597,21 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
+        const Model::ParameterReader reader(data, "GastPti");
 
-        loadRealParameter(data, Params::R, R_, "R");
-        loadRealParameter(data, Params::T1, T1_, "T1");
-        loadRealParameter(data, Params::T2, T2_, "T2");
-        loadRealParameter(data, Params::T3, T3_, "T3");
-        loadRealParameter(data, Params::At, At_, "At");
-        loadRealParameter(data, Params::Kt, Kt_, "Kt");
-        loadRealParameter(data, Params::Vmax, Vmax_, "Vmax");
-        loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
-        loadRealParameter(data, Params::Dturb, Dturb_, "Dturb");
-        if (data.parameters.contains(Params::Trate))
+        R_     = reader.readReal(Params::R).value_or(R_);
+        T1_    = reader.readNonNegative(Params::T1).value_or(T1_);
+        T2_    = reader.readNonNegative(Params::T2).value_or(T2_);
+        T3_    = reader.readNonNegative(Params::T3).value_or(T3_);
+        At_    = reader.readReal(Params::At).value_or(At_);
+        Kt_    = reader.readReal(Params::Kt).value_or(Kt_);
+        Vmax_  = reader.readReal(Params::Vmax).value_or(Vmax_);
+        Vmin_  = reader.readReal(Params::Vmin).value_or(Vmin_);
+        Dturb_ = reader.readReal(Params::Dturb).value_or(Dturb_);
+        // A missing rating leaves the zero component base that verify() rejects
+        if (const auto trate = reader.readReal(Params::Trate))
         {
-          RealT trate{};
-          loadRealParameter(data, Params::Trate, trate, "Trate");
-          this->setComponentBase(trate * static_cast<RealT>(1.0e6));
-        }
-        else
-        {
-          Log::error() << "GastPti: missing required parameter 'Trate'\n";
-          ++parameter_error_count_;
+          this->setComponentBase(*trate * static_cast<RealT>(1.0e6));
         }
 
         setDerivedParameters();
@@ -720,21 +660,19 @@ namespace GridKit
       /**
        * @brief Resolve the parameter-derived constants
        *
-       * Validates and raises each turbine lag in place so every explicit
-       * differential row retains a nonzero denominator and resets the
-       * parameter-only response defaults. initialize() transactionally
-       * finalizes the operating-point-dependent response bounds and valve mask.
-       * Recording invalid lag inputs before the in-place floor preserves the
-       * loading error for verify().
+       * Raises each turbine lag in place so every explicit differential row
+       * retains a nonzero denominator and resets the parameter-only response
+       * defaults. initialize() transactionally finalizes the
+       * operating-point-dependent response bounds and valve mask.
        */
       template <typename scalar_type, typename index_type>
       void GastPti<scalar_type, index_type>::setDerivedParameters()
       {
         bool floor_warning = false;
 
-        floor_warning |= floorTimeConstant(T1_, "T1");
-        floor_warning |= floorTimeConstant(T2_, "T2");
-        floor_warning |= floorTimeConstant(T3_, "T3");
+        floor_warning |= floorTimeConstant(T1_);
+        floor_warning |= floorTimeConstant(T2_);
+        floor_warning |= floorTimeConstant(T3_);
 
         if (floor_warning)
         {

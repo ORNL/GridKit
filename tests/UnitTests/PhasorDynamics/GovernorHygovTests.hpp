@@ -115,8 +115,12 @@ namespace GridKit
         {
           for (const RealT value : nonfinite_values)
           {
-            Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
-            success *= (!invalid_fixture.hygov.verify().passed());
+            success *= configurationRejected(
+                [&]()
+                {
+                  Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
+                  return invalid_fixture.hygov.verify();
+                });
           }
         }
 
@@ -149,8 +153,12 @@ namespace GridKit
 
         for (const auto& [parameter, value] : invalid_parameter_values)
         {
-          Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
-          success *= (!invalid_fixture.hygov.verify().passed());
+          success *= configurationRejected(
+              [&]()
+              {
+                Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
+                return invalid_fixture.hygov.verify();
+              });
         }
 
         // A curve with no rise cannot yield a unique gate.
@@ -189,8 +197,13 @@ namespace GridKit
 
         auto bad_numeric_type                      = makeData();
         bad_numeric_type.parameters[Params::Trate] = true;
-        Fixture<ScalarT> bad_numeric_model(bad_numeric_type);
-        success *= (!bad_numeric_model.hygov.verify().passed());
+
+        success *= configurationRejected(
+            [&]()
+            {
+              Fixture<ScalarT> bad_numeric_model(bad_numeric_type);
+              return bad_numeric_model.hygov.verify();
+            });
 
         Fixture<ScalarT> overflowing_component_base(
             makeData(),

@@ -200,7 +200,6 @@ namespace GridKit
         RealT Pmin_{ZERO<RealT>};
         RealT Tlag_{static_cast<RealT>(3.0)};
 
-        IdxT  parameter_error_count_{0};
         RealT vcomp_on_{ONE<RealT>};
         RealT vcomp_off_{ZERO<RealT>};
         RealT ref_on_{ONE<RealT>};

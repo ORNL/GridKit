@@ -10,6 +10,7 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
@@ -47,40 +48,16 @@ namespace GridKit
     void GenClassical<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
 
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
+      const Model::ParameterReader reader(data, "GenClassical");
 
-      if (data.parameters.contains(Parameter::H))
-      {
-        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
-      }
-
-      if (data.parameters.contains(Parameter::D))
-      {
-        D_ = std::get<RealT>(data.parameters.at(Parameter::D));
-      }
-
-      if (data.parameters.contains(Parameter::Ra))
-      {
-        Ra_ = std::get<RealT>(data.parameters.at(Parameter::Ra));
-      }
-
-      if (data.parameters.contains(Parameter::Xdp))
-      {
-        Xdp_ = std::get<RealT>(data.parameters.at(Parameter::Xdp));
-      }
-
-      if (data.parameters.contains(Parameter::mva))
-      {
-        mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
-      }
+      p0_       = reader.readReal(Parameter::p0).value_or(p0_);
+      q0_       = reader.readReal(Parameter::q0).value_or(q0_);
+      H_        = reader.readReal(Parameter::H).value_or(H_);
+      D_        = reader.readReal(Parameter::D).value_or(D_);
+      Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);
+      Xdp_      = reader.readReal(Parameter::Xdp).value_or(Xdp_);
+      mva_base_ = reader.readReal(Parameter::mva).value_or(mva_base_);
     }
 
     template <typename scalar_type, typename index_type>

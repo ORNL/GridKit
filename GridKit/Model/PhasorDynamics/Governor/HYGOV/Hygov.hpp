@@ -177,7 +177,6 @@ namespace GridKit
 
         RealT leadlag_gain_{ZERO<RealT>};
 
-        IdxT    parameter_error_count_{0};
         RealT   Gmin_response_{Gmin_};
         RealT   Gmax_response_{Gmax_};
         RealT   Hdam_eff_{Hdam_};

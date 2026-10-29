@@ -9,8 +9,8 @@
 #include <algorithm>
 #include <atomic>
 #include <format>
-#include <variant>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
@@ -121,10 +121,10 @@ namespace GridKit
       /**
        * @brief Validate the REPCA configuration
        *
-       * Checks parameter-loading errors, static parameter relationships,
-       * system/component bases and both conversion ratios, the regulated
-       * bus, required measurement signals, and attached optional reference
-       * signals. Command-output assignment is optional.
+       * Checks static parameter relationships, system/component bases and
+       * both conversion ratios, the regulated bus, required measurement
+       * signals, and attached optional reference signals. Command-output
+       * assignment is optional.
        *
        * @return The configuration checks; passed() when valid.
        */
@@ -132,8 +132,6 @@ namespace GridKit
       Model::ConfigurationChecks Repca<scalar_type, index_type>::verify() const
       {
         Model::ConfigurationChecks checks("Repca");
-
-        checks.check(parameter_error_count_ == 0, "model data has invalid parameters");
 
         checks.check(bus_ != nullptr, "regulated bus is required");
 
@@ -847,8 +845,7 @@ namespace GridKit
        *
        * Omitted parameters retain their documented defaults. Real parameters
        * accept real and integer values and must be finite; selectors require
-       * Boolean values. Loading errors are counted for verify() rather than
-       * thrown.
+       * Boolean values. Invalid values throw std::invalid_argument.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -857,92 +854,39 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        parameter_error_count_ = 0;
+        const Model::ParameterReader reader(data, "Repca");
 
-        auto load_real = [&](auto key, RealT& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          RealT       parsed_value{};
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            parsed_value = *real_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            parsed_value = static_cast<RealT>(*index_value);
-          }
-          else
-          {
-            Log::error() << "Repca: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-            return;
-          }
-
-          if (!std::isfinite(parsed_value))
-          {
-            Log::error() << "Repca: parameter '" << name << "' must be finite\n";
-            ++parameter_error_count_;
-            return;
-          }
-
-          target = parsed_value;
-        };
-
-        auto load_switch = [&](auto key, bool& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* bool_value = std::get_if<bool>(&value))
-          {
-            target = *bool_value;
-          }
-          else
-          {
-            Log::error() << "Repca: parameter '" << name << "' must be boolean\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        load_real(Params::mva, mva_base_, "mva");
-        load_switch(Params::VcompFlag, VcompFlag_, "VcompFlag");
-        load_switch(Params::RefFlag, RefFlag_, "RefFlag");
-        load_switch(Params::Freqflag, Freqflag_, "Freqflag");
-        load_real(Params::Tfltr, Tfltr_, "Tfltr");
-        load_real(Params::Vfrz, Vfrz_, "Vfrz");
-        load_real(Params::Rc, Rc_, "Rc");
-        load_real(Params::Xc, Xc_, "Xc");
-        load_real(Params::Kc, Kc_, "Kc");
-        load_real(Params::dbdlow, dbdlow_, "dbdlow");
-        load_real(Params::dbdupper, dbdupper_, "dbdupper");
-        load_real(Params::emax, emax_, "emax");
-        load_real(Params::emin, emin_, "emin");
-        load_real(Params::Kp, Kp_, "Kp");
-        load_real(Params::Ki, Ki_, "Ki");
-        load_real(Params::Qmax, Qmax_, "Qmax");
-        load_real(Params::Qmin, Qmin_, "Qmin");
-        load_real(Params::Tft, Tft_, "Tft");
-        load_real(Params::Tfv, Tfv_, "Tfv");
-        load_real(Params::Tp, Tp_, "Tp");
-        load_real(Params::fdbd1, fdbd1_, "fdbd1");
-        load_real(Params::fdbd2, fdbd2_, "fdbd2");
-        load_real(Params::Ddn, Ddn_, "Ddn");
-        load_real(Params::Dup, Dup_, "Dup");
-        load_real(Params::femax, femax_, "femax");
-        load_real(Params::femin, femin_, "femin");
-        load_real(Params::Kpg, Kpg_, "Kpg");
-        load_real(Params::Kig, Kig_, "Kig");
-        load_real(Params::Pmax, Pmax_, "Pmax");
-        load_real(Params::Pmin, Pmin_, "Pmin");
-        load_real(Params::Tlag, Tlag_, "Tlag");
+        mva_base_  = reader.readReal(Params::mva).value_or(mva_base_);
+        VcompFlag_ = reader.readBool(Params::VcompFlag).value_or(VcompFlag_);
+        RefFlag_   = reader.readBool(Params::RefFlag).value_or(RefFlag_);
+        Freqflag_  = reader.readBool(Params::Freqflag).value_or(Freqflag_);
+        Tfltr_     = reader.readNonNegative(Params::Tfltr).value_or(Tfltr_);
+        Vfrz_      = reader.readReal(Params::Vfrz).value_or(Vfrz_);
+        Rc_        = reader.readReal(Params::Rc).value_or(Rc_);
+        Xc_        = reader.readReal(Params::Xc).value_or(Xc_);
+        Kc_        = reader.readReal(Params::Kc).value_or(Kc_);
+        dbdlow_    = reader.readReal(Params::dbdlow).value_or(dbdlow_);
+        dbdupper_  = reader.readReal(Params::dbdupper).value_or(dbdupper_);
+        emax_      = reader.readReal(Params::emax).value_or(emax_);
+        emin_      = reader.readReal(Params::emin).value_or(emin_);
+        Kp_        = reader.readReal(Params::Kp).value_or(Kp_);
+        Ki_        = reader.readReal(Params::Ki).value_or(Ki_);
+        Qmax_      = reader.readReal(Params::Qmax).value_or(Qmax_);
+        Qmin_      = reader.readReal(Params::Qmin).value_or(Qmin_);
+        Tft_       = reader.readNonNegative(Params::Tft).value_or(Tft_);
+        Tfv_       = reader.readNonNegative(Params::Tfv).value_or(Tfv_);
+        Tp_        = reader.readNonNegative(Params::Tp).value_or(Tp_);
+        fdbd1_     = reader.readReal(Params::fdbd1).value_or(fdbd1_);
+        fdbd2_     = reader.readReal(Params::fdbd2).value_or(fdbd2_);
+        Ddn_       = reader.readReal(Params::Ddn).value_or(Ddn_);
+        Dup_       = reader.readReal(Params::Dup).value_or(Dup_);
+        femax_     = reader.readReal(Params::femax).value_or(femax_);
+        femin_     = reader.readReal(Params::femin).value_or(femin_);
+        Kpg_       = reader.readReal(Params::Kpg).value_or(Kpg_);
+        Kig_       = reader.readReal(Params::Kig).value_or(Kig_);
+        Pmax_      = reader.readReal(Params::Pmax).value_or(Pmax_);
+        Pmin_      = reader.readReal(Params::Pmin).value_or(Pmin_);
+        Tlag_      = reader.readNonNegative(Params::Tlag).value_or(Tlag_);
 
         setDerivedParameters();
       }
@@ -990,23 +934,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Repca<scalar_type, index_type>::setDerivedParameters()
       {
-        // The lags are raised to the floor below, so negative values must be
-        // rejected here while the value as read is still available.
-        auto check_non_negative = [&](RealT value, const char* name)
-        {
-          if (value < ZERO<RealT>)
-          {
-            Log::error() << "Repca: " << name << " must be non-negative\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        check_non_negative(Tfltr_, "Tfltr");
-        check_non_negative(Tft_, "Tft");
-        check_non_negative(Tfv_, "Tfv");
-        check_non_negative(Tp_, "Tp");
-        check_non_negative(Tlag_, "Tlag");
-
         if (Tfltr_ < TIME_CONSTANT_MINIMUM || Tfv_ < TIME_CONSTANT_MINIMUM
             || Tp_ < TIME_CONSTANT_MINIMUM || Tlag_ < TIME_CONSTANT_MINIMUM)
         {

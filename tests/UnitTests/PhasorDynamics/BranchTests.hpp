@@ -383,9 +383,14 @@ namespace GridKit
         PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(&bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0, -1.0, 0.0));
         success *= (!negative_tap_branch.verify().passed());
 
-        const RealT                           nan = std::numeric_limits<RealT>::quiet_NaN();
-        PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, branchData(nan, 0.1, 0.0, 0.0));
-        success *= (!nonfinite_branch.verify().passed());
+        const RealT nan = std::numeric_limits<RealT>::quiet_NaN();
+
+        success *= configurationRejected(
+            [&]()
+            {
+              PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, branchData(nan, 0.1, 0.0, 0.0));
+              return nonfinite_branch.verify();
+            });
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
