@@ -79,6 +79,11 @@ namespace GridKit
         head,        ///< Turbine head on component base
       };
 
+      /// Initial values for the HYGOV governor model.
+      enum class HygovInitialValues : size_t
+      {
+      };
+
       /**
        * @brief Model data for HYGOV: parameters, optional input signals, the
        *        required mechanical-power output, and monitored variables.

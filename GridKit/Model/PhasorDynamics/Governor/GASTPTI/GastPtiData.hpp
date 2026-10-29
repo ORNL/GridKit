@@ -58,6 +58,11 @@ namespace GridKit
         vtemp,  ///< \f$V_T\f$ Temperature-limit fuel demand on component base [p.u.]
       };
 
+      /// Initial values for the GASTPTI governor model.
+      enum class GastPtiInitialValues : size_t
+      {
+      };
+
       /**
        * @brief Model data for GASTPTI parameters, signal ports, and monitored variables.
        *

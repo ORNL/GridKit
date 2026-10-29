@@ -57,6 +57,18 @@ namespace GridKit
       q2,  ///< \f$Q_2\f$ Bus-2 terminal reactive power [p.u.]
     };
 
+    /// Initial values supported for a branch
+    enum class BranchInitialValues : size_t
+    {
+      ir1,        ///< \f$I_{r1}\f$ Initial real current into bus 1 on system base
+      ii1,        ///< \f$I_{i1}\f$ Initial imaginary current into bus 1 on system base
+      ir2,        ///< \f$I_{r2}\f$ Initial real current into bus 2 on system base
+      ii2,        ///< \f$I_{i2}\f$ Initial imaginary current into bus 2 on system base
+      in_service, ///< Initial service status; defaults to true
+      tap,        ///< Initial off-nominal tap magnitude on the bus-1 side [p.u.]
+      phase,      ///< Initial phase-shift angle [rad]
+    };
+
     /**
      * @brief Contains modeling data for a Branch
      *

@@ -30,6 +30,10 @@ namespace GridKit
     {
     };
 
+    enum class ConstantSignalSourceInitialValues : size_t
+    {
+    };
+
     template <typename real_type, typename index_type>
     using ConstantSignalSourceData =
         ComponentData<real_type,

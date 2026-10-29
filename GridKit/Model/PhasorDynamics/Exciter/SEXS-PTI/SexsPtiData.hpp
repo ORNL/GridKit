@@ -52,6 +52,11 @@ namespace GridKit
         efd, ///< Field voltage output
       };
 
+      /// Initial values for the SEXS-PTI exciter model.
+      enum class SexsPtiInitialValues : size_t
+      {
+      };
+
       template <typename real_type, typename index_type>
       using SexsPtiData =
           ComponentData<real_type,
