@@ -9,6 +9,14 @@ if(TARGET SUNDIALS::idas)
   install(TARGETS test_ida RUNTIME DESTINATION bin)
 endif()
 
+if(GRIDKIT_ENABLE_SUNDIALS_PARTITIONED_DAE)
+  add_executable(test_partitioned runPartitionedTests.cpp)
+  target_link_libraries(test_partitioned GridKit::solvers_partitioned GridKit::testing)
+  add_test(NAME PartitionedTest COMMAND $<TARGET_FILE:test_partitioned>)
+
+  install(TARGETS test_partitioned RUNTIME DESTINATION bin)
+endif()
+
 if(GRIDKIT_ENABLE_RESOLVE)
   add_executable(test_rosenbrock runRosenbrockTests.cpp)
   target_link_libraries(
