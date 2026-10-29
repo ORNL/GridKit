@@ -245,13 +245,15 @@ namespace GridKit
       }
 
       /**
-       * @brief Enzyme sparse load
+       * @brief Enzyme sparse load, with the arguments of `sparse_store`
+       *
+       * Returns zero, so an accumulation stores its increment.
        *
        * @tparam ScalarT - scalar data type
        * @tparam IdxT - matrix index data type
        */
       template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static ScalarT sparse_load(IdxT, IdxT, IdxT*, IdxT*, ScalarT*)
+      [[gnu::always_inline]] static ScalarT sparse_load(IdxT, IdxT, ScalarT, const IdxT*, const IdxT*, IdxT*, IdxT*, ScalarT*, IdxT*)
       {
         return 0.0;
       }

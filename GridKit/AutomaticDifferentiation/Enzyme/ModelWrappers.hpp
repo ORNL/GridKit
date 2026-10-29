@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <cstddef>
 #include <vector>
 
 #include <GridKit/Model/EvaluatorTraits.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -28,7 +30,9 @@ namespace GridKit
         BusResidual11, //< Special case for branches that are connected to two buses
         BusResidual12, //< Special case for branches that are connected to two buses
         BusResidual21, //< Special case for branches that are connected to two buses
-        BusResidual22  //< Special case for branches that are connected to two buses
+        BusResidual22, //< Special case for branches that are connected to two buses
+        Objective,     //< Optimization objective
+        Constraints    //< Optimization internal constraints and contributions at the ports
       };
 
       /**
@@ -225,6 +229,58 @@ namespace GridKit
                          ScalarT*       h)
         {
           model->evaluateBusResidual22(y, yp, wb, h);
+        }
+      };
+
+      /**
+       * @brief Wrapper partial template specialization for an optimization objective
+       */
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::Objective>
+      {
+        /// Number of internal variables
+        static constexpr std::size_t NUM_INTERNAL_INPUTS = Utilities::enum_size<typename ModelT::InternalVariablesT>();
+
+        /// Number of local variables
+        static constexpr std::size_t NUM_INPUTS = NUM_INTERNAL_INPUTS + Utilities::enum_size<typename ModelT::ExternalVariablesT>();
+
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] x - Local variables
+         * @return Objective contribution
+         */
+        template <typename ScalarT>
+        [[gnu::always_inline]] inline static ScalarT eval(const ModelT* model, const ScalarT* x)
+        {
+          return model->objective(x, x + NUM_INTERNAL_INPUTS);
+        }
+      };
+
+      /**
+       * @brief Wrapper partial template specialization for optimization constraints
+       */
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::Constraints>
+      {
+        /// Number of internal variables
+        static constexpr std::size_t NUM_INTERNAL_INPUTS = Utilities::enum_size<typename ModelT::InternalVariablesT>();
+
+        /// Number of internal constraints
+        static constexpr std::size_t NUM_INTERNAL_OUTPUTS = Utilities::enum_size<typename ModelT::InternalConstraintsT>();
+
+        /// Number of local constraint contributions
+        static constexpr std::size_t NUM_OUTPUTS = NUM_INTERNAL_OUTPUTS + Utilities::enum_size<typename ModelT::ExternalConstraintsT>();
+
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] x - Local variables
+         * @param[out] g - Local constraint contributions
+         */
+        template <typename ScalarT>
+        [[gnu::always_inline]] inline static void eval(const ModelT* model, const ScalarT* x, ScalarT* g)
+        {
+          model->internalConstraints(x, x + NUM_INTERNAL_INPUTS, g);
+          model->externalConstraints(x, x + NUM_INTERNAL_INPUTS, g + NUM_INTERNAL_OUTPUTS);
         }
       };
     } // namespace Sparse

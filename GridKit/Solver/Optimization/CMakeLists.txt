@@ -5,12 +5,28 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
+if(TARGET SUNDIALS::idas)
+  gridkit_add_library(
+    solvers_opt
+    SOURCES DynamicObjective.cpp DynamicConstraint.cpp
+    HEADERS DynamicConstraint.hpp DynamicObjective.hpp OptimizationSolver.hpp
+    LINK_LIBRARIES
+      PUBLIC
+      IPOPT
+      PUBLIC
+      GridKit::solvers_dyn)
+endif()
+
 gridkit_add_library(
-  solvers_opt
-  SOURCES DynamicObjective.cpp DynamicConstraint.cpp
-  HEADERS DynamicConstraint.hpp DynamicObjective.hpp OptimizationSolver.hpp
+  solvers_opt_steady
+  SOURCES IpoptInterface.cpp
+  HEADERS IpoptInterface.hpp
   LINK_LIBRARIES
     PUBLIC
     IPOPT
     PUBLIC
-    GridKit::solvers_dyn)
+    GridKit::dense_vector
+    PUBLIC
+    GridKit::sparse_matrix
+    PUBLIC
+    GridKit::utilities_logger)

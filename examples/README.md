@@ -8,6 +8,8 @@ GridKit™ usage examples are organized as follows:
 optimization.
 - `LinearAlgebra` has examples and tests for dense and sparse matrices in
 GridKit™.
+- [OptimalPowerFlow](OptimalPowerFlow/README.md) contains examples of AC optimal
+power flow with GridKit™.
 - [PhasorDynamics](PhasorDynamics/README.md) contains examples describing use of
 GridKit™ for phasor domain dynamic simulations.
 - `PowerElectronics` has examples describing microgrid simulations with
