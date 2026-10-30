@@ -50,6 +50,8 @@ namespace GridKit
     enum class GensalSignalOutputs : size_t
     {
       speed, ///< \f$\omega\f$ Unique ID of the signal receiving speed deviation
+      ir,    ///< \f$I_r\f$ Real terminal current on machine base
+      ii,    ///< \f$I_i\f$ Imaginary terminal current on machine base
     };
 
     /// Variables able to be monitored for a Gensal generator model
@@ -71,6 +73,14 @@ namespace GridKit
       te,     ///< \f$T_e\f$ Electrical torque
       id,     ///< \f$I_d\f$ D-axis current
       iq,     ///< \f$I_q\f$ Q-axis current
+    };
+
+    /// Initial values for a Gensal generator model
+    enum class GensalInitialValues : size_t
+    {
+      ir,         ///< \f$I_r\f$ Initial real terminal current into the bus on system base
+      ii,         ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
+      in_service, ///< Initial service status; defaults to true
     };
 
     /**

@@ -70,6 +70,11 @@ namespace GridKit
         vfe, ///< \f$V_{\mathrm{FE}}\f$ Exciter feedback drive [p.u.]
       };
 
+      /// Initial values for the ESDC1A exciter model.
+      enum class Esdc1aInitialValues : size_t
+      {
+      };
+
       /**
        * @brief Model data for ESDC1A parameters, terminal bus, signal ports,
        *        and monitored variables.

@@ -33,6 +33,8 @@ namespace GridKit
     /// Signal outputs supported for a load
     enum class LoadZSignalOutputs : size_t
     {
+      ir, ///< Real terminal current
+      ii, ///< Imaginary terminal current
     };
 
     /// Variables able to be monitored for a load
@@ -40,6 +42,14 @@ namespace GridKit
     {
       p,
       q,
+    };
+
+    /// Initial values supported for a load
+    enum class LoadZInitialValues : size_t
+    {
+      ir,         ///< Initial real terminal current into the bus on system base
+      ii,         ///< Initial imaginary terminal current into the bus on system base
+      in_service, ///< Initial service status; defaults to true
     };
 
     /**

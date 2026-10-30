@@ -30,6 +30,10 @@ namespace GridKit
     {
     };
 
+    enum class FunctionSignalSourceInitialValues : size_t
+    {
+    };
+
     template <typename real_type, typename index_type>
     using FunctionSignalSourceData =
         ComponentData<real_type,
