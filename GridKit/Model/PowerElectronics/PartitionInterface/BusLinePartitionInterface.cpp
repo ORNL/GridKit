@@ -35,12 +35,17 @@ namespace GridKit
     {
       if (dynamic_cast<MicrogridBus<ScalarT, IdxT>*>(bus) == nullptr)
       {
-        throw std::invalid_argument("BusLinePartitionInterface requires a MicrogridBus.");
+        throw std::invalid_argument("BusLinePartitionInterface: Requires a MicrogridBus.");
       }
 
       if (dynamic_cast<MicrogridLine<ScalarT, IdxT>*>(component) == nullptr)
       {
-        throw std::invalid_argument("BusLinePartitionInterface requires a MicrogridLine.");
+        throw std::invalid_argument("BusLinePartitionInterface: Requires a MicrogridLine.");
+      }
+
+      if (!bus->isAllocated() or !component->isAllocated())
+      {
+        throw std::invalid_argument("BusLinePartitionInterface: Malformed network. Ensure components are allocated before partitioning.");
       }
 
       size_           = 4;
@@ -79,7 +84,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusLinePartitionInterface<ScalarT, IdxT>::allocate()
     {
-      CircuitComponent<ScalarT, IdxT>::allocate();
+      Component<ScalarT, IdxT>::allocate();
 
       this->setConnectionNodes(0, connection_indices_[0]);
       this->setConnectionNodes(1, connection_indices_[1]);
