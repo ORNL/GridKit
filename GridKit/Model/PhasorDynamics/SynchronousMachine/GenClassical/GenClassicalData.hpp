@@ -60,8 +60,9 @@ namespace GridKit
     /// Initial values for a classical generator model
     enum class GenClassicalInitialValues : size_t
     {
-      ir, ///< \f$I_r\f$ Initial real terminal current into the bus on system base
-      ii, ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
+      ir,         ///< \f$I_r\f$ Initial real terminal current into the bus on system base
+      ii,         ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
+      in_service, ///< Initial service status; defaults to true
     };
 
     /**

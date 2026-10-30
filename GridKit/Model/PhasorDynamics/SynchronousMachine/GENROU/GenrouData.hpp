@@ -72,8 +72,9 @@ namespace GridKit
     /// Initial values for a Genrou generator model
     enum class GenrouInitialValues : size_t
     {
-      ir, ///< Initial real terminal current into the bus on system base
-      ii, ///< Initial imaginary terminal current into the bus on system base
+      ir,         ///< Initial real terminal current into the bus on system base
+      ii,         ///< Initial imaginary terminal current into the bus on system base
+      in_service, ///< Initial service status; defaults to true
     };
 
     /**

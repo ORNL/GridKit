@@ -73,8 +73,9 @@ namespace GridKit
       /// Initial values for the REGCA converter model.
       enum class RegcaInitialValues : size_t
       {
-        ir, ///< Initial real terminal current into the bus on system base
-        ii, ///< Initial imaginary terminal current into the bus on system base
+        ir,         ///< Initial real terminal current into the bus on system base
+        ii,         ///< Initial imaginary terminal current into the bus on system base
+        in_service, ///< Initial service status; defaults to true
       };
 
       /**
