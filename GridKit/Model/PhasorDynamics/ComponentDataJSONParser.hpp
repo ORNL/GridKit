@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
@@ -10,6 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/String.hpp>
 
 namespace GridKit
 {
@@ -48,6 +50,15 @@ namespace GridKit
       error_context << "\n\tSee the \"" << c.device_class
                     << "\" device with \"id\": \"" << c.disambiguation_string
                     << "\" in the \"devices\" list of your JSON file.";
+
+      if (!Utilities::isValidIdentifier(c.disambiguation_string))
+      {
+        Log::error()
+            << "\n\tDevice id may contain only ASCII letters, digits, "
+               "spaces, '_', '.' and '-'."
+            << error_context.str() << std::endl;
+        throw std::runtime_error("JSON parser failed");
+      }
 
       for (auto& raw_parameter : j.at("params").items())
       {

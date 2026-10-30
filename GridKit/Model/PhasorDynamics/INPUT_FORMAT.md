@@ -89,10 +89,10 @@ a bus and has the following fields:
   -------------------|------------------------------------------------------
   `number`           | Unique non-negative integer identifying the bus
   `class`            | A string indicating the class of node. See the table below for more information
-  `name`             | String containing the name of the node. This may be empty or non-unique
+  `name`             | String containing the name of the node. This may be empty or non-unique. Only ASCII letters, digits, spaces, `_`, `.` and `-` are allowed
   `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
   `params`           | Object mapping bus parameter names to values. Supported parameter: `kv`, the bus voltage base in kV.
-  `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information. A monitored bus `name` may contain only letters, digits, spaces, `_`, `.` and `-`
+  `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
   `extension`        | Optional field containing an object with implementation-defined keys
 
 #### Bus classes
@@ -129,9 +129,9 @@ represent a device and has the following fields:
   ------------------|------------------------------------------------------
   `class`           | A string indicating the class of device. See the table below for more information
   `ports`           | An object mapping the device's port names to associated bus numbers or signal IDs
-  `id`              | A string disambiguating the device from others
+  `id`              | A string disambiguating the device from others. Only ASCII letters, digits, spaces, `_`, `.` and `-` are allowed
   `params`          | An object mapping initialization parameters to Boolean or numerical values
-  `mon`             | Optional field, which is an array specifying variables to record in an output channel. A monitored device `id` may contain only letters, digits, spaces, `_`, `.` and `-`
+  `mon`             | Optional field, which is an array specifying variables to record in an output channel
   `extension`       | Optional field containing an object with implementation-defined keys
 
 For more information, see the detailed documentation for each device class containing equations, electrical bus configuration, and signal inlets/outlets specifications.
