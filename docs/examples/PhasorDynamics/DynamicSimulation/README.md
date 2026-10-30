@@ -7,6 +7,7 @@
 
 ThreeBusConstantSource <Toy/ThreeBusConstantSource/README>
 ACTIVSg10k <ACTIVSg10k/README>
+Texas7kGas <Texas7kGas/README>
 ```
 
 ```{include} ../../../../examples/PhasorDynamics/DynamicSimulation/README.md

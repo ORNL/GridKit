@@ -1,0 +1,11 @@
+{
+    "system_model_file": "Texas7kGas.case.json",
+    "output_file": "Texas7kGas.csv",
+    "dt_monitor": 5.0,
+    "dt_fixed": 5.0,
+    "max_order": 2,
+    "tmax": 1810.0,
+    "events": [
+        { "time": 10.0, "type": "withdrawal", "bus": 1344, "w": 1000.0 }
+    ]
+}

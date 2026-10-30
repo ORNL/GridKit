@@ -10,3 +10,4 @@ inputs.
 | [PostgreSQL](PostgreSQL/README.md) | An ACTIVSg2000 bus fault with long monitor output loaded into PostgreSQL. |
 | [SixBusGas](Toy/SixBusGas/README.md) | Gas-fired machines held in steady state by a gas network. |
 | [ACTIVSg10k](ACTIVSg10k/README.md) | A short simulation without disturbances using the reusable ACTIVSg10k case. |
+| [Texas7kGas](Texas7kGas/README.md) | A 30-minute pipeline rupture in the Texas7k gas network. |
