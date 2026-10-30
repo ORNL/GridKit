@@ -52,7 +52,7 @@ namespace GridKit
     {
       bus_id_        = data.bus_id;
       size_          = 0;
-      monitor_       = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
+      monitor_       = std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);
       using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::Vr, [this]
                     { return Vr(); });

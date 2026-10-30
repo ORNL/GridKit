@@ -4,11 +4,22 @@
 #include <cctype>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 namespace GridKit
 {
   namespace Utilities
   {
+    /// Whether an identifier contains only ASCII letters, digits, spaces, '_', '.' and '-'.
+    inline bool isValidIdentifier(std::string_view id)
+    {
+      return id.find_first_not_of(
+                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                 "abcdefghijklmnopqrstuvwxyz"
+                 "0123456789 _.-")
+             == std::string_view::npos;
+    }
+
     /**
      * @brief Convert a string to all uppercase
      */

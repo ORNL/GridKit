@@ -5,6 +5,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -83,6 +84,8 @@ namespace GridKit
       std::vector<SystemEvent>                       events;
       /// path to output file
       fs::path                                       output_file;
+      /// table layout of the output file
+      ::GridKit::Model::VariableMonitorLayout        output_layout;
       /// path to reference file for validation
       fs::path                                       reference_file;
       /// Error tolerance (between output file and reference file)
@@ -162,6 +165,23 @@ namespace GridKit
       if (j.contains("output_file"))
       {
         j.at("output_file").get_to(c.output_file);
+      }
+
+      using OutputLayout = ::GridKit::Model::VariableMonitorLayout;
+      if (j.contains("output_layout"))
+      {
+        auto layout_str  = j.at("output_layout").get<std::string>();
+        auto layout_wrap = enum_cast<OutputLayout>(layout_str, case_insensitive);
+        if (!layout_wrap.has_value())
+        {
+          Log::error() << "Invalid output layout \"" << layout_str << "\"; "
+                       << "must be either \"wide\" or \"long\"";
+        }
+        c.output_layout = layout_wrap.value();
+      }
+      else
+      {
+        c.output_layout = OutputLayout::WIDE;
       }
 
       if (j.contains("reference_file"))
@@ -244,13 +264,19 @@ namespace GridKit
         }
       }
 
+      // TODO: Support reference comparison for the long layout
+      if (data.output_layout == ::GridKit::Model::VariableMonitorLayout::LONG && !data.reference_file.empty())
+      {
+        throw std::invalid_argument("reference_file is not supported with the long output_layout");
+      }
+
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
       std::string model_output_file;
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
       {
-        if (sink.format == csv && sink.delim == ",")
+        if (sink.format == csv && sink.delim == "," && sink.layout == data.output_layout)
         {
           model_output_file = sink.file_name;
         }
@@ -261,7 +287,7 @@ namespace GridKit
         if (!data.output_file.empty())
         {
           // Add study output file to model if one did not already exist
-          data.model_data.monitor_sink.emplace_back(csv, data.output_file);
+          data.model_data.monitor_sink.emplace_back(csv, data.output_file, ",", data.output_layout);
         }
       }
       else

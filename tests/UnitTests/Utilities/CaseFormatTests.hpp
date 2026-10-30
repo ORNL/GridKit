@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <stdexcept>
+#include <utility>
 
 #include <nlohmann/json.hpp>
 
@@ -19,6 +21,7 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -32,6 +35,85 @@ namespace GridKit
     public:
       CaseFormatTests()  = default;
       ~CaseFormatTests() = default;
+
+      /// Identifier restrictions apply during parsing, independently of monitoring.
+      TestOutcome identifierParse()
+      {
+        using DataT = PhasorDynamics::SystemModelData<RealT, IdxT>;
+        using Log   = Utilities::Logger;
+
+        const json case_input = json::parse(R"({
+          "header": {"case_name": "Identifiers", "case_description": "", "case_comments": ""},
+          "params": {"freq_base": 60.0, "va_base": 100000000.0},
+          "buses": [{"number": 1, "class": "Bus", "name": "Bus 1", "params": {}}],
+          "devices": [{"class": "Branch", "id": "Branch 1", "params": {}, "ports": {}}]
+        })");
+
+        TestStatus success            = true;
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        for (bool hierarchical : {false, true})
+        {
+          json input = case_input;
+          if (hierarchical)
+          {
+            input["subsystems"] = json::array({{{"id", "area"},
+                                                {"level", 1},
+                                                {"buses", input["buses"]},
+                                                {"devices", input["devices"]}}});
+            input["buses"]      = json::array();
+            input["devices"]    = json::array();
+          }
+          auto& contents = hierarchical ? input["subsystems"][0] : input;
+          auto& bus      = contents["buses"][0];
+          auto& device   = contents["devices"][0];
+
+          // A null selection represents an absent "mon" field.
+          for (const auto& [bus_mon, device_mon] :
+               {std::pair{json(), json()},
+                std::pair{json::array(), json::array()},
+                std::pair{json::array({"Vm"}), json::array({"p1"})}})
+          {
+            if (bus_mon.is_null())
+            {
+              bus.erase("mon");
+              device.erase("mon");
+            }
+            else
+            {
+              bus["mon"]    = bus_mon;
+              device["mon"] = device_mon;
+            }
+
+            for (const auto* name : {"", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _.-"})
+            {
+              bus["name"]         = name;
+              device["id"]        = name;
+              const auto  data    = input.template get<DataT>();
+              const auto& parsed  = hierarchical ? data.subsystems[0] : data;
+              success            *= parsed.bus[0].name == name;
+              success            *= parsed.branch[0].disambiguation_string == name;
+            }
+
+            for (const auto* name : {"bad\"id", "bad\\id", "bad,id", "bad\nid", "bad\tid", "bad\rid", "caf\xc3\xa9"})
+            {
+              bus["name"]   = name;
+              device["id"]  = "Branch 1";
+              success      *= throws<std::runtime_error>([&]()
+                                                    { (void) input.template get<DataT>(); });
+
+              bus["name"]   = "Bus 1";
+              device["id"]  = name;
+              success      *= throws<std::runtime_error>([&]()
+                                                    { (void) input.template get<DataT>(); });
+            }
+          }
+        }
+
+        Log::setVerbosity(previous_verbosity);
+        return success.report(__func__);
+      }
 
       TestOutcome simpleParse()
       {

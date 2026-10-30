@@ -9,6 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/String.hpp>
 
 namespace GridKit
 {
@@ -24,11 +25,21 @@ namespace GridKit
     void from_json(const json& j, BusData<RealT, IdxT>& bd)
     {
       j.at("name").get_to(bd.name);
+      j.at("number").get_to(bd.bus_id);
 
       std::stringstream error_context;
       error_context << "\n\tSee bus number " << bd.bus_id
                     << " (\"name\": \"" << bd.name << "\") "
                     << "in the \"buses\" list of your JSON file.";
+
+      if (!Utilities::isValidIdentifier(bd.name))
+      {
+        Log::error()
+            << "\n\tBus name may contain only ASCII letters, digits, "
+               "spaces, '_', '.' and '-'."
+            << error_context.str() << std::endl;
+        throw std::runtime_error("JSON parser failed");
+      }
 
       if (j.contains("init"))
       {
@@ -50,8 +61,6 @@ namespace GridKit
           }
         }
       }
-
-      j.at("number").get_to(bd.bus_id);
 
       auto string_class = j.at("class").get<std::string>();
       if (string_class == "Bus")
