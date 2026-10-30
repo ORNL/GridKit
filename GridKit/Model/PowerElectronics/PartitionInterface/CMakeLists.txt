@@ -4,7 +4,6 @@ gridkit_add_library(
   HEADERS BusLinePartitionInterface.hpp PartitionInterface.hpp
   LINK_LIBRARIES
     PUBLIC
-      GridKit::dense_vector
-      GridKit::utilities_logger
-      GridKit::power_elec_microline
-)
+    GridKit::dense_vector
+    GridKit::utilities_logger
+    GridKit::power_elec_microline)

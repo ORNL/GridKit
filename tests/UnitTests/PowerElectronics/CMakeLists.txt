@@ -6,15 +6,14 @@ target_link_libraries(
 add_executable(test_partition_power_electronics runPartitionPowerElectronicsTests.cpp)
 target_link_libraries(
   test_partition_power_electronics
-  PRIVATE
-    GridKit::power_elec_bus_line_interface
-    GridKit::power_elec_disgen
-    GridKit::power_elec_microline
-    GridKit::power_elec_microload
-    GridKit::power_elec_microbusdq
-    GridKit::testing
-    GridKit::sparse_matrix
-    GridKit::Utilities)
+  PRIVATE GridKit::power_elec_bus_line_interface
+          GridKit::power_elec_disgen
+          GridKit::power_elec_microline
+          GridKit::power_elec_microload
+          GridKit::power_elec_microbusdq
+          GridKit::testing
+          GridKit::sparse_matrix
+          GridKit::Utilities)
 
 add_executable(test_power_electronics_component_clone runComponentCloneTests.cpp)
 target_link_libraries(
@@ -27,7 +26,8 @@ target_link_libraries(
 
 add_test(NAME PowerElectronicsNodeTest COMMAND $<TARGET_FILE:test_power_electronics_node>)
 add_test(NAME PartitionPowerElectronicsTest COMMAND $<TARGET_FILE:test_partition_power_electronics>)
-add_test(NAME PowerElectronicsComponentCloneTest COMMAND $<TARGET_FILE:test_power_electronics_component_clone>)
+add_test(NAME PowerElectronicsComponentCloneTest
+         COMMAND $<TARGET_FILE:test_power_electronics_component_clone>)
 
 install(TARGETS test_power_electronics_node RUNTIME DESTINATION bin)
 install(TARGETS test_partition_power_electronics RUNTIME DESTINATION bin)
