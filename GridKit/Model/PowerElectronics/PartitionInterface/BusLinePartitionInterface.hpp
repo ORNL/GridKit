@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
+#include <GridKit/Model/PowerElectronics/Component.hpp>
 #include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 #include <GridKit/Model/PowerElectronics/PartitionInterface/PartitionInterface.hpp>
 
@@ -44,34 +44,34 @@ namespace GridKit
     class BusLinePartitionInterface : public PartitionInterface<ScalarT, IdxT>
     {
 
-      using component_type = CircuitComponent<ScalarT, IdxT>;
+      using component_type = Component<ScalarT, IdxT>;
       using node_type      = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
-      using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
+      using RealT          = typename Component<ScalarT, IdxT>::RealT;
 
-      using CircuitComponent<ScalarT, IdxT>::size_;
-      using CircuitComponent<ScalarT, IdxT>::nnz_;
-      using CircuitComponent<ScalarT, IdxT>::time_;
-      using CircuitComponent<ScalarT, IdxT>::alpha_;
-      using CircuitComponent<ScalarT, IdxT>::y_ext_;
-      using CircuitComponent<ScalarT, IdxT>::y_int_;
-      using CircuitComponent<ScalarT, IdxT>::yp_ext_;
-      using CircuitComponent<ScalarT, IdxT>::yp_int_;
-      using CircuitComponent<ScalarT, IdxT>::tag_;
-      using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-      using CircuitComponent<ScalarT, IdxT>::f_ext_;
-      using CircuitComponent<ScalarT, IdxT>::f_int_;
-      using CircuitComponent<ScalarT, IdxT>::g_;
-      using CircuitComponent<ScalarT, IdxT>::yB_;
-      using CircuitComponent<ScalarT, IdxT>::ypB_;
-      using CircuitComponent<ScalarT, IdxT>::fB_;
-      using CircuitComponent<ScalarT, IdxT>::gB_;
-      using CircuitComponent<ScalarT, IdxT>::param_;
-      using CircuitComponent<ScalarT, IdxT>::idc_;
+      using Component<ScalarT, IdxT>::size_;
+      using Component<ScalarT, IdxT>::nnz_;
+      using Component<ScalarT, IdxT>::time_;
+      using Component<ScalarT, IdxT>::alpha_;
+      using Component<ScalarT, IdxT>::y_ext_;
+      using Component<ScalarT, IdxT>::y_int_;
+      using Component<ScalarT, IdxT>::yp_ext_;
+      using Component<ScalarT, IdxT>::yp_int_;
+      using Component<ScalarT, IdxT>::tag_;
+      using Component<ScalarT, IdxT>::abs_tol_;
+      using Component<ScalarT, IdxT>::f_ext_;
+      using Component<ScalarT, IdxT>::f_int_;
+      using Component<ScalarT, IdxT>::g_;
+      using Component<ScalarT, IdxT>::yB_;
+      using Component<ScalarT, IdxT>::ypB_;
+      using Component<ScalarT, IdxT>::fB_;
+      using Component<ScalarT, IdxT>::gB_;
+      using Component<ScalarT, IdxT>::param_;
+      using Component<ScalarT, IdxT>::idc_;
 
-      using CircuitComponent<ScalarT, IdxT>::extern_indices_;
-      using CircuitComponent<ScalarT, IdxT>::n_extern_;
-      using CircuitComponent<ScalarT, IdxT>::n_intern_;
-      using CircuitComponent<ScalarT, IdxT>::connection_nodes_;
+      using Component<ScalarT, IdxT>::extern_indices_;
+      using Component<ScalarT, IdxT>::n_extern_;
+      using Component<ScalarT, IdxT>::n_intern_;
+      using Component<ScalarT, IdxT>::connection_nodes_;
 
     public:
       BusLinePartitionInterface(node_type* bus, component_type* component, IdxT id);
