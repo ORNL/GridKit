@@ -23,6 +23,7 @@ namespace GridKit
       using component_type = Component<ScalarT, IdxT>;
       using node_type      = NodeBase<ScalarT, IdxT>;
 
+    protected:
       using Component<ScalarT, IdxT>::abs_tol_;
       using Component<ScalarT, IdxT>::allocated_;
       using Component<ScalarT, IdxT>::allocateVectors;
@@ -59,7 +60,7 @@ namespace GridKit
        *
        * @post System model parameters set as input
        */
-      SystemModel(bool use_jac = false)
+      SystemModel(bool use_jac)
       {
         // Can choose if to use jacobian
         use_jac_ = use_jac;
@@ -117,7 +118,7 @@ namespace GridKit
        *
        * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
        */
-      int allocate() final
+      int allocate() override
       {
         size_t component_internal_size = 0;
         for (component_type* comp : components_)
@@ -157,7 +158,7 @@ namespace GridKit
           {
             node->allocate();
 
-            for (size_t i = 0; i < node->getInternalSize(); i++)
+            for (IdxT i = 0; i < static_cast<IdxT>(node->getInternalSize()); i++)
             {
               ExternalConnection<ScalarT, IdxT> node_connection{
                   .y_   = y_int_ + node_internal_idx,
@@ -368,7 +369,7 @@ namespace GridKit
        *
        * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
        */
-      int evaluateInternalResidual() final
+      int evaluateInternalResidual() override
       {
         for (IdxT i = 0; i < size_; i++)
         {
@@ -409,7 +410,7 @@ namespace GridKit
        *
        * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
        */
-      int evaluateJacobian() final
+      int evaluateJacobian() override
       {
         // Zero out values
         RealT* vals = csr_jac_->getValues();
@@ -431,7 +432,15 @@ namespace GridKit
 
           for (IdxT i = 0; i < nnz; ++i)
           {
-            if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+            const IdxT row = component->getNodeConnection(r[i]);
+            const IdxT col = component->getNodeConnection(c[i]);
+
+            const bool is_internal_entry = row != INVALID_INDEX<IdxT>
+                                           && col != INVALID_INDEX<IdxT>
+                                           && row < this->getInternalSize()
+                                           && col < this->getInternalSize();
+
+            if (is_internal_entry)
             {
               vals[map_to_csr_[counter]] += v[i];
               ++counter;
@@ -515,7 +524,7 @@ namespace GridKit
         allocated_ = false;
       }
 
-    private:
+    protected:
       static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
 
       std::vector<component_type*> components_;
