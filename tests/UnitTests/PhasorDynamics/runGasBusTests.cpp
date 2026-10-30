@@ -9,6 +9,7 @@ int main()
   result += test.initialization();
   result += test.residual();
   result += test.withdrawal();
+  result += test.absoluteTolerance();
   result += test.parameterValidation();
   result += test.fixedPressure();
 

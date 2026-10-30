@@ -114,6 +114,21 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// The pressure tolerance scales with the case-file pressure
+      TestOutcome absoluteTolerance()
+      {
+        TestStatus success = true;
+
+        GasBusT bus(busData(4.0e6));
+        bus.allocate();
+        bus.initialize();
+        bus.setAbsoluteTolerance(1.0e-4);
+
+        success *= isEqual(bus.absoluteTolerance().getData()[0], ScalarT{400.0});
+
+        return success.report(__func__);
+      }
+
       /// A fixed-pressure bus has no variables and holds the case-file pressure
       TestOutcome fixedPressure()
       {

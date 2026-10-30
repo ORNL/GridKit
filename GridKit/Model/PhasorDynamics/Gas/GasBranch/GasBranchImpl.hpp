@@ -197,10 +197,27 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Scale the tolerances by the mean terminal pressure and the sonic
+       * mass flux a rho at that pressure
+       *
+       * A pipe without flow then keeps the same flux tolerance as one with flow.
+       */
       template <typename scalar_type, typename index_type>
       int GasBranch<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        const RealT p_ref   = HALF<RealT> * static_cast<RealT>(bus1_->p() + bus2_->p());
+        const RealT phi_ref = p_ref * (b1_ + b2_ * p_ref) / a_;
+
+        auto* abs_tol = abs_tol_.getData();
+        for (IdxT j = 1; j < N_; ++j)
+        {
+          abs_tol[pIndex(j)] = static_cast<ScalarT>(rel_tol * p_ref);
+        }
+        for (IdxT k = 1; k <= N_; ++k)
+        {
+          abs_tol[phiIndex(k)] = static_cast<ScalarT>(rel_tol * phi_ref);
+        }
         return 0;
       }
 

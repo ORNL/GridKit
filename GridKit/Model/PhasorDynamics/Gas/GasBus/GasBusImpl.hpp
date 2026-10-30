@@ -122,10 +122,11 @@ namespace GridKit
         return 0;
       }
 
+      /// The pressure tolerance scales with the case-file pressure
       template <typename scalar_type, typename index_type>
       int GasBus<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol * p0_));
         return 0;
       }
 

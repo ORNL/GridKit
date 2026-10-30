@@ -11,6 +11,7 @@ int main()
   result += test.initialization();
   result += test.initializationResidual();
   result += test.massConservation();
+  result += test.absoluteTolerance();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
   result += test.fixedPressureBus();

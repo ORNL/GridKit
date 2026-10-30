@@ -8,7 +8,7 @@
   `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
   `tmax`               | A floating-point value for max time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
-  `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9)
+  `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9); `0` uses each model's own absolute tolerances, scaled by `rel_tol`
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `max_order`          | Maximum IDA integration method order from 1 to 5 (default: 5; fixed stepping is capped at 2)

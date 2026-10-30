@@ -260,6 +260,31 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Tolerances scale with the 5 MPa mean terminal pressure and the sonic mass flux p/a
+      TestOutcome absoluteTolerance()
+      {
+        TestStatus success = true;
+
+        GasBusT    bus1(busData(6.0e6));
+        GasBusT    bus2(busData(4.0e6));
+        GasBranchT branch(&bus1, &bus2, branchData(500.0));
+        connect(bus1, bus2, branch);
+        branch.setAbsoluteTolerance(1.0e-4);
+
+        // Nodes 1 to 3, then segments 1 to 4
+        const auto* abs_tol = branch.absoluteTolerance().getData();
+        for (IdxT j = 0; j < 3; ++j)
+        {
+          success *= isEqual(abs_tol[j], ScalarT{500.0}, tol_);
+        }
+        for (IdxT k = 3; k < 7; ++k)
+        {
+          success *= isEqual(abs_tol[k], ScalarT{1.0}, tol_);
+        }
+
+        return success.report(__func__);
+      }
+
       /// With the node balance met, the linepack changes only by the terminal mass flows
       TestOutcome massConservation()
       {
