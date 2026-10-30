@@ -129,7 +129,7 @@ represent a device and has the following fields:
   ------------------|------------------------------------------------------
   `class`           | A string indicating the class of device. See the table below for more information
   `ports`           | An object mapping the device's port names to associated bus numbers or signal IDs
-  `id`              | A string disambiguating the device from others
+  `id`              | A string disambiguating the device from others of the same `class`. It must be unique per `class` across the whole hierarchy, since lookups and events (e.g. branch outages) find devices by `class` and `id`
   `params`          | An object mapping initialization parameters to Boolean or numerical values
   `mon`             | Optional field, which is an array specifying variables to record in an output channel
   `extension`       | Optional field containing an object with implementation-defined keys

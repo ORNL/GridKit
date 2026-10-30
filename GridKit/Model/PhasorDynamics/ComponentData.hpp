@@ -72,6 +72,12 @@ namespace GridKit
 
       /// Disambiguation string for this device
       std::string disambiguation_string;
+
+      /// Device class and disambiguation string (e.g. "Genrou_1"), for lookups and monitors
+      std::string label() const
+      {
+        return device_class + "_" + disambiguation_string;
+      }
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

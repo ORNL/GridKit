@@ -68,6 +68,15 @@ namespace GridKit
       }
 
       /**
+       * @brief Return the SignalNode with this id, or nullptr if there is none
+       */
+      SignalNodeT* find(IdxT signal_id) const
+      {
+        const auto it = signal_node_id_map_.find(signal_id);
+        return it == signal_node_id_map_.end() ? nullptr : it->second;
+      }
+
+      /**
        * @brief Access a SignalNode using its name
        */
       SignalNodeT* operator[](const std::string& signal_name)

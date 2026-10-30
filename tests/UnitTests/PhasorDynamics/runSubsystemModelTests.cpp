@@ -7,6 +7,7 @@ int main()
 
   result += test.flatVsHierarchical();
   result += test.hierarchicalInput();
+  result += test.hierarchicalLookup();
   result += test.invalidHierarchy();
   result += test.systemBases();
 #ifdef GRIDKIT_ENABLE_ENZYME

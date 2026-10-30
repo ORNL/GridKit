@@ -78,7 +78,7 @@ namespace GridKit
        * @param data Expected to be derived from ComponentData
        */
       VariableMonitor(const ObjData& data)
-        : VariableMonitor(data.device_class + "_" + data.disambiguation_string,
+        : VariableMonitor(data.label(),
                           data.monitored_variables)
       {
       }
