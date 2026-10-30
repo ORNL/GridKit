@@ -28,7 +28,8 @@ namespace GridKit
         auto size        = static_cast<size_t>(size_);
         auto bus_size    = static_cast<size_t>(bus_->size());
         auto signal_size = static_cast<size_t>(ws_.getSize());
-        auto buffer_size = 2 * size * size + size * signal_size + 2 * size * bus_size;
+        auto gas_size    = static_cast<size_t>(h_.getSize() * wb_.getSize());
+        auto buffer_size = 2 * size * size + size * signal_size + 2 * size * bus_size + gas_size;
         J_rows_buffer_   = new IdxT[buffer_size];
         J_cols_buffer_   = new IdxT[buffer_size];
         J_vals_buffer_   = new RealT[buffer_size];
@@ -110,6 +111,31 @@ namespace GridKit
                                                                                                  J_cols_buffer_,
                                                                                                  J_vals_buffer_,
                                                                                                  nnz_);
+
+      // Only the gas-bus row depends on bus values
+      IdxT gas_row    = INVALID_INDEX<IdxT>;
+      IdxT gas_column = INVALID_INDEX<IdxT>;
+      if (gas_bus_ != nullptr && gas_bus_->size() > 0)
+      {
+        gas_row    = gas_bus_->getResidualIndex(0);
+        gas_column = gas_bus_->getVariableIndex(0);
+      }
+      const IdxT gas_rows[]    = {INVALID_INDEX<IdxT>, INVALID_INDEX<IdxT>, gas_row};
+      const IdxT gas_columns[] = {INVALID_INDEX<IdxT>, INVALID_INDEX<IdxT>, gas_column};
+
+      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
+                                                                                                  static_cast<size_t>(h_.getSize()),
+                                                                                                  static_cast<size_t>(wb_.getSize()),
+                                                                                                  gas_rows,
+                                                                                                  gas_columns,
+                                                                                                  y_.getData(),
+                                                                                                  yp_.getData(),
+                                                                                                  wb_.getData(),
+                                                                                                  J_rows_buffer_,
+                                                                                                  J_cols_buffer_,
+                                                                                                  J_vals_buffer_,
+                                                                                                  nnz_);
 
       this->constructCoo();
 

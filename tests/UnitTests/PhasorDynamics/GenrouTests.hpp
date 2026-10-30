@@ -6,6 +6,7 @@
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasBus/GasBus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -310,6 +311,52 @@ namespace GridKit
       {
         TestStatus success = true;
         success.skipTest();
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief GasInputPm sets the mechanical power from the gas pressure and
+       *        draws the matching fuel from the gas bus.
+       */
+      TestOutcome gas_port()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GenrouDataT::Parameters;
+
+        auto data                      = makeGenrouData();
+        data.parameters[Parameter::kf] = RealT{0.06};
+
+        PhasorDynamics::Gas::GasBusData<RealT, IdxT> gas_data;
+        gas_data.p0 = RealT{4.0e6};
+
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus(1.0, 0.0);
+        PhasorDynamics::Gas::GasBus<ScalarT, IdxT> gas_bus(gas_data);
+        PhasorDynamics::Genrou<ScalarT, IdxT>      gen(&bus, data);
+        gen.setGasBus(&gas_bus);
+
+        bus.allocate();
+        gas_bus.allocate();
+        gen.allocate();
+        bus.initialize();
+        gas_bus.initialize();
+        gen.initialize();
+
+        bus.evaluateResidual();
+        gas_bus.evaluateResidual();
+        gen.evaluateResidual();
+
+        // P_m = 1 p.u. on the 100 MVA system base burns 0.06 kg/MJ x 100 MW
+        success *= isEqual(gas_bus.q(), ScalarT{-6.0}, tol_);
+
+        // Half the pressure halves the fuel and the mechanical power
+        gas_bus.p() = ScalarT{2.0e6};
+        gas_bus.evaluateResidual();
+        gen.evaluateResidual();
+
+        success *= isEqual(gas_bus.q(), ScalarT{-3.0}, tol_);
+        success *= isEqual(gen.getResidual().getData()[1], ScalarT{0.5 / 6.0}, tol_); // (T_e - P_m)/(2H)
 
         return success.report(__func__);
       }

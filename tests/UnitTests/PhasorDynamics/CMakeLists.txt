@@ -40,6 +40,25 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_gas_bus runGasBusTests.cpp)
+target_link_libraries(
+  test_phasor_gas_bus
+  GridKit::definitions
+  GridKit::phasor_dynamics_gas_bus
+  GridKit::phasor_dynamics_gas_bus_infinite
+  GridKit::testing)
+
+add_executable(test_phasor_gas_branch runGasBranchTests.cpp)
+target_link_libraries(
+  test_phasor_gas_branch
+  GridKit::definitions
+  GridKit::phasor_dynamics_gas_branch
+  GridKit::phasor_dynamics_gas_branch_dependency_tracking
+  GridKit::phasor_dynamics_gas_bus
+  GridKit::phasor_dynamics_gas_bus_dependency_tracking
+  GridKit::phasor_dynamics_gas_bus_infinite
+  GridKit::testing)
+
 add_executable(test_phasor_loadz runLoadZTests.cpp)
 target_link_libraries(
   test_phasor_loadz
@@ -66,6 +85,7 @@ target_link_libraries(
   GridKit::definitions
   GridKit::phasor_dynamics_genrou
   GridKit::phasor_dynamics_genrou_dependency_tracking
+  GridKit::phasor_dynamics_gas_bus
   GridKit::phasor_dynamics_bus
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
@@ -76,6 +96,7 @@ target_link_libraries(
   GridKit::definitions
   GridKit::phasor_dynamics_gensal
   GridKit::phasor_dynamics_gensal_dependency_tracking
+  GridKit::phasor_dynamics_gas_bus
   GridKit::phasor_dynamics_bus
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
@@ -180,6 +201,7 @@ target_link_libraries(
   GridKit::definitions
   GridKit::phasor_dynamics_gen_classical
   GridKit::phasor_dynamics_gen_classical_dependency_tracking
+  GridKit::phasor_dynamics_gas_bus
   GridKit::phasor_dynamics_bus
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
@@ -227,6 +249,8 @@ add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBusSignalVoltageOutTest COMMAND test_phasor_bus_signal_voltage_out)
 add_test(NAME PhasorDynamicsBusSignalVoltageInTest COMMAND test_phasor_bus_signal_voltage_in)
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
+add_test(NAME PhasorDynamicsGasBusTest COMMAND test_phasor_gas_bus)
+add_test(NAME PhasorDynamicsGasBranchTest COMMAND test_phasor_gas_branch)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
 add_test(NAME PhasorDynamicsGovernorGastPtiTest COMMAND test_phasor_governor_gastpti)
@@ -255,6 +279,8 @@ install(
           test_phasor_bus_signal_voltage_out
           test_phasor_bus_signal_voltage_in
           test_phasor_branch
+          test_phasor_gas_bus
+          test_phasor_gas_branch
           test_phasor_loadz
           test_phasor_loadzip
           test_phasor_genrou

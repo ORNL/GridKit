@@ -11,6 +11,9 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasBranch/GasBranch.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasBus/GasBus.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasBusInfinite/GasBusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>

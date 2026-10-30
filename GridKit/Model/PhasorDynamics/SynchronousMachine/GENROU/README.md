@@ -37,6 +37,7 @@ $X_{\ell}$        | [p.u.] | `Xl`    | Stator leakage reactance                 
 $S_{10}$          | [p.u.] | `S10`   | Saturation factor at 1.0 pu flux                       | 0             |
 $S_{12}$          | [p.u.] | `S12`   | Saturation factor at 1.2 pu flux                       | 0             |
 $S^\mathrm{base}$ | [MVA]  | `mva`   | Machine power base                                     | 100           |
+$k_\mathrm{f}$    | [kg/MJ] | `kf`   | Specific fuel consumption                              | 0.06          | Required with `GasInputPm`
 
 ### Parameter Validation
 
@@ -72,6 +73,7 @@ Name    | Port   | Init    | Description
 `pmech` | Input  | Unknown | Mechanical-power input; held constant when unconnected
 `efd`   | Input  | Unknown | Field-voltage input; held constant when unconnected
 `speed` | Output | Known   | Machine speed-deviation output
+`GasInputPm` | GasBus | Known | Gas bus supplying fuel in place of `pmech`
 
 ## Model Variables
 
@@ -106,7 +108,9 @@ $I_i$              | [p.u.] | Terminal current, imaginary component on network r
 ### External Variables
 
 #### Differential
-None.
+Symbol         | Units | Description      | Note
+---------------|-------|------------------|----------------------------------
+$p_\mathrm{g}$ | [Pa]  | Gas-bus pressure | Optional GasBus port `GasInputPm`
 
 #### Algebraic
 Symbol            | Units  | Description                                                      | Note
@@ -119,6 +123,13 @@ $E_{\mathrm{fd}}$ | [p.u.] | Field winding voltage from the excitation system   
 ## Model Equations
 
 Smooth functions: [$q$](../../../../CommonMath.md#quadratic-ramp).
+
+With `GasInputPm` attached, the fuel valve is fixed and the mechanical power
+follows the gas-bus pressure:
+
+```math
+P_\mathrm{m} = K_\mathrm{v} p_\mathrm{g}
+```
 
 ### Internal Equations
 
@@ -178,6 +189,13 @@ I_i^{\mathrm{bus}}
 \end{aligned}
 ```
 
+With `GasInputPm` attached, the machine draws its fuel from the gas bus, with
+$S^\mathrm{sys}$ in MVA:
+
+```math
+\Delta q^\mathrm{bus} \mathrel{+}= -k_\mathrm{f} S^\mathrm{sys} P_\mathrm{m}
+```
+
 ## Initialization
 
 The power-flow solution gives $V_r$, $V_i$, $I_r$, and $I_i$. At synchronous
@@ -208,6 +226,13 @@ network frame and is independent of rotor angle:
 With $\delta$ known, the rotor-frame currents, voltages, flux states, field
 voltage, and mechanical power follow directly from the steady-state model
 equations above.
+
+With `GasInputPm` attached, the valve gain holds the initialized mechanical
+power at the initial gas-bus pressure:
+
+```math
+K_\mathrm{v} \leftarrow \dfrac{P_\mathrm{m}}{p_\mathrm{g}}
+```
 
 ## Monitors
 

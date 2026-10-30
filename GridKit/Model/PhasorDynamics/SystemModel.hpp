@@ -30,6 +30,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class SignalNode;
 
+    namespace Gas
+    {
+      template <typename scalar_type, typename index_type>
+      class GasBusBase;
+    }
+
     /**
      * @brief Prototype for a system model class
      *
@@ -74,6 +80,7 @@ namespace GridKit
       using CsrMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using BusT           = BusBase<ScalarT, IdxT>;
+      using GasBusT        = Gas::GasBusBase<ScalarT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
       using ComponentT     = Component<ScalarT, IdxT>;
@@ -119,6 +126,7 @@ namespace GridKit
       void setSystemBase(RealT freq_system_base, RealT va_system_base);
 
       BusT*                  getBus(IdxT bus_id);
+      GasBusT*               getGasBus(IdxT bus_id);
       SignalNodeT*           getSignalNode(IdxT signal_id);
       ComponentT*            getComponent(IdxT gridkit_component_id);
       Branch<ScalarT, IdxT>* getBranch(const std::string& id);
@@ -144,6 +152,8 @@ namespace GridKit
       /// Map between branch id and gridkit_component_id
       /// @todo remove this map and use branch IDs to access individual branches.
       std::map<std::string, IdxT> gridkit_branch_indices_;
+
+      std::map<IdxT, GasBusT*> gas_buses_; ///< Gas buses by bus_id, owned as components
 
       std::map<IdxT, IdxT>  gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, BusT*> external_buses_;         ///< Parent's buses by bus_id, not owned

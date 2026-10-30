@@ -34,12 +34,14 @@ namespace GridKit
       S10,   ///< Saturation factor at 1.0 pu flux
       S12,   ///< Saturation factor at 1.2 pu flux
       mva,   ///< MVA base of the genrou model
+      kf,    ///< Specific fuel consumption with GasInputPm [kg/MJ]
     };
 
     /// Buses for a Genrou generator model
     enum class GenrouBuses : size_t
     {
-      bus, ///< Unique ID of the connecting bus
+      bus,        ///< Unique ID of the connecting bus
+      GasInputPm, ///< Unique ID of the gas bus supplying fuel in place of pmech
     };
 
     /// Signal inputs for a Genrou generator model

@@ -58,6 +58,7 @@ namespace GridKit
       Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);
       Xdp_      = reader.readReal(Parameter::Xdp).value_or(Xdp_);
       mva_base_ = reader.readReal(Parameter::mva).value_or(mva_base_);
+      kf_       = reader.readReal(Parameter::kf).value_or(kf_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -119,9 +120,9 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Resize bus data
-      wb_.resize(2);
-      h_.resize(2);
+      // Resize bus data; the last entry is the gas bus
+      wb_.resize(3);
+      h_.resize(3);
 
       // Resize signal variable data
       ws_.resize(2);
@@ -159,6 +160,12 @@ namespace GridKit
         checks.fail("efd signal attached with no linked exciter");
       }
 
+      if (gas_bus_ != nullptr)
+      {
+        checks.check(!pmech_port.connected(), "pmech and GasInputPm cannot both be attached");
+        checks.check(std::isfinite(kf_) && kf_ > ZERO<RealT>, "kf must be finite and positive with GasInputPm");
+      }
+
       return checks;
     }
 
@@ -168,6 +175,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::initialize()
     {
+      if (gas_bus_ != nullptr && gas_bus_->p() <= ZERO<RealT>)
+      {
+        Log::error() << "GenClassical: GasInputPm pressure must be positive\n";
+        return 1;
+      }
+
       // Network frame terminal values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
@@ -199,6 +212,13 @@ namespace GridKit
       if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
         pmech_port.writeValue(pmech_set_);
+      }
+
+      // A fixed fuel valve makes mechanical power proportional to gas pressure
+      pmech_gain_ = ONE<RealT>;
+      if (gas_bus_ != nullptr)
+      {
+        pmech_gain_ = static_cast<RealT>(pmech_set_ / gas_bus_->p());
       }
 
       efd_set_ = static_cast<RealT>(efd);
@@ -284,7 +304,7 @@ namespace GridKit
       const ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      const ScalarT pmech = this->toComponentBase(ws[0]);
+      const ScalarT pmech = this->toComponentBase(pmech_gain_ * ws[0]);
       const ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
@@ -309,13 +329,16 @@ namespace GridKit
     __attribute__((always_inline)) inline int GenClassical<scalar_type, index_type>::evaluateBusResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
+        const ScalarT*                  wb,
         ScalarT*                        h)
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
       h[0]             = this->toSystemBase(ir);
       h[1]             = this->toSystemBase(ii);
+
+      // Fuel drawn from the gas bus, zero without GasInputPm
+      h[2] = -kf_ * va_system_base_ / static_cast<RealT>(1.0e6) * pmech_gain_ * wb[2];
 
       return 0;
     }
@@ -331,6 +354,10 @@ namespace GridKit
       if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
         ws_indices_[0] = pmech_port.signalVariableIndex();
+      }
+      if (gas_bus_ != nullptr && gas_bus_->size() > 0)
+      {
+        ws_indices_[0] = gas_bus_->getVariableIndex(0);
       }
 
       ws_indices_[1] = INVALID_INDEX<IdxT>;
@@ -356,6 +383,10 @@ namespace GridKit
       {
         ws[0] = pmech_port.readSignal();
       }
+      if (gas_bus_ != nullptr)
+      {
+        ws[0] = gas_bus_->p();
+      }
 
       ws[1] = efd_set_;
       if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
@@ -366,6 +397,11 @@ namespace GridKit
       auto* wb = wb_.getData();
       wb[0]    = Vr();
       wb[1]    = Vi();
+      wb[2]    = ZERO<RealT>;
+      if (gas_bus_ != nullptr)
+      {
+        wb[2] = gas_bus_->p();
+      }
 
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
@@ -380,6 +416,15 @@ namespace GridKit
       if (bus_->size() > 0)
       {
         bus_->getResidual().setDataUpdated();
+      }
+
+      if (gas_bus_ != nullptr)
+      {
+        gas_bus_->q() += h[2];
+        if (gas_bus_->size() > 0)
+        {
+          gas_bus_->getResidual().setDataUpdated();
+        }
       }
       f_.setDataUpdated();
 

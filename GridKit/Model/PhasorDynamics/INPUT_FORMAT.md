@@ -91,7 +91,7 @@ a bus and has the following fields:
   `class`            | A string indicating the class of node. See the table below for more information
   `name`             | String containing the name of the node. This may be empty or non-unique. Only ASCII letters, digits, spaces, `_`, `.` and `-` are allowed
   `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
-  `params`           | Object mapping bus parameter names to values. Supported parameter: `kv`, the bus voltage base in kV.
+  `params`           | Object mapping bus parameter names to values. Supported parameter: `kv`, the bus voltage base in kV. Gas buses have no parameters.
   `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
   `extension`        | Optional field containing an object with implementation-defined keys
 
@@ -104,8 +104,11 @@ specified:
   -------------------|------------------------------------------------------------|------------------------- | -------------------------
   `Bus`              | Positive-sequence, AC phasor domain bus                    | `Vr`, `Vi`               | `Vm`, `Va`
   `BusInfinite`      | Positive-sequence, AC phasor domain bus with fixed voltage | `Vr`, `Vi`               | `Vm`, `Va`
+  `GasBus`           | Gas network junction with a mass-flow balance              | `p`                      |
+  `GasBusInfinite`   | Gas network junction with fixed pressure                   | `p`                      |
 
-`Vr` defaults to `1.0`, and `Vi` defaults to `0.0`.
+`Vr` defaults to `1.0`, and `Vi` defaults to `0.0`. The gas pressure `p`, in
+Pa, has no default and must be positive.
 
 ### Signals
 
@@ -144,6 +147,7 @@ are specified:
   Device class | Description
   -------------|------------
   [Branch](Branch/README.md) | algebraic pi model for a line or off-nominal transformer branch
+  [GasBranch](Gas/GasBranch/README.md) | isothermal gas pipe divided into segments
   [LoadZ](Load/LoadZ/README.md) | Constant-impedance load model
   [LoadZIP](Load/LoadZIP/README.md) | ZIP load model
   [Genrou](SynchronousMachine/GENROU/README.md) | 6th order machine model

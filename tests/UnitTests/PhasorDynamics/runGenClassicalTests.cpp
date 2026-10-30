@@ -14,6 +14,7 @@ int main()
   result += test.monitor_system_base();
   result += test.signals();
   result += test.hard_coded_residual();
+  result += test.gas_port();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

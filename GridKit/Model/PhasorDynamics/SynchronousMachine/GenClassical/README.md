@@ -22,6 +22,7 @@ $H$               | [s]  | `H`   | Rotor inertia                    | 3.0       
 $D$               | [p.u.] | `D`   | Damping coefficient              | 0.0           |
 $R_\mathrm{a}$             | [p.u.] | `Ra`  | Armature resistance              | 0.0           | Component base
 $X'_d$            | [p.u.] | `Xdp` | Direct-axis transient reactance  | 0.2           | Component base
+$k_\mathrm{f}$    | [kg/MJ] | `kf` | Specific fuel consumption        | 0.06          | Required with `GasInputPm`
 
 ### Parameter Validation
 
@@ -52,6 +53,7 @@ Name    | Port   | Init    | Description
 `pmech` | Input  | Unknown | Mechanical-power input
 `efd`   | Input  | Unknown | Field-voltage input
 `speed` | Output | Known   | Speed-deviation output
+`GasInputPm` | GasBus | Known | Gas bus supplying fuel in place of `pmech`
 
 ## Model Variables
 
@@ -76,7 +78,9 @@ $I_\mathrm{i}$ | [p.u.] | Terminal current, imaginary component | Component base
 
 #### Differential
 
-None.
+Symbol         | Units | Init  | Description      | Note
+---------------|-------|-------|------------------|----------------------------------
+$p_\mathrm{g}$ | [Pa]  | Known | Gas-bus pressure | Optional GasBus port `GasInputPm`
 
 #### Algebraic
 
@@ -88,6 +92,13 @@ $P_\mathrm{m}$  | [p.u.] | Unknown | Mechanical power                      | Opt
 $E_\mathrm{fd}$ | [p.u.] | Unknown | Field voltage                         | Optional signal port `efd`; component base
 
 ## Model Equations
+
+With `GasInputPm` attached, the fuel valve is fixed and the mechanical power
+follows the gas-bus pressure:
+
+```math
+P_\mathrm{m} = K_\mathrm{v} p_\mathrm{g}
+```
 
 ### Internal Equations
 
@@ -117,6 +128,13 @@ $E_\mathrm{fd}$ | [p.u.] | Unknown | Field voltage                         | Opt
   \Delta I^\mathrm{bus}_\mathrm{r} &\mathrel{+}= \dfrac{I_\mathrm{r}}{k_\mathrm{base}} \\
   \Delta I^\mathrm{bus}_\mathrm{i} &\mathrel{+}= \dfrac{I_\mathrm{i}}{k_\mathrm{base}}
 \end{aligned}
+```
+
+With `GasInputPm` attached, the machine draws its fuel from the gas bus, with
+$S^\mathrm{sys}$ in MVA:
+
+```math
+\Delta q^\mathrm{bus} \mathrel{+}= -k_\mathrm{f} S^\mathrm{sys} P_\mathrm{m}
 ```
 
 ## Initialization
@@ -160,6 +178,13 @@ All internal derivatives are initialized to zero:
   E_\mathrm{fd}
     &\leftarrow |V_\mathrm{r}+jV_\mathrm{i}+(R_\mathrm{a}+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})|
 \end{aligned}
+```
+
+With `GasInputPm` attached, the valve gain holds this mechanical power at the
+initial gas-bus pressure:
+
+```math
+K_\mathrm{v} \leftarrow \dfrac{P_\mathrm{m}}{p_\mathrm{g}}
 ```
 
 ## Monitors

@@ -93,6 +93,22 @@ namespace GridKit
         ordered_external_buses_.push_back(bus);
       }
 
+      // Add gas buses before the devices that add to their balances
+      for (const auto& gasbusdata : data.gasbus)
+      {
+        GasBusT* gas_bus = nullptr;
+        if (gasbusdata.device_class == "GasBusInfinite")
+        {
+          gas_bus = new Gas::GasBusInfinite<ScalarT, IdxT>(gasbusdata);
+        }
+        else
+        {
+          gas_bus = new Gas::GasBus<ScalarT, IdxT>(gasbusdata);
+        }
+        gas_buses_[gasbusdata.bus_id] = gas_bus;
+        addComponent(gas_bus);
+      }
+
       // Add REGCA converters
       for (const auto& regcadata : data.regca)
       {
@@ -131,6 +147,27 @@ namespace GridKit
         addComponent(branch);
       }
 
+      // Add gas branches
+      for (const auto& gasbranchdata : data.gasbranch)
+      {
+        IdxT bus1_index = 0;
+        if (gasbranchdata.buses.contains(Gas::GasBranchBuses::bus1))
+        {
+          bus1_index = gasbranchdata.buses.at(Gas::GasBranchBuses::bus1);
+        }
+
+        IdxT bus2_index = 0;
+        if (gasbranchdata.buses.contains(Gas::GasBranchBuses::bus2))
+        {
+          bus2_index = gasbranchdata.buses.at(Gas::GasBranchBuses::bus2);
+        }
+
+        auto* gasbranch = new Gas::GasBranch<ScalarT, IdxT>(getGasBus(bus1_index),
+                                                            getGasBus(bus2_index),
+                                                            gasbranchdata);
+        addComponent(gasbranch);
+      }
+
       // Add loads
       /// @todo Add loads to JSON parser
       for (const auto& loaddata : data.loadz)
@@ -167,6 +204,10 @@ namespace GridKit
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
         auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
+        if (gendata.buses.contains(GenrouBuses::GasInputPm))
+        {
+          gen->setGasBus(getGasBus(gendata.buses.at(GenrouBuses::GasInputPm)));
+        }
         addComponent(gen);
         gen->getPorts().connect(gendata, signal_nodes_);
       }
@@ -181,6 +222,10 @@ namespace GridKit
         }
 
         auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
+        if (gendata.buses.contains(GensalBuses::GasInputPm))
+        {
+          gen->setGasBus(getGasBus(gendata.buses.at(GensalBuses::GasInputPm)));
+        }
         addComponent(gen);
         gen->getPorts().connect(gendata, signal_nodes_);
       }
@@ -194,6 +239,10 @@ namespace GridKit
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
+        if (gendata.buses.contains(GenClassicalBuses::GasInputPm))
+        {
+          gen->setGasBus(getGasBus(gendata.buses.at(GenClassicalBuses::GasInputPm)));
+        }
         addComponent(gen);
         gen->getPorts().connect(gendata, signal_nodes_);
       }
@@ -1035,6 +1084,18 @@ namespace GridKit
         return external_buses_.at(bus_id);
       }
       return bus;
+    }
+
+    /**
+     * @brief Return pointer to a gas bus of this system
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    SystemModel<scalar_type, index_type>::GasBusT*
+    SystemModel<scalar_type, index_type>::getGasBus(IdxT bus_id)
+    {
+      // Should fail if user-provided bus_id is incorrect
+      return gas_buses_.at(bus_id);
     }
 
     /**

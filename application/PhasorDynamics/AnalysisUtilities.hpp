@@ -40,7 +40,8 @@ namespace GridKit
         FAULT_ON,
         FAULT_OFF,
         IN_SERVICE,
-        OUT_OF_SERVICE
+        OUT_OF_SERVICE,
+        PRESSURE
       };
 
       /// Time event takes place
@@ -53,6 +54,8 @@ namespace GridKit
       double      R{0.0};
       /// Fault reactance [p.u.]
       double      X{0.0};
+      /// Pressure of a fixed-pressure gas bus [Pa]
+      double      p{0.0};
       /// Case-file `id` of the branch to put in or out of service
       std::string device;
     };
@@ -159,6 +162,10 @@ namespace GridKit
         {
           raw_event.at("R").get_to(event.R);
           raw_event.at("X").get_to(event.X);
+        }
+        if (event.type == EventType::PRESSURE)
+        {
+          raw_event.at("p").get_to(event.p);
         }
       }
 

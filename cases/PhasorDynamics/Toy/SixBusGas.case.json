@@ -1,0 +1,398 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "SixBusGas",
+    "case_description": "Six-bus system whose two GENROU machines burn gas from a four-bus gas network",
+    "case_comments": "Steady state written by examples/PhasorDynamics/DynamicSimulation/Toy/SixBusGas/steady_state.py"
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "buses": [
+    {
+      "number": 1,
+      "class": "BusInfinite",
+      "name": "Bus 1",
+      "init": {
+        "Vr": 1.0,
+        "Vi": 0.0
+      },
+      "params": {
+        "kv": 230.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 2,
+      "class": "Bus",
+      "name": "Bus 2",
+      "init": {
+        "Vr": 1.018457216770598,
+        "Vi": 0.056079386657551675
+      },
+      "params": {
+        "kv": 230.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 3,
+      "class": "Bus",
+      "name": "Bus 3",
+      "init": {
+        "Vr": 1.018803148088181,
+        "Vi": 0.049397828349150005
+      },
+      "params": {
+        "kv": 230.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 4,
+      "class": "Bus",
+      "name": "Bus 4",
+      "init": {
+        "Vr": 0.9698890361101913,
+        "Vi": -0.06531856605674254
+      },
+      "params": {
+        "kv": 230.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 5,
+      "class": "Bus",
+      "name": "Bus 5",
+      "init": {
+        "Vr": 0.9831282502242281,
+        "Vi": -0.04012615360642881
+      },
+      "params": {
+        "kv": 230.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 6,
+      "class": "Bus",
+      "name": "Bus 6",
+      "init": {
+        "Vr": 0.9922800796319535,
+        "Vi": -0.022559332482618932
+      },
+      "params": {
+        "kv": 230.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 101,
+      "class": "GasBusInfinite",
+      "name": "Gas 101",
+      "init": {
+        "p": 5000000.0
+      },
+      "mon": [
+        "p"
+      ]
+    },
+    {
+      "number": 102,
+      "class": "GasBus",
+      "name": "Gas 102",
+      "init": {
+        "p": 4869408.516982447
+      },
+      "mon": [
+        "p"
+      ]
+    },
+    {
+      "number": 103,
+      "class": "GasBus",
+      "name": "Gas 103",
+      "init": {
+        "p": 4826204.8294967525
+      },
+      "mon": [
+        "p"
+      ]
+    },
+    {
+      "number": 104,
+      "class": "GasBus",
+      "name": "Gas 104",
+      "init": {
+        "p": 4832980.8640904585
+      },
+      "mon": [
+        "p"
+      ]
+    }
+  ],
+  "devices": [
+    {
+      "class": "Branch",
+      "id": "BR_1_4",
+      "ports": {
+        "bus1": 1,
+        "bus2": 4
+      },
+      "params": {
+        "R": 0.01,
+        "X": 0.1,
+        "G": 0.0,
+        "B": 0.02
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "BR_1_6",
+      "ports": {
+        "bus1": 1,
+        "bus2": 6
+      },
+      "params": {
+        "R": 0.01,
+        "X": 0.1,
+        "G": 0.0,
+        "B": 0.02
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "BR_4_5",
+      "ports": {
+        "bus1": 4,
+        "bus2": 5
+      },
+      "params": {
+        "R": 0.01,
+        "X": 0.08,
+        "G": 0.0,
+        "B": 0.02
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "BR_5_6",
+      "ports": {
+        "bus1": 5,
+        "bus2": 6
+      },
+      "params": {
+        "R": 0.01,
+        "X": 0.08,
+        "G": 0.0,
+        "B": 0.02
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "BR_2_5",
+      "ports": {
+        "bus1": 2,
+        "bus2": 5
+      },
+      "params": {
+        "R": 0.0,
+        "X": 0.06,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "id": "BR_3_6",
+      "ports": {
+        "bus1": 3,
+        "bus2": 6
+      },
+      "params": {
+        "R": 0.0,
+        "X": 0.06,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "LoadZ",
+      "id": "L4",
+      "ports": {
+        "bus": 4
+      },
+      "params": {
+        "R": 0.8669277591178577,
+        "X": 0.2600783277353573
+      }
+    },
+    {
+      "class": "LoadZ",
+      "id": "L5",
+      "ports": {
+        "bus": 5
+      },
+      "params": {
+        "R": 0.5808907587553196,
+        "X": 0.1936302529184399
+      }
+    },
+    {
+      "class": "LoadZ",
+      "id": "L6",
+      "ports": {
+        "bus": 6
+      },
+      "params": {
+        "R": 0.738846509937343,
+        "X": 0.24628216997911437
+      }
+    },
+    {
+      "class": "Genrou",
+      "id": "G2",
+      "ports": {
+        "bus": 2,
+        "GasInputPm": 103
+      },
+      "params": {
+        "p0": 1.599999999999995,
+        "q0": 0.6896031438543317,
+        "H": 4.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 6.0,
+        "Tdopp": 0.04,
+        "Tqop": 0.8,
+        "Tqopp": 0.06,
+        "Xd": 1.8,
+        "Xdp": 0.3,
+        "Xdpp": 0.25,
+        "Xq": 1.7,
+        "Xqp": 0.55,
+        "Xqpp": 0.25,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 200.0,
+        "kf": 0.06
+      },
+      "mon": [
+        "p",
+        "speed",
+        "delta"
+      ]
+    },
+    {
+      "class": "Genrou",
+      "id": "G3",
+      "ports": {
+        "bus": 3,
+        "GasInputPm": 104
+      },
+      "params": {
+        "p0": 1.2000000000000044,
+        "q0": 0.5096052186570462,
+        "H": 4.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 6.0,
+        "Tdopp": 0.04,
+        "Tqop": 0.8,
+        "Tqopp": 0.06,
+        "Xd": 1.8,
+        "Xdp": 0.3,
+        "Xdpp": 0.25,
+        "Xq": 1.7,
+        "Xqp": 0.55,
+        "Xqpp": 0.25,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 150.0,
+        "kf": 0.06
+      },
+      "mon": [
+        "p",
+        "speed",
+        "delta"
+      ]
+    },
+    {
+      "class": "GasBranch",
+      "id": "GP_101_102",
+      "ports": {
+        "bus1": 101,
+        "bus2": 102
+      },
+      "params": {
+        "L": 5000.0,
+        "D": 0.3,
+        "lambda": 0.01,
+        "a": 370.0,
+        "dxmax": 250.0
+      },
+      "mon": [
+        "q1",
+        "q2",
+        "linepack"
+      ]
+    },
+    {
+      "class": "GasBranch",
+      "id": "GP_102_103",
+      "ports": {
+        "bus1": 102,
+        "bus2": 103
+      },
+      "params": {
+        "L": 2000.0,
+        "D": 0.25,
+        "lambda": 0.01,
+        "a": 370.0,
+        "dxmax": 250.0
+      },
+      "mon": [
+        "q1",
+        "q2",
+        "linepack"
+      ]
+    },
+    {
+      "class": "GasBranch",
+      "id": "GP_102_104",
+      "ports": {
+        "bus1": 102,
+        "bus2": 104
+      },
+      "params": {
+        "L": 3000.0,
+        "D": 0.25,
+        "lambda": 0.01,
+        "a": 370.0,
+        "dxmax": 250.0
+      },
+      "mon": [
+        "q1",
+        "q2",
+        "linepack"
+      ]
+    }
+  ]
+}

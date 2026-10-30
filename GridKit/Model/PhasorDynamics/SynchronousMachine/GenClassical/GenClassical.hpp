@@ -10,6 +10,7 @@
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasBusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -58,6 +59,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
       using Component<scalar_type, index_type>::freq_system_base_;
+      using Component<scalar_type, index_type>::va_system_base_;
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
@@ -67,6 +69,7 @@ namespace GridKit
       using IdxT         = index_type;
       using RealT        = typename Component<ScalarT, IdxT>::RealT;
       using BusT         = BusBase<ScalarT, IdxT>;
+      using GasBusT      = Gas::GasBusBase<ScalarT, IdxT>;
       using ModelDataT   = GenClassicalData<RealT, IdxT>;
       using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT     = Model::VariableMonitor<GenClassical, GenClassicalData>;
@@ -91,6 +94,12 @@ namespace GridKit
       SignalPortsT& getPorts()
       {
         return ports_;
+      }
+
+      /// Take mechanical power from a gas bus through GasInputPm
+      void setGasBus(GasBusT* gas_bus)
+      {
+        gas_bus_ = gas_bus;
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
@@ -129,7 +138,8 @@ namespace GridKit
 
     private:
       /* Identification */
-      BusT* bus_;
+      BusT*    bus_;
+      GasBusT* gas_bus_{nullptr};
 
       /// Component signal ports
       SignalPortsT ports_;
@@ -144,10 +154,13 @@ namespace GridKit
       RealT Ra_{0.0};
       RealT Xdp_{0.2};
       RealT mva_base_{100.0};
+      RealT kf_{0.0};
 
       /* Derived parameters */
       RealT G_;
       RealT B_;
+      /// System-base mechanical power per unit of the pmech input; the valve gain with GasInputPm
+      RealT pmech_gain_{1.0};
 
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_{0.0};

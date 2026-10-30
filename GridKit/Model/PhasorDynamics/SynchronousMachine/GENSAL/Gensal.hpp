@@ -9,6 +9,7 @@
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasBusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -67,6 +68,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
       using Component<scalar_type, index_type>::freq_system_base_;
+      using Component<scalar_type, index_type>::va_system_base_;
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
@@ -76,6 +78,7 @@ namespace GridKit
       using IdxT           = index_type;
       using RealT          = typename Component<ScalarT, IdxT>::RealT;
       using BusT           = BusBase<ScalarT, IdxT>;
+      using GasBusT        = Gas::GasBusBase<ScalarT, IdxT>;
       using ModelDataT     = GensalData<RealT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
@@ -102,6 +105,12 @@ namespace GridKit
       SignalPortsT& getPorts()
       {
         return ports_;
+      }
+
+      /// Take mechanical power from a gas bus through GasInputPm
+      void setGasBus(GasBusT* gas_bus)
+      {
+        gas_bus_ = gas_bus;
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
@@ -140,7 +149,8 @@ namespace GridKit
 
     private:
       /* Identification */
-      BusT* bus_;
+      BusT*    bus_;
+      GasBusT* gas_bus_{nullptr};
 
       /* Component ports */
       SignalPortsT ports_;
@@ -164,6 +174,7 @@ namespace GridKit
       RealT S10_{0.0};
       RealT S12_{0.0};
       RealT mva_base_{100.0};
+      RealT kf_{0.0};
 
       /* Derived parameters */
       RealT   SA_;
@@ -176,6 +187,8 @@ namespace GridKit
       RealT   Xq2_;
       RealT   G_;
       RealT   B_;
+      /// System-base mechanical power per unit of the pmech input; the valve gain with GasInputPm
+      RealT   pmech_gain_{1.0};
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
       ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set

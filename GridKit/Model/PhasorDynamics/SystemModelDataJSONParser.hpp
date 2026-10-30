@@ -8,6 +8,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasBus/GasBusDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -90,8 +91,19 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     void parseSystemContents(const json& j, SystemModelData<RealT, IdxT>& sm)
     {
-      /// Gets all electrical buses
-      j.at("buses").get_to(sm.bus);
+      /// Gets all electrical and gas buses
+      for (auto& raw_bus : j.at("buses"))
+      {
+        auto kind = raw_bus.at("class").get<std::string>();
+        if (kind == "GasBus" || kind == "GasBusInfinite")
+        {
+          raw_bus.get_to(sm.gasbus.emplace_back());
+        }
+        else
+        {
+          raw_bus.get_to(sm.bus.emplace_back());
+        }
+      }
 
       /// Gets all signal nodes (allows for systems without signals)
       if (j.contains("signals"))
@@ -108,6 +120,12 @@ namespace GridKit
           typename SystemModelData<RealT, IdxT>::BranchDataT branch;
           raw_component.get_to(branch);
           sm.branch.push_back(branch);
+        }
+        else if (kind == "GasBranch")
+        {
+          typename SystemModelData<RealT, IdxT>::GasBranchDataT gasbranch;
+          raw_component.get_to(gasbranch);
+          sm.gasbranch.push_back(gasbranch);
         }
         else if (kind == "Genrou")
         {

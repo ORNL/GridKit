@@ -31,12 +31,14 @@ namespace GridKit
       S10,   ///< \f$S_{10}\f$ Saturation factor at 1.0 pu flux
       S12,   ///< \f$S_{12}\f$ Saturation factor at 1.2 pu flux
       mva,   ///< \f$S_\mathrm{mach}\f$ MVA base of the gensal model
+      kf,    ///< \f$k_\mathrm{f}\f$ Specific fuel consumption with GasInputPm [kg/MJ]
     };
 
     /// Buses for a Gensal generator model
     enum class GensalBuses : size_t
     {
-      bus, ///< Unique ID of the connecting bus
+      bus,        ///< Unique ID of the connecting bus
+      GasInputPm, ///< \f$p_\mathrm{g}\f$ Unique ID of the gas bus supplying fuel in place of pmech
     };
 
     /// Signal inputs for a Gensal generator model

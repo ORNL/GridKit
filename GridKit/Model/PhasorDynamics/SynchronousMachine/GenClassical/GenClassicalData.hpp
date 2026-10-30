@@ -22,12 +22,14 @@ namespace GridKit
       Ra,  ///< \f$R_a\f$ Armature resistance
       Xdp, ///< \f$X'_d\f$ Direct-axis transient reactance
       mva, ///< \f$S^\mathrm{base}\f$ Component power base
+      kf,  ///< \f$k_\mathrm{f}\f$ Specific fuel consumption with GasInputPm [kg/MJ]
     };
 
     /// Buses for a classical generator model
     enum class GenClassicalBuses : size_t
     {
-      bus, ///< Unique ID of the connecting bus
+      bus,        ///< Unique ID of the connecting bus
+      GasInputPm, ///< \f$p_\mathrm{g}\f$ Unique ID of the gas bus supplying fuel in place of pmech
     };
 
     /// Signal inputs for a classical generator model
