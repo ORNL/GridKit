@@ -9,6 +9,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasBusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -73,11 +74,14 @@ TestStatus runStudy(StudyData study_data)
     case EventType::OUT_OF_SERVICE:
       sys.getBranch(event.device)->setInService(false);
       break;
+    case EventType::WITHDRAWAL:
+      ret = sys.getGasBus(event.bus)->setWithdrawal(event.w);
+      break;
     }
 
     if (ret != 0)
     {
-      Log::error() << "Fault event failed for bus " << event.bus
+      Log::error() << "Event failed for bus " << event.bus
                    << " at time " << event.time << '\n';
       return {false};
     }

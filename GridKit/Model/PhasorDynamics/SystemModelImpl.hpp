@@ -168,6 +168,27 @@ namespace GridKit
         addComponent(gasbranch);
       }
 
+      // Add gas compressors
+      for (const auto& gascompressordata : data.gascompressor)
+      {
+        IdxT bus1_index = 0;
+        if (gascompressordata.buses.contains(Gas::GasCompressorBuses::bus1))
+        {
+          bus1_index = gascompressordata.buses.at(Gas::GasCompressorBuses::bus1);
+        }
+
+        IdxT bus2_index = 0;
+        if (gascompressordata.buses.contains(Gas::GasCompressorBuses::bus2))
+        {
+          bus2_index = gascompressordata.buses.at(Gas::GasCompressorBuses::bus2);
+        }
+
+        auto* gascompressor = new Gas::GasCompressor<ScalarT, IdxT>(getGasBus(bus1_index),
+                                                                    getGasBus(bus2_index),
+                                                                    gascompressordata);
+        addComponent(gascompressor);
+      }
+
       // Add loads
       /// @todo Add loads to JSON parser
       for (const auto& loaddata : data.loadz)

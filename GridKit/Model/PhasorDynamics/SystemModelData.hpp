@@ -16,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Gas/GasBranch/GasBranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Gas/GasBus/GasBusData.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasCompressor/GasCompressorData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
@@ -48,6 +49,7 @@ namespace GridKit
       using BusDataT          = BusData<RealT, IdxT>;
       using GasBusDataT       = Gas::GasBusData<RealT, IdxT>;
       using GasBranchDataT    = Gas::GasBranchData<RealT, IdxT>;
+      using CompressorDataT   = Gas::GasCompressorData<RealT, IdxT>;
       using RegcaDataT        = Converter::RegcaData<RealT, IdxT>;
       using ReecbDataT        = Controller::ReecbData<RealT, IdxT>;
       using RepcaDataT        = Controller::RepcaData<RealT, IdxT>;
@@ -109,6 +111,7 @@ namespace GridKit
       std::vector<BranchDataT>       branch;          ///< Branches within the model
       std::vector<GasBusDataT>       gasbus;          ///< Gas buses within the model
       std::vector<GasBranchDataT>    gasbranch;       ///< Gas branches within the model
+      std::vector<CompressorDataT>   gascompressor;   ///< Gas compressors within the model
       std::vector<RegcaDataT>        regca;           ///< REGCA converter instances within the model
       std::vector<ReecbDataT>        reecb;           ///< REECB electrical controllers within the model
       std::vector<RepcaDataT>        repca;           ///< REPCA plant controllers within the model

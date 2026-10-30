@@ -7,6 +7,7 @@
 
 #include <cmath>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Gas/GasBus/GasBus.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
@@ -23,7 +24,8 @@ namespace GridKit
        * - Number of equations = 1
        * - Number of internal variables = 1
        *
-       * @param data - gas bus data with the initial pressure and monitor selections
+       * @param data - gas bus data with the initial pressure, injection, and
+       * monitor selections
        */
       template <typename scalar_type, typename index_type>
       GasBus<scalar_type, index_type>::GasBus(const ModelDataT& data)
@@ -32,6 +34,10 @@ namespace GridKit
       {
         bus_id_ = data.bus_id;
         size_   = 1;
+
+        using Parameter = typename ModelDataT::Parameters;
+        const Model::ParameterReader reader(data, "GasBus");
+        injection_ = reader.readReal(Parameter::q).value_or(injection_);
 
         using Variable = typename ModelDataT::MonitorableVariables;
         monitor_->set(Variable::p, [this]
@@ -124,7 +130,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Reset the mass-flow balance
+       * @brief Reset the mass-flow balance to the injection
        *
        * @warning This implementation assumes the gas bus residual is evaluated
        * _before_ the residuals of the devices connected to it.
@@ -132,8 +138,26 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int GasBus<scalar_type, index_type>::evaluateResidual()
       {
-        q() = ZERO<RealT>;
+        q() = injection_;
         f_.setDataUpdated();
+        return 0;
+      }
+
+      /**
+       * @brief Replace the injection with a withdrawal, for example at an event
+       *
+       * @param[in] withdrawal - mass flow leaving the network [kg/s]
+       */
+      template <typename scalar_type, typename index_type>
+      int GasBus<scalar_type, index_type>::setWithdrawal(RealT withdrawal)
+      {
+        if (!std::isfinite(withdrawal))
+        {
+          Log::error() << "GasBus: withdrawal must be finite\n";
+          return 1;
+        }
+
+        injection_ = -withdrawal;
         return 0;
       }
 

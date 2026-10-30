@@ -30,8 +30,9 @@ Each event group describes a system event that occurs at a given time point
    Name              | Value
  --------------------|-------------------------------------------------------
   `time`             | A floating point value for time event occurs
-  `type`             | Event type (one of { "fault_on", "fault_off", "in_service", "out_of_service" })
-  `bus`              | Number of the faulted bus (omitted for `ContingencyAnalysis`, which faults every bus in turn using the same `R` and `X`)
+  `type`             | Event type (one of { "fault_on", "fault_off", "in_service", "out_of_service", "withdrawal" })
+  `bus`              | Number of the faulted bus, or of the `GasBus` for "withdrawal" (fault buses are omitted for `ContingencyAnalysis`, which faults every bus in turn using the same `R` and `X`)
   `R`                | Fault resistance in per unit (required for "fault_on")
   `X`                | Fault reactance in per unit (required for "fault_on")
   `device`           | `id` of the branch to put in service ("in_service") or take out of service ("out_of_service")
+  `w`                | Gas withdrawal leaving the network in kg/s; the bus injection becomes `-w` (required for "withdrawal")

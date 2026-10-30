@@ -8,6 +8,7 @@ int main()
   result += test.constructor();
   result += test.initialization();
   result += test.residual();
+  result += test.withdrawal();
   result += test.parameterValidation();
   result += test.fixedPressure();
 

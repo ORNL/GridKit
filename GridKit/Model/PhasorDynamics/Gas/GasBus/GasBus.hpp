@@ -21,7 +21,7 @@ namespace GridKit
        * @brief Gas bus with a pressure variable and a mass-flow balance.
        *
        * Mass flow entering the bus is positive. Connected devices add their
-       * mass flows after the bus resets the balance to zero.
+       * mass flows after the bus resets the balance to its injection.
        */
       template <typename scalar_type, typename index_type>
       class GasBus : public GasBusBase<scalar_type, index_type>
@@ -54,6 +54,7 @@ namespace GridKit
         int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
+        int setWithdrawal(RealT withdrawal) override final;
 
         Model::ConfigurationChecks verify() const override final;
 
@@ -71,6 +72,7 @@ namespace GridKit
 
       private:
         RealT p0_{ZERO<RealT>};
+        RealT injection_{ZERO<RealT>};
 
         /// Variable monitor
         std::unique_ptr<MonitorT> monitor_;

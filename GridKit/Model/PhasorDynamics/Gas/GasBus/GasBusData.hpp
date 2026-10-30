@@ -16,6 +16,12 @@ namespace GridKit
   {
     namespace Gas
     {
+      /// Parameters for a gas bus
+      enum class GasBusParameters : size_t
+      {
+        q, ///< \f$q\f$ Mass flow injected into the network [kg/s]
+      };
+
       /// Variables able to be monitored for a gas bus
       enum class GasBusMonitorableVariables : size_t
       {
@@ -33,7 +39,7 @@ namespace GridKit
       template <typename real_type, typename index_type>
       struct GasBusData : public ComponentData<real_type,
                                                index_type,
-                                               Utilities::EmptyEnum,
+                                               GasBusParameters,
                                                Utilities::EmptyEnum,
                                                Utilities::EmptyEnum,
                                                Utilities::EmptyEnum,

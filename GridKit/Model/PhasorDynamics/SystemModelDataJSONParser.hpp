@@ -127,6 +127,12 @@ namespace GridKit
           raw_component.get_to(gasbranch);
           sm.gasbranch.push_back(gasbranch);
         }
+        else if (kind == "GasCompressor")
+        {
+          typename SystemModelData<RealT, IdxT>::CompressorDataT gascompressor;
+          raw_component.get_to(gascompressor);
+          sm.gascompressor.push_back(gascompressor);
+        }
         else if (kind == "Genrou")
         {
           typename SystemModelData<RealT, IdxT>::GenrouDataT genrou;

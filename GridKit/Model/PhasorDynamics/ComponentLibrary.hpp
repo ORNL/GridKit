@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Gas/GasBranch/GasBranch.hpp>
 #include <GridKit/Model/PhasorDynamics/Gas/GasBus/GasBus.hpp>
 #include <GridKit/Model/PhasorDynamics/Gas/GasBusInfinite/GasBusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Gas/GasCompressor/GasCompressor.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>

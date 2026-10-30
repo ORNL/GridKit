@@ -35,6 +35,13 @@ namespace GridKit
         /// Mass-flow balance that connected devices add to [kg/s]
         virtual ScalarT& q() = 0;
 
+        /// Set the withdrawal leaving the network at this bus [kg/s]
+        virtual int setWithdrawal(RealT /* withdrawal */)
+        {
+          Log::error() << "Withdrawals are not supported by this gas bus type\n";
+          return 1;
+        }
+
         IdxT busID() const
         {
           return bus_id_;

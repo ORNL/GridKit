@@ -1,21 +1,29 @@
 # GasBus
 
 A gas bus owns the pressure $p$ and the mass-flow balance residual. Each
-connected device adds its mass flow after the bus resets the residual to zero.
+connected device adds its mass flow after the bus resets the residual to the
+injection.
 
 ## Notes
 
-- Mass flow entering the bus has positive sign.
+- Mass flow entering the bus has positive sign, so the injection $q$ of a gas
+  load is negative.
 - Connected GasBranch models add their terminal storage, so $p$ is a
   differential variable.
+- A `withdrawal` event replaces $q$ with the negative of the withdrawal, for
+  example for a leak.
 
 ## Model Parameters
 
-None.
+Symbol | Units  | JSON | Description | Typical Value | Note
+-------|--------|------|-------------|---------------|-----
+$q$    | [kg/s] | `q`  | Injection   | 0.0           |
 
 ### Parameter Validation
 
-None.
+```math
+|q| < \infty
+```
 
 ### Model Derived Parameters
 
@@ -59,7 +67,7 @@ $q_d$ be the mass flow component $d$ adds.
 #### Differential
 
 ```math
-0 = \sum_{d \in \mathcal{D}} q_d
+0 = q + \sum_{d \in \mathcal{D}} q_d
 ```
 
 #### Algebraic

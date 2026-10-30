@@ -60,6 +60,26 @@ namespace GridKit
           }
         }
 
+        // Only a GasBus takes an injection; a GasBusInfinite supplies any flow
+        if (j.contains("params"))
+        {
+          using Parameters = typename GasBusData<RealT, IdxT>::Parameters;
+          for (auto& raw_parameter : j.at("params").items())
+          {
+            auto key = Utilities::enum_cast<Parameters>(raw_parameter.key());
+            if (key.has_value() && gd.device_class == "GasBus" && raw_parameter.value().is_number())
+            {
+              gd.parameters[key.value()] = raw_parameter.value().template get<RealT>();
+            }
+            else
+            {
+              Log::error() << "\n\tInvalid parameter \""
+                           << raw_parameter.key() << "\" in \"params\" section."
+                           << error_context.str() << std::endl;
+            }
+          }
+        }
+
         if (j.contains("mon"))
         {
           using MonitorableVariables = typename GasBusData<RealT, IdxT>::MonitorableVariables;

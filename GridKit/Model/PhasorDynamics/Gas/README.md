@@ -15,6 +15,7 @@ of bus voltage, and mass flow plays the role of current.
 - [GasBus](GasBus/README.md): Junction mass balance
 - [GasBusInfinite](GasBusInfinite/README.md): Fixed-pressure supply
 - [GasBranch](GasBranch/README.md): Pipe
+- [GasCompressor](GasCompressor/README.md): Fixed-ratio compressor
 
 ## Gas Laws
 

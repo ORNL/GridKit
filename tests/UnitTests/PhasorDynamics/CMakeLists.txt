@@ -59,6 +59,17 @@ target_link_libraries(
   GridKit::phasor_dynamics_gas_bus_infinite
   GridKit::testing)
 
+add_executable(test_phasor_gas_compressor runGasCompressorTests.cpp)
+target_link_libraries(
+  test_phasor_gas_compressor
+  GridKit::definitions
+  GridKit::phasor_dynamics_gas_compressor
+  GridKit::phasor_dynamics_gas_compressor_dependency_tracking
+  GridKit::phasor_dynamics_gas_bus
+  GridKit::phasor_dynamics_gas_bus_dependency_tracking
+  GridKit::phasor_dynamics_gas_bus_infinite
+  GridKit::testing)
+
 add_executable(test_phasor_loadz runLoadZTests.cpp)
 target_link_libraries(
   test_phasor_loadz
@@ -251,6 +262,7 @@ add_test(NAME PhasorDynamicsBusSignalVoltageInTest COMMAND test_phasor_bus_signa
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsGasBusTest COMMAND test_phasor_gas_bus)
 add_test(NAME PhasorDynamicsGasBranchTest COMMAND test_phasor_gas_branch)
+add_test(NAME PhasorDynamicsGasCompressorTest COMMAND test_phasor_gas_compressor)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
 add_test(NAME PhasorDynamicsGovernorGastPtiTest COMMAND test_phasor_governor_gastpti)
@@ -281,6 +293,7 @@ install(
           test_phasor_branch
           test_phasor_gas_bus
           test_phasor_gas_branch
+          test_phasor_gas_compressor
           test_phasor_loadz
           test_phasor_loadzip
           test_phasor_genrou

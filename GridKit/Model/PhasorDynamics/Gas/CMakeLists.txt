@@ -8,3 +8,4 @@ install(FILES GasBusBase.hpp DESTINATION include/GridKit/Model/PhasorDynamics/Ga
 add_subdirectory(GasBranch)
 add_subdirectory(GasBus)
 add_subdirectory(GasBusInfinite)
+add_subdirectory(GasCompressor)

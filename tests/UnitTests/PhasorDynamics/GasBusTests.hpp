@@ -62,8 +62,28 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// The residual resets the balance that connected devices add to
+      /// The residual resets the balance that connected devices add to the injection
       TestOutcome residual()
+      {
+        TestStatus success = true;
+
+        auto data                                                 = busData(4.0e6);
+        data.parameters[PhasorDynamics::Gas::GasBusParameters::q] = RealT{-1.5};
+
+        GasBusT bus(data);
+        bus.allocate();
+        bus.initialize();
+
+        bus.q() = ScalarT{2.5};
+        bus.evaluateResidual();
+
+        success *= isEqual(bus.q(), ScalarT{-1.5});
+
+        return success.report(__func__);
+      }
+
+      /// A withdrawal replaces the injection of a GasBus; a fixed-pressure bus rejects it
+      TestOutcome withdrawal()
       {
         TestStatus success = true;
 
@@ -71,10 +91,12 @@ namespace GridKit
         bus.allocate();
         bus.initialize();
 
-        bus.q() = ScalarT{2.5};
+        success *= (bus.setWithdrawal(20.0) == 0);
         bus.evaluateResidual();
+        success *= isEqual(bus.q(), ScalarT{-20.0});
 
-        success *= isEqual(bus.q(), ScalarT{0.0});
+        GasBusInfiniteT supply(busData(5.0e6));
+        success *= (supply.setWithdrawal(20.0) != 0);
 
         return success.report(__func__);
       }
