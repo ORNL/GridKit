@@ -4,7 +4,6 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
-#include <GridKit/Model/PhasorDynamics/Gas/GasBusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -33,11 +32,10 @@ int runApplication(int argc, const char* argv[])
 
   for (const auto& event : study.events)
   {
-    if ((event.type == EventType::FAULT_ON || event.type == EventType::FAULT_OFF
-         || event.type == EventType::PRESSURE)
+    if ((event.type == EventType::FAULT_ON || event.type == EventType::FAULT_OFF)
         && event.bus == GridKit::INVALID_INDEX<index_type>)
     {
-      Log::error() << "Event at time " << event.time
+      Log::error() << "Fault event at time " << event.time
                    << " requires a bus number\n";
       return 1;
     }
@@ -85,14 +83,11 @@ int runApplication(int argc, const char* argv[])
     case EventType::OUT_OF_SERVICE:
       sys.getBranch(event.device)->setInService(false);
       break;
-    case EventType::PRESSURE:
-      ret = sys.getGasBus(event.bus)->setPressure(event.p);
-      break;
     }
 
     if (ret != 0)
     {
-      Log::error() << "Event failed for bus " << event.bus
+      Log::error() << "Fault event failed for bus " << event.bus
                    << " at time " << event.time << '\n';
       return 1;
     }

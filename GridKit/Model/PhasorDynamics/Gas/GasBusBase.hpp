@@ -35,13 +35,6 @@ namespace GridKit
         /// Mass-flow balance that connected devices add to [kg/s]
         virtual ScalarT& q() = 0;
 
-        /// Set the pressure of a fixed-pressure bus [Pa]
-        virtual int setPressure(RealT /* pressure */)
-        {
-          Log::error() << "GasBus: only a GasBusInfinite has a settable pressure\n";
-          return 1;
-        }
-
         IdxT busID() const
         {
           return bus_id_;

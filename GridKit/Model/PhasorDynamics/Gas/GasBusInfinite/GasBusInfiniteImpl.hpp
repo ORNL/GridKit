@@ -29,7 +29,7 @@ namespace GridKit
       GasBusInfinite<scalar_type, index_type>::GasBusInfinite(const ModelDataT& data)
         : p0_(data.p0),
           p_(data.p0),
-          monitor_(std::make_unique<MonitorT>("GasBusInfinite", data.name, data.monitored_variables))
+          monitor_(std::make_unique<MonitorT>("GasBus", data.name, data.monitored_variables))
       {
         bus_id_ = data.bus_id;
         size_   = 0;
@@ -72,7 +72,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Restore the case-file pressure
+       * @brief Set the case-file pressure
        */
       template <typename scalar_type, typename index_type>
       int GasBusInfinite<scalar_type, index_type>::initialize()
@@ -115,24 +115,6 @@ namespace GridKit
       int GasBusInfinite<scalar_type, index_type>::evaluateJacobian()
       {
         return this->constructCoo();
-      }
-
-      /**
-       * @brief Change the fixed pressure, for example at an event
-       *
-       * @param[in] pressure - new bus pressure [Pa]
-       */
-      template <typename scalar_type, typename index_type>
-      int GasBusInfinite<scalar_type, index_type>::setPressure(RealT pressure)
-      {
-        if (!std::isfinite(pressure) || pressure <= ZERO<RealT>)
-        {
-          Log::error() << "GasBusInfinite: pressure must be finite and positive\n";
-          return 1;
-        }
-
-        p_ = pressure;
-        return 0;
       }
 
       template <typename scalar_type, typename index_type>

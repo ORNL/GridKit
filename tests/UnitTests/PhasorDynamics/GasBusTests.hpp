@@ -92,7 +92,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// A fixed-pressure bus has no variables and takes a new pressure
+      /// A fixed-pressure bus has no variables and holds the case-file pressure
       TestOutcome fixedPressure()
       {
         TestStatus success = true;
@@ -103,15 +103,6 @@ namespace GridKit
 
         success *= (bus.size() == 0);
         success *= isEqual(bus.p(), ScalarT{5.0e6});
-
-        success *= (bus.setPressure(4.5e6) == 0);
-        success *= isEqual(bus.p(), ScalarT{4.5e6});
-
-        success *= (bus.setPressure(0.0) != 0);
-        success *= isEqual(bus.p(), ScalarT{4.5e6});
-
-        GasBusT variable_bus(busData(5.0e6));
-        success *= (variable_bus.setPressure(4.5e6) != 0);
 
         return success.report(__func__);
       }

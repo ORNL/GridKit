@@ -73,13 +73,19 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         int evaluateInternalResidual(const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* f);
-        int evaluateBusResidual(const ScalarT* y, const ScalarT* wbp, ScalarT* h);
+        int evaluateBusResidual(const ScalarT* y, const ScalarT* wb, const ScalarT* wbp, ScalarT* h);
 
       private:
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
         void gatherBusValues();
+
+        ScalarT density(ScalarT p) const;
+        ScalarT densitySlope(ScalarT p) const;
+        ScalarT meanDensity(ScalarT p_from, ScalarT p_to) const;
+        ScalarT potential(ScalarT p) const;
+        ScalarT pressureAtPotential(ScalarT target) const;
 
         IdxT    pIndex(IdxT j) const;
         IdxT    phiIndex(IdxT k) const;
@@ -96,6 +102,8 @@ namespace GridKit
         RealT D_{ZERO<RealT>};
         RealT lambda_{ZERO<RealT>};
         RealT a_{ZERO<RealT>};
+        RealT b1_{ONE<RealT>};
+        RealT b2_{ZERO<RealT>};
         RealT dxmax_{static_cast<RealT>(1000.0)};
 
         IdxT  N_{1};

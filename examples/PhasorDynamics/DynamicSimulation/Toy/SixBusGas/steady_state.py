@@ -2,7 +2,8 @@
 
 The power flow gives each machine's mechanical power P_m. A machine on
 GasInputPm burns k_f * P_m of gas, and the gas-network steady state with those
-withdrawals gives the gas-bus pressures. Both are written to the case file.
+withdrawals gives the gas-bus pressures. Both are written to the case file,
+with the gas law derived from T, G, and the equation of state as in GasTranSim.
 
 Usage: python3 steady_state.py [case_file]
 """
@@ -65,8 +66,24 @@ GAS_BRANCHES = [  # id, bus1, bus2, length [m], diameter [m]
     ("GP_102_104", 102, 104, 3000.0, 0.25),
 ]
 FRICTION = 0.01  # Darcy friction factor [-]
-SOUND_SPEED = 370.0  # Isothermal speed of sound [m/s]
+TEMPERATURE = 288.706  # [K]
+SPECIFIC_GRAVITY = 0.6  # [-]
+EOS = "simple_cnga"  # ideal, simple_cnga, or full_cnga
 DX_MAX = 250.0  # Maximum segment length [m]
+
+
+def gas_law(temperature, specific_gravity, eos):
+    """Return the sound speed a [m/s] and density coefficients b1 [-], b2 [1/Pa]."""
+    a = np.sqrt(8.314 * temperature / (0.02896 * specific_gravity))
+    if eos == "ideal":
+        return a, 1.0, 0.0
+    if eos == "simple_cnga":
+        return a, 1.00300865, 2.96848838e-8
+    c = 344400.0 * 10.0 ** (1.785 * specific_gravity) / (6894.75729 * (1.8 * temperature) ** 3.825)
+    return a, 1.0 + c * 101350.0, c
+
+
+SOUND_SPEED, B1, B2 = gas_law(TEMPERATURE, SPECIFIC_GRAVITY, EOS)
 
 
 def solve_power_flow():
@@ -116,11 +133,16 @@ def solve_power_flow():
     return voltage, injection
 
 
+def potential(p):
+    """Integral of the density over pressure from zero to p."""
+    return p**2 * (B1 / 2.0 + B2 * p / 3.0) / SOUND_SPEED**2
+
+
 def pipe_mass_flow(p1, p2, length, diameter):
     """Steady mass flow from bus 1 to bus 2 [kg/s]."""
     area = np.pi * diameter**2 / 4.0
-    dp2 = p1**2 - p2**2
-    return area * np.sign(dp2) * np.sqrt(diameter * abs(dp2) / (FRICTION * SOUND_SPEED**2 * length))
+    drop = potential(p1) - potential(p2)
+    return area * np.sign(drop) * np.sqrt(2.0 * diameter * abs(drop) / (FRICTION * length))
 
 
 def solve_gas_network(withdrawal):
@@ -193,7 +215,7 @@ def build_case():
         params = {"p0": injection[bus].real, "q0": injection[bus].imag, **GENROU, "mva": mva, "kf": KF}
         devices.append({"class": "Genrou", "id": name, "ports": {"bus": bus, "GasInputPm": gas_bus}, "params": params, "mon": ["p", "speed", "delta"]})
     for name, b1, b2, length, diameter in GAS_BRANCHES:
-        params = {"L": length, "D": diameter, "lambda": FRICTION, "a": SOUND_SPEED, "dxmax": DX_MAX}
+        params = {"L": length, "D": diameter, "lambda": FRICTION, "a": SOUND_SPEED, "b1": B1, "b2": B2, "dxmax": DX_MAX}
         devices.append({"class": "GasBranch", "id": name, "ports": {"bus1": b1, "bus2": b2}, "params": params, "mon": ["q1", "q2", "linepack"]})
 
     return {

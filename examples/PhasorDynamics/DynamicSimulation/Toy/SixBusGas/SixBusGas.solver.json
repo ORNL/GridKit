@@ -3,7 +3,5 @@
     "output_file": "SixBusGas.csv",
     "dt_monitor": 0.02,
     "tmax": 120.0,
-    "events": [
-        { "time": 5.0, "type": "pressure", "bus": 101, "p": 4.5e6 }
-    ]
+    "events": []
 }

@@ -20,6 +20,8 @@ namespace GridKit
         D,      ///< \f$D\f$ Pipe diameter [m]
         lambda, ///< \f$\lambda\f$ Darcy friction factor [-]
         a,      ///< \f$a\f$ Isothermal speed of sound [m/s]
+        b1,     ///< \f$b_1\f$ First density coefficient [-]
+        b2,     ///< \f$b_2\f$ Second density coefficient [1/Pa]
         dxmax,  ///< \f$\Delta x^{\max}\f$ Maximum segment length [m]
       };
 

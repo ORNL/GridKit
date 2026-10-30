@@ -5,7 +5,6 @@ draw. It has no variables.
 
 ## Notes
 
-- A `pressure` event changes the pressure during a simulation.
 - Mass flows added by connected devices are discarded.
 
 ## Model Parameters

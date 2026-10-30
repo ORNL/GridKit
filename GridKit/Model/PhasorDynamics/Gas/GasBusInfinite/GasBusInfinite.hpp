@@ -50,7 +50,6 @@ namespace GridKit
         int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
-        int setPressure(RealT pressure) override final;
 
         Model::ConfigurationChecks verify() const override final;
 

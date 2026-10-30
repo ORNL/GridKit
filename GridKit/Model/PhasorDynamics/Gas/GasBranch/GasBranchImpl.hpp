@@ -65,6 +65,8 @@ namespace GridKit
         D_      = reader.readReal(Parameter::D).value_or(D_);
         lambda_ = reader.readReal(Parameter::lambda).value_or(lambda_);
         a_      = reader.readReal(Parameter::a).value_or(a_);
+        b1_     = reader.readReal(Parameter::b1).value_or(b1_);
+        b2_     = reader.readReal(Parameter::b2).value_or(b2_);
         dxmax_  = reader.readReal(Parameter::dxmax).value_or(dxmax_);
       }
 
@@ -124,6 +126,8 @@ namespace GridKit
         checks.check(std::isfinite(lambda_) && lambda_ > ZERO<RealT>,
                      "lambda must be finite and positive");
         checks.check(std::isfinite(a_) && a_ > ZERO<RealT>, "a must be finite and positive");
+        checks.check(std::isfinite(b1_) && b1_ > ZERO<RealT>, "b1 must be finite and positive");
+        checks.check(std::isfinite(b2_) && b2_ >= ZERO<RealT>, "b2 must be finite and nonnegative");
         checks.check(std::isfinite(dxmax_) && dxmax_ > ZERO<RealT>,
                      "dxmax must be finite and positive");
 
@@ -149,9 +153,10 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT dp2 = p0 * p0 - pN * pN;
-        ScalarT       phi = std::sqrt(D_ * std::abs(dp2) / (lambda_ * a_ * a_ * L_));
-        if (dp2 < ZERO<RealT>)
+        // In steady flow the potential falls linearly along the pipe
+        const ScalarT drop = potential(p0) - potential(pN);
+        ScalarT       phi  = std::sqrt(TWO<RealT> * D_ * std::abs(drop) / (lambda_ * L_));
+        if (drop < ZERO<RealT>)
         {
           phi = -phi;
         }
@@ -160,7 +165,7 @@ namespace GridKit
         auto* yp = yp_.getData();
         for (IdxT j = 1; j < N_; ++j)
         {
-          y[pIndex(j)] = std::sqrt(p0 * p0 - static_cast<RealT>(j) / static_cast<RealT>(N_) * dp2);
+          y[pIndex(j)] = pressureAtPotential(potential(p0) - static_cast<RealT>(j) / static_cast<RealT>(N_) * drop);
         }
         for (IdxT k = 1; k <= N_; ++k)
         {
@@ -228,6 +233,56 @@ namespace GridKit
         return y[pIndex(j)];
       }
 
+      /// Gas density at pressure p
+      template <typename scalar_type, typename index_type>
+      scalar_type GasBranch<scalar_type, index_type>::density(ScalarT p) const
+      {
+        return p * (b1_ + b2_ * p) / (a_ * a_);
+      }
+
+      /// Derivative of the density with respect to pressure
+      template <typename scalar_type, typename index_type>
+      scalar_type GasBranch<scalar_type, index_type>::densitySlope(ScalarT p) const
+      {
+        return (b1_ + TWO<RealT> * b2_ * p) / (a_ * a_);
+      }
+
+      /// Mean of the density over the pressures between p_from and p_to
+      template <typename scalar_type, typename index_type>
+      scalar_type GasBranch<scalar_type, index_type>::meanDensity(ScalarT p_from, ScalarT p_to) const
+      {
+        return (HALF<RealT> * b1_ * (p_from + p_to)
+                + b2_ * (p_from * p_from + p_from * p_to + p_to * p_to) / THREE<RealT>)
+               / (a_ * a_);
+      }
+
+      /// Integral of the density over pressure from zero to p
+      template <typename scalar_type, typename index_type>
+      scalar_type GasBranch<scalar_type, index_type>::potential(ScalarT p) const
+      {
+        return p * p * (HALF<RealT> * b1_ + b2_ * p / THREE<RealT>) / (a_ * a_);
+      }
+
+      /**
+       * @brief Pressure with the target potential, by Newton's method from the
+       * ideal-gas root
+       *
+       * The potential is convex for b2 >= 0, so the iterates fall to the root
+       * and stop falling once they reach it.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type GasBranch<scalar_type, index_type>::pressureAtPotential(ScalarT target) const
+      {
+        ScalarT p    = std::sqrt(TWO<RealT> * a_ * a_ * target / b1_);
+        ScalarT next = p - (potential(p) - target) / density(p);
+        while (next < p)
+        {
+          p    = next;
+          next = p - (potential(p) - target) / density(p);
+        }
+        return p;
+      }
+
       /// Read the bus pressures and their derivatives; a fixed-pressure bus has none
       template <typename scalar_type, typename index_type>
       void GasBranch<scalar_type, index_type>::gatherBusValues()
@@ -260,22 +315,20 @@ namespace GridKit
                                                                        const ScalarT* wb,
                                                                        ScalarT*       f)
       {
-        const RealT a2 = a_ * a_;
-
         for (IdxT j = 1; j < N_; ++j)
         {
-          f[pIndex(j)] = -yp[pIndex(j)] + a2 / dx_ * (y[phiIndex(j)] - y[phiIndex(j + 1)]);
+          f[pIndex(j)] = -yp[pIndex(j)]
+                         + (y[phiIndex(j)] - y[phiIndex(j + 1)]) / (densitySlope(y[pIndex(j)]) * dx_);
         }
 
         for (IdxT k = 1; k <= N_; ++k)
         {
-          const ScalarT p_from  = nodePressure(k - 1, y, wb);
-          const ScalarT p_to    = nodePressure(k, y, wb);
-          const ScalarT phi     = y[phiIndex(k)];
-          const ScalarT rho_bar = HALF<RealT> * (p_from + p_to) / a2;
+          const ScalarT p_from = nodePressure(k - 1, y, wb);
+          const ScalarT p_to   = nodePressure(k, y, wb);
+          const ScalarT phi    = y[phiIndex(k)];
 
           f[phiIndex(k)] = -yp[phiIndex(k)] + (p_from - p_to) / dx_
-                           - lambda_ / (TWO<RealT> * D_) * phi * std::abs(phi) / rho_bar;
+                           - lambda_ / (TWO<RealT> * D_) * phi * std::abs(phi) / meanDensity(p_from, p_to);
         }
 
         return 0;
@@ -286,13 +339,14 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       int GasBranch<scalar_type, index_type>::evaluateBusResidual(const ScalarT* y,
+                                                                  const ScalarT* wb,
                                                                   const ScalarT* wbp,
                                                                   ScalarT*       h)
       {
-        const RealT storage = HALF<RealT> * A_ * dx_ / (a_ * a_);
+        const RealT half_volume = HALF<RealT> * A_ * dx_;
 
-        h[0] = -A_ * y[phiIndex(1)] - storage * wbp[0];
-        h[1] = A_ * y[phiIndex(N_)] - storage * wbp[1];
+        h[0] = -A_ * y[phiIndex(1)] - half_volume * densitySlope(wb[0]) * wbp[0];
+        h[1] = A_ * y[phiIndex(N_)] - half_volume * densitySlope(wb[1]) * wbp[1];
 
         return 0;
       }
@@ -310,7 +364,7 @@ namespace GridKit
         auto*       f  = f_.getData();
         auto*       h  = h_.getData();
         evaluateInternalResidual(y, yp, wb_.getData(), f);
-        evaluateBusResidual(y, wbp_.getData(), h);
+        evaluateBusResidual(y, wb_.getData(), wbp_.getData(), h);
 
         bus1_->q() += h[0];
         bus2_->q() += h[1];
@@ -394,25 +448,25 @@ namespace GridKit
                       {
                         ScalarT h[2];
                         gatherBusValues();
-                        evaluateBusResidual(y_.getData(), wbp_.getData(), h);
+                        evaluateBusResidual(y_.getData(), wb_.getData(), wbp_.getData(), h);
                         return h[0]; });
         monitor_->set(Variable::q2, [this]
                       {
                         ScalarT h[2];
                         gatherBusValues();
-                        evaluateBusResidual(y_.getData(), wbp_.getData(), h);
+                        evaluateBusResidual(y_.getData(), wb_.getData(), wbp_.getData(), h);
                         return h[1]; });
         monitor_->set(Variable::linepack, [this]
                       {
                         gatherBusValues();
-                        const auto* y            = y_.getData();
-                        const auto* wb           = wb_.getData();
-                        ScalarT     pressure_sum = HALF<RealT> * (wb[0] + wb[1]);
+                        const auto* y           = y_.getData();
+                        const auto* wb          = wb_.getData();
+                        ScalarT     density_sum = HALF<RealT> * (density(wb[0]) + density(wb[1]));
                         for (IdxT j = 1; j < N_; ++j)
                         {
-                          pressure_sum += y[pIndex(j)];
+                          density_sum += density(y[pIndex(j)]);
                         }
-                        return A_ * dx_ * pressure_sum / (a_ * a_); });
+                        return A_ * dx_ * density_sum; });
       }
     } // namespace Gas
   } // namespace PhasorDynamics

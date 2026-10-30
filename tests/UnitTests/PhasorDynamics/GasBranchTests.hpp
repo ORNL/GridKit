@@ -60,6 +60,17 @@ namespace GridKit
         return data;
       }
 
+      /// The same pipe with the GasTranSim simple CNGA gas law
+      static GasBranchDataT cngaData(RealT dxmax)
+      {
+        using Parameter = typename GasBranchDataT::Parameters;
+
+        auto data                      = branchData(dxmax);
+        data.parameters[Parameter::b1] = RealT{1.00300865};
+        data.parameters[Parameter::b2] = RealT{2.96848838e-8};
+        return data;
+      }
+
       /// Allocate and initialize, numbering the bus variables after the pipe's
       template <typename T>
       static void connect(PhasorDynamics::Gas::GasBusBase<T, IdxT>& bus1,
@@ -148,12 +159,16 @@ namespace GridKit
         success *= GasBranchT(&bus1, &bus2, branchData(1000.0)).verify().passed();
         success *= !GasBranchT(nullptr, &bus2, branchData(1000.0)).verify().passed();
 
-        for (auto parameter : {Parameter::L, Parameter::D, Parameter::lambda, Parameter::a, Parameter::dxmax})
+        for (auto parameter : {Parameter::L, Parameter::D, Parameter::lambda, Parameter::a, Parameter::b1, Parameter::dxmax})
         {
           auto data                   = branchData(1000.0);
           data.parameters[parameter]  = RealT{0.0};
           success                    *= !GasBranchT(&bus1, &bus2, data).verify().passed();
         }
+
+        auto negative_b2                       = branchData(1000.0);
+        negative_b2.parameters[Parameter::b2]  = RealT{-1.0e-8};
+        success                               *= !GasBranchT(&bus1, &bus2, negative_b2).verify().passed();
 
         return success.report(__func__);
       }
@@ -219,14 +234,14 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// The initialized pipe is at rest, and both terminals carry the same mass flow
+      /// The initialized CNGA pipe is at rest, and both terminals carry the same mass flow
       TestOutcome initializationResidual()
       {
         TestStatus success = true;
 
         GasBusT    bus1(busData(6.0e6));
         GasBusT    bus2(busData(4.0e6));
-        GasBranchT branch(&bus1, &bus2, branchData(500.0));
+        GasBranchT branch(&bus1, &bus2, cngaData(500.0));
         connect(bus1, bus2, branch);
 
         bus1.evaluateResidual();
@@ -240,9 +255,7 @@ namespace GridKit
           success *= isEqual(f[i], ScalarT{0.0}, RealT{4000.0} * tol_);
         }
 
-        // A phi = (pi/64)(1000) leaves bus 1 and enters bus 2
-        success *= isEqual(bus1.q(), ScalarT{-125.0 * pi_ / 8.0}, tol_);
-        success *= isEqual(bus2.q(), ScalarT{125.0 * pi_ / 8.0}, tol_);
+        success *= isEqual(bus1.q(), -bus2.q(), tol_);
 
         return success.report(__func__);
       }
@@ -274,7 +287,7 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// The hand-written Jacobian matches DependencyTracking, bus rows included
+      /// The hand-written CNGA Jacobian matches DependencyTracking, bus rows included
       TestOutcome jacobian()
       {
         TestStatus success = true;
@@ -319,7 +332,7 @@ namespace GridKit
       {
         PhasorDynamics::Gas::GasBus<T, IdxT>    bus1(busData(6.0e6));
         PhasorDynamics::Gas::GasBus<T, IdxT>    bus2(busData(3.0e6));
-        PhasorDynamics::Gas::GasBranch<T, IdxT> branch(&bus1, &bus2, branchData(1000.0));
+        PhasorDynamics::Gas::GasBranch<T, IdxT> branch(&bus1, &bus2, cngaData(1000.0));
         connect(bus1, bus2, branch);
         setState(bus1, bus2, branch);
 

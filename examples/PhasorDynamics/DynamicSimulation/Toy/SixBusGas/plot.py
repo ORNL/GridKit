@@ -22,7 +22,6 @@ GRID = "#e4e3de"
 # Categorical slots 1-4, fixed per entity in every panel
 G2, G3, SUPPLY, JUNCTION = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
 
-EVENT_TIME = 5.0  # [s]
 F_SYS = 60.0  # [Hz]
 
 
@@ -44,14 +43,13 @@ def label_ends(ax, series):
         placed.append(y)
         ax.annotate(name, xy=(1.0, value), xycoords=("axes fraction", "data"), xytext=(1.015, y),
                     textcoords=("axes fraction", "data"), va="center", fontsize=8.5, color=INK,
-                    arrowprops={"arrowstyle": "-", "color": color, "lw": 1.0})
+                    arrowprops={"arrowstyle": "-", "color": color, "lw": 1.0, "relpos": (0.0, 0.5)})
 
 
 def panel(ax, t, series, ylabel, legend_loc):
     for name, values, color in series:
         ax.plot(t, values, color=color, lw=1.6, label=name)
     ax.set_ylabel(ylabel, color=INK_SECONDARY)
-    ax.axvline(EVENT_TIME, color=INK_SECONDARY, lw=0.8, ls=(0, (4, 3)))
     ax.grid(axis="y", color=GRID, lw=0.6)
     ax.set_facecolor(SURFACE)
     for side in ("top", "right"):
@@ -87,16 +85,14 @@ def main(csv_path):
     ]
 
     fig, axes = plt.subplots(4, 1, figsize=(8.0, 9.5), sharex=True, facecolor=SURFACE)
-    panel(axes[0], t, pressure, "Gas pressure [MPa]", "upper right")
-    panel(axes[1], t, fuel, "Fuel mass flow [kg/s]", "upper right")
-    panel(axes[2], t, power, "Electrical power [p.u.]", "upper right")
+    panel(axes[0], t, pressure, "Gas pressure [MPa]", "center right")
+    panel(axes[1], t, fuel, "Fuel mass flow [kg/s]", "center right")
+    panel(axes[2], t, power, "Electrical power [p.u.]", "center right")
     panel(axes[3], t, speed, "Speed deviation [mHz]", "lower right")
 
-    axes[0].annotate("Supply pressure 5.0 to 4.5 MPa", xy=(EVENT_TIME, 1.0), xycoords=("data", "axes fraction"),
-                     xytext=(4, -2), textcoords="offset points", va="top", fontsize=8.5, color=INK_SECONDARY)
     axes[-1].set_xlabel("Time [s]", color=INK_SECONDARY)
     axes[-1].set_xlim(t[0], t[-1])
-    fig.suptitle("SixBusGas: gas supply pressure drop seen by gas-fired machines", color=INK, fontsize=11)
+    fig.suptitle("SixBusGas: gas-fired machines in steady state", color=INK, fontsize=11)
     fig.subplots_adjust(left=0.1, right=0.8, top=0.95, bottom=0.06, hspace=0.18)
 
     out = pathlib.Path(__file__).resolve().parent / "SixBusGas.png"
