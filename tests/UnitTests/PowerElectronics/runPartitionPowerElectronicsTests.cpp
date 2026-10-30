@@ -5,8 +5,8 @@
 
 int main()
 {
-  GridKit::Testing::TestingResults                                 result;
-  GridKit::Testing::PartitionPowerElectronicsTests<double, size_t> test;
+  GridKit::Testing::TestingResults                                                   result;
+  GridKit::PowerElectronics::Testing::PartitionPowerElectronicsTests<double, size_t> test;
 
   result += test.residual();
   result += test.jacobian();
