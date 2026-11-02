@@ -26,6 +26,6 @@ Unimplemented models:
 - `WT3P1`
 - `WT3T1`
 
-This case was validated against PowerWorld. The comparison results are provided [here](../../../examples/PhasorDynamics/Validation/ACTIVSg25k/README.md).
+Simulation and validation studies have not yet been implemented for this case.
 
 [^1]: Texas A&M University, [Grid Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/activsg25k/).

@@ -18,6 +18,7 @@
 - Added hierarchical PhasorDynamics system models.
 - Migrated PhasorDynamics models with real and Boolean parameters to `Model::ParameterReader`.
 - Added component labels and lookups that search subsystems.
+- Added ACTIVSg25k and ACTIVSg70k PhasorDynamics cases.
 
 ## v0.2
 
