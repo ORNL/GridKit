@@ -2,11 +2,7 @@
  * @file TwoAreaHierarchicalTests.hpp
  * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  * @brief Compare the TwoArea case with the same case split into hierarchical
- * subsystems: bus 8 at the top level, Area 1 (buses 1, 2, 5, 6, 7), and
- * Area 2 (buses 3, 4, 9, 10) with the load on bus 8.
- *
- * Variable ordering differs between the two systems, so values are compared
- * through an index map built from bus IDs and component labels.
+ * subsystems, through an index map built from bus IDs and component labels.
  */
 #pragma once
 
@@ -66,7 +62,7 @@ namespace GridKit
           auto* area1 = hierarchical.getSubsystem(0);
           auto* area2 = hierarchical.getSubsystem(1);
 
-          // Two levels: areas have no subsystems
+          // Areas have no subsystems
           success *= area1->numSubsystems() == 0;
           success *= area2->numSubsystems() == 0;
 
@@ -219,8 +215,12 @@ namespace GridKit
             const RealT fault_x      = 0.01;
             for (auto* system : {&flat, &hierarchical})
             {
-              const char* name = (system == &flat) ? "flat" : "hierarchical";
-              BusT*       bus7 = system->getBus(7);
+              const char* name = "hierarchical";
+              if (system == &flat)
+              {
+                name = "flat";
+              }
+              BusT* bus7 = system->getBus(7);
 
               try
               {

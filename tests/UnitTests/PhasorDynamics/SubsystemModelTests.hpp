@@ -123,8 +123,10 @@ namespace GridKit
         TestStatus success = true;
 
         // Signal in subsystem C, added to any existing ones
-        json input = readJson("SubsystemHierarchical.json");
-        input["subsystems"][1]["subsystems"][0]["signals"].push_back({{"signal_id", 5}, {"name", "s"}});
+        json  input             = readJson("SubsystemHierarchical.json");
+        json& input_subsystem_b = input["subsystems"][1];
+        json& input_subsystem_c = input_subsystem_b["subsystems"][0];
+        input_subsystem_c["signals"].push_back({{"signal_id", 5}, {"name", "s"}});
         SystemT top(input.template get<DataT>());
 
         auto* a = top.getSubsystem(0);
@@ -190,28 +192,37 @@ namespace GridKit
         json       input;
 
         // Device uses a bus of a sibling subsystem
-        input                                                  = hierarchical;
-        input["subsystems"][0]["devices"][0]["ports"]["bus2"]  = 3;
-        success                                               *= constructionThrows(input);
+        {
+          input                    = hierarchical;
+          json& subsystem_a        = input["subsystems"][0];
+          json& branch             = subsystem_a["devices"][0];
+          branch["ports"]["bus2"]  = 3;
+          success                 *= constructionThrows(input);
+        }
 
         // Device uses a signal of its parent
-        const json signal_r = {{"signal_id", 1}, {"name", "sr"}};
-        const json signal_i = {{"signal_id", 2}, {"name", "si"}};
-        const json source   = {{"class", "ConstantSignalSource"},
-                               {"ports", {{"sr", 1}, {"si", 2}}},
-                               {"id", "1"},
-                               {"params", json::object()}};
-        input               = hierarchical;
-        input["signals"]    = json::array({signal_r, signal_i});
-        input["subsystems"][0]["devices"].push_back(source);
+        const json signal_r         = {{"signal_id", 1}, {"name", "sr"}};
+        const json signal_i         = {{"signal_id", 2}, {"name", "si"}};
+        const json source           = {{"class", "ConstantSignalSource"},
+                                       {"ports", {{"sr", 1}, {"si", 2}}},
+                                       {"id", "1"},
+                                       {"params", json::object()}};
+        input                       = hierarchical;
+        input["signals"]            = json::array({signal_r, signal_i});
+        json& subsystem_with_source = input["subsystems"][0];
+        subsystem_with_source["devices"].push_back(source);
         success *= constructionThrows(input);
 
         // Devices in a system with subsystems
-        input                = hierarchical;
-        json load            = input["subsystems"][1]["subsystems"][0]["devices"][2];
-        load["ports"]["bus"] = 1;
-        input["devices"].push_back(load);
-        success *= constructionThrows(input);
+        {
+          input                = hierarchical;
+          json& subsystem_b    = input["subsystems"][1];
+          json& subsystem_c    = subsystem_b["subsystems"][0];
+          json  load           = subsystem_c["devices"][2];
+          load["ports"]["bus"] = 1;
+          input["devices"].push_back(load);
+          success *= constructionThrows(input);
+        }
 
         // Programmatic hierarchy: devices and subsystems in one system
         {
@@ -255,9 +266,13 @@ namespace GridKit
         success *= constructionThrows(input);
 
         // Subsystem level not matching the hierarchy (grandchild at level 1)
-        input                                             = hierarchical;
-        input["subsystems"][1]["subsystems"][0]["level"]  = 1;
-        success                                          *= constructionThrows(input);
+        {
+          input                 = hierarchical;
+          json& subsystem_b     = input["subsystems"][1];
+          json& subsystem_c     = subsystem_b["subsystems"][0];
+          subsystem_c["level"]  = 1;
+          success              *= constructionThrows(input);
+        }
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
