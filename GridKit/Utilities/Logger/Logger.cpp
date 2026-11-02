@@ -4,10 +4,10 @@
  * @author Slaven Peles <peless@ornl.org>
  */
 
+#include "Logger.hpp"
+
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Utilities/Colors.hpp>
-
-#include "Logger.hpp"
 
 // TODO: allow instantiating a scoped logger that prefixes with some
 //       class/logical distinction name like `[CliArgs]` or `[GENROU]`.

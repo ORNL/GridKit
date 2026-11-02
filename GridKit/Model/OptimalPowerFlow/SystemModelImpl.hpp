@@ -81,8 +81,7 @@ namespace GridKit
 
       for (const auto& [number, bus] : buses_)
       {
-        checks.check(number != INVALID_INDEX<IdxT>,
-                     std::format("{}: invalid bus number", bus->id()));
+        checks.check(number != INVALID_INDEX<IdxT>, std::format("{}: invalid bus number", bus->id()));
       }
 
       std::set<std::string> ids;
@@ -99,8 +98,7 @@ namespace GridKit
         const auto& ports = component->ports();
         for (IdxT port = 0; port < ports.size(); ++port)
         {
-          checks.check(components.contains(ports[port].component),
-                       std::format("{}: port {} must connect to a component in this system", component->id(), port));
+          checks.check(components.contains(ports[port].component), std::format("{}: port {} must connect to a component in this system", component->id(), port));
         }
       }
 
@@ -281,13 +279,15 @@ namespace GridKit
         if (bus == buses_.end())
         {
           throw std::invalid_argument(
-              std::format("{}: port '{}' names unknown bus {}", data.id, Utilities::enum_name(port), number->second));
+            std::format("{}: port '{}' names unknown bus {}", data.id, Utilities::enum_name(port), number->second)
+          );
         }
 
         if (device->connect(static_cast<IdxT>(port), *bus->second) != 0)
         {
           throw std::invalid_argument(
-              std::format("{}: port '{}' does not fit bus {}", data.id, Utilities::enum_name(port), number->second));
+            std::format("{}: port '{}' does not fit bus {}", data.id, Utilities::enum_name(port), number->second)
+          );
         }
       }
 

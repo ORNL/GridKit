@@ -19,14 +19,7 @@ namespace GridKit
 
       CooMatrix(IdxT n, IdxT m, IdxT nnz);
 
-      CooMatrix(IdxT                n,
-                IdxT                m,
-                IdxT                nnz,
-                IdxT**              rows,
-                IdxT**              cols,
-                RealT**             vals,
-                memory::MemorySpace memspace_src = memory::HOST,
-                memory::MemorySpace memspace_dst = memory::HOST);
+      CooMatrix(IdxT n, IdxT m, IdxT nnz, IdxT** rows, IdxT** cols, RealT** vals, memory::MemorySpace memspace_src = memory::HOST, memory::MemorySpace memspace_dst = memory::HOST);
 
       ~CooMatrix();
 
@@ -42,10 +35,7 @@ namespace GridKit
       IdxT*  getColData(memory::MemorySpace memspace = memory::HOST);
       RealT* getValues(memory::MemorySpace memspace = memory::HOST);
 
-      int setDataPointers(IdxT*               row_data,
-                          IdxT*               col_data,
-                          RealT*              val_data,
-                          memory::MemorySpace memspace);
+      int setDataPointers(IdxT* row_data, IdxT* col_data, RealT* val_data, memory::MemorySpace memspace);
 
       int destroyMatrixData(memory::MemorySpace memspace);
 

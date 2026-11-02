@@ -35,11 +35,7 @@ namespace GridKit
         std::array<char, 128> buffer{};
         constexpr auto        precision = std::numeric_limits<RealT>::digits10 + 1;
 
-        auto [ptr, ec] = std::to_chars(buffer.data(),
-                                       buffer.data() + buffer.size(),
-                                       value,
-                                       std::chars_format::scientific,
-                                       precision);
+        auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value, std::chars_format::scientific, precision);
 
         if (ec == std::errc{})
         {

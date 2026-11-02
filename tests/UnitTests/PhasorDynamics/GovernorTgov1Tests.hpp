@@ -40,7 +40,7 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>* gov =
-            new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
+          new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
 
         success *= (gov != nullptr);
 
@@ -105,9 +105,7 @@ namespace GridKit
         gov.getPorts().in.template port<PhasorDynamics::Governor::Tgov1SignalInputs::speed>().connect(&omega);
 
         // Test answer keys
-        const std::vector<ScalarT> res_answer = {static_cast<ScalarT>(2.0) / static_cast<ScalarT>(15.0),
-                                                 -2.0,
-                                                 static_cast<ScalarT>(1.0) / static_cast<ScalarT>(3.0)};
+        const std::vector<ScalarT> res_answer = {static_cast<ScalarT>(2.0) / static_cast<ScalarT>(15.0), -2.0, static_cast<ScalarT>(1.0) / static_cast<ScalarT>(3.0)};
 
         bus.allocate();
         gen.allocate();
@@ -304,8 +302,9 @@ namespace GridKit
 
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          PhasorDynamics::BusData<ScalarT, IdxT>    busdata,
-          PhasorDynamics::GenrouData<ScalarT, IdxT> gendata)
+        PhasorDynamics::BusData<ScalarT, IdxT>    busdata,
+        PhasorDynamics::GenrouData<ScalarT, IdxT> gendata
+      )
       {
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>      pmech;
@@ -344,8 +343,9 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          PhasorDynamics::BusData<ScalarT, IdxT>    busdata,
-          PhasorDynamics::GenrouData<ScalarT, IdxT> gendata)
+        PhasorDynamics::BusData<ScalarT, IdxT>    busdata,
+        PhasorDynamics::GenrouData<ScalarT, IdxT> gendata
+      )
       {
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;

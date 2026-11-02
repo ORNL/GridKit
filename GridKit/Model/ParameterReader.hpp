@@ -25,13 +25,13 @@ namespace GridKit
     /// Model data container with a map from each parameter to its value
     template <typename T>
     concept ParameterData =
-        requires(const T& data) {
-          typename T::RealT;
-          typename T::IdxT;
-          typename T::Parameters;
-          data.parameters;
-        }
-        && Utilities::SizedEnum<typename T::Parameters>;
+      requires(const T& data) {
+        typename T::RealT;
+        typename T::IdxT;
+        typename T::Parameters;
+        data.parameters;
+      }
+      && Utilities::SizedEnum<typename T::Parameters>;
 
     /**
      * @brief Reads typed parameters out of a model data container.
@@ -154,7 +154,8 @@ namespace GridKit
       [[noreturn]] void reject(ParametersT key, std::string_view reason) const
       {
         throw std::invalid_argument(
-            std::format("{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason));
+          std::format("{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason)
+        );
       }
 
       const ParameterMapT& parameters_;

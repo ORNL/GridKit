@@ -38,13 +38,7 @@ namespace GridKit
     {
     private:
       using Params = ReaderTestParameters;
-      using DataT  = PhasorDynamics::ComponentData<RealT,
-                                                   IdxT,
-                                                   Params,
-                                                   Utilities::EmptyEnum,
-                                                   Utilities::EmptyEnum,
-                                                   Utilities::EmptyEnum,
-                                                   Utilities::EmptyEnum>;
+      using DataT  = PhasorDynamics::ComponentData<RealT, IdxT, Params, Utilities::EmptyEnum, Utilities::EmptyEnum, Utilities::EmptyEnum, Utilities::EmptyEnum>;
 
     public:
       /// Omitted parameters return no value, integers widen to reals, and
@@ -54,16 +48,7 @@ namespace GridKit
         TestStatus success = true;
 
         DataT data;
-        data.parameters = {{Params::integer, static_cast<IdxT>(2)},
-                           {Params::real, static_cast<RealT>(0.5)},
-                           {Params::zero, ZERO<RealT>},
-                           {Params::negative, -ONE<RealT>},
-                           {Params::infinite, std::numeric_limits<RealT>::infinity()},
-                           {Params::not_a_number, std::numeric_limits<RealT>::quiet_NaN()},
-                           {Params::integer_flag, static_cast<IdxT>(1)},
-                           {Params::false_flag, false},
-                           {Params::true_flag, true},
-                           {Params::text, std::string("2")}};
+        data.parameters = {{Params::integer, static_cast<IdxT>(2)}, {Params::real, static_cast<RealT>(0.5)}, {Params::zero, ZERO<RealT>}, {Params::negative, -ONE<RealT>}, {Params::infinite, std::numeric_limits<RealT>::infinity()}, {Params::not_a_number, std::numeric_limits<RealT>::quiet_NaN()}, {Params::integer_flag, static_cast<IdxT>(1)}, {Params::false_flag, false}, {Params::true_flag, true}, {Params::text, std::string("2")}};
 
         const Model::ParameterReader reader(data, "Test");
 

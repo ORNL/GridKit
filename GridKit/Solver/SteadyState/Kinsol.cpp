@@ -6,6 +6,8 @@
  * SUNDIALS library.
  */
 
+#include "Kinsol.hpp"
+
 #include <algorithm>
 #include <format>
 #include <iomanip>
@@ -19,8 +21,6 @@
 #include <sunmatrix/sunmatrix_dense.h> // access to dense SUNMatrix
 
 #include <GridKit/Model/Evaluator.hpp>
-
-#include "Kinsol.hpp"
 
 namespace AnalysisManager
 {

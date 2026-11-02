@@ -68,13 +68,7 @@ namespace GridKit
        */
       template <typename real_type, typename index_type>
       using GastPtiData =
-          ComponentData<real_type,
-                        index_type,
-                        GastPtiParameters,
-                        GastPtiBuses,
-                        GastPtiSignalInputs,
-                        GastPtiSignalOutputs,
-                        GastPtiMonitorableVariables>;
+        ComponentData<real_type, index_type, GastPtiParameters, GastPtiBuses, GastPtiSignalInputs, GastPtiSignalOutputs, GastPtiMonitorableVariables>;
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit

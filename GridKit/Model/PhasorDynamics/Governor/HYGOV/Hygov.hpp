@@ -116,11 +116,12 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT* y,
-            const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
-            ScalarT*       f);
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f
+        );
 
       private:
         void initializeParameters(const ModelDataT& data);
@@ -136,11 +137,7 @@ namespace GridKit
 
         /// Bisect a bracketed initialization residual to machine rounding.
         template <typename FuncT>
-        static RealT bisectInitialRoot(RealT a,
-                                       RealT b,
-                                       RealT fa,
-                                       RealT fb,
-                                       FuncT residual);
+        static RealT bisectInitialRoot(RealT a, RealT b, RealT fa, RealT fb, FuncT residual);
 
         /// Solve the gate at the configured dam head.
         RealT solveInitialGate(RealT pmech) const;
@@ -153,7 +150,7 @@ namespace GridKit
 
         /// Accepted seed distance beyond the achievable-power range edge.
         static constexpr RealT INITIALIZATION_TOLERANCE =
-            static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
         RealT                Rperm_{static_cast<RealT>(0.04)};
         RealT                Rtemp_{static_cast<RealT>(0.3)};

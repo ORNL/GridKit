@@ -91,13 +91,7 @@ namespace GridKit
        */
       template <typename real_type, typename index_type>
       using ReecbData =
-          ComponentData<real_type,
-                        index_type,
-                        ReecbParameters,
-                        ReecbBuses,
-                        ReecbSignalInputs,
-                        ReecbSignalOutputs,
-                        ReecbMonitorableVariables>;
+        ComponentData<real_type, index_type, ReecbParameters, ReecbBuses, ReecbSignalInputs, ReecbSignalOutputs, ReecbMonitorableVariables>;
     } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

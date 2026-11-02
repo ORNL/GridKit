@@ -45,7 +45,7 @@ namespace GridKit
     public:
       // The Jacobian entries reach 13.4 eps against dependency tracking.
       static constexpr RealT kTol =
-          static_cast<RealT>(32.0) * std::numeric_limits<RealT>::epsilon();
+        static_cast<RealT>(32.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Balance equalities and magnitude inequalities at every bus, and flow
       /// inequalities at every branch, unlimited at the unrated ones

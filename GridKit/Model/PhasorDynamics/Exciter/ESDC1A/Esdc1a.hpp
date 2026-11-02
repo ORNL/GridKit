@@ -116,11 +116,12 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT* y,
-            const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
-            ScalarT*       f);
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f
+        );
 
       private:
         void initializeParameters(const ModelDataT& data);
@@ -128,9 +129,10 @@ namespace GridKit
         void setDerivedParameters();
 
         static __attribute__((always_inline)) inline ScalarT awmin(
-            ScalarT x,
-            ScalarT f,
-            RealT   xmin);
+          ScalarT x,
+          ScalarT f,
+          RealT   xmin
+        );
 
         /// Recover the input that the smooth CommonMath ramp maps to a
         /// requested strictly positive output.

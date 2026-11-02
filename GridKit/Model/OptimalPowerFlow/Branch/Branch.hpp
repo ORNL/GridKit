@@ -62,11 +62,13 @@ namespace GridKit
       using ExternalConstraintsT = BranchExternalConstraints;
 
       static constexpr std::array<IdxT, Utilities::enum_size<BranchPorts>()> NUM_PORT_VARIABLES{
-          BusT::NUM_SHARED_VARIABLES,
-          BusT::NUM_SHARED_VARIABLES};
+        BusT::NUM_SHARED_VARIABLES,
+        BusT::NUM_SHARED_VARIABLES
+      };
       static constexpr std::array<IdxT, Utilities::enum_size<BranchPorts>()> NUM_PORT_CONSTRAINTS{
-          BusT::NUM_SHARED_CONSTRAINTS,
-          BusT::NUM_SHARED_CONSTRAINTS};
+        BusT::NUM_SHARED_CONSTRAINTS,
+        BusT::NUM_SHARED_CONSTRAINTS
+      };
 
       explicit Branch(const ModelDataT& data);
 

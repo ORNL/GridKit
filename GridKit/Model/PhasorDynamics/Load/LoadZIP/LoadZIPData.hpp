@@ -52,12 +52,6 @@ namespace GridKit
      */
     template <typename real_type, typename index_type>
     using LoadZIPData =
-        ComponentData<real_type,
-                      index_type,
-                      LoadZIPParameters,
-                      LoadZIPBuses,
-                      LoadZIPSignalInputs,
-                      LoadZIPSignalOutputs,
-                      LoadZIPMonitorableVariables>;
+      ComponentData<real_type, index_type, LoadZIPParameters, LoadZIPBuses, LoadZIPSignalInputs, LoadZIPSignalOutputs, LoadZIPMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

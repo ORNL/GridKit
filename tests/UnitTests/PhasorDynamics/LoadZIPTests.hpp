@@ -37,7 +37,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* load =
-            new PhasorDynamics::LoadZIP<ScalarT, IdxT>(bus, DataT{});
+          new PhasorDynamics::LoadZIP<ScalarT, IdxT>(bus, DataT{});
 
         success *= (load != nullptr);
 
@@ -216,7 +216,8 @@ namespace GridKit
 
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP)
+        const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP
+      )
       {
         DependencyTracking::Variable Vr{0.3};
         DependencyTracking::Variable Vi{0.4};
@@ -250,7 +251,8 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP)
+        const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP
+      )
       {
         ScalarT Vr{0.3};
         ScalarT Vi{0.4};

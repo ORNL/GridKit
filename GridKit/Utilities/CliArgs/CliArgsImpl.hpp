@@ -14,7 +14,8 @@ namespace GridKit
     {
       /// Construct an @ref OptionArgumentPair with a specification and an empty
       /// set of values.
-      explicit OptionArgumentPair(Option opt) : option(std::move(opt))
+      explicit OptionArgumentPair(Option opt)
+        : option(std::move(opt))
       {
       }
 

@@ -14,9 +14,10 @@ namespace GridKit
     inline bool isValidIdentifier(std::string_view id)
     {
       return id.find_first_not_of(
-                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                 "abcdefghijklmnopqrstuvwxyz"
-                 "0123456789 _.-")
+               "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+               "abcdefghijklmnopqrstuvwxyz"
+               "0123456789 _.-"
+             )
              == std::string_view::npos;
     }
 
@@ -57,7 +58,8 @@ namespace GridKit
       if (ss.fail() || !ss.eof())
       {
         throw std::runtime_error(
-            "Failed to parse \""s + str + "\" as value of type \'" + typeid(T).name() + "\'");
+          "Failed to parse \""s + str + "\" as value of type \'" + typeid(T).name() + "\'"
+        );
       }
       return ret;
     }

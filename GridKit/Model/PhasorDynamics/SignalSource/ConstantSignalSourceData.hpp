@@ -32,13 +32,7 @@ namespace GridKit
 
     template <typename real_type, typename index_type>
     using ConstantSignalSourceData =
-        ComponentData<real_type,
-                      index_type,
-                      ConstantSignalSourceParameters,
-                      ConstantSignalSourceBuses,
-                      ConstantSignalSourceSignalInputs,
-                      ConstantSignalSourceSignalOutputs,
-                      ConstantSignalSourceMonitorableVariables>;
+      ComponentData<real_type, index_type, ConstantSignalSourceParameters, ConstantSignalSourceBuses, ConstantSignalSourceSignalInputs, ConstantSignalSourceSignalOutputs, ConstantSignalSourceMonitorableVariables>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

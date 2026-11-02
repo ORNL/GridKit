@@ -51,9 +51,11 @@ namespace GridKit
       using ExternalConstraintsT = LoadExternalConstraints;
 
       static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()> NUM_PORT_VARIABLES{
-          BusT::NUM_SHARED_VARIABLES};
+        BusT::NUM_SHARED_VARIABLES
+      };
       static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()> NUM_PORT_CONSTRAINTS{
-          BusT::NUM_SHARED_CONSTRAINTS};
+        BusT::NUM_SHARED_CONSTRAINTS
+      };
 
       explicit Load(const ModelDataT& data);
 

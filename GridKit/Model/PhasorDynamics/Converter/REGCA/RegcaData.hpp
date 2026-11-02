@@ -82,13 +82,7 @@ namespace GridKit
        */
       template <typename real_type, typename index_type>
       using RegcaData =
-          ComponentData<real_type,
-                        index_type,
-                        RegcaParameters,
-                        RegcaBuses,
-                        RegcaSignalInputs,
-                        RegcaSignalOutputs,
-                        RegcaMonitorableVariables>;
+        ComponentData<real_type, index_type, RegcaParameters, RegcaBuses, RegcaSignalInputs, RegcaSignalOutputs, RegcaMonitorableVariables>;
     } // namespace Converter
   } // namespace PhasorDynamics
 } // namespace GridKit

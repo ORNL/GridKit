@@ -11,10 +11,7 @@ if(GRIDKIT_ENABLE_ZMQ)
     GridKit::co_sim
     GridKit::testing
     cppzmq)
-  target_include_directories(
-    test_cosim
-    PRIVATE
-    ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
+  target_include_directories(test_cosim PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
   add_test(NAME CoSimulationChannelTest COMMAND test_cosim)
   set_tests_properties(CoSimulationChannelTest PROPERTIES TIMEOUT 30)

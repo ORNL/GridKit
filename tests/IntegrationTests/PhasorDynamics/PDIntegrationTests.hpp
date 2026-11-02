@@ -211,11 +211,7 @@ namespace GridKit
         return success;
       }
 
-      std::unique_ptr<ErrorSet> runSimulation(SystemModelDataT&  system_data,
-                                              IdxT               fault_bus,
-                                              RealT              R,
-                                              RealT              X,
-                                              const std::string& ref_file)
+      std::unique_ptr<ErrorSet> runSimulation(SystemModelDataT& system_data, IdxT fault_bus, RealT R, RealT X, const std::string& ref_file)
       {
         system_data.monitor_sink.emplace_back(VariableMonitorFormat::CSV, "mon.csv");
 
@@ -231,8 +227,7 @@ namespace GridKit
 
         // Set up simulation
         AnalysisManager::Sundials::Ida<RealT, size_t> ida(&sys);
-        ida.setTolerance(static_cast<RealT>(1.0e-7),
-                         static_cast<RealT>(1.0e-9));
+        ida.setTolerance(static_cast<RealT>(1.0e-7), static_cast<RealT>(1.0e-9));
         ida.configureSimulation();
 
         // Run for 1s
@@ -739,15 +734,7 @@ namespace GridKit
         bus.Vr0      = ONE<RealT>;
         bus.Vi0      = ZERO<RealT>;
 
-        data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD)},
-                       {"Reactive Current Command", signalId(LoopSignal::IQCMD)},
-                       {"Branch Current Real", signalId(LoopSignal::IBRANCHR)},
-                       {"Branch Current Imaginary", signalId(LoopSignal::IBRANCHI)},
-                       {"Branch Active Power", signalId(LoopSignal::PBRANCH)},
-                       {"Branch Reactive Power", signalId(LoopSignal::QBRANCH)},
-                       {"Reactive Power Command", signalId(LoopSignal::QEXT)},
-                       {"Active Power Command", signalId(LoopSignal::PEXT)},
-                       {"Plant Active Power Reference", signalId(LoopSignal::PLANT_PREF)}};
+        data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD)}, {"Reactive Current Command", signalId(LoopSignal::IQCMD)}, {"Branch Current Real", signalId(LoopSignal::IBRANCHR)}, {"Branch Current Imaginary", signalId(LoopSignal::IBRANCHI)}, {"Branch Active Power", signalId(LoopSignal::PBRANCH)}, {"Branch Reactive Power", signalId(LoopSignal::QBRANCH)}, {"Reactive Power Command", signalId(LoopSignal::QEXT)}, {"Active Power Command", signalId(LoopSignal::PEXT)}, {"Plant Active Power Reference", signalId(LoopSignal::PLANT_PREF)}};
 
         auto& converter                                        = data.regca.emplace_back();
         converter.buses[RegcaBuses::bus]                       = RENEWABLE_BUS_ID;
@@ -807,7 +794,7 @@ namespace GridKit
         auto& reference                                          = data.constant_source.emplace_back();
         reference.parameters[ConstantSignalSourceParameters::Sr] = INITIAL_ACTIVE_POWER;
         reference.signal_outputs[ConstantSignalSourceSignalOutputs::sr] =
-            signalId(LoopSignal::PLANT_PREF);
+          signalId(LoopSignal::PLANT_PREF);
 
         SystemModel<RealT, IdxT> system(data);
         success *= system.allocate() == 0;
@@ -831,18 +818,13 @@ namespace GridKit
 
         const auto*              equilibrium_values = system.y().getData();
         const std::vector<RealT> equilibrium(
-            equilibrium_values,
-            equilibrium_values + static_cast<size_t>(system.y().getSize()));
+          equilibrium_values,
+          equilibrium_values + static_cast<size_t>(system.y().getSize())
+        );
 
-        success *= isEqual(static_cast<RealT>(pref_signal->read()),
-                           INITIAL_ACTIVE_POWER,
-                           RECOVERY_TOLERANCE);
-        success *= isEqual(static_cast<RealT>(pext_signal->read()),
-                           INITIAL_ACTIVE_POWER,
-                           RECOVERY_TOLERANCE);
-        success *= isEqual(static_cast<RealT>(qext_signal->read()),
-                           INITIAL_REACTIVE_POWER,
-                           RECOVERY_TOLERANCE);
+        success *= isEqual(static_cast<RealT>(pref_signal->read()), INITIAL_ACTIVE_POWER, RECOVERY_TOLERANCE);
+        success *= isEqual(static_cast<RealT>(pext_signal->read()), INITIAL_ACTIVE_POWER, RECOVERY_TOLERANCE);
+        success *= isEqual(static_cast<RealT>(qext_signal->read()), INITIAL_REACTIVE_POWER, RECOVERY_TOLERANCE);
 
         const RealT pref0    = static_cast<RealT>(pref_signal->read());
         const RealT pext0    = static_cast<RealT>(pext_signal->read());
@@ -860,9 +842,9 @@ namespace GridKit
         };
 
         const std::array<SignalResponse, 3> responses{{
-            {"REPCA PEXT", static_cast<RealT>(pext_signal->read()) - pext0},
-            {"REECB IPCMD", static_cast<RealT>(ipcmd_signal->read()) - ipcmd0},
-            {"REGCA PBRANCH", static_cast<RealT>(pbranch_signal->read()) - pbranch0},
+          {"REPCA PEXT", static_cast<RealT>(pext_signal->read()) - pext0},
+          {"REECB IPCMD", static_cast<RealT>(ipcmd_signal->read()) - ipcmd0},
+          {"REGCA PBRANCH", static_cast<RealT>(pbranch_signal->read()) - pbranch0},
         }};
         for (const auto& response : responses)
         {
@@ -876,8 +858,7 @@ namespace GridKit
 
         pref_signal->init(pref0);
         success *= ida.initializeSimulation(PULSE_DURATION) == 0;
-        success *= ida.runSimulation(PULSE_DURATION + RECOVERY_HORIZON,
-                                     OUTPUT_INTERVAL)
+        success *= ida.runSimulation(PULSE_DURATION + RECOVERY_HORIZON, OUTPUT_INTERVAL)
                    == 0;
 
         const auto* final_values = system.y().getData();

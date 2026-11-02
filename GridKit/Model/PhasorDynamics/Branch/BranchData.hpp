@@ -67,12 +67,6 @@ namespace GridKit
      */
     template <typename real_type, typename index_type>
     using BranchData =
-        ComponentData<real_type,
-                      index_type,
-                      BranchParameters,
-                      BranchBuses,
-                      BranchSignalInputs,
-                      BranchSignalOutputs,
-                      BranchMonitorableVariables>;
+      ComponentData<real_type, index_type, BranchParameters, BranchBuses, BranchSignalInputs, BranchSignalOutputs, BranchMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

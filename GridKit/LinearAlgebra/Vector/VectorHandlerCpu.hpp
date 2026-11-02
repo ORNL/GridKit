@@ -48,13 +48,7 @@ namespace GridKit
        * if `transpose = T` (yes), `x = beta*x + alpha*V^T*y`,
        * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
        */
-      void gemv(char                   transpose,
-                IdxT                   k,
-                const ScalarT          alpha,
-                const ScalarT          beta,
-                Vector<ScalarT, IdxT>* V,
-                Vector<ScalarT, IdxT>* y,
-                Vector<ScalarT, IdxT>* x);
+      void gemv(char transpose, IdxT k, const ScalarT alpha, const ScalarT beta, Vector<ScalarT, IdxT>* V, Vector<ScalarT, IdxT>* y, Vector<ScalarT, IdxT>* x);
 
       // Scale a vector by a diagonal matrix
       void scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec);

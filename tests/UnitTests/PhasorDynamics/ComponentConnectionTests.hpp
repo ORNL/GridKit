@@ -56,8 +56,9 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
-            static_cast<ScalarT>(1.0),
-            static_cast<ScalarT>(0.0));
+          static_cast<ScalarT>(1.0),
+          static_cast<ScalarT>(0.0)
+        );
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd;
         PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
 
@@ -104,8 +105,9 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
-            static_cast<ScalarT>(1.0),
-            static_cast<ScalarT>(0.0));
+          static_cast<ScalarT>(1.0),
+          static_cast<ScalarT>(0.0)
+        );
         PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
         PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
 
@@ -150,8 +152,9 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
-            static_cast<ScalarT>(1.0),
-            static_cast<ScalarT>(0.0));
+          static_cast<ScalarT>(1.0),
+          static_cast<ScalarT>(0.0)
+        );
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd;
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> machine_data;
@@ -198,8 +201,9 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
-            static_cast<ScalarT>(1.0),
-            static_cast<ScalarT>(0.0));
+          static_cast<ScalarT>(1.0),
+          static_cast<ScalarT>(0.0)
+        );
         PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> machine_data;
@@ -248,8 +252,9 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
-            static_cast<ScalarT>(1.0),
-            static_cast<ScalarT>(0.0));
+          static_cast<ScalarT>(1.0),
+          static_cast<ScalarT>(0.0)
+        );
         PhasorDynamics::SignalNode<ScalarT, IdxT> ir;
         PhasorDynamics::SignalNode<ScalarT, IdxT> ii;
         PhasorDynamics::SignalNode<ScalarT, IdxT> p;
@@ -307,12 +312,8 @@ namespace GridKit
 
         const auto* state = plant.y().getData();
 
-        success *= isEqual(state[static_cast<size_t>(PlantInternal::PMEAS)],
-                           static_cast<ScalarT>(0.8),
-                           kTol);
-        success *= isEqual(state[static_cast<size_t>(PlantInternal::QMEAS)],
-                           static_cast<ScalarT>(0.2),
-                           kTol);
+        success *= isEqual(state[static_cast<size_t>(PlantInternal::PMEAS)], static_cast<ScalarT>(0.8), kTol);
+        success *= isEqual(state[static_cast<size_t>(PlantInternal::QMEAS)], static_cast<ScalarT>(0.2), kTol);
 
         const auto* residual = plant.getResidual().getData();
         for (IdxT row = 0; row < plant.size(); ++row)
@@ -336,8 +337,9 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
-            static_cast<ScalarT>(1.0),
-            static_cast<ScalarT>(0.0));
+          static_cast<ScalarT>(1.0),
+          static_cast<ScalarT>(0.0)
+        );
         PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd;
         PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd;
         PhasorDynamics::SignalNode<ScalarT, IdxT> pe;
@@ -393,10 +395,12 @@ namespace GridKit
         success *= ipcmd.linked() && iqcmd.linked() && pe.linked() && qgen.linked();
         success *= ipcmd.getVariableIndex()
                    == controller.getVariableIndex(
-                       static_cast<IdxT>(PhasorDynamics::Controller::ReecbInternalVariables::IPCMD));
+                     static_cast<IdxT>(PhasorDynamics::Controller::ReecbInternalVariables::IPCMD)
+                   );
         success *= iqcmd.getVariableIndex()
                    == controller.getVariableIndex(
-                       static_cast<IdxT>(PhasorDynamics::Controller::ReecbInternalVariables::IQCMD));
+                     static_cast<IdxT>(PhasorDynamics::Controller::ReecbInternalVariables::IQCMD)
+                   );
         success *= system.initialize() == 0;
         success *= system.evaluateResidual() == 0;
 
@@ -433,11 +437,7 @@ namespace GridKit
       {
         using namespace PhasorDynamics;
 
-        return checkConnection<Genrou<ScalarT, IdxT>,
-                               GenrouInternalVariables::OMEGA,
-                               GenrouSignalOutputs::speed,
-                               GenrouSignalInputs::pmech>(makeGenrouGastPtiCase(),
-                                                          __func__);
+        return checkConnection<Genrou<ScalarT, IdxT>, GenrouInternalVariables::OMEGA, GenrouSignalOutputs::speed, GenrouSignalInputs::pmech>(makeGenrouGastPtiCase(), __func__);
       }
 
       /// Check production GASTPTI signal wiring to GENSAL.
@@ -445,11 +445,7 @@ namespace GridKit
       {
         using namespace PhasorDynamics;
 
-        return checkConnection<Gensal<ScalarT, IdxT>,
-                               GensalInternalVariables::OMEGA,
-                               GensalSignalOutputs::speed,
-                               GensalSignalInputs::pmech>(makeGensalGastPtiCase(),
-                                                          __func__);
+        return checkConnection<Gensal<ScalarT, IdxT>, GensalInternalVariables::OMEGA, GensalSignalOutputs::speed, GensalSignalInputs::pmech>(makeGensalGastPtiCase(), __func__);
       }
 
       /// Check production GASTPTI signal wiring to GenClassical.
@@ -457,11 +453,7 @@ namespace GridKit
       {
         using namespace PhasorDynamics;
 
-        return checkConnection<GenClassical<ScalarT, IdxT>,
-                               GenClassicalInternalVariables::OMEGA,
-                               GenClassicalSignalOutputs::speed,
-                               GenClassicalSignalInputs::pmech>(makeGenClassicalGastPtiCase(),
-                                                                __func__);
+        return checkConnection<GenClassical<ScalarT, IdxT>, GenClassicalInternalVariables::OMEGA, GenClassicalSignalOutputs::speed, GenClassicalSignalInputs::pmech>(makeGenClassicalGastPtiCase(), __func__);
       }
 
     private:
@@ -482,10 +474,7 @@ namespace GridKit
       static constexpr RealT kInitialActivePower   = static_cast<RealT>(0.4);
       static constexpr RealT kInitialReactivePower = static_cast<RealT>(0.05);
 
-      template <typename MachineT,
-                auto speed_state_variable,
-                auto speed_port_variable,
-                auto pmech_port_variable>
+      template <typename MachineT, auto speed_state_variable, auto speed_port_variable, auto pmech_port_variable>
       TestOutcome checkConnection(const SystemDataT& data, const char* test_name)
       {
         using namespace PhasorDynamics::Governor;
@@ -519,11 +508,11 @@ namespace GridKit
         auto& governor_ports = governor->getPorts();
 
         const bool ports_connected =
-            machine_ports.out.template port<speed_port_variable>().connected()
-            && machine_ports.in.template port<pmech_port_variable>().connected()
-            && governor_ports.in.template port<GastPtiSignalInputs::speed>().connected()
-            && governor_ports.in.template port<GastPtiSignalInputs::pref>().connected()
-            && governor_ports.out.template port<GastPtiSignalOutputs::pmech>().connected();
+          machine_ports.out.template port<speed_port_variable>().connected()
+          && machine_ports.in.template port<pmech_port_variable>().connected()
+          && governor_ports.in.template port<GastPtiSignalInputs::speed>().connected()
+          && governor_ports.in.template port<GastPtiSignalInputs::pref>().connected()
+          && governor_ports.out.template port<GastPtiSignalOutputs::pmech>().connected();
         success *= ports_connected;
         if (!ports_connected)
         {
@@ -539,16 +528,17 @@ namespace GridKit
                    == machine->getVariableIndex(static_cast<IdxT>(speed_state_variable));
         success *= speed_index
                    == governor_ports.in.template port<GastPtiSignalInputs::speed>()
-                          .signalVariableIndex();
+                        .signalVariableIndex();
         success *= pmech_index
                    == machine_ports.in.template port<pmech_port_variable>()
-                          .signalVariableIndex();
+                        .signalVariableIndex();
         success *= pmech_index
                    == governor->getVariableIndex(
-                       static_cast<IdxT>(GastPtiInternalVariables::PMECH));
+                     static_cast<IdxT>(GastPtiInternalVariables::PMECH)
+                   );
         success *= pref_index
                    == governor_ports.in.template port<GastPtiSignalInputs::pref>()
-                          .signalVariableIndex();
+                        .signalVariableIndex();
 
         return success.report(test_name);
       }
@@ -567,9 +557,7 @@ namespace GridKit
         bus.Vr0      = ONE<RealT>;
         bus.Vi0      = ZERO<RealT>;
 
-        data.signal = {{"Machine Speed Deviation", kSpeedSignalId},
-                       {"Mechanical Power", kPmechSignalId},
-                       {"Active Power Reference", kPrefSignalId}};
+        data.signal = {{"Machine Speed Deviation", kSpeedSignalId}, {"Mechanical Power", kPmechSignalId}, {"Active Power Reference", kPrefSignalId}};
 
         auto& governor                                       = data.gastpti.emplace_back();
         governor.signal_inputs[GastPtiSignalInputs::speed]   = kSpeedSignalId;

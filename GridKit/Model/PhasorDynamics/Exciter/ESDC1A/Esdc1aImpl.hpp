@@ -139,13 +139,12 @@ namespace GridKit
 
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
         checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        checks.check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
-                     "UEL must be 0, 1, 2, or 3");
+        checks.check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3), "UEL must be 0, 1, 2, or 3");
 
         // Model data uses an exact zero to mean "saturation bypassed", so
         // this is an exact comparison by intent rather than a tolerance test.
         const bool saturation_disabled =
-            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+          Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
         if (!saturation_disabled)
         {
@@ -171,7 +170,7 @@ namespace GridKit
         // An attached port must resolve to writable signal storage. The
         // enumerator is a template argument, so each port names itself once.
         auto check_attached_signal =
-            [&]<Esdc1aSignalInputs variable>(const char* name)
+          [&]<Esdc1aSignalInputs variable>(const char* name)
         {
           if (ports_.in.template port<variable>().connected()
               && !ports_.in.template port<variable>().linked())
@@ -535,11 +534,12 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int
       Esdc1a<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT* y,
-          const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
-          ScalarT*       f)
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        const ScalarT* ws,
+        ScalarT*       f
+      )
       {
         const auto EFDP = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
         const auto VC   = static_cast<size_t>(Esdc1aInternalVariables::VC);
@@ -622,9 +622,10 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline scalar_type
       Esdc1a<scalar_type, index_type>::awmin(
-          const ScalarT x,
-          const ScalarT f,
-          const RealT   xmin)
+        const ScalarT x,
+        const ScalarT f,
+        const RealT   xmin
+      )
       {
         const ScalarT above = Math::above(x, xmin);
 
@@ -761,12 +762,12 @@ namespace GridKit
         // the coefficients stay finite; verify() reports inconsistent data.
         // The disabled test matches the verify() predicate exactly.
         const bool saturation_disabled =
-            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+          Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
         const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
         const bool saturation_consistent =
-            E1_ > ZERO<RealT> && E2_ > ZERO<RealT>
-            && Se1_ >= ZERO<RealT> && Se2_ >= ZERO<RealT>
-            && sat_ordered;
+          E1_ > ZERO<RealT> && E2_ > ZERO<RealT>
+          && Se1_ >= ZERO<RealT> && Se2_ >= ZERO<RealT>
+          && sat_ordered;
         if (saturation_disabled || !saturation_consistent)
         {
           SA_ = ZERO<RealT>;

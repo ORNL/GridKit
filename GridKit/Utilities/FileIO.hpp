@@ -35,10 +35,7 @@ namespace GridKit
    * variables.
    */
   template <typename ScalarT>
-  void setLookupTable(std::vector<std::vector<ScalarT>>& table,
-                      std::istream&                      idata,
-                      ScalarT&                           ti,
-                      ScalarT&                           tf)
+  void setLookupTable(std::vector<std::vector<ScalarT>>& table, std::istream& idata, ScalarT& ti, ScalarT& tf)
   {
     std::string line;
     int         oldwordcount = -1;

@@ -67,11 +67,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::n_intern_;
 
     public:
-      DistributedGenerator(IdxT                                        id,
-                           DistributedGeneratorParameters<RealT, IdxT> parm,
-                           bool                                        reference_frame,
-                           NodeT*                                      node_ref,
-                           NodeT*                                      node_bus);
+      DistributedGenerator(IdxT id, DistributedGeneratorParameters<RealT, IdxT> parm, bool reference_frame, NodeT* node_ref, NodeT* node_bus);
       virtual ~DistributedGenerator();
 
       int initialize();

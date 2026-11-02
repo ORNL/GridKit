@@ -77,12 +77,6 @@ namespace GridKit
      */
     template <typename real_type, typename index_type>
     using GenrouData =
-        ComponentData<real_type,
-                      index_type,
-                      GenrouParameters,
-                      GenrouBuses,
-                      GenrouSignalInputs,
-                      GenrouSignalOutputs,
-                      GenrouMonitorableVariables>;
+      ComponentData<real_type, index_type, GenrouParameters, GenrouBuses, GenrouSignalInputs, GenrouSignalOutputs, GenrouMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

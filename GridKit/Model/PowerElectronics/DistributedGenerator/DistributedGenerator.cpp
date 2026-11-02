@@ -16,11 +16,7 @@ namespace GridKit
      * Calls default ModelEvaluatorImpl constructor.
      */
     template <class ScalarT, typename IdxT>
-    DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT                                        id,
-                                                              DistributedGeneratorParameters<RealT, IdxT> parm,
-                                                              bool                                        reference_frame,
-                                                              NodeT*                                      node_ref,
-                                                              NodeT*                                      node_bus)
+    DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT id, DistributedGeneratorParameters<RealT, IdxT> parm, bool reference_frame, NodeT* node_ref, NodeT* node_bus)
       : wb_(parm.wb_),
         wc_(parm.wc_),
         mp_(parm.mp_),
@@ -227,8 +223,7 @@ namespace GridKit
       {
         rtemp.push_back(1);
         ctemp.push_back(15);
-        valtemp.push_back(-std::sin(delta) * static_cast<RealT>(y_int_[10])
-                          - std::cos(delta) * static_cast<RealT>(y_int_[11]));
+        valtemp.push_back(-std::sin(delta) * static_cast<RealT>(y_int_[10]) - std::cos(delta) * static_cast<RealT>(y_int_[11]));
       }
       this->setJacValues(rtemp, ctemp, valtemp);
 
@@ -240,29 +235,20 @@ namespace GridKit
       {
         rtemp.push_back(2);
         ctemp.push_back(15);
-        valtemp.push_back(std::cos(delta) * static_cast<RealT>(y_int_[10])
-                          - std::sin(delta) * static_cast<RealT>(y_int_[11]));
+        valtemp.push_back(std::cos(delta) * static_cast<RealT>(y_int_[10]) - std::sin(delta) * static_cast<RealT>(y_int_[11]));
       }
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 3
       rtemp.assign(5, 3);
       ctemp   = {3, 11, 12, 13, 14};
-      valtemp = {-wc_ - alpha_,
-                 wc_ * static_cast<RealT>(y_int_[10]),
-                 wc_ * static_cast<RealT>(y_int_[11]),
-                 wc_ * static_cast<RealT>(y_int_[8]),
-                 wc_ * static_cast<RealT>(y_int_[9])};
+      valtemp = {-wc_ - alpha_, wc_ * static_cast<RealT>(y_int_[10]), wc_ * static_cast<RealT>(y_int_[11]), wc_ * static_cast<RealT>(y_int_[8]), wc_ * static_cast<RealT>(y_int_[9])};
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 4
       rtemp.assign(5, 4);
       ctemp   = {4, 11, 12, 13, 14};
-      valtemp = {-wc_ - alpha_,
-                 -wc_ * static_cast<RealT>(y_int_[11]),
-                 wc_ * static_cast<RealT>(y_int_[10]),
-                 wc_ * static_cast<RealT>(y_int_[9]),
-                 -wc_ * static_cast<RealT>(y_int_[8])};
+      valtemp = {-wc_ - alpha_, -wc_ * static_cast<RealT>(y_int_[11]), wc_ * static_cast<RealT>(y_int_[10]), wc_ * static_cast<RealT>(y_int_[9]), -wc_ * static_cast<RealT>(y_int_[8])};
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 5
@@ -292,60 +278,37 @@ namespace GridKit
       // r = 9
       rtemp.assign(9, 9);
       ctemp   = {3, 4, 5, 7, 9, 10, 11, 12, 13};
-      valtemp = {-mp_ * static_cast<RealT>(y_int_[7]),
-                 -(Kpc_ * Kpv_ * nq_) / Lf_,
-                 (Kpc_ * Kiv_) / Lf_,
-                 Kic_ / Lf_,
-                 -(Kpc_ + rLf_) / Lf_ - alpha_,
-                 -mp_ * static_cast<RealT>(y_int_[0]),
-                 -(Kpc_ * Kpv_ + 1.0) / Lf_,
-                 -(Cf_ * Kpc_ * wb_) / Lf_,
-                 (F_ * Kpc_) / Lf_};
+      valtemp = {-mp_ * static_cast<RealT>(y_int_[7]), -(Kpc_ * Kpv_ * nq_) / Lf_, (Kpc_ * Kiv_) / Lf_, Kic_ / Lf_, -(Kpc_ + rLf_) / Lf_ - alpha_, -mp_ * static_cast<RealT>(y_int_[0]), -(Kpc_ * Kpv_ + 1.0) / Lf_, -(Cf_ * Kpc_ * wb_) / Lf_, (F_ * Kpc_) / Lf_};
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 10
       rtemp.assign(8, 10);
       ctemp   = {3, 6, 8, 9, 10, 11, 12, 14};
-      valtemp = {mp_ * static_cast<RealT>(y_int_[6]),
-                 (Kiv_ * Kpc_) / Lf_,
-                 Kic_ / Lf_,
-                 mp_ * static_cast<RealT>(y_int_[0]),
-                 -(Kpc_ + rLf_) / Lf_ - alpha_,
-                 (Cf_ * Kpc_ * wb_) / Lf_,
-                 -(Kpc_ * Kpv_ + 1.0) / Lf_,
-                 (F_ * Kpc_) / Lf_};
+      valtemp = {mp_ * static_cast<RealT>(y_int_[6]), (Kiv_ * Kpc_) / Lf_, Kic_ / Lf_, mp_ * static_cast<RealT>(y_int_[0]), -(Kpc_ + rLf_) / Lf_ - alpha_, (Cf_ * Kpc_ * wb_) / Lf_, -(Kpc_ * Kpv_ + 1.0) / Lf_, (F_ * Kpc_) / Lf_};
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 11
       rtemp.assign(5, 11);
       ctemp   = {3, 9, 11, 12, 13};
-      valtemp = {-mp_ * static_cast<RealT>(y_int_[9]),
-                 1.0 / Cf_,
-                 -alpha_,
-                 wb_ - mp_ * static_cast<RealT>(y_int_[0]),
-                 -1.0 / Cf_};
+      valtemp = {-mp_ * static_cast<RealT>(y_int_[9]), 1.0 / Cf_, -alpha_, wb_ - mp_ * static_cast<RealT>(y_int_[0]), -1.0 / Cf_};
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 12
       rtemp.assign(5, 12);
       ctemp   = {3, 10, 11, 12, 14};
-      valtemp = {mp_ * static_cast<RealT>(y_int_[8]),
-                 1.0 / Cf_,
-                 -wb_ + mp_ * static_cast<RealT>(y_int_[0]),
-                 -alpha_,
-                 -1.0 / Cf_};
+      valtemp = {mp_ * static_cast<RealT>(y_int_[8]), 1.0 / Cf_, -wb_ + mp_ * static_cast<RealT>(y_int_[0]), -alpha_, -1.0 / Cf_};
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 13
       rtemp.assign(6, 13);
       ctemp   = {1, 2, 3, 11, 13, 14};
       valtemp = {
-          (1.0 / Lc_) * -std::cos(delta),
-          (1.0 / Lc_) * -std::sin(delta),
-          -mp_ * static_cast<RealT>(y_int_[11]),
-          1.0 / Lc_,
-          -rLc_ / Lc_ - alpha_,
-          wb_ - mp_ * static_cast<RealT>(y_int_[0]),
+        (1.0 / Lc_) * -std::cos(delta),
+        (1.0 / Lc_) * -std::sin(delta),
+        -mp_ * static_cast<RealT>(y_int_[11]),
+        1.0 / Lc_,
+        -rLc_ / Lc_ - alpha_,
+        wb_ - mp_ * static_cast<RealT>(y_int_[0]),
       };
       if (!refframe_)
       {
@@ -359,12 +322,12 @@ namespace GridKit
       rtemp.assign(6, 14);
       ctemp   = {1, 2, 3, 12, 13, 14};
       valtemp = {
-          (1.0 / Lc_) * std::sin(delta),
-          (1.0 / Lc_) * -std::cos(delta),
-          mp_ * static_cast<RealT>(y_int_[10]),
-          1.0 / Lc_,
-          -wb_ + mp_ * static_cast<RealT>(y_int_[0]),
-          -rLc_ / Lc_ - alpha_,
+        (1.0 / Lc_) * std::sin(delta),
+        (1.0 / Lc_) * -std::cos(delta),
+        mp_ * static_cast<RealT>(y_int_[10]),
+        1.0 / Lc_,
+        -wb_ + mp_ * static_cast<RealT>(y_int_[0]),
+        -rLc_ / Lc_ - alpha_,
       };
       if (!refframe_)
       {

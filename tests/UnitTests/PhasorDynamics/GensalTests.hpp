@@ -66,7 +66,7 @@ namespace GridKit
         auto  data = makeGensalData();
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::Gensal<ScalarT, IdxT>(bus, data);
+          new PhasorDynamics::Gensal<ScalarT, IdxT>(bus, data);
 
         success *= (machine != nullptr);
 
@@ -267,20 +267,21 @@ namespace GridKit
         PhasorDynamics::Gensal<ScalarT, IdxT> gen(&bus, data);
 
         const std::vector<ScalarT> res_answer = {
-            0.0,
-            0.0,
-            2.2083333333333335,
-            -1.028125,
-            0.65,
-            0.0,
-            0.2,
-            -1.1,
-            -1.4,
-            1.8125,
-            0.5,
-            0.25,
-            2.95,
-            -1.25};
+          0.0,
+          0.0,
+          2.2083333333333335,
+          -1.028125,
+          0.65,
+          0.0,
+          0.2,
+          -1.1,
+          -1.4,
+          1.8125,
+          0.5,
+          0.25,
+          2.95,
+          -1.25
+        };
 
         bus.allocate();
         bus.initialize();

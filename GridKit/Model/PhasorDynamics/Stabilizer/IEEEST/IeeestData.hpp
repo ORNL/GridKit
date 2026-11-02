@@ -78,13 +78,7 @@ namespace GridKit
        */
       template <typename real_type, typename index_type>
       using IeeestData =
-          ComponentData<real_type,
-                        index_type,
-                        IeeestParameters,
-                        IeeestBuses,
-                        IeeestSignalInputs,
-                        IeeestSignalOutputs,
-                        IeeestMonitorableVariables>;
+        ComponentData<real_type, index_type, IeeestParameters, IeeestBuses, IeeestSignalInputs, IeeestSignalOutputs, IeeestMonitorableVariables>;
 
     } // namespace Stabilizer
   } // namespace PhasorDynamics

@@ -66,13 +66,7 @@ namespace GridKit
         return data;
       }
 
-      static void addBranch(OPF::SystemModelData<RealT, IdxT>& data,
-                            const char*                        id,
-                            IdxT                               bus1,
-                            IdxT                               bus2,
-                            RealT                              r,
-                            RealT                              x,
-                            RealT                              b)
+      static void addBranch(OPF::SystemModelData<RealT, IdxT>& data, const char* id, IdxT bus1, IdxT bus2, RealT r, RealT x, RealT b)
       {
         auto& branch                                = data.branch.emplace_back();
         branch.id                                   = id;

@@ -56,7 +56,8 @@ namespace GridKit
 
       static constexpr std::array<IdxT, Utilities::enum_size<GeneratorPorts>()> NUM_PORT_VARIABLES{0};
       static constexpr std::array<IdxT, Utilities::enum_size<GeneratorPorts>()> NUM_PORT_CONSTRAINTS{
-          BusT::NUM_SHARED_CONSTRAINTS};
+        BusT::NUM_SHARED_CONSTRAINTS
+      };
 
       explicit Generator(const ModelDataT& data);
 

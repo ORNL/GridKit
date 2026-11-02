@@ -60,9 +60,7 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
-    Branch<scalar_type, index_type>::internalConstraints([[maybe_unused]] const ScalarT* x,
-                                                         const ScalarT*                  external,
-                                                         ScalarT*                        g) const
+    Branch<scalar_type, index_type>::internalConstraints([[maybe_unused]] const ScalarT* x, const ScalarT* external, ScalarT* g) const
     {
       const auto DP1 = static_cast<size_t>(BranchExternalConstraints::DP1);
       const auto DQ1 = static_cast<size_t>(BranchExternalConstraints::DQ1);
@@ -80,9 +78,7 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void
-    Branch<scalar_type, index_type>::externalConstraints([[maybe_unused]] const ScalarT* x,
-                                                         const ScalarT*                  external,
-                                                         ScalarT*                        g) const
+    Branch<scalar_type, index_type>::externalConstraints([[maybe_unused]] const ScalarT* x, const ScalarT* external, ScalarT* g) const
     {
       power(external, g);
     }

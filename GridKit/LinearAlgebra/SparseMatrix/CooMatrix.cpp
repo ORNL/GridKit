@@ -27,9 +27,7 @@ namespace GridKit
      * @param[in] nnz_ - number of non-zeros
      */
     template <typename RealT, typename IdxT>
-    CooMatrix<RealT, IdxT>::CooMatrix(IdxT n,
-                                      IdxT m,
-                                      IdxT nnz)
+    CooMatrix<RealT, IdxT>::CooMatrix(IdxT n, IdxT m, IdxT nnz)
       : n_{n},
         m_{m},
         nnz_{nnz}
@@ -65,14 +63,7 @@ namespace GridKit
      * @param[in] memspace_dst
      */
     template <typename RealT, typename IdxT>
-    CooMatrix<RealT, IdxT>::CooMatrix(IdxT                n,
-                                      IdxT                m,
-                                      IdxT                nnz_,
-                                      IdxT**              rows,
-                                      IdxT**              cols,
-                                      RealT**             vals,
-                                      memory::MemorySpace memspace_src,
-                                      memory::MemorySpace memspace_dst)
+    CooMatrix<RealT, IdxT>::CooMatrix(IdxT n, IdxT m, IdxT nnz_, IdxT** rows, IdxT** cols, RealT** vals, memory::MemorySpace memspace_src, memory::MemorySpace memspace_dst)
       : CooMatrix(n, m, nnz_)
     {
       int control = -1;
@@ -248,10 +239,7 @@ namespace GridKit
      * @return 0 if successful, 1 if not.
      */
     template <typename RealT, typename IdxT>
-    int CooMatrix<RealT, IdxT>::setDataPointers(IdxT*               row_data,
-                                                IdxT*               col_data,
-                                                RealT*              val_data,
-                                                memory::MemorySpace memspace)
+    int CooMatrix<RealT, IdxT>::setDataPointers(IdxT* row_data, IdxT* col_data, RealT* val_data, memory::MemorySpace memspace)
     {
       using namespace memory;
 

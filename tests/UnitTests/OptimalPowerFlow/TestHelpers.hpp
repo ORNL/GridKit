@@ -75,15 +75,17 @@ namespace GridKit
     inline auto pattern(const OPF::Component<double, size_t>::CooBuffer& entries)
     {
       return std::pair{
-          std::vector<size_t>(entries.rows.getData(), entries.rows.getData() + entries.nnz),
-          std::vector<size_t>(entries.cols.getData(), entries.cols.getData() + entries.nnz)};
+        std::vector<size_t>(entries.rows.getData(), entries.rows.getData() + entries.nnz),
+        std::vector<size_t>(entries.cols.getData(), entries.cols.getData() + entries.nnz)
+      };
     }
 
     inline auto pattern(LinearAlgebra::CsrMatrix<double, size_t>& matrix)
     {
       return std::pair{
-          std::vector<size_t>(matrix.getRowData(), matrix.getRowData() + matrix.getNumRows() + 1),
-          std::vector<size_t>(matrix.getColData(), matrix.getColData() + matrix.getNnz())};
+        std::vector<size_t>(matrix.getRowData(), matrix.getRowData() + matrix.getNumRows() + 1),
+        std::vector<size_t>(matrix.getColData(), matrix.getColData() + matrix.getNnz())
+      };
     }
 
     inline bool matches(const EntryMap& actual, const EntryMap& expected, double tolerance)

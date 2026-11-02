@@ -37,12 +37,7 @@ namespace GridKit
 
           std::fill_n(gradient, WrapperT::NUM_INPUTS, 0.0);
 
-          __enzyme_autodiff<void>((void*) WrapperT::template eval<ScalarT>,
-                                  enzyme_const,
-                                  model,
-                                  enzyme_dup,
-                                  x,
-                                  gradient);
+          __enzyme_autodiff<void>((void*) WrapperT::template eval<ScalarT>, enzyme_const, model, enzyme_dup, x, gradient);
         }
       };
     } // namespace Sparse

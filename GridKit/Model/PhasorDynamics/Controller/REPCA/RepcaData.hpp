@@ -97,13 +97,7 @@ namespace GridKit
        */
       template <typename real_type, typename index_type>
       using RepcaData =
-          ComponentData<real_type,
-                        index_type,
-                        RepcaParameters,
-                        RepcaBuses,
-                        RepcaSignalInputs,
-                        RepcaSignalOutputs,
-                        RepcaMonitorableVariables>;
+        ComponentData<real_type, index_type, RepcaParameters, RepcaBuses, RepcaSignalInputs, RepcaSignalOutputs, RepcaMonitorableVariables>;
     } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -141,31 +141,22 @@ namespace GridKit
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        checks.check(valid_component_base,
-                     "mva must define a finite positive component power base");
+        checks.check(valid_component_base, "mva must define a finite positive component power base");
         checks.check(valid_system_base, "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
-          checks.check(std::isfinite(system_to_component)
-                           && system_to_component > ZERO<RealT>
-                           && std::isfinite(component_to_system)
-                           && component_to_system > ZERO<RealT>,
-                       "system/component power-base conversion ratios must be finite and positive");
+          checks.check(std::isfinite(system_to_component) && system_to_component > ZERO<RealT> && std::isfinite(component_to_system) && component_to_system > ZERO<RealT>, "system/component power-base conversion ratios must be finite and positive");
         }
 
-        checks.check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
-                     "dbdlow <= 0 <= dbdupper is required");
-        checks.check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
-                     "emin <= 0 <= emax is required");
+        checks.check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_, "dbdlow <= 0 <= dbdupper is required");
+        checks.check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_, "emin <= 0 <= emax is required");
         checks.check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
-        checks.check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
-                     "fdbd1 <= 0 <= fdbd2 is required");
+        checks.check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_, "fdbd1 <= 0 <= fdbd2 is required");
         checks.check(Ddn_ >= ZERO<RealT>, "Ddn must be non-negative");
         checks.check(Dup_ >= ZERO<RealT>, "Dup must be non-negative");
-        checks.check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
-                     "femin <= 0 <= femax is required");
+        checks.check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_, "femin <= 0 <= femax is required");
         checks.check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
 
         auto check_required_signal = [&]<RepcaSignalInputs variable>(const char* name)
@@ -270,13 +261,13 @@ namespace GridKit
         const ScalarT vr = Vr();
         const ScalarT vi = Vi();
         const ScalarT ir_system =
-            ports_.in.template port<RepcaSignalInputs::ir>().readSignal();
+          ports_.in.template port<RepcaSignalInputs::ir>().readSignal();
         const ScalarT ii_system =
-            ports_.in.template port<RepcaSignalInputs::ii>().readSignal();
+          ports_.in.template port<RepcaSignalInputs::ii>().readSignal();
         const ScalarT p_system =
-            ports_.in.template port<RepcaSignalInputs::p>().readSignal();
+          ports_.in.template port<RepcaSignalInputs::p>().readSignal();
         const ScalarT q_system =
-            ports_.in.template port<RepcaSignalInputs::q>().readSignal();
+          ports_.in.template port<RepcaSignalInputs::q>().readSignal();
         const ScalarT ir   = this->toComponentBase(ir_system);
         const ScalarT ii   = this->toComponentBase(ii_system);
         ScalarT       freq = static_cast<ScalarT>(ONE<RealT>);
@@ -392,45 +383,45 @@ namespace GridKit
         const ScalarT pref0_system = p_system + this->toSystemBase(ep0 - pfreq0);
 
         const bool candidates_are_finite =
-            is_finite(qext0_system)
-            && (!Freqflag_ || is_finite(pext0_system))
-            && is_finite(qext0)
-            && (!Freqflag_ || is_finite(pext0))
-            && is_finite(p)
-            && is_finite(q)
-            && is_finite(vldc_r)
-            && is_finite(vldc_i)
-            && is_finite(v0)
-            && is_finite(vldc0)
-            && is_finite(vdroop0)
-            && is_finite(vctrl0)
-            && is_finite(vmeas0)
-            && is_finite(qmeas0)
-            && is_finite(pmeas0)
-            && is_finite(sfrz0)
-            && is_finite(erq0)
-            && is_finite(erqdb0)
-            && is_finite(erqlim0)
-            && is_finite(qpi0)
-            && is_finite(xqlag0)
-            && is_finite(qpi_input0)
-            && is_finite(xqpi0)
-            && is_finite(q_aw_rate0)
-            && is_finite(xqpi_rate0)
-            && is_finite(ef0)
-            && is_finite(pfreq0)
-            && is_finite(ep0)
-            && is_finite(eplim0)
-            && is_finite(pref0)
-            && is_finite(ppi0)
-            && is_finite(ppi_input0)
-            && is_finite(xppi0)
-            && is_finite(p_aw_rate0)
-            && is_finite(pext_output0)
-            && is_finite(freqref0)
-            && is_finite(vref0)
-            && is_finite(qref0_system)
-            && is_finite(pref0_system);
+          is_finite(qext0_system)
+          && (!Freqflag_ || is_finite(pext0_system))
+          && is_finite(qext0)
+          && (!Freqflag_ || is_finite(pext0))
+          && is_finite(p)
+          && is_finite(q)
+          && is_finite(vldc_r)
+          && is_finite(vldc_i)
+          && is_finite(v0)
+          && is_finite(vldc0)
+          && is_finite(vdroop0)
+          && is_finite(vctrl0)
+          && is_finite(vmeas0)
+          && is_finite(qmeas0)
+          && is_finite(pmeas0)
+          && is_finite(sfrz0)
+          && is_finite(erq0)
+          && is_finite(erqdb0)
+          && is_finite(erqlim0)
+          && is_finite(qpi0)
+          && is_finite(xqlag0)
+          && is_finite(qpi_input0)
+          && is_finite(xqpi0)
+          && is_finite(q_aw_rate0)
+          && is_finite(xqpi_rate0)
+          && is_finite(ef0)
+          && is_finite(pfreq0)
+          && is_finite(ep0)
+          && is_finite(eplim0)
+          && is_finite(pref0)
+          && is_finite(ppi0)
+          && is_finite(ppi_input0)
+          && is_finite(xppi0)
+          && is_finite(p_aw_rate0)
+          && is_finite(pext_output0)
+          && is_finite(freqref0)
+          && is_finite(vref0)
+          && is_finite(qref0_system)
+          && is_finite(pref0_system);
         if (!candidates_are_finite)
         {
           Log::error() << "Repca: derived initial values must be finite\n";
@@ -706,11 +697,12 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       [[gnu::always_inline]] inline int
       Repca<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT* y,
-          const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
-          ScalarT*       f)
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        const ScalarT* ws,
+        ScalarT*       f
+      )
       {
         const auto VMEAS      = static_cast<size_t>(RepcaInternalVariables::VMEAS);
         const auto QMEAS      = static_cast<size_t>(RepcaInternalVariables::QMEAS);
@@ -1088,7 +1080,7 @@ namespace GridKit
         input              = static_cast<ScalarT>(result);
         return std::isfinite(result)
                && std::abs(Math::deadband2(result, lower, upper) - value)
-                      <= INITIALIZATION_TOLERANCE;
+                    <= INITIALIZATION_TOLERANCE;
       }
 
       /**

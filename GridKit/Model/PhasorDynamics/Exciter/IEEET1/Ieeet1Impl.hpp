@@ -125,11 +125,10 @@ namespace GridKit
 
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
         checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        checks.check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
-                     "Ispdlim must be 0 or 1");
+        checks.check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>, "Ispdlim must be 0 or 1");
 
         const bool saturation_disabled =
-            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+          Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
         if (!saturation_disabled)
         {
@@ -143,7 +142,7 @@ namespace GridKit
         }
 
         auto check_attached_signal =
-            [&]<Ieeet1SignalInputs input>(const char* name)
+          [&]<Ieeet1SignalInputs input>(const char* name)
         {
           auto port = ports_.in.template port<input>();
           if (port.connected() && !port.linked())
@@ -352,11 +351,12 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT* y,
-          const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
-          ScalarT*       f)
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        const ScalarT* ws,
+        ScalarT*       f
+      )
       {
         const auto OMEGA = static_cast<size_t>(Ieeet1ExternalVariables::OMEGA);
         const auto VREF  = static_cast<size_t>(Ieeet1ExternalVariables::VREF);
@@ -576,7 +576,7 @@ namespace GridKit
         SB_ = ZERO<RealT>;
 
         const bool saturation_disabled =
-            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+          Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
         if (saturation_disabled)
         {

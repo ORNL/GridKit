@@ -65,12 +65,6 @@ namespace GridKit
      */
     template <typename real_type, typename index_type>
     using GenClassicalData =
-        ComponentData<real_type,
-                      index_type,
-                      GenClassicalParameters,
-                      GenClassicalBuses,
-                      GenClassicalSignalInputs,
-                      GenClassicalSignalOutputs,
-                      GenClassicalMonitorableVariables>;
+      ComponentData<real_type, index_type, GenClassicalParameters, GenClassicalBuses, GenClassicalSignalInputs, GenClassicalSignalOutputs, GenClassicalMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

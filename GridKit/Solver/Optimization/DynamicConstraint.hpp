@@ -39,10 +39,7 @@ namespace AnalysisManager
       using IpoptData                 = Ipopt::IpoptData;
 
     public:
-      DynamicConstraint(Sundials::Ida<ScalarT, IdxT>* integrator,
-                        RealT                         t_init,
-                        RealT                         t_final,
-                        RealT                         dt_monitor = 0);
+      DynamicConstraint(Sundials::Ida<ScalarT, IdxT>* integrator, RealT t_init, RealT t_final, RealT dt_monitor = 0);
       virtual ~DynamicConstraint();
 
       /// Returns sizes of the model components
@@ -70,17 +67,7 @@ namespace AnalysisManager
       virtual bool eval_h(Index n, const Number* x, bool new_x, Number obj_factor, Index m, const Number* lambda, bool new_lambda, Index nele_hess, Index* iRow, Index* jCol, Number* values);
 
       /// Postprocessing of the results (not used here)
-      virtual void finalize_solution(SolverReturn               status,
-                                     Index                      n,
-                                     const Number*              x,
-                                     const Number*              z_L,
-                                     const Number*              z_U,
-                                     Index                      m,
-                                     const Number*              g,
-                                     const Number*              lambda,
-                                     Number                     obj_value,
-                                     const IpoptData*           ip_data,
-                                     IpoptCalculatedQuantities* ip_cq);
+      virtual void finalize_solution(SolverReturn status, Index n, const Number* x, const Number* z_L, const Number* z_U, Index m, const Number* g, const Number* lambda, Number obj_value, const IpoptData* ip_data, IpoptCalculatedQuantities* ip_cq);
 
     private:
       RealT t_init_;

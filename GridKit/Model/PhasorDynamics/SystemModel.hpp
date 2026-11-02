@@ -84,8 +84,7 @@ namespace GridKit
 
       SystemModel(const SystemModelData<RealT, IdxT>& data);
 
-      SystemModel(const SystemModelData<RealT, IdxT>& data,
-                  const std::vector<BusT*>&           external_buses);
+      SystemModel(const SystemModelData<RealT, IdxT>& data, const std::vector<BusT*>& external_buses);
 
       virtual ~SystemModel();
 

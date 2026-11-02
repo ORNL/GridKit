@@ -48,15 +48,7 @@ namespace GridKit
         gather(x.data());
 
         jacobian_entries_.nnz = 0;
-        Enzyme::Sparse::DgDx<ModelT>::eval(&model,
-                                           local_x_.getSize(),
-                                           constraint_indices_.getData(),
-                                           variable_indices_.getData(),
-                                           x.data(),
-                                           jacobian_entries_.rows.getData(),
-                                           jacobian_entries_.cols.getData(),
-                                           jacobian_entries_.values.getData(),
-                                           jacobian_entries_.nnz);
+        Enzyme::Sparse::DgDx<ModelT>::eval(&model, local_x_.getSize(), constraint_indices_.getData(), variable_indices_.getData(), x.data(), jacobian_entries_.rows.getData(), jacobian_entries_.cols.getData(), jacobian_entries_.values.getData(), jacobian_entries_.nnz);
         assert(jacobian_entries_.nnz <= jacobian_entries_.values.getSize());
         return 0;
       }
@@ -72,16 +64,7 @@ namespace GridKit
       gatherMultipliers(lambda.data());
 
       hessian_entries_.nnz = 0;
-      Enzyme::Sparse::D2LDx2<ModelT>::eval(&model,
-                                           local_x_.getSize(),
-                                           variable_indices_.getData(),
-                                           x.data(),
-                                           sigma,
-                                           lambda.data(),
-                                           hessian_entries_.rows.getData(),
-                                           hessian_entries_.cols.getData(),
-                                           hessian_entries_.values.getData(),
-                                           hessian_entries_.nnz);
+      Enzyme::Sparse::D2LDx2<ModelT>::eval(&model, local_x_.getSize(), variable_indices_.getData(), x.data(), sigma, lambda.data(), hessian_entries_.rows.getData(), hessian_entries_.cols.getData(), hessian_entries_.values.getData(), hessian_entries_.nnz);
       assert(hessian_entries_.nnz <= hessian_entries_.values.getSize());
 
       keepLowerTriangle(hessian_entries_);

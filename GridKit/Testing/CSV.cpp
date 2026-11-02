@@ -35,10 +35,7 @@ namespace GridKit
       return ifs;
     }
 
-    std::unique_ptr<ErrorSet> compareCSV(const std::string& f_test,
-                                         const std::string& f_ref,
-                                         ErrorType          error_type,
-                                         double             abs_threshold)
+    std::unique_ptr<ErrorSet> compareCSV(const std::string& f_test, const std::string& f_ref, ErrorType error_type, double abs_threshold)
     {
       // Open files and read labels
       auto ifs_test = checkOpenFile(f_test);

@@ -59,13 +59,7 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct BusData : public ComponentData<real_type,
-                                          index_type,
-                                          BusParameters,
-                                          Utilities::EmptyEnum,
-                                          BusSignalInputs,
-                                          BusSignalOutputs,
-                                          BusMonitorableVariables>
+    struct BusData : public ComponentData<real_type, index_type, BusParameters, Utilities::EmptyEnum, BusSignalInputs, BusSignalOutputs, BusMonitorableVariables>
     {
       using RealT = real_type;
       using IdxT  = index_type;

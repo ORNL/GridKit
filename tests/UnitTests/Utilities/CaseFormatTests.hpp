@@ -58,10 +58,7 @@ namespace GridKit
           json input = case_input;
           if (hierarchical)
           {
-            input["subsystems"] = json::array({{{"id", "area"},
-                                                {"level", 1},
-                                                {"buses", input["buses"]},
-                                                {"devices", input["devices"]}}});
+            input["subsystems"] = json::array({{{"id", "area"}, {"level", 1}, {"buses", input["buses"]}, {"devices", input["devices"]}}});
             input["buses"]      = json::array();
             input["devices"]    = json::array();
           }
@@ -125,7 +122,7 @@ namespace GridKit
         using ReecbData = Controller::ReecbData<RealT, IdxT>;
 
         const char data[] =
-            R"({
+          R"({
                "header": {
                    "format_version": 0.2,
                    "format_revision": 0,
@@ -265,13 +262,17 @@ namespace GridKit
         success *= result.reecb[0].buses[ReecbData::Buses::bus] == 1;
         success *= result.reecb[0].disambiguation_string == "REE1";
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::iqcmd);
+          ReecbData::MonitorableVariables::iqcmd
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::ipcmd);
+          ReecbData::MonitorableVariables::ipcmd
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::vmeas);
+          ReecbData::MonitorableVariables::vmeas
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::pmeas);
+          ReecbData::MonitorableVariables::pmeas
+        );
 
         return success.report(__func__);
       }
@@ -287,7 +288,7 @@ namespace GridKit
         using RepcaData   = Controller::RepcaData<RealT, IdxT>;
 
         const char data[] =
-            R"({
+          R"({
                "header": {
                    "format_version": 0.2,
                    "format_revision": 0,
@@ -555,7 +556,8 @@ namespace GridKit
         success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::pmech);
         success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::filter);
         success *= result.hygov[0].monitored_variables.contains(
-            HygovData::MonitorableVariables::desiredgate);
+          HygovData::MonitorableVariables::desiredgate
+        );
         success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::gate);
         success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::flow);
         success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::head);
@@ -681,13 +683,17 @@ namespace GridKit
         success           *= result.reecb[0].signal_outputs[ReecbData::SignalOutputs::ipcmd] == 28;
         success           *= result.reecb[0].disambiguation_string == "EC1";
         success           *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::iqcmd);
+          ReecbData::MonitorableVariables::iqcmd
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::ipcmd);
+          ReecbData::MonitorableVariables::ipcmd
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::vmeas);
+          ReecbData::MonitorableVariables::vmeas
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::pmeas);
+          ReecbData::MonitorableVariables::pmeas
+        );
 
         return success.report(__func__);
       }

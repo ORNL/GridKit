@@ -24,16 +24,7 @@ int runApplication(int argc, const char* argv[])
 {
   Log::raiseVerbosity(Log::SUMMARY);
 
-  CliArgs args{{.name = {"--case-file", "-c"}, .help = "JSON case file", .required = true},
-               {.name = {"--reference-cost", "-r"}, .help = "Optimal cost to check [$/h]", .type = ArgType::Real},
-               {.name     = {"--solver-tolerance"},
-                .help     = "Ipopt convergence tolerance",
-                .type     = ArgType::Real,
-                .defaults = 1.0e-6},
-               {.name     = {"--tolerance", "-t"},
-                .help     = "Relative tolerance of the cost check",
-                .type     = ArgType::Real,
-                .defaults = 1.0e-6}};
+  CliArgs args{{.name = {"--case-file", "-c"}, .help = "JSON case file", .required = true}, {.name = {"--reference-cost", "-r"}, .help = "Optimal cost to check [$/h]", .type = ArgType::Real}, {.name = {"--solver-tolerance"}, .help = "Ipopt convergence tolerance", .type = ArgType::Real, .defaults = 1.0e-6}, {.name = {"--tolerance", "-t"}, .help = "Relative tolerance of the cost check", .type = ArgType::Real, .defaults = 1.0e-6}};
   args.parseArgs(argc, argv);
 
   OPF::SystemModel<double, size_t> model(OPF::parseSystemModelData(args["case-file"]()));

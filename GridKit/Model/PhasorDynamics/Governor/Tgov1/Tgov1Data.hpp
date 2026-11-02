@@ -71,13 +71,7 @@ namespace GridKit
        */
       template <typename real_type, typename index_type>
       using Tgov1Data =
-          ComponentData<real_type,
-                        index_type,
-                        Tgov1Parameters,
-                        Tgov1Buses,
-                        Tgov1SignalInputs,
-                        Tgov1SignalOutputs,
-                        Tgov1MonitorableVariables>;
+        ComponentData<real_type, index_type, Tgov1Parameters, Tgov1Buses, Tgov1SignalInputs, Tgov1SignalOutputs, Tgov1MonitorableVariables>;
 
     } // namespace Governor
   } // namespace PhasorDynamics

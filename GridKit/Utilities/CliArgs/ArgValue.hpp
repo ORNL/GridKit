@@ -30,14 +30,14 @@ namespace GridKit
        */
       template <typename T>
       static constexpr bool notAnArgValue =
-          !std::is_same_v<std::remove_reference_t<T>, ArgValue>;
+        !std::is_same_v<std::remove_reference_t<T>, ArgValue>;
 
       /**
        * @brief Check that T != std::initializer_list<ArgValue>
        */
       template <typename T>
       static constexpr bool notAnArgValueList =
-          !std::is_same_v<std::remove_reference_t<T>, std::initializer_list<ArgValue>>;
+        !std::is_same_v<std::remove_reference_t<T>, std::initializer_list<ArgValue>>;
 
       /**
        * @brief Check that T is not an ArgValue or list of ArgValues

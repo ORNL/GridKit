@@ -90,13 +90,7 @@ namespace GridKit
        */
       template <typename real_type, typename index_type>
       using HygovData =
-          ComponentData<real_type,
-                        index_type,
-                        HygovParameters,
-                        HygovBuses,
-                        HygovSignalInputs,
-                        HygovSignalOutputs,
-                        HygovMonitorableVariables>;
+        ComponentData<real_type, index_type, HygovParameters, HygovBuses, HygovSignalInputs, HygovSignalOutputs, HygovMonitorableVariables>;
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -187,8 +187,7 @@ namespace GridKit
         }
 
         IdxT    r   = K % 2;
-        ScalarT res = static_cast<ScalarT>((std::floor(static_cast<double>(K) / 2.0) + static_cast<double>(r)) * 1.0
-                                           + std::floor(static_cast<double>(K) / 2.0) * (-0.5));
+        ScalarT res = static_cast<ScalarT>((std::floor(static_cast<double>(K) / 2.0) + static_cast<double>(r)) * 1.0 + std::floor(static_cast<double>(K) / 2.0) * (-0.5));
 
         handler_.axpyMulti(N, &alpha, K, &x, &y, memspace_);
         status *= verifyAnswer(y, 2.0 - res);

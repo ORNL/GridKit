@@ -48,7 +48,7 @@ namespace GridKit
         // Check dependencies of f[0] (depends on x[0] and x[1])
         {
           const DependencyTracking::Variable::DependencyMap& dependencies =
-              (f[0]).getDependencies();
+            (f[0]).getDependencies();
 
           success *= (dependencies.size() == 2);
           success *= (dependencies.find(0) != dependencies.end());
@@ -59,7 +59,7 @@ namespace GridKit
         // Check dependencies of f[2] (depends on x[0], x[1], x[2])
         {
           const DependencyTracking::Variable::DependencyMap& dependencies =
-              (f[2]).getDependencies();
+            (f[2]).getDependencies();
 
           success *= (dependencies.size() == 3);
           success *= (dependencies.find(0) != dependencies.end());
@@ -72,9 +72,7 @@ namespace GridKit
 
     private:
       template <typename T>
-      void residualFunction(std::vector<T>&       f,
-                            const std::vector<T>& x,
-                            const std::vector<T>& p)
+      void residualFunction(std::vector<T>& f, const std::vector<T>& x, const std::vector<T>& p)
       {
         const T u = x[0] * x[1];
 

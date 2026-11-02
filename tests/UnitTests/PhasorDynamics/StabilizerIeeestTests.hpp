@@ -133,18 +133,18 @@ namespace GridKit
 
         // Hand-computed answer key (see plan for full derivation)
         const std::vector<ScalarT> res_answer = {
-            0.19,   // f[0]:  -x1_dot + x2
-            0.28,   // f[1]:  -x2_dot + x3
-            0.37,   // f[2]:  -x3_dot + x4
-            1.0975, // f[3]:  -x4_dot + (-a0*x1 - a1*x2 - a2*x3 - a3*x4 + u) / a4
-            0.25,   // f[4]:  -T2*x5_dot - x5 + v4
-            0.24,   // f[5]:  -T4*x6_dot - x6 + v5
-            -0.05,  // f[6]:  -T6*x7_dot - x7 + v6
-            -0.42,  // f[7]:  -v4 + x1 + A5*x2 + A6*x3
-            -0.25,  // f[8]:  -T2*(v5 - x5) + T1*(v4 - x5)
-            -0.31,  // f[9]:  -T4*(v6 - x6) + T3*(v5 - x6)
-            5.75,   // f[10]: -T6*v7 + Ks*T5*(v6 - x7)
-            0.0,    // f[11]: limiter (v7=0.05 within [-0.1, 0.1])
+          0.19,   // f[0]:  -x1_dot + x2
+          0.28,   // f[1]:  -x2_dot + x3
+          0.37,   // f[2]:  -x3_dot + x4
+          1.0975, // f[3]:  -x4_dot + (-a0*x1 - a1*x2 - a2*x3 - a3*x4 + u) / a4
+          0.25,   // f[4]:  -T2*x5_dot - x5 + v4
+          0.24,   // f[5]:  -T4*x6_dot - x6 + v5
+          -0.05,  // f[6]:  -T6*x7_dot - x7 + v6
+          -0.42,  // f[7]:  -v4 + x1 + A5*x2 + A6*x3
+          -0.25,  // f[8]:  -T2*(v5 - x5) + T1*(v4 - x5)
+          -0.31,  // f[9]:  -T4*(v6 - x6) + T3*(v5 - x6)
+          5.75,   // f[10]: -T6*v7 + Ks*T5*(v6 - x7)
+          0.0,    // f[11]: limiter (v7=0.05 within [-0.1, 0.1])
         };
 
         // Looser tolerance for f[11] — Math::clamp is a smooth ramp approximation.
@@ -181,10 +181,10 @@ namespace GridKit
         auto data = makeTestData();
 
         std::vector<DependencyTracking::Variable::DependencyMap>
-            dependency_tracking_jacobian = DependencyTrackingJacobian(data);
+          dependency_tracking_jacobian = DependencyTrackingJacobian(data);
 
         std::vector<DependencyTracking::Variable::DependencyMap>
-            enzyme_jacobian = EnzymeJacobian(data);
+          enzyme_jacobian = EnzymeJacobian(data);
 
         // Compare DependencyTracking dependencies to Enzyme's
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
@@ -198,7 +198,8 @@ namespace GridKit
 
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata)
+        PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata
+      )
       {
         using DepVar = DependencyTracking::Variable;
 
@@ -239,7 +240,8 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata)
+        PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata
+      )
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;

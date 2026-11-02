@@ -146,29 +146,10 @@ namespace GridKit
         size_t   current_nnz = 0;
         for (size_t i = 0; i < N; i++)
         {
-          ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, size_t>,
-                                                       (void*) ident_store<ScalarT, size_t>,
-                                                       i);
-          ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, size_t>,
-                                                         (void*) sparse_store<ScalarT, size_t>,
-                                                         i,
-                                                         1.0,
-                                                         index_maps,
-                                                         index_maps,
-                                                         rows_buffer,
-                                                         cols_buffer,
-                                                         vals_buffer,
-                                                         &current_nnz);
+          ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, size_t>, (void*) ident_store<ScalarT, size_t>, i);
+          ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, size_t>, (void*) sparse_store<ScalarT, size_t>, i, 1.0, index_maps, index_maps, rows_buffer, cols_buffer, vals_buffer, &current_nnz);
 
-          __enzyme_fwddiff<void>((void*) vectorFunction,
-                                 enzyme_const,
-                                 N,
-                                 enzyme_dup,
-                                 x,
-                                 output,
-                                 enzyme_dupnoneed,
-                                 (ScalarT*) 0x1,
-                                 d_output);
+          __enzyme_fwddiff<void>((void*) vectorFunction, enzyme_const, N, enzyme_dup, x, output, enzyme_dupnoneed, (ScalarT*) 0x1, d_output);
         }
 
         size_t*  rows = new size_t[current_nnz];
@@ -216,8 +197,7 @@ namespace GridKit
       }
 
       // @todo move to a common location if this needs to be reused
-      TestStatus checkVectorFunctionSparseJacobian(SparseMatrix* matrix_1,
-                                                   SparseMatrix* matrix_2)
+      TestStatus checkVectorFunctionSparseJacobian(SparseMatrix* matrix_1, SparseMatrix* matrix_2)
       {
         TestStatus success = true;
 

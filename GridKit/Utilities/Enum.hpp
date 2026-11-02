@@ -42,8 +42,7 @@ namespace GridKit
     /// and an underlying type of `std::size_t`.
     template <typename T>
     concept SizedEnum = std::is_enum_v<T>
-                        && std::is_same_v<std::underlying_type_t<T>,
-                                          std::size_t>
+                        && std::is_same_v<std::underlying_type_t<T>, std::size_t>
                         && is_contiguous_enum<T>();
 
     /// Simplest enum satisfying [`SizedEnum`].
@@ -68,7 +67,7 @@ namespace GridKit
     /// Variant of `magic_enum::enum_cast` that permits passing empty enums.
     template <SizedEnum T, typename BinaryPredicate = std::equal_to<>>
     constexpr auto enum_cast(std::string_view value, BinaryPredicate predicate)
-        -> std::optional<T>
+      -> std::optional<T>
     {
       if constexpr (magic_enum::enum_count<T>() == 0)
       {
@@ -113,8 +112,9 @@ namespace GridKit
     constexpr auto enum_values()
     {
       return std::views::iota(
-                 std::size_t{0},
-                 static_cast<std::size_t>(magic_enum::enum_count<T>()))
+               std::size_t{0},
+               static_cast<std::size_t>(magic_enum::enum_count<T>())
+             )
              | std::views::transform([](std::size_t i)
                                      { return static_cast<T>(i); });
     }

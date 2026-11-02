@@ -121,10 +121,12 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT* y, const ScalarT* yp, const ScalarT* wb, const ScalarT* ws, ScalarT* f);
+          const ScalarT* y, const ScalarT* yp, const ScalarT* wb, const ScalarT* ws, ScalarT* f
+        );
 
         __attribute__((always_inline)) inline int evaluateBusResidual(
-            const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* h);
+          const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* h
+        );
 
       private:
         void initializeParameters(const ModelDataT& data);
@@ -146,9 +148,10 @@ namespace GridKit
          * @todo Move this reusable limiter to CommonMath.
          */
         static __attribute__((always_inline)) inline ScalarT rrpwr(
-            const ScalarT x,
-            const ScalarT f,
-            const RealT   rate)
+          const ScalarT x,
+          const ScalarT f,
+          const RealT   rate
+        )
         {
           assert(rate >= ZERO<RealT>);
 
@@ -178,17 +181,18 @@ namespace GridKit
          * @todo Move this one-sided anti-windup helper to CommonMath.
          */
         static __attribute__((always_inline)) inline ScalarT awmax(
-            const ScalarT x,
-            const ScalarT f,
-            const ScalarT xmax,
-            const ScalarT fmax)
+          const ScalarT x,
+          const ScalarT f,
+          const ScalarT xmax,
+          const ScalarT fmax
+        )
         {
           const ScalarT gap_rate = f - fmax;
           const ScalarT below    = Math::sigmoid(xmax - x);
 
           return fmax
                  + (below + (ONE<RealT> - below) * Math::sigmoid(-gap_rate))
-                       * gap_rate;
+                     * gap_rate;
         }
 
         ScalarT& Vr();

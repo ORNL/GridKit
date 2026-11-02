@@ -73,13 +73,7 @@ namespace GridKit
        */
       template <typename real_type, typename index_type>
       using Ieeet1Data =
-          ComponentData<real_type,
-                        index_type,
-                        Ieeet1Parameters,
-                        Ieeet1Buses,
-                        Ieeet1SignalInputs,
-                        Ieeet1SignalOutputs,
-                        Ieeet1MonitorableVariables>;
+        ComponentData<real_type, index_type, Ieeet1Parameters, Ieeet1Buses, Ieeet1SignalInputs, Ieeet1SignalOutputs, Ieeet1MonitorableVariables>;
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

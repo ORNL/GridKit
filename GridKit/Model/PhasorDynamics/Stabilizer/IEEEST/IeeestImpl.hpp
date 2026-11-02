@@ -241,11 +241,12 @@ namespace GridKit
 
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Ieeest<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT*                  y,
-          const ScalarT*                  yp,
-          [[maybe_unused]] const ScalarT* wb,
-          const ScalarT*                  ws,
-          ScalarT*                        f)
+        const ScalarT*                  y,
+        const ScalarT*                  yp,
+        [[maybe_unused]] const ScalarT* wb,
+        const ScalarT*                  ws,
+        ScalarT*                        f
+      )
       {
         ScalarT x1  = y[0];
         ScalarT x2  = y[1];

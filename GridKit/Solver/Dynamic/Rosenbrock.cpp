@@ -229,12 +229,7 @@ namespace AnalysisManager
      * @param memspace The memory space that linear algebra operations should be performed in.
      */
     template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::Rosenbrock(Tableau&&                                             tab,
-                                          GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
-                                          GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver,
-                                          GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
-                                          const ErrorNorm<ScalarT, IdxT>*                       err_norm,
-                                          GridKit::memory::MemorySpace                          memspace)
+    Rosenbrock<ScalarT, IdxT>::Rosenbrock(Tableau&& tab, GridKit::Model::Evaluator<ScalarT, IdxT>* model, GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>& lin_solver, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler, const ErrorNorm<ScalarT, IdxT>* err_norm, GridKit::memory::MemorySpace memspace)
       : tab_(std::move(tab)),
         model_(model),
         lin_solver_(lin_solver),
@@ -402,11 +397,7 @@ namespace AnalysisManager
      * @return An error code, with 0 as success.
      */
     template <class ScalarT, typename IdxT>
-    int Rosenbrock<ScalarT, IdxT>::integrate(const std::vector<RealT>&                           out_times,
-                                             StepController<RealT>&                              step_controller,
-                                             Parameters                                          params,
-                                             std::optional<std::function<void(RealT)>>           out_cb,
-                                             std::optional<std::function<void(const StepInfo&)>> step_cb)
+    int Rosenbrock<ScalarT, IdxT>::integrate(const std::vector<RealT>& out_times, StepController<RealT>& step_controller, Parameters params, std::optional<std::function<void(RealT)>> out_cb, std::optional<std::function<void(const StepInfo&)>> step_cb)
     {
       constexpr RealT ONE  = GridKit::ONE<RealT>;
       constexpr RealT ZERO = GridKit::ZERO<RealT>;
@@ -445,11 +436,10 @@ namespace AnalysisManager
             err            = err_norm_->errorNorm(err_vec, *y_new_, *y_cur_, vector_handler_, memspace_);
           }
 
-          StepControl<RealT> next_step = step_controller.nextStep(err,
-                                                                  StepControl<RealT>{
-                                                                      .accept_    = prev_accept,
-                                                                      .step_size_ = step_size_,
-                                                                  },
+          StepControl<RealT> next_step = step_controller.nextStep(err, StepControl<RealT>{
+                                                                         .accept_    = prev_accept,
+                                                                         .step_size_ = step_size_,
+                                                                       },
                                                                   tab_.order_);
           prev_accept                  = next_step.accept_;
           next_step_size               = next_step.step_size_;
@@ -473,14 +463,14 @@ namespace AnalysisManager
             if (skip_lu_)
             {
               stats_.skip_lu_steps_.push_back(StepInfo{
-                  .sim_time_       = current_time_,
-                  .step_size_      = step_size_,
-                  .next_step_size_ = next_step_size,
-                  .err_est_        = err,
-                  .step_no_        = stats_.num_steps_,
-                  .skip_lu_        = skip_lu_,
-                  .skip_f_         = skip_f_,
-                  .accepted_       = prev_accept,
+                .sim_time_       = current_time_,
+                .step_size_      = step_size_,
+                .next_step_size_ = next_step_size,
+                .err_est_        = err,
+                .step_no_        = stats_.num_steps_,
+                .skip_lu_        = skip_lu_,
+                .skip_f_         = skip_f_,
+                .accepted_       = prev_accept,
               });
             }
             stats_.min_step_ = std::min(stats_.min_step_, step_size_);
@@ -496,14 +486,14 @@ namespace AnalysisManager
             skip_f_ = true;
 
             stats_.rejections_.push_back(StepInfo{
-                .sim_time_       = current_time_,
-                .step_size_      = step_size_,
-                .next_step_size_ = next_step_size,
-                .err_est_        = err,
-                .step_no_        = stats_.num_steps_,
-                .skip_lu_        = skip_lu_,
-                .skip_f_         = skip_f_,
-                .accepted_       = prev_accept,
+              .sim_time_       = current_time_,
+              .step_size_      = step_size_,
+              .next_step_size_ = next_step_size,
+              .err_est_        = err,
+              .step_no_        = stats_.num_steps_,
+              .skip_lu_        = skip_lu_,
+              .skip_f_         = skip_f_,
+              .accepted_       = prev_accept,
             });
           }
 
@@ -529,14 +519,14 @@ namespace AnalysisManager
             model_->updateTime(current_time_, ZERO);
 
             (*step_cb)(StepInfo{
-                .sim_time_       = current_time_,
-                .step_size_      = step_size_,
-                .next_step_size_ = next_step_size,
-                .err_est_        = err,
-                .step_no_        = stats_.num_steps_,
-                .skip_lu_        = skip_lu_,
-                .skip_f_         = skip_f_,
-                .accepted_       = prev_accept,
+              .sim_time_       = current_time_,
+              .step_size_      = step_size_,
+              .next_step_size_ = next_step_size,
+              .err_est_        = err,
+              .step_no_        = stats_.num_steps_,
+              .skip_lu_        = skip_lu_,
+              .skip_f_         = skip_f_,
+              .accepted_       = prev_accept,
             });
           }
         }
