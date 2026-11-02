@@ -61,7 +61,8 @@ TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
 }
 
 void runStudySerial(
-    const StudyData& study_data, std::vector<TestStatus>& stat_vec)
+  const StudyData& study_data, std::vector<TestStatus>& stat_vec
+)
 {
   for (std::size_t i = 0; i < study_data.model_data.bus.size(); ++i)
   {
@@ -72,7 +73,8 @@ void runStudySerial(
 
 #ifdef GRIDKIT_ENABLE_THREADS
 void runStudyAsync(
-    const StudyData& study_data, std::vector<TestStatus>& stat_vec)
+  const StudyData& study_data, std::vector<TestStatus>& stat_vec
+)
 {
   auto n_faults = study_data.model_data.bus.size();
 
@@ -81,7 +83,8 @@ void runStudyAsync(
   for (std::size_t i = 0; i < n_faults; ++i)
   {
     futures.emplace_back(
-        std::async(std::launch::async, singleFaultStudy, i, study_data));
+      std::async(std::launch::async, singleFaultStudy, i, study_data)
+    );
   }
 
   for (std::size_t i = 0; i < n_faults; ++i)
@@ -94,7 +97,8 @@ void runStudyAsync(
 
 #ifdef _OPENMP
 void runStudyOpenMP(
-    const StudyData& study_data, std::vector<TestStatus>& stat_vec)
+  const StudyData& study_data, std::vector<TestStatus>& stat_vec
+)
 {
   auto n_faults = study_data.model_data.bus.size();
 #pragma omp parallel for
@@ -147,11 +151,11 @@ int runApplication(int argc, const char* argv[])
       return data;
     };
     if (runCoupledClientStudies(
-            options,
-            next,
-            [&](TestStatus result)
-            { stat_vec[completed++] = result; },
-            true)
+          options,
+          next,
+          [&](TestStatus result) { stat_vec[completed++] = result; },
+          true
+        )
         == GridKit::CoSim::RunResult::STOPPED)
     {
       return 1;

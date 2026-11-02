@@ -21,6 +21,7 @@
 #include <sunmatrix/sunmatrix_dense.h> // access to dense SUNMatrix
 
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace AnalysisManager
 {
@@ -32,13 +33,14 @@ namespace AnalysisManager
     {
       model_ = model;
       residual_ =
-          [model](std::span<const ScalarT> values, std::span<ScalarT> residual)
+        [model](std::span<const ScalarT> values, std::span<ScalarT> residual)
       {
         std::copy(values.begin(), values.end(), model->y().getData());
         model->y().setDataUpdated();
         const int status = model->evaluateResidual();
         std::copy_n(
-            model->getResidual().getData(), residual.size(), residual.begin());
+          model->getResidual().getData(), residual.size(), residual.begin()
+        );
         return status;
       };
     }
@@ -109,9 +111,10 @@ namespace AnalysisManager
 
       // Set up linear solver
       JacobianMat_ = SUNDenseMatrix(
-          static_cast<sunindextype>(size_),
-          static_cast<sunindextype>(size_),
-          context_);
+        static_cast<sunindextype>(size_),
+        static_cast<sunindextype>(size_),
+        context_
+      );
       checkAllocation(context_, (void*) JacobianMat_, "SUNDenseMatrix");
 
       linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
@@ -129,7 +132,8 @@ namespace AnalysisManager
       if (!model_)
       {
         throw std::logic_error(
-            "KINSOL requires an explicit initial guess when used with a callback");
+          "KINSOL requires an explicit initial guess when used with a callback"
+        );
       }
 
       model_->initialize();
@@ -147,14 +151,15 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Kinsol<ScalarT, IdxT>::runSimulation(std::span<ScalarT> values,
-                                             ResidualFunction   residual,
-                                             bool               line_search)
+    int Kinsol<ScalarT, IdxT>::runSimulation(
+      std::span<ScalarT> values, ResidualFunction residual, bool line_search
+    )
     {
       if (values.size() != static_cast<std::size_t>(size_) || !residual)
       {
         throw std::invalid_argument(
-            "KINSOL requires a matching initial guess and a residual callback");
+          "KINSOL requires a matching initial guess and a residual callback"
+        );
       }
 
       // ensure the model callback is restored on scope exit
@@ -187,7 +192,8 @@ namespace AnalysisManager
 
       callback_error_  = nullptr;
       const int retval = KINSol(
-          solver_, yy_, line_search ? KIN_LINESEARCH : KIN_NONE, scale_, scale_);
+        solver_, yy_, line_search ? KIN_LINESEARCH : KIN_NONE, scale_, scale_
+      );
       if (callback_error_)
       {
         std::rethrow_exception(callback_error_);
@@ -215,8 +221,9 @@ namespace AnalysisManager
       try
       {
         return self.residual_(
-            {N_VGetArrayPointer(yy), static_cast<std::size_t>(self.size_)},
-            {N_VGetArrayPointer(rr), static_cast<std::size_t>(self.size_)});
+          {N_VGetArrayPointer(yy), static_cast<std::size_t>(self.size_)},
+          {N_VGetArrayPointer(rr), static_cast<std::size_t>(self.size_)}
+        );
       }
       catch (...)
       {
@@ -283,7 +290,8 @@ namespace AnalysisManager
         // NOTE: this will only work if called immediately after the function
         auto errorCode = SUNContext_GetLastError(c);
         Logger::error() << std::format(
-            "Function {} failed: {}\n", functionName, SUNGetErrMsg(errorCode));
+          "Function {} failed: {}\n", functionName, SUNGetErrMsg(errorCode)
+        );
         throw SundialsException();
       }
     }
@@ -294,7 +302,8 @@ namespace AnalysisManager
       if (retval < 0)
       {
         Logger::error() << std::format(
-            "Function {} failed: {}\n", functionName, SUNGetErrMsg(retval));
+          "Function {} failed: {}\n", functionName, SUNGetErrMsg(retval)
+        );
         throw SundialsException();
       }
     }
@@ -325,7 +334,8 @@ namespace AnalysisManager
     void Kinsol<ScalarT, IdxT>::setJacobianUpdateInterval(long int iterations)
     {
       checkOutput(
-          KINSetMaxSetupCalls(solver_, iterations), "KINSetMaxSetupCalls");
+        KINSetMaxSetupCalls(solver_, iterations), "KINSetMaxSetupCalls"
+      );
     }
 
     // Compiler will prevent building modules with data type incompatible with

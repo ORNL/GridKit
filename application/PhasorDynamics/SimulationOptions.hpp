@@ -56,7 +56,8 @@ namespace GridKit
           || text.find_first_not_of("0123456789") != std::string::npos)
       {
         throw std::invalid_argument(
-            std::format("expected a nonnegative signal ID: {}", text));
+          std::format("expected a nonnegative signal ID: {}", text)
+        );
       }
 
       const auto value = Utilities::parse<std::size_t>(text);
@@ -64,7 +65,8 @@ namespace GridKit
       if (value >= std::numeric_limits<std::size_t>::max())
       {
         throw std::invalid_argument(
-            std::format("signal ID is out of range: {}", text));
+          std::format("signal ID is out of range: {}", text)
+        );
       }
 
       return value;
@@ -72,39 +74,41 @@ namespace GridKit
 
     /// Parse command line options to a simulation application.
     inline SimulationOptions parseSimulationOptions(
-        int argc, const char* argv[], bool contingency = false)
+      int argc, const char* argv[], bool contingency = false
+    )
     {
       using Utilities::ArgType;
       Utilities::CliArgs args{
-          {.name       = {"solver_file"},
-           .help       = "Path to the solver JSON file",
-           .required   = true,
-           .type       = ArgType::String,
-           .positional = true},
-          {.name = {"--cosim-role"},
-           .help = "Co-simulation role (client, server)",
-           .type = ArgType::String},
-          {.name = {"--cosim-endpoint"},
-           .help = "ZeroMQ endpoint, e.g. tcp://127.0.0.1:8800",
-           .type = ArgType::String},
-          {.name = {"--cosim-dt"},
-           .help = "Positive exchange interval in seconds",
-           .type = ArgType::Real},
-          {.name       = {"--cosim-input"},
-           .help       = "Receive JSON key NAME into signal ID: "
-                         "NAME=ID (repeatable)",
-           .type       = ArgType::String,
-           .repeatable = true},
-          {.name       = {"--cosim-output"},
-           .help       = "Send signal ID as JSON key NAME: NAME=ID (repeatable)",
-           .type       = ArgType::String,
-           .repeatable = true},
-          {.name = {"--cosim-timeout-ms"},
-           .help = "Send/receive timeout in milliseconds (default: 30000)",
-           .type = ArgType::Integer},
-          {.name = {"--cosim-serve"},
-           .help = "Server continues to accept sessions until shutdown",
-           .flag = true}};
+        {.name       = {"solver_file"},
+         .help       = "Path to the solver JSON file",
+         .required   = true,
+         .type       = ArgType::String,
+         .positional = true},
+        {.name = {"--cosim-role"},
+         .help = "Co-simulation role (client, server)",
+         .type = ArgType::String},
+        {.name = {"--cosim-endpoint"},
+         .help = "ZeroMQ endpoint, e.g. tcp://127.0.0.1:8800",
+         .type = ArgType::String},
+        {.name = {"--cosim-dt"},
+         .help = "Positive exchange interval in seconds",
+         .type = ArgType::Real},
+        {.name       = {"--cosim-input"},
+         .help       = "Receive JSON key NAME into signal ID: "
+                       "NAME=ID (repeatable)",
+         .type       = ArgType::String,
+         .repeatable = true},
+        {.name       = {"--cosim-output"},
+         .help       = "Send signal ID as JSON key NAME: NAME=ID (repeatable)",
+         .type       = ArgType::String,
+         .repeatable = true},
+        {.name = {"--cosim-timeout-ms"},
+         .help = "Send/receive timeout in milliseconds (default: 30000)",
+         .type = ArgType::Integer},
+        {.name = {"--cosim-serve"},
+         .help = "Server continues to accept sessions until shutdown",
+         .flag = true}
+      };
       args.parseArgs(argc, argv);
 
       SimulationOptions options;
@@ -124,7 +128,8 @@ namespace GridKit
         if (!std::isfinite(options.interval) || options.interval <= 0.0)
         {
           throw std::invalid_argument(
-              "co-simulation exchange interval must be positive and finite");
+            "co-simulation exchange interval must be positive and finite"
+          );
         }
       }
       if (!args["cosim-timeout-ms"].empty())
@@ -146,16 +151,19 @@ namespace GridKit
           if (equal == std::string::npos || equal == 0)
           {
             throw std::invalid_argument(
-                std::format("signal mapping must be NAME=ID: {}", value));
+              std::format("signal mapping must be NAME=ID: {}", value)
+            );
           }
           if (!mappings
-                   .emplace(
-                       value.substr(0, equal),
-                       parseSignalId(value.substr(equal + 1)))
-                   .second)
+                 .emplace(
+                   value.substr(0, equal),
+                   parseSignalId(value.substr(equal + 1))
+                 )
+                 .second)
           {
             throw std::invalid_argument(
-                std::format("duplicate signal name: {}", value));
+              std::format("duplicate signal name: {}", value)
+            );
           }
         }
       };
@@ -165,32 +173,36 @@ namespace GridKit
       if (options.solver_file.empty())
       {
         throw std::invalid_argument(
-            "no solver file provided. use --help for usage");
+          "no solver file provided. use --help for usage"
+        );
       }
       const bool is_cosim =
-          options.serve || !args["cosim-role"].empty()
-          || !args["cosim-endpoint"].empty() || !args["cosim-dt"].empty()
-          || !args["cosim-input"].empty() || !args["cosim-output"].empty()
-          || !args["cosim-timeout-ms"].empty();
+        options.serve || !args["cosim-role"].empty()
+        || !args["cosim-endpoint"].empty() || !args["cosim-dt"].empty()
+        || !args["cosim-input"].empty() || !args["cosim-output"].empty()
+        || !args["cosim-timeout-ms"].empty();
       if (is_cosim)
       {
 #ifndef GRIDKIT_ENABLE_ZMQ
         throw std::invalid_argument(
-            "co-simulation requires a build with GRIDKIT_ENABLE_ZMQ=ON");
+          "co-simulation requires a build with GRIDKIT_ENABLE_ZMQ=ON"
+        );
 #endif
         if ((options.role != "client" && options.role != "server")
             || options.endpoint.empty() || options.interval <= 0.0
             || options.inputs.empty() || options.outputs.empty())
         {
           throw std::invalid_argument(
-              "co-simulation requires role, endpoint, dt, input and output "
-              "mappings");
+            "co-simulation requires role, endpoint, dt, input and output "
+            "mappings"
+          );
         }
         if (contingency && options.role != "client")
         {
           throw std::invalid_argument(
-              "ContingencyAnalysis requires the co-simulation client role. this "
-              "is a temporary limitation");
+            "ContingencyAnalysis requires the co-simulation client role. this "
+            "is a temporary limitation"
+          );
         }
         if (options.serve && options.role != "server")
         {
@@ -204,7 +216,8 @@ namespace GridKit
             if (!ids.insert(id).second)
             {
               throw std::invalid_argument(
-                  std::format("signal ID mapped more than once: {}", id));
+                std::format("signal ID mapped more than once: {}", id)
+              );
             }
           }
         }

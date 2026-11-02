@@ -385,9 +385,8 @@ namespace GridKit
         system.y().setDataUpdated();
         success       *= (system.evaluateResidual() == 0);
         const auto* f  = system.getResidual().getData();
-        success       *= isEqual(f[consumer_vtr_residual],
-                           static_cast<ScalarT>(0.75),
-                           kTol);
+        success *=
+          isEqual(f[consumer_vtr_residual], static_cast<ScalarT>(0.75), kTol);
 
         return success.report(__func__);
       }

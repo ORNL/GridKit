@@ -84,13 +84,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    using GenrouData =
-        ComponentData<real_type,
-                      index_type,
-                      GenrouParameters,
-                      GenrouBuses,
-                      GenrouSignalInputs,
-                      GenrouSignalOutputs,
-                      GenrouMonitorableVariables>;
+    using GenrouData = ComponentData<
+      real_type,
+      index_type,
+      GenrouParameters,
+      GenrouBuses,
+      GenrouSignalInputs,
+      GenrouSignalOutputs,
+      GenrouMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

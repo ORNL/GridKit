@@ -38,12 +38,14 @@ namespace GridKit
       using ComponentT = PhasorDynamics::Component<ScalarT, IdxT>;
       using RealT      = typename ComponentT::RealT;
 
-      static PhasorDynamics::BranchData<RealT, IdxT> branchData(const RealT R,
-                                                                const RealT X,
-                                                                const RealT G,
-                                                                const RealT B,
-                                                                const RealT tap   = 1.0,
-                                                                const RealT phase = 0.0)
+      static PhasorDynamics::BranchData<RealT, IdxT> branchData(
+        const RealT R,
+        const RealT X,
+        const RealT G,
+        const RealT B,
+        const RealT tap   = 1.0,
+        const RealT phase = 0.0
+      )
       {
         using Parameter = PhasorDynamics::BranchParameters;
 
@@ -398,11 +400,13 @@ namespace GridKit
 
         auto rebind = [&](auto& model, IdxT offset)
         {
-          return model.bind(system.y(),
-                            system.yp(),
-                            system.getResidual(),
-                            system.absoluteTolerance(),
-                            offset);
+          return model.bind(
+            system.y(),
+            system.yp(),
+            system.getResidual(),
+            system.absoluteTolerance(),
+            offset
+          );
         };
 
         // Rebinding the same slices is a no-op.
@@ -437,9 +441,7 @@ namespace GridKit
         // Suppress the expected signal-configuration error below.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        status *= throws<std::runtime_error>(
-            [&]()
-            { sys.allocate(); });
+        status *= throws<std::runtime_error>([&]() { sys.allocate(); });
         Log::setVerbosity(previous_verbosity);
 
         return status.report(__func__);
@@ -462,9 +464,7 @@ namespace GridKit
         // Suppress the expected child-allocation error below.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        status *= throws<std::runtime_error>(
-            [&]()
-            { system.allocate(); });
+        status *= throws<std::runtime_error>([&]() { system.allocate(); });
         Log::setVerbosity(previous_verbosity);
 
         return status.report(__func__);
@@ -548,8 +548,10 @@ namespace GridKit
       }
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      DependencyTrackingJacobian(
+        PhasorDynamics::SystemModelData<ScalarT, IdxT> data
+      )
       {
         // Create an empty system model
         PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
@@ -570,7 +572,8 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
+        PhasorDynamics::SystemModelData<ScalarT, IdxT> data
+      )
       {
         // Create an empty system model
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);

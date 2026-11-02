@@ -14,7 +14,8 @@ namespace AnalysisManager
 
     public:
       explicit SundialsException(
-          const char* message = "A SUNDIALS class wrapper failed!\n")
+        const char* message = "A SUNDIALS class wrapper failed!\n"
+      )
         : message_(message)
       {
       }

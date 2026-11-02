@@ -25,12 +25,8 @@ namespace GridKit
      * @param[in] nnz - number of non-zeros
      */
     template <typename RealT, typename IdxT>
-    CsrMatrix<RealT, IdxT>::CsrMatrix(IdxT n,
-                                      IdxT m,
-                                      IdxT nnz)
-      : n_{n},
-        m_{m},
-        nnz_{nnz}
+    CsrMatrix<RealT, IdxT>::CsrMatrix(IdxT n, IdxT m, IdxT nnz)
+      : n_{n}, m_{m}, nnz_{nnz}
     {
       setNotUpdated();
 
@@ -63,14 +59,16 @@ namespace GridKit
      * @param[in] memspace_dst
      */
     template <typename RealT, typename IdxT>
-    CsrMatrix<RealT, IdxT>::CsrMatrix(IdxT                n,
-                                      IdxT                m,
-                                      IdxT                nnz,
-                                      IdxT**              rows,
-                                      IdxT**              cols,
-                                      RealT**             vals,
-                                      memory::MemorySpace memspace_src,
-                                      memory::MemorySpace memspace_dst)
+    CsrMatrix<RealT, IdxT>::CsrMatrix(
+      IdxT                n,
+      IdxT                m,
+      IdxT                nnz,
+      IdxT**              rows,
+      IdxT**              cols,
+      RealT**             vals,
+      memory::MemorySpace memspace_src,
+      memory::MemorySpace memspace_dst
+    )
       : CsrMatrix(n, m, nnz)
     {
       int control = -1;
@@ -292,10 +290,12 @@ namespace GridKit
      * @return 0 if successful, 1 if not.
      */
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::setDataPointers(IdxT*               row_data,
-                                                IdxT*               col_data,
-                                                RealT*              val_data,
-                                                memory::MemorySpace memspace)
+    int CsrMatrix<RealT, IdxT>::setDataPointers(
+      IdxT*               row_data,
+      IdxT*               col_data,
+      RealT*              val_data,
+      memory::MemorySpace memspace
+    )
     {
       using namespace memory;
 
@@ -408,9 +408,11 @@ namespace GridKit
      * @return 0 if successful, -1 if not.
      */
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyValues(const RealT*        new_vals,
-                                           memory::MemorySpace memspace_in,
-                                           memory::MemorySpace memspace_out)
+    int CsrMatrix<RealT, IdxT>::copyValues(
+      const RealT*        new_vals,
+      memory::MemorySpace memspace_in,
+      memory::MemorySpace memspace_out
+    )
     {
 
       IdxT nnz_current = nnz_;
@@ -491,8 +493,9 @@ namespace GridKit
      * @return 0 if successful, -1 if not.
      */
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::setValuesPointer(RealT*              new_vals,
-                                                 memory::MemorySpace memspace)
+    int CsrMatrix<RealT, IdxT>::setValuesPointer(
+      RealT* new_vals, memory::MemorySpace memspace
+    )
     {
       using namespace memory;
       setNotUpdated();
@@ -576,11 +579,13 @@ namespace GridKit
     }
 
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyDataFrom(const IdxT*         row_data,
-                                             const IdxT*         col_data,
-                                             const RealT*        val_data,
-                                             memory::MemorySpace memspace_in,
-                                             memory::MemorySpace memspace_out)
+    int CsrMatrix<RealT, IdxT>::copyDataFrom(
+      const IdxT*         row_data,
+      const IdxT*         col_data,
+      const RealT*        val_data,
+      memory::MemorySpace memspace_in,
+      memory::MemorySpace memspace_out
+    )
     {
       // four cases (for now)
       IdxT nnz_current = nnz_;
@@ -673,12 +678,14 @@ namespace GridKit
     }
 
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyDataFrom(const IdxT*         row_data,
-                                             const IdxT*         col_data,
-                                             const RealT*        val_data,
-                                             IdxT                new_nnz,
-                                             memory::MemorySpace memspace_in,
-                                             memory::MemorySpace memspace_out)
+    int CsrMatrix<RealT, IdxT>::copyDataFrom(
+      const IdxT*         row_data,
+      const IdxT*         col_data,
+      const RealT*        val_data,
+      IdxT                new_nnz,
+      memory::MemorySpace memspace_in,
+      memory::MemorySpace memspace_out
+    )
     {
       destroyMatrixData(memspace_out);
       nnz_ = new_nnz;

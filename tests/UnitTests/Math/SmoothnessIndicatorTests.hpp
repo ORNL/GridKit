@@ -26,9 +26,9 @@ namespace GridKit
         return static_cast<ScalarT>(value);
       }
 
-      static bool within(const ScalarT value,
-                         const ScalarT expected,
-                         const ScalarT tolerance)
+      static bool within(
+        const ScalarT value, const ScalarT expected, const ScalarT tolerance
+      )
       {
         return std::abs(value - expected) < tolerance;
       }
@@ -104,9 +104,12 @@ namespace GridKit
         success *= (std::abs(upper_breakpoint) < tol);
 
         const ScalarT x  = scalar(-0.4);
-        success         *= (std::abs(Math::deadband2(x, lower, upper)
-                             - (x - Math::clamp(x, lower, upper)))
-                    < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(
+             Math::deadband2(x, lower, upper)
+             - (x - Math::clamp(x, lower, upper))
+           )
+           < scalar(kRoundoffTolerance));
 
         const ScalarT far_above_input    = scalar(4.0);
         const ScalarT far_below_input    = scalar(-4.0);
@@ -121,10 +124,16 @@ namespace GridKit
         const ScalarT point        = scalar(0.25);
         const ScalarT above_point  = scalar(0.75);
         const ScalarT below_point  = scalar(-0.25);
-        success                   *= (std::abs(Math::deadband2(above_point, point, point) - (above_point - point))
-                    < scalar(kRoundoffTolerance));
-        success                   *= (std::abs(Math::deadband2(below_point, point, point) - (below_point - point))
-                    < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(
+             Math::deadband2(above_point, point, point) - (above_point - point)
+           )
+           < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(
+             Math::deadband2(below_point, point, point) - (below_point - point)
+           )
+           < scalar(kRoundoffTolerance));
 
         return success.report(__func__);
       }
@@ -152,10 +161,12 @@ namespace GridKit
         success *= (Math::outside(scalar(3.2), limit_min, limit_max) > near_one);
 
         const ScalarT x  = scalar(1.5);
-        success         *= (std::abs(Math::inside(x, limit_min, limit_max)
-                             + Math::outside(x, limit_min, limit_max)
-                             - scalar(1.0))
-                    < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(
+             Math::inside(x, limit_min, limit_max)
+             + Math::outside(x, limit_min, limit_max) - scalar(1.0)
+           )
+           < scalar(kRoundoffTolerance));
 
         return success.report(__func__);
       }
@@ -259,26 +270,37 @@ namespace GridKit
         const auto     lower_bounded_state = Math::max(state_below_bound, parameter_bound);
         const auto     upper_bounded_state = Math::min(state_above_bound, parameter_bound);
 
-        static_assert(std::is_same<typename std::decay<decltype(lower_bounded_state)>::type, Variable>::value,
-                      "Mixed-type max should keep the differentiable scalar type.");
-        static_assert(std::is_same<typename std::decay<decltype(upper_bounded_state)>::type, Variable>::value,
-                      "Mixed-type min should keep the differentiable scalar type.");
+        static_assert(
+          std::is_same<
+            typename std::decay<decltype(lower_bounded_state)>::type,
+            Variable>::value,
+          "Mixed-type max should keep the differentiable scalar type."
+        );
+        static_assert(
+          std::is_same<
+            typename std::decay<decltype(upper_bounded_state)>::type,
+            Variable>::value,
+          "Mixed-type min should keep the differentiable scalar type."
+        );
 
         success *= (std::abs(lower_bounded_state.getValue() - parameter_bound) < kSmoothTolerance);
         success *= (std::abs(upper_bounded_state.getValue() - parameter_bound) < kSmoothTolerance);
 
         const ScalarT x  = scalar(0.4);
         const ScalarT y  = scalar(-0.7);
-        success         *= (std::abs(Math::min(x, y) + Math::max(x, y) - (x + y))
-                    < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(Math::min(x, y) + Math::max(x, y) - (x + y))
+           < scalar(kRoundoffTolerance));
 
         const ScalarT point = scalar(0.25);
         const ScalarT bias  = std::log(scalar(2.0)) / scalar(Math::MU<RealT>);
 
-        success *= (std::abs(Math::max(point, point) - (point + bias))
-                    < scalar(kRoundoffTolerance));
-        success *= (std::abs(Math::min(point, point) - (point - bias))
-                    < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(Math::max(point, point) - (point + bias))
+           < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(Math::min(point, point) - (point - bias))
+           < scalar(kRoundoffTolerance));
 
         return success.report(__func__);
       }
@@ -330,18 +352,26 @@ namespace GridKit
         const ScalarT f_negative        = -f_positive;
         const ScalarT blocked_tolerance = f_positive * scalar(kSmoothTolerance);
 
-        success *= (std::abs(Math::antiwindup(inside, f_positive, limit_min, limit_max)
-                             - Math::indicator(inside, f_positive, limit_min, limit_max) * f_positive)
-                    < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(
+             Math::antiwindup(inside, f_positive, limit_min, limit_max)
+             - Math::indicator(inside, f_positive, limit_min, limit_max)
+                 * f_positive
+           )
+           < scalar(kRoundoffTolerance));
 
         success *= (std::abs(Math::antiwindup(above_limit, f_positive, limit_min, limit_max)) < blocked_tolerance);
-        success *= within(Math::antiwindup(above_limit, f_negative, limit_min, limit_max),
-                          f_negative,
-                          blocked_tolerance);
+        success *= within(
+          Math::antiwindup(above_limit, f_negative, limit_min, limit_max),
+          f_negative,
+          blocked_tolerance
+        );
         success *= (std::abs(Math::antiwindup(below_limit, f_negative, limit_min, limit_max)) < blocked_tolerance);
-        success *= within(Math::antiwindup(below_limit, f_positive, limit_min, limit_max),
-                          f_positive,
-                          blocked_tolerance);
+        success *= within(
+          Math::antiwindup(below_limit, f_positive, limit_min, limit_max),
+          f_positive,
+          blocked_tolerance
+        );
 
         return success.report(__func__);
       }

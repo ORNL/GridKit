@@ -105,11 +105,12 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         [[gnu::always_inline]] inline int evaluateInternalResidual(
-            const ScalarT* y,
-            const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
-            ScalarT*       f);
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f
+        );
 
       private:
         bool floorTimeConstant(RealT& value);

@@ -13,13 +13,15 @@ int main(int argc, const char* argv[])
   // Print timings
   Log::raiseVerbosity(Log::SUMMARY);
 
-  GridKit::Utilities::CliArgs args{{.name     = {"--cases", "-c"},
-                                    .help     = "Case file, or directory searched recursively for *.case.json",
-                                    .required = true},
-                                   {.name     = {"--evaluations", "-n"},
-                                    .help     = "Number of timed evaluations per case",
-                                    .type     = GridKit::Utilities::ArgType::Integer,
-                                    .defaults = 100}};
+  GridKit::Utilities::CliArgs args{
+    {.name     = {"--cases", "-c"},
+     .help     = "Case file, or directory searched recursively for *.case.json",
+     .required = true},
+    {.name     = {"--evaluations", "-n"},
+     .help     = "Number of timed evaluations per case",
+     .type     = GridKit::Utilities::ArgType::Integer,
+     .defaults = 100}
+  };
   args.parseArgs(argc, argv);
 
   const std::filesystem::path path = args["cases"]();

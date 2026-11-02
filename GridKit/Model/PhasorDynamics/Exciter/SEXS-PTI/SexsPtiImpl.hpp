@@ -122,7 +122,7 @@ namespace GridKit
         }
 
         auto check_attached_signal =
-            [&]<SexsPtiSignalInputs input>(const char* name)
+          [&]<SexsPtiSignalInputs input>(const char* name)
         {
           auto port = ports_.in.template port<input>();
           if (port.connected() && !port.linked())
@@ -245,12 +245,14 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int SexsPti<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT* y,
-          const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
-          ScalarT*       f)
+      __attribute__((always_inline)) inline int
+      SexsPti<scalar_type, index_type>::evaluateInternalResidual(
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        const ScalarT* ws,
+        ScalarT*       f
+      )
       {
         const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
         const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);

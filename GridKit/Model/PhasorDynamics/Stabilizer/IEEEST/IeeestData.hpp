@@ -84,14 +84,14 @@ namespace GridKit
        * @tparam index_type Integer parameter data type
        */
       template <typename real_type, typename index_type>
-      using IeeestData =
-          ComponentData<real_type,
-                        index_type,
-                        IeeestParameters,
-                        IeeestBuses,
-                        IeeestSignalInputs,
-                        IeeestSignalOutputs,
-                        IeeestMonitorableVariables>;
+      using IeeestData = ComponentData<
+        real_type,
+        index_type,
+        IeeestParameters,
+        IeeestBuses,
+        IeeestSignalInputs,
+        IeeestSignalOutputs,
+        IeeestMonitorableVariables>;
 
     } // namespace Stabilizer
   } // namespace PhasorDynamics

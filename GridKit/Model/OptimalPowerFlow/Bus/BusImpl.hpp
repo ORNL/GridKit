@@ -76,10 +76,10 @@ namespace GridKit
 
     /// Shunt power into the bus, which starts its balance, and the squared voltage magnitude
     template <typename scalar_type, typename index_type>
-    [[gnu::always_inline]] void
-    Bus<scalar_type, index_type>::internalConstraints(const ScalarT*                  x,
-                                                      [[maybe_unused]] const ScalarT* external,
-                                                      ScalarT*                        g) const
+    [[gnu::always_inline]] void Bus<scalar_type, index_type>::
+      internalConstraints(
+        const ScalarT* x, [[maybe_unused]] const ScalarT* external, ScalarT* g
+      ) const
     {
       const auto VR  = static_cast<size_t>(BusInternalVariables::VR);
       const auto VI  = static_cast<size_t>(BusInternalVariables::VI);

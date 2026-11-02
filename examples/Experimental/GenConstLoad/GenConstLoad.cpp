@@ -86,7 +86,9 @@ int main()
 
   // Create interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
-      new IpoptInterface::DynamicObjective<double, size_t>(idas, t_init, t_final, dt_monitor);
+    new IpoptInterface::DynamicObjective<double, size_t>(
+      idas, t_init, t_final, dt_monitor
+    );
 
   auto* param = model->param().getData();
 
@@ -114,7 +116,7 @@ int main()
 
   // Compare results of the two optimization methods
   int retval =
-      isEqual(ipoptApp->Statistics()->FinalObjective(), 1239.0, 10 * tol) ? 0 : 1;
+    isEqual(ipoptApp->Statistics()->FinalObjective(), 1239.0, 10 * tol) ? 0 : 1;
 
   if (retval != 0)
   {

@@ -40,7 +40,7 @@ namespace GridKit
       ~ControllerRepcaTests() = default;
 
       static constexpr RealT kTol =
-          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+        static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Validate construction, defaults, parameters, signals, and time floors.
       TestOutcome validation()
@@ -111,34 +111,13 @@ namespace GridKit
         const RealT                  nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT                  infinity = std::numeric_limits<RealT>::infinity();
         const std::array<Params, 28> real_parameters{{
-            Params::mva,
-            Params::Tfltr,
-            Params::Vfrz,
-            Params::Rc,
-            Params::Xc,
-            Params::Kc,
-            Params::dbdlow,
-            Params::dbdupper,
-            Params::emax,
-            Params::emin,
-            Params::Kp,
-            Params::Ki,
-            Params::Qmax,
-            Params::Qmin,
-            Params::Tft,
-            Params::Tfv,
-            Params::Tp,
-            Params::fdbd1,
-            Params::fdbd2,
-            Params::Ddn,
-            Params::Dup,
-            Params::femax,
-            Params::femin,
-            Params::Kpg,
-            Params::Kig,
-            Params::Pmax,
-            Params::Pmin,
-            Params::Tlag,
+          Params::mva,  Params::Tfltr, Params::Vfrz,   Params::Rc,
+          Params::Xc,   Params::Kc,    Params::dbdlow, Params::dbdupper,
+          Params::emax, Params::emin,  Params::Kp,     Params::Ki,
+          Params::Qmax, Params::Qmin,  Params::Tft,    Params::Tfv,
+          Params::Tp,   Params::fdbd1, Params::fdbd2,  Params::Ddn,
+          Params::Dup,  Params::femax, Params::femin,  Params::Kpg,
+          Params::Kig,  Params::Pmax,  Params::Pmin,   Params::Tlag,
         }};
         for (const Params parameter : real_parameters)
         {
@@ -156,31 +135,30 @@ namespace GridKit
         {
           auto tiny_base_data                    = makeData();
           tiny_base_data.parameters[Params::mva] = std::numeric_limits<RealT>::min();
-          Fixture<ScalarT> overflowing_base_ratio(tiny_base_data,
-                                                  1.0,
-                                                  0.0,
-                                                  std::numeric_limits<RealT>::max());
+          Fixture<ScalarT> overflowing_base_ratio(
+            tiny_base_data, 1.0, 0.0, std::numeric_limits<RealT>::max()
+          );
           overflowing_base_ratio.attachAllInputs();
           success *= (!overflowing_base_ratio.repca.verify().passed());
         }
 
         const std::array<Params, 3> flag_parameters{{
-            Params::VcompFlag,
-            Params::RefFlag,
-            Params::Freqflag,
+          Params::VcompFlag,
+          Params::RefFlag,
+          Params::Freqflag,
         }};
         const std::array<bool, 2>   valid_flag_values{{false, true}};
         const std::array<IdxT, 3>   invalid_integral_flag_values{{
-            static_cast<IdxT>(0),
-            static_cast<IdxT>(1),
-            static_cast<IdxT>(2),
+          static_cast<IdxT>(0),
+          static_cast<IdxT>(1),
+          static_cast<IdxT>(2),
         }};
         const std::array<RealT, 5>  invalid_real_flag_values{{
-            static_cast<RealT>(0.0),
-            static_cast<RealT>(0.5),
-            static_cast<RealT>(1.0),
-            nan,
-            infinity,
+          static_cast<RealT>(0.0),
+          static_cast<RealT>(0.5),
+          static_cast<RealT>(1.0),
+          nan,
+          infinity,
         }};
         for (const Params flag : flag_parameters)
         {
@@ -238,14 +216,14 @@ namespace GridKit
         floored.repca.y().setDataUpdated();
         success *= (floored.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 4> floored_residuals{{
-            {Vars::VMEAS, 1.0},
-            {Vars::QMEAS, 2.0},
-            {Vars::PMEAS, 3.0},
-            {Vars::PREF, 4.0},
+          {Vars::VMEAS, 1.0},
+          {Vars::QMEAS, 2.0},
+          {Vars::PMEAS, 3.0},
+          {Vars::PREF, 4.0},
         }};
-        success *= residualsMatch(floored.repca,
-                                  floored_residuals,
-                                  "floored time constants");
+        success *= residualsMatch(
+          floored.repca, floored_residuals, "floored time constants"
+        );
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -263,7 +241,8 @@ namespace GridKit
         success *= (fixture.repca.tagDifferentiable() == 0);
         success *= (fixture.repca.evaluateResidual() == 0);
 
-        const std::array<VariableValue, Utilities::enum_size<Vars>()> initial_state{{
+        const std::array<VariableValue, Utilities::enum_size<Vars>()>
+          initial_state{{
             {Vars::VMEAS, 0.984002032518226},
             {Vars::QMEAS, 0.2},
             {Vars::XQPI, 0.5},
@@ -286,7 +265,7 @@ namespace GridKit
             {Vars::EPLIM, 0.0},
             {Vars::PPI, 0.9},
             {Vars::PEXT, 0.45},
-        }};
+          }};
         success *= stateMatches(fixture.repca, initial_state, "initialization");
 
         success *= scalarPreserved(fixture.input(Ext::ir), 0.2, "preserved ir");
@@ -318,18 +297,17 @@ namespace GridKit
         const auto* tolerances = fixture.repca.absoluteTolerance().getData();
         for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
-          success *= valueUnchanged(tolerances[row],
-                                    absolute_tolerance,
-                                    "absolute tolerance",
-                                    row);
+          success *= valueUnchanged(
+            tolerances[row], absolute_tolerance, "absolute tolerance", row
+          );
         }
 
         const std::array<RealT, 5> initial_monitors{{
-            0.25,
-            0.45,
-            0.984002032518226,
-            0.2,
-            0.8,
+          0.25,
+          0.45,
+          0.984002032518226,
+          0.2,
+          0.8,
         }};
         success *= monitorMatches(fixture.repca, initial_monitors, "initialization");
 
@@ -364,25 +342,23 @@ namespace GridKit
         success *= (fallback.repca.evaluateResidual() == 0);
         success *= allResidualsWithinInitTolerance(fallback.repca);
 
-        Fixture<ScalarT> outputless(makeInitializationData(),
-                                    0.8,
-                                    0.6,
-                                    100.0e6,
-                                    false);
+        Fixture<ScalarT> outputless(
+          makeInitializationData(), 0.8, 0.6, 100.0e6, false
+        );
         outputless.attachAllInputs();
         setInitializationInputs(outputless);
         success *= outputless.initialize(0.25, 0.45);
         success *= (outputless.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 2> outputless_state{{
-            {Vars::QEXT, 0.25},
-            {Vars::PEXT, 0.45},
+          {Vars::QEXT, 0.25},
+          {Vars::PEXT, 0.45},
         }};
-        success *= stateMatches(outputless.repca,
-                                outputless_state,
-                                "unassigned command outputs");
-        success *= monitorMatches(outputless.repca,
-                                  initial_monitors,
-                                  "unassigned command outputs");
+        success *= stateMatches(
+          outputless.repca, outputless_state, "unassigned command outputs"
+        );
+        success *= monitorMatches(
+          outputless.repca, initial_monitors, "unassigned command outputs"
+        );
         success *= allResidualsWithinInitTolerance(outputless.repca);
 
         struct FlagCase
@@ -397,14 +373,62 @@ namespace GridKit
         };
 
         const std::array<FlagCase, 8> flag_cases{{
-            {"droop/reactive-reference/disabled-frequency", false, false, false, 1.08, 0.8, 0.0},
-            {"droop/reactive-reference/enabled-frequency", false, false, true, 1.08, 0.9, 0.45},
-            {"droop/voltage-reference/disabled-frequency", false, true, false, 1.08, 0.8, 0.0},
-            {"droop/voltage-reference/enabled-frequency", false, true, true, 1.08, 0.9, 0.45},
-            {"line-drop/reactive-reference/disabled-frequency", true, false, false, 0.984002032518226, 0.8, 0.0},
-            {"line-drop/reactive-reference/enabled-frequency", true, false, true, 0.984002032518226, 0.9, 0.45},
-            {"line-drop/voltage-reference/disabled-frequency", true, true, false, 0.984002032518226, 0.8, 0.0},
-            {"line-drop/voltage-reference/enabled-frequency", true, true, true, 0.984002032518226, 0.9, 0.45},
+          {"droop/reactive-reference/disabled-frequency",
+           false,
+           false,
+           false,
+           1.08,
+           0.8,
+           0.0},
+          {"droop/reactive-reference/enabled-frequency",
+           false,
+           false,
+           true,
+           1.08,
+           0.9,
+           0.45},
+          {"droop/voltage-reference/disabled-frequency",
+           false,
+           true,
+           false,
+           1.08,
+           0.8,
+           0.0},
+          {"droop/voltage-reference/enabled-frequency",
+           false,
+           true,
+           true,
+           1.08,
+           0.9,
+           0.45},
+          {"line-drop/reactive-reference/disabled-frequency",
+           true,
+           false,
+           false,
+           0.984002032518226,
+           0.8,
+           0.0},
+          {"line-drop/reactive-reference/enabled-frequency",
+           true,
+           false,
+           true,
+           0.984002032518226,
+           0.9,
+           0.45},
+          {"line-drop/voltage-reference/disabled-frequency",
+           true,
+           true,
+           false,
+           0.984002032518226,
+           0.8,
+           0.0},
+          {"line-drop/voltage-reference/enabled-frequency",
+           true,
+           true,
+           true,
+           0.984002032518226,
+           0.9,
+           0.45},
         }};
         for (const auto& test_case : flag_cases)
         {
@@ -420,15 +444,14 @@ namespace GridKit
           success *= (scenario.repca.evaluateResidual() == 0);
 
           const std::array<VariableValue, 5> expected_state{{
-              {Vars::VMEAS, test_case.voltage},
-              {Vars::VCTRL, test_case.voltage},
-              {Vars::PREF, test_case.pref},
-              {Vars::PPI, test_case.pref},
-              {Vars::PEXT, test_case.pext},
+            {Vars::VMEAS, test_case.voltage},
+            {Vars::VCTRL, test_case.voltage},
+            {Vars::PREF, test_case.pref},
+            {Vars::PPI, test_case.pref},
+            {Vars::PEXT, test_case.pext},
           }};
-          success *= stateMatches(scenario.repca,
-                                  expected_state,
-                                  test_case.label);
+          success *=
+            stateMatches(scenario.repca, expected_state, test_case.label);
           success *= scalarMatches(scenario.qext(), 0.25, test_case.label);
           success *= scalarMatches(scenario.pext(), test_case.pext, test_case.label);
           success *= allResidualsWithinInitTolerance(scenario.repca);
@@ -459,46 +482,49 @@ namespace GridKit
         const RealT                        nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT                        infinity = std::numeric_limits<RealT>::infinity();
         const std::array<RejectionCase, 4> rejection_cases{{
-            {"nonfinite qext", infinity, 0.45},
-            {"nonfinite pext", 0.25, infinity},
-            {"nan qext", nan, 0.45},
-            {"nan pext", 0.25, nan},
+          {"nonfinite qext", infinity, 0.45},
+          {"nonfinite pext", 0.25, infinity},
+          {"nan qext", nan, 0.45},
+          {"nan pext", 0.25, nan},
         }};
         for (const auto& test_case : rejection_cases)
         {
-          success *= initializationRejectedAtomically(data,
-                                                      test_case.qext,
-                                                      test_case.pext,
-                                                      test_case.label);
+          success *= initializationRejectedAtomically(
+            data, test_case.qext, test_case.pext, test_case.label
+          );
         }
         const std::array<Ext, 5>   required_ports{{
-            Ext::ir,
-            Ext::ii,
-            Ext::p,
-            Ext::q,
-            Ext::freq,
+          Ext::ir,
+          Ext::ii,
+          Ext::p,
+          Ext::q,
+          Ext::freq,
         }};
         const std::array<RealT, 3> nonfinite_values{{infinity, -infinity, nan}};
         for (const Ext port : required_ports)
         {
           for (const RealT value : nonfinite_values)
           {
-            success *= initializationRejectedAtomically(data,
-                                                        0.25,
-                                                        0.45,
-                                                        "nonfinite required signal",
-                                                        NonfiniteTarget::INPUT,
-                                                        0.8,
-                                                        0.6,
-                                                        port,
-                                                        value);
+            success *= initializationRejectedAtomically(
+              data,
+              0.25,
+              0.45,
+              "nonfinite required signal",
+              NonfiniteTarget::INPUT,
+              0.8,
+              0.6,
+              port,
+              value
+            );
           }
         }
-        success *= initializationRejectedAtomically(data,
-                                                    0.25,
-                                                    0.45,
-                                                    "nonfinite bus voltage",
-                                                    NonfiniteTarget::BUS_VOLTAGE);
+        success *= initializationRejectedAtomically(
+          data,
+          0.25,
+          0.45,
+          "nonfinite bus voltage",
+          NonfiniteTarget::BUS_VOLTAGE
+        );
 
         auto collapsed_data = data;
 
@@ -513,12 +539,12 @@ namespace GridKit
 
         const std::array<bool, 2>                    voltage_reference_values{{false, true}};
         const std::array<std::pair<RealT, RealT>, 2> voltage_cases{{
-            {0.8, 0.6},
-            {0.2, 0.0},
+          {0.8, 0.6},
+          {0.2, 0.0},
         }};
         const std::array<VariableValue, 2>           asymmetric_reactive_state{{
-            {Vars::ERQDB, -0.1},
-            {Vars::ERQLIM, 0.0},
+          {Vars::ERQDB, -0.1},
+          {Vars::ERQLIM, 0.0},
         }};
         for (const bool voltage_reference : voltage_reference_values)
         {
@@ -526,16 +552,18 @@ namespace GridKit
           data.parameters[Params::RefFlag] = voltage_reference;
           for (const auto& voltage : voltage_cases)
           {
-            Fixture<ScalarT> asymmetric_reactive(data,
-                                                 voltage.first,
-                                                 voltage.second);
+            Fixture<ScalarT> asymmetric_reactive(
+              data, voltage.first, voltage.second
+            );
             asymmetric_reactive.attachAllInputs();
             setInitializationInputs(asymmetric_reactive);
             success *= asymmetric_reactive.initialize(0.25, 0.45);
             success *= (asymmetric_reactive.repca.evaluateResidual() == 0);
-            success *= stateMatches(asymmetric_reactive.repca,
-                                    asymmetric_reactive_state,
-                                    "asymmetric reactive initialization");
+            success *= stateMatches(
+              asymmetric_reactive.repca,
+              asymmetric_reactive_state,
+              "asymmetric reactive initialization"
+            );
             success *= allResidualsWithinInitTolerance(asymmetric_reactive.repca);
           }
         }
@@ -562,19 +590,25 @@ namespace GridKit
           success *= asymmetric_active.initialize(0.25, 0.45);
           success *= (asymmetric_active.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 3> lower_active_state{{
-              {Vars::EF, 0.0},
-              {Vars::EP, -0.1},
-              {Vars::EPLIM, 0.0},
+            {Vars::EF, 0.0},
+            {Vars::EP, -0.1},
+            {Vars::EPLIM, 0.0},
           }};
-          success *= stateMatches(asymmetric_active.repca,
-                                  lower_active_state,
-                                  "lower active-error boundary");
-          success *= scalarMatches(asymmetric_active.input(Ext::freqref),
-                                   0.995,
-                                   "asymmetric frequency reference");
-          success *= scalarMatches(asymmetric_active.input(Ext::pref),
-                                   0.35,
-                                   "lower-bound plant reference");
+          success *= stateMatches(
+            asymmetric_active.repca,
+            lower_active_state,
+            "lower active-error boundary"
+          );
+          success *= scalarMatches(
+            asymmetric_active.input(Ext::freqref),
+            0.995,
+            "asymmetric frequency reference"
+          );
+          success *= scalarMatches(
+            asymmetric_active.input(Ext::pref),
+            0.35,
+            "lower-bound plant reference"
+          );
           success *= allResidualsWithinInitTolerance(asymmetric_active.repca);
         }
 
@@ -588,28 +622,36 @@ namespace GridKit
           success *= asymmetric_active.initialize(0.25, 0.45);
           success *= (asymmetric_active.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 3> upper_active_state{{
-              {Vars::EF, 0.0},
-              {Vars::EP, 0.1},
-              {Vars::EPLIM, 0.0},
+            {Vars::EF, 0.0},
+            {Vars::EP, 0.1},
+            {Vars::EPLIM, 0.0},
           }};
-          success *= stateMatches(asymmetric_active.repca,
-                                  upper_active_state,
-                                  "upper active-error boundary");
-          success *= scalarMatches(asymmetric_active.input(Ext::freqref),
-                                   0.985,
-                                   "asymmetric frequency reference");
-          success *= scalarMatches(asymmetric_active.input(Ext::pref),
-                                   0.45,
-                                   "upper-bound plant reference");
+          success *= stateMatches(
+            asymmetric_active.repca,
+            upper_active_state,
+            "upper active-error boundary"
+          );
+          success *= scalarMatches(
+            asymmetric_active.input(Ext::freqref),
+            0.985,
+            "asymmetric frequency reference"
+          );
+          success *= scalarMatches(
+            asymmetric_active.input(Ext::pref),
+            0.45,
+            "upper-bound plant reference"
+          );
           success *= allResidualsWithinInitTolerance(asymmetric_active.repca);
         }
 
         auto overflow_data                    = makeInitializationData();
         overflow_data.parameters[Params::Rc]  = std::numeric_limits<RealT>::max();
-        success                              *= initializationRejectedAtomically(overflow_data,
-                                                    0.25,
-                                                    0.45,
-                                                    "nonfinite derived initialization candidate");
+        success *= initializationRejectedAtomically(
+          overflow_data,
+          0.25,
+          0.45,
+          "nonfinite derived initialization candidate"
+        );
 
         // An invalid configuration is rejected before any state is written.
         {
@@ -641,18 +683,20 @@ namespace GridKit
           success *= qmax_pmin_boundary.initialize(0.75, 0.0);
           success *= (qmax_pmin_boundary.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 8> qmax_pmin_state{{
-              {Vars::QPI, 1.5},
-              {Vars::XQLAG, 1.5},
-              {Vars::XQPI, 1.6},
-              {Vars::QEXT, 0.75},
-              {Vars::PREF, 0.0},
-              {Vars::PPI, 0.0},
-              {Vars::XPPI, -0.1},
-              {Vars::PEXT, 0.0},
+            {Vars::QPI, 1.5},
+            {Vars::XQLAG, 1.5},
+            {Vars::XQPI, 1.6},
+            {Vars::QEXT, 0.75},
+            {Vars::PREF, 0.0},
+            {Vars::PPI, 0.0},
+            {Vars::XPPI, -0.1},
+            {Vars::PEXT, 0.0},
           }};
-          success *= stateMatches(qmax_pmin_boundary.repca,
-                                  qmax_pmin_state,
-                                  "Qmax/Pmin command boundary");
+          success *= stateMatches(
+            qmax_pmin_boundary.repca,
+            qmax_pmin_state,
+            "Qmax/Pmin command boundary"
+          );
         }
 
         {
@@ -662,18 +706,20 @@ namespace GridKit
           success *= qmin_pmax_boundary.initialize(-0.4, 1.0);
           success *= (qmin_pmax_boundary.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 8> qmin_pmax_state{{
-              {Vars::QPI, -0.8},
-              {Vars::XQLAG, -0.8},
-              {Vars::XQPI, -0.9},
-              {Vars::QEXT, -0.4},
-              {Vars::PREF, 2.0},
-              {Vars::PPI, 2.0},
-              {Vars::XPPI, 2.1},
-              {Vars::PEXT, 1.0},
+            {Vars::QPI, -0.8},
+            {Vars::XQLAG, -0.8},
+            {Vars::XQPI, -0.9},
+            {Vars::QEXT, -0.4},
+            {Vars::PREF, 2.0},
+            {Vars::PPI, 2.0},
+            {Vars::XPPI, 2.1},
+            {Vars::PEXT, 1.0},
           }};
-          success *= stateMatches(qmin_pmax_boundary.repca,
-                                  qmin_pmax_state,
-                                  "Qmin/Pmax command boundary");
+          success *= stateMatches(
+            qmin_pmax_boundary.repca,
+            qmin_pmax_state,
+            "Qmin/Pmax command boundary"
+          );
         }
 
         {
@@ -683,18 +729,18 @@ namespace GridKit
           success *= collapsed_limits.initialize(0.25, 0.45);
           success *= (collapsed_limits.repca.evaluateResidual() == 0);
           const std::array<VariableValue, 8> collapsed_state{{
-              {Vars::XQPI, 0.5},
-              {Vars::XQLAG, 0.5},
-              {Vars::QPI, 0.5},
-              {Vars::QEXT, 0.25},
-              {Vars::XPPI, 0.9},
-              {Vars::PREF, 0.9},
-              {Vars::PPI, 0.9},
-              {Vars::PEXT, 0.45},
+            {Vars::XQPI, 0.5},
+            {Vars::XQLAG, 0.5},
+            {Vars::QPI, 0.5},
+            {Vars::QEXT, 0.25},
+            {Vars::XPPI, 0.9},
+            {Vars::PREF, 0.9},
+            {Vars::PPI, 0.9},
+            {Vars::PEXT, 0.45},
           }};
-          success *= stateMatches(collapsed_limits.repca,
-                                  collapsed_state,
-                                  "collapsed Q/P limits");
+          success *= stateMatches(
+            collapsed_limits.repca, collapsed_state, "collapsed Q/P limits"
+          );
           success *= allResidualsWithinInitTolerance(collapsed_limits.repca);
         }
 
@@ -708,10 +754,10 @@ namespace GridKit
         };
 
         const std::array<LimitCase, 4> limit_cases{{
-            {"adjusted Qmin", -0.5, 0.45, Vars::QPI, -1.0},
-            {"adjusted Qmax", 0.9, 0.45, Vars::QPI, 1.8},
-            {"adjusted Pmin", 0.25, -0.1, Vars::PPI, -0.2},
-            {"adjusted Pmax", 0.25, 1.1, Vars::PPI, 2.2},
+          {"adjusted Qmin", -0.5, 0.45, Vars::QPI, -1.0},
+          {"adjusted Qmax", 0.9, 0.45, Vars::QPI, 1.8},
+          {"adjusted Pmin", 0.25, -0.1, Vars::PPI, -0.2},
+          {"adjusted Pmax", 0.25, 1.1, Vars::PPI, 2.2},
         }};
 
         for (const auto& test_case : limit_cases)
@@ -720,9 +766,11 @@ namespace GridKit
           adjusted.attachAllInputs();
           setInitializationInputs(adjusted);
           success *= adjusted.initialize(test_case.qext, test_case.pext);
-          success *= stateMatches(adjusted.repca,
-                                  {{test_case.output, test_case.expected}},
-                                  test_case.label);
+          success *= stateMatches(
+            adjusted.repca,
+            {{test_case.output, test_case.expected}},
+            test_case.label
+          );
           success *= (adjusted.repca.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(adjusted.repca);
         }
@@ -736,21 +784,24 @@ namespace GridKit
           disabled_frequency.attachAllInputs();
           setInitializationInputs(disabled_frequency);
           success *= disabled_frequency.initialize(0.25, 0.45);
-          success *= stateMatches(disabled_frequency.repca,
-                                  {{Vars::PREF, 0.8},
-                                   {Vars::PPI, 0.8},
-                                   {Vars::PEXT, 0.0}},
-                                  "measured-power limit");
+          success *= stateMatches(
+            disabled_frequency.repca,
+            {{Vars::PREF, 0.8}, {Vars::PPI, 0.8}, {Vars::PEXT, 0.0}},
+            "measured-power limit"
+          );
           success *= (disabled_frequency.repca.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(disabled_frequency.repca);
 
-          setState(disabled_frequency.repca,
-                   {{Vars::XPPI, 0.6}, {Vars::PPI, 0.77}});
+          setState(
+            disabled_frequency.repca, {{Vars::XPPI, 0.6}, {Vars::PPI, 0.77}}
+          );
           setDerivative(disabled_frequency.repca, {{Vars::XPPI, 0.0}});
           success *= (disabled_frequency.repca.evaluateResidual() == 0);
-          success *= residualsMatch(disabled_frequency.repca,
-                                    {{Vars::XPPI, 0.18}},
-                                    "measured-power limit");
+          success *= residualsMatch(
+            disabled_frequency.repca,
+            {{Vars::XPPI, 0.18}},
+            "measured-power limit"
+          );
         }
 
         {
@@ -759,29 +810,37 @@ namespace GridKit
           setInitializationInputs(adjusted);
           success *= adjusted.initialize(1.0, 1.25);
 
-          setState(adjusted.repca,
-                   {{Vars::QPI, 1.75},
-                    {Vars::XQPI, 1.55},
-                    {Vars::SFRZ, 1.0},
-                    {Vars::PPI, 2.25},
-                    {Vars::XPPI, 2.08}});
+          setState(
+            adjusted.repca,
+            {{Vars::QPI, 1.75},
+             {Vars::XQPI, 1.55},
+             {Vars::SFRZ, 1.0},
+             {Vars::PPI, 2.25},
+             {Vars::XPPI, 2.08}}
+          );
           setDerivative(adjusted.repca, {{Vars::XQPI, 0.0}, {Vars::XPPI, 0.0}});
           success *= (adjusted.repca.evaluateResidual() == 0);
-          success *= residualsMatch(adjusted.repca,
-                                    {{Vars::XQPI, 0.3}, {Vars::XPPI, 0.18}},
-                                    "adjusted antiwindup limits");
+          success *= residualsMatch(
+            adjusted.repca,
+            {{Vars::XQPI, 0.3}, {Vars::XPPI, 0.18}},
+            "adjusted antiwindup limits"
+          );
 
-          setState(adjusted.repca,
-                   {{Vars::QPI, 0.0},
-                    {Vars::ERQLIM, 0.0},
-                    {Vars::XQPI, 1.75},
-                    {Vars::PPI, 0.0},
-                    {Vars::EPLIM, 0.0},
-                    {Vars::XPPI, 2.25}});
+          setState(
+            adjusted.repca,
+            {{Vars::QPI, 0.0},
+             {Vars::ERQLIM, 0.0},
+             {Vars::XQPI, 1.75},
+             {Vars::PPI, 0.0},
+             {Vars::EPLIM, 0.0},
+             {Vars::XPPI, 2.25}}
+          );
           success *= (adjusted.repca.evaluateResidual() == 0);
-          success *= residualsMatch(adjusted.repca,
-                                    {{Vars::QPI, 1.75}, {Vars::PPI, 2.25}},
-                                    "adjusted command limits");
+          success *= residualsMatch(
+            adjusted.repca,
+            {{Vars::QPI, 1.75}, {Vars::PPI, 2.25}},
+            "adjusted command limits"
+          );
         }
 
         Log::setVerbosity(previous_verbosity);
@@ -801,33 +860,24 @@ namespace GridKit
         setAnswerKeyState(fixture.repca);
         success *= (fixture.repca.evaluateResidual() == 0);
 
-        const std::array<VariableValue, Utilities::enum_size<Vars>()> expected_residuals{{
-            {Vars::VMEAS, 0.4},
-            {Vars::QMEAS, 0.45},
-            {Vars::XQPI, -0.225},
-            {Vars::XQLAG, 0.46},
-            {Vars::PMEAS, 0.5},
-            {Vars::XPPI, -69.0 / 170.0},
-            {Vars::PREF, 0.4},
-            {Vars::V, -1.28},
-            {Vars::VLDC, 0.028},
-            {Vars::VDROOP, 0.1},
-            {Vars::VCTRL, 0.05},
-            {Vars::SFRZ, 0.5},
-            {Vars::ERQ, -0.63},
-            {Vars::ERQDB, 0.75},
-            {Vars::ERQLIM, 0.025},
-            {Vars::QPI, -0.05},
-            {Vars::QEXT, -1.345},
-            {Vars::EF, -0.015},
-            {Vars::EP, -0.4},
-            {Vars::EPLIM, 1.1},
-            {Vars::PPI, 0.1},
-            {Vars::PEXT, 0.05},
-        }};
+        const std::array<VariableValue, Utilities::enum_size<Vars>()>
+          expected_residuals{{
+            {Vars::VMEAS, 0.4},    {Vars::QMEAS, 0.45},
+            {Vars::XQPI, -0.225},  {Vars::XQLAG, 0.46},
+            {Vars::PMEAS, 0.5},    {Vars::XPPI, -69.0 / 170.0},
+            {Vars::PREF, 0.4},     {Vars::V, -1.28},
+            {Vars::VLDC, 0.028},   {Vars::VDROOP, 0.1},
+            {Vars::VCTRL, 0.05},   {Vars::SFRZ, 0.5},
+            {Vars::ERQ, -0.63},    {Vars::ERQDB, 0.75},
+            {Vars::ERQLIM, 0.025}, {Vars::QPI, -0.05},
+            {Vars::QEXT, -1.345},  {Vars::EF, -0.015},
+            {Vars::EP, -0.4},      {Vars::EPLIM, 1.1},
+            {Vars::PPI, 0.1},      {Vars::PEXT, 0.05},
+          }};
 
-        success              *= (static_cast<size_t>(fixture.repca.getResidual().getSize())
-                    == expected_residuals.size());
+        success *=
+          (static_cast<size_t>(fixture.repca.getResidual().getSize())
+           == expected_residuals.size());
         const auto* residual  = fixture.repca.getResidual().getData();
         for (size_t row = 0; row < expected_residuals.size(); ++row)
         {
@@ -838,9 +888,11 @@ namespace GridKit
                       << variableName(variable) << '\n';
             success = false;
           }
-          success *= scalarMatches(residual[index(variable)],
-                                   expected_residuals[row].value,
-                                   variableName(variable));
+          success *= scalarMatches(
+            residual[index(variable)],
+            expected_residuals[row].value,
+            variableName(variable)
+          );
         }
 
         return success.report(__func__);
@@ -861,10 +913,10 @@ namespace GridKit
         };
 
         const std::array<FlagCase, 4> flag_cases{{
-            {"droop/reactive-reference", false, false, 0.08, 0.30},
-            {"droop/voltage-reference", false, true, 0.08, 0.10},
-            {"line-drop/reactive-reference", true, false, -0.08, 0.30},
-            {"line-drop/voltage-reference", true, true, -0.08, 0.10},
+          {"droop/reactive-reference", false, false, 0.08, 0.30},
+          {"droop/voltage-reference", false, true, 0.08, 0.10},
+          {"line-drop/reactive-reference", true, false, -0.08, 0.30},
+          {"line-drop/voltage-reference", true, true, -0.08, 0.10},
         }};
         for (const auto& test_case : flag_cases)
         {
@@ -879,22 +931,23 @@ namespace GridKit
           fixture.input(Ext::qref) = 0.20;
 
           success *= fixture.prepare(0.0, 0.0);
-          setState(fixture.repca,
-                   {{Vars::VMEAS, 0.95},
-                    {Vars::QMEAS, 0.10},
-                    {Vars::VLDC, 0.92},
-                    {Vars::VDROOP, 1.08},
-                    {Vars::VCTRL, 1.0},
-                    {Vars::ERQ, 0.0}});
+          setState(
+            fixture.repca,
+            {{Vars::VMEAS, 0.95},
+             {Vars::QMEAS, 0.10},
+             {Vars::VLDC, 0.92},
+             {Vars::VDROOP, 1.08},
+             {Vars::VCTRL, 1.0},
+             {Vars::ERQ, 0.0}}
+          );
           success *= (fixture.repca.evaluateResidual() == 0);
 
           const std::array<VariableValue, 2> expected_residuals{{
-              {Vars::VCTRL, test_case.vctrl},
-              {Vars::ERQ, test_case.erq},
+            {Vars::VCTRL, test_case.vctrl},
+            {Vars::ERQ, test_case.erq},
           }};
-          success *= residualsMatch(fixture.repca,
-                                    expected_residuals,
-                                    test_case.label);
+          success *=
+            residualsMatch(fixture.repca, expected_residuals, test_case.label);
         }
 
         Fixture<ScalarT> fixture(makeResidualData());
@@ -914,103 +967,115 @@ namespace GridKit
           success *= freeze.prepare(0.0, 0.0);
 
           const std::array<DrivenCase, 2> freeze_cases{{
-              {0.0, 0.0},
-              {1.6, 1.0},
+            {0.0, 0.0},
+            {1.6, 1.0},
           }};
           for (const auto& test_case : freeze_cases)
           {
             setState(freeze.repca, {{Vars::V, test_case.input}, {Vars::SFRZ, 0.0}});
             success *= (freeze.repca.evaluateResidual() == 0);
-            success *= residualsMatch(freeze.repca,
-                                      {{Vars::SFRZ, test_case.expected}},
-                                      "freeze gate");
+            success *= residualsMatch(
+              freeze.repca, {{Vars::SFRZ, test_case.expected}}, "freeze gate"
+            );
           }
         }
 
         // The interior probe sits at the midpoint of the band, where the
         // smooth deadband cancels exactly.
         const std::array<DrivenCase, 3> deadband_cases{{
-            {-0.82, -0.8},
-            {0.005, 0.0},
-            {0.83, 0.8},
+          {-0.82, -0.8},
+          {0.005, 0.0},
+          {0.83, 0.8},
         }};
         for (const auto& test_case : deadband_cases)
         {
           setState(fixture.repca, {{Vars::ERQ, test_case.input}, {Vars::ERQDB, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::ERQDB, test_case.expected}},
-                                    "reactive-power deadband");
+          success *= residualsMatch(
+            fixture.repca,
+            {{Vars::ERQDB, test_case.expected}},
+            "reactive-power deadband"
+          );
         }
 
         const std::array<DrivenCase, 3> error_limit_cases{{
-            {-1.5, -0.7},
-            {0.05, 0.05},
-            {1.6, 0.8},
+          {-1.5, -0.7},
+          {0.05, 0.05},
+          {1.6, 0.8},
         }};
         for (const auto& test_case : error_limit_cases)
         {
           setState(fixture.repca, {{Vars::ERQDB, test_case.input}, {Vars::ERQLIM, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::ERQLIM, test_case.expected}},
-                                    "reactive-power error limit");
+          success *= residualsMatch(
+            fixture.repca,
+            {{Vars::ERQLIM, test_case.expected}},
+            "reactive-power error limit"
+          );
         }
 
         const std::array<DrivenCase, 3> command_limit_cases{{
-            {-1.6, -0.8},
-            {0.05, 0.05},
-            {1.7, 0.9},
+          {-1.6, -0.8},
+          {0.05, 0.05},
+          {1.7, 0.9},
         }};
         for (const auto& test_case : command_limit_cases)
         {
-          setState(fixture.repca,
-                   {{Vars::XQPI, test_case.input},
-                    {Vars::ERQLIM, 0.0},
-                    {Vars::QPI, 0.0}});
+          setState(
+            fixture.repca,
+            {{Vars::XQPI, test_case.input},
+             {Vars::ERQLIM, 0.0},
+             {Vars::QPI, 0.0}}
+          );
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::QPI, test_case.expected}},
-                                    "reactive-power command limit");
+          success *= residualsMatch(
+            fixture.repca,
+            {{Vars::QPI, test_case.expected}},
+            "reactive-power command limit"
+          );
         }
 
         // The limited command feeds back to the PI state; a state beyond a
         // limit holds under outward error and returns under restoring error.
         const std::array<AntiWindupCase, 6> antiwindup_cases{{
-            {0.35, 0.3, -0.25, 0.9},
-            {-0.25, -0.3, 0.35, -0.9},
-            {0.9, 0.4, 0.4, 0.75},
-            {0.9, 0.4, 1.4, 0.0},
-            {0.2, -0.6, 1.4, -1.05},
-            {-0.8, -0.4, -1.3, 0.0},
+          {0.35, 0.3, -0.25, 0.9},
+          {-0.25, -0.3, 0.35, -0.9},
+          {0.9, 0.4, 0.4, 0.75},
+          {0.9, 0.4, 1.4, 0.0},
+          {0.2, -0.6, 1.4, -1.05},
+          {-0.8, -0.4, -1.3, 0.0},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
-          setState(fixture.repca,
-                   {{Vars::QPI, test_case.output},
-                    {Vars::ERQLIM, test_case.error},
-                    {Vars::XQPI, test_case.state},
-                    {Vars::SFRZ, 1.0}});
+          setState(
+            fixture.repca,
+            {{Vars::QPI, test_case.output},
+             {Vars::ERQLIM, test_case.error},
+             {Vars::XQPI, test_case.state},
+             {Vars::SFRZ, 1.0}}
+          );
           setDerivative(fixture.repca, {{Vars::XQPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::XQPI, test_case.expected}, {Vars::QPI, 0.0}},
-                                    "reactive-power antiwindup");
+          success *= residualsMatch(
+            fixture.repca,
+            {{Vars::XQPI, test_case.expected}, {Vars::QPI, 0.0}},
+            "reactive-power antiwindup"
+          );
         }
 
-        setState(fixture.repca,
-                 {{Vars::XQLAG, 0.14},
-                  {Vars::QPI, 0.27},
-                  {Vars::QEXT, 0.20}});
+        setState(
+          fixture.repca,
+          {{Vars::XQLAG, 0.14}, {Vars::QPI, 0.27}, {Vars::QEXT, 0.20}}
+        );
         setDerivative(fixture.repca, {{Vars::XQLAG, -0.04}});
         success *= (fixture.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 2> lead_lag_residuals{{
-            {Vars::XQLAG, 0.092},
-            {Vars::QEXT, -0.624},
+          {Vars::XQLAG, 0.092},
+          {Vars::QEXT, -0.624},
         }};
-        success *= residualsMatch(fixture.repca,
-                                  lead_lag_residuals,
-                                  "reactive-command lead-lag");
+        success *= residualsMatch(
+          fixture.repca, lead_lag_residuals, "reactive-command lead-lag"
+        );
 
         // A state beyond the upper limit holds under outward error, so the
         // row depends on the limited command but not on the state.
@@ -1019,27 +1084,35 @@ namespace GridKit
           blocked.attachAllInputs();
           setAnswerKeyInputs(blocked);
           success *= blocked.prepare(0.0, 0.0);
-          setState(blocked.repca,
-                   {{Vars::QPI, 0.9}, {Vars::XQPI, 1.4}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
+          setState(
+            blocked.repca,
+            {{Vars::QPI, 0.9},
+             {Vars::XQPI, 1.4},
+             {Vars::ERQLIM, 0.4},
+             {Vars::SFRZ, 1.0}}
+          );
           setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
           numberVariables(blocked);
           blocked.repca.updateTime(0.0, 1.0);
           success *= (blocked.repca.evaluateResidual() == 0);
 
           const DependencyTracking::Variable::DependencyMap expected{
-              {2 * index(Vars::XQPI) + 1, -1.0}, // @todo Remove these
-              {2 * index(Vars::SFRZ), 0.0},      // @todo Remove these
-              {2 * index(Vars::ERQLIM), 0.0},    // @todo Remove these
-              {2 * index(Vars::QPI), 1.5},       // @todo Remove these
-              {2 * index(Vars::XQPI), 0.0},      // @todo Remove these
+            {2 * index(Vars::XQPI) + 1, -1.0}, // @todo Remove these
+            {2 * index(Vars::SFRZ), 0.0},      // @todo Remove these
+            {2 * index(Vars::ERQLIM), 0.0},    // @todo Remove these
+            {2 * index(Vars::QPI), 1.5},       // @todo Remove these
+            {2 * index(Vars::XQPI), 0.0},      // @todo Remove these
           };
 
           success *= jacobianRowMatches(
-              blocked.repca.getResidual().getData()[index(Vars::XQPI)].getDependencies(),
-              expected,
-              index(Vars::XQPI),
-              "blocked reactive-power antiwindup",
-              kTol);
+            blocked.repca.getResidual()
+              .getData()[index(Vars::XQPI)]
+              .getDependencies(),
+            expected,
+            index(Vars::XQPI),
+            "blocked reactive-power antiwindup",
+            kTol
+          );
         }
 
         return success.report(__func__);
@@ -1058,8 +1131,8 @@ namespace GridKit
         };
 
         const std::array<FlagCase, 2> flag_cases{{
-            {"disabled frequency control", false, -0.6},
-            {"enabled frequency control", true, 0.2},
+          {"disabled frequency control", false, -0.6},
+          {"enabled frequency control", true, 0.2},
         }};
         for (const auto& test_case : flag_cases)
         {
@@ -1071,9 +1144,9 @@ namespace GridKit
           success *= fixture.prepare(0.0, 0.0);
           setState(fixture.repca, {{Vars::PREF, 0.8}, {Vars::PEXT, 0.3}});
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::PEXT, test_case.pext}},
-                                    test_case.label);
+          success *= residualsMatch(
+            fixture.repca, {{Vars::PEXT, test_case.pext}}, test_case.label
+          );
         }
 
         Fixture<ScalarT> fixture(makeResidualData());
@@ -1084,9 +1157,9 @@ namespace GridKit
         // The interior probe sits at the midpoint of the band, where the
         // smooth deadband cancels exactly.
         const std::array<DrivenCase, 3> frequency_deadband_cases{{
-            {-0.81, -0.8},
-            {0.0025, 0.0},
-            {0.815, 0.8},
+          {-0.81, -0.8},
+          {0.0025, 0.0},
+          {0.815, 0.8},
         }};
         for (const auto& test_case : frequency_deadband_cases)
         {
@@ -1094,89 +1167,101 @@ namespace GridKit
           fixture.input(Ext::freqref) = 1.0 + test_case.input;
           setState(fixture.repca, {{Vars::EF, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::EF, test_case.expected}},
-                                    "frequency deadband");
+          success *= residualsMatch(
+            fixture.repca,
+            {{Vars::EF, test_case.expected}},
+            "frequency deadband"
+          );
         }
 
         const std::array<DrivenCase, 3> droop_cases{{
-            {-0.9, -1.8},
-            {0.0, 0.0},
-            {0.9, 0.9},
+          {-0.9, -1.8},
+          {0.0, 0.0},
+          {0.9, 0.9},
         }};
         fixture.input(Ext::pref) = 0.2;
         for (const auto& test_case : droop_cases)
         {
-          setState(fixture.repca,
-                   {{Vars::EF, test_case.input},
-                    {Vars::EP, 0.0},
-                    {Vars::PMEAS, 0.4}});
+          setState(
+            fixture.repca,
+            {{Vars::EF, test_case.input}, {Vars::EP, 0.0}, {Vars::PMEAS, 0.4}}
+          );
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::EP, test_case.expected}},
-                                    "frequency droop");
+          success *= residualsMatch(
+            fixture.repca, {{Vars::EP, test_case.expected}}, "frequency droop"
+          );
         }
 
         const std::array<DrivenCase, 3> error_limit_cases{{
-            {-1.3, -0.5},
-            {0.05, 0.05},
-            {1.4, 0.6},
+          {-1.3, -0.5},
+          {0.05, 0.05},
+          {1.4, 0.6},
         }};
         for (const auto& test_case : error_limit_cases)
         {
           setState(fixture.repca, {{Vars::EP, test_case.input}, {Vars::EPLIM, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::EPLIM, test_case.expected}},
-                                    "active-power error limit");
+          success *= residualsMatch(
+            fixture.repca,
+            {{Vars::EPLIM, test_case.expected}},
+            "active-power error limit"
+          );
         }
 
         const std::array<DrivenCase, 3> command_limit_cases{{
-            {-0.8, 0.0},
-            {1.0, 1.0},
-            {2.8, 2.0},
+          {-0.8, 0.0},
+          {1.0, 1.0},
+          {2.8, 2.0},
         }};
         for (const auto& test_case : command_limit_cases)
         {
-          setState(fixture.repca,
-                   {{Vars::XPPI, test_case.input},
-                    {Vars::EPLIM, 0.0},
-                    {Vars::PPI, 0.0}});
+          setState(
+            fixture.repca,
+            {{Vars::XPPI, test_case.input},
+             {Vars::EPLIM, 0.0},
+             {Vars::PPI, 0.0}}
+          );
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::PPI, test_case.expected}},
-                                    "active-power command limit");
+          success *= residualsMatch(
+            fixture.repca,
+            {{Vars::PPI, test_case.expected}},
+            "active-power command limit"
+          );
         }
 
         // The limited command feeds back to the PI state; a state beyond a
         // limit holds under outward error and returns under restoring error.
         const std::array<AntiWindupCase, 6> antiwindup_cases{{
-            {1.45, 0.5, 0.6, 0.9},
-            {0.6, -0.5, 1.45, -0.9},
-            {2.0, 1.0, 1.15, 0.9},
-            {2.0, 0.5, 2.5, 0.0},
-            {1.15, -1.0, 2.85, -0.9},
-            {0.0, -0.5, -0.5, 0.0},
+          {1.45, 0.5, 0.6, 0.9},
+          {0.6, -0.5, 1.45, -0.9},
+          {2.0, 1.0, 1.15, 0.9},
+          {2.0, 0.5, 2.5, 0.0},
+          {1.15, -1.0, 2.85, -0.9},
+          {0.0, -0.5, -0.5, 0.0},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
-          setState(fixture.repca,
-                   {{Vars::PPI, test_case.output},
-                    {Vars::XPPI, test_case.state},
-                    {Vars::EPLIM, test_case.error}});
+          setState(
+            fixture.repca,
+            {{Vars::PPI, test_case.output},
+             {Vars::XPPI, test_case.state},
+             {Vars::EPLIM, test_case.error}}
+          );
           setDerivative(fixture.repca, {{Vars::XPPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca,
-                                    {{Vars::XPPI, test_case.expected}, {Vars::PPI, 0.0}},
-                                    "active-power antiwindup");
+          success *= residualsMatch(
+            fixture.repca,
+            {{Vars::XPPI, test_case.expected}, {Vars::PPI, 0.0}},
+            "active-power antiwindup"
+          );
         }
 
         setState(fixture.repca, {{Vars::PPI, 0.66}, {Vars::PREF, 0.60}});
         setDerivative(fixture.repca, {{Vars::PREF, 0.05}});
         success *= (fixture.repca.evaluateResidual() == 0);
-        success *= residualsMatch(fixture.repca,
-                                  {{Vars::PREF, 0.07}},
-                                  "active-power command lag");
+        success *= residualsMatch(
+          fixture.repca, {{Vars::PREF, 0.07}}, "active-power command lag"
+        );
 
         return success.report(__func__);
       }
@@ -1191,27 +1276,29 @@ namespace GridKit
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
         setAnswerKeyState(fixture.repca);
-        setDerivative(fixture.repca,
-                      {{Vars::VMEAS, 0.2},
-                       {Vars::QMEAS, -0.1},
-                       {Vars::XQPI, 0.4},
-                       {Vars::XQLAG, -0.3},
-                       {Vars::PMEAS, 0.6},
-                       {Vars::XPPI, -0.5},
-                       {Vars::PREF, 0.8}});
+        setDerivative(
+          fixture.repca,
+          {{Vars::VMEAS, 0.2},
+           {Vars::QMEAS, -0.1},
+           {Vars::XQPI, 0.4},
+           {Vars::XQLAG, -0.3},
+           {Vars::PMEAS, 0.6},
+           {Vars::XPPI, -0.5},
+           {Vars::PREF, 0.8}}
+        );
         success *= (fixture.repca.evaluateResidual() == 0);
         const std::array<VariableValue, 7> expected_residuals{{
-            {Vars::VMEAS, 0.3},
-            {Vars::QMEAS, 0.35},
-            {Vars::XQPI, -0.325},
-            {Vars::XQLAG, 0.36},
-            {Vars::PMEAS, 0.4},
-            {Vars::XPPI, -43.0 / 85.0},
-            {Vars::PREF, 0.3},
+          {Vars::VMEAS, 0.3},
+          {Vars::QMEAS, 0.35},
+          {Vars::XQPI, -0.325},
+          {Vars::XQLAG, 0.36},
+          {Vars::PMEAS, 0.4},
+          {Vars::XPPI, -43.0 / 85.0},
+          {Vars::PREF, 0.3},
         }};
-        success *= residualsMatch(fixture.repca,
-                                  expected_residuals,
-                                  "explicit derivatives");
+        success *= residualsMatch(
+          fixture.repca, expected_residuals, "explicit derivatives"
+        );
 
         return success.report(__func__);
       }
@@ -1226,28 +1313,31 @@ namespace GridKit
         const auto data       = makeResidualData();
         const auto dependency = dependencyTrackingJacobian(data, success);
 
-        success *= jacobianMatches(dependency,
-                                   expectedJacobian(),
-                                   "dependency tracking",
-                                   kTol);
+        success *= jacobianMatches(
+          dependency, expectedJacobian(), "dependency tracking", kTol
+        );
 
         auto all_flags_off_data                          = data;
         all_flags_off_data.parameters[Params::VcompFlag] = false;
         all_flags_off_data.parameters[Params::RefFlag]   = false;
         all_flags_off_data.parameters[Params::Freqflag]  = false;
         const auto all_flags_off =
-            dependencyTrackingJacobian(all_flags_off_data, success);
-        success *= jacobianMatches(all_flags_off,
-                                   expectedJacobianAllFlagsOff(),
-                                   "all-flags-off dependency tracking",
-                                   kTol);
+          dependencyTrackingJacobian(all_flags_off_data, success);
+        success *= jacobianMatches(
+          all_flags_off,
+          expectedJacobianAllFlagsOff(),
+          "all-flags-off dependency tracking",
+          kTol
+        );
 
         const auto nonunit_alpha_dependency =
-            dependencyTrackingJacobian(data, success, kNonunitAlpha);
-        success *= jacobianMatches(nonunit_alpha_dependency,
-                                   expectedJacobianNonunitAlpha(),
-                                   "non-unit-alpha dependency tracking",
-                                   kTol);
+          dependencyTrackingJacobian(data, success, kNonunitAlpha);
+        success *= jacobianMatches(
+          nonunit_alpha_dependency,
+          expectedJacobianNonunitAlpha(),
+          "non-unit-alpha dependency tracking",
+          kTol
+        );
 
         return success.report(__func__);
       }
@@ -1261,26 +1351,30 @@ namespace GridKit
 
         const auto data = makeResidualData();
 
-        success *= jacobianMatches(enzymeJacobian(data, success),
-                                   dependencyTrackingJacobian(data, success),
-                                   "Enzyme versus dependency tracking",
-                                   kTol);
+        success *= jacobianMatches(
+          enzymeJacobian(data, success),
+          dependencyTrackingJacobian(data, success),
+          "Enzyme versus dependency tracking",
+          kTol
+        );
 
         auto all_flags_off_data                           = data;
         all_flags_off_data.parameters[Params::VcompFlag]  = false;
         all_flags_off_data.parameters[Params::RefFlag]    = false;
         all_flags_off_data.parameters[Params::Freqflag]   = false;
-        success                                          *= jacobianMatches(
-            enzymeJacobian(all_flags_off_data, success),
-            dependencyTrackingJacobian(all_flags_off_data, success),
-            "all-flags-off Enzyme versus dependency tracking",
-            kTol);
+        success                                           *= jacobianMatches(
+          enzymeJacobian(all_flags_off_data, success),
+          dependencyTrackingJacobian(all_flags_off_data, success),
+          "all-flags-off Enzyme versus dependency tracking",
+          kTol
+        );
 
         success *= jacobianMatches(
-            enzymeJacobian(data, success, kNonunitAlpha),
-            dependencyTrackingJacobian(data, success, kNonunitAlpha),
-            "non-unit-alpha Enzyme versus dependency tracking",
-            kTol);
+          enzymeJacobian(data, success, kNonunitAlpha),
+          dependencyTrackingJacobian(data, success, kNonunitAlpha),
+          "non-unit-alpha Enzyme versus dependency tracking",
+          kTol
+        );
 
         return success.report(__func__);
       }
@@ -1346,13 +1440,14 @@ namespace GridKit
         PhasorDynamics::SignalNode<T, IdxT> pext_node_;
 
       public:
-        explicit Fixture(const Data& data,
-                         RealT       vr                     = 1.0,
-                         RealT       vi                     = 0.0,
-                         RealT       system_va_base         = 100.0e6,
-                         bool        assign_command_outputs = true)
-          : bus(static_cast<T>(vr), static_cast<T>(vi)),
-            repca(&bus, data)
+        explicit Fixture(
+          const Data& data,
+          RealT       vr                     = 1.0,
+          RealT       vi                     = 0.0,
+          RealT       system_va_base         = 100.0e6,
+          bool        assign_command_outputs = true
+        )
+          : bus(static_cast<T>(vr), static_cast<T>(vi)), repca(&bus, data)
         {
           repca.setSystemBase(60.0, system_va_base);
           if (assign_command_outputs)
@@ -1382,8 +1477,9 @@ namespace GridKit
           repca.getPorts().in.template port<Data::SignalInputs::q>().connect(&input_nodes_[index(Ext::q)]);
         }
 
-        void attachAllInputs(RealT initial_value    = 0.0,
-                             bool  attach_frequency = true)
+        void attachAllInputs(
+          RealT initial_value = 0.0, bool attach_frequency = true
+        )
         {
           attachRequiredInputs(initial_value);
 
@@ -1609,37 +1705,27 @@ namespace GridKit
         // Every smooth-transition argument keeps a saturation margin, and
         // every clamp that must pass its input through sits at the midpoint
         // of its limits or well inside them, so each row carries its ideal value.
-        setState(repca,
-                 {{Vars::VMEAS, 0.85},
-                  {Vars::QMEAS, 0.45},
-                  {Vars::XQPI, 0.0},
-                  {Vars::XQLAG, -0.05},
-                  {Vars::PMEAS, 0.3},
-                  {Vars::XPPI, 1.85},
-                  {Vars::PREF, 0.35},
-                  {Vars::V, 1.5},
-                  {Vars::VLDC, 1.0},
-                  {Vars::VDROOP, 1.6},
-                  {Vars::VCTRL, 0.95},
-                  {Vars::SFRZ, 0.5},
-                  {Vars::ERQ, 0.83},
-                  {Vars::ERQDB, 0.05},
-                  {Vars::ERQLIM, 0.025},
-                  {Vars::QPI, 0.1},
-                  {Vars::QEXT, 0.25},
-                  {Vars::EF, 0.8},
-                  {Vars::EP, 2.0},
-                  {Vars::EPLIM, -0.5},
-                  {Vars::PPI, 0.9},
-                  {Vars::PEXT, 0.15}});
-        setDerivative(repca,
-                      {{Vars::VMEAS, 0.1},
-                       {Vars::QMEAS, -0.2},
-                       {Vars::XQPI, 0.3},
-                       {Vars::XQLAG, -0.4},
-                       {Vars::PMEAS, 0.5},
-                       {Vars::XPPI, -0.6},
-                       {Vars::PREF, 0.7}});
+        setState(
+          repca,
+          {{Vars::VMEAS, 0.85},  {Vars::QMEAS, 0.45}, {Vars::XQPI, 0.0},
+           {Vars::XQLAG, -0.05}, {Vars::PMEAS, 0.3},  {Vars::XPPI, 1.85},
+           {Vars::PREF, 0.35},   {Vars::V, 1.5},      {Vars::VLDC, 1.0},
+           {Vars::VDROOP, 1.6},  {Vars::VCTRL, 0.95}, {Vars::SFRZ, 0.5},
+           {Vars::ERQ, 0.83},    {Vars::ERQDB, 0.05}, {Vars::ERQLIM, 0.025},
+           {Vars::QPI, 0.1},     {Vars::QEXT, 0.25},  {Vars::EF, 0.8},
+           {Vars::EP, 2.0},      {Vars::EPLIM, -0.5}, {Vars::PPI, 0.9},
+           {Vars::PEXT, 0.15}}
+        );
+        setDerivative(
+          repca,
+          {{Vars::VMEAS, 0.1},
+           {Vars::QMEAS, -0.2},
+           {Vars::XQPI, 0.3},
+           {Vars::XQLAG, -0.4},
+           {Vars::PMEAS, 0.5},
+           {Vars::XPPI, -0.6},
+           {Vars::PREF, 0.7}}
+        );
       }
 
       bool defaultsMatchDocumentedValues() const
@@ -1672,21 +1758,27 @@ namespace GridKit
         {
           success = false;
         }
-        if (!vectorsMatch(implicit_defaults.repca.y(),
-                          explicit_defaults.repca.y(),
-                          "documented-default state"))
+        if (!vectorsMatch(
+              implicit_defaults.repca.y(),
+              explicit_defaults.repca.y(),
+              "documented-default state"
+            ))
         {
           success = false;
         }
-        if (!vectorsMatch(implicit_defaults.repca.yp(),
-                          explicit_defaults.repca.yp(),
-                          "documented-default derivative"))
+        if (!vectorsMatch(
+              implicit_defaults.repca.yp(),
+              explicit_defaults.repca.yp(),
+              "documented-default derivative"
+            ))
         {
           success = false;
         }
-        if (!vectorsMatch(implicit_defaults.repca.getResidual(),
-                          explicit_defaults.repca.getResidual(),
-                          "documented-default residual"))
+        if (!vectorsMatch(
+              implicit_defaults.repca.getResidual(),
+              explicit_defaults.repca.getResidual(),
+              "documented-default residual"
+            ))
         {
           success = false;
         }
@@ -1694,11 +1786,13 @@ namespace GridKit
         {
           const auto port     = static_cast<size_t>(variant);
           const auto variable = static_cast<Ext>(port);
-          if (!rowMatches(implicit_defaults.input(variable),
-                          explicit_defaults.input(variable),
-                          "documented-default signal",
-                          port,
-                          ""))
+          if (!rowMatches(
+                implicit_defaults.input(variable),
+                explicit_defaults.input(variable),
+                "documented-default signal",
+                port,
+                ""
+              ))
           {
             success = false;
           }
@@ -1716,9 +1810,11 @@ namespace GridKit
         {
           success = false;
         }
-        if (!vectorsMatch(implicit_defaults.repca.getResidual(),
-                          explicit_defaults.repca.getResidual(),
-                          "documented-default dynamic residual"))
+        if (!vectorsMatch(
+              implicit_defaults.repca.getResidual(),
+              explicit_defaults.repca.getResidual(),
+              "documented-default dynamic residual"
+            ))
         {
           success = false;
         }
@@ -1731,12 +1827,13 @@ namespace GridKit
         auto data                  = makeData();
         data.parameters[parameter] = value;
         return configurationRejected(
-            [&]()
-            {
-              Fixture<ScalarT> fixture(data);
-              fixture.attachAllInputs();
-              return fixture.repca.verify();
-            });
+          [&]()
+          {
+            Fixture<ScalarT> fixture(data);
+            fixture.attachAllInputs();
+            return fixture.repca.verify();
+          }
+        );
       }
 
       template <Ext variable>
@@ -1764,16 +1861,17 @@ namespace GridKit
         fixture.repca.yp().setDataUpdated();
       }
 
-      bool initializationRejectedAtomically(const Data&     data,
-                                            RealT           qext,
-                                            RealT           pext,
-                                            const char*     label,
-                                            NonfiniteTarget target        = NonfiniteTarget::NONE,
-                                            RealT           initial_vr    = 0.8,
-                                            RealT           initial_vi    = 0.6,
-                                            Ext             poisoned_port = Ext::freq,
-                                            RealT           poison_value =
-                                                std::numeric_limits<RealT>::infinity()) const
+      bool initializationRejectedAtomically(
+        const Data&     data,
+        RealT           qext,
+        RealT           pext,
+        const char*     label,
+        NonfiniteTarget target        = NonfiniteTarget::NONE,
+        RealT           initial_vr    = 0.8,
+        RealT           initial_vi    = 0.6,
+        Ext             poisoned_port = Ext::freq,
+        RealT           poison_value  = std::numeric_limits<RealT>::infinity()
+      ) const
       {
         Fixture<ScalarT> fixture(data, initial_vr, initial_vi);
         fixture.attachAllInputs(77.0);
@@ -1835,10 +1933,12 @@ namespace GridKit
         for (auto variant : Utilities::enum_values<Ext>())
         {
           const auto port = static_cast<size_t>(variant);
-          if (!valueUnchanged(fixture.input(static_cast<Ext>(port)),
-                              inputs_before[port],
-                              "external signal",
-                              port))
+          if (!valueUnchanged(
+                fixture.input(static_cast<Ext>(port)),
+                inputs_before[port],
+                "external signal",
+                port
+              ))
           {
             success = false;
           }
@@ -1847,8 +1947,10 @@ namespace GridKit
       }
 
       template <typename T>
-      void setState(PhasorDynamics::Controller::Repca<T, IdxT>& repca,
-                    std::initializer_list<VariableValue>        values) const
+      void setState(
+        PhasorDynamics::Controller::Repca<T, IdxT>& repca,
+        std::initializer_list<VariableValue>        values
+      ) const
       {
         auto* y = repca.y().getData();
         for (const auto& [variable, value] : values)
@@ -1859,8 +1961,10 @@ namespace GridKit
       }
 
       template <typename T>
-      void setDerivative(PhasorDynamics::Controller::Repca<T, IdxT>& repca,
-                         std::initializer_list<VariableValue>        values) const
+      void setDerivative(
+        PhasorDynamics::Controller::Repca<T, IdxT>& repca,
+        std::initializer_list<VariableValue>        values
+      ) const
       {
         auto* yp = repca.yp().getData();
         for (const auto& [variable, value] : values)
@@ -1872,39 +1976,24 @@ namespace GridKit
 
       static const char* variableName(Vars variable)
       {
-        static constexpr std::array<const char*, Utilities::enum_size<Vars>()> names{{
-            "VMEAS",
-            "QMEAS",
-            "XQPI",
-            "XQLAG",
-            "PMEAS",
-            "XPPI",
-            "PREF",
-            "V",
-            "VLDC",
-            "VDROOP",
-            "VCTRL",
-            "SFRZ",
-            "ERQ",
-            "ERQDB",
-            "ERQLIM",
-            "QPI",
-            "QEXT",
-            "EF",
-            "EP",
-            "EPLIM",
-            "PPI",
-            "PEXT",
-        }};
+        static constexpr std::array<const char*, Utilities::enum_size<Vars>()>
+          names{{
+            "VMEAS", "QMEAS", "XQPI",   "XQLAG",  "PMEAS", "XPPI",
+            "PREF",  "V",     "VLDC",   "VDROOP", "VCTRL", "SFRZ",
+            "ERQ",   "ERQDB", "ERQLIM", "QPI",    "QEXT",  "EF",
+            "EP",    "EPLIM", "PPI",    "PEXT",
+          }};
         return names[index(variable)];
       }
 
-      static bool variableMatches(RealT       actual,
-                                  RealT       expected,
-                                  const char* what,
-                                  Vars        variable,
-                                  const char* context,
-                                  RealT       tolerance = kTol)
+      static bool variableMatches(
+        RealT       actual,
+        RealT       expected,
+        const char* what,
+        Vars        variable,
+        const char* context,
+        RealT       tolerance = kTol
+      )
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -1921,12 +2010,14 @@ namespace GridKit
         return false;
       }
 
-      static bool rowMatches(RealT       actual,
-                             RealT       expected,
-                             const char* what,
-                             size_t      row,
-                             const char* context,
-                             RealT       tolerance = kTol)
+      static bool rowMatches(
+        RealT       actual,
+        RealT       expected,
+        const char* what,
+        size_t      row,
+        const char* context,
+        RealT       tolerance = kTol
+      )
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -1942,10 +2033,9 @@ namespace GridKit
         return false;
       }
 
-      bool scalarMatches(RealT       actual,
-                         RealT       expected,
-                         const char* label,
-                         RealT       tolerance = kTol) const
+      bool scalarMatches(
+        RealT actual, RealT expected, const char* label, RealT tolerance = kTol
+      ) const
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -1956,9 +2046,11 @@ namespace GridKit
         return false;
       }
 
-      bool monitorMatches(const RepcaT&               repca,
-                          const std::array<RealT, 5>& expected,
-                          const char*                 context) const
+      bool monitorMatches(
+        const RepcaT&               repca,
+        const std::array<RealT, 5>& expected,
+        const char*                 context
+      ) const
       {
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> monitor(time);
@@ -1974,10 +2066,10 @@ namespace GridKit
         std::getline(output, header);
         std::getline(output, values_line);
 
-        bool success =
-            header == "t,Repca_repca_test_qext,Repca_repca_test_pext,"
-                      "Repca_repca_test_vmeas,Repca_repca_test_qmeas,"
-                      "Repca_repca_test_pmeas";
+        bool success = header
+                       == "t,Repca_repca_test_qext,Repca_repca_test_pext,"
+                          "Repca_repca_test_vmeas,Repca_repca_test_qmeas,"
+                          "Repca_repca_test_pmeas";
 
         const auto values = Tokenizer<RealT>(values_line, ',')();
         if (values.size() != expected.size() + 1)
@@ -1989,11 +2081,7 @@ namespace GridKit
 
         for (size_t i = 0; i < expected.size(); ++i)
         {
-          if (!rowMatches(values[i + 1],
-                          expected[i],
-                          "monitor",
-                          i,
-                          context))
+          if (!rowMatches(values[i + 1], expected[i], "monitor", i, context))
           {
             success = false;
           }
@@ -2023,10 +2111,9 @@ namespace GridKit
         return false;
       }
 
-      static bool valueUnchanged(RealT       actual,
-                                 RealT       expected,
-                                 const char* what,
-                                 size_t      index)
+      static bool valueUnchanged(
+        RealT actual, RealT expected, const char* what, size_t index
+      )
       {
         if (preserved(actual, expected))
         {
@@ -2039,10 +2126,12 @@ namespace GridKit
       }
 
       template <typename VectorT, typename ValuesT>
-      bool rowsMatch(const VectorT& vector,
-                     const ValuesT& values,
-                     const char*    what,
-                     const char*    context) const
+      bool rowsMatch(
+        const VectorT& vector,
+        const ValuesT& values,
+        const char*    what,
+        const char*    context
+      ) const
       {
         bool        success       = true;
         const auto* vector_values = vector.getData();
@@ -2050,11 +2139,13 @@ namespace GridKit
         {
           const size_t row = index(variable);
 
-          if (!variableMatches(static_cast<RealT>(vector_values[row]),
-                               expected,
-                               what,
-                               variable,
-                               context))
+          if (!variableMatches(
+                static_cast<RealT>(vector_values[row]),
+                expected,
+                what,
+                variable,
+                context
+              ))
           {
             success = false;
           }
@@ -2062,32 +2153,40 @@ namespace GridKit
         return success;
       }
 
-      bool residualsMatch(const RepcaT&                        repca,
-                          std::initializer_list<VariableValue> values,
-                          const char*                          context = "") const
+      bool residualsMatch(
+        const RepcaT&                        repca,
+        std::initializer_list<VariableValue> values,
+        const char*                          context = ""
+      ) const
       {
         return rowsMatch(repca.getResidual(), values, "residual", context);
       }
 
       template <size_t size>
-      bool residualsMatch(const RepcaT&                          repca,
-                          const std::array<VariableValue, size>& values,
-                          const char*                            context = "") const
+      bool residualsMatch(
+        const RepcaT&                          repca,
+        const std::array<VariableValue, size>& values,
+        const char*                            context = ""
+      ) const
       {
         return rowsMatch(repca.getResidual(), values, "residual", context);
       }
 
-      bool stateMatches(const RepcaT&                        repca,
-                        std::initializer_list<VariableValue> values,
-                        const char*                          context = "") const
+      bool stateMatches(
+        const RepcaT&                        repca,
+        std::initializer_list<VariableValue> values,
+        const char*                          context = ""
+      ) const
       {
         return rowsMatch(repca.y(), values, "state", context);
       }
 
       template <size_t size>
-      bool stateMatches(const RepcaT&                          repca,
-                        const std::array<VariableValue, size>& values,
-                        const char*                            context = "") const
+      bool stateMatches(
+        const RepcaT&                          repca,
+        const std::array<VariableValue, size>& values,
+        const char*                            context = ""
+      ) const
       {
         return rowsMatch(repca.y(), values, "state", context);
       }
@@ -2100,12 +2199,14 @@ namespace GridKit
         for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           const auto variable = static_cast<Vars>(row);
-          if (!variableMatches(f[row],
-                               0.0,
-                               "residual",
-                               variable,
-                               "at rest",
-                               RepcaT::INITIALIZATION_TOLERANCE))
+          if (!variableMatches(
+                f[row],
+                0.0,
+                "residual",
+                variable,
+                "at rest",
+                RepcaT::INITIALIZATION_TOLERANCE
+              ))
           {
             success = false;
           }
@@ -2130,18 +2231,19 @@ namespace GridKit
       }
 
       template <typename VectorT>
-      bool vectorUnchanged(const VectorT&            vector,
-                           const std::vector<RealT>& snapshot,
-                           const char*               what) const
+      bool vectorUnchanged(
+        const VectorT&            vector,
+        const std::vector<RealT>& snapshot,
+        const char*               what
+      ) const
       {
         bool        success = true;
         const auto* values  = vector.getData();
         for (size_t row = 0; row < snapshot.size(); ++row)
         {
-          if (!valueUnchanged(static_cast<RealT>(values[row]),
-                              snapshot[row],
-                              what,
-                              row))
+          if (!valueUnchanged(
+                static_cast<RealT>(values[row]), snapshot[row], what, row
+              ))
           {
             success = false;
           }
@@ -2150,9 +2252,9 @@ namespace GridKit
       }
 
       template <typename LeftVectorT, typename RightVectorT>
-      bool vectorsMatch(const LeftVectorT&  left,
-                        const RightVectorT& right,
-                        const char*         what) const
+      bool vectorsMatch(
+        const LeftVectorT& left, const RightVectorT& right, const char* what
+      ) const
       {
         if (left.getSize() != right.getSize())
         {
@@ -2164,11 +2266,13 @@ namespace GridKit
         const auto* right_values = right.getData();
         for (size_t row = 0; row < static_cast<size_t>(left.getSize()); ++row)
         {
-          if (!rowMatches(static_cast<RealT>(left_values[row]),
-                          static_cast<RealT>(right_values[row]),
-                          what,
-                          row,
-                          ""))
+          if (!rowMatches(
+                static_cast<RealT>(left_values[row]),
+                static_cast<RealT>(right_values[row]),
+                what,
+                row,
+                ""
+              ))
           {
             success = false;
           }
@@ -2179,48 +2283,56 @@ namespace GridKit
       std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobian() const
       {
         return {
-            {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
-            {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::q)), 10.0}},
-            {{index(Vars::XQPI), -1.75},
-             {index(Vars::SFRZ), 0.15},
-             {index(Vars::ERQLIM), 0.0},
-             {index(Vars::QPI), 0.75}},
-            {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
-            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::p)), 5.0}},
-            {{index(Vars::XPPI), -35.0 / 17.0},
-             {index(Vars::EPLIM), 0.0},
-             {index(Vars::PPI), 18.0 / 17.0}},
-            {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
-            {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
-            {{index(Vars::VLDC), -2.0},
-             {kBusVrColumn, 1.96},
-             {kBusViColumn, 0.52},
-             {externalColumn(index(Ext::ir)), -0.1096},
-             {externalColumn(index(Ext::ii)), 0.0968}},
-            {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::q)), 0.8}},
-            {{index(Vars::VLDC), 1.0},
-             {index(Vars::VDROOP), 0.0},
-             {index(Vars::VCTRL), -1.0}},
-            {{index(Vars::V), 0.0}, {index(Vars::SFRZ), -1.0}},
-            {{index(Vars::VMEAS), -1.0},
-             {index(Vars::QMEAS), 0.0},
-             {index(Vars::ERQ), -1.0},
-             {externalColumn(index(Ext::vref)), 1.0},
-             {externalColumn(index(Ext::qref)), 0.0}},
-            {{index(Vars::ERQ), 1.0}, {index(Vars::ERQDB), -1.0}},
-            {{index(Vars::ERQDB), 1.0}, {index(Vars::ERQLIM), -1.0}},
-            {{index(Vars::XQPI), 1.0}, {index(Vars::ERQLIM), 2.0}, {index(Vars::QPI), -1.0}},
-            {{index(Vars::XQLAG), 2.3}, {index(Vars::QPI), 0.2}, {index(Vars::QEXT), -5.0}},
-            {{index(Vars::EF), -1.0},
-             {externalColumn(index(Ext::freq)), -1.0},
-             {externalColumn(index(Ext::freqref)), 1.0}},
-            {{index(Vars::PMEAS), -1.0},
-             {index(Vars::EF), 1.0},
-             {index(Vars::EP), -1.0},
-             {externalColumn(index(Ext::pref)), 2.0}},
-            {{index(Vars::EP), 0.0}, {index(Vars::EPLIM), -1.0}},
-            {{index(Vars::XPPI), 1.0}, {index(Vars::EPLIM), 1.7}, {index(Vars::PPI), -1.0}},
-            {{index(Vars::PREF), 1.0}, {index(Vars::PEXT), -2.0}},
+          {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
+          {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::q)), 10.0}},
+          {{index(Vars::XQPI), -1.75},
+           {index(Vars::SFRZ), 0.15},
+           {index(Vars::ERQLIM), 0.0},
+           {index(Vars::QPI), 0.75}},
+          {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
+          {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::p)), 5.0}},
+          {{index(Vars::XPPI), -35.0 / 17.0},
+           {index(Vars::EPLIM), 0.0},
+           {index(Vars::PPI), 18.0 / 17.0}},
+          {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
+          {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
+          {{index(Vars::VLDC), -2.0},
+           {kBusVrColumn, 1.96},
+           {kBusViColumn, 0.52},
+           {externalColumn(index(Ext::ir)), -0.1096},
+           {externalColumn(index(Ext::ii)), 0.0968}},
+          {{index(Vars::V), 1.0},
+           {index(Vars::VDROOP), -1.0},
+           {externalColumn(index(Ext::q)), 0.8}},
+          {{index(Vars::VLDC), 1.0},
+           {index(Vars::VDROOP), 0.0},
+           {index(Vars::VCTRL), -1.0}},
+          {{index(Vars::V), 0.0}, {index(Vars::SFRZ), -1.0}},
+          {{index(Vars::VMEAS), -1.0},
+           {index(Vars::QMEAS), 0.0},
+           {index(Vars::ERQ), -1.0},
+           {externalColumn(index(Ext::vref)), 1.0},
+           {externalColumn(index(Ext::qref)), 0.0}},
+          {{index(Vars::ERQ), 1.0}, {index(Vars::ERQDB), -1.0}},
+          {{index(Vars::ERQDB), 1.0}, {index(Vars::ERQLIM), -1.0}},
+          {{index(Vars::XQPI), 1.0},
+           {index(Vars::ERQLIM), 2.0},
+           {index(Vars::QPI), -1.0}},
+          {{index(Vars::XQLAG), 2.3},
+           {index(Vars::QPI), 0.2},
+           {index(Vars::QEXT), -5.0}},
+          {{index(Vars::EF), -1.0},
+           {externalColumn(index(Ext::freq)), -1.0},
+           {externalColumn(index(Ext::freqref)), 1.0}},
+          {{index(Vars::PMEAS), -1.0},
+           {index(Vars::EF), 1.0},
+           {index(Vars::EP), -1.0},
+           {externalColumn(index(Ext::pref)), 2.0}},
+          {{index(Vars::EP), 0.0}, {index(Vars::EPLIM), -1.0}},
+          {{index(Vars::XPPI), 1.0},
+           {index(Vars::EPLIM), 1.7},
+           {index(Vars::PPI), -1.0}},
+          {{index(Vars::PREF), 1.0}, {index(Vars::PEXT), -2.0}},
         };
       }
 
@@ -2228,20 +2340,20 @@ namespace GridKit
       {
         auto expected                = expectedJacobian();
         expected[index(Vars::VCTRL)] = {
-            {index(Vars::VLDC), 0.0},
-            {index(Vars::VDROOP), 1.0},
-            {index(Vars::VCTRL), -1.0},
+          {index(Vars::VLDC), 0.0},
+          {index(Vars::VDROOP), 1.0},
+          {index(Vars::VCTRL), -1.0},
         };
         expected[index(Vars::ERQ)] = {
-            {index(Vars::VMEAS), 0.0},
-            {index(Vars::QMEAS), -1.0},
-            {index(Vars::ERQ), -1.0},
-            {externalColumn(index(Ext::vref)), 0.0},
-            {externalColumn(index(Ext::qref)), 2.0},
+          {index(Vars::VMEAS), 0.0},
+          {index(Vars::QMEAS), -1.0},
+          {index(Vars::ERQ), -1.0},
+          {externalColumn(index(Ext::vref)), 0.0},
+          {externalColumn(index(Ext::qref)), 2.0},
         };
         expected[index(Vars::PEXT)] = {
-            {index(Vars::PREF), 0.0},
-            {index(Vars::PEXT), -2.0},
+          {index(Vars::PREF), 0.0},
+          {index(Vars::PEXT), -2.0},
         };
         return expected;
       }
@@ -2260,11 +2372,12 @@ namespace GridKit
       }
 
       bool jacobianRowMatches(
-          const DependencyTracking::Variable::DependencyMap& actual,
-          const DependencyTracking::Variable::DependencyMap& expected,
-          size_t                                             row,
-          const char*                                        source,
-          RealT                                              tolerance) const
+        const DependencyTracking::Variable::DependencyMap& actual,
+        const DependencyTracking::Variable::DependencyMap& expected,
+        size_t                                             row,
+        const char*                                        source,
+        RealT                                              tolerance
+      ) const
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -2277,10 +2390,12 @@ namespace GridKit
       }
 
       bool jacobianMatches(
-          const std::vector<DependencyTracking::Variable::DependencyMap>& actual,
-          const std::vector<DependencyTracking::Variable::DependencyMap>& expected,
-          const char*                                                     source,
-          RealT                                                           tolerance) const
+        const std::vector<DependencyTracking::Variable::DependencyMap>& actual,
+        const std::vector<DependencyTracking::Variable::DependencyMap>&
+                    expected,
+        const char* source,
+        RealT       tolerance
+      ) const
       {
         if (actual.size() != expected.size())
         {
@@ -2325,10 +2440,10 @@ namespace GridKit
         fixture.bus.y().setDataUpdated();
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
-          const Data& data,
-          TestStatus& success,
-          RealT       alpha = 1.0) const
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      dependencyTrackingJacobian(
+        const Data& data, TestStatus& success, RealT alpha = 1.0
+      ) const
       {
         using DepVar = DependencyTracking::Variable;
 
@@ -2347,9 +2462,8 @@ namespace GridKit
 
 #ifdef GRIDKIT_ENABLE_ENZYME
       std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
-          const Data& data,
-          TestStatus& success,
-          RealT       alpha = 1.0) const
+        const Data& data, TestStatus& success, RealT alpha = 1.0
+      ) const
       {
         Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
         fixture.attachAllInputs();

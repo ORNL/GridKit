@@ -71,7 +71,7 @@ namespace GridKit
           return;
         }
         const IdxT signal_index =
-            port.linked() ? port.signalVariableIndex() : INVALID_INDEX<IdxT>;
+          port.linked() ? port.signalVariableIndex() : INVALID_INDEX<IdxT>;
         J_rows_buffer_[k] = residual_indices_.at(residual);
         if (signal_index != INVALID_INDEX<IdxT>)
         {

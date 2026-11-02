@@ -471,12 +471,13 @@ namespace GridKit
       };
 
       /// Variant type for all possible sink types
-      using SinkVariant = std::variant<Sink<Format::CSV, Layout::WIDE>,
-                                       Sink<Format::JSON, Layout::WIDE>,
-                                       Sink<Format::YAML, Layout::WIDE>,
-                                       Sink<Format::CSV, Layout::LONG>,
-                                       Sink<Format::JSON, Layout::LONG>,
-                                       Sink<Format::YAML, Layout::LONG>>;
+      using SinkVariant = std::variant<
+        Sink<Format::CSV, Layout::WIDE>,
+        Sink<Format::JSON, Layout::WIDE>,
+        Sink<Format::YAML, Layout::WIDE>,
+        Sink<Format::CSV, Layout::LONG>,
+        Sink<Format::JSON, Layout::LONG>,
+        Sink<Format::YAML, Layout::LONG>>;
 
       /**
        * @brief Construct the sink type whose format and layout match the spec

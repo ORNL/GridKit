@@ -79,12 +79,16 @@ namespace GridKit
       Vector& operator=(const Vector&) = delete;
       Vector& operator=(Vector&&)      = delete;
 
-      int copyFromExternal(const ScalarT*      source,
-                           memory::MemorySpace memspaceIn  = memory::HOST,
-                           memory::MemorySpace memspaceOut = memory::HOST);
-      int copyFromExternal(const Vector&       source,
-                           memory::MemorySpace memspaceIn  = memory::HOST,
-                           memory::MemorySpace memspaceOut = memory::HOST);
+      int copyFromExternal(
+        const ScalarT*      source,
+        memory::MemorySpace memspaceIn  = memory::HOST,
+        memory::MemorySpace memspaceOut = memory::HOST
+      );
+      int copyFromExternal(
+        const Vector&       source,
+        memory::MemorySpace memspaceIn  = memory::HOST,
+        memory::MemorySpace memspaceOut = memory::HOST
+      );
 
       // TODO: in the future, we should consider making the `getData` family of
       //       methods accept the memory space through a template parameter
@@ -338,13 +342,17 @@ namespace GridKit
       int syncData(memory::MemorySpace memspaceOut = memory::HOST);
       int syncData(IdxT j, memory::MemorySpace memspaceOut = memory::HOST);
       int resize(IdxT new_n_current);
-      int copyToExternal(ScalarT*            dest,
-                         IdxT                i,
-                         memory::MemorySpace memspaceSrc = memory::HOST,
-                         memory::MemorySpace memspaceDst = memory::HOST);
-      int copyToExternal(ScalarT*            dest,
-                         memory::MemorySpace memspaceSrc = memory::HOST,
-                         memory::MemorySpace memspaceDst = memory::HOST);
+      int copyToExternal(
+        ScalarT*            dest,
+        IdxT                i,
+        memory::MemorySpace memspaceSrc = memory::HOST,
+        memory::MemorySpace memspaceDst = memory::HOST
+      );
+      int copyToExternal(
+        ScalarT*            dest,
+        memory::MemorySpace memspaceSrc = memory::HOST,
+        memory::MemorySpace memspaceDst = memory::HOST
+      );
 
     private:
       [[gnu::always_inline]]

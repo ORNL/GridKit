@@ -287,26 +287,42 @@ namespace GridKit
 
         if (auto port = ports_.out.template port<RegcaSignalOutputs::ir>())
         {
-          port.link(&y[static_cast<size_t>(RegcaInternalVariables::IR)],
-                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::IR))));
+          port.link(
+            &y[static_cast<size_t>(RegcaInternalVariables::IR)],
+            &(this->getVariableIndex(
+              static_cast<IdxT>(RegcaInternalVariables::IR)
+            ))
+          );
         }
 
         if (auto port = ports_.out.template port<RegcaSignalOutputs::ii>())
         {
-          port.link(&y[static_cast<size_t>(RegcaInternalVariables::II)],
-                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::II))));
+          port.link(
+            &y[static_cast<size_t>(RegcaInternalVariables::II)],
+            &(this->getVariableIndex(
+              static_cast<IdxT>(RegcaInternalVariables::II)
+            ))
+          );
         }
 
         if (auto port = ports_.out.template port<RegcaSignalOutputs::pbranch>())
         {
-          port.link(&y[static_cast<size_t>(RegcaInternalVariables::PBR)],
-                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::PBR))));
+          port.link(
+            &y[static_cast<size_t>(RegcaInternalVariables::PBR)],
+            &(this->getVariableIndex(
+              static_cast<IdxT>(RegcaInternalVariables::PBR)
+            ))
+          );
         }
 
         if (auto port = ports_.out.template port<RegcaSignalOutputs::qbranch>())
         {
-          port.link(&y[static_cast<size_t>(RegcaInternalVariables::QBR)],
-                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::QBR))));
+          port.link(
+            &y[static_cast<size_t>(RegcaInternalVariables::QBR)],
+            &(this->getVariableIndex(
+              static_cast<IdxT>(RegcaInternalVariables::QBR)
+            ))
+          );
         }
 
         allocated_ = true;
@@ -336,8 +352,10 @@ namespace GridKit
         checks.check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
         checks.check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
         checks.check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
-        checks.check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
-                     "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
+        checks.check(
+          ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
+          "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax"
+        );
 
         if (ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
@@ -399,14 +417,14 @@ namespace GridKit
         }
         if (vt < VA1_)
         {
-          Log::error()
-              << "Regca: terminal voltage magnitude must be at least VA1 at initialization\n";
+          Log::error() << "Regca: terminal voltage magnitude must be at least "
+                          "VA1 at initialization\n";
           return 1;
         }
         if (vt >= Vhvmax_)
         {
-          Log::error()
-              << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
+          Log::error() << "Regca: terminal voltage magnitude must be below "
+                          "Vhvmax at initialization\n";
           return 1;
         }
 
@@ -509,13 +527,14 @@ namespace GridKit
        * @param[out] f Internal residuals.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int
-      Regca<scalar_type, index_type>::evaluateInternalResidual(
+      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::
+        evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
           const ScalarT* wb,
           const ScalarT* ws,
-          ScalarT*       f)
+          ScalarT*       f
+        )
       {
         const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
         const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
@@ -599,11 +618,13 @@ namespace GridKit
        * @param[out] h Current injected into the terminal bus.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::evaluateBusResidual(
+      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::
+        evaluateBusResidual(
           const ScalarT*                  y,
           [[maybe_unused]] const ScalarT* yp,
           [[maybe_unused]] const ScalarT* wb,
-          ScalarT*                        h)
+          ScalarT*                        h
+        )
       {
         const auto IR = static_cast<size_t>(RegcaInternalVariables::IR);
         const auto II = static_cast<size_t>(RegcaInternalVariables::II);

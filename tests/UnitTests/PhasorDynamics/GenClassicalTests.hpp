@@ -66,7 +66,7 @@ namespace GridKit
         auto  data = makeGenClassicalData();
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::GenClassical<ScalarT, IdxT>(bus, data);
+          new PhasorDynamics::GenClassical<ScalarT, IdxT>(bus, data);
 
         success *= (machine != nullptr);
 
@@ -97,11 +97,11 @@ namespace GridKit
         data.parameters[Parameter::Xdp] = RealT{2.3};
 
         const std::vector<ScalarT> var_answer = {
-            3.0 * std::numbers::pi_v<RealT> / 4.0, // delta
-            0.0,                                   // omega
-            3.5,                                   // Te
-            1.0,                                   // Ir
-            2.0,                                   // Ii
+          3.0 * std::numbers::pi_v<RealT> / 4.0, // delta
+          0.0,                                   // omega
+          3.5,                                   // Te
+          1.0,                                   // Ir
+          2.0,                                   // Ii
         };
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 1.0);
@@ -381,12 +381,7 @@ namespace GridKit
         gen.getPorts().in.template port<Inputs::pmech>().connect(&pmech);
         gen.getPorts().in.template port<Inputs::efd>().connect(&efd);
 
-        const std::vector<ScalarT> res_answer = {
-            0.0,
-            -0.5,
-            -6.0,
-            2.0,
-            -6.0};
+        const std::vector<ScalarT> res_answer = {0.0, -0.5, -6.0, 2.0, -6.0};
 
         bus.allocate();
         bus.initialize();

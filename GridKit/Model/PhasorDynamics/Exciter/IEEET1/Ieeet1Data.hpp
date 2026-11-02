@@ -77,14 +77,14 @@ namespace GridKit
        * Integer parameters are of the same type as matrix and vector indices.
        */
       template <typename real_type, typename index_type>
-      using Ieeet1Data =
-          ComponentData<real_type,
-                        index_type,
-                        Ieeet1Parameters,
-                        Ieeet1Buses,
-                        Ieeet1SignalInputs,
-                        Ieeet1SignalOutputs,
-                        Ieeet1MonitorableVariables>;
+      using Ieeet1Data = ComponentData<
+        real_type,
+        index_type,
+        Ieeet1Parameters,
+        Ieeet1Buses,
+        Ieeet1SignalInputs,
+        Ieeet1SignalOutputs,
+        Ieeet1MonitorableVariables>;
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -1,4 +1,5 @@
 
+
 #pragma once
 
 #include <exception>
@@ -69,21 +70,24 @@ namespace AnalysisManager
       int configureLinearSolverDense();
       int getDefaultInitialCondition();
       int initializeSimulation(
-          RealT t0, bool findConsistent = true, bool printMonitor = true);
+        RealT t0, bool findConsistent = true, bool printMonitor = true
+      );
 
       int getStepCount(RealT tf, RealT dt) const;
 
       int runSimulation(
-          RealT                       tf,
-          RealT                       dt_monitor    = 0,
-          std::optional<StepCallback> step_callback = {});
+        RealT                       tf,
+        RealT                       dt_monitor    = 0,
+        std::optional<StepCallback> step_callback = {}
+      );
       int runSimulationStep(
-          RealT                       tf,
-          RealT                       dt_monitor,
-          int                         step,
-          int                         nsteps,
-          std::optional<StepCallback> callback     = {},
-          bool                        printMonitor = true);
+        RealT                       tf,
+        RealT                       dt_monitor,
+        int                         step,
+        int                         nsteps,
+        std::optional<StepCallback> callback     = {},
+        bool                        printMonitor = true
+      );
       int deleteSimulation();
 
       int configureQuadrature();
@@ -164,36 +168,39 @@ namespace AnalysisManager
       static int Residual(RealT t, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data);
 
       static int Jac(
-          RealT     t,
-          RealT     cj,
-          N_Vector  yy,
-          N_Vector  yp,
-          N_Vector  resvec,
-          SUNMatrix J,
-          void*     user_data,
-          N_Vector  tmp1,
-          N_Vector  tmp2,
-          N_Vector  tmp3);
+        RealT     t,
+        RealT     cj,
+        N_Vector  yy,
+        N_Vector  yp,
+        N_Vector  resvec,
+        SUNMatrix J,
+        void*     user_data,
+        N_Vector  tmp1,
+        N_Vector  tmp2,
+        N_Vector  tmp3
+      );
 
       static int Integrand(RealT t, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data);
 
       static int adjointResidual(
-          RealT    t,
-          N_Vector yy,
-          N_Vector yp,
-          N_Vector yyB,
-          N_Vector ypB,
-          N_Vector rrB,
-          void*    user_data);
+        RealT    t,
+        N_Vector yy,
+        N_Vector yp,
+        N_Vector yyB,
+        N_Vector ypB,
+        N_Vector rrB,
+        void*    user_data
+      );
 
       static int adjointIntegrand(
-          RealT    t,
-          N_Vector yy,
-          N_Vector yp,
-          N_Vector yyB,
-          N_Vector ypB,
-          N_Vector rhsQB,
-          void*    user_data);
+        RealT    t,
+        N_Vector yy,
+        N_Vector yp,
+        N_Vector yyB,
+        N_Vector ypB,
+        N_Vector rhsQB,
+        void*    user_data
+      );
 
       RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
       int   getIDAConsistentICType() const;
@@ -257,18 +264,20 @@ namespace AnalysisManager
       static void checkOutput(int retval, const char* functionName);
 
       void setIDAOptions(
-          void*   mem,
-          ScalarT time_step,
-          ScalarT rel_tol,
-          ScalarT abs_tol_override,
-          IdxT    max_steps,
-          int     max_order,
-          bool    suppress_alg);
+        void*   mem,
+        ScalarT time_step,
+        ScalarT rel_tol,
+        ScalarT abs_tol_override,
+        IdxT    max_steps,
+        int     max_order,
+        bool    suppress_alg
+      );
       void setTolerance(
-          void*   mem,
-          ScalarT rel_tol,
-          ScalarT abs_tol_override,
-          ScalarT tol_fac = 1);
+        void*   mem,
+        ScalarT rel_tol,
+        ScalarT abs_tol_override,
+        ScalarT tol_fac = 1
+      );
       void setQuadratureTolerance(void* mem, ScalarT rel_tol, ScalarT abs_tol_override);
     };
 

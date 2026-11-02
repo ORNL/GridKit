@@ -35,7 +35,7 @@ namespace GridKit
         // TODO: this should be fixed. sizing this array based on ordering of
         //       variables seems fragile
         std::array<RealT, static_cast<size_t>(ReecbInternalVariables::IQCMD)>
-            variables{};
+          variables{};
         std::array<RealT, Utilities::enum_size<ReecbExternalVariables>()>
               signals{};
         RealT qmin{};
@@ -164,11 +164,14 @@ namespace GridKit
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
-          checks.check(std::isfinite(system_to_component)
-                           && system_to_component > ZERO<RealT>
-                           && std::isfinite(component_to_system)
-                           && component_to_system > ZERO<RealT>,
-                       "system/component power-base conversion ratios must be finite and positive");
+          checks.check(
+            std::isfinite(system_to_component)
+              && system_to_component > ZERO<RealT>
+              && std::isfinite(component_to_system)
+              && component_to_system > ZERO<RealT>,
+            "system/component power-base conversion ratios must be finite and "
+            "positive"
+          );
         }
 
         checks.check(std::isfinite(Trv_), "Trv must be finite");
@@ -411,7 +414,8 @@ namespace GridKit
         // Q priority uses Imax directly for reactive current, so include the
         // smooth-clamp recovery margin carried by iqneed0.
         const auto current_limit = solveInitialLimit(
-            std::max({Imax_, high0, low0, iqneed0}), high0, low0);
+          std::max({Imax_, high0, low0, iqneed0}), high0, low0
+        );
         if (!current_limit)
         {
           Log::error() << "Reecb: adjusted Imax cannot include the initial current commands\n";
@@ -893,13 +897,14 @@ namespace GridKit
        * @param[out] f Internal residuals.
        */
       template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline int
-      Reecb<scalar_type, index_type>::evaluateInternalResidual(
+      [[gnu::always_inline]] inline int Reecb<scalar_type, index_type>::
+        evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
           const ScalarT* wb,
           const ScalarT* ws,
-          ScalarT*       f)
+          ScalarT*       f
+        )
       {
         const auto VMEAS  = static_cast<size_t>(ReecbInternalVariables::VMEAS);
         const auto PMEAS  = static_cast<size_t>(ReecbInternalVariables::PMEAS);
@@ -1084,9 +1089,9 @@ namespace GridKit
         const ValueT normalizer  = absolute + knee;
         const ValueT scaled_x    = absolute / normalizer;
         const ValueT scaled_knee = knee / normalizer;
-        const ValueT magnitude   = normalizer
-                                 * std::sqrt(scaled_x * scaled_x
-                                             + scaled_knee * scaled_knee);
+        const ValueT magnitude =
+          normalizer
+          * std::sqrt(scaled_x * scaled_x + scaled_knee * scaled_knee);
         const ValueT half_sum = HALF<RealT> * magnitude
                                 + HALF<RealT> * absolute;
         const ValueT conjugate = QUARTER<RealT> * knee * (knee / half_sum);
@@ -1119,7 +1124,7 @@ namespace GridKit
                              * (scaled_y + std::hypot(scaled_y, ONE<RealT>));
         const RealT square = hinged
                              - QUARTER<RealT> * CURRENT_CIRCLE_KNEE
-                                   * (CURRENT_CIRCLE_KNEE / hinged);
+                                 * (CURRENT_CIRCLE_KNEE / hinged);
         return std::max(ZERO<RealT>, square);
       }
 
@@ -1155,7 +1160,8 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       auto Reecb<scalar_type, index_type>::solveInitialLimit(
-          RealT lower, RealT high, RealT low) -> std::optional<InitialCurrentLimit>
+        RealT lower, RealT high, RealT low
+      ) -> std::optional<InitialCurrentLimit>
       {
         RealT imax = lower;
         RealT cap  = sqrtramp(circleSquare(imax, high));

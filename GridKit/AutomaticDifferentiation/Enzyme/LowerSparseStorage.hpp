@@ -46,17 +46,19 @@ namespace GridKit
        * @param[in,out] vals - buffer where val will be stored
        * @param[in,out] nnz - number of nonzeros
        */
-      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_store_float_size_t(
-          size_t        row,
-          size_t        col,
-          float         val,
-          float         scaling,
-          const size_t* row_indices,
-          const size_t* col_indices,
-          size_t*       rows,
-          size_t*       cols,
-          float*        vals,
-          size_t&       nnz)
+      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void
+      inner_store_float_size_t(
+        size_t        row,
+        size_t        col,
+        float         val,
+        float         scaling,
+        const size_t* row_indices,
+        const size_t* col_indices,
+        size_t*       rows,
+        size_t*       cols,
+        float*        vals,
+        size_t&       nnz
+      )
       {
         const auto row_mapped = row_indices[static_cast<size_t>(row)];
         const auto col_mapped = col_indices[static_cast<size_t>(col)];
@@ -85,17 +87,19 @@ namespace GridKit
        * @param[in,out] vals - buffer where val will be stored
        * @param[in,out] nnz - number of nonzeros
        */
-      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_store_float_long_int(
-          long int        row,
-          long int        col,
-          float           val,
-          float           scaling,
-          const long int* row_indices,
-          const long int* col_indices,
-          long int*       rows,
-          long int*       cols,
-          float*          vals,
-          long int&       nnz)
+      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void
+      inner_store_float_long_int(
+        long int        row,
+        long int        col,
+        float           val,
+        float           scaling,
+        const long int* row_indices,
+        const long int* col_indices,
+        long int*       rows,
+        long int*       cols,
+        float*          vals,
+        long int&       nnz
+      )
       {
         const auto row_mapped = row_indices[static_cast<size_t>(row)];
         const auto col_mapped = col_indices[static_cast<size_t>(col)];
@@ -124,17 +128,19 @@ namespace GridKit
        * @param[in,out] vals - buffer where val will be stored
        * @param[in,out] nnz - number of nonzeros
        */
-      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_store_double_size_t(
-          size_t        row,
-          size_t        col,
-          double        val,
-          double        scaling,
-          const size_t* row_indices,
-          const size_t* col_indices,
-          size_t*       rows,
-          size_t*       cols,
-          double*       vals,
-          size_t&       nnz)
+      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void
+      inner_store_double_size_t(
+        size_t        row,
+        size_t        col,
+        double        val,
+        double        scaling,
+        const size_t* row_indices,
+        const size_t* col_indices,
+        size_t*       rows,
+        size_t*       cols,
+        double*       vals,
+        size_t&       nnz
+      )
       {
         const auto row_mapped = row_indices[static_cast<size_t>(row)];
         const auto col_mapped = col_indices[static_cast<size_t>(col)];
@@ -163,17 +169,19 @@ namespace GridKit
        * @param[in,out] vals - buffer where val will be stored
        * @param[in,out] nnz - number of nonzeros
        */
-      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_store_double_long_int(
-          long int        row,
-          long int        col,
-          double          val,
-          double          scaling,
-          const long int* row_indices,
-          const long int* col_indices,
-          long int*       rows,
-          long int*       cols,
-          double*         vals,
-          long int&       nnz)
+      [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void
+      inner_store_double_long_int(
+        long int        row,
+        long int        col,
+        double          val,
+        double          scaling,
+        const long int* row_indices,
+        const long int* col_indices,
+        long int*       rows,
+        long int*       cols,
+        double*         vals,
+        long int&       nnz
+      )
       {
         const auto row_mapped = row_indices[static_cast<size_t>(row)];
         const auto col_mapped = col_indices[static_cast<size_t>(col)];
@@ -207,16 +215,17 @@ namespace GridKit
        */
       template <typename ScalarT, typename IdxT>
       __attribute__((always_inline)) static void sparse_store(
-          ScalarT     val,
-          IdxT        row,
-          IdxT        col,
-          ScalarT     scaling,
-          const IdxT* row_indices,
-          const IdxT* col_indices,
-          IdxT*       rows,
-          IdxT*       cols,
-          ScalarT*    vals,
-          IdxT*       nnz)
+        ScalarT     val,
+        IdxT        row,
+        IdxT        col,
+        ScalarT     scaling,
+        const IdxT* row_indices,
+        const IdxT* col_indices,
+        IdxT*       rows,
+        IdxT*       cols,
+        ScalarT*    vals,
+        IdxT*       nnz
+      )
       {
         if (val == 0.0)
           return;

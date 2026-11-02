@@ -107,7 +107,9 @@ int main()
 
   // Create dynamic objective interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
-      new IpoptInterface::DynamicObjective<double, size_t>(&idas, t_init, t_final, dt_monitor);
+    new IpoptInterface::DynamicObjective<double, size_t>(
+      &idas, t_init, t_final, dt_monitor
+    );
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);
@@ -135,7 +137,9 @@ int main()
 
   // Create dynamic constraint interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicConstraintInterface =
-      new IpoptInterface::DynamicConstraint<double, size_t>(&idas, t_init, t_final, dt_monitor);
+    new IpoptInterface::DynamicConstraint<double, size_t>(
+      &idas, t_init, t_final, dt_monitor
+    );
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);

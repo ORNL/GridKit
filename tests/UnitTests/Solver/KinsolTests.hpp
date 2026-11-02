@@ -84,13 +84,14 @@ namespace GridKit
         outcome *= isEqual(values[1], 3.0);
 
         solver.runSimulation(
-            values,
-            [](auto x, auto f)
-            {
-              f[0] = x[0] - 7.0;
-              f[1] = x[1] + 1.0;
-              return 0;
-            });
+          values,
+          [](auto x, auto f)
+          {
+            f[0] = x[0] - 7.0;
+            f[1] = x[1] + 1.0;
+            return 0;
+          }
+        );
         outcome *= isEqual(values[0], 7.0);
         outcome *= isEqual(values[1], -1.0);
 

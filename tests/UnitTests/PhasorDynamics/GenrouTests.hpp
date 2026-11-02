@@ -70,7 +70,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, GenrouDataT{});
+          new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, GenrouDataT{});
 
         success *= (machine != nullptr);
 
@@ -227,23 +227,24 @@ namespace GridKit
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
         const std::vector<ScalarT> res_answer = {
-            -2.0 * std::numbers::pi_v<RealT> * 60.0,
-            -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
-            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
-            -54.75,
-            -9.6,
-            static_cast<ScalarT>(892.) / static_cast<ScalarT>(375.),
-            0.21,
-            -0.07,
-            -0.19223748416156686,
-            2.0,
-            1.4,
-            0.31,
-            2.211,
-            0.85,
-            1.2,
-            -static_cast<ScalarT>(13.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(143.) / static_cast<ScalarT>(52.)};
+          -2.0 * std::numbers::pi_v<RealT> * 60.0,
+          -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
+          -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
+          -54.75,
+          -9.6,
+          static_cast<ScalarT>(892.) / static_cast<ScalarT>(375.),
+          0.21,
+          -0.07,
+          -0.19223748416156686,
+          2.0,
+          1.4,
+          0.31,
+          2.211,
+          0.85,
+          1.2,
+          -static_cast<ScalarT>(13.) / static_cast<ScalarT>(130.),
+          -static_cast<ScalarT>(143.) / static_cast<ScalarT>(52.)
+        };
 
         bus.allocate();
         bus.initialize();

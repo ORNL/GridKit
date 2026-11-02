@@ -72,13 +72,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    using GenClassicalData =
-        ComponentData<real_type,
-                      index_type,
-                      GenClassicalParameters,
-                      GenClassicalBuses,
-                      GenClassicalSignalInputs,
-                      GenClassicalSignalOutputs,
-                      GenClassicalMonitorableVariables>;
+    using GenClassicalData = ComponentData<
+      real_type,
+      index_type,
+      GenClassicalParameters,
+      GenClassicalBuses,
+      GenClassicalSignalInputs,
+      GenClassicalSignalOutputs,
+      GenClassicalMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

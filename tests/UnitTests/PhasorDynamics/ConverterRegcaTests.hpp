@@ -37,9 +37,9 @@ namespace GridKit
       ~ConverterRegcaTests() = default;
 
       static constexpr ScalarT kTol =
-          static_cast<ScalarT>(100.0) * std::numeric_limits<ScalarT>::epsilon();
+        static_cast<ScalarT>(100.0) * std::numeric_limits<ScalarT>::epsilon();
       static constexpr RealT kSmoothTol =
-          std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
+        std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
 
       /// Construction, the monitor, and every verify() error class: missing
       /// and invalid parameters, a null bus, and an unlinked command port.
@@ -67,11 +67,14 @@ namespace GridKit
         bad_switch.parameters[Params::sL] = static_cast<IdxT>(2);
 
         success *= configurationRejected(
-            [&]()
-            {
-              PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(&bus, bad_switch);
-              return bad_switch_model.verify();
-            });
+          [&]()
+          {
+            PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(
+              &bus, bad_switch
+            );
+            return bad_switch_model.verify();
+          }
+        );
 
         success *= invalidParameterCase(bus, Params::mva, 0.0);
         success *= invalidParameterCase(bus, Params::IL1, -0.1);
@@ -201,9 +204,9 @@ namespace GridKit
         };
 
         const std::array<RejectionCase, 3> rejected{{
-            {"terminal voltage below VA1", HALF<RealT> * kVa1},
-            {"terminal voltage at Vhvmax", kHvrcmVoltageLimit},
-            {"zero terminal voltage", 0.0},
+          {"terminal voltage below VA1", HALF<RealT> * kVa1},
+          {"terminal voltage at Vhvmax", kHvrcmVoltageLimit},
+          {"zero terminal voltage", 0.0},
         }};
 
         for (const auto& test_case : rejected)
@@ -351,16 +354,16 @@ namespace GridKit
         // The LVACM and LVPL states use the midpoint of their breakpoint
         // interval, where linseg is exactly one half for every MU.
         const std::array<ExpectedResidual, 10> expected{{
-            {Vars::VM, "VM", -0.01},
-            {Vars::IQ, "IQ", 1.52},
-            {Vars::IP, "IP", -0.03},
-            {Vars::VT, "VT", 0.5425},
-            {Vars::IR, "IR", -0.2875},
-            {Vars::II, "II", 0.1265},
-            {Vars::IQEXTRA, "IQEXTRA", -0.03},
-            {Vars::IL, "IL", 0.35},
-            {Vars::PBR, "PBR", 0.0},
-            {Vars::QBR, "QBR", 0.0},
+          {Vars::VM, "VM", -0.01},
+          {Vars::IQ, "IQ", 1.52},
+          {Vars::IP, "IP", -0.03},
+          {Vars::VT, "VT", 0.5425},
+          {Vars::IR, "IR", -0.2875},
+          {Vars::II, "II", 0.1265},
+          {Vars::IQEXTRA, "IQEXTRA", -0.03},
+          {Vars::IL, "IL", 0.35},
+          {Vars::PBR, "PBR", 0.0},
+          {Vars::QBR, "QBR", 0.0},
         }};
 
         const auto& residual  = fixture.regca.getResidual();
@@ -402,12 +405,12 @@ namespace GridKit
           };
 
           const std::array<RateCase, 6> cases{{
-              {"negative outward rate", -0.5, -1.5, -0.7},
-              {"negative restoring rate", -0.5, 0.5, 5.0},
-              {"zero negative rate", 0.0, -0.5, -0.7},
-              {"zero positive rate", 0.0, 0.5, 0.7},
-              {"positive restoring rate", 0.5, -0.5, -5.0},
-              {"positive outward rate", 0.5, 1.5, 0.7},
+            {"negative outward rate", -0.5, -1.5, -0.7},
+            {"negative restoring rate", -0.5, 0.5, 5.0},
+            {"zero negative rate", 0.0, -0.5, -0.7},
+            {"zero positive rate", 0.0, 0.5, 0.7},
+            {"positive restoring rate", 0.5, -0.5, -5.0},
+            {"positive outward rate", 0.5, 1.5, 0.7},
           }};
 
           auto* y = fixture.regca.y().getData();
@@ -420,9 +423,9 @@ namespace GridKit
             success *= (fixture.evaluate() == 0);
 
             const auto* f  = fixture.regca.getResidual().getData();
-            success       *= scalarMatches(f[index(Vars::IP)],
-                                     test_case.expected_rate,
-                                     test_case.label);
+            success        *= scalarMatches(
+              f[index(Vars::IP)], test_case.expected_rate, test_case.label
+            );
           }
         }
 
@@ -437,9 +440,9 @@ namespace GridKit
         // Above the LVPL ceiling, outward motion is blocked and restoring
         // motion passes. Bypassing LVPL leaves the same outward drive intact.
         const std::array<LvplCase, 3> cases{{
-            {"outward rate blocked by LVPL", true, 0.7, 0.0},
-            {"restoring rate passes LVPL", true, 0.5, -0.5},
-            {"outward rate with LVPL bypassed", false, 0.7, 0.5},
+          {"outward rate blocked by LVPL", true, 0.7, 0.0},
+          {"restoring rate passes LVPL", true, 0.5, -0.5},
+          {"outward rate with LVPL bypassed", false, 0.7, 0.5},
         }};
 
         for (const auto& test_case : cases)
@@ -463,9 +466,9 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IP)],
-                                   test_case.expected_rate,
-                                   test_case.label);
+          success        *= scalarMatches(
+            f[index(Vars::IP)], test_case.expected_rate, test_case.label
+          );
         }
 
         // The moving-ceiling rule: with VM inside the active LVPL segment and
@@ -488,9 +491,9 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IP)],
-                                   -1.925,
-                                   "falling ceiling drags Ip");
+          success        *= scalarMatches(
+            f[index(Vars::IP)], -1.925, "falling ceiling drags Ip"
+          );
         }
 
         // Above the upper breakpoint the ceiling releases: outward motion
@@ -509,9 +512,9 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
 
           const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IP)],
-                                   0.7,
-                                   "released ceiling above the breakpoint");
+          success        *= scalarMatches(
+            f[index(Vars::IP)], 0.7, "released ceiling above the breakpoint"
+          );
         }
 
         return success.report(__func__);
@@ -535,10 +538,10 @@ namespace GridKit
 
         // The unlimited rate is (command - Q0) / Tg with Tg = 0.2.
         const std::array<RecoveryCase, 4> cases{{
-            {"upper recovery limit binds", 0.2, 0.4, 0.5},
-            {"lower recovery limit binds", -0.2, -0.4, -0.6},
-            {"zero Q0 leaves rising rates unrestricted", 0.0, 0.4, 2.0},
-            {"zero Q0 leaves falling rates unrestricted", 0.0, -0.4, -2.0},
+          {"upper recovery limit binds", 0.2, 0.4, 0.5},
+          {"lower recovery limit binds", -0.2, -0.4, -0.6},
+          {"zero Q0 leaves rising rates unrestricted", 0.0, 0.4, 2.0},
+          {"zero Q0 leaves falling rates unrestricted", 0.0, -0.4, -2.0},
         }};
 
         for (const auto& test_case : cases)
@@ -580,10 +583,14 @@ namespace GridKit
 
           const auto* y              = fixture.regca.y().getData();
           const RealT extra_current  = y[index(Vars::IQEXTRA)];
-          success                   *= scalarMatches(
-              extra_current, hvrcmTransition(), "IQEXTRA at initialization");
+          success                    *= scalarMatches(
+            extra_current, hvrcmTransition(), "IQEXTRA at initialization"
+          );
           success *= scalarMatches(
-              y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)], 0.1 / terminal_voltage, "IQ preserves Q0 after HVRCM compensation");
+            y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)],
+            0.1 / terminal_voltage,
+            "IQ preserves Q0 after HVRCM compensation"
+          );
           success *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR");
         }
 
@@ -646,12 +653,13 @@ namespace GridKit
 
           success *= (fixture.evaluate() == 0);
 
-          const auto& dependencies =
-              fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)].getDependencies();
+          const auto& dependencies = fixture.regca.getResidual()
+                                       .getData()[index(Vars::IQEXTRA)]
+                                       .getDependencies();
 
           const DepVar::DependencyMap expected{{
-              {2 * index(Vars::VT), 0.5},       // @todo remove these
-              {2 * index(Vars::IQEXTRA), -0.5}, // @todo remove these
+            {2 * index(Vars::VT), 0.5},       // @todo remove these
+            {2 * index(Vars::IQEXTRA), -0.5}, // @todo remove these
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -668,9 +676,9 @@ namespace GridKit
 
         const RealT                transition_current = 1.0 / Math::MU<RealT>;
         const std::array<RealT, 3> currents{{
-            -transition_current,
-            0.0,
-            transition_current,
+          -transition_current,
+          0.0,
+          transition_current,
         }};
 
         for (const bool lvpl_enabled : {false, true})
@@ -681,17 +689,18 @@ namespace GridKit
           for (const RealT current : currents)
           {
             const auto dependency_tracking_jacobian =
-                dependencyTrackingJacobian(data, current, success);
+              dependencyTrackingJacobian(data, current, success);
             const auto enzyme_jacobian = enzymeJacobian(data, current, success);
 
-            const auto nrows = std::min(dependency_tracking_jacobian.size(),
-                                        enzyme_jacobian.size());
+            const auto nrows = std::min(
+              dependency_tracking_jacobian.size(), enzyme_jacobian.size()
+            );
 
             for (size_t i = 0; i < nrows; ++i)
             {
-              if (!isEqual(dependency_tracking_jacobian[i],
-                           enzyme_jacobian[i],
-                           kTol))
+              if (!isEqual(
+                    dependency_tracking_jacobian[i], enzyme_jacobian[i], kTol
+                  ))
               {
                 std::cout << "Jacobian row " << i
                           << " mismatch between dependency tracking and Enzyme"
@@ -815,8 +824,8 @@ namespace GridKit
 
       /// Offset whose smooth-ramp tail decays by one significand width.
       static constexpr RealT kHvrcmOffset =
-          static_cast<RealT>(std::numeric_limits<RealT>::digits)
-          * std::numbers::ln2_v<RealT> / Math::MU<RealT>;
+        static_cast<RealT>(std::numeric_limits<RealT>::digits)
+        * std::numbers::ln2_v<RealT> / Math::MU<RealT>;
 
       static constexpr RealT hvrcmTransition()
       {
@@ -942,11 +951,12 @@ namespace GridKit
         auto data              = makeData();
         data.parameters[param] = value;
         return configurationRejected(
-            [&]()
-            {
-              PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
-              return model.verify();
-            });
+          [&]()
+          {
+            PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
+            return model.verify();
+          }
+        );
       }
 
       bool allResidualsZero(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca) const
@@ -970,10 +980,12 @@ namespace GridKit
         return success;
       }
 
-      bool scalarMatches(ScalarT     actual,
-                         ScalarT     expected,
-                         const char* label,
-                         RealT       tolerance = kTol) const
+      bool scalarMatches(
+        ScalarT     actual,
+        ScalarT     expected,
+        const char* label,
+        RealT       tolerance = kTol
+      ) const
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -991,8 +1003,8 @@ namespace GridKit
       /// transition points, where the Jacobian has the richest structure.
       template <typename T>
       void setJacobianState(
-          PhasorDynamics::Converter::Regca<T, IdxT>& regca,
-          RealT                                      current)
+        PhasorDynamics::Converter::Regca<T, IdxT>& regca, RealT current
+      )
       {
         setResidualState(regca);
         auto* y                 = regca.y().getData();
@@ -1003,10 +1015,10 @@ namespace GridKit
         regca.y().setDataUpdated();
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
-          const Data& data,
-          RealT       current,
-          TestStatus& success)
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      dependencyTrackingJacobian(
+        const Data& data, RealT current, TestStatus& success
+      )
       {
         using DepVar = DependencyTracking::Variable;
 
@@ -1028,9 +1040,8 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
-          const Data& data,
-          RealT       current,
-          TestStatus& success)
+        const Data& data, RealT current, TestStatus& success
+      )
       {
         Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
         fixture.attachIpcmd(kStateIpcmd);

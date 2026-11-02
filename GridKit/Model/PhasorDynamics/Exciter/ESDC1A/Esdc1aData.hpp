@@ -85,14 +85,14 @@ namespace GridKit
        * @see Esdc1a
        */
       template <typename real_type, typename index_type>
-      using Esdc1aData =
-          ComponentData<real_type,
-                        index_type,
-                        Esdc1aParameters,
-                        Esdc1aBuses,
-                        Esdc1aSignalInputs,
-                        Esdc1aSignalOutputs,
-                        Esdc1aMonitorableVariables>;
+      using Esdc1aData = ComponentData<
+        real_type,
+        index_type,
+        Esdc1aParameters,
+        Esdc1aBuses,
+        Esdc1aSignalInputs,
+        Esdc1aSignalOutputs,
+        Esdc1aMonitorableVariables>;
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

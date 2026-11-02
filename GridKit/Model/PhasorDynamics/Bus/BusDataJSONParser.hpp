@@ -34,10 +34,9 @@ namespace GridKit
 
       if (!Utilities::isValidIdentifier(bd.name))
       {
-        Log::error()
-            << "\n\tBus name may contain only ASCII letters, digits, "
-               "spaces, '_', '.' and '-'."
-            << error_context.str() << std::endl;
+        Log::error() << "\n\tBus name may contain only ASCII letters, digits, "
+                        "spaces, '_', '.' and '-'."
+                     << error_context.str() << std::endl;
         throw std::runtime_error("JSON parser failed");
       }
 
@@ -132,7 +131,7 @@ namespace GridKit
           auto input = Utilities::enum_cast<SignalInputs>(raw_input.key());
           if (input.has_value()
               && static_cast<size_t>(input.value())
-                     < Utilities::enum_size<SignalInputs>())
+                   < Utilities::enum_size<SignalInputs>())
           {
             raw_input.value().get_to(bd.signal_inputs[input.value()]);
           }
@@ -147,7 +146,7 @@ namespace GridKit
           auto output = Utilities::enum_cast<SignalOutputs>(raw_output.key());
           if (output.has_value()
               && static_cast<size_t>(output.value())
-                     < Utilities::enum_size<SignalOutputs>())
+                   < Utilities::enum_size<SignalOutputs>())
           {
             raw_output.value().get_to(bd.signal_outputs[output.value()]);
           }

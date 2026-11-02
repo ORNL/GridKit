@@ -52,8 +52,10 @@ namespace GridKit
      * use
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data,
-                                                      const std::vector<BusT*>&           external_buses)
+    SystemModel<scalar_type, index_type>::SystemModel(
+      const SystemModelData<RealT, IdxT>& data,
+      const std::vector<BusT*>&           external_buses
+    )
       : SystemModel()
     {
       using namespace Governor;
@@ -123,9 +125,8 @@ namespace GridKit
           bus2_index = branchdata.buses.at(BranchBuses::bus2);
         }
 
-        auto* branch = new BranchT(getBus(bus1_index),
-                                   getBus(bus2_index),
-                                   branchdata);
+        auto* branch =
+          new BranchT(getBus(bus1_index), getBus(bus2_index), branchdata);
 
         addComponent(branch, branchdata.label());
       }
@@ -152,8 +153,8 @@ namespace GridKit
         {
           bus_index = loadzipdata.buses.at(LoadZIPBuses::bus);
         }
-        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
-                                                   loadzipdata);
+        auto* loadzip =
+          new LoadZIP<ScalarT, IdxT>(getBus(bus_index), loadzipdata);
         addComponent(loadzip, loadzipdata.label());
       }
 
@@ -955,8 +956,7 @@ namespace GridKit
 
       IdxT gridkit_component_id = static_cast<IdxT>(components_.size());
       component->setGridKitComponentID(gridkit_component_id);
-      component->setSystemBase(this->freq_system_base_,
-                               this->va_system_base_);
+      component->setSystemBase(this->freq_system_base_, this->va_system_base_);
       components_.push_back(component);
       component_labels_.push_back(label);
       if (!label.empty())
@@ -1008,7 +1008,8 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::setSystemBase(
-        RealT freq_system_base, RealT va_system_base)
+      RealT freq_system_base, RealT va_system_base
+    )
     {
       ComponentT::setSystemBase(freq_system_base, va_system_base);
 

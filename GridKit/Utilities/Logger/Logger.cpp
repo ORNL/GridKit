@@ -44,7 +44,7 @@ namespace GridKit
      *
      * @pre `output_streams_` vector is allocated
      * @post Verbosity level is set to user supplied value `v` and outputs
-     * for `output_streams_` are set accordingly.
+     *       for `output_streams_` are set accordingly.
      */
     void Logger::setVerbosity(Verbosity v)
     {
@@ -60,7 +60,7 @@ namespace GridKit
      *
      * @pre `output_streams_` vector is allocated
      * @post Verbosity level is the larger of its previous value and `v`, and
-     * outputs for `output_streams_` are set accordingly.
+     *       outputs for `output_streams_` are set accordingly.
      */
     void Logger::raiseVerbosity(Verbosity v)
     {
@@ -87,8 +87,8 @@ namespace GridKit
      *
      * @pre Vector `output_streams` is allocated and correctly initialized.
      * @post All streams `output_stream_[i]`, where `i <= verbosity_` are
-     * directed to stream `logger_`. The rest are sent to null device
-     * (not printed).
+     *       directed to stream `logger_`. The rest are sent to null device
+     *       (not printed).
      */
     void Logger::updateVerbosity(std::vector<std::ostream*>& output_streams)
     {
@@ -133,7 +133,7 @@ namespace GridKit
     {
       using namespace Colors;
       *(output_streams_[WARNINGS])
-          << "[" << YELLOW << "WARNING" << CLEAR << "] ";
+        << "[" << YELLOW << "WARNING" << CLEAR << "] ";
       return *(output_streams_[WARNINGS]);
     }
 
@@ -155,7 +155,7 @@ namespace GridKit
      * @brief Returns reference to output stream for all other messages.
      *
      * @return Reference to output stream to miscellaneous messages
-     * in `output_streams_`.
+     *         in `output_streams_`.
      *
      * @pre `output_streams_` vector is allocated and correctly initialized.
      */
@@ -205,7 +205,7 @@ namespace GridKit
      *
      * @pre Output file `file_` has been opened.
      * @post Output file `file_` is closed and active output streams are
-     * set to default output `std::cout`.
+     *       set to default output `std::cout`.
      */
     void Logger::closeOutputFile()
     {

@@ -129,10 +129,10 @@ namespace GridKit
       ExternalConnection<ScalarT, IdxT> getNodeConnection(size_t local_index) const
       {
         return ExternalConnection<ScalarT, IdxT>{
-            .y_   = y_ext_[local_index],
-            .yp_  = yp_ext_[local_index],
-            .f_   = f_ext_[local_index],
-            .idx_ = connection_nodes_[local_index],
+          .y_   = y_ext_[local_index],
+          .yp_  = yp_ext_[local_index],
+          .f_   = f_ext_[local_index],
+          .idx_ = connection_nodes_[local_index],
         };
       }
 

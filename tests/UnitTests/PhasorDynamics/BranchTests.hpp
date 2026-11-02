@@ -38,7 +38,9 @@ namespace GridKit
         auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
 
         PhasorDynamics::Component<ScalarT, IdxT>* branch =
-            new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
+          new PhasorDynamics::Branch<ScalarT, IdxT>(
+            bus1, bus2, PhasorDynamics::BranchData<RealT, IdxT>{}
+          );
 
         success *= (branch != nullptr);
 
@@ -386,11 +388,14 @@ namespace GridKit
         const RealT nan = std::numeric_limits<RealT>::quiet_NaN();
 
         success *= configurationRejected(
-            [&]()
-            {
-              PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, branchData(nan, 0.1, 0.0, 0.0));
-              return nonfinite_branch.verify();
-            });
+          [&]()
+          {
+            PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(
+              &bus1, &bus2, branchData(nan, 0.1, 0.0, 0.0)
+            );
+            return nonfinite_branch.verify();
+          }
+        );
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -456,12 +461,14 @@ namespace GridKit
       }
 
     private:
-      static PhasorDynamics::BranchData<RealT, IdxT> branchData(const RealT R,
-                                                                const RealT X,
-                                                                const RealT G,
-                                                                const RealT B,
-                                                                const RealT tap   = 1.0,
-                                                                const RealT phase = 0.0)
+      static PhasorDynamics::BranchData<RealT, IdxT> branchData(
+        const RealT R,
+        const RealT X,
+        const RealT G,
+        const RealT B,
+        const RealT tap   = 1.0,
+        const RealT phase = 0.0
+      )
       {
         using Parameter = PhasorDynamics::BranchParameters;
 
@@ -475,12 +482,15 @@ namespace GridKit
         return data;
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
-                                                                                  const RealT X,
-                                                                                  const RealT G,
-                                                                                  const RealT B,
-                                                                                  const RealT tap   = 1.0,
-                                                                                  const RealT phase = 0.0)
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      analyticalJacobian(
+        const RealT R,
+        const RealT X,
+        const RealT G,
+        const RealT B,
+        const RealT tap   = 1.0,
+        const RealT phase = 0.0
+      )
       {
         const RealT denom   = R * R + X * X;
         const RealT g       = R / denom;

@@ -103,8 +103,9 @@ namespace GridKit
 
         if (auto pmech_port = ports_.out.template port<GastPtiSignalOutputs::pmech>())
         {
-          pmech_port.link(&y[PMECH],
-                          &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
+          pmech_port.link(
+            &y[PMECH], &(this->getVariableIndex(static_cast<IdxT>(PMECH)))
+          );
         }
 
         allocated_ = true;
@@ -128,10 +129,14 @@ namespace GridKit
         Model::ConfigurationChecks checks("GastPti");
 
         checks.check(std::isfinite(R_) && R_ > ZERO<RealT>, "R must be finite and positive");
-        checks.check(std::isfinite(At_) && At_ >= ZERO<RealT>,
-                     "At must be finite and non-negative");
-        checks.check(std::isfinite(Kt_) && Kt_ >= ZERO<RealT>,
-                     "Kt must be finite and non-negative");
+        checks.check(
+          std::isfinite(At_) && At_ >= ZERO<RealT>,
+          "At must be finite and non-negative"
+        );
+        checks.check(
+          std::isfinite(Kt_) && Kt_ >= ZERO<RealT>,
+          "Kt must be finite and non-negative"
+        );
 
         const bool finite_limits = std::isfinite(Vmin_) && std::isfinite(Vmax_);
         checks.check(finite_limits, "Vmin and Vmax must be finite");
@@ -140,8 +145,10 @@ namespace GridKit
           checks.check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
         }
 
-        checks.check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
-                     "Dturb must be finite and non-negative");
+        checks.check(
+          std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
+          "Dturb must be finite and non-negative"
+        );
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
@@ -153,19 +160,24 @@ namespace GridKit
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
-          checks.check(std::isfinite(system_to_component)
-                           && system_to_component > ZERO<RealT>
-                           && std::isfinite(component_to_system)
-                           && component_to_system > ZERO<RealT>,
-                       "system/component power-base conversion ratios must be finite and positive");
+          checks.check(
+            std::isfinite(system_to_component)
+              && system_to_component > ZERO<RealT>
+              && std::isfinite(component_to_system)
+              && component_to_system > ZERO<RealT>,
+            "system/component power-base conversion ratios must be finite and "
+            "positive"
+          );
         }
 
-        checks.check(ports_.out.template port<GastPtiSignalOutputs::pmech>().connected(),
-                     "pmech output must be assigned");
+        checks.check(
+          ports_.out.template port<GastPtiSignalOutputs::pmech>().connected(),
+          "pmech output must be assigned"
+        );
 
         // An attached port must resolve to writable signal storage.
         auto check_attached_signal =
-            [&]<GastPtiSignalInputs variable>(const char* name) -> bool
+          [&]<GastPtiSignalInputs variable>(const char* name) -> bool
         {
           auto port = ports_.in.template port<variable>();
 
@@ -183,12 +195,14 @@ namespace GridKit
           return false;
         };
 
-        const auto omega_linked =
-            check_attached_signal
-                .template operator()<GastPtiSignalInputs::speed>("speed");
-        const auto        pref_linked =
-            check_attached_signal
-                .template operator()<GastPtiSignalInputs::pref>("pref");
+        const auto                       omega_linked =
+          check_attached_signal.template operator()<GastPtiSignalInputs::speed>(
+            "speed"
+          );
+        const auto                       pref_linked =
+          check_attached_signal.template operator()<GastPtiSignalInputs::pref>(
+            "pref"
+          );
 
         if (variable_indices_.size() == static_cast<size_t>(size_))
         {
@@ -197,14 +211,18 @@ namespace GridKit
           if (omega_linked)
           {
             auto omega = ports_.in.template port<GastPtiSignalInputs::speed>();
-            checks.check(omega.signalVariableIndex() != pmech_index,
-                         "speed and pmech ports must use distinct signals");
+            checks.check(
+              omega.signalVariableIndex() != pmech_index,
+              "speed and pmech ports must use distinct signals"
+            );
           }
           if (pref_linked)
           {
             auto pref = ports_.in.template port<GastPtiSignalInputs::pref>();
-            checks.check(pref.signalVariableIndex() != pmech_index,
-                         "pref and pmech ports must use distinct signals");
+            checks.check(
+              pref.signalVariableIndex() != pmech_index,
+              "pref and pmech ports must use distinct signals"
+            );
           }
           if (omega_linked && pref_linked)
           {
@@ -216,8 +234,10 @@ namespace GridKit
             if (omega_index != INVALID_INDEX<IdxT>
                 || pref_index != INVALID_INDEX<IdxT>)
             {
-              checks.check(omega_index != pref_index,
-                           "speed and pref ports must use distinct signals");
+              checks.check(
+                omega_index != pref_index,
+                "speed and pref ports must use distinct signals"
+              );
             }
           }
         }
@@ -324,8 +344,8 @@ namespace GridKit
           const RealT margin = vtemp0 - xflow0;
           if (!std::isfinite(margin) || margin <= ZERO<RealT>)
           {
-            Log::error()
-                << "GastPti: active initial temperature-gate margin must be finite and positive\n";
+            Log::error() << "GastPti: active initial temperature-gate margin "
+                            "must be finite and positive\n";
             return 1;
           }
 
@@ -347,8 +367,8 @@ namespace GridKit
         if (!std::isfinite(vload0) || !std::isfinite(vlv0)
             || !std::isfinite(pref_component0) || !std::isfinite(pref0))
         {
-          Log::error()
-              << "GastPti: initial selector, load-demand, and reference candidates must be finite\n";
+          Log::error() << "GastPti: initial selector, load-demand, and "
+                          "reference candidates must be finite\n";
           return 1;
         }
 
@@ -513,13 +533,14 @@ namespace GridKit
        * @param[out] f Model-owned residuals in `GastPtiInternalVariables` order.
        */
       template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline int
-      GastPti<scalar_type, index_type>::evaluateInternalResidual(
+      [[gnu::always_inline]] inline int GastPti<scalar_type, index_type>::
+        evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
           const ScalarT* wb,
           const ScalarT* ws,
-          ScalarT*       f)
+          ScalarT*       f
+        )
       {
         const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
         const auto XFLOW  = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
@@ -549,8 +570,9 @@ namespace GridKit
         const ScalarT omega = ws[OMEGA];
         const ScalarT pref  = this->toComponentBase(ws[PREF]);
 
-        const ScalarT valve_target =
-            Math::antiwindup(xvalve, vlv - xvalve, Vmin_response_, Vmax_response_);
+        const ScalarT valve_target = Math::antiwindup(
+          xvalve, vlv - xvalve, Vmin_response_, Vmax_response_
+        );
 
         f[XVALVE] = -xvalve_dot + s_valve_ * valve_target / T1_;
         f[XFLOW]  = -xflow_dot + (-xflow + xvalve) / T2_;

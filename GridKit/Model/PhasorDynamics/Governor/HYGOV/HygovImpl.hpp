@@ -126,10 +126,13 @@ namespace GridKit
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        checks.check(valid_component_base,
-                     "component power base must be finite and positive");
-        checks.check(valid_system_base,
-                     "system power base must be finite and positive");
+        checks.check(
+          valid_component_base,
+          "component power base must be finite and positive"
+        );
+        checks.check(
+          valid_system_base, "system power base must be finite and positive"
+        );
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
@@ -138,8 +141,11 @@ namespace GridKit
                                          && system_to_component > ZERO<RealT>
                                          && std::isfinite(component_to_system)
                                          && component_to_system > ZERO<RealT>;
-          checks.check(valid_base_ratios,
-                       "system/component power-base conversion ratios must be finite and positive");
+          checks.check(
+            valid_base_ratios,
+            "system/component power-base conversion ratios must be finite and "
+            "positive"
+          );
         }
 
         checks.check(Rtemp_ > ZERO<RealT>, "Rtemp must be nonzero");
@@ -186,22 +192,27 @@ namespace GridKit
           const bool  finite_power_range = std::isfinite(minimum_power)
                                           && std::isfinite(maximum_power)
                                           && std::isfinite(power_range);
-          checks.check(finite_power_range,
-                       "mechanical-power range must be finite");
+          checks.check(
+            finite_power_range, "mechanical-power range must be finite"
+          );
           if (finite_power_range)
           {
-            checks.check(power_range > INITIALIZATION_TOLERANCE,
-                         "mechanical power must rise across [Gv0, Gv5]");
+            checks.check(
+              power_range > INITIALIZATION_TOLERANCE,
+              "mechanical power must rise across [Gv0, Gv5]"
+            );
           }
         }
 
-        checks.check(ports_.out.template port<HygovSignalOutputs::pmech>().connected(),
-                     "pmech output signal must be assigned");
+        checks.check(
+          ports_.out.template port<HygovSignalOutputs::pmech>().connected(),
+          "pmech output signal must be assigned"
+        );
 
         // An attached port must resolve to readable signal storage. The
         // enumerator is a template argument, so each port names itself once.
         auto check_attached_signal =
-            [&]<HygovSignalInputs variable>(const char* name)
+          [&]<HygovSignalInputs variable>(const char* name)
         {
           if (ports_.in.template port<variable>().connected()
               && !ports_.in.template port<variable>().linked())
@@ -557,13 +568,14 @@ namespace GridKit
        * @return int 0 on success.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int
-      Hygov<scalar_type, index_type>::evaluateInternalResidual(
+      __attribute__((always_inline)) inline int Hygov<scalar_type, index_type>::
+        evaluateInternalResidual(
           const ScalarT*                  y,
           const ScalarT*                  yp,
           [[maybe_unused]] const ScalarT* wb,
           const ScalarT*                  ws,
-          ScalarT*                        f)
+          ScalarT*                        f
+        )
       {
         const auto XN      = static_cast<size_t>(HygovInternalVariables::XN);
         const auto XF      = static_cast<size_t>(HygovInternalVariables::XF);
@@ -744,16 +756,18 @@ namespace GridKit
         { return value != ZERO<RealT>; };
 
         const bool curve_supplied =
-            std::any_of(Gv_.begin(), Gv_.end(), is_nonzero)
-            || std::any_of(Pgv_.begin(), Pgv_.end(), is_nonzero);
+          std::any_of(Gv_.begin(), Gv_.end(), is_nonzero)
+          || std::any_of(Pgv_.begin(), Pgv_.end(), is_nonzero);
         if (!curve_supplied)
         {
-          Gv_  = {ZERO<RealT>,
-                  static_cast<RealT>(0.2),
-                  static_cast<RealT>(0.4),
-                  static_cast<RealT>(0.6),
-                  static_cast<RealT>(0.8),
-                  ONE<RealT>};
+          Gv_ = {
+            ZERO<RealT>,
+            static_cast<RealT>(0.2),
+            static_cast<RealT>(0.4),
+            static_cast<RealT>(0.6),
+            static_cast<RealT>(0.8),
+            ONE<RealT>
+          };
           Pgv_ = Gv_;
         }
 
@@ -827,9 +841,9 @@ namespace GridKit
        * @return Steady mechanical power on the component base.
        */
       template <typename scalar_type, typename index_type>
-      typename Hygov<scalar_type, index_type>::RealT
-      Hygov<scalar_type, index_type>::initialMechanicalPower(RealT gate,
-                                                             RealT Hdam) const
+      typename Hygov<scalar_type, index_type>::RealT Hygov<
+        scalar_type,
+        index_type>::initialMechanicalPower(RealT gate, RealT Hdam) const
       {
         const RealT pgv = static_cast<RealT>(gatePower(static_cast<ScalarT>(gate)));
         const RealT q   = std::sqrt(Hdam) * pgv;
@@ -856,12 +870,10 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       template <typename FuncT>
-      typename Hygov<scalar_type, index_type>::RealT
-      Hygov<scalar_type, index_type>::bisectInitialRoot(RealT a,
-                                                        RealT b,
-                                                        RealT fa,
-                                                        RealT fb,
-                                                        FuncT residual)
+      typename Hygov<scalar_type, index_type>::RealT Hygov<
+        scalar_type,
+        index_type>::
+        bisectInitialRoot(RealT a, RealT b, RealT fa, RealT fb, FuncT residual)
       {
         while (true)
         {

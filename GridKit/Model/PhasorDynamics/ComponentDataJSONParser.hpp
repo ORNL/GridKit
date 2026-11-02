@@ -21,26 +21,28 @@ namespace GridKit
     using Log  = ::GridKit::Utilities::Logger;
 
     /// JSON parser function for the `ComponentData` class and descendants
-    template <typename RealT,
-              typename IdxT,
-              typename Parameters,
-              typename Buses,
-              typename SignalInputs,
-              typename SignalOutputs,
-              typename MonitorableVariables>
-      requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Buses>
-               && std::is_enum_v<SignalInputs>
-               && std::is_enum_v<SignalOutputs>
+    template <
+      typename RealT,
+      typename IdxT,
+      typename Parameters,
+      typename Buses,
+      typename SignalInputs,
+      typename SignalOutputs,
+      typename MonitorableVariables>
+      requires std::is_enum_v<Parameters> && std::is_enum_v<Buses>
+               && std::is_enum_v<SignalInputs> && std::is_enum_v<SignalOutputs>
                && std::is_enum_v<MonitorableVariables>
-    void from_json(const json&                          j,
-                   ComponentData<RealT,
-                                 IdxT,
-                                 Parameters,
-                                 Buses,
-                                 SignalInputs,
-                                 SignalOutputs,
-                                 MonitorableVariables>& c)
+    void from_json(
+      const json& j,
+      ComponentData<
+        RealT,
+        IdxT,
+        Parameters,
+        Buses,
+        SignalInputs,
+        SignalOutputs,
+        MonitorableVariables>& c
+    )
     {
       j.at("class").get_to(c.device_class);
 
@@ -53,10 +55,9 @@ namespace GridKit
 
       if (!Utilities::isValidIdentifier(c.disambiguation_string))
       {
-        Log::error()
-            << "\n\tDevice id may contain only ASCII letters, digits, "
-               "spaces, '_', '.' and '-'."
-            << error_context.str() << std::endl;
+        Log::error() << "\n\tDevice id may contain only ASCII letters, digits, "
+                        "spaces, '_', '.' and '-'."
+                     << error_context.str() << std::endl;
         throw std::runtime_error("JSON parser failed");
       }
 
@@ -110,8 +111,7 @@ namespace GridKit
       {
         auto bus = Utilities::enum_cast<Buses>(raw_port.key());
         if (bus.has_value()
-            && static_cast<size_t>(bus.value())
-                   < Utilities::enum_size<Buses>())
+            && static_cast<size_t>(bus.value()) < Utilities::enum_size<Buses>())
         {
           raw_port.value().get_to(c.buses[bus.value()]);
           continue;
@@ -120,17 +120,17 @@ namespace GridKit
         auto signal_input = Utilities::enum_cast<SignalInputs>(raw_port.key());
         if (signal_input.has_value()
             && static_cast<size_t>(signal_input.value())
-                   < Utilities::enum_size<SignalInputs>())
+                 < Utilities::enum_size<SignalInputs>())
         {
           raw_port.value().get_to(c.signal_inputs[signal_input.value()]);
           continue;
         }
 
         auto signal_output =
-            Utilities::enum_cast<SignalOutputs>(raw_port.key());
+          Utilities::enum_cast<SignalOutputs>(raw_port.key());
         if (signal_output.has_value()
             && static_cast<size_t>(signal_output.value())
-                   < Utilities::enum_size<SignalOutputs>())
+                 < Utilities::enum_size<SignalOutputs>())
         {
           raw_port.value().get_to(c.signal_outputs[signal_output.value()]);
           continue;

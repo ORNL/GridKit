@@ -57,8 +57,8 @@ namespace GridKit
       monitor_->set(Variable::Vi, [this]
                     { return Vi(); });
       monitor_->set(
-          Variable::Vm, [this]
-          { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+        Variable::Vm, [this] { return std::sqrt(Vr() * Vr() + Vi() * Vi()); }
+      );
       monitor_->set(Variable::Va, [this]
                     { return std::atan2(Vi(), Vr()); });
     }
@@ -144,15 +144,19 @@ namespace GridKit
         const auto& port = ports_.in.template port<input>();
         if (!port.connected())
         {
-          checks.fail(std::format(
+          checks.fail(
+            std::format(
               "{} signal inlet is not connected; a default current is not "
               "allowed",
-              name));
+              name
+            )
+          );
         }
         else if (!port.linked())
         {
           checks.fail(
-              std::format("{} signal attached with no linked source", name));
+            std::format("{} signal attached with no linked source", name)
+          );
         }
       };
 
@@ -161,10 +165,13 @@ namespace GridKit
         const auto& port = ports_.out.template port<output>();
         if (port.connected() && !port.linked())
         {
-          checks.fail(std::format(
+          checks.fail(
+            std::format(
               "{} signal attached but not linked; connect signal ports before "
               "allocate()",
-              name));
+              name
+            )
+          );
         }
       };
 
@@ -192,7 +199,7 @@ namespace GridKit
       if (status && !(ZERO<RealT> < R * R + X * X))
       {
         Log::error()
-            << "BusSignalVoltageOut: fault impedance R + jX must be nonzero\n";
+          << "BusSignalVoltageOut: fault impedance R + jX must be nonzero\n";
         return 1;
       }
 

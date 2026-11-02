@@ -42,9 +42,7 @@ namespace GridKit
        *
        * @return TestOutcome indicating success or failure of the test
        */
-      TestOutcome constructor(IdxT n,
-                              IdxT m,
-                              IdxT nnz)
+      TestOutcome constructor(IdxT n, IdxT m, IdxT nnz)
       {
         TestStatus success;
         success = true;

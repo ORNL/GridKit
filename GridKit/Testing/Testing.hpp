@@ -128,9 +128,11 @@ namespace GridKit
     }
 
     template <typename T>
-    bool isEqual(const T value,
-                 const T ref,
-                 const T tol = std::numeric_limits<T>::epsilon())
+    bool isEqual(
+      const T value,
+      const T ref,
+      const T tol = std::numeric_limits<T>::epsilon()
+    )
     {
       T error = std::abs(value - ref) / (1.0 + std::abs(ref));
       return (error < tol);
@@ -148,9 +150,11 @@ namespace GridKit
      * @return bool - true if the maps are equal; false otherwise
      */
     template <typename IdxT = size_t, typename RealT = double>
-    inline bool isEqual(std::map<IdxT, RealT> a,
-                        std::map<IdxT, RealT> b,
-                        const RealT           tol = std::numeric_limits<RealT>::epsilon())
+    inline bool isEqual(
+      std::map<IdxT, RealT> a,
+      std::map<IdxT, RealT> b,
+      const RealT           tol = std::numeric_limits<RealT>::epsilon()
+    )
     {
       int fail = 0;
 
@@ -231,8 +235,8 @@ namespace GridKit
     throws(TFunc func, TArgs&&... args)
     {
       return Detail::ThrowsHelper<TErr>{}(
-          [&]()
-          { func(std::forward<TArgs>(args)...); });
+        [&]() { func(std::forward<TArgs>(args)...); }
+      );
     }
 
     /// True when building a model throws `std::invalid_argument` or the

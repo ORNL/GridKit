@@ -63,11 +63,13 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] f - Internal residual
          */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       f)
+        static void eval(
+          ModelT*        model,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          ScalarT*       f
+        )
         {
           model->evaluateInternalResidual(y, yp, wb, f);
         }
@@ -90,12 +92,14 @@ namespace GridKit
          * @param[in] ws - Signal variables
          * @param[out] f - Internal residual
          */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         const ScalarT* ws,
-                         ScalarT*       f)
+        static void eval(
+          ModelT*        model,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f
+        )
         {
           model->evaluateInternalResidual(y, yp, wb, ws, f);
         }
@@ -117,11 +121,13 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
+        static void eval(
+          ModelT*        model,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          ScalarT*       h
+        )
         {
           model->evaluateBusResidual(y, yp, wb, h);
         }
@@ -143,11 +149,13 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
+        static void eval(
+          ModelT*        model,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          ScalarT*       h
+        )
         {
           model->evaluateBusResidual11(y, yp, wb, h);
         }
@@ -169,11 +177,13 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
+        static void eval(
+          ModelT*        model,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          ScalarT*       h
+        )
         {
           model->evaluateBusResidual12(y, yp, wb, h);
         }
@@ -196,11 +206,13 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
+        static void eval(
+          ModelT*        model,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          ScalarT*       h
+        )
         {
           model->evaluateBusResidual21(y, yp, wb, h);
         }
@@ -222,11 +234,13 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT*        model,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         ScalarT*       h)
+        static void eval(
+          ModelT*        model,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          ScalarT*       h
+        )
         {
           model->evaluateBusResidual22(y, yp, wb, h);
         }

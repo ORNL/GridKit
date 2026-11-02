@@ -42,7 +42,7 @@ namespace GridKit
       ~ControllerReecbTests() = default;
 
       static constexpr RealT kTol =
-          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+        static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Validate construction, row layout, defaults, parameters, buses,
       /// signal links, and the time-constant floor.
@@ -61,28 +61,11 @@ namespace GridKit
         success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
 
         const std::array<Vars, Utilities::enum_size<Vars>()> row_order{{
-            Vars::VMEAS,
-            Vars::PMEAS,
-            Vars::XPIQ,
-            Vars::XPIV,
-            Vars::QV,
-            Vars::PORD,
-            Vars::VT,
-            Vars::VSAFE,
-            Vars::SDIP,
-            Vars::IQV,
-            Vars::QREF,
-            Vars::EQ,
-            Vars::VPIQ,
-            Vars::EPIV,
-            Vars::RPORD,
-            Vars::ILCAP,
-            Vars::IQMAX,
-            Vars::IPMAX,
-            Vars::IQBASE,
-            Vars::IQRAW,
-            Vars::IQCMD,
-            Vars::IPCMD,
+          Vars::VMEAS, Vars::PMEAS, Vars::XPIQ,  Vars::XPIV,   Vars::QV,
+          Vars::PORD,  Vars::VT,    Vars::VSAFE, Vars::SDIP,   Vars::IQV,
+          Vars::QREF,  Vars::EQ,    Vars::VPIQ,  Vars::EPIV,   Vars::RPORD,
+          Vars::ILCAP, Vars::IQMAX, Vars::IPMAX, Vars::IQBASE, Vars::IQRAW,
+          Vars::IQCMD, Vars::IPCMD,
         }};
         for (size_t row = 0; row < row_order.size(); ++row)
         {
@@ -96,8 +79,9 @@ namespace GridKit
         success *= (configured.reecb.initialize() != 0);
         success *= (configured.reecb.allocate() == 0);
         success *= (configured.reecb.tagDifferentiable() == 0);
-        success *= (static_cast<size_t>(configured.reecb.getResidual().getSize())
-                    == Utilities::enum_size<Vars>());
+        success *=
+          (static_cast<size_t>(configured.reecb.getResidual().getSize())
+           == Utilities::enum_size<Vars>());
 
         for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
@@ -129,32 +113,13 @@ namespace GridKit
         const RealT                  nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT                  infinity = std::numeric_limits<RealT>::infinity();
         const std::array<Params, 26> real_parameters{{
-            Params::mva,
-            Params::Trv,
-            Params::Tp,
-            Params::Vref0,
-            Params::Vdip,
-            Params::Vup,
-            Params::dbd1,
-            Params::dbd2,
-            Params::kqv,
-            Params::Iql1,
-            Params::Iqh1,
-            Params::Qmax,
-            Params::Qmin,
-            Params::Kqp,
-            Params::Kqi,
-            Params::Vmax,
-            Params::Vmin,
-            Params::Kvp,
-            Params::Kvi,
-            Params::Tiq,
-            Params::Tpord,
-            Params::dPmax,
-            Params::dPmin,
-            Params::Pmax,
-            Params::Pmin,
-            Params::Imax,
+          Params::mva,   Params::Trv,   Params::Tp,    Params::Vref0,
+          Params::Vdip,  Params::Vup,   Params::dbd1,  Params::dbd2,
+          Params::kqv,   Params::Iql1,  Params::Iqh1,  Params::Qmax,
+          Params::Qmin,  Params::Kqp,   Params::Kqi,   Params::Vmax,
+          Params::Vmin,  Params::Kvp,   Params::Kvi,   Params::Tiq,
+          Params::Tpord, Params::dPmax, Params::dPmin, Params::Pmax,
+          Params::Pmin,  Params::Imax,
         }};
         for (const Params parameter : real_parameters)
         {
@@ -177,11 +142,11 @@ namespace GridKit
         success *= invalidParameterCase(Params::Imax, 0.0);
 
         const std::array<Params, 5> nonnegative_gains{{
-            Params::kqv,
-            Params::Kqp,
-            Params::Kqi,
-            Params::Kvp,
-            Params::Kvi,
+          Params::kqv,
+          Params::Kqp,
+          Params::Kqi,
+          Params::Kvp,
+          Params::Kvi,
         }};
         for (const Params gain : nonnegative_gains)
         {
@@ -189,23 +154,23 @@ namespace GridKit
         }
 
         const std::array<Params, 4> flag_parameters{{
-            Params::PfFlag,
-            Params::VFlag,
-            Params::QFlag,
-            Params::Pqflag,
+          Params::PfFlag,
+          Params::VFlag,
+          Params::QFlag,
+          Params::Pqflag,
         }};
         const std::array<bool, 2>   valid_flag_values{{false, true}};
         const std::array<IdxT, 3>   invalid_integral_flag_values{{
-            static_cast<IdxT>(0),
-            static_cast<IdxT>(1),
-            static_cast<IdxT>(2),
+          static_cast<IdxT>(0),
+          static_cast<IdxT>(1),
+          static_cast<IdxT>(2),
         }};
         const std::array<RealT, 5>  invalid_real_flag_values{{
-            static_cast<RealT>(0.0),
-            static_cast<RealT>(0.5),
-            static_cast<RealT>(1.0),
-            nan,
-            infinity,
+          static_cast<RealT>(0.0),
+          static_cast<RealT>(0.5),
+          static_cast<RealT>(1.0),
+          nan,
+          infinity,
         }};
         for (const Params flag : flag_parameters)
         {
@@ -253,28 +218,32 @@ namespace GridKit
         // and saturates the active-power ramp limiter.
         setState(floored.reecb, {{Vars::VMEAS, 0.5}});
         success *= (floored.evaluate() == 0);
-        success *= residualsMatch(floored.reecb,
-                                  {{Vars::VMEAS, 500.0}},
-                                  "floored voltage filter");
+        success *= residualsMatch(
+          floored.reecb, {{Vars::VMEAS, 500.0}}, "floored voltage filter"
+        );
 
-        setState(floored.reecb,
-                 {{Vars::VMEAS, 1.0},
-                  {Vars::PMEAS, 1.0},
-                  {Vars::QV, 1.0},
-                  {Vars::PORD, 1.0}});
+        setState(
+          floored.reecb,
+          {{Vars::VMEAS, 1.0},
+           {Vars::PMEAS, 1.0},
+           {Vars::QV, 1.0},
+           {Vars::PORD, 1.0}}
+        );
         success *= (floored.evaluate() == 0);
-        success *= residualsMatch(floored.reecb,
-                                  {{Vars::PMEAS, 500.0},
-                                   {Vars::QV, 500.0},
-                                   {Vars::RPORD, 1.0}},
-                                  "floored time constants");
+        success *= residualsMatch(
+          floored.reecb,
+          {{Vars::PMEAS, 500.0}, {Vars::QV, 500.0}, {Vars::RPORD, 1.0}},
+          "floored time constants"
+        );
 
         // The algebraic slew row supplies the differential order row.
         setState(floored.reecb, {{Vars::RPORD, 1.0}});
         success *= (floored.evaluate() == 0);
-        success *= residualsMatch(floored.reecb,
-                                  {{Vars::PORD, 1.0}, {Vars::RPORD, 0.0}},
-                                  "floored active-power order rate");
+        success *= residualsMatch(
+          floored.reecb,
+          {{Vars::PORD, 1.0}, {Vars::RPORD, 0.0}},
+          "floored active-power order rate"
+        );
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -293,37 +262,30 @@ namespace GridKit
         success                  *= fixture.initialize(kInitialIqcmd, kInitialIpcmd);
         success                  *= (fixture.evaluate() == 0);
 
-        success *= stateMatches(fixture.reecb,
-                                {{Vars::VMEAS, 1.0},
-                                 {Vars::PMEAS, 1.5},
-                                 {Vars::XPIQ, 0.0},
-                                 {Vars::XPIV, 0.0},
-                                 {Vars::QV, 1.5},
-                                 {Vars::PORD, 1.5},
-                                 {Vars::VT, 1.0},
-                                 {Vars::VSAFE, 1.0},
-                                 {Vars::SDIP, 1.0},
-                                 {Vars::IQV, 0.0},
-                                 {Vars::QREF, 1.5},
-                                 {Vars::EQ, 0.0},
-                                 {Vars::VPIQ, 0.5},
-                                 {Vars::EPIV, 0.0},
-                                 {Vars::RPORD, 0.0},
-                                 {Vars::IPMAX, 2.5},
-                                 {Vars::IQBASE, 0.0},
-                                 {Vars::IQRAW, 1.5},
-                                 {Vars::IQCMD, 0.75},
-                                 {Vars::IPCMD, 0.75}},
-                                "initialization");
-        success *= stateMatches(fixture.reecb,
-                                {{Vars::ILCAP, 2.0}},
-                                "initial current-circle capacity",
-                                kCircleTol);
+        success *= stateMatches(
+          fixture.reecb,
+          {{Vars::VMEAS, 1.0},  {Vars::PMEAS, 1.5},  {Vars::XPIQ, 0.0},
+           {Vars::XPIV, 0.0},   {Vars::QV, 1.5},     {Vars::PORD, 1.5},
+           {Vars::VT, 1.0},     {Vars::VSAFE, 1.0},  {Vars::SDIP, 1.0},
+           {Vars::IQV, 0.0},    {Vars::QREF, 1.5},   {Vars::EQ, 0.0},
+           {Vars::VPIQ, 0.5},   {Vars::EPIV, 0.0},   {Vars::RPORD, 0.0},
+           {Vars::IPMAX, 2.5},  {Vars::IQBASE, 0.0}, {Vars::IQRAW, 1.5},
+           {Vars::IQCMD, 0.75}, {Vars::IPCMD, 0.75}},
+          "initialization"
+        );
+        success *= stateMatches(
+          fixture.reecb,
+          {{Vars::ILCAP, 2.0}},
+          "initial current-circle capacity",
+          kCircleTol
+        );
 
         const auto* initial_values  = fixture.reecb.y().getData();
-        success                    *= scalarMatches(initial_values[index(Vars::IQMAX)],
-                                 initial_values[index(Vars::ILCAP)],
-                                 "initial reactive-current limit");
+        success                     *= scalarMatches(
+          initial_values[index(Vars::IQMAX)],
+          initial_values[index(Vars::ILCAP)],
+          "initial reactive-current limit"
+        );
 
         success *= scalarPreserved(fixture.iqcmd(), kInitialIqcmd, "preserved iqcmd");
         success *= scalarPreserved(fixture.ipcmd(), kInitialIpcmd, "preserved ipcmd");
@@ -334,9 +296,11 @@ namespace GridKit
         success *= scalarMatches(fixture.input(Ext::pref), 0.75, "published pref");
         success *= allResidualsWithinInitTolerance(fixture.reecb);
 
-        success *= monitorMatches(fixture.reecb,
-                                  {{kInitialIqcmd, kInitialIpcmd, 1.0, 1.5}},
-                                  "initialization");
+        success *= monitorMatches(
+          fixture.reecb,
+          {{kInitialIqcmd, kInitialIpcmd, 1.0, 1.5}},
+          "initialization"
+        );
 
         constexpr RealT absolute_tolerance  = 2.5e-7;
         success                            *= (fixture.reecb.setAbsoluteTolerance(absolute_tolerance) == 0);
@@ -372,7 +336,11 @@ namespace GridKit
         success *= initializationRejectedAtomically(data, 0.75, -0.1, "negative active-current command");
         success *= initializationRejectedAtomically(data, 0.75, std::numeric_limits<RealT>::infinity(), "nonfinite active-current command");
         success *= initializationRejectedAtomically(
-            data, std::numeric_limits<RealT>::infinity(), 0.75, "nonfinite reactive-current command");
+          data,
+          std::numeric_limits<RealT>::infinity(),
+          0.75,
+          "nonfinite reactive-current command"
+        );
 
         auto pord_above                     = data;
         pord_above.parameters[Params::Pmax] = 1.0;
@@ -432,8 +400,8 @@ namespace GridKit
         };
 
         const std::array<VoltageLimitCase, 2> voltage_limits{{
-            {0.3, 0.3, 0.3},
-            {1.6, 0.96, 0.8},
+          {0.3, 0.3, 0.3},
+          {1.6, 0.96, 0.8},
         }};
         for (const auto& test_case : voltage_limits)
         {
@@ -467,11 +435,23 @@ namespace GridKit
         success *= (late.evaluate() == 0);
         success *= residualsMatch(late.reecb, {{Vars::PORD, 0.0}}, "rejected Pmax adjustment");
         success *= initializationRejectedAtomically(
-            power_factor, 0.75, 0.75, "unrepresentable power-factor reference", 1.0e-8, 0.75);
+          power_factor,
+          0.75,
+          0.75,
+          "unrepresentable power-factor reference",
+          1.0e-8,
+          0.75
+        );
 
         success *= initializationRejectedAtomically(data, 0.75, 0.75, "zero terminal voltage", 0.75, 0.75, 0.0);
         success *= initializationRejectedAtomically(
-            data, 0.75, 0.75, "nonfinite active-power feedback", std::numeric_limits<RealT>::infinity(), 0.75);
+          data,
+          0.75,
+          0.75,
+          "nonfinite active-power feedback",
+          std::numeric_limits<RealT>::infinity(),
+          0.75
+        );
 
         // Collapsed limits remain pinned at their initial output or expand to
         // include it.
@@ -571,9 +551,9 @@ namespace GridKit
         };
 
         const std::array<ExactnessCase, 3> active_cases{{
-            {1.0e-6, "near the lower active-current limit"},
-            {0.75, "interior active-current command"},
-            {1.25 - 1.0e-6, "near the upper active-current limit"},
+          {1.0e-6, "near the lower active-current limit"},
+          {0.75, "interior active-current command"},
+          {1.25 - 1.0e-6, "near the upper active-current limit"},
         }};
 
         // The recovered order limits are widened so the reconstruction, not
@@ -595,9 +575,9 @@ namespace GridKit
         Fixture<ScalarT> interior(makeData());
         success *= interior.initialize(0.0, 0.75);
         success *= (interior.evaluate() == 0);
-        success *= stateMatches(interior.reecb,
-                                {{Vars::PORD, 1.5}},
-                                "interior active-power order");
+        success *= stateMatches(
+          interior.reecb, {{Vars::PORD, 1.5}}, "interior active-power order"
+        );
 
         // A command whose recovered order lands exactly on the order limit is
         // admitted rather than rejected.
@@ -617,8 +597,8 @@ namespace GridKit
         };
 
         const std::array<AsymmetricSlewCase, 2> asymmetric_slews{{
-            {-0.001, 0.1, "narrow negative ramp limit"},
-            {-0.1, 0.001, "narrow positive ramp limit"},
+          {-0.001, 0.1, "narrow negative ramp limit"},
+          {-0.1, 0.001, "narrow positive ramp limit"},
         }};
 
         for (const auto& test_case : asymmetric_slews)
@@ -631,19 +611,18 @@ namespace GridKit
           asymmetric.attachAllInputs();
           success *= asymmetric.initialize(0.0, 0.75);
           success *= (asymmetric.evaluate() == 0);
-          success *= stateMatches(asymmetric.reecb,
-                                  {{Vars::PORD, 1.5}},
-                                  test_case.label);
+          success *= stateMatches(
+            asymmetric.reecb, {{Vars::PORD, 1.5}}, test_case.label
+          );
           success *= allResidualsWithinInitTolerance(asymmetric.reecb);
-          success *= scalarMatches(asymmetric.input(Ext::pref),
-                                   0.75,
-                                   test_case.label);
+          success *=
+            scalarMatches(asymmetric.input(Ext::pref), 0.75, test_case.label);
         }
 
         // The reactive command shares the inverse, at both signs.
         const std::array<RealT, 2> reactive_commands{{
-            static_cast<RealT>(1.0 - 1.0e-6),
-            static_cast<RealT>(-1.0 + 1.0e-6),
+          static_cast<RealT>(1.0 - 1.0e-6),
+          static_cast<RealT>(-1.0 + 1.0e-6),
         }};
         for (const RealT iqcmd : reactive_commands)
         {
@@ -664,13 +643,13 @@ namespace GridKit
         };
 
         const std::array<BoundaryCase, 7> boundary_cases{{
-            {true, 0.75, 0.0, 2.5, "zero active-current command"},
-            {true, 0.0, 1.25, 0.0, "zero reactive-current capacity"},
-            {true, 1.0, 0.75, 2.0, "upper reactive-current command"},
-            {true, -1.0, 0.75, 2.0, "lower reactive-current command"},
-            {false, 0.75, 1.0, 2.0, "upper active-current command"},
-            {false, 1.25, 0.0, 0.0, "zero active-current capacity"},
-            {true, 0.75, 1.5, 1.5, "expanded current circle"},
+          {true, 0.75, 0.0, 2.5, "zero active-current command"},
+          {true, 0.0, 1.25, 0.0, "zero reactive-current capacity"},
+          {true, 1.0, 0.75, 2.0, "upper reactive-current command"},
+          {true, -1.0, 0.75, 2.0, "lower reactive-current command"},
+          {false, 0.75, 1.0, 2.0, "upper active-current command"},
+          {false, 1.25, 0.0, 0.0, "zero active-current capacity"},
+          {true, 0.75, 1.5, 1.5, "expanded current circle"},
         }};
         for (const auto& test_case : boundary_cases)
         {
@@ -681,10 +660,12 @@ namespace GridKit
           success *= (boundary.evaluate() == 0);
           success *= scalarPreserved(boundary.iqcmd(), test_case.iqcmd, test_case.label);
           success *= scalarPreserved(boundary.ipcmd(), test_case.ipcmd, test_case.label);
-          success *= stateMatches(boundary.reecb,
-                                  {{Vars::ILCAP, test_case.capacity}},
-                                  test_case.label,
-                                  kCircleTol);
+          success *= stateMatches(
+            boundary.reecb,
+            {{Vars::ILCAP, test_case.capacity}},
+            test_case.label,
+            kCircleTol
+          );
           success *= allResidualsWithinInitTolerance(boundary.reecb);
         }
 
@@ -704,8 +685,8 @@ namespace GridKit
         capacity_data.parameters[Params::Imax]   = 0.1;
 
         const std::array<std::pair<RealT, RealT>, 2> capacity_cases{{
-            {1.7, 0.3},
-            {1.5, 0.5},
+          {1.7, 0.3},
+          {1.5, 0.5},
         }};
         for (const auto& [iqcmd, ipcmd] : capacity_cases)
         {
@@ -720,9 +701,8 @@ namespace GridKit
             std::cout << "REECB low-priority capacity does not include its initial command\n";
             success = false;
           }
-          success *= scalarMatches(ilcap,
-                                   iqcmd,
-                                   "minimal low-priority capacity");
+          success *=
+            scalarMatches(ilcap, iqcmd, "minimal low-priority capacity");
           success *= allResidualsWithinInitTolerance(capacity_fixture.reecb);
         }
 
@@ -755,10 +735,12 @@ namespace GridKit
         success                  *= (exhausted.evaluate() == 0);
         success                  *= scalarPreserved(exhausted.iqcmd(), 0.0, "exhausted reactive-current capacity");
 
-        success *= stateMatches(exhausted.reecb,
-                                {{Vars::ILCAP, 0.0}},
-                                "injection does not expand current circle",
-                                kCircleTol);
+        success *= stateMatches(
+          exhausted.reecb,
+          {{Vars::ILCAP, 0.0}},
+          "injection does not expand current circle",
+          kCircleTol
+        );
         success *= allResidualsWithinInitTolerance(exhausted.reecb);
 
         Log::setVerbosity(previous_verbosity);
@@ -778,33 +760,24 @@ namespace GridKit
         success *= (fixture.evaluate() == 0);
 
         const RealT                                                   ideal_circle_leg = circleLeg(1.76);
-        const std::array<VariableValue, Utilities::enum_size<Vars>()> expected_residuals{{
-            {Vars::VMEAS, 0.99},
-            {Vars::PMEAS, 0.145},
-            {Vars::XPIQ, 0.21},
-            {Vars::XPIV, 0.13},
-            {Vars::QV, -0.05},
-            {Vars::PORD, 0.26},
-            {Vars::VT, -0.03},
-            {Vars::VSAFE, 0.0},
-            {Vars::SDIP, 0.0},
-            {Vars::IQV, 0.0},
-            {Vars::QREF, 0.0},
-            {Vars::EQ, 0.0},
-            {Vars::VPIQ, 0.0},
-            {Vars::EPIV, 0.0},
-            {Vars::RPORD, 0.0},
-            {Vars::ILCAP, ideal_circle_leg - 1.20},
-            {Vars::IQMAX, 0.0},
-            {Vars::IPMAX, 0.0},
-            {Vars::IQBASE, 0.0},
-            {Vars::IQRAW, 0.0},
-            {Vars::IQCMD, 0.19},
-            {Vars::IPCMD, 0.05},
-        }};
+        const std::array<VariableValue, Utilities::enum_size<Vars>()>
+          expected_residuals{{
+            {Vars::VMEAS, 0.99}, {Vars::PMEAS, 0.145},
+            {Vars::XPIQ, 0.21},  {Vars::XPIV, 0.13},
+            {Vars::QV, -0.05},   {Vars::PORD, 0.26},
+            {Vars::VT, -0.03},   {Vars::VSAFE, 0.0},
+            {Vars::SDIP, 0.0},   {Vars::IQV, 0.0},
+            {Vars::QREF, 0.0},   {Vars::EQ, 0.0},
+            {Vars::VPIQ, 0.0},   {Vars::EPIV, 0.0},
+            {Vars::RPORD, 0.0},  {Vars::ILCAP, ideal_circle_leg - 1.20},
+            {Vars::IQMAX, 0.0},  {Vars::IPMAX, 0.0},
+            {Vars::IQBASE, 0.0}, {Vars::IQRAW, 0.0},
+            {Vars::IQCMD, 0.19}, {Vars::IPCMD, 0.05},
+          }};
 
-        success *= (static_cast<size_t>(fixture.reecb.getResidual().getSize())
-                    == expected_residuals.size());
+        success *=
+          (static_cast<size_t>(fixture.reecb.getResidual().getSize())
+           == expected_residuals.size());
         for (size_t row = 0; row < expected_residuals.size(); ++row)
         {
           if (index(expected_residuals[row].variable) != row)
@@ -823,12 +796,14 @@ namespace GridKit
             tolerance = kCircleTol;
           }
 
-          success *= variableMatches(residuals[index(variable)],
-                                     expected,
-                                     "residual",
-                                     variable,
-                                     "hand-computable state",
-                                     tolerance);
+          success *= variableMatches(
+            residuals[index(variable)],
+            expected,
+            "residual",
+            variable,
+            "hand-computable state",
+            tolerance
+          );
         }
 
         return success.report(__func__);
@@ -885,10 +860,12 @@ namespace GridKit
                   success *= allResidualsWithinInitTolerance(fixture.reecb);
                   success *= scalarPreserved(fixture.iqcmd(), 0.75, "selector iqcmd");
                   success *= scalarPreserved(fixture.ipcmd(), 0.75, "selector ipcmd");
-                  success *= stateMatches(fixture.reecb,
-                                          {{Vars::ILCAP, 2.0}},
-                                          "selector ILCAP",
-                                          kCircleTol);
+                  success *= stateMatches(
+                    fixture.reecb,
+                    {{Vars::ILCAP, 2.0}},
+                    "selector ILCAP",
+                    kCircleTol
+                  );
 
                   // Exactly one reactive path carries the operating point.
                   const auto* y = fixture.reecb.y().getData();
@@ -963,22 +940,24 @@ namespace GridKit
           // voltage error without power-base conversion.
           fixture.input(Ext::qext)  = 1.2;
           success                  *= (fixture.evaluate() == 0);
-          success                  *= residualsMatch(fixture.reecb,
-                                                     {{Vars::EPIV, 0.2}},
-                                    "unconverted voltage reference");
+          success                   *= residualsMatch(
+            fixture.reecb, {{Vars::EPIV, 0.2}}, "unconverted voltage reference"
+          );
 
           // A reference beyond Vmax is limited.
           fixture.input(Ext::qext)  = 2.0;
           success                  *= (fixture.evaluate() == 0);
-          success                  *= residualsMatch(fixture.reecb,
-                                                     {{Vars::EPIV, 0.5}},
-                                    "limited voltage reference");
+          success                   *= residualsMatch(
+            fixture.reecb, {{Vars::EPIV, 0.5}}, "limited voltage reference"
+          );
 
           setState(fixture.reecb, {{Vars::EPIV, 0.2}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::XPIV, 0.1}},
-                                    "unconverted voltage-reference rate");
+          success *= residualsMatch(
+            fixture.reecb,
+            {{Vars::XPIV, 0.1}},
+            "unconverted voltage-reference rate"
+          );
         }
 
         {
@@ -993,15 +972,17 @@ namespace GridKit
           // converted value drives the current-command lag.
           fixture.input(Ext::qext)  = 0.85;
           success                  *= (fixture.evaluate() == 0);
-          success                  *= residualsMatch(fixture.reecb,
-                                                     {{Vars::QREF, 0.2}},
-                                    "converted reactive reference");
+          success                   *= residualsMatch(
+            fixture.reecb, {{Vars::QREF, 0.2}}, "converted reactive reference"
+          );
 
           setState(fixture.reecb, {{Vars::QREF, 1.7}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::QV, 10.0}},
-                                    "converted reactive-reference rate");
+          success *= residualsMatch(
+            fixture.reecb,
+            {{Vars::QV, 10.0}},
+            "converted reactive-reference rate"
+          );
         }
 
         return success.report(__func__);
@@ -1025,9 +1006,9 @@ namespace GridKit
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::QV, 0.1}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::QREF, 0.8}},
-                                    "constant-reactive reference");
+          success *= residualsMatch(
+            fixture.reecb, {{Vars::QREF, 0.8}}, "constant-reactive reference"
+          );
 
           setState(fixture.reecb, {{Vars::QREF, 0.8}});
           success *= (fixture.evaluate() == 0);
@@ -1035,9 +1016,11 @@ namespace GridKit
 
           setState(fixture.reecb, {{Vars::VT, 0.0}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::SDIP, -1.0}},
-                                    "constant-reactive voltage gate");
+          success *= residualsMatch(
+            fixture.reecb,
+            {{Vars::SDIP, -1.0}},
+            "constant-reactive voltage gate"
+          );
 
           setState(fixture.reecb, {{Vars::SDIP, 0.0}});
           success *= (fixture.evaluate() == 0);
@@ -1058,27 +1041,31 @@ namespace GridKit
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::XPIQ, 0.82}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::QREF, 0.2}},
-                                    "cascaded reactive-power reference");
+          success *= residualsMatch(
+            fixture.reecb,
+            {{Vars::QREF, 0.2}},
+            "cascaded reactive-power reference"
+          );
 
           setState(fixture.reecb, {{Vars::QREF, 0.2}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::EQ, 0.3}},
-                                    "cascaded reactive-power error");
+          success *= residualsMatch(
+            fixture.reecb, {{Vars::EQ, 0.3}}, "cascaded reactive-power error"
+          );
 
           setState(fixture.reecb, {{Vars::EQ, 0.3}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::XPIQ, 0.12}, {Vars::QV, 0.0}},
-                                    "reactive-power integral rate");
+          success *= residualsMatch(
+            fixture.reecb,
+            {{Vars::XPIQ, 0.12}, {Vars::QV, 0.0}},
+            "reactive-power integral rate"
+          );
 
           setState(fixture.reecb, {{Vars::VT, 0.0}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::SDIP, -1.0}},
-                                    "reactive-power voltage gate");
+          success *= residualsMatch(
+            fixture.reecb, {{Vars::SDIP, -1.0}}, "reactive-power voltage gate"
+          );
 
           setState(fixture.reecb, {{Vars::SDIP, 0.0}});
           success *= (fixture.evaluate() == 0);
@@ -1097,21 +1084,23 @@ namespace GridKit
           success                  *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::EPIV, 0.05}},
-                                    "direct-voltage error");
+          success *= residualsMatch(
+            fixture.reecb, {{Vars::EPIV, 0.05}}, "direct-voltage error"
+          );
 
           setState(fixture.reecb, {{Vars::EPIV, 0.05}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::XPIQ, 0.0}, {Vars::XPIV, 0.025}},
-                                    "voltage-control integral rate");
+          success *= residualsMatch(
+            fixture.reecb,
+            {{Vars::XPIQ, 0.0}, {Vars::XPIV, 0.025}},
+            "voltage-control integral rate"
+          );
 
           setState(fixture.reecb, {{Vars::VT, 2.0}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::SDIP, -1.0}},
-                                    "voltage-control voltage gate");
+          success *= residualsMatch(
+            fixture.reecb, {{Vars::SDIP, -1.0}}, "voltage-control voltage gate"
+          );
 
           setState(fixture.reecb, {{Vars::SDIP, 0.0}});
           success *= (fixture.evaluate() == 0);
@@ -1134,9 +1123,9 @@ namespace GridKit
           };
 
           const std::array<ReactiveReferenceCase, 3> reference_cases{{
-              {-0.6, -0.7, -0.28},
-              {0.05, 0.1, 0.04},
-              {0.6, 0.8, 0.32},
+            {-0.6, -0.7, -0.28},
+            {0.05, 0.1, 0.04},
+            {0.6, 0.8, 0.32},
           }};
           for (const auto& test_case : reference_cases)
           {
@@ -1145,18 +1134,24 @@ namespace GridKit
             fixture.input(Ext::qext)  = test_case.input;
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
-            setState(fixture.reecb,
-                     {{Vars::XPIQ, 1.0}, {Vars::QREF, 2.0 * test_case.input}});
+            setState(
+              fixture.reecb,
+              {{Vars::XPIQ, 1.0}, {Vars::QREF, 2.0 * test_case.input}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::EQ, test_case.limited_error}},
-                                      "reactive-power reference limit");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::EQ, test_case.limited_error}},
+              "reactive-power reference limit"
+            );
 
             setState(fixture.reecb, {{Vars::EQ, test_case.limited_error}});
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::XPIQ, test_case.expected_rate}},
-                                      "reactive-power limited-error rate");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::XPIQ, test_case.expected_rate}},
+              "reactive-power limited-error rate"
+            );
           }
         }
 
@@ -1172,11 +1167,11 @@ namespace GridKit
           data.parameters[Params::Qmax]  = 3.0;
 
           const std::array<AntiWindupCase, 5> antiwindup_cases{{
-              {2.2, 1.0, 0.0},
-              {2.2, -1.0, -0.8},
-              {-0.2, -1.0, 0.0},
-              {-0.2, 1.0, 0.8},
-              {1.0, 1.0, 0.8},
+            {2.2, 1.0, 0.0},
+            {2.2, -1.0, -0.8},
+            {-0.2, -1.0, 0.0},
+            {-0.2, 1.0, 0.8},
+            {1.0, 1.0, 0.8},
           }};
           for (const auto& test_case : antiwindup_cases)
           {
@@ -1185,14 +1180,18 @@ namespace GridKit
             fixture.input(Ext::qext)  = test_case.reference;
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
-            setState(fixture.reecb,
-                     {{Vars::XPIQ, test_case.state},
-                      {Vars::QREF, 2.0 * test_case.reference},
-                      {Vars::EQ, 2.0 * test_case.reference}});
+            setState(
+              fixture.reecb,
+              {{Vars::XPIQ, test_case.state},
+               {Vars::QREF, 2.0 * test_case.reference},
+               {Vars::EQ, 2.0 * test_case.reference}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::XPIQ, test_case.expected}},
-                                      "reactive-power antiwindup");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::XPIQ, test_case.expected}},
+              "reactive-power antiwindup"
+            );
           }
         }
 
@@ -1207,11 +1206,11 @@ namespace GridKit
           data.parameters[Params::Kvi]   = 1.0;
 
           const std::array<AntiWindupCase, 5> antiwindup_cases{{
-              {1.0, 1.6, 0.0},
-              {1.0, 0.4, -0.6},
-              {-1.0, 0.4, 0.0},
-              {-1.0, 1.6, 0.6},
-              {0.0, 1.6, 0.6},
+            {1.0, 1.6, 0.0},
+            {1.0, 0.4, -0.6},
+            {-1.0, 0.4, 0.0},
+            {-1.0, 1.6, 0.6},
+            {0.0, 1.6, 0.6},
           }};
           for (const auto& test_case : antiwindup_cases)
           {
@@ -1220,15 +1219,19 @@ namespace GridKit
             fixture.input(Ext::qext)  = test_case.reference;
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
-            setState(fixture.reecb,
-                     {{Vars::XPIV, test_case.state},
-                      {Vars::EPIV, test_case.reference - 1.0},
-                      {Vars::ILCAP, 0.5},
-                      {Vars::IQMAX, 0.5}});
+            setState(
+              fixture.reecb,
+              {{Vars::XPIV, test_case.state},
+               {Vars::EPIV, test_case.reference - 1.0},
+               {Vars::ILCAP, 0.5},
+               {Vars::IQMAX, 0.5}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::XPIV, test_case.expected}},
-                                      "voltage-control antiwindup");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::XPIV, test_case.expected}},
+              "voltage-control antiwindup"
+            );
           }
         }
 
@@ -1245,40 +1248,48 @@ namespace GridKit
           data.parameters[Params::Vref0] = 3.0;
 
           const std::array<DrivenCase, 5> injection_cases{{
-              {5.5, -1.2},
-              {4.2, -0.6},
-              {3.0, 0.0},
-              {1.8, 0.6},
-              {0.4, 1.5},
+            {5.5, -1.2},
+            {4.2, -0.6},
+            {3.0, 0.0},
+            {1.8, 0.6},
+            {0.4, 1.5},
           }};
           for (const auto& test_case : injection_cases)
           {
             Fixture<ScalarT> fixture(data);
             success *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
-            setState(fixture.reecb,
-                     {{Vars::VMEAS, test_case.input},
-                      {Vars::IQV, 0.0},
-                      {Vars::IQRAW, 0.0},
-                      {Vars::IQCMD, 0.0},
-                      {Vars::ILCAP, 3.0},
-                      {Vars::IQMAX, 3.0}});
+            setState(
+              fixture.reecb,
+              {{Vars::VMEAS, test_case.input},
+               {Vars::IQV, 0.0},
+               {Vars::IQRAW, 0.0},
+               {Vars::IQCMD, 0.0},
+               {Vars::ILCAP, 3.0},
+               {Vars::IQMAX, 3.0}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IQV, test_case.expected}},
-                                      "reactive-current injection curve");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::IQV, test_case.expected}},
+              "reactive-current injection curve"
+            );
 
             setState(fixture.reecb, {{Vars::IQV, test_case.expected}});
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IQRAW, test_case.expected}},
-                                      "reactive-current injection sum");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::IQRAW, test_case.expected}},
+              "reactive-current injection sum"
+            );
 
             setState(fixture.reecb, {{Vars::IQRAW, test_case.expected}});
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IQCMD, test_case.expected}},
-                                      "reactive-current injection command");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::IQCMD, test_case.expected}},
+              "reactive-current injection command"
+            );
           }
         }
 
@@ -1296,15 +1307,17 @@ namespace GridKit
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::PMEAS, 0.6}, {Vars::QV, 0.1}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::QREF, 0.3}},
-                                    "power-factor reactive reference");
+          success *= residualsMatch(
+            fixture.reecb,
+            {{Vars::QREF, 0.3}},
+            "power-factor reactive reference"
+          );
 
           setState(fixture.reecb, {{Vars::QREF, 0.3}});
           success *= (fixture.evaluate() == 0);
-          success *= residualsMatch(fixture.reecb,
-                                    {{Vars::QV, 0.4}},
-                                    "power-factor reference");
+          success *= residualsMatch(
+            fixture.reecb, {{Vars::QV, 0.4}}, "power-factor reference"
+          );
         }
 
         return success.report(__func__);
@@ -1319,9 +1332,9 @@ namespace GridKit
         {
           // The ramp-rate limiter bounds the active-power order rate.
           const std::array<DrivenCase, 3> rate_cases{{
-              {-1.0, -0.5},
-              {0.2, 0.2},
-              {1.0, 0.6},
+            {-1.0, -0.5},
+            {0.2, 0.2},
+            {1.0, 0.6},
           }};
           for (const auto& test_case : rate_cases)
           {
@@ -1331,15 +1344,19 @@ namespace GridKit
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::RPORD, test_case.expected}},
-                                      "active-power ramp limit");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::RPORD, test_case.expected}},
+              "active-power ramp limit"
+            );
 
             setState(fixture.reecb, {{Vars::RPORD, test_case.expected}});
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::PORD, test_case.expected}},
-                                      "active-power order rate");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::PORD, test_case.expected}},
+              "active-power order rate"
+            );
           }
         }
 
@@ -1355,10 +1372,10 @@ namespace GridKit
           };
 
           const std::array<AsymmetricRateCase, 4> rate_cases{{
-              {-0.001, 0.1, -0.002, -0.001},
-              {-0.001, 0.1, 0.05, 0.05},
-              {-0.1, 0.001, -0.05, -0.05},
-              {-0.1, 0.001, 0.002, 0.001},
+            {-0.001, 0.1, -0.002, -0.001},
+            {-0.001, 0.1, 0.05, 0.05},
+            {-0.1, 0.001, -0.05, -0.05},
+            {-0.1, 0.001, 0.002, 0.001},
           }};
 
           for (const auto& test_case : rate_cases)
@@ -1373,24 +1390,28 @@ namespace GridKit
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::RPORD, test_case.expected}},
-                                      "asymmetric active-power ramp limit");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::RPORD, test_case.expected}},
+              "asymmetric active-power ramp limit"
+            );
 
             setState(fixture.reecb, {{Vars::RPORD, test_case.expected}});
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::PORD, test_case.expected}},
-                                      "asymmetric active-power order rate");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::PORD, test_case.expected}},
+              "asymmetric active-power order rate"
+            );
           }
         }
 
         {
           // The voltage band gates the active-power order outside it.
           const std::array<DrivenCase, 3> gate_cases{{
-              {0.0, 0.0},
-              {1.0, 0.2},
-              {2.0, 0.0},
+            {0.0, 0.0},
+            {1.0, 0.2},
+            {2.0, 0.0},
           }};
           for (const auto& test_case : gate_cases)
           {
@@ -1402,15 +1423,19 @@ namespace GridKit
             setState(fixture.reecb, {{Vars::VT, test_case.input}});
             success          *= (fixture.evaluate() == 0);
             const RealT gate  = test_case.expected / static_cast<RealT>(0.2);
-            success          *= residualsMatch(fixture.reecb,
-                                               {{Vars::SDIP, gate - 1.0}},
-                                      "active-power voltage gate");
+            success           *= residualsMatch(
+              fixture.reecb,
+              {{Vars::SDIP, gate - 1.0}},
+              "active-power voltage gate"
+            );
 
             setState(fixture.reecb, {{Vars::SDIP, gate}, {Vars::RPORD, 0.2}});
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::PORD, test_case.expected}},
-                                      "gated active-power order rate");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::PORD, test_case.expected}},
+              "gated active-power order rate"
+            );
           }
         }
 
@@ -1418,11 +1443,11 @@ namespace GridKit
           // Saturated probes sit beyond their limit by a margin, so a blocked
           // gate contributes nothing and an admitted gate passes the full rate.
           const std::array<AntiWindupCase, 5> antiwindup_cases{{
-              {2.0, 1.0, 0.0},
-              {2.0, -1.0, -0.5},
-              {-0.4, -1.0, 0.0},
-              {-0.4, 1.0, 0.6},
-              {0.5, 1.0, 0.6},
+            {2.0, 1.0, 0.0},
+            {2.0, -1.0, -0.5},
+            {-0.4, -1.0, 0.0},
+            {-0.4, 1.0, 0.6},
+            {0.5, 1.0, 0.6},
           }};
           for (const auto& test_case : antiwindup_cases)
           {
@@ -1436,39 +1461,47 @@ namespace GridKit
             {
               limited_rate = -0.5;
             }
-            setState(fixture.reecb,
-                     {{Vars::PORD, test_case.state}, {Vars::RPORD, limited_rate}});
+            setState(
+              fixture.reecb,
+              {{Vars::PORD, test_case.state}, {Vars::RPORD, limited_rate}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::PORD, test_case.expected}},
-                                      "active-power antiwindup");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::PORD, test_case.expected}},
+              "active-power antiwindup"
+            );
           }
         }
 
         {
           // P priority leaves the reactive command on the residual capacity.
           const std::array<DrivenCase, 5> reactive_limit_cases{{
-              {-3.0, -2.0},
-              {-1.0, -1.0},
-              {0.0, 0.0},
-              {1.0, 1.0},
-              {3.0, 2.0},
+            {-3.0, -2.0},
+            {-1.0, -1.0},
+            {0.0, 0.0},
+            {1.0, 1.0},
+            {3.0, 2.0},
           }};
           for (const auto& test_case : reactive_limit_cases)
           {
             Fixture<ScalarT> fixture(makeData());
             success *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
-            setState(fixture.reecb,
-                     {{Vars::ILCAP, 2.0},
-                      {Vars::IQMAX, 2.0},
-                      {Vars::IQRAW, test_case.input},
-                      {Vars::IQCMD, 0.0},
-                      {Vars::QV, test_case.input}});
+            setState(
+              fixture.reecb,
+              {{Vars::ILCAP, 2.0},
+               {Vars::IQMAX, 2.0},
+               {Vars::IQRAW, test_case.input},
+               {Vars::IQCMD, 0.0},
+               {Vars::QV, test_case.input}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IQCMD, test_case.expected}},
-                                      "reactive-command limit");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::IQCMD, test_case.expected}},
+              "reactive-command limit"
+            );
           }
         }
 
@@ -1479,25 +1512,29 @@ namespace GridKit
           data.parameters[Params::Pqflag] = false;
 
           const std::array<DrivenCase, 4> active_limit_cases{{
-              {-1.0, 0.0},
-              {0.6, 0.6},
-              {1.0, 1.0},
-              {3.0, 2.0},
+            {-1.0, 0.0},
+            {0.6, 0.6},
+            {1.0, 1.0},
+            {3.0, 2.0},
           }};
           for (const auto& test_case : active_limit_cases)
           {
             Fixture<ScalarT> fixture(data);
             success *= fixture.prepare(0.2, 0.0);
             setControlState(fixture.reecb);
-            setState(fixture.reecb,
-                     {{Vars::ILCAP, 2.0},
-                      {Vars::IPMAX, 2.0},
-                      {Vars::IPCMD, 0.0},
-                      {Vars::PORD, test_case.input}});
+            setState(
+              fixture.reecb,
+              {{Vars::ILCAP, 2.0},
+               {Vars::IPMAX, 2.0},
+               {Vars::IPCMD, 0.0},
+               {Vars::PORD, test_case.input}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IPCMD, test_case.expected}},
-                                      "active-command limit");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::IPCMD, test_case.expected}},
+              "active-command limit"
+            );
           }
         }
 
@@ -1505,8 +1542,8 @@ namespace GridKit
           // The priority selector chooses which command consumes the circle.
           const RealT                                 capacity_state = 1.20;
           const std::array<std::pair<bool, RealT>, 2> priority_cases{{
-              {true, 1.76},
-              {false, 2.00},
+            {true, 1.76},
+            {false, 2.00},
           }};
           for (const auto& [p_priority, square] : priority_cases)
           {
@@ -1523,10 +1560,12 @@ namespace GridKit
             {
               label = "P-priority current circle";
             }
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILCAP, circleLeg(square) - capacity_state}},
-                                      label,
-                                      kCircleTol);
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::ILCAP, circleLeg(square) - capacity_state}},
+              label,
+              kCircleTol
+            );
           }
         }
 
@@ -1553,14 +1592,16 @@ namespace GridKit
               iqcmd = maximum;
               ipcmd = limit;
             }
-            setState(fixture.reecb,
-                     {{Vars::ILCAP, 0.0},
-                      {Vars::IQCMD, iqcmd},
-                      {Vars::IPCMD, ipcmd}});
+            setState(
+              fixture.reecb,
+              {{Vars::ILCAP, 0.0}, {Vars::IQCMD, iqcmd}, {Vars::IPCMD, ipcmd}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILCAP, 0.0}},
-                                      "finite selected current circle");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::ILCAP, 0.0}},
+              "finite selected current circle"
+            );
             success *= allResidualsFinite(fixture.reecb);
           }
 
@@ -1574,10 +1615,12 @@ namespace GridKit
           setControlState(open.reecb);
           setState(open.reecb, {{Vars::ILCAP, 0.0}, {Vars::IPCMD, 0.0}});
           success *= (open.evaluate() == 0);
-          success *= residualsMatch(open.reecb,
-                                    {{Vars::ILCAP, open_limit}},
-                                    "finite open current circle",
-                                    kCircleTol);
+          success *= residualsMatch(
+            open.reecb,
+            {{Vars::ILCAP, open_limit}},
+            "finite open current circle",
+            kCircleTol
+          );
           success *= allResidualsFinite(open.reecb);
         }
 
@@ -1594,9 +1637,9 @@ namespace GridKit
           };
 
           const std::array<CircleCase, 3> circle_cases{{
-              {0.25, 0.75},
-              {0.5, 0.0},
-              {0.75, -1.25},
+            {0.25, 0.75},
+            {0.5, 0.0},
+            {0.75, -1.25},
           }};
           for (const auto& test_case : circle_cases)
           {
@@ -1605,18 +1648,22 @@ namespace GridKit
             Fixture<ScalarT> fixture(data);
             success *= fixture.prepare(0.0, test_case.ipcmd);
             setControlState(fixture.reecb);
-            setState(fixture.reecb,
-                     {{Vars::ILCAP, 0.0},
-                      {Vars::IQMAX, 0.0},
-                      {Vars::IQRAW, 0.0},
-                      {Vars::IPCMD, test_case.ipcmd},
-                      {Vars::IQCMD, 0.0},
-                      {Vars::QV, 1.0}});
+            setState(
+              fixture.reecb,
+              {{Vars::ILCAP, 0.0},
+               {Vars::IQMAX, 0.0},
+               {Vars::IQRAW, 0.0},
+               {Vars::IPCMD, test_case.ipcmd},
+               {Vars::IQCMD, 0.0},
+               {Vars::QV, 1.0}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILCAP, ideal_capacity}},
-                                      "off-axis capacity",
-                                      kCircleTol);
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::ILCAP, ideal_capacity}},
+              "off-axis capacity",
+              kCircleTol
+            );
 
             const RealT capacity = fixture.reecb.getResidual().getData()[index(Vars::ILCAP)];
             if (!std::isfinite(capacity) || capacity < ZERO<RealT>)
@@ -1627,16 +1674,21 @@ namespace GridKit
 
             setState(fixture.reecb, {{Vars::ILCAP, capacity}});
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IQMAX, capacity}},
-                                      "reactive-current capacity");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::IQMAX, capacity}},
+              "reactive-current capacity"
+            );
 
-            setState(fixture.reecb,
-                     {{Vars::IQMAX, capacity}, {Vars::IQRAW, 1.0}});
+            setState(
+              fixture.reecb, {{Vars::IQMAX, capacity}, {Vars::IQRAW, 1.0}}
+            );
             success *= (fixture.evaluate() == 0);
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IQCMD, capacity}},
-                                      "capacity magnitude bound");
+            success *= residualsMatch(
+              fixture.reecb,
+              {{Vars::IQCMD, capacity}},
+              "capacity magnitude bound"
+            );
             success *= allResidualsFinite(fixture.reecb);
           }
         }
@@ -1661,11 +1713,23 @@ namespace GridKit
         };
 
         const std::array<ControlMode, 5> control_modes{{
-            {"reactive-power reference with Q priority", false, false, false, false},
-            {"power-factor reference with P priority", true, false, false, true},
-            {"direct-voltage control with Q priority", false, false, true, false},
-            {"cascaded reactive-power control with P priority", false, true, true, true},
-            {"cascaded power-factor control with Q priority", true, true, true, false},
+          {"reactive-power reference with Q priority",
+           false,
+           false,
+           false,
+           false},
+          {"power-factor reference with P priority", true, false, false, true},
+          {"direct-voltage control with Q priority", false, false, true, false},
+          {"cascaded reactive-power control with P priority",
+           false,
+           true,
+           true,
+           true},
+          {"cascaded power-factor control with Q priority",
+           true,
+           true,
+           true,
+           false},
         }};
         for (const auto& mode : control_modes)
         {
@@ -1683,9 +1747,10 @@ namespace GridKit
             Log::setVerbosity(Log::Verbosity::NONE);
           }
           success *= jacobiansMatch(
-              dependencyTrackingJacobian(data, kNonunitAlpha, success),
-              enzymeJacobian(data, kNonunitAlpha, success),
-              mode.label);
+            dependencyTrackingJacobian(data, kNonunitAlpha, success),
+            enzymeJacobian(data, kNonunitAlpha, success),
+            mode.label
+          );
           Log::setVerbosity(previous_verbosity);
         }
 
@@ -1698,39 +1763,47 @@ namespace GridKit
         };
 
         const std::array<CurrentCircleProbe, 5> current_circle_probes{{
-            {"open current circle", true, 2.5, 2.0},
-            {"closing current circle", true, 0.41, 0.05},
-            {"closed current circle", true, 0.4, 0.0},
-            {"over-driven current circle", true, 0.2, 0.0},
-            {"over-driven current circle on the reactive axis", false, 0.1, 0.0},
+          {"open current circle", true, 2.5, 2.0},
+          {"closing current circle", true, 0.41, 0.05},
+          {"closed current circle", true, 0.4, 0.0},
+          {"over-driven current circle", true, 0.2, 0.0},
+          {"over-driven current circle on the reactive axis", false, 0.1, 0.0},
         }};
         for (const auto& probe : current_circle_probes)
         {
           auto data                        = makeJacobianData();
           data.parameters[Params::Pqflag]  = probe.p_priority;
           data.parameters[Params::Imax]    = probe.imax;
-          success                         *= jacobiansMatch(
-              dependencyTrackingJacobian(
-                  data, kNonunitAlpha, success, probe.capacity),
-              enzymeJacobian(data, kNonunitAlpha, success, probe.capacity),
-              probe.label);
+          success                          *= jacobiansMatch(
+            dependencyTrackingJacobian(
+              data, kNonunitAlpha, success, probe.capacity
+            ),
+            enzymeJacobian(data, kNonunitAlpha, success, probe.capacity),
+            probe.label
+          );
         }
 
         auto transition_data                        = makeJacobianData();
         transition_data.parameters[Params::Pqflag]  = true;
         transition_data.parameters[Params::Imax]    = 0.4;
-        success                                    *= jacobiansMatch(
-            dependencyTrackingJacobian(
-                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1),
-            enzymeJacobian(
-                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1),
-            "open current-circle transition");
+        success                                     *= jacobiansMatch(
+          dependencyTrackingJacobian(
+            transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1
+          ),
+          enzymeJacobian(
+            transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1
+          ),
+          "open current-circle transition"
+        );
         success *= jacobiansMatch(
-            dependencyTrackingJacobian(
-                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3),
-            enzymeJacobian(
-                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3),
-            "over-driven current-circle transition");
+          dependencyTrackingJacobian(
+            transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3
+          ),
+          enzymeJacobian(
+            transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3
+          ),
+          "over-driven current-circle transition"
+        );
 
         struct NonlinearProbe
         {
@@ -1743,20 +1816,24 @@ namespace GridKit
         // The component base selects the active-order slew branch. Explicit
         // voltage-error states select either side of the moving current band.
         const std::array<NonlinearProbe, 4> nonlinear_probes{{
-            {"upper active-order slew", 25.0, 2.0, 0.2},
-            {"lower active-order slew", 100.0, 2.0, 0.2},
-            {"below voltage-PI moving band", 50.0, 0.5, -1.0},
-            {"above voltage-PI moving band", 50.0, 0.5, 1.0},
+          {"upper active-order slew", 25.0, 2.0, 0.2},
+          {"lower active-order slew", 100.0, 2.0, 0.2},
+          {"below voltage-PI moving band", 50.0, 0.5, -1.0},
+          {"above voltage-PI moving band", 50.0, 0.5, 1.0},
         }};
         for (const auto& probe : nonlinear_probes)
         {
           auto data                     = makeJacobianData();
           data.parameters[Params::mva]  = probe.mva;
-          success                      *= jacobiansMatch(
-              dependencyTrackingJacobian(
-                  data, kNonunitAlpha, success, probe.capacity, probe.epiv),
-              enzymeJacobian(data, kNonunitAlpha, success, probe.capacity, probe.epiv),
-              probe.label);
+          success                       *= jacobiansMatch(
+            dependencyTrackingJacobian(
+              data, kNonunitAlpha, success, probe.capacity, probe.epiv
+            ),
+            enzymeJacobian(
+              data, kNonunitAlpha, success, probe.capacity, probe.epiv
+            ),
+            probe.label
+          );
         }
 
         auto injection_data                       = makeJacobianData();
@@ -1767,10 +1844,11 @@ namespace GridKit
         injection_data.parameters[Params::Iql1]   = -1.2;
         injection_data.parameters[Params::Iqh1]   = 1.5;
         injection_data.parameters[Params::Vref0]  = 2.2;
-        success                                  *= jacobiansMatch(
-            dependencyTrackingJacobian(injection_data, kNonunitAlpha, success),
-            enzymeJacobian(injection_data, kNonunitAlpha, success),
-            "voltage-error current injection");
+        success                                   *= jacobiansMatch(
+          dependencyTrackingJacobian(injection_data, kNonunitAlpha, success),
+          enzymeJacobian(injection_data, kNonunitAlpha, success),
+          "voltage-error current injection"
+        );
 
         return success.report(__func__);
       }
@@ -1830,11 +1908,13 @@ namespace GridKit
         bool                                commands_assigned_{true};
 
       public:
-        explicit Fixture(const Data& data,
-                         RealT       vr              = 1.0,
-                         RealT       vi              = 0.0,
-                         RealT       system_va_base  = kSystemBaseVa,
-                         bool        assign_commands = true)
+        explicit Fixture(
+          const Data& data,
+          RealT       vr              = 1.0,
+          RealT       vi              = 0.0,
+          RealT       system_va_base  = kSystemBaseVa,
+          bool        assign_commands = true
+        )
           : commands_assigned_(assign_commands),
             bus(static_cast<T>(vr), static_cast<T>(vi)),
             reecb(&bus, data)
@@ -1959,7 +2039,7 @@ namespace GridKit
 
       /// MU-aware tolerance for ideal current-circle comparisons.
       static constexpr RealT kCircleTol =
-          std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
+        std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
 
       static constexpr size_t kBusVrColumn = Utilities::enum_size<Vars>();
 
@@ -2126,36 +2206,26 @@ namespace GridKit
       template <typename T>
       void setResidualState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb) const
       {
-        setState(reecb,
-                 {{Vars::VMEAS, 0.80},
-                  {Vars::PMEAS, 0.55},
-                  {Vars::XPIQ, 0.64},
-                  {Vars::XPIV, -0.05},
-                  {Vars::QV, 0.30},
-                  {Vars::PORD, 0.60},
-                  {Vars::VT, 1.00},
-                  {Vars::VSAFE, 0.80},
-                  {Vars::SDIP, 1.00},
-                  {Vars::IQV, 0.50},
-                  {Vars::QREF, 0.40},
-                  {Vars::EQ, 0.60},
-                  {Vars::VPIQ, 1.00},
-                  {Vars::EPIV, 0.20},
-                  {Vars::RPORD, 0.20},
-                  {Vars::ILCAP, 1.20},
-                  {Vars::IQMAX, 1.20},
-                  {Vars::IPMAX, 1.50},
-                  {Vars::IQBASE, 0.19},
-                  {Vars::IQRAW, 0.69},
-                  {Vars::IQCMD, 0.25},
-                  {Vars::IPCMD, 0.35}});
-        setDerivative(reecb,
-                      {{Vars::VMEAS, 0.01},
-                       {Vars::PMEAS, -0.02},
-                       {Vars::XPIQ, 0.03},
-                       {Vars::XPIV, -0.03},
-                       {Vars::QV, 0.05},
-                       {Vars::PORD, -0.06}});
+        setState(
+          reecb,
+          {{Vars::VMEAS, 0.80},  {Vars::PMEAS, 0.55}, {Vars::XPIQ, 0.64},
+           {Vars::XPIV, -0.05},  {Vars::QV, 0.30},    {Vars::PORD, 0.60},
+           {Vars::VT, 1.00},     {Vars::VSAFE, 0.80}, {Vars::SDIP, 1.00},
+           {Vars::IQV, 0.50},    {Vars::QREF, 0.40},  {Vars::EQ, 0.60},
+           {Vars::VPIQ, 1.00},   {Vars::EPIV, 0.20},  {Vars::RPORD, 0.20},
+           {Vars::ILCAP, 1.20},  {Vars::IQMAX, 1.20}, {Vars::IPMAX, 1.50},
+           {Vars::IQBASE, 0.19}, {Vars::IQRAW, 0.69}, {Vars::IQCMD, 0.25},
+           {Vars::IPCMD, 0.35}}
+        );
+        setDerivative(
+          reecb,
+          {{Vars::VMEAS, 0.01},
+           {Vars::PMEAS, -0.02},
+           {Vars::XPIQ, 0.03},
+           {Vars::XPIV, -0.03},
+           {Vars::QV, 0.05},
+           {Vars::PORD, -0.06}}
+        );
       }
 
       /// A neutral driven state for the control probes: unit voltage, cleared
@@ -2164,39 +2234,28 @@ namespace GridKit
       void setControlState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb) const
       {
         reecb.yp().setToConst(static_cast<T>(ZERO<RealT>));
-        setState(reecb,
-                 {{Vars::VMEAS, 1.0},
-                  {Vars::PMEAS, 0.6},
-                  {Vars::XPIQ, 0.0},
-                  {Vars::XPIV, 0.0},
-                  {Vars::QV, 0.0},
-                  {Vars::PORD, 0.5},
-                  {Vars::VT, 1.0},
-                  {Vars::VSAFE, 1.0},
-                  {Vars::SDIP, 1.0},
-                  {Vars::IQV, 0.0},
-                  {Vars::QREF, 0.0},
-                  {Vars::EQ, 0.0},
-                  {Vars::VPIQ, 0.0},
-                  {Vars::EPIV, 0.0},
-                  {Vars::RPORD, 0.0},
-                  {Vars::ILCAP, 1.4},
-                  {Vars::IQMAX, 1.4},
-                  {Vars::IPMAX, 1.5},
-                  {Vars::IQBASE, 0.0},
-                  {Vars::IQRAW, 0.0},
-                  {Vars::IQCMD, 0.1},
-                  {Vars::IPCMD, 0.2}});
+        setState(
+          reecb, {{Vars::VMEAS, 1.0},  {Vars::PMEAS, 0.6}, {Vars::XPIQ, 0.0},
+                  {Vars::XPIV, 0.0},   {Vars::QV, 0.0},    {Vars::PORD, 0.5},
+                  {Vars::VT, 1.0},     {Vars::VSAFE, 1.0}, {Vars::SDIP, 1.0},
+                  {Vars::IQV, 0.0},    {Vars::QREF, 0.0},  {Vars::EQ, 0.0},
+                  {Vars::VPIQ, 0.0},   {Vars::EPIV, 0.0},  {Vars::RPORD, 0.0},
+                  {Vars::ILCAP, 1.4},  {Vars::IQMAX, 1.4}, {Vars::IPMAX, 1.5},
+                  {Vars::IQBASE, 0.0}, {Vars::IQRAW, 0.0}, {Vars::IQCMD, 0.1},
+                  {Vars::IPCMD, 0.2}}
+        );
         reecb.yp().setDataUpdated();
       }
 
       /// Populate every differential and algebraic variable for a Jacobian
       /// probe. The optional states place selected smooth branches explicitly.
       template <typename T>
-      void setJacobianState(Fixture<T>& fixture,
-                            RealT       capacity,
-                            RealT       epiv  = static_cast<RealT>(0.2),
-                            RealT       ipcmd = static_cast<RealT>(0.2)) const
+      void setJacobianState(
+        Fixture<T>& fixture,
+        RealT       capacity,
+        RealT       epiv  = static_cast<RealT>(0.2),
+        RealT       ipcmd = static_cast<RealT>(0.2)
+      ) const
       {
         fixture.input(Ext::pe)     = static_cast<T>(0.25);
         fixture.input(Ext::qgen)   = static_cast<T>(0.5);
@@ -2205,29 +2264,19 @@ namespace GridKit
         fixture.input(Ext::pref)   = static_cast<T>(0.25);
 
         fixture.reecb.yp().setToConst(static_cast<T>(ZERO<RealT>));
-        setState(fixture.reecb,
-                 {{Vars::VMEAS, 1.0},
-                  {Vars::PMEAS, 0.5},
-                  {Vars::XPIQ, 1.6},
-                  {Vars::XPIV, 0.0},
-                  {Vars::QV, 0.0},
-                  {Vars::PORD, 0.5},
-                  {Vars::VT, 1.0},
-                  {Vars::VSAFE, 1.0},
-                  {Vars::SDIP, 1.0},
-                  {Vars::IQV, 0.0},
-                  {Vars::QREF, 0.0},
-                  {Vars::EQ, 0.5},
-                  {Vars::VPIQ, 1.0},
-                  {Vars::EPIV, epiv},
-                  {Vars::RPORD, 0.05},
-                  {Vars::ILCAP, capacity},
-                  {Vars::IQMAX, capacity},
-                  {Vars::IPMAX, capacity},
-                  {Vars::IQBASE, 0.2},
-                  {Vars::IQRAW, 0.2},
-                  {Vars::IQCMD, 0.1},
-                  {Vars::IPCMD, ipcmd}});
+        setState(
+          fixture.reecb, {{Vars::VMEAS, 1.0},      {Vars::PMEAS, 0.5},
+                          {Vars::XPIQ, 1.6},       {Vars::XPIV, 0.0},
+                          {Vars::QV, 0.0},         {Vars::PORD, 0.5},
+                          {Vars::VT, 1.0},         {Vars::VSAFE, 1.0},
+                          {Vars::SDIP, 1.0},       {Vars::IQV, 0.0},
+                          {Vars::QREF, 0.0},       {Vars::EQ, 0.5},
+                          {Vars::VPIQ, 1.0},       {Vars::EPIV, epiv},
+                          {Vars::RPORD, 0.05},     {Vars::ILCAP, capacity},
+                          {Vars::IQMAX, capacity}, {Vars::IPMAX, capacity},
+                          {Vars::IQBASE, 0.2},     {Vars::IQRAW, 0.2},
+                          {Vars::IQCMD, 0.1},      {Vars::IPCMD, ipcmd}}
+        );
         fixture.reecb.yp().setDataUpdated();
       }
 
@@ -2252,32 +2301,40 @@ namespace GridKit
         {
           success = false;
         }
-        if (!vectorsMatch(implicit_defaults.reecb.y(),
-                          explicit_defaults.reecb.y(),
-                          "documented-default state"))
+        if (!vectorsMatch(
+              implicit_defaults.reecb.y(),
+              explicit_defaults.reecb.y(),
+              "documented-default state"
+            ))
         {
           success = false;
         }
-        if (!vectorsMatch(implicit_defaults.reecb.yp(),
-                          explicit_defaults.reecb.yp(),
-                          "documented-default derivative"))
+        if (!vectorsMatch(
+              implicit_defaults.reecb.yp(),
+              explicit_defaults.reecb.yp(),
+              "documented-default derivative"
+            ))
         {
           success = false;
         }
-        if (!vectorsMatch(implicit_defaults.reecb.getResidual(),
-                          explicit_defaults.reecb.getResidual(),
-                          "documented-default residual"))
+        if (!vectorsMatch(
+              implicit_defaults.reecb.getResidual(),
+              explicit_defaults.reecb.getResidual(),
+              "documented-default residual"
+            ))
         {
           success = false;
         }
         for (auto variable : Utilities::enum_values<Ext>())
         {
           const auto port = static_cast<size_t>(variable);
-          if (!rowMatches(implicit_defaults.input(variable),
-                          explicit_defaults.input(variable),
-                          "documented-default signal",
-                          port,
-                          ""))
+          if (!rowMatches(
+                implicit_defaults.input(variable),
+                explicit_defaults.input(variable),
+                "documented-default signal",
+                port,
+                ""
+              ))
           {
             success = false;
           }
@@ -2291,9 +2348,11 @@ namespace GridKit
         {
           success = false;
         }
-        if (!vectorsMatch(implicit_defaults.reecb.getResidual(),
-                          explicit_defaults.reecb.getResidual(),
-                          "documented-default dynamic residual"))
+        if (!vectorsMatch(
+              implicit_defaults.reecb.getResidual(),
+              explicit_defaults.reecb.getResidual(),
+              "documented-default dynamic residual"
+            ))
         {
           success = false;
         }
@@ -2306,11 +2365,12 @@ namespace GridKit
         auto data                  = makeData();
         data.parameters[parameter] = value;
         return configurationRejected(
-            [&]()
-            {
-              Fixture<ScalarT> fixture(data);
-              return fixture.reecb.verify();
-            });
+          [&]()
+          {
+            Fixture<ScalarT> fixture(data);
+            return fixture.reecb.verify();
+          }
+        );
       }
 
       template <Ext variable>
@@ -2338,13 +2398,15 @@ namespace GridKit
         fixture.reecb.yp().setDataUpdated();
       }
 
-      bool initializationRejectedAtomically(const Data& data,
-                                            RealT       iqcmd,
-                                            RealT       ipcmd,
-                                            const char* label,
-                                            RealT       pe      = 0.6,
-                                            RealT       qgen    = 0.6,
-                                            RealT       voltage = 1.0) const
+      bool initializationRejectedAtomically(
+        const Data& data,
+        RealT       iqcmd,
+        RealT       ipcmd,
+        const char* label,
+        RealT       pe      = 0.6,
+        RealT       qgen    = 0.6,
+        RealT       voltage = 1.0
+      ) const
       {
         Fixture<ScalarT> fixture(data, voltage);
         fixture.attachAllInputs(77.0);
@@ -2397,10 +2459,12 @@ namespace GridKit
         for (auto variable : Utilities::enum_values<Ext>())
         {
           const auto port = static_cast<size_t>(variable);
-          if (!valueUnchanged(fixture.input(variable),
-                              inputs_before[port],
-                              "external signal",
-                              port))
+          if (!valueUnchanged(
+                fixture.input(variable),
+                inputs_before[port],
+                "external signal",
+                port
+              ))
           {
             success = false;
           }
@@ -2409,8 +2473,10 @@ namespace GridKit
       }
 
       template <typename T>
-      void setState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb,
-                    std::initializer_list<VariableValue>        values) const
+      void setState(
+        PhasorDynamics::Controller::Reecb<T, IdxT>& reecb,
+        std::initializer_list<VariableValue>        values
+      ) const
       {
         auto* y = reecb.y().getData();
         for (const auto& [variable, value] : values)
@@ -2421,8 +2487,10 @@ namespace GridKit
       }
 
       template <typename T>
-      void setDerivative(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb,
-                         std::initializer_list<VariableValue>        values) const
+      void setDerivative(
+        PhasorDynamics::Controller::Reecb<T, IdxT>& reecb,
+        std::initializer_list<VariableValue>        values
+      ) const
       {
         auto* yp = reecb.yp().getData();
         for (const auto& [variable, value] : values)
@@ -2434,39 +2502,24 @@ namespace GridKit
 
       static const char* variableName(Vars variable)
       {
-        static constexpr std::array<const char*, Utilities::enum_size<Vars>()> names{{
-            "VMEAS",
-            "PMEAS",
-            "XPIQ",
-            "XPIV",
-            "QV",
-            "PORD",
-            "VT",
-            "VSAFE",
-            "SDIP",
-            "IQV",
-            "QREF",
-            "EQ",
-            "VPIQ",
-            "EPIV",
-            "RPORD",
-            "ILCAP",
-            "IQMAX",
-            "IPMAX",
-            "IQBASE",
-            "IQRAW",
-            "IQCMD",
-            "IPCMD",
-        }};
+        static constexpr std::array<const char*, Utilities::enum_size<Vars>()>
+          names{{
+            "VMEAS",  "PMEAS", "XPIQ",  "XPIV",  "QV",    "PORD",
+            "VT",     "VSAFE", "SDIP",  "IQV",   "QREF",  "EQ",
+            "VPIQ",   "EPIV",  "RPORD", "ILCAP", "IQMAX", "IPMAX",
+            "IQBASE", "IQRAW", "IQCMD", "IPCMD",
+          }};
         return names[index(variable)];
       }
 
-      static bool variableMatches(RealT       actual,
-                                  RealT       expected,
-                                  const char* what,
-                                  Vars        variable,
-                                  const char* context,
-                                  RealT       tolerance = kTol)
+      static bool variableMatches(
+        RealT       actual,
+        RealT       expected,
+        const char* what,
+        Vars        variable,
+        const char* context,
+        RealT       tolerance = kTol
+      )
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -2483,12 +2536,14 @@ namespace GridKit
         return false;
       }
 
-      static bool rowMatches(RealT       actual,
-                             RealT       expected,
-                             const char* what,
-                             size_t      row,
-                             const char* context,
-                             RealT       tolerance = kTol)
+      static bool rowMatches(
+        RealT       actual,
+        RealT       expected,
+        const char* what,
+        size_t      row,
+        const char* context,
+        RealT       tolerance = kTol
+      )
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -2505,10 +2560,9 @@ namespace GridKit
         return false;
       }
 
-      bool scalarMatches(RealT       actual,
-                         RealT       expected,
-                         const char* label,
-                         RealT       tolerance = kTol) const
+      bool scalarMatches(
+        RealT actual, RealT expected, const char* label, RealT tolerance = kTol
+      ) const
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -2543,10 +2597,9 @@ namespace GridKit
         return false;
       }
 
-      static bool valueUnchanged(RealT       actual,
-                                 RealT       expected,
-                                 const char* what,
-                                 size_t      row)
+      static bool valueUnchanged(
+        RealT actual, RealT expected, const char* what, size_t row
+      )
       {
         if (preserved(actual, expected))
         {
@@ -2559,22 +2612,26 @@ namespace GridKit
       }
 
       template <typename VectorT, typename ValuesT>
-      bool rowsMatch(const VectorT& vector,
-                     const ValuesT& values,
-                     const char*    what,
-                     const char*    context,
-                     RealT          tolerance = kTol) const
+      bool rowsMatch(
+        const VectorT& vector,
+        const ValuesT& values,
+        const char*    what,
+        const char*    context,
+        RealT          tolerance = kTol
+      ) const
       {
         bool        success       = true;
         const auto* vector_values = vector.getData();
         for (const auto& [variable, expected] : values)
         {
-          if (!variableMatches(static_cast<RealT>(vector_values[index(variable)]),
-                               expected,
-                               what,
-                               variable,
-                               context,
-                               tolerance))
+          if (!variableMatches(
+                static_cast<RealT>(vector_values[index(variable)]),
+                expected,
+                what,
+                variable,
+                context,
+                tolerance
+              ))
           {
             success = false;
           }
@@ -2582,36 +2639,44 @@ namespace GridKit
         return success;
       }
 
-      bool residualsMatch(const ReecbT&                        reecb,
-                          std::initializer_list<VariableValue> values,
-                          const char*                          context   = "",
-                          RealT                                tolerance = kTol) const
+      bool residualsMatch(
+        const ReecbT&                        reecb,
+        std::initializer_list<VariableValue> values,
+        const char*                          context   = "",
+        RealT                                tolerance = kTol
+      ) const
       {
         return rowsMatch(reecb.getResidual(), values, "residual", context, tolerance);
       }
 
       template <size_t size>
-      bool residualsMatch(const ReecbT&                          reecb,
-                          const std::array<VariableValue, size>& values,
-                          const char*                            context   = "",
-                          RealT                                  tolerance = kTol) const
+      bool residualsMatch(
+        const ReecbT&                          reecb,
+        const std::array<VariableValue, size>& values,
+        const char*                            context   = "",
+        RealT                                  tolerance = kTol
+      ) const
       {
         return rowsMatch(reecb.getResidual(), values, "residual", context, tolerance);
       }
 
-      bool stateMatches(const ReecbT&                        reecb,
-                        std::initializer_list<VariableValue> values,
-                        const char*                          context   = "",
-                        RealT                                tolerance = kTol) const
+      bool stateMatches(
+        const ReecbT&                        reecb,
+        std::initializer_list<VariableValue> values,
+        const char*                          context   = "",
+        RealT                                tolerance = kTol
+      ) const
       {
         return rowsMatch(reecb.y(), values, "state", context, tolerance);
       }
 
       template <size_t size>
-      bool stateMatches(const ReecbT&                          reecb,
-                        const std::array<VariableValue, size>& values,
-                        const char*                            context   = "",
-                        RealT                                  tolerance = kTol) const
+      bool stateMatches(
+        const ReecbT&                          reecb,
+        const std::array<VariableValue, size>& values,
+        const char*                            context   = "",
+        RealT                                  tolerance = kTol
+      ) const
       {
         return rowsMatch(reecb.y(), values, "state", context, tolerance);
       }
@@ -2624,12 +2689,14 @@ namespace GridKit
         for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           const auto variable = static_cast<Vars>(row);
-          if (!variableMatches(f[row],
-                               0.0,
-                               "residual",
-                               variable,
-                               "at rest",
-                               ReecbT::INITIALIZATION_TOLERANCE))
+          if (!variableMatches(
+                f[row],
+                0.0,
+                "residual",
+                variable,
+                "at rest",
+                ReecbT::INITIALIZATION_TOLERANCE
+              ))
           {
             success = false;
           }
@@ -2657,9 +2724,11 @@ namespace GridKit
         return success;
       }
 
-      bool monitorMatches(const ReecbT&               reecb,
-                          const std::array<RealT, 4>& expected,
-                          const char*                 context) const
+      bool monitorMatches(
+        const ReecbT&               reecb,
+        const std::array<RealT, 4>& expected,
+        const char*                 context
+      ) const
       {
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> monitor(time);
@@ -2709,9 +2778,11 @@ namespace GridKit
       }
 
       template <typename VectorT>
-      bool vectorUnchanged(const VectorT&            vector,
-                           const std::vector<RealT>& snapshot,
-                           const char*               what) const
+      bool vectorUnchanged(
+        const VectorT&            vector,
+        const std::vector<RealT>& snapshot,
+        const char*               what
+      ) const
       {
         bool        success = true;
         const auto* values  = vector.getData();
@@ -2726,9 +2797,9 @@ namespace GridKit
       }
 
       template <typename LeftVectorT, typename RightVectorT>
-      bool vectorsMatch(const LeftVectorT&  left,
-                        const RightVectorT& right,
-                        const char*         what) const
+      bool vectorsMatch(
+        const LeftVectorT& left, const RightVectorT& right, const char* what
+      ) const
       {
         if (left.getSize() != right.getSize())
         {
@@ -2740,11 +2811,13 @@ namespace GridKit
         const auto* right_values = right.getData();
         for (size_t row = 0; row < static_cast<size_t>(left.getSize()); ++row)
         {
-          if (!rowMatches(static_cast<RealT>(left_values[row]),
-                          static_cast<RealT>(right_values[row]),
-                          what,
-                          row,
-                          ""))
+          if (!rowMatches(
+                static_cast<RealT>(left_values[row]),
+                static_cast<RealT>(right_values[row]),
+                what,
+                row,
+                ""
+              ))
           {
             success = false;
           }
@@ -2779,12 +2852,14 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap>
-      dependencyTrackingJacobian(const Data& data,
-                                 RealT       alpha,
-                                 TestStatus& success,
-                                 RealT       capacity = 2.0,
-                                 RealT       epiv     = static_cast<RealT>(0.2),
-                                 RealT       ipcmd    = static_cast<RealT>(0.2)) const
+      dependencyTrackingJacobian(
+        const Data& data,
+        RealT       alpha,
+        TestStatus& success,
+        RealT       capacity = 2.0,
+        RealT       epiv     = static_cast<RealT>(0.2),
+        RealT       ipcmd    = static_cast<RealT>(0.2)
+      ) const
       {
         using DepVar = DependencyTracking::Variable;
 
@@ -2801,13 +2876,14 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      std::vector<DependencyTracking::Variable::DependencyMap>
-      enzymeJacobian(const Data& data,
-                     RealT       alpha,
-                     TestStatus& success,
-                     RealT       capacity = 2.0,
-                     RealT       epiv     = static_cast<RealT>(0.2),
-                     RealT       ipcmd    = static_cast<RealT>(0.2)) const
+      std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
+        const Data& data,
+        RealT       alpha,
+        TestStatus& success,
+        RealT       capacity = 2.0,
+        RealT       epiv     = static_cast<RealT>(0.2),
+        RealT       ipcmd    = static_cast<RealT>(0.2)
+      ) const
       {
         Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
         fixture.attachAllInputs();
@@ -2829,9 +2905,11 @@ namespace GridKit
       }
 
       bool jacobiansMatch(
-          const std::vector<DependencyTracking::Variable::DependencyMap>& dependency,
-          const std::vector<DependencyTracking::Variable::DependencyMap>& enzyme,
-          const char*                                                     probe) const
+        const std::vector<DependencyTracking::Variable::DependencyMap>&
+          dependency,
+        const std::vector<DependencyTracking::Variable::DependencyMap>& enzyme,
+        const char*                                                     probe
+      ) const
       {
         if (dependency.size() != enzyme.size())
         {

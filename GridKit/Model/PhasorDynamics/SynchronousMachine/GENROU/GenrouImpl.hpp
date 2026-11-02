@@ -21,10 +21,8 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT*             bus,
-                                            const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    Genrou<scalar_type, index_type>::Genrou(BusT* bus, const ModelDataT& data)
+      : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -202,8 +200,10 @@ namespace GridKit
       const ScalarT ksat_prime = ONE<RealT> + Xqd_ * ksat;
       const ScalarT xsat_delta = ksat_prime * Xdpp_ + Xq_ - Xqpp_;
 
-      ScalarT delta = std::atan2((vi + Ra_ * ii) * ksat_prime + xsat_delta * ir,
-                                 (vr + Ra_ * ir) * ksat_prime - xsat_delta * ii);
+      ScalarT delta = std::atan2(
+        (vi + Ra_ * ii) * ksat_prime + xsat_delta * ir,
+        (vr + Ra_ * ir) * ksat_prime - xsat_delta * ii
+      );
       ScalarT id    = ir * std::sin(delta) - ii * std::cos(delta);
       ScalarT iq    = ir * std::cos(delta) + ii * std::sin(delta);
       ScalarT vq    = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ + iq * Ra_;
@@ -309,12 +309,14 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateInternalResidual(
+    __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::
+      evaluateInternalResidual(
         const ScalarT* y,
         const ScalarT* yp,
         const ScalarT* wb,
         const ScalarT* ws,
-        ScalarT*       f)
+        ScalarT*       f
+      )
     {
       /* Read variables */
       ScalarT delta  = y[0];
@@ -382,11 +384,13 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::
+      evaluateBusResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
         [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+        ScalarT*                        h
+      )
     {
       ScalarT ir = y[15];
       ScalarT ii = y[16];

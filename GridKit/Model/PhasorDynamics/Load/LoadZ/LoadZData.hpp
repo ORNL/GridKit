@@ -59,13 +59,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    using LoadZData =
-        ComponentData<real_type,
-                      index_type,
-                      LoadZParameters,
-                      LoadZBuses,
-                      LoadZSignalInputs,
-                      LoadZSignalOutputs,
-                      LoadZMonitorableVariables>;
+    using LoadZData = ComponentData<
+      real_type,
+      index_type,
+      LoadZParameters,
+      LoadZBuses,
+      LoadZSignalInputs,
+      LoadZSignalOutputs,
+      LoadZMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

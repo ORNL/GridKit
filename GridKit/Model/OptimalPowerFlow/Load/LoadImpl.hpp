@@ -32,10 +32,10 @@ namespace GridKit
 
     /// Power into the bus, the negative of the demand
     template <typename scalar_type, typename index_type>
-    [[gnu::always_inline]] void
-    Load<scalar_type, index_type>::externalConstraints([[maybe_unused]] const ScalarT* x,
-                                                       const ScalarT*                  external,
-                                                       ScalarT*                        g) const
+    [[gnu::always_inline]] void Load<scalar_type, index_type>::
+      externalConstraints(
+        [[maybe_unused]] const ScalarT* x, const ScalarT* external, ScalarT* g
+      ) const
     {
       const auto VR = static_cast<size_t>(LoadExternalVariables::VR);
       const auto VI = static_cast<size_t>(LoadExternalVariables::VI);

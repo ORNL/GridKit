@@ -417,12 +417,14 @@ namespace AnalysisManager
       Stats stats_;
 
     public:
-      Rosenbrock(Tableau&&                                             tab,
-                 GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
-                 GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver,
-                 GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
-                 const ErrorNorm<ScalarT, IdxT>*                       err_norm,
-                 GridKit::memory::MemorySpace                          memspace = GridKit::memory::HOST);
+      Rosenbrock(
+        Tableau&&                                             tab,
+        GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
+        GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver,
+        GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
+        const ErrorNorm<ScalarT, IdxT>*                       err_norm,
+        GridKit::memory::MemorySpace memspace = GridKit::memory::HOST
+      );
 
       [[nodiscard("May fail. Check error code.")]]
       int allocate();
@@ -431,11 +433,13 @@ namespace AnalysisManager
       int initializeSimulation(RealT t0);
 
       [[nodiscard("May fail. Check error code.")]]
-      int integrate(const std::vector<RealT>&                           out_times,
-                    StepController<RealT>&                              step_controller,
-                    Parameters                                          params  = {},
-                    std::optional<std::function<void(RealT)>>           out_cb  = {},
-                    std::optional<std::function<void(const StepInfo&)>> step_cb = {});
+      int integrate(
+        const std::vector<RealT>&                           out_times,
+        StepController<RealT>&                              step_controller,
+        Parameters                                          params  = {},
+        std::optional<std::function<void(RealT)>>           out_cb  = {},
+        std::optional<std::function<void(const StepInfo&)>> step_cb = {}
+      );
 
     private:
       /**

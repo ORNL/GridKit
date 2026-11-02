@@ -47,7 +47,8 @@ namespace GridKit
 
         nnz_ = 0;
 
-        GridKit::Enzyme::Sparse::DfDy<ModelT, Fn::InternalResidualWithSignal>::eval(
+        GridKit::Enzyme::Sparse::DfDy<ModelT, Fn::InternalResidualWithSignal>::
+          eval(
             this,
             static_cast<size_t>(f_.getSize()),
             static_cast<size_t>(y_.getSize()),
@@ -60,9 +61,11 @@ namespace GridKit
             J_rows_buffer_,
             J_cols_buffer_,
             J_vals_buffer_,
-            nnz_);
+            nnz_
+          );
 
-        GridKit::Enzyme::Sparse::DfDyp<ModelT, Fn::InternalResidualWithSignal>::eval(
+        GridKit::Enzyme::Sparse::DfDyp<ModelT, Fn::InternalResidualWithSignal>::
+          eval(
             this,
             static_cast<size_t>(f_.getSize()),
             static_cast<size_t>(y_.getSize()),
@@ -76,9 +79,11 @@ namespace GridKit
             J_rows_buffer_,
             J_cols_buffer_,
             J_vals_buffer_,
-            nnz_);
+            nnz_
+          );
 
-        GridKit::Enzyme::Sparse::DfDwb<ModelT, Fn::InternalResidualWithSignal>::eval(
+        GridKit::Enzyme::Sparse::DfDwb<ModelT, Fn::InternalResidualWithSignal>::
+          eval(
             this,
             static_cast<size_t>(f_.getSize()),
             static_cast<size_t>(bus_->size()),
@@ -91,9 +96,11 @@ namespace GridKit
             J_rows_buffer_,
             J_cols_buffer_,
             J_vals_buffer_,
-            nnz_);
+            nnz_
+          );
 
-        GridKit::Enzyme::Sparse::DfDws<ModelT, Fn::InternalResidualWithSignal>::eval(
+        GridKit::Enzyme::Sparse::DfDws<ModelT, Fn::InternalResidualWithSignal>::
+          eval(
             this,
             static_cast<size_t>(f_.getSize()),
             static_cast<size_t>(ws_.getSize()),
@@ -106,7 +113,8 @@ namespace GridKit
             J_rows_buffer_,
             J_cols_buffer_,
             J_vals_buffer_,
-            nnz_);
+            nnz_
+          );
         this->constructCoo();
 
         return 0;

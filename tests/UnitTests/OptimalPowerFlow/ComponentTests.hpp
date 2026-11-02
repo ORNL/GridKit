@@ -46,7 +46,7 @@ namespace GridKit
     public:
       // Branch Hessian rows reach 5.2 eps, and 8.2 eps on x86-64-v4 with ASan.
       static constexpr RealT kTol =
-          static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
+        static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Power into each bus at V1 = 1 and V2 = j, from the admittances by hand
       TestOutcome branchPower()
@@ -407,14 +407,18 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success *= matches(sum(bus.jacobianEntries()),
-                           EntryMap{{{0, 0}, -TWO<RealT> * SHUNT_G * vr},
-                                    {{0, 1}, -TWO<RealT> * SHUNT_G * vi},
-                                    {{1, 0}, TWO<RealT> * SHUNT_B * vr},
-                                    {{1, 1}, TWO<RealT> * SHUNT_B * vi},
-                                    {{2, 0}, TWO<RealT> * vr},
-                                    {{2, 1}, TWO<RealT> * vi}},
-                           kTol);
+        success *= matches(
+          sum(bus.jacobianEntries()),
+          EntryMap{
+            {{0, 0}, -TWO<RealT> * SHUNT_G * vr},
+            {{0, 1}, -TWO<RealT> * SHUNT_G * vi},
+            {{1, 0}, TWO<RealT> * SHUNT_B * vr},
+            {{1, 1}, TWO<RealT> * SHUNT_B * vi},
+            {{2, 0}, TWO<RealT> * vr},
+            {{2, 1}, TWO<RealT> * vi}
+          },
+          kTol
+        );
 
         setMultipliers(system, SHUNT_LAMBDA);
         success *= bus.evaluateHessian(ONE<RealT>) == 0;
@@ -488,14 +492,18 @@ namespace GridKit
           return success.report(__func__);
         }
         // A bus without a shunt contributes nothing to its balance
-        success *= matches(sum(bus.jacobianEntries()),
-                           EntryMap{{{0, 0}, ZERO<RealT>},
-                                    {{0, 1}, ZERO<RealT>},
-                                    {{1, 0}, ZERO<RealT>},
-                                    {{1, 1}, ZERO<RealT>},
-                                    {{2, 0}, TWO<RealT> * vr},
-                                    {{2, 1}, TWO<RealT> * vi}},
-                           kTol);
+        success *= matches(
+          sum(bus.jacobianEntries()),
+          EntryMap{
+            {{0, 0}, ZERO<RealT>},
+            {{0, 1}, ZERO<RealT>},
+            {{1, 0}, ZERO<RealT>},
+            {{1, 1}, ZERO<RealT>},
+            {{2, 0}, TWO<RealT> * vr},
+            {{2, 1}, TWO<RealT> * vi}
+          },
+          kTol
+        );
 
         setMultipliers(system, BUS_LAMBDA);
         success *= bus.evaluateHessian(ONE<RealT>) == 0;
@@ -651,8 +659,10 @@ namespace GridKit
               const RealT u        = status(in_service);
 
               // Derivative of the demand over each voltage component, divided by that component
-              const std::array<RealT, 2> slope{u * (zip.Pi / v + TWO<RealT> * zip.Pz),
-                                               u * (zip.Qi / v + TWO<RealT> * zip.Qz)};
+              const std::array<RealT, 2> slope{
+                u * (zip.Pi / v + TWO<RealT> * zip.Pz),
+                u * (zip.Qi / v + TWO<RealT> * zip.Qz)
+              };
               for (IdxT row = 0; row < slope.size(); ++row)
               {
                 success *= isEqual(actual.at(row), expected.at(row), kTol);
@@ -715,12 +725,13 @@ namespace GridKit
         data.parameters  = {{OPF::LoadParameters::P, IdxT{1}}};
         success         *= OPF::Load<RealT, IdxT>(data).verify().passed();
 
-        for (const auto parameter : {OPF::LoadParameters::P,
-                                     OPF::LoadParameters::Q,
-                                     OPF::LoadParameters::Pi,
-                                     OPF::LoadParameters::Qi,
-                                     OPF::LoadParameters::Pz,
-                                     OPF::LoadParameters::Qz})
+        for (const auto parameter :
+             {OPF::LoadParameters::P,
+              OPF::LoadParameters::Q,
+              OPF::LoadParameters::Pi,
+              OPF::LoadParameters::Qi,
+              OPF::LoadParameters::Pz,
+              OPF::LoadParameters::Qz})
         {
           data.parameters  = {{parameter, std::numeric_limits<RealT>::infinity()}};
           success         *= configurationRejected([&]()
@@ -748,10 +759,12 @@ namespace GridKit
       };
 
       /// Constant power only, constant current, constant impedance, and all three parts
-      static constexpr std::array<ZipParts, 4> ZIP_PARTS{{{0.0, 0.0, 0.0, 0.0},
-                                                          {0.5, -0.2, 0.0, 0.0},
-                                                          {0.0, 0.0, 0.3, 0.1},
-                                                          {0.4, 0.15, 0.25, -0.05}}};
+      static constexpr std::array<ZipParts, 4> ZIP_PARTS{
+        {{0.0, 0.0, 0.0, 0.0},
+         {0.5, -0.2, 0.0, 0.0},
+         {0.0, 0.0, 0.3, 0.1},
+         {0.4, 0.15, 0.25, -0.05}}
+      };
 
       static constexpr std::array<std::array<RealT, 2>, 3> ZIP_VOLTAGES{{{1.1, 0.0}, {0.8, -0.6}, {1.15, 0.2}}};
       static constexpr std::array<RealT, 3>                LOAD_LAMBDA{0.7, -0.4, 0.0};
@@ -760,13 +773,15 @@ namespace GridKit
       {
         OPF::LoadData<RealT, IdxT> data;
         data.id         = "zip";
-        data.parameters = {{OPF::LoadParameters::P, LOAD_P},
-                           {OPF::LoadParameters::Q, LOAD_Q},
-                           {OPF::LoadParameters::Pi, zip.Pi},
-                           {OPF::LoadParameters::Qi, zip.Qi},
-                           {OPF::LoadParameters::Pz, zip.Pz},
-                           {OPF::LoadParameters::Qz, zip.Qz},
-                           {OPF::LoadParameters::in_service, in_service}};
+        data.parameters = {
+          {OPF::LoadParameters::P, LOAD_P},
+          {OPF::LoadParameters::Q, LOAD_Q},
+          {OPF::LoadParameters::Pi, zip.Pi},
+          {OPF::LoadParameters::Qi, zip.Qi},
+          {OPF::LoadParameters::Pz, zip.Pz},
+          {OPF::LoadParameters::Qz, zip.Qz},
+          {OPF::LoadParameters::in_service, in_service}
+        };
         return data;
       }
 
@@ -784,8 +799,10 @@ namespace GridKit
       static std::pair<RealT, RealT> loadWeights(bool in_service, const ZipParts& zip)
       {
         const RealT u = status(in_service);
-        return {-u * (LOAD_LAMBDA[0] * zip.Pi + LOAD_LAMBDA[1] * zip.Qi),
-                -u * (LOAD_LAMBDA[0] * zip.Pz + LOAD_LAMBDA[1] * zip.Qz)};
+        return {
+          -u * (LOAD_LAMBDA[0] * zip.Pi + LOAD_LAMBDA[1] * zip.Qi),
+          -u * (LOAD_LAMBDA[0] * zip.Pz + LOAD_LAMBDA[1] * zip.Qz)
+        };
       }
 
       template <typename ScalarT>
@@ -954,11 +971,13 @@ namespace GridKit
        *
        * @param[in] admittance - \f$g_{k1}, b_{k1}, g_{k2}, b_{k2}\f$
        */
-      static void addPowerHessian(EntryMap&                   hessian,
-                                  IdxT                        k,
-                                  const std::array<RealT, 4>& admittance,
-                                  RealT                       weight_p,
-                                  RealT                       weight_q)
+      static void addPowerHessian(
+        EntryMap&                   hessian,
+        IdxT                        k,
+        const std::array<RealT, 4>& admittance,
+        RealT                       weight_p,
+        RealT                       weight_q
+      )
       {
         for (IdxT m = 0; m < 2; ++m)
         {

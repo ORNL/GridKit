@@ -215,9 +215,9 @@ namespace GridKit
      * @return 0 if successful, 1 otherwise.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setData(ScalarT*            data,
-                                       IdxT                size,
-                                       memory::MemorySpace memspace)
+    int Vector<ScalarT, IdxT>::setData(
+      ScalarT* data, IdxT size, memory::MemorySpace memspace
+    )
     {
       if (data == nullptr && size != IdxT{})
       {
@@ -296,9 +296,11 @@ namespace GridKit
      * @return 0 if successful, 1 otherwise.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyFromExternal(const ScalarT*      source,
-                                                memory::MemorySpace memspaceSrc,
-                                                memory::MemorySpace memspaceDst)
+    int Vector<ScalarT, IdxT>::copyFromExternal(
+      const ScalarT*      source,
+      memory::MemorySpace memspaceSrc,
+      memory::MemorySpace memspaceDst
+    )
     {
       if (source == nullptr)
       {
@@ -776,8 +778,10 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::resize(IdxT new_n_size)
     {
-      assert(owns_cpu_data_ && owns_gpu_data_
-             && "Cannot resize if vector is not owning the data.");
+      assert(
+        owns_cpu_data_ && owns_gpu_data_
+        && "Cannot resize if vector is not owning the data."
+      );
 
       if (h_data_ == nullptr && d_data_ == nullptr)
       {

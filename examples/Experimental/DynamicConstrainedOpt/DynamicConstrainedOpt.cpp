@@ -92,7 +92,9 @@ int main()
 
   // Create dynamic objective interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
-      new IpoptInterface::DynamicObjective<double, size_t>(&idas, t_init, t_final, dt_monitor);
+    new IpoptInterface::DynamicObjective<double, size_t>(
+      &idas, t_init, t_final, dt_monitor
+    );
 
   auto* param = model.param().getData();
 
@@ -123,7 +125,9 @@ int main()
 
   // Create dynamic constraint interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicConstraintInterface =
-      new IpoptInterface::DynamicConstraint<double, size_t>(&idas, t_init, t_final, dt_monitor);
+    new IpoptInterface::DynamicConstraint<double, size_t>(
+      &idas, t_init, t_final, dt_monitor
+    );
 
   // Initialize problem
   param[0] = Pm;

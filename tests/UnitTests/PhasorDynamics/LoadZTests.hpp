@@ -38,7 +38,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* load =
-            new PhasorDynamics::LoadZ<ScalarT, IdxT>(bus, DataT{});
+          new PhasorDynamics::LoadZ<ScalarT, IdxT>(bus, DataT{});
 
         success *= (load != nullptr);
 
@@ -249,8 +249,8 @@ namespace GridKit
         return data;
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
-                                                                                  const RealT X)
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      analyticalJacobian(const RealT R, const RealT X)
       {
         const RealT b = -X / (R * R + X * X);
         const RealT g = R / (R * R + X * X);

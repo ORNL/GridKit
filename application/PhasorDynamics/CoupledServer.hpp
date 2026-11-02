@@ -35,7 +35,8 @@ namespace GridKit
             || !sameTime(message.interval, options_.interval))
         {
           throw std::runtime_error(
-              "invalid co-simulation initialization or incompatible study timing");
+            "invalid co-simulation initialization or incompatible study timing"
+          );
         }
 
         session_ = message.session;
@@ -47,7 +48,8 @@ namespace GridKit
         }
 
         simulation_ = std::make_unique<CoupledSimulation>(
-            data_, options_.inputs, options_.outputs, &message.signals);
+          data_, options_.inputs, options_.outputs, &message.signals
+        );
         simulation_->start();
         outgoing_.signals    = simulation_->outputs();
         outgoing_.final_time = data_.tmax;
@@ -96,7 +98,7 @@ namespace GridKit
       bool handleRequest(const CoSimulationMessage& message)
       {
         outgoing_ =
-            CoSimulationMessage(message.type, message.session, message.time);
+          CoSimulationMessage(message.type, message.session, message.time);
         if (message.type == CoSim::MessageType::INIT)
         {
           beginStudy(message);
@@ -108,7 +110,8 @@ namespace GridKit
           if (simulation_ || message.session != session_)
           {
             throw std::runtime_error(
-                "shutdown requires a completed co-simulation session");
+              "shutdown requires a completed co-simulation session"
+            );
           }
           return false;
         }
@@ -116,7 +119,8 @@ namespace GridKit
         if (!simulation_ || message.session != session_)
         {
           throw std::runtime_error(
-              "co-simulation message has no matching active session");
+            "co-simulation message has no matching active session"
+          );
         }
 
         switch (message.type)
@@ -124,10 +128,12 @@ namespace GridKit
         case CoSim::MessageType::STEP:
           if (message.time - simulation_->time() > options_.interval
               && !sameTime(
-                  message.time - simulation_->time(), options_.interval))
+                message.time - simulation_->time(), options_.interval
+              ))
           {
             throw std::runtime_error(
-                "co-simulation step exceeds the exchange interval");
+              "co-simulation step exceeds the exchange interval"
+            );
           }
 
           simulation_->setInputs(message.signals);
@@ -139,7 +145,8 @@ namespace GridKit
           if (!sameTime(message.time, simulation_->time()))
           {
             throw std::runtime_error(
-                "interface update has the wrong simulation time");
+              "interface update has the wrong simulation time"
+            );
           }
 
           if (message.type == CoSim::MessageType::UPDATE)

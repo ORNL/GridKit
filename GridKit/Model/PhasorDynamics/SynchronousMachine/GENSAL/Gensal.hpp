@@ -134,9 +134,11 @@ namespace GridKit
 
     public:
       __attribute__((always_inline)) inline int evaluateInternalResidual(
-          const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
+      );
       __attribute__((always_inline)) inline int evaluateBusResidual(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
+      );
 
     private:
       /* Identification */

@@ -21,10 +21,8 @@ namespace GridKit
      * - Number of independent variables = 2
      */
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT*             bus,
-                                          const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus, const ModelDataT& data)
+      : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
 
@@ -154,11 +152,13 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::
+      evaluateBusResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
         [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+        ScalarT*                        h
+      )
     {
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
@@ -173,11 +173,13 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateInternalResidual(
+    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::
+      evaluateInternalResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
-        ScalarT*                        f)
+        ScalarT*                        f
+      )
     {
       const ScalarT Vr = wb[0];
       const ScalarT Vi = wb[1];

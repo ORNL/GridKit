@@ -120,13 +120,15 @@ namespace GridKit
      * x must equal k.
      */
     template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::gemv(char                   transpose,
-                                               IdxT                   k,
-                                               const ScalarT          alpha,
-                                               const ScalarT          beta,
-                                               Vector<ScalarT, IdxT>* V,
-                                               Vector<ScalarT, IdxT>* y,
-                                               Vector<ScalarT, IdxT>* x)
+    void VectorHandlerCpu<ScalarT, IdxT>::gemv(
+      char                   transpose,
+      IdxT                   k,
+      const ScalarT          alpha,
+      const ScalarT          beta,
+      Vector<ScalarT, IdxT>* V,
+      Vector<ScalarT, IdxT>* y,
+      Vector<ScalarT, IdxT>* x
+    )
     {
       // x = beta*x + alpha*V*y OR x = beta*x + alpha*V^Ty
       const ScalarT* V_data = V->getData(memory::HOST);
@@ -139,8 +141,10 @@ namespace GridKit
       switch (transpose)
       {
       case 'T':
-        assert((V->getSize() == y->getSize())
-               && "gemv: Size mismatch! Size of V does not match size of y.");
+        assert(
+          (V->getSize() == y->getSize())
+          && "gemv: Size mismatch! Size of V does not match size of y."
+        );
         for (i = 0; i < k; ++i)
         {
           sum       = beta * x_data[i];
@@ -156,8 +160,10 @@ namespace GridKit
         }
         break;
       case 'N':
-        assert((V->getSize() == x->getSize())
-               && "gemv: Size mismatch! Size of V does not match size of x.");
+        assert(
+          (V->getSize() == x->getSize())
+          && "gemv: Size mismatch! Size of V does not match size of x."
+        );
         for (i = 0; i < n; ++i)
         {
           sum       = beta * x_data[i];
@@ -190,11 +196,13 @@ namespace GridKit
      * @pre _k_ > 0, _size_ > 0, _size_ = x->getSize()
      */
     template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::axpyMulti(IdxT                   size,
-                                                    Vector<ScalarT, IdxT>* alpha,
-                                                    IdxT                   k,
-                                                    Vector<ScalarT, IdxT>* x,
-                                                    Vector<ScalarT, IdxT>* y)
+    void VectorHandlerCpu<ScalarT, IdxT>::axpyMulti(
+      IdxT                   size,
+      Vector<ScalarT, IdxT>* alpha,
+      IdxT                   k,
+      Vector<ScalarT, IdxT>* x,
+      Vector<ScalarT, IdxT>* y
+    )
     {
       ScalarT* alpha_data = alpha->getData(memory::HOST);
       ScalarT* y_data     = y->getData(memory::HOST);
@@ -228,11 +236,13 @@ namespace GridKit
      * @pre _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
      */
     template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::dot2Multi(IdxT                   size,
-                                                    Vector<ScalarT, IdxT>* V,
-                                                    IdxT                   k,
-                                                    Vector<ScalarT, IdxT>* x,
-                                                    Vector<ScalarT, IdxT>* res)
+    void VectorHandlerCpu<ScalarT, IdxT>::dot2Multi(
+      IdxT                   size,
+      Vector<ScalarT, IdxT>* V,
+      IdxT                   k,
+      Vector<ScalarT, IdxT>* x,
+      Vector<ScalarT, IdxT>* res
+    )
     {
       ScalarT*       res_data = res->getData(memory::HOST);
       const ScalarT* x_data   = x->getData(memory::HOST);

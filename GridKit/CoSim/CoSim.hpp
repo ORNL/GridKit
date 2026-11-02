@@ -30,20 +30,23 @@ namespace GridKit
     class CoSim
     {
       static_assert(
-          std::atomic<detail::RunState>::is_always_lock_free,
-          "lock-free atomics for std::uint8_t are required for co-simulation");
+        std::atomic<detail::RunState>::is_always_lock_free,
+        "lock-free atomics for std::uint8_t are required for co-simulation"
+      );
 
     public:
       CoSim(
-          const std::string&           address,
-          StepFunction<scalar_type>    step,
-          ExtractFunction<scalar_type> extract,
-          int                          timeout_ms = 30000);
+        const std::string&           address,
+        StepFunction<scalar_type>    step,
+        ExtractFunction<scalar_type> extract,
+        int                          timeout_ms = 30000
+      );
       CoSim(
-          const std::string&                  address,
-          MessageStepFunction<scalar_type>    step,
-          MessageExtractFunction<scalar_type> extract,
-          int                                 timeout_ms = 30000);
+        const std::string&                  address,
+        MessageStepFunction<scalar_type>    step,
+        MessageExtractFunction<scalar_type> extract,
+        int                                 timeout_ms = 30000
+      );
       CoSim(const CoSim&)            = delete;
       CoSim& operator=(const CoSim&) = delete;
 
@@ -55,7 +58,8 @@ namespace GridKit
       {
         auto expected = detail::RunState::RUNNING;
         state_.compare_exchange_strong(
-            expected, detail::RunState::STOP_REQUESTED, std::memory_order_relaxed);
+          expected, detail::RunState::STOP_REQUESTED, std::memory_order_relaxed
+        );
       }
 
       /// Check if the co-simulation is running.

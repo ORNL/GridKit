@@ -179,10 +179,12 @@ namespace GridKit
         // Device uses a signal of its parent
         const json signal_r = {{"signal_id", 1}, {"name", "sr"}};
         const json signal_i = {{"signal_id", 2}, {"name", "si"}};
-        const json source   = {{"class", "ConstantSignalSource"},
-                               {"ports", {{"sr", 1}, {"si", 2}}},
-                               {"id", "1"},
-                               {"params", json::object()}};
+        const json source   = {
+          {"class", "ConstantSignalSource"},
+          {"ports", {{"sr", 1}, {"si", 2}}},
+          {"id", "1"},
+          {"params", json::object()}
+        };
         input               = hierarchical;
         input["signals"]    = json::array({signal_r, signal_i});
         input["subsystems"][0]["devices"].push_back(source);
@@ -312,7 +314,8 @@ namespace GridKit
         auto* c = b->getSubsystem(0);
 
         PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> top_dt(
-            readJson("SubsystemHierarchical.json").template get<DataT>());
+          readJson("SubsystemHierarchical.json").template get<DataT>()
+        );
 
         for (auto* system : {&flat, &top})
         {

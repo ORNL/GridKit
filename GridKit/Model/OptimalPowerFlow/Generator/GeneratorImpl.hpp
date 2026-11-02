@@ -64,10 +64,10 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    [[gnu::always_inline]] void
-    Generator<scalar_type, index_type>::externalConstraints(const ScalarT*                  x,
-                                                            [[maybe_unused]] const ScalarT* external,
-                                                            ScalarT*                        g) const
+    [[gnu::always_inline]] void Generator<scalar_type, index_type>::
+      externalConstraints(
+        const ScalarT* x, [[maybe_unused]] const ScalarT* external, ScalarT* g
+      ) const
     {
       const auto P  = static_cast<size_t>(GeneratorInternalVariables::P);
       const auto Q  = static_cast<size_t>(GeneratorInternalVariables::Q);

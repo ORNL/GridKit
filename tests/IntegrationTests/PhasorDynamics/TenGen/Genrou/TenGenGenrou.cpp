@@ -39,12 +39,14 @@ GridKit::PhasorDynamics::GenrouData<real_type, index_type> genData(real_type p0,
 }
 
 /// Branch data with the given line and transformer parameters
-GridKit::PhasorDynamics::BranchData<real_type, index_type> branchData(const real_type R,
-                                                                      const real_type X,
-                                                                      const real_type G,
-                                                                      const real_type B,
-                                                                      const real_type tap   = 1.0,
-                                                                      const real_type phase = 0.0)
+GridKit::PhasorDynamics::BranchData<real_type, index_type> branchData(
+  const real_type R,
+  const real_type X,
+  const real_type G,
+  const real_type B,
+  const real_type tap   = 1.0,
+  const real_type phase = 0.0
+)
 {
   using Parameter = GridKit::PhasorDynamics::BranchParameters;
 
@@ -166,9 +168,9 @@ int main()
     // Output voltage magnitudes on buses
     for (size_t i = 0; i < 9; ++i)
     {
-      out << std::sqrt(yval[2 * i] * yval[2 * i]
-                       + yval[2 * i + 1] * yval[2 * i + 1])
-          << ",";
+      out << std::sqrt(
+        yval[2 * i] * yval[2 * i] + yval[2 * i + 1] * yval[2 * i + 1]
+      ) << ",";
     }
 
     // Output generator frequencies
@@ -227,9 +229,10 @@ int main()
   Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
   auto error_set = GridKit::Testing::compareCSV(
-      "TenGenGenrou_Results.csv",
-      "reference/TenGenGenrou.ref.csv",
-      GridKit::Testing::ErrorType::ABSOLUTE);
+    "TenGenGenrou_Results.csv",
+    "reference/TenGenGenrou.ref.csv",
+    GridKit::Testing::ErrorType::ABSOLUTE
+  );
   error_set->display();
   success *= error_set->total_error.max_value < 1e-4;
 

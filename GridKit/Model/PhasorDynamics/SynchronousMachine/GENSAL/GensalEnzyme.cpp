@@ -36,80 +36,100 @@ namespace GridKit
 
       nnz_ = 0;
 
-      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
-                                    GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
-                                                                                                                static_cast<size_t>(f_.getSize()),
-                                                                                                                static_cast<size_t>(y_.getSize()),
-                                                                                                                (this->getResidualIndices()).data(),
-                                                                                                                (this->getVariableIndices()).data(),
-                                                                                                                y_.getData(),
-                                                                                                                yp_.getData(),
-                                                                                                                wb_.getData(),
-                                                                                                                ws_.getData(),
-                                                                                                                J_rows_buffer_,
-                                                                                                                J_cols_buffer_,
-                                                                                                                J_vals_buffer_,
-                                                                                                                nnz_);
+      GridKit::Enzyme::Sparse::DfDy<
+        GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+        GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::
+        eval(
+          this,
+          static_cast<size_t>(f_.getSize()),
+          static_cast<size_t>(y_.getSize()),
+          (this->getResidualIndices()).data(),
+          (this->getVariableIndices()).data(),
+          y_.getData(),
+          yp_.getData(),
+          wb_.getData(),
+          ws_.getData(),
+          J_rows_buffer_,
+          J_cols_buffer_,
+          J_vals_buffer_,
+          nnz_
+        );
 
-      GridKit::Enzyme::Sparse::DfDyp<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
-                                                                                                                 static_cast<size_t>(f_.getSize()),
-                                                                                                                 static_cast<size_t>(y_.getSize()),
-                                                                                                                 (this->getResidualIndices()).data(),
-                                                                                                                 (this->getVariableIndices()).data(),
-                                                                                                                 y_.getData(),
-                                                                                                                 yp_.getData(),
-                                                                                                                 wb_.getData(),
-                                                                                                                 ws_.getData(),
-                                                                                                                 alpha_,
-                                                                                                                 J_rows_buffer_,
-                                                                                                                 J_cols_buffer_,
-                                                                                                                 J_vals_buffer_,
-                                                                                                                 nnz_);
+      GridKit::Enzyme::Sparse::DfDyp<
+        GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+        GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::
+        eval(
+          this,
+          static_cast<size_t>(f_.getSize()),
+          static_cast<size_t>(y_.getSize()),
+          (this->getResidualIndices()).data(),
+          (this->getVariableIndices()).data(),
+          y_.getData(),
+          yp_.getData(),
+          wb_.getData(),
+          ws_.getData(),
+          alpha_,
+          J_rows_buffer_,
+          J_cols_buffer_,
+          J_vals_buffer_,
+          nnz_
+        );
 
-      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
-                                                                                                                 static_cast<size_t>(f_.getSize()),
-                                                                                                                 static_cast<size_t>(bus_->size()),
-                                                                                                                 (this->getResidualIndices()).data(),
-                                                                                                                 (bus_->getVariableIndices()).data(),
-                                                                                                                 y_.getData(),
-                                                                                                                 yp_.getData(),
-                                                                                                                 wb_.getData(),
-                                                                                                                 ws_.getData(),
-                                                                                                                 J_rows_buffer_,
-                                                                                                                 J_cols_buffer_,
-                                                                                                                 J_vals_buffer_,
-                                                                                                                 nnz_);
+      GridKit::Enzyme::Sparse::DfDwb<
+        GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+        GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::
+        eval(
+          this,
+          static_cast<size_t>(f_.getSize()),
+          static_cast<size_t>(bus_->size()),
+          (this->getResidualIndices()).data(),
+          (bus_->getVariableIndices()).data(),
+          y_.getData(),
+          yp_.getData(),
+          wb_.getData(),
+          ws_.getData(),
+          J_rows_buffer_,
+          J_cols_buffer_,
+          J_vals_buffer_,
+          nnz_
+        );
 
-      GridKit::Enzyme::Sparse::DfDws<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
-                                                                                                                 static_cast<size_t>(f_.getSize()),
-                                                                                                                 static_cast<size_t>(ws_.getSize()),
-                                                                                                                 (this->getResidualIndices()).data(),
-                                                                                                                 ws_indices_.data(),
-                                                                                                                 y_.getData(),
-                                                                                                                 yp_.getData(),
-                                                                                                                 wb_.getData(),
-                                                                                                                 ws_.getData(),
-                                                                                                                 J_rows_buffer_,
-                                                                                                                 J_cols_buffer_,
-                                                                                                                 J_vals_buffer_,
-                                                                                                                 nnz_);
+      GridKit::Enzyme::Sparse::DfDws<
+        GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+        GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::
+        eval(
+          this,
+          static_cast<size_t>(f_.getSize()),
+          static_cast<size_t>(ws_.getSize()),
+          (this->getResidualIndices()).data(),
+          ws_indices_.data(),
+          y_.getData(),
+          yp_.getData(),
+          wb_.getData(),
+          ws_.getData(),
+          J_rows_buffer_,
+          J_cols_buffer_,
+          J_vals_buffer_,
+          nnz_
+        );
 
-      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
-                                    GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
-                                                                                                 static_cast<size_t>(bus_->size()),
-                                                                                                 static_cast<size_t>(y_.getSize()),
-                                                                                                 (bus_->getResidualIndices()).data(),
-                                                                                                 (this->getVariableIndices()).data(),
-                                                                                                 y_.getData(),
-                                                                                                 yp_.getData(),
-                                                                                                 wb_.getData(),
-                                                                                                 J_rows_buffer_,
-                                                                                                 J_cols_buffer_,
-                                                                                                 J_vals_buffer_,
-                                                                                                 nnz_);
+      GridKit::Enzyme::Sparse::DhDy<
+        GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+        GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::
+        eval(
+          this,
+          static_cast<size_t>(bus_->size()),
+          static_cast<size_t>(y_.getSize()),
+          (bus_->getResidualIndices()).data(),
+          (this->getVariableIndices()).data(),
+          y_.getData(),
+          yp_.getData(),
+          wb_.getData(),
+          J_rows_buffer_,
+          J_cols_buffer_,
+          J_vals_buffer_,
+          nnz_
+        );
 
       this->constructCoo();
 

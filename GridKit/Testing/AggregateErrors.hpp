@@ -14,7 +14,7 @@ namespace GridKit
   {
 
     inline constexpr double DEFAULT_ABS_ERROR_THRESHOLD =
-        std::numeric_limits<double>::epsilon();
+      std::numeric_limits<double>::epsilon();
 
     /**
      * @brief Aggregate norm data for a single variable over time
@@ -71,7 +71,8 @@ namespace GridKit
        * @brief Pretty-print label and values to output stream
        */
       std::ostream& display(
-          std::ostream& os = std::cout, const std::string& indent = "  ") const
+        std::ostream& os = std::cout, const std::string& indent = "  "
+      ) const
       {
         os << indent << label << ":\n"
            << indent << indent << "max     : "
@@ -165,8 +166,8 @@ namespace GridKit
     {
       template <typename C>
       explicit ErrorSetImpl(
-          const C& labels,
-          double   abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD)
+        const C& labels, double abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD
+      )
         : ErrorSet(labels),
           abs_threshold_(abs_threshold),
           ref_norms_(std::size(labels))
@@ -221,9 +222,10 @@ namespace GridKit
 
     template <typename C>
     std::unique_ptr<ErrorSet> makeErrorSet(
-        ErrorType type,
-        const C&  labels,
-        double    abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD)
+      ErrorType type,
+      const C&  labels,
+      double    abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD
+    )
     {
       switch (type)
       {

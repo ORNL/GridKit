@@ -29,7 +29,7 @@ namespace GridKit
       ~ExciterIeeet1Tests() = default;
 
       static constexpr RealT kTol =
-          static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
+        static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
 
       TestOutcome constructor()
       {
@@ -248,9 +248,9 @@ namespace GridKit
         const auto* f = exciter.getResidual().getData();
 
         // vref absorbs both limiter inputs; later changes enter with unit gain.
-        success *= isEqual(vref_node.read(),
-                           y[0] + y[4] + y[5] - vuel_value - voel_value,
-                           kTol);
+        success *= isEqual(
+          vref_node.read(), y[0] + y[4] + y[5] - vuel_value - voel_value, kTol
+        );
         success *= isEqual(f[4], static_cast<ScalarT>(0.0), kTol);
 
         vuel_value = -0.3;

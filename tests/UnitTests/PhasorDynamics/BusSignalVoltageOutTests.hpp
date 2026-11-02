@@ -265,9 +265,11 @@ namespace GridKit
         success *= isEqual(f[1].getValue(), 2.4);
 
         VariableT::DependencyMap expected_f0{
-            {6, 0.0}, {8, 0.0}, {ir_var_number, 1.0}};
+          {6, 0.0}, {8, 0.0}, {ir_var_number, 1.0}
+        };
         VariableT::DependencyMap expected_f1{
-            {6, 0.0}, {8, 0.0}, {ii_var_number, 1.0}};
+          {6, 0.0}, {8, 0.0}, {ii_var_number, 1.0}
+        };
         success *= isEqual(f[0].getDependencies(), expected_f0);
         success *= isEqual(f[1].getDependencies(), expected_f1);
 

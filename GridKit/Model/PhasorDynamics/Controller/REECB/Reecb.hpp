@@ -109,7 +109,7 @@ namespace GridKit
       public:
         /// Initialization reconstruction tolerance.
         static constexpr RealT INITIALIZATION_TOLERANCE =
-            static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
         Reecb(BusT* bus, const ModelDataT& data);
         ~Reecb();
@@ -133,17 +133,18 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         [[gnu::always_inline]] inline int evaluateInternalResidual(
-            const ScalarT* y,
-            const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
-            ScalarT*       f);
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f
+        );
 
       private:
         /// Hinge width chosen so closed-circle leakage stays below the
         /// initialization tolerance [p.u. current squared].
         static constexpr RealT CURRENT_CIRCLE_KNEE =
-            INITIALIZATION_TOLERANCE / Math::MU<RealT>;
+          INITIALIZATION_TOLERANCE / Math::MU<RealT>;
 
         struct InitialPoint;
 

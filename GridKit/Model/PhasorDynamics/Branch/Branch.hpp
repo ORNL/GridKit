@@ -114,17 +114,19 @@ namespace GridKit
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
 
-      static __attribute__((always_inline)) inline void addAdmittanceContribution(const RealT   G,
-                                                                                  const RealT   B,
-                                                                                  const ScalarT Vr,
-                                                                                  const ScalarT Vi,
-                                                                                  ScalarT&      Ir,
-                                                                                  ScalarT&      Ii);
+      static __attribute__((always_inline)) inline void
+      addAdmittanceContribution(
+        const RealT   G,
+        const RealT   B,
+        const ScalarT Vr,
+        const ScalarT Vi,
+        ScalarT&      Ir,
+        ScalarT&      Ii
+      );
 
-      static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(const RealT    G,
-                                                                                const RealT    B,
-                                                                                const ScalarT* wb,
-                                                                                ScalarT*       h);
+      static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(
+        const RealT G, const RealT B, const ScalarT* wb, ScalarT* h
+      );
 
       ScalarT& Vr1()
       {
@@ -168,13 +170,17 @@ namespace GridKit
 
     public:
       __attribute__((always_inline)) inline int evaluateBusResidual11(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
+      );
       __attribute__((always_inline)) inline int evaluateBusResidual12(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
+      );
       __attribute__((always_inline)) inline int evaluateBusResidual21(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
+      );
       __attribute__((always_inline)) inline int evaluateBusResidual22(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
+      );
 
     private:
       BusT* bus1_;

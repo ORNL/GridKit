@@ -32,8 +32,7 @@ namespace GridKit
        * @param data Data to initialize the model from.
        */
       template <typename scalar_type, typename index_type>
-      Tgov1<scalar_type, index_type>::Tgov1(
-          const ModelDataT& data)
+      Tgov1<scalar_type, index_type>::Tgov1(const ModelDataT& data)
       {
         initializeParameters(data);
 
@@ -144,7 +143,8 @@ namespace GridKit
           auto*      y  = y_.getData();
           const auto PM = static_cast<IdxT>(Tgov1InternalVariables::PM);
           pmech_port.link(
-              &y[static_cast<size_t>(PM)], &(this->getVariableIndex(PM)));
+            &y[static_cast<size_t>(PM)], &(this->getVariableIndex(PM))
+          );
         }
 
         allocated_ = true;
@@ -163,8 +163,10 @@ namespace GridKit
         checks.check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
         checks.check(R_ != ZERO<RealT>, "R must be nonzero");
         checks.check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
-        checks.check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
-                     "pmech output signal must be assigned");
+        checks.check(
+          ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
+          "pmech output signal must be assigned"
+        );
 
         auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>();
         if (speed_port.connected() && !speed_port.linked())
@@ -279,12 +281,14 @@ namespace GridKit
        *
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Tgov1<scalar_type, index_type>::evaluateInternalResidual(
+      __attribute__((always_inline)) inline int Tgov1<scalar_type, index_type>::
+        evaluateInternalResidual(
           const ScalarT*                  y,
           const ScalarT*                  yp,
           [[maybe_unused]] const ScalarT* wb,
           const ScalarT*                  ws,
-          ScalarT*                        f)
+          ScalarT*                        f
+        )
       {
         const auto PTX = static_cast<size_t>(Tgov1InternalVariables::PTX);
         const auto PV  = static_cast<size_t>(Tgov1InternalVariables::PV);
