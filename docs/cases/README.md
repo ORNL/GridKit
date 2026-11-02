@@ -71,6 +71,20 @@ IEEE39 <OptimalPowerFlow/IEEE39/README>
 :class-card: gk-card
 :::
 
+:::{grid-item-card} ACTIVSg25k
+:link: PhasorDynamics/ACTIVSg25k/README
+:link-type: doc
+:img-top: ../../cases/PhasorDynamics/ACTIVSg25k/ACTIVSg25k.png
+:class-card: gk-card
+:::
+
+:::{grid-item-card} ACTIVSg70k
+:link: PhasorDynamics/ACTIVSg70k/README
+:link-type: doc
+:img-top: ../../cases/PhasorDynamics/ACTIVSg70k/ACTIVSg70k.png
+:class-card: gk-card
+:::
+
 :::{grid-item-card} Hawaii
 :link: PhasorDynamics/Hawaii/README
 :link-type: doc
@@ -118,6 +132,8 @@ ACTIVSg200 <PhasorDynamics/ACTIVSg200/README>
 ACTIVSg500 <PhasorDynamics/ACTIVSg500/README>
 ACTIVSg2000 <PhasorDynamics/ACTIVSg2000/README>
 ACTIVSg10k <PhasorDynamics/ACTIVSg10k/README>
+ACTIVSg25k <PhasorDynamics/ACTIVSg25k/README>
+ACTIVSg70k <PhasorDynamics/ACTIVSg70k/README>
 Hawaii <PhasorDynamics/Hawaii/README>
 IEEE39 <PhasorDynamics/IEEE39/README>
 Two-Area Kundur <PhasorDynamics/TwoArea/README>
