@@ -103,7 +103,7 @@ namespace GridKit
         }
 
         auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
-        addComponent(regca);
+        addComponent(regca, regcadata.label());
 
         regca->getPorts().connect(regcadata, signal_nodes_);
       }
@@ -123,12 +123,11 @@ namespace GridKit
           bus2_index = branchdata.buses.at(BranchBuses::bus2);
         }
 
-        auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index),
-                                                 getBus(bus2_index),
-                                                 branchdata);
+        auto* branch = new BranchT(getBus(bus1_index),
+                                   getBus(bus2_index),
+                                   branchdata);
 
-        gridkit_branch_indices_[branchdata.disambiguation_string] = static_cast<IdxT>(components_.size());
-        addComponent(branch);
+        addComponent(branch, branchdata.label());
       }
 
       // Add loads
@@ -141,7 +140,7 @@ namespace GridKit
           bus_index = loaddata.buses.at(LoadZBuses::bus);
         }
         auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
-        addComponent(load);
+        addComponent(load, loaddata.label());
       }
 
       // Add zip loads
@@ -155,7 +154,7 @@ namespace GridKit
         }
         auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
                                                    loadzipdata);
-        addComponent(loadzip);
+        addComponent(loadzip, loadzipdata.label());
       }
 
       // Add GENROU generators
@@ -167,7 +166,7 @@ namespace GridKit
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
         auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
-        addComponent(gen);
+        addComponent(gen, gendata.label());
         gen->getPorts().connect(gendata, signal_nodes_);
       }
 
@@ -181,7 +180,7 @@ namespace GridKit
         }
 
         auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
-        addComponent(gen);
+        addComponent(gen, gendata.label());
         gen->getPorts().connect(gendata, signal_nodes_);
       }
 
@@ -194,7 +193,7 @@ namespace GridKit
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
-        addComponent(gen);
+        addComponent(gen, gendata.label());
         gen->getPorts().connect(gendata, signal_nodes_);
       }
 
@@ -209,7 +208,7 @@ namespace GridKit
         }
 
         auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
-        addComponent(reecb);
+        addComponent(reecb, reecbdata.label());
 
         reecb->getPorts().connect(reecbdata, signal_nodes_);
       }
@@ -218,7 +217,7 @@ namespace GridKit
       for (const auto& govdata : data.gov)
       {
         auto* gov = new Tgov1<ScalarT, IdxT>(govdata);
-        addComponent(gov);
+        addComponent(gov, govdata.label());
 
         gov->getPorts().connect(govdata, signal_nodes_);
       }
@@ -227,7 +226,7 @@ namespace GridKit
       for (const auto& gastptidata : data.gastpti)
       {
         auto* gastpti = new GastPti<ScalarT, IdxT>(gastptidata);
-        addComponent(gastpti);
+        addComponent(gastpti, gastptidata.label());
 
         gastpti->getPorts().connect(gastptidata, signal_nodes_);
       }
@@ -236,7 +235,7 @@ namespace GridKit
       for (const auto& hygovdata : data.hygov)
       {
         auto* hygov = new Hygov<ScalarT, IdxT>(hygovdata);
-        addComponent(hygov);
+        addComponent(hygov, hygovdata.label());
 
         hygov->getPorts().connect(hygovdata, signal_nodes_);
       }
@@ -246,7 +245,7 @@ namespace GridKit
       for (const auto& stabdata : data.stabilizer)
       {
         auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-        addComponent(stabilizer);
+        addComponent(stabilizer, stabdata.label());
         stabilizer->getPorts().connect(stabdata, signal_nodes_);
       }
 
@@ -259,7 +258,7 @@ namespace GridKit
         }
 
         auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        addComponent(exciter);
+        addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
       }
@@ -273,7 +272,7 @@ namespace GridKit
         }
 
         auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
-        addComponent(exciter);
+        addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
       }
@@ -287,7 +286,7 @@ namespace GridKit
         }
 
         auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
-        addComponent(exciter);
+        addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
       }
@@ -303,7 +302,7 @@ namespace GridKit
         }
 
         auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
-        addComponent(repca);
+        addComponent(repca, repcadata.label());
 
         repca->getPorts().connect(repcadata, signal_nodes_);
       }
@@ -312,7 +311,7 @@ namespace GridKit
       for (const auto& srcdata : data.constant_source)
       {
         auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
-        addComponent(source);
+        addComponent(source, srcdata.label());
         source->getPorts().connect(srcdata, signal_nodes_);
       }
 
@@ -320,7 +319,7 @@ namespace GridKit
       for (const auto& srcdata : data.function_source)
       {
         auto* source = new FunctionSignalSource<ScalarT, IdxT>(srcdata);
-        addComponent(source);
+        addComponent(source, srcdata.label());
         source->getPorts().connect(srcdata, signal_nodes_);
       }
 
@@ -939,14 +938,14 @@ namespace GridKit
      *
      * Add component at the end of the components array and set GridKit's component ID
      *
+     * @param[in] component - Component to add
+     * @param[in] label     - ComponentData::label() of the device (e.g. "Genrou_1"),
+     *                        or empty for components without case-file data
+     *
      * @pre This system has no subsystems.
-     *
-     * @todo: No integer user-facing component_id for now, but we could map GridKit's
-     * component ID to the disambiguation_string
-     *
      */
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addComponent(ComponentT* component)
+    void SystemModel<scalar_type, index_type>::addComponent(ComponentT* component, const std::string& label)
     {
       if (!subsystems_.empty())
       {
@@ -959,6 +958,11 @@ namespace GridKit
       component->setSystemBase(this->freq_system_base_,
                                this->va_system_base_);
       components_.push_back(component);
+      component_labels_.push_back(label);
+      if (!label.empty())
+      {
+        gridkit_component_indices_[label] = gridkit_component_id;
+      }
       allocated_ = false;
     }
 
@@ -1029,10 +1033,14 @@ namespace GridKit
     SystemModel<scalar_type, index_type>::getBus(IdxT bus_id)
     {
       BusT* bus = findBus(bus_id);
+      if (bus == nullptr && external_buses_.contains(bus_id))
+      {
+        bus = external_buses_.at(bus_id);
+      }
       if (bus == nullptr)
       {
-        // Should fail if user-provided bus_id is incorrect
-        return external_buses_.at(bus_id);
+        Log::error() << "Unknown bus " << bus_id << "\n";
+        throw std::runtime_error("SystemModel bus lookup failed");
       }
       return bus;
     }
@@ -1045,23 +1053,37 @@ namespace GridKit
     SystemModel<scalar_type, index_type>::BusT*
     SystemModel<scalar_type, index_type>::findBus(IdxT bus_id)
     {
-      const auto it = gridkit_bus_indices_.find(bus_id);
+      BusT*      bus = nullptr;
+      const auto it  = gridkit_bus_indices_.find(bus_id);
       if (it != gridkit_bus_indices_.end())
       {
-        IdxT gridkit_bus_id = it->second;
-        assert((buses_[gridkit_bus_id])->busID() == bus_id);
-        return buses_[gridkit_bus_id];
+        bus = buses_[it->second];
+        assert(bus->busID() == bus_id);
       }
 
-      for (auto* subsystem : subsystems_)
+      for (IdxT subsystem = 0; bus == nullptr && subsystem < numSubsystems(); ++subsystem)
       {
-        BusT* bus = subsystem->findBus(bus_id);
-        if (bus != nullptr)
-        {
-          return bus;
-        }
+        bus = subsystems_[subsystem]->findBus(bus_id);
       }
-      return nullptr;
+      return bus;
+    }
+
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::IdxT
+    SystemModel<scalar_type, index_type>::numComponents() const
+    {
+      return static_cast<IdxT>(components_.size());
+    }
+
+    /**
+     * @brief Return the label (device class and case-file ID) of a component of
+     * this system, empty if it has none
+     */
+    template <typename scalar_type, typename index_type>
+    const std::string&
+    SystemModel<scalar_type, index_type>::getComponentLabel(IdxT gridkit_component_id) const
+    {
+      return component_labels_.at(gridkit_component_id);
     }
 
     template <typename scalar_type, typename index_type>
@@ -1099,14 +1121,36 @@ namespace GridKit
     }
 
     /**
-     * @brief Return pointer to a signal
+     * @brief Return pointer to a signal of this system or its subsystems
      *
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SignalNodeT*
     SystemModel<scalar_type, index_type>::getSignalNode(IdxT signal_id)
     {
-      return signal_nodes_[signal_id];
+      SignalNodeT* node = findSignalNode(signal_id);
+      if (node == nullptr)
+      {
+        Log::error() << "Unknown signal " << signal_id << "\n";
+        throw std::runtime_error("SystemModel signal lookup failed");
+      }
+      return node;
+    }
+
+    /**
+     * @brief Return pointer to a signal of this system or its subsystems, or
+     * nullptr if there is none
+     */
+    template <typename scalar_type, typename index_type>
+    SystemModel<scalar_type, index_type>::SignalNodeT*
+    SystemModel<scalar_type, index_type>::findSignalNode(IdxT signal_id)
+    {
+      SignalNodeT* node = signal_nodes_.find(signal_id);
+      for (IdxT subsystem = 0; node == nullptr && subsystem < numSubsystems(); ++subsystem)
+      {
+        node = subsystems_[subsystem]->findSignalNode(signal_id);
+      }
+      return node;
     }
 
     /**
@@ -1122,14 +1166,59 @@ namespace GridKit
     }
 
     /**
-     * @brief Return pointer to a branch by case-file `id`
+     * @brief Return pointer to a branch of this system or its subsystems by
+     * case-file `id`
      */
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>*
+    SystemModel<scalar_type, index_type>::BranchT*
     SystemModel<scalar_type, index_type>::getBranch(const std::string& id)
     {
-      // Should fail if user-provided id is incorrect
-      return dynamic_cast<Branch<ScalarT, IdxT>*>(components_[gridkit_branch_indices_.at(id)]);
+      BranchT* branch = dynamic_cast<BranchT*>(findComponent("Branch_" + id));
+      if (branch == nullptr)
+      {
+        Log::error() << "Unknown branch " << id << "\n";
+        throw std::runtime_error("SystemModel branch lookup failed");
+      }
+      return branch;
+    }
+
+    /**
+     * @brief Return pointer to a component of this system or its subsystems by
+     * label (device class and case-file ID, e.g. "Genrou_1")
+     */
+    template <typename scalar_type, typename index_type>
+    SystemModel<scalar_type, index_type>::ComponentT*
+    SystemModel<scalar_type, index_type>::getComponent(const std::string& label)
+    {
+      ComponentT* component = findComponent(label);
+      if (component == nullptr)
+      {
+        Log::error() << "Unknown component " << label << "\n";
+        throw std::runtime_error("SystemModel component lookup failed");
+      }
+      return component;
+    }
+
+    /**
+     * @brief Return pointer to a component of this system or its subsystems by
+     * label, or nullptr if there is none
+     */
+    template <typename scalar_type, typename index_type>
+    SystemModel<scalar_type, index_type>::ComponentT*
+    SystemModel<scalar_type, index_type>::findComponent(const std::string& label)
+    {
+      ComponentT* component = nullptr;
+      const auto  it        = gridkit_component_indices_.find(label);
+      if (it != gridkit_component_indices_.end())
+      {
+        component = components_[it->second];
+      }
+
+      for (IdxT subsystem = 0; component == nullptr && subsystem < numSubsystems(); ++subsystem)
+      {
+        component = subsystems_[subsystem]->findComponent(label);
+      }
+      return component;
     }
 
   } // namespace PhasorDynamics

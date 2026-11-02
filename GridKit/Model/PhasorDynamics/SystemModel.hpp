@@ -77,6 +77,7 @@ namespace GridKit
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
       using ComponentT     = Component<ScalarT, IdxT>;
+      using BranchT        = Branch<ScalarT, IdxT>;
       using MonitorT       = Model::VariableMonitorController<ScalarT>;
 
     public:
@@ -113,37 +114,44 @@ namespace GridKit
       void updateTime(RealT t, RealT a) override;
 
       void addBus(BusT* bus);
-      void addComponent(ComponentT* component);
+      void addComponent(ComponentT* component, const std::string& label = "");
       void addSubsystem(SystemModel* subsystem);
 
       void setSystemBase(RealT freq_system_base, RealT va_system_base);
 
-      BusT*                  getBus(IdxT bus_id);
-      SignalNodeT*           getSignalNode(IdxT signal_id);
-      ComponentT*            getComponent(IdxT gridkit_component_id);
-      Branch<ScalarT, IdxT>* getBranch(const std::string& id);
+      BusT*        getBus(IdxT bus_id);
+      SignalNodeT* getSignalNode(IdxT signal_id);
+      ComponentT*  getComponent(IdxT gridkit_component_id);
+      ComponentT*  getComponent(const std::string& label);
+      BranchT*     getBranch(const std::string& id);
 
-      IdxT         numSubsystems() const;
-      SystemModel* getSubsystem(IdxT index);
-      IdxT         offset() const;
+      IdxT               numComponents() const;
+      const std::string& getComponentLabel(IdxT gridkit_component_id) const;
+      IdxT               numSubsystems() const;
+      SystemModel*       getSubsystem(IdxT index);
+      IdxT               offset() const;
 
       const std::vector<BusT*>& getExternalBuses() const;
 
     private:
-      BusT* findBus(IdxT bus_id);
-      IdxT  computeSize();
-      void  bindChildren(IdxT global_offset);
-      void  addMonitorsTo(MonitorT& monitor) const;
-      void  evaluateCooJacobians();
+      BusT*        findBus(IdxT bus_id);
+      SignalNodeT* findSignalNode(IdxT signal_id);
+      ComponentT*  findComponent(const std::string& label);
+      IdxT         computeSize();
+      void         bindChildren(IdxT global_offset);
+      void         addMonitorsTo(MonitorT& monitor) const;
+      void         evaluateCooJacobians();
 
       std::vector<BusT*>        buses_;
       SignalNodeSetT            signal_nodes_;
       std::vector<ComponentT*>  components_;
       std::vector<SystemModel*> subsystems_;
 
-      /// Map between branch id and gridkit_component_id
-      /// @todo remove this map and use branch IDs to access individual branches.
-      std::map<std::string, IdxT> gridkit_branch_indices_;
+      /// Component labels (device class and case-file ID), by gridkit_component_id
+      std::vector<std::string> component_labels_;
+
+      /// Map between component label and gridkit_component_id
+      std::map<std::string, IdxT> gridkit_component_indices_;
 
       std::map<IdxT, IdxT>  gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, BusT*> external_buses_;         ///< Parent's buses by bus_id, not owned
