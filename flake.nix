@@ -2,10 +2,6 @@
   description = "gridkit development shell";
 
   inputs = {
-    enzyme-src = {
-      url = "github:EnzymeAD/Enzyme/v0.0.303";
-      flake = false;
-    };
     nlohmann-json-src = {
       url = "github:nlohmann/json/d70e46bc65a21a8eb1ef0e3e9ba707b7b9b78378";
       flake = false;
@@ -22,7 +18,6 @@
       self,
       nixpkgs,
       sundials-src,
-      enzyme-src,
       nlohmann-json-src,
       ...
     }:
@@ -40,13 +35,6 @@
         let
           pkgs = import nixpkgs { inherit system; };
           llvmPackages = pkgs.llvmPackages_21;
-          enzyme = (pkgs.enzyme.override { inherit llvmPackages; }).overrideAttrs (old: {
-            version = "0.0.303";
-            src = enzyme-src;
-            patches = (old.patches or [ ]) ++ [
-              ./nix/enzyme-optimization-levels.patch
-            ];
-          });
           sundials79 = pkgs.sundials.overrideAttrs (old: {
             version = "7.9.0";
             src = sundials-src;
@@ -70,8 +58,8 @@
               pkgs.cmake
               pkgs.gfortran
               pkgs.pkg-config
+              pkgs.enzyme
               llvmPackages.llvm
-              enzyme
             ];
 
             buildInputs = [
@@ -93,7 +81,7 @@
             cmakeBuildType = "Release";
             cmakeFlags = [
               (lib.cmakeBool "GridKit_ENABLE_ENZYME" true)
-              (lib.cmakeFeature "ENZYME_DIR" "${enzyme}")
+              (lib.cmakeFeature "ENZYME_DIR" "${pkgs.enzyme}")
               (lib.cmakeBool "GridKit_ENABLE_SUNDIALS" true)
               (lib.cmakeBool "GridKit_ENABLE_ZMQ" true)
               (lib.cmakeBool "GridKit_ENABLE_IPOPT" true)
@@ -116,7 +104,6 @@
         {
           default = gridkit;
           gridkit = gridkit;
-          enzyme = enzyme;
         }
       );
 

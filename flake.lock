@@ -1,29 +1,12 @@
 {
   "nodes": {
-    "enzyme-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1791756742,
-        "narHash": "sha256-L/Ais8bWWlst2r0qRrPyK5Rr3FqmmlKK0lpnDZPsPDM=",
-        "owner": "EnzymeAD",
-        "repo": "Enzyme",
-        "rev": "06da3b77d8ceaa9e260c7147a2e6bedf27b6d377",
-        "type": "github"
-      },
-      "original": {
-        "owner": "EnzymeAD",
-        "ref": "v0.0.303",
-        "repo": "Enzyme",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1792773339,
-        "narHash": "sha256-rZLrzrC6i+jnTAlvPZHogKDulY7WWDEv9hJeHieO7Zw=",
+        "lastModified": 1793540411,
+        "narHash": "sha256-fiPJ88izTVucjeo2EQ3jk4aWmLg03I1D4vxnX2QjEgE=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "3ec636362e1816bc2f0888fa0fa2c69f1bc9e504",
+        "rev": "0bb2eedc20e4739f29e8045034f2828ad7054f8f",
         "type": "github"
       },
       "original": {
@@ -52,7 +35,6 @@
     },
     "root": {
       "inputs": {
-        "enzyme-src": "enzyme-src",
         "nixpkgs": "nixpkgs",
         "nlohmann-json-src": "nlohmann-json-src",
         "sundials-src": "sundials-src"
