@@ -39,12 +39,18 @@ class CaseSpec:
     case_dir: Path
     case_json: str
     solver_json: str
+    # Since upstream "Cleanup Examples" (#577) the case lives in cases/ and the
+    # solver stays beside the example, so the two can be in different dirs.
+    solver_dir: Path | None = None
     aux: Path | None = None
     dyr: Path | None = None
     template_m: Path | None = None
     load_class: str = "LoadZIP"
     exciter_class: str = "SexsPti"
     governor_class: str = "Tgov1"
+    # Suffix on the Genrou's own device id. Empty in pre-#577 cases where the
+    # Genrou id was the bare "<bus>_<unit>".
+    machine_suffix: str = ""
     companion_suffixes: dict[str, str] = field(
         default_factory=lambda: {"Tgov1": "_tgov1", "SexsPti": "_sexs_pti"}
     )
@@ -55,24 +61,30 @@ class CaseSpec:
 
     @property
     def solver_json_path(self) -> Path:
-        return self.case_dir / self.solver_json
+        return (self.solver_dir or self.case_dir) / self.solver_json
 
 
 _GRIDKIT = Path.home() / "gridkit"
 _TAMU = Path("/kfs2/projects/scidac/scidac-data")
 
 # Source tree, not build/: the build copy is a CMake artifact of this file.
-ILLINOIS = CaseSpec(
-    name="illinois",
-    case_dir=_GRIDKIT / "examples/PhasorDynamics/Large/Illinois",
-    case_json="illinois.case.json",
-    solver_json="illinois.solver.json",
+# Formerly "illinois" under examples/PhasorDynamics/Large; upstream #577 moved
+# the case to cases/ and renamed it to its standard ACTIVSg200 designation.
+ACTIVSG200 = CaseSpec(
+    name="activsg200",
+    case_dir=_GRIDKIT / "cases/PhasorDynamics/ACTIVSg200",
+    case_json="ACTIVSg200.case.json",
+    solver_dir=_GRIDKIT / "examples/PhasorDynamics/Validation/ACTIVSg200",
+    solver_json="ACTIVSg200.solver.json",
     aux=_TAMU / "ACTIVSg200/raw-tamu-data/ACTIVSg200.aux",
     dyr=_TAMU / "ACTIVSg200/raw-tamu-data/ACTIVSg200_dynamics.dyr",
     template_m=_TAMU / "ACTIVSg200/raw-tamu-data/case_ACTIVSg200.m",
     load_class="LoadZIP",
     exciter_class="SexsPti",
+    machine_suffix="_genrou",
 )
+
+ILLINOIS = ACTIVSG200  # back-compat alias
 
 HAWAII40 = CaseSpec(
     name="hawaii40",
@@ -85,7 +97,7 @@ HAWAII40 = CaseSpec(
     companion_suffixes={"Tgov1": "_tgov1", "Ieeet1": "_ieeet1"},
 )
 
-CASES = {c.name: c for c in (ILLINOIS, HAWAII40)}
+CASES = {c.name: c for c in (ACTIVSG200, HAWAII40)}
 
 
 # --------------------------------------------------------------------------
@@ -302,12 +314,25 @@ def audit_case_json(case: dict) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["quantity", "value"])
 
 
+def gen_id_of(device_id: str, spec: CaseSpec) -> str:
+    """Device id -> generator id (`"<bus>_<unit>"`).
+
+    Strips the machine or companion suffix, so `49_1_genrou`, `49_1_tgov1`
+    and a bare `49_1` all map to `49_1`.
+    """
+    did = str(device_id)
+    for s in (spec.machine_suffix, *spec.companion_suffixes.values()):
+        if s and did.endswith(s):
+            return did[: -len(s)]
+    return did
+
+
 def companion_report(case: dict, spec: CaseSpec) -> pd.DataFrame:
     """One row per Genrou: which companion devices exist for it."""
     by_cls = {c: {d["id"] for d in devices(case, c)} for c in spec.companion_suffixes}
     rows = []
     for g in devices(case, "Genrou"):
-        gid = g["id"]
+        gid = gen_id_of(g["id"], spec)
         row = {"genrou": gid}
         for cls, suffix in spec.companion_suffixes.items():
             row[cls] = (gid + suffix) in by_cls[cls] or gid in by_cls[cls]
@@ -469,6 +494,7 @@ def build_case_from_aux_dyr(
         "tgov1": 0,
         "load": 0,
         "shunt": 0,
+        "shunt_folded": 0,
         "missing_dyr": [],
     }
 
@@ -491,14 +517,10 @@ def build_case_from_aux_dyr(
     gen_by_id = {r["_gid"]: r for _, r in gen.iterrows()}
 
     exc = spec.exciter_class
-    suffixes = spec.companion_suffixes
     kept: list[dict] = []
     for d in case["devices"]:
         cls, did = d.get("class"), d.get("id", "")
-        gid = did
-        for s in suffixes.values():
-            if did.endswith(s):
-                gid = did[: -len(s)]
+        gid = gen_id_of(did, spec)
         if cls not in ("Genrou", exc, spec.governor_class):
             kept.append(d)
             continue
@@ -536,22 +558,60 @@ def build_case_from_aux_dyr(
     shunt["_bus"] = _num(shunt, "BusNum").astype(int)
     shunt_mvr = dict(zip(shunt["_bus"], _num(shunt, "SSNMVR")))
 
+    # Match .aux Load/Shunt records to LoadZIP devices, per bus.
+    #
+    # Two conventions are supported. Pre-#577 cases carry one LoadZIP per
+    # .aux load record plus separate "shunt_" devices. Post-#577 cases carry
+    # exactly one LoadZIP per bus, which holds the summed load AND the bus
+    # shunt folded into Qnom. Verified against ACTIVSg200: at buses 95, 100
+    # and 194 the shipped Qnom equals sum(LoadSMVR) - SSNMVR*|V|^2 exactly.
+    _by_bus: dict[int, list[dict]] = {}
     for d in devices(case, "LoadZIP"):
-        b = d["ports"]["bus"]
-        p = d["params"]
-        if is_shunt(d):
-            if b in shunt_mvr and b in vmag:
-                p["Qnom"] = -(shunt_mvr[b] / baseMVA) * vmag[b] ** 2
-                p["Pnom"] = 0.0
+        _by_bus.setdefault(d["ports"]["bus"], []).append(d)
+    _rows_by_bus: dict[int, list] = {}
+    for _, r in load.iterrows():
+        _rows_by_bus.setdefault(int(r["_bus"]), []).append(r)
+
+    for b, devs in _by_bus.items():
+        rows = _rows_by_bus.get(b, [])
+        q_shunt = (
+            -(shunt_mvr[b] / baseMVA) * vmag[b] ** 2
+            if (b in shunt_mvr and b in vmag)
+            else 0.0
+        )
+
+        if len(devs) == 1:
+            p = devs[0]["params"]
+            p["Pnom"] = sum(float(r["LoadSMW"]) for r in rows) / baseMVA
+            p["Qnom"] = sum(float(r["LoadSMVR"]) for r in rows) / baseMVA + q_shunt
+            if rows:
+                counts["load"] += 1
+                if q_shunt:
+                    counts["shunt_folded"] += 1
+            else:
                 counts["shunt"] += 1
         else:
-            rank = int(str(d["id"]).rsplit("_", 1)[1])
-            row = load_by_key.get((b, rank))
-            if row is not None:
-                p["Pnom"] = float(row["LoadSMW"]) / baseMVA
-                p["Qnom"] = float(row["LoadSMVR"]) / baseMVA
+            # Several devices on the bus: shunt stays separate, loads are
+            # matched to .aux records in document order.
+            real = [d for d in devs if not is_shunt(d)]
+            for d in devs:
+                if is_shunt(d):
+                    d["params"]["Pnom"] = 0.0
+                    d["params"]["Qnom"] = q_shunt
+                    counts["shunt"] += 1
+            if len(real) != len(rows):
+                warnings.warn(
+                    f"bus {b}: {len(real)} LoadZIP vs {len(rows)} .aux load "
+                    "records; matching positionally.",
+                    stacklevel=2,
+                )
+            for d, r in zip(real, rows):
+                d["params"]["Pnom"] = float(r["LoadSMW"]) / baseMVA
+                d["params"]["Qnom"] = float(r["LoadSMVR"]) / baseMVA
                 counts["load"] += 1
-        p.pop("Vnom", None)  # never a GridKit parameter
+
+    for d in devices(case, "LoadZIP"):
+        d["params"].pop("Vnom", None)  # never a GridKit parameter
 
     if creator_overlay:
         apply_overlay(case, creator_overlay)
@@ -628,6 +688,7 @@ def build_case_from_m(
         "gen_added": 0,
         "load": 0,
         "shunt": 0,
+        "shunt_folded": 0,
         "gen_unmatched": [],
     }
 
@@ -652,7 +713,7 @@ def build_case_from_m(
     grow = {r["_gid"]: r for _, r in gen.iterrows()}
     online_ids = {g for g, r in grow.items() if r["_online"]}
 
-    json_genrou = {d["id"] for d in devices(case, "Genrou")}
+    json_genrou = {gen_id_of(d["id"], spec) for d in devices(case, "Genrou")}
     missing = sorted(online_ids - json_genrou)
     if missing and dyr is None:
         msg = (
@@ -663,17 +724,13 @@ def build_case_from_m(
             raise ValueError(msg)
         counts["gen_unmatched"] = missing
 
-    suffixes = spec.companion_suffixes
     if remove_offline:
         drop = json_genrou - online_ids
         if drop:
             keep = []
             for d in case["devices"]:
                 did, cls = d.get("id", ""), d.get("class")
-                gid = did
-                for s in suffixes.values():
-                    if did.endswith(s):
-                        gid = did[: -len(s)]
+                gid = gen_id_of(did, spec)
                 if (
                     cls in ("Genrou", spec.exciter_class, spec.governor_class)
                     and gid in drop
@@ -685,7 +742,7 @@ def build_case_from_m(
 
     if patch_gen:
         for d in devices(case, "Genrou"):
-            r = grow.get(d["id"])
+            r = grow.get(gen_id_of(d["id"], spec))
             if r is None or not r["_online"]:
                 continue
             d["params"]["p0"] = float(r["PG"]) / baseMVA
@@ -699,19 +756,41 @@ def build_case_from_m(
         )
 
     if patch_load and spec.load_class == "LoadZIP":
-        lz = devices(case, "LoadZIP")
         by_bus: dict[int, list[dict]] = {}
-        for d in lz:
+        for d in devices(case, "LoadZIP"):
             by_bus.setdefault(d["ports"]["bus"], []).append(d)
+
         for b, devs in by_bus.items():
+            # mpc.bus keeps the shunt in BS, separate from PD/QD. Whether it
+            # stays a separate device or folds into the load's Qnom depends
+            # on the case convention, same split as build_case_from_aux_dyr.
+            q_shunt = (
+                -(bs_[b] / baseMVA) * vm[b] ** 2 if (b in bs_ and b in vm) else 0.0
+            )
+
+            if len(devs) == 1:
+                p = devs[0]["params"]
+                if b in pd_:
+                    p["Pnom"] = pd_[b] / baseMVA
+                    p["Qnom"] = qd_[b] / baseMVA + q_shunt
+                    if pd_[b] or qd_[b]:
+                        counts["load"] += 1
+                        if q_shunt:
+                            counts["shunt_folded"] += 1
+                    else:
+                        counts["shunt"] += 1
+                p.pop("Vnom", None)
+                continue
+
             real = [d for d in devs if not is_shunt(d)]
             for d in devs:
                 if is_shunt(d) and b in bs_ and b in vm:
                     d["params"]["Pnom"] = 0.0
-                    d["params"]["Qnom"] = -(bs_[b] / baseMVA) * vm[b] ** 2
+                    d["params"]["Qnom"] = q_shunt
                     counts["shunt"] += 1
             if not real or b not in pd_:
                 continue
+            # Split the bus total the way the base case already split it.
             p_t, q_t = pd_[b] / baseMVA, qd_[b] / baseMVA
             sp = sum(float(d["params"].get("Pnom", 0.0)) for d in real)
             sq = sum(float(d["params"].get("Qnom", 0.0)) for d in real)
@@ -753,7 +832,7 @@ def _add_gens_from_dyr(case, spec, missing, grow, dyr, baseMVA) -> int:
             {
                 "class": "Genrou",
                 "ports": {"bus": b, **ports},
-                "id": gid,
+                "id": gid + spec.machine_suffix,
                 "params": genrou_params(
                     rec, mva, float(r["PG"]) / baseMVA, float(r["QG"]) / baseMVA
                 ),

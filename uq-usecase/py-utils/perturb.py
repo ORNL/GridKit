@@ -19,13 +19,20 @@ from __future__ import annotations
 
 import copy
 import warnings
+from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd
 
+# Fuels that cannot be dispatched up on demand. Used to keep them out of
+# headroom redistribution and out of commitment candidate lists.
+NONDISPATCHABLE_FUELS = frozenset({"wind", "solar", "pv", "photovoltaic"})
+
 __all__ = [
     "copy_frames",
     "gen_index",
+    "dispatchable_gens",
+    "NONDISPATCHABLE_FUELS",
     "scale_load",
     "set_bus_load",
     "set_gen_status",
@@ -39,6 +46,48 @@ def copy_frames(frames: dict) -> dict:
         k: (v.copy() if isinstance(v, (pd.DataFrame, pd.Series)) else copy.copy(v))
         for k, v in frames.items()
     }
+
+
+def _fuel_mask(frames: dict, fuels: Iterable[str] | None) -> np.ndarray:
+    """Boolean mask over `mpc.gen` rows whose genfuel is in `fuels`."""
+    n = len(frames["gen"])
+    if not fuels or "genfuel" not in frames:
+        return np.zeros(n, dtype=bool)
+    want = {str(x).lower() for x in fuels}
+    return np.array([str(x).lower() in want for x in frames["genfuel"]], dtype=bool)
+
+
+def dispatchable_gens(
+    frames: dict,
+    exclude_fuels: Iterable[str] | None = NONDISPATCHABLE_FUELS,
+    exclude_slack: bool = True,
+    online_only: bool = True,
+) -> pd.DataFrame:
+    """Units that are legitimate commitment candidates.
+
+    Drops non-dispatchable fuels and, by default, the slack bus. Returns the
+    gen rows with `gid`, `fuel` and `headroom_mw` attached, sorted by output.
+    """
+    gen = frames["gen"]
+    gid = gen_index(frames)
+    fuel = pd.Series(
+        [str(x).lower() for x in frames.get("genfuel", [""] * len(gen))],
+        index=gen.index,
+    )
+    keep = ~_fuel_mask(frames, exclude_fuels)
+    if online_only:
+        keep &= (gen["GEN_STATUS"].astype(int) == 1).to_numpy()
+    if exclude_slack:
+        slack = set(
+            frames["bus"].loc[frames["bus"]["BUS_TYPE"] == 3, "BUS_I"].astype(int)
+        )
+        keep &= ~gen["GEN_BUS"].astype(int).isin(slack).to_numpy()
+
+    out = gen.loc[keep].copy()
+    out.insert(0, "gid", gid[keep])
+    out.insert(1, "fuel", fuel[keep])
+    out["headroom_mw"] = (out["PMAX"] - out["PG"]).clip(lower=0)
+    return out.sort_values("PG", ascending=False)
 
 
 def gen_index(frames: dict) -> pd.Series:
@@ -109,7 +158,10 @@ def set_bus_load(
 
 
 def _headroom_redistribute(
-    gen: pd.DataFrame, deficit_mw: float, exclude: np.ndarray, slack_bus: set[int]
+    gen: pd.DataFrame,
+    deficit_mw: float,
+    exclude: np.ndarray,
+    slack_bus: set[int],
 ) -> dict:
     """Share `deficit_mw` across online gens in proportion to PMAX - PG."""
     on = (gen["GEN_STATUS"] == 1).to_numpy() & ~exclude
@@ -128,6 +180,13 @@ def _headroom_redistribute(
     gen.loc[pick, "PG"] = gen.loc[pick, "PG"].to_numpy() + headroom * (
         deficit_mw / total
     )
+    if deficit_mw > total:
+        warnings.warn(
+            f"redistribution capped: {deficit_mw:.1f} MW decommitted but only "
+            f"{total:.1f} MW of eligible headroom. The shortfall falls on the "
+            "PF slack, which may push it past PMAX.",
+            stacklevel=3,
+        )
     return {
         "absorbed_mw": float(deficit_mw),
         "n_units": int(pick.sum()),
@@ -137,7 +196,10 @@ def _headroom_redistribute(
 
 
 def set_gen_status(
-    frames: dict, status: dict, redistribute: str | None = "headroom"
+    frames: dict,
+    status: dict,
+    redistribute: str | None = "headroom",
+    exclude_fuels: Iterable[str] | None = NONDISPATCHABLE_FUELS,
 ) -> dict:
     """Switch generators on/off. `status` maps gen id or bus number to 0/1.
 
@@ -145,12 +207,20 @@ def set_gen_status(
     `redistribute="headroom"` the lost MW is shared across the remaining online
     units in proportion to their spare capacity, which keeps the slack from
     absorbing everything. Use `redistribute=None` to let the PF slack take it.
+
+    `exclude_fuels` keeps non-dispatchable units out of that redistribution.
+    It matters: in ACTIVSg200 the wind-labelled machines hold most of the
+    system's spare capacity, so without this they would absorb the bulk of any
+    decommitted output despite being non-dispatchable. Pass `None` to allow
+    every online unit to participate.
     """
     f = copy_frames(frames)
     gen = f["gen"]
     gid = gen_index(f)
     bus_i = gen["GEN_BUS"].astype(int)
     slack = set(f["bus"].loc[f["bus"]["BUS_TYPE"] == 3, "BUS_I"].astype(int))
+
+    blocked = _fuel_mask(f, exclude_fuels)
 
     touched = np.zeros(len(gen), dtype=bool)
     lost = 0.0
@@ -173,9 +243,12 @@ def set_gen_status(
     report = {
         "switched": {str(k): int(v) for k, v in status.items()},
         "unserved_mw": lost,
+        "excluded_fuels": sorted(exclude_fuels) if exclude_fuels else [],
     }
     if lost > 0 and redistribute == "headroom":
-        report["redistribution"] = _headroom_redistribute(gen, lost, touched, slack)
+        report["redistribution"] = _headroom_redistribute(
+            gen, lost, touched | blocked, slack
+        )
     elif lost > 0:
         report["redistribution"] = "left to PF slack"
     f["_perturb_report"] = report

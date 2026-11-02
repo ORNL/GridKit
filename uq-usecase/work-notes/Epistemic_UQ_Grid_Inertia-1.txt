@@ -1,0 +1,630 @@
+Parameter Calibration and Epistemic Uncertainty
+Reduction in Dynamic Grid Simulations
+Ian Taylor, Julie Bessac, Ignas Satkauskas
+
+Luke Lowery, Adam Birchfield
+
+Computational Science Center
+Electrical & Computer Engineering
+National Laboratory of the Rockies
+Texas A&M University
+Golden, CO, USA
+College Station, TX, USA
+{ian.taylor,julie.bessac,ignas.satkauskas}@nlr.gov
+{lukel,abirchfield}@tamu.edu
+0009-0002-6058-6958, 0000-0001-6407-2423,
+0009-0000-0029-3403,
+0000-0002-2162-1629
+0000-0002-4428-782X
+
+Abstract—Dynamic grid simulations depend on properly calibrated parameters to accurately model physical grid response
+to hypothetical disturbances. We showcase a novel method to
+calibrate parameters, hence reducing epistemic uncertainty in
+grid models. The proposed method relies on simulation-based
+inference and neural networks (NN) as classical physics-driven
+inverse problems are highly non-linear and intractable for power
+grid forward models. Contrary to classical NNs that provide
+point estimates, the designed NNs provide a companion variancecovariance to point estimates providing a measure of uncertainty
+about the output calibration. Additionally, as operational grids
+spans across thousands of buses, we propose a statistical method
+to subsample data in order to accelerate NN training in large
+configurations. We demonstrate varying levels of success on grid
+examples, and provide a sensitivity analysis method to determine
+whether grid parameters are easily estimable.
+Index Terms—grid simulation, parameter calibration, uncertainty reduction, neural networks, simulation-based inference,
+contingency analysis
+
+I. I NTRODUCTION AND BACKGROUND
+With the increasing capability of dynamic grid simulation
+models, it is becoming more desirable to model larger grids
+with more configurable parameters to reflect physical grids as
+closely as possible. Such simulations allow contingency analysis testing of grid resilience under hypothetical disturbances
+such as line faults, generator failure, or sudden connection
+or disconnection of large loads. However, in order for these
+models to accurately reflect the true grid response, their
+parameters must be realistically calibrated.
+This work was authored by the National Laboratory of the Rockies for
+the U.S. Department of Energy, operated under Contract No. DE-AC3608GO28308. Funding provided by the Department of Energy Office of
+Science Advanced Scientific Computing Research (ASCR) Scientific Discovery through Advanced Computing (SciDAC) FASTMath Institute program,
+the SciDAC Office of Electricity partnership titled “Next Generation Grid
+Simulations.” The views expressed in the article do not necessarily represent
+the views of the DOE or the U.S. Government. The U.S. Government retains
+and the publisher, by accepting the article for publication, acknowledges that
+the U.S. Government retains a nonexclusive, paid-up, irrevocable, worldwide
+license to publish or reproduce the published form of this work, or allow
+others to do so, for U.S. Government purposes. This research was performed
+using computational resources sponsored by the U.S. Department of Energy’s
+Office of Critical Minerals and Energy Innovation and located at the National
+Laboratory of the Rockies.
+
+Slaven Peles
+Computational Science
+and Engineering Division
+Oak Ridge National Laboratory
+Oak Ridge, TN, USA
+peless@ornl.gov
+0000-0001-7110-3021
+
+The objective of epistemic uncertainty reduction in this
+context is to estimate grid parameters of interest (e.g. rotor inertia), with minimal uncertainty, based on observations of that
+physical grid (e.g. voltage angle over time). These estimates
+should be calibrated such that simulations of a digital-twin grid
+using these calibrated parameter values resemble observations
+of the physical grid as closely as possible. The uncertainty
+quantification (UQ) task depends on properly understanding
+and modeling relationships between the grid-parameter values,
+the simulation output, and physical measurements of the grid.
+Parameter calibration in dynamic electrical grid models is of
+significant interest in the literature, due to regulatory requirements to periodically update generator stability models [1].
+One significant approach is calibrating generator models using
+of Kalman filter, ensemble Kalman filter, or Unscented Kalman
+filter methods with PMU observations near the generator [e.g.,
+1, 2, 3]. While [3] reports standard errors on the parameter
+estimates, the uncertainty is rarely of interest in these works.
+Various methods are used to determine which model parameters are identifiable from a given PMU observation, to
+avoid wasted computational effort attempting to calibrate nonidentifiable parameters. Sensitivity analyses (SA) fill this role,
+for example trajectory-based SA [2] and Gramian-based SA
+[4]. Acilan and Gol [5] go further, defining a “distractor”
+parameter as one that is identifiable but already correctly
+calibrated, and developing a NN-based method to flag such
+parameters. In a Bayesian setting, a distractor parameter may
+still have its posterior uncertainty reduced relative to its prior,
+even if the posterior mean estimate is not updated.
+Dynamic simulation parameters have been estimated by
+posteriors conditioned on PMU observations using several
+Bayesian methods including Approximate Bayesian Computation (ABC) [4], conditional variational autoencoders [6],
+polynomial chaos expansion and Markov chain Monte Carlo
+(MCMC) [7], and hierarchical Bayesian inference and importance sampling [8]. Machine learning-based approaches have
+also been used, including double deep Q-learning for load
+model calibration [9]. Outside of dynamic models, statistical
+methods have been used to infer parameters of electrical loads,
+such as to determine when large loads are turned on/off using
+
+observed power consumption data [10, 11, 12].
+Multiple solutions to the parameter calibration problem have
+been a concern to [2, 5], where multiple distinct sets of
+parameter values can result in equally good fits to observed
+data, possibly due to collinearity of the parameters’ effects.
+Our Bayesian approach accommodates this possibility through
+the posterior correlation in the multivariate Gaussian estimate.
+TODO: Continue literature review of parameter calibration
+in grid models
+Simulation-based inference (SBI) is a class of statistical
+techniques that replace intractable likelihood or loss function
+calculations with a trainable surrogate: a complex model is
+treated as a black-box simulator, run many times over parameter draws, and a machine-learning model is trained on the simulated (parameter, data) pairs to approximate parameters given
+new observations. This enables inference for complex highly
+non-linear systems like power grids whose likelihoods/loss
+functions cannot be written down. SBI includes methods such
+as ABC, but is a broader category of methods that all attempt
+to solve the same fundamental problem [13].
+GridKit [14, 15] is a next-generation grid simulator that uses multiple advanced analysis methods such as dynamic constrained optimization and
+partitioned numerical integrators to perform phasor dynamics
+simulations on grids up to thousands of buses in size. Our epistemic uncertainty reduction workflow employs GridKit to simulate phasor dynamics and parameter responses on the ACTIVSg200 test case, a 200-bus synthetic grid representing central Illinois with 40 GENROU (round-rotor synchronous generator) units. This case is modified from the Texas A&M Electric Grid Test Case repository [24] for GridKit compatibility and serves as a practical testbed for calibrating rotor inertia parameters on larger-scale, realistic systems.
+II. M ETHODS
+A. Multivariate Gaussian Loss NN
+Our approach to simulation-based inference follows ideas
+presented in [16], [17]. We first simulate grid parameters, θ,
+from their prior distribution, then we simulate observations, y
+using GridKit for its deterministic part and from our approximate observation distribution, p̃(y|θ) for its stochastic part.
+Then, we train a NN N using these simulated y ↦→ θ pairs
+so that given an observation, we can estimate the parameters
+that produced it. We extend [16], [17] by estimating not just
+point estimates with squared-error loss, but posterior mean
+and covariance with a Gaussian loss. Specifically, we optimize
+the NN with data y as inputs Nw : y ↦→ (θ, Σ) weights w.
+The multivariate Gaussian output and loss compile the output
+values of the network into a mean vector and covariance
+matrix, which represent the prediction and its uncertainty,
+respectively. If the network is predicting p parameters, then it
+will output p + p(p + 1)/2 values, p of which form the mean
+vector, µ, while the remaining values form the lower-triangular
+Cholesky factor of the covariance matrix, L, where Σ = LL⊤ .
+The covariance matrix Σ is symmetric positive definite, hence
+estimating its Cholesky factor enables to reduce the amount of
+estimated coefficients while ensuring the positive definiteness
+of the reconstructed covariance. Then for a training input, y,
+and output, θ, the loss is calculated as
+⃓ 1
+(︂
+)︂−1
+1 ⃓⃓
+⃓
+(θ − µ), (1)
+ℓ(θ, µ, L) = ⃓LL⊤ ⃓ + (θ − µ)⊤ LL⊤
+2
+2
+
+the negative log of the multivariate Gaussian density function
+(up to a normalizing constant). The weights and biases of the
+network are the minimizers of this loss function over all the
+training data. The multivariate Gaussian loss function also
+presents challenges in training. When the network weights
+are initialized with random values, the covariance matrix
+output during initial iterations may have very large or very
+small values, leading to numerical instability when finding its
+inverse, its determinant, or the gradient of the loss function for
+back propagation. To overcome these issues, we initially train
+using an intermediate loss function ℓ1 that serves to initialize
+the network’s weights to sensible values:
+2
+
+ℓ1 (θ, µ, L) = (θ − µ)⊤ (θ − µ) + ∥L − I p ∥2 ,
+
+(2)
+
+where I p is the p × p identity matrix and ∥ · ∥2 is the entrywise L2 -norm over matrices. This is effectively the same as
+a squared-error loss function on the mean prediction, while
+initializing the covariance matrix close to the identity matrix
+via its Cholesky factor, L. The gradients of this loss function
+are easier to calculate, and it does not require inverting Σ or
+finding its determinant. When we switch to the loss function
+ℓ in (1) after some time, numerical instability is very rare. If
+there remains numerical instability a second intermediate loss
+function that only uses the diagonal of Σ and initializes the
+off-diagonal elements to zero is used.
+The input data y have a multivariate time series structure,
+consisting of voltage magnitude and phase measurements on
+several buses over a period of time surrounding an induced
+fault (see Sect. II-B1). The voltage angle as a variable can
+be problematic due to wrap-around values near 2π and 0.
+To resolve this, the angle is decomposed into sin and cos
+components, creating two continuous series containing all
+the original information in the angle. The NN thus begins
+with several convolutional layers. Each convolution layer has
+a kernel size of 3, uses a stride of 2 to down-sample the
+time dimension by a factor of 2, and increases the number
+of channels by a factor of 2. At the boundary between the
+convolutional and dense layers, we place a 1D dropout layer
+with a zeroing probability of 0.2, followed by both a maximum
+and average pooling layer that are concatenated, effectively
+doubling the number of channels again. Finally, two equal
+width dense layers lead to the output. Using both pooling
+methods allows dense layers to learn whether a maximum or
+an average is most informative for the ultimate prediction task.
+All layers use ReLU for non-linearity.
+B. Data Reduction
+Reduction of the simulation output data serves two purposes: it reduces the cost and time required to load data from
+disk, and it simplifies the NN architecture and training. We
+consider data reduction in both the time sampling and bus
+measurement dimensions of the simulation outputs.
+1) Temporal Axis Thinning: To optimize computational
+efficiency and reduce input dimensionality, we apply Temporal Axis Thinning via non-uniform sampling windows. For
+a fault occurring at t = 1.0 s, the high-transient window
+
+(t ∈ [0.95, 1.2) s) retains a fine observation resolution of
+0.004 s (250 Hz) to capture rapid fault-on and immediate
+post-fault dynamics. For the extended post-fault window (t ∈
+[1.2, 4.0] s), where slower dynamics dominate, the observation
+resolution is downsampled to 0.02 s (50 Hz, with up to 0.04 s
+permissible). This reduction is physically justified by the
+Nyquist-Shannon sampling theorem for tracking rotor angle
+oscillations, and it directly aligns with real-world streaming
+data constraints defined in the IEEE C37.118 synchrophasor
+standard [18].
+We provide the calibration NN information on this heterogeneous observation resolution by appending a channel to the
+input with the time at each sample.
+2) Channel Reduction and Bus Selection: In contrast to
+reducing the temporal resolution of the data as above, selecting
+the most beneficial data streams for training involves more
+consideration. Especially in very large grids, many of the bus
+voltage measurements may be irrelevant to the parameters of
+interest, and the calibration NN would require more parameters
+and longer training times to effectively learn meaningful
+relationships among noise. In real-world applications, this
+problem may translate to limiting physical sensor placement
+or collection of data from different grid entities, which can
+reduce the cost of data collection.
+To select relevant sensors for the NN training, we propose a method based on mutual information (MI). MI is
+an information-theoretic measure of the dependence between
+two random variables beyond linear relationships. It has the
+potential to capture associations throughout the entire joint
+probability distribution of the two random variables. We apply
+MI in a greedy algorithm (Algorithm 1). Algorithm 1 is similar
+to the MI-based feature selection algorithm of [19], with the
+difference that Algorithm 1 can process higher-dimensional
+features through the initial dimension reduction step. However,
+like the algorithm of [19], it further avoids including redundant
+information, as a bus Bj ′ that is strongly associated with Bj
+will not add much new information to the relationship with
+the parameters of interest, inertia here {H1 , . . . , Hp }. It also
+avoids selecting the same bus multiple times, because the joint
+informativeness of all parameters is considered.
+C. Parameter Sensitivity Analysis
+It is valuable to know before training the calibration NN
+if certain parameters have the potential to be calibrated
+more or less precisely, i.e., with less or more uncertainty,
+respectively. Parameters that affect bus voltages more strongly
+will be calibrated more precisely from measurements, as the
+measurements contain more information about their value.
+Therefore we perform a sensitivity analysis (SA) to determine
+parameters most and least likely to be calibrated precisely.
+There are different types of SA with different strengths. Here,
+we perform a Morris analysis [21, 22] using the Python
+library SALib [23]. The Morris method is called “one-at-atime” SA because it modifies one input variable at a time and
+measures primarily the main linear effects of one variable on
+the response. Each instance of one variable being modified is
+
+Algorithm 1 Select subset of buses using greedy MI search.
+(︁
+)︁
+Require: n samples of H i = H1 . . . Hp , i = 1, . . . , n
+of generator inertia from the prior distribution.
+Require: n corresponding samples bij , i = 1, . . . , n, j =
+1, . . . , m of time-indexed voltage measurements for each
+of m measured buses.
+Require: k ∈ N, the desired number of buses to select.
+Require: A first-stage dimension reduction denoted R EDUCE.
+Require: The copula-based MI estimator [20]
+Ensure: A set {j1 , . . . , jk } of selected bus indices.
+1: For each observation bij , i = 1, . . . , n, j = 1, . . . , m,
+calculate b′ij = R EDUCE(bij ).
+2: S ← ∅
+3: while |S| < k do
+4:
+j ∗ ← 0, I ∗ ← −∞
+5:
+for j = 1, . . . , m; j ∈
+/ S do
+6:
+for i = 1, . . . , n do
+7:
+Concatenate reduced observations b′ij ′ for j ′ ∈
+′
+S and j = j to create B i .
+8:
+end for
+9:
+Compute I ← MI({B i }, {hi })
+10:
+if I > I ∗ then
+11:
+j ∗ ← j, I ∗ ← I
+12:
+end if
+13:
+end for
+14:
+S ← S ∪ j∗
+15: end while
+16: return S
+
+known as a “trajectory”. Morris SA places multiple trajectories
+for each variable spread out across different values of the
+other variables, to ensure any potential interactions or higher
+order effects can be identified, though not estimated. Other
+SA methods, for example Sobol SA, may estimate higherorder effects but at the expense of a much larger sample size
+required, especially for many variables of interest. Because
+grid models have many parameters to be calibrated and a
+phasor dynamics simulation is expensive to run for larger
+grids, a more frugal SA is preferred. One drawback of Morris
+SA is that it works with scalar response variables only. In our
+case, the response are the bus dynamic voltage measurements,
+which are multi-dimensional time series. We use PCA to
+decorrelate and reduce the response dimension while retaining
+as much of the primary modes of variation as possible.
+To perform Morris SA, we first generate a Morris sampling
+design in all parameters of interest (here generator inertia),
+then run the phasor dynamics simulation (GridKit) for each
+design point, saving voltage measurements for each bus. We
+then reduce each phasor dynamics output to the top k principal
+components. Let µ∗ij and σij be the Morris µ∗ and σ metrics,
+respectively, for parameter i and principal component j. The
+Morris µ∗ is the average absolute linear effect of each covariate
+on the response across across each trajectory for that variable,
+and the Morris value σ is the standard deviation of the linear
+
+(︂∑︁
+)︂1/2
+k
+∗ 2
+effects across trajectories. We create µ∗i =
+(µ
+)
+ij
+j=1
+(︂∑︁
+)︂1/2
+k
+2
+and σi =
+by combining the metrics in
+j=1 (σij )
+each principal component. This combination is justified by
+the orthogonal nature of principal components. Parameters
+with the largest µ∗i have the largest effect on the phasor
+dynamics output in total. We expect the parameters with large
+µ∗i to be calibrated more precisely than those with smaller µ∗i .
+Parameters with large σi relative to µ∗i have highly varying
+linear effects indicating potential interactions or higher-order
+effects. Fig. 3 shows the results of Morris SA for the dataset
+and parameters in Sect. III.
+III. E MPIRICAL RESULTS
+We demonstrate the proposed method by calibrating generator inertia in synthetic grids. We choose inertia as a test case
+because it affects the dynamic voltage response after a fault.
+Specifically, varying inertia values can change the stability of
+the grid response and the speed of voltage oscillations. Additionally, inertia can be changed in a dynamic grid simulation
+without needing to recompute the steady state power flow
+solution or change the dynamic simulation initial conditions.
+In the synthetic grids, we simultaneously calibrate four inertia
+parameters to demonstrate the multivariate Gaussian loss NN’s
+ability to produce correlated uncertainty estimates.
+The Illinois synthetic grid, ACTIVSg200, (Fig. 1) consists
+of 200 buses, and is modified from the Texas A&M Electric Grid Test Case repository [24] for use in GridKit. The
+modified version is available with GridKit source code. The
+test case is a synthetic grid geographically located in central
+Illinois, with comparable generation and load profiles. We will
+calibrate four GENROU (round-rotor synchronous generator)
+inertia parameters, H, out of the 40 total generators in the
+synthetic grid. Fig. 2 shows an example of the synthetic PMU
+measurements produced, in this case, the sin of the voltage
+angle on an example bus. The differences shown between high,
+medium, and low inertia are what the calibration NN will try
+to capture in training in order to produce inertia estimates from
+measurements.
+We vary the inertia values of the generators GENROU 126 1 GENROU 135 1, GENROU 115 1, GENROU 189 1 over a Gaussian prior with standard deviation
+equal to 12% of their nominal values. All four study generators
+are among the top 12 according to the SA values of µ∗ (Fig.
+3), so the available measurements contain information that can
+be used to calibrate them precisely. Next, we select four buses
+to train the calibration NN. Using Algorithm 1 and PCA as
+a first-stage dimension reduction, we select NORMAL 2 3,
+BARTONVILLE 3, PEKIN 1 2, and CLINTON 1 2 as the
+most informative buses. In Fig. 1, we see that these buses are
+the buses where the study generators are attached to the grid,
+so it is expected that they will contain the most information
+about the study generators.
+Finally, we generate 1,000 simulations using GridKit, splitting out 900 for the training dataset and 100 for the validation
+dataset. We then train the calibration NN using the loss
+
+Fig. 1: Illinois grid topology with dark gray bus sizes proportional to load. Blue markers indicate study generator buses
+with varied inertia parameters. Measurement buses selected by
+Algorithm 1 coincide with these locations.
+
+Fig. 2: Example of phasor dynamic simulations in the Illinois
+dataset for a single bus (CLINTON 1 2). The sin of the
+voltage angle is shown for three representative runs, where
+the inertia of the four varied generators (GENROU 126 1,
+GENROU 135 1, GENROU 115 1, GENROU 189 1) are
+high, medium, and low.
+
+functions described in Sect. II-A and a decreasing learning
+rate throughout training. Fig. 4a (top panel) shows the calibration results measured on the validation dataset. As expected,
+calibration is accurate (strong matching between true and
+estimated values) and precise–the magnitude of the error is
+small and the estimated epistemic uncertainty is appropriately small. We also investigate the correlated uncertainty
+estimates (Σ off-diagonal coordinates) of the multivariate
+Gaussian loss NN. Fig. 4b (bottom panel) shows how the
+estimated correlation of two parameters (GENROU 126 1 H
+and GENROU 135 1 H) varies with the estimated means of
+the same parameters. We see a significant range of estimated
+correlation that spans both positive and negative values. The
+
+Fig. 3: Morris µ∗i and σi values of Illinois inertia parameters.
+Parameters are sorted by µ∗i descending, the four varied
+inertia parameters are shown in bold plus least sensitive for
+scale. For visual clarity, we omit other inertia parameters.
+GENROU 189 1, a study generator inertia parameter, is also
+the most sensitive in the analysis. All four parameters near
+the high end of sensitivity, with a large gap between GENROU 115 1, the least sensitive study generator, and the end
+of the list. We expect these parameters to be more precisely
+calibrated.
+
+points at the center of the scatterplot have more neutral
+estimated correlations, while inertias at the bound of their
+domain have more extreme positive or negative correlations. A
+positive correlation indicates that the parameter estimates have
+similarly-signed error, while a negative correlation indicates
+that they may have oppositely-signed error. The larger correlations are near the boundaries of the prior distribution, so the
+correlation shapes the residual distribution to cover more plausible parameter values. The learned correlations enable more
+sophisticated downstream uses of the calibrated parameters.
+For example, the simulation may be configured using several
+Monte Carlo values drawn from the full estimated Gaussian
+distribution to produce a range of plausible simulations. Nonzero correlations allow these Monte Carlo samples to more
+accurately reflect plausible parameter values.
+IV. C ONCLUSION
+We presented a simulation-based inference framework that
+calibrates dynamic grid parameters via a NN trained with
+a multivariate Gaussian loss, yielding point estimates with
+full posterior covariances. To make the method tractable for
+large grids, we reduce the NN-training data along both the
+temporal and bus dimensions, selecting the most informative
+buses via a greedy MI algorithm. A Morris SA additionally
+screens, before training, which parameters are likely to be
+calibrated precisely. Results on the Illinois test case matched
+the SA: sensitive parameters were calibrated precisely, while
+insensitive ones honestly reverted to the prior, and residual
+correlations exposed otherwise hidden parameter interactions.
+
+(a) Calibration plot showing true inertia values and estimated inertia
+values with uncertainty.
+
+(b) Relationship between estimated mean and correlation of GENROU 126 1 H and GENROU 135 1 H. Each validation point is
+located at the coordinates of the estimated parameter means, and
+colored according to the estimated correlation between parameters.
+
+Fig. 4: Performance of calibration NN on Illinois data.
+
+The proposed method was also tested on a synthetic Hawaii
+grid (Texas A&M Electric Grid Test Case repository [25]
+for use in GridKit). The Hawaii grid configuration differs
+significantly from the Illinois one, hence their simulations
+and subsequent numerical results differ as well. However, the
+Morris SA distinguished parameters with reliable estimates
+from those without, and the calibration NN produced appropriate correlated uncertainty estimates. Finlly, leveraging the
+generalizability of the method, future work includes extending
+the framework beyond inertia parameters and to different grid
+size and configurations, as well as exploiting the calibrated
+posterior distributions in downstream tasks such as contingency analysis, where Monte Carlo sampling from the full
+estimated Gaussian can propagate calibration uncertainty into
+grid resilience studies.
+R EFERENCES
+[1]
+
+Y. Wehbe and Lingling Fan, “UKF based estimation of synchronous generator electromechanical pa-
+
+[2]
+
+[3]
+
+[4]
+
+[5]
+
+[6]
+
+[7]
+
+[8]
+
+[9]
+
+[10]
+
+rameters from phasor measurements,” in 2012 North
+American Power Symposium (NAPS), Champaign, IL,
+USA: IEEE, Sep. 2012, pp. 1–6, ISBN: 9781467323086
+9781467323062 9781467323079. DOI: 10.1109/NAPS.
+2012.6336347
+R. Huang et al., “Calibrating parameters of power system stability models using advanced ensemble kalman
+filter,” IEEE Transactions on Power Systems, vol. 33,
+no. 3, pp. 2895–2905, May 2018, ISSN: 0885-8950,
+1558-0679. DOI: 10.1109/TPWRS.2017.2760163
+M. González-Cagigal, J. Rosendo-Macı́as, and A.
+Gómez-Expósito, “Parameter estimation of fully regulated synchronous generators using unscented kalman
+filters,” Electric Power Systems Research, vol. 168,
+pp. 210–217, Mar. 2019, ISSN: 03787796. DOI: 10 .
+1016/j.epsr.2018.11.018
+S. R. Khazeiynasab and J. Qi, “Generator parameter calibration by adaptive approximate bayesian computation
+with sequential monte carlo sampler,” IEEE Transactions on Smart Grid, vol. 12, no. 5, pp. 4327–4338,
+Sep. 2021, ISSN: 1949-3053, 1949-3061. DOI: 10.1109/
+TSG.2021.3077734
+E. Acilan and M. Gol, “Novel parameter error identification method for power plant dynamic models,”
+IEEE Transactions on Power Systems, vol. 39, no. 1,
+pp. 957–966, Jan. 2024, ISSN: 0885-8950, 1558-0679.
+DOI : 10.1109/TPWRS.2023.3253842
+S. R. Khazeiynasab, J. Zhao, I. Batarseh, and B. Tan,
+“Power plant model parameter calibration using conditional variational autoencoder,” IEEE Transactions on
+Power Systems, vol. 37, no. 2, pp. 1642–1652, Mar.
+2022, ISSN: 0885-8950, 1558-0679. DOI: 10 . 1109 /
+TPWRS.2021.3107515
+Y. Xu, L. Mili, X. Chen, M. Korkali, and L. Min, “A
+bayesian approach to real-time dynamic parameter estimation using phasor measurement unit measurement,”
+IEEE Transactions on Power Systems, vol. 35, no. 2,
+pp. 1109–1119, Mar. 2020, ISSN: 0885-8950, 15580679. DOI: 10.1109/TPWRS.2019.2942133
+Y. Xu, L. Mili, M. Korkali, and X. Chen, “An adaptive
+bayesian parameter estimation of a synchronous generator under gross errors,” IEEE Transactions on Industrial
+Informatics, vol. 16, no. 8, pp. 5088–5098, Aug. 2020,
+ISSN: 1551-3203, 1941-0050. DOI : 10.1109/TII.2019.
+2950238
+X. Wang, Y. Wang, D. Shi, J. Wang, and Z. Wang,
+“Two-stage WECC composite load modeling: A double
+deep q-learning networks approach,” IEEE Transactions
+on Smart Grid, vol. 11, no. 5, pp. 4331–4344, Sep.
+2020, ISSN: 1949-3053, 1949-3061. DOI: 10.1109/TSG.
+2020.2988171
+D. Egarter, V. P. Bhuvana, and W. Elmenreich, “PALDi:
+Online load disaggregation via particle filtering,” IEEE
+Transactions on Instrumentation and Measurement,
+vol. 64, no. 2, pp. 467–477, Feb. 2015, ISSN: 00189456, 1557-9662. DOI: 10.1109/TIM.2014.2344373
+
+[11]
+
+[12]
+
+[13]
+
+[14]
+
+[15]
+
+[16]
+
+[17]
+
+[18]
+
+[19]
+
+[20]
+
+[21]
+
+D. Egarter and W. Elmenreich, “Autonomous load
+disaggregation approach based on active power measurements,” in 2015 IEEE International Conference on
+Pervasive Computing and Communication Workshops
+(PerCom Workshops), St. Louis, MO: IEEE, Mar. 2015,
+pp. 293–298, ISBN: 9781479984251. DOI: 10 . 1109 /
+PERCOMW.2015.7134051
+O. Van Cutsem, G. Lilis, and M. Kayal, “Automatic
+multi-state load profile identification with application
+to energy disaggregation,” in 2017 22nd IEEE International Conference on Emerging Technologies and Factory Automation (ETFA), Limassol: IEEE, Sep. 2017,
+pp. 1–8, ISBN: 9781509065059. DOI: 10.1109/ETFA.
+2017.8247684
+K. Cranmer, J. Brehmer, and G. Louppe, “The frontier of simulation-based inference,” Proceedings of
+the National Academy of Sciences, vol. 117, no. 48,
+pp. 30 055–30 062, Dec. 2020, ISSN: 0027-8424, 10916490. DOI: 10.1073/pnas.1912789117
+S. Peles, Gridkit, [Computer Software] https://doi.org/
+10.11578/dc.20250310.1, Mar. 2025. DOI: 10.11578/
+dc.20250310.1
+L. Lowery et al., “GridKit: Practical modeling of large
+power systems for adaptive time step integration,” in
+60th Hawaii International Conference on System Sciences (HICSS), Jan. 2027, pp. 1–10.
+J. Rudi, J. Bessac, and A. Lenzi, Parameter estimation
+with dense and convolutional neural networks applied
+to the FitzHugh-nagumo ODE, May 4, 2021. DOI: 10.
+48550/arXiv.2012.06691 arXiv: 2012.06691[stat].
+A. Lenzi, J. Bessac, J. Rudi, and M. L. Stein, “Neural networks for parameter estimation in intractable
+models,” Computational Statistics & Data Analysis,
+vol. 185, p. 107 762, Sep. 2023, ISSN: 01679473. DOI:
+10.1016/j.csda.2023.107762
+IEEE Power and Energy Society, “Ieee standard for
+synchrophasor data transfer for power systems,” IEEE
+Std C37.118.2-2011 (Revision of IEEE Std C37.1182005), pp. 1–53, 2011. DOI: 10.1109/IEEESTD.2011.
+6111757
+S. Lall, D. Sinha, A. Ghosh, D. Sengupta, and S. Bandyopadhyay, “Stable feature selection using copula based
+mutual information,” Pattern Recognition, vol. 112,
+p. 107 697, Apr. 1, 2021, ISSN: 0031-3203. DOI: 10 .
+1016/j.patcog.2020.107697
+T. Blumentritt and F. Schmid, “Mutual information
+as a measure of multivariate association: Analytical
+properties and statistical estimation,” Journal of Statistical Computation and Simulation, vol. 82, no. 9,
+pp. 1257–1274, Sep. 2012, ISSN: 0094-9655, 15635163. DOI: 10.1080/00949655.2011.575782
+M. D. Morris, “Factorial sampling plans for preliminary
+computational experiments,” Technometrics, vol. 33,
+no. 2, pp. 161–174, May 1991, ISSN: 0040-1706, 15372723. DOI: 10.1080/00401706.1991.10484804
+
+[22]
+
+F. Campolongo, J. Cariboni, and A. Saltelli, “An effective screening design for sensitivity analysis of large
+models,” Environmental Modelling & Software, vol. 22,
+no. 10, pp. 1509–1518, Oct. 2007, ISSN: 13648152.
+DOI: 10.1016/j.envsoft.2006.10.004
+[23] J. Herman and W. Usher, “SALib: An open-source
+python library for sensitivity analysis,” The Journal of
+Open Source Software, vol. 2, no. 9, p. 97, Jan. 10,
+2017, ISSN: 2475-9066. DOI: 10.21105/joss.00097
+[24] A. Birchfield, Illinois 200-bus system: ACTIVSg200.
+[25] A. Birchfield, Hawaii synthetic grid - 37 buses.
+
+

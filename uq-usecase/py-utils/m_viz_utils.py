@@ -507,6 +507,7 @@ def plot_grid(
     case_data: MatpowerCaseData,
     map_style: str = "carto-positron",
     zoom: float | None = None,
+    center: tuple[float, float] | None = None,
     branch_bins: int = 10,
     n_hover_points: int = 10,
     show_loading: bool = True,
@@ -844,6 +845,11 @@ def plot_grid(
 
     center_lon = float(case_data.bus["lon"].mean())
     center_lat = float(case_data.bus["lat"].mean())
+
+    # Use provided center if given; otherwise auto-calculate
+    if center is not None:
+        center_lat, center_lon = center
+
     if zoom is None:
         zoom = 7 if len(case_data.bus) <= 400 else 5
 
@@ -878,6 +884,261 @@ def plot_first_geo(
         show_loading=False,
         show_gen_connectors=show_gen_connectors,
     )
+
+
+def plot_grid_paper(
+    geo_case_data: MatpowerCaseData,
+    measurement_buses: list[int | str],
+    generator_buses: list[int | str],
+    zoom: float | None = None,
+    center: tuple[float, float] | None = None,
+    map_style: str = "carto-positron",
+    measurement_color: str = "#2ca02c",
+    generator_color: str = "#1f77b4",
+    marker_scale: float = 1.0,
+    measurement_marker_size: float = 15.0,
+    generator_marker_size: float = 15.0,
+    fault_bus: int | str | None = None,
+    fault_marker_size: float = 20.0,
+    legend_generator_label: str = "generator buses",
+) -> go.Figure:
+    """Simplified paper-ready geo plot with selectable bus groups.
+
+    Creates a clean map with all branches and base buses in black/gray,
+    and two user-defined bus groups highlighted in distinct colors
+    (e.g., measurement and generator buses).
+
+    Parameters
+    ----------
+    geo_case_data:
+        Case data with geographic coordinates, colocated bus splitting,
+        and generator fan-out already applied (from attach_geo_to_case).
+    measurement_buses:
+        List of bus identifiers (BUS_I integers or bus_name strings)
+        to highlight as "measurement buses".
+    generator_buses:
+        List of bus identifiers (BUS_I integers or bus_name strings)
+        to highlight as "generator buses".
+    zoom:
+        Map zoom level. If None, auto-calculated based on grid size.
+    center:
+        Map center (lat, lon). If None, auto-calculated as data mean.
+    map_style:
+        Plotly mapbox style (e.g., "carto-positron", "open-street-map").
+    measurement_color:
+        Hex color for measurement bus markers (default: green).
+    generator_color:
+        Hex color for generator bus markers (default: blue).
+    marker_scale:
+        Global marker size multiplier (applied to base buses only, not highlighted groups).
+    measurement_marker_size:
+        Fixed pixel size for measurement bus markers (default: 15.0, independent of load).
+    generator_marker_size:
+        Fixed pixel size for generator bus markers (default: 15.0, independent of load).
+    fault_bus:
+        Optional bus identifier (BUS_I int or bus_name str) to highlight with a red fault marker.
+        Set to None to skip fault overlay (default).
+    fault_marker_size:
+        Fixed pixel size for fault bus marker (default: 20.0, independent of load).
+    legend_generator_label:
+        Custom legend label for generator buses. If None, defaults to "generator buses".
+
+    Returns
+    -------
+    go.Figure
+        Plotly figure ready for display or save.
+    """
+
+    required_bus_cols = ["lat", "lon", "BUS_I"]
+    missing_bus_cols = [
+        c for c in required_bus_cols if c not in geo_case_data.bus.columns
+    ]
+    if missing_bus_cols:
+        raise ValueError(f"Missing required bus columns: {missing_bus_cols}")
+
+    required_branch_cols = ["from_lat", "from_lon", "to_lat", "to_lon"]
+    missing_branch_cols = [
+        c for c in required_branch_cols if c not in geo_case_data.branch.columns
+    ]
+    if missing_branch_cols:
+        raise ValueError(f"Missing required branch columns: {missing_branch_cols}")
+
+    fig = go.Figure()
+
+    # --- uniform gray branches ---
+    lat_vals = _branch_lat_array(geo_case_data.branch, n_points=10)
+    lon_vals = _branch_lon_array(geo_case_data.branch, n_points=10)
+    hover_vals = _branch_hover_array(geo_case_data.branch, n_points=10)
+    fig.add_trace(
+        go.Scattermap(
+            mode="lines",
+            lat=lat_vals,
+            lon=lon_vals,
+            hovertext=hover_vals,
+            hoverinfo="text",
+            line=dict(color="rgba(80, 80, 80, 0.45)", width=1.5),
+            name="branches",
+            showlegend=True,
+        )
+    )
+
+    # --- base buses (black) ---
+    has_bus_name = "bus_name" in geo_case_data.bus.columns
+    has_json_bus = "json_bus_number" in geo_case_data.bus.columns
+    bus_hover = [
+        (
+            f"<b>BUS_I: {row.BUS_I}</b><br>"
+            + (f"{row.bus_name}<br>" if has_bus_name else "")
+            + f"PD: {row.PD:.2f} MW<br>QD: {row.QD:.2f} MVAr"
+            + (f"<br>json: number={row.json_bus_number}" if has_json_bus else "")
+        )
+        for row in geo_case_data.bus.itertuples()
+    ]
+    bus_sizes = (
+        (np.sqrt(geo_case_data.bus["PD"].clip(lower=0.01).values) * 2.2 + 3)
+        * marker_scale
+    ).tolist()
+    fig.add_trace(
+        go.Scattermap(
+            name="buses",
+            mode="markers",
+            lat=geo_case_data.bus["lat"].tolist(),
+            lon=geo_case_data.bus["lon"].tolist(),
+            hovertext=bus_hover,
+            hoverinfo="text",
+            marker=dict(size=bus_sizes, color="black", opacity=0.6),
+            showlegend=True,
+        )
+    )
+
+    # --- measurement buses (highlighted color, larger halo) ---
+    # Draw measurement buses first with larger size
+    meas_rows = _lookup_bus_list(geo_case_data.bus, measurement_buses)
+    if not meas_rows.empty:
+        meas_hover = [
+            (
+                f"<b>BUS_I: {row.BUS_I}</b><br>"
+                + (f"{row.bus_name}<br>" if has_bus_name else "")
+                + f"PD: {row.PD:.2f} MW<br>QD: {row.QD:.2f} MVAr"
+                + (f"<br>json: number={row.json_bus_number}" if has_json_bus else "")
+            )
+            for row in meas_rows.itertuples()
+        ]
+        # Measurement buses: larger size (drawn first as halo)
+        meas_sizes = [measurement_marker_size] * len(meas_rows)
+        fig.add_trace(
+            go.Scattermap(
+                name="measurement buses",
+                mode="markers",
+                lat=meas_rows["lat"].tolist(),
+                lon=meas_rows["lon"].tolist(),
+                hovertext=meas_hover,
+                hoverinfo="text",
+                marker=dict(size=meas_sizes, color=measurement_color, opacity=0.9),
+                showlegend=True,
+            )
+        )
+
+    # --- generator buses (highlighted color, smaller, on top) ---
+    # Draw generator buses last with smaller size so they appear on top
+    gen_rows = _lookup_bus_list(geo_case_data.bus, generator_buses)
+    if not gen_rows.empty:
+        gen_hover = [
+            (
+                f"<b>BUS_I: {row.BUS_I}</b><br>"
+                + (f"{row.bus_name}<br>" if has_bus_name else "")
+                + f"PD: {row.PD:.2f} MW<br>QD: {row.QD:.2f} MVAr"
+                + (f"<br>json: number={row.json_bus_number}" if has_json_bus else "")
+            )
+            for row in gen_rows.itertuples()
+        ]
+        # Generator buses: smaller size so they appear on top
+        gen_sizes = [generator_marker_size] * len(gen_rows)
+        fig.add_trace(
+            go.Scattermap(
+                name=legend_generator_label,
+                mode="markers",
+                lat=gen_rows["lat"].tolist(),
+                lon=gen_rows["lon"].tolist(),
+                hovertext=gen_hover,
+                hoverinfo="text",
+                marker=dict(size=gen_sizes, color=generator_color, opacity=0.9),
+                showlegend=True,
+            )
+        )
+
+    # --- fault bus overlay (optional) ---
+    if fault_bus is not None:
+        fault_row = lookup_fault_bus(geo_case_data.bus, fault_bus)
+        if not fault_row.empty:
+            fault_lat = float(fault_row["lat"].iloc[0])
+            fault_lon = float(fault_row["lon"].iloc[0])
+            fault_bus_i = int(fault_row["BUS_I"].iloc[0])
+            fault_label = (
+                fault_row["bus_name"].iloc[0] if has_bus_name else str(fault_bus_i)
+            )
+
+            # Red fault marker (no border)
+            fig.add_trace(
+                go.Scattermap(
+                    name="⚡ fault",
+                    mode="markers",
+                    lat=[fault_lat],
+                    lon=[fault_lon],
+                    hovertext=[
+                        f"<b>⚡ FAULT</b><br>BUS_I: {fault_bus_i}<br>Name: {fault_label}"
+                    ],
+                    hoverinfo="text",
+                    marker=dict(size=fault_marker_size, color="red", opacity=1.0),
+                    showlegend=True,
+                )
+            )
+
+    # --- layout with center and zoom ---
+    center_lon = float(geo_case_data.bus["lon"].mean())
+    center_lat = float(geo_case_data.bus["lat"].mean())
+
+    if center is not None:
+        center_lat, center_lon = center
+
+    if zoom is None:
+        zoom = 7 if len(geo_case_data.bus) <= 400 else 5
+
+    fig.update_layout(
+        title=f"{geo_case_data.case_name}: paper plot",
+        map={
+            "style": map_style,
+            "center": {"lon": center_lon, "lat": center_lat},
+            "zoom": zoom,
+        },
+        legend={"orientation": "v", "y": 0.9, "x": 0, "itemsizing": "constant"},
+        margin=dict(l=0, r=0, t=40, b=0),
+        height=650,
+        width=780,
+    )
+    return fig
+
+
+def _lookup_bus_list(bus_df: pd.DataFrame, bus_ids: list[int | str]) -> pd.DataFrame:
+    """Look up multiple buses by BUS_I (int) or bus_name (str).
+
+    Returns DataFrame containing all matching buses.
+    """
+    if not bus_ids:
+        return pd.DataFrame()
+
+    matching_rows = []
+    for bus_id in bus_ids:
+        if isinstance(bus_id, int):
+            row = bus_df[bus_df["BUS_I"] == bus_id]
+        else:
+            row = bus_df[bus_df.get("bus_name", pd.Series()) == bus_id]
+        if not row.empty:
+            matching_rows.append(row)
+
+    if matching_rows:
+        return pd.concat(matching_rows, ignore_index=False).drop_duplicates()
+    return pd.DataFrame()
 
 
 def _infer_lat_lon_cols(df: pd.DataFrame) -> tuple[str, str]:
@@ -1631,3 +1892,52 @@ def plot_wind_comparison(
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
     return fig
+
+
+def parse_json_genrou_names(genrou_names):
+    """
+    Parse JSON Genrou names and extract bus IDs.
+
+    Converts JSON Genrou device names (e.g., "Genrou 126 1", "126_1") to a list
+    of bus IDs (integers) that can be looked up in the bus DataFrame.
+
+    The JSON naming convention is "Genrou {bus}_{rank}", where:
+      - bus: BUS_I from the MATPOWER .m file
+      - rank: ordinal position among all generators at that bus
+
+    Parameters
+    ----------
+    genrou_names : list of str or int
+        JSON Genrou names ("Genrou 126 1") or already-parsed bus IDs (126).
+        Mixed types are supported.
+
+    Returns
+    -------
+    list of int
+        Bus IDs that can be looked up in geo_case_data.bus["BUS_I"].
+        If parsing fails on an entry, a warning is printed and that entry
+        is skipped.
+
+    Examples
+    --------
+    >>> parse_json_genrou_names(["Genrou 126 1", "Genrou 135 1"])
+    [126, 135]
+
+    >>> parse_json_genrou_names(["126_1", "Genrou 135 1", 189])
+    [126, 135, 189]
+    """
+    bus_ids = []
+    for name in genrou_names:
+        if isinstance(name, str):
+            # Remove "Genrou" prefix and split on whitespace
+            parts = name.replace("Genrou", "").strip().split()
+            if parts:
+                try:
+                    bus_id = int(parts[0])
+                    bus_ids.append(bus_id)
+                except (ValueError, IndexError):
+                    print(f"WARNING: Could not parse generator name: {name!r}")
+        else:
+            # Already an int
+            bus_ids.append(int(name))
+    return bus_ids

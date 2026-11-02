@@ -355,6 +355,57 @@ git checkout isatkaus/uq-usecase
 
 ---
 
+## RHEL 9: the RHEL 8 build runs as-is, no rebuild needed *(verified 2026-10-22)*
+
+Kestrel is migrating RHEL 8 -> RHEL 9. RHEL 8 queue submissions stopped 2026-10-20
+and all compute nodes convert by 2026-11-02. **GridKit built on RHEL 8 was tested on
+a RHEL 9.4 compute node and works unchanged.**
+
+Evidence, from a probe job on `x1006c0s5b0n1` (RHEL 9.4, glibc 2.34):
+
+| check | result |
+|---|---|
+| `ldd DynamicSimulation` | **no unresolved libraries** |
+| binary requires | GLIBC <= **2.14**, GLIBCXX <= **3.4.31** |
+| node provides | glibc **2.34** |
+| `module load julia/1.12.1` | works, resolves to `/nopt/.../julia-1.12.1/usr/bin/julia` |
+| `ctest -R WECC240_validation` | **PASSED (0.64 s)** |
+
+It works because glibc is *backward* compatible: a binary linked against 2.28 (RHEL 8)
+runs against 2.34 (RHEL 9); the reverse would not. `libstdc++` is satisfied by the
+**rpath to the GCC 13 install under `/nopt`**, not by the RHEL 9 system library, which
+only reaches GLIBCXX 3.4.29 and would be too old for the 3.4.31 this binary needs. That
+rpath (see "Derive GCC 13 lib dir for rpath" in `6_build_gridkit.sh`) is doing real work
+here, not just convenience.
+
+A campaign CCT computed on RHEL 9 matched the RHEL 8 value exactly
+(`h2560_n34`, fault bus 66, 0.1836 both), so this is numerical agreement rather than
+merely a successful launch.
+
+### The one real RHEL 8 -> RHEL 9 runtime difference
+
+`/lib64/libomp.so` exists on RHEL 8 but **not on RHEL 9 compute nodes**, so
+`DynamicSimulation` dies with `error while loading shared libraries: libomp.so`
+(exit 127). Point at the library the build actually used:
+
+```
+/nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/lib
+```
+
+**Do not put that on the job's global `LD_LIBRARY_PATH`.** Doing so makes Julia load
+GridKit's SuiteSparse instead of its own and every PowerModels solve dies in
+`SuiteSparse_jll` init. Scope it to the runner subprocess only; `campaign.runner_env()`
+does this.
+
+### Still to do: a rebuild on RHEL 9
+
+The above validates the **runtime** only. Rebuilding from source on RHEL 9 is untested
+and is expected to need at least the `cmake/3.27.9` swap noted above, plus whatever the
+RHEL 9 module reorganisation changes. Worth a dry run of this document on a RHEL 9 node
+at some point; not urgent, since nothing needs rebuilding to keep running.
+
+---
+
 ## Using GridKit Dependencies from /nopt (Future)
 
 > **Not yet set up.** This section will be filled in once GridKit itself is also

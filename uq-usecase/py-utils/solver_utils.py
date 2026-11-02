@@ -22,16 +22,31 @@ from __future__ import annotations
 
 import copy
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import pandas as pd
 
 # Keys that only make sense for GridKit's own regression tests.
-_TEST_ONLY_KEYS = ("reference_file", "error_tolerance", "output_file")
+# Keys that make the shipped solver a regression test: they grade the run
+# against a stored reference trace. Any perturbed scenario "fails" that
+# comparison by construction, so they are stripped for scenario use.
+# `output_file` is deliberately NOT here: without it DynamicSimulation
+# writes no monitor csv at all.
+_TEST_ONLY_KEYS = (
+    "reference_file",
+    "error_tolerance",
+    "error_type",
+    "abs_err_threshold",
+)
 
 __all__ = [
     "list_faults",
     "fault_element_id",
+    "set_fault_bus",
+    "enable_monitors",
+    "BUS_MONITORS",
+    "GENROU_MONITORS",
     "apply_solver_overrides",
     "make_solver",
     "validate_solver",
@@ -39,6 +54,13 @@ __all__ = [
     "set_fault_impedance",
     "write_solver",
 ]
+
+# Valid "mon" entries, from the GridKit enums: BusMonitorableVariables in
+# Bus/BusData.hpp and GenrouMonitorableVariables in
+# SynchronousMachine/GENROU/GenrouData.hpp. An unknown name is logged as an
+# error by the parser and then ignored, so typos cost you the channel silently.
+BUS_MONITORS = ("Vr", "Vi")
+GENROU_MONITORS = ("ir", "ii", "p", "q", "delta", "omega", "speed")
 
 
 def _load(obj, what: str) -> dict:
@@ -91,13 +113,102 @@ def fault_element_id(case, bus: int | str) -> int:
     return int(hit["element_id"].iloc[0])
 
 
-def apply_solver_overrides(solver: dict, overrides: dict | None) -> dict:
+def _resolve_bus(case: dict, bus: int | str) -> int:
+    """Bus number from a number or a bus name."""
+    if not isinstance(bus, str):
+        return int(bus)
+    buses = case.get("buses", [])
+    hits = [b["number"] for b in buses if b.get("name") == bus]
+    if not hits:
+        hits = [
+            b["number"] for b in buses if bus.lower() in str(b.get("name", "")).lower()
+        ]
+    if len(hits) != 1:
+        raise KeyError(f"bus name {bus!r} matched {len(hits)} buses")
+    return int(hits[0])
+
+
+def set_fault_bus(case, bus: int | str, fault_id: str | None = None) -> dict:
+    """Move a `BusFault` to another bus. Returns a modified copy.
+
+    Relocating one device is preferred over shipping a fault per bus: every
+    extra `BusFault` is another component GridKit assembles, and the pre-#577
+    case carried 200 of them. `fault_id` is only needed when a case has more
+    than one fault.
+    """
+    case = _load(case, "case")
+    faults = [d for d in case.get("devices", []) if d.get("class") == "BusFault"]
+    if not faults:
+        raise KeyError("case has no BusFault device to move")
+    if fault_id is not None:
+        sel = [d for d in faults if d.get("id") == fault_id]
+        if not sel:
+            raise KeyError(
+                f"no BusFault with id {fault_id!r}; have "
+                f"{[d.get('id') for d in faults]}"
+            )
+        target = sel[0]
+    elif len(faults) == 1:
+        target = faults[0]
+    else:
+        raise KeyError(
+            f"{len(faults)} BusFaults present, pass fault_id= to pick one: "
+            f"{[d.get('id') for d in faults]}"
+        )
+    target["ports"]["bus"] = _resolve_bus(case, bus)
+    return case
+
+
+def enable_monitors(
+    case,
+    bus: Sequence[str] | None = ("Vr", "Vi"),
+    genrou: Sequence[str] | None = ("delta", "omega"),
+) -> dict:
+    """Set which channels land in the monitor csv. Returns a modified copy.
+
+    The post-#577 ACTIVSg200 case monitors `omega` only: every bus carries
+    `"mon": []`, so no bus voltage reaches the csv and nothing PMU-observable
+    can be computed. Pass None to leave a group untouched.
+
+    Valid names are BUS_MONITORS and GENROU_MONITORS.
+    """
+    case = _load(case, "case")
+    for group, names, valid in (
+        ("bus", bus, BUS_MONITORS),
+        ("genrou", genrou, GENROU_MONITORS),
+    ):
+        if names is None:
+            continue
+        bad = sorted(set(names) - set(valid))
+        if bad:
+            raise ValueError(f"invalid {group} monitor(s) {bad}; valid: {list(valid)}")
+    if bus is not None:
+        for b in case.get("buses", []):
+            b["mon"] = list(bus)
+    if genrou is not None:
+        for d in case.get("devices", []):
+            if d.get("class") == "Genrou":
+                d["mon"] = list(genrou)
+    return case
+
+
+def apply_solver_overrides(
+    solver: dict, overrides: dict | None, strip_test_keys: bool = True
+) -> dict:
     """Patch a solver dict. Mirrors `gridkit_utils.make_run_dir` semantics.
 
     `events` may be a complete replacement list, or a list of patches each
     carrying an `index` key naming the event to modify.
+
+    `strip_test_keys` removes the validation-only keys the shipped solver
+    carries. Leave it on for scenario runs: with `reference_file` present
+    DynamicSimulation grades the run against a stored trace and exits
+    nonzero whenever the case has been perturbed.
     """
     solver = copy.deepcopy(solver)
+    if strip_test_keys:
+        for k in _TEST_ONLY_KEYS:
+            solver.pop(k, None)
     if not overrides:
         return solver
     for key, val in overrides.items():
