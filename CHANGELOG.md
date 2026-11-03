@@ -19,6 +19,11 @@
 - Migrated PhasorDynamics models with real and Boolean parameters to `Model::ParameterReader`.
 - Added component labels and lookups that search subsystems.
 - Added ACTIVSg25k and ACTIVSg70k PhasorDynamics cases.
+- Fixed REPCA PI windup while saturated; the PI states now track the limited outputs.
+- Fixed REECB to limit the direct voltage reference (`VFlag` off) to [`Vmin`, `Vmax`].
+- Fixed ESDC1A rate feedback to use the limited field-voltage rate.
+- Fixed REGCA to hold the terminal voltage at `Vhvmax`, as PowerWorld does; `Khv` is accepted but unused.
+- Added the FourBusLimits validation case, which drives the REPCA, REECB, REGCA, and ESDC1A limits.
 
 ## v0.2
 

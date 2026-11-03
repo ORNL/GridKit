@@ -68,6 +68,7 @@ A valid REPCA parameter set must satisfy the following conditions:
 \begin{aligned}
   S^\mathrm{base} &> 0 \\
   T_\mathrm{fltr}, T_\mathrm{ft}, T_\mathrm{fv}, T_\mathrm{p}, T_\mathrm{lag} &\ge 0 \\
+  K_\mathrm{p}, K_\mathrm{pg} &\ge 0 \\
   D_\mathrm{bd1} &\le 0 \le D_\mathrm{bd2} \\
   e^{\min} &\le 0 \le e^{\max} \\
   Q^{\min} &\le Q^{\max} \\
@@ -188,6 +189,9 @@ $f^\mathrm{ref}$                | [p.u.] | Frequency reference                  
 
 Smooth functions: [`above`](../../../../CommonMath.md#above), [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`](../../../../CommonMath.md#clamp), [`deadband2`](../../../../CommonMath.md#type-ii-deadband).
 
+The PI controllers feed back the limited outputs.[^pi-feedback] Limiting the
+state as well keeps it constant at zero error.
+
 ### Internal Equations
 
 #### Differential
@@ -196,10 +200,16 @@ Smooth functions: [`above`](../../../../CommonMath.md#above), [`antiwindup`](../
 \begin{aligned}
   0 &= -\dot{V}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (V^\mathrm{ctrl} - V^\mathrm{meas}) \\
   0 &= -\dot{Q}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (k_\mathrm{base}Q - Q^\mathrm{meas}) \\
-  0 &= -\dot{x}_Q^\mathrm{PI} + s_\mathrm{frz}\, \text{antiwindup}(Q^\mathrm{PI}, K_\mathrm{i}e_\mathrm{RQ}^\mathrm{lim};\,Q^{\min}, Q^{\max}) \\
+  0 &= -\dot{x}_Q^\mathrm{PI} + s_\mathrm{frz}\, \begin{cases}
+    \dfrac{K_\mathrm{i}}{K_\mathrm{p}}\left(Q^\mathrm{PI}-\text{clamp}(x_Q^\mathrm{PI};\,Q^{\min},Q^{\max})\right) & K_\mathrm{p}>0 \\
+    \text{antiwindup}(x_Q^\mathrm{PI}, K_\mathrm{i}e_\mathrm{RQ}^\mathrm{lim};\,Q^{\min},Q^{\max}) & K_\mathrm{p}=0
+  \end{cases} \\
   0 &= -\dot{x}_Q^\mathrm{lag} + \dfrac{1}{T_\mathrm{fv}} (Q^\mathrm{PI} - x_Q^\mathrm{lag}) \\
   0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}} (k_\mathrm{base}P - P^\mathrm{meas}) \\
-  0 &= -\dot{x}_P^\mathrm{PI} + \text{antiwindup}(P^\mathrm{PI}, K_\mathrm{ig}e_P^\mathrm{lim};\,P^{\min}, P^{\max}) \\
+  0 &= -\dot{x}_P^\mathrm{PI} + \begin{cases}
+    \dfrac{K_\mathrm{ig}}{K_\mathrm{pg}}\left(P^\mathrm{PI}-\text{clamp}(x_P^\mathrm{PI};\,P^{\min},P^{\max})\right) & K_\mathrm{pg}>0 \\
+    \text{antiwindup}(x_P^\mathrm{PI}, K_\mathrm{ig}e_P^\mathrm{lim};\,P^{\min},P^{\max}) & K_\mathrm{pg}=0
+  \end{cases} \\
   0 &= -\dot{P}^\mathrm{ref} + \dfrac{1}{T_\mathrm{lag}} (P^\mathrm{PI} - P^\mathrm{ref})
 \end{aligned}
 ```
@@ -299,11 +309,8 @@ If an initial PI output falls outside its configured limits, REPCA expands the
 limits to include it and logs a warning. This matches PowerWorld's default
 `Modify Limits and Run` treatment of initial limit violations.
 
-Initialization rejects an operating point if:
-
-- a required input or derived value is not finite;
-- the gated reactive-power or active-power PI state rate is nonfinite or does
-  not vanish within the implementation tolerance.
+Initialization rejects an operating point if a required input or derived value
+is not finite.
 
 Initialization is atomic; candidates are validated before state or signal writes.
 
@@ -342,3 +349,5 @@ $\text{droop}(0;D_\mathrm{dn},D_\mathrm{up})=0$.
 [^frequency-measurement]: Background for phase-derived, filtered frequency
     measurement: [PSCAD Frequency/Phase/Magnitude Meter](https://www.pscad.com/webhelp-pscad-v5.1.0-ol/Master_Library_Models/Meters/Frequency_Phase_Magnitude_Meter.htm) and
     [Ting et al., *Evaluating Methods for Measuring Grid Frequency in Low-Inertia Power Systems*](https://research-hub.nlr.gov/en/publications/evaluating-methods-for-measuring-grid-frequency-in-low-inertia-po-3/).
+
+[^pi-feedback]: See PowerWorld's [DER_A feedback PI, p. 3](https://www.powerworld.com/WebHelp/Content/TransientModels_PDF/Generator/Machine/Machine%20Model%20DER_A.pdf#page=3).

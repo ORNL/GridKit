@@ -1,0 +1,14 @@
+{
+    "system_model_file": "FourBusLimits.case.json",
+    "output_file": "FourBusLimits.csv",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "bus": 4, "R": 0.0, "X": 0.05 },
+        { "time": 1.15, "type": "fault_off", "bus": 4 },
+        { "time": 2.0, "type": "out_of_service", "device": "BR_1_4" }
+    ],
+    "reference_file": "reference/FourBusLimits.ref.csv",
+    "error_type": "relative",
+    "error_tolerance": 2e-2
+}

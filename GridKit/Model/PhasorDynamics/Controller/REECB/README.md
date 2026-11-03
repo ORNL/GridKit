@@ -205,7 +205,7 @@ Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`
   0 &= -Q^\mathrm{ref}+s_Q^\mathrm{ref}(s_\mathrm{pf}P^\mathrm{meas}\tan(\phi^\mathrm{ref})+s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}) \\
   0 &= -e_Q+\text{clamp}(Q^\mathrm{ref};\,Q^{\min},Q^{\max})-k_\mathrm{base}Q^\mathrm{gen} \\
   0 &= -V_Q^\mathrm{PI}+\text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
-  0 &= -e_V^\mathrm{PI}+s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
+  0 &= -e_V^\mathrm{PI}+s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}\text{clamp}(Q^\mathrm{ext};\,V^{\min},V^{\max})-s_QV^\mathrm{meas} \\
   0 &= -r_P^\mathrm{ord}+\text{aslew}\!\left(\dfrac{k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}}{T_\mathrm{pord}};\,R_P^{\min},R_P^{\max}\right) \\
   0 &= -I_L^\mathrm{cap}+\text{sqrtramp}\big((I^{\max}-I^\mathrm{high})(I^{\max}+I^\mathrm{high})\big) \\
   0 &= -I_q^{\max}+s_\mathrm{pq}I_L^\mathrm{cap}+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
@@ -321,7 +321,7 @@ give
         0 & s_Qs_V=0
       \end{cases} \\
   V_Q^\mathrm{PI} &\leftarrow \text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
-  e_V^\mathrm{PI} &\leftarrow s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
+  e_V^\mathrm{PI} &\leftarrow s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}\text{clamp}(Q^\mathrm{ext};\,V^{\min},V^{\max})-s_QV^\mathrm{meas} \\
   x_V^\mathrm{PI} &\leftarrow
       \begin{cases}
         -K_\mathrm{vp}e_V^\mathrm{PI} & s_Q=1\ \land\ I_q^{\max}\le\epsilon_\mathrm{init} \\
@@ -353,7 +353,7 @@ limit, latch, or signal is changed.
       \end{cases} \\
   Q^\mathrm{ext} &\leftarrow
       \begin{cases}
-        V^\mathrm{meas} & s_V^\mathrm{ref}=1 \\
+        \text{iclamp}(V^\mathrm{meas};\,V^{\min},V^{\max}) & s_V^\mathrm{ref}=1 \\
         0 & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
         Q^\mathrm{target}/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
       \end{cases} \\

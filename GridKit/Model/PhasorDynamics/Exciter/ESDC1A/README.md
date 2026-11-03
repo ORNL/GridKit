@@ -101,7 +101,7 @@ raised to that floor in place, so every equation below uses the raised value:
 When saturation is disabled, $S_A = 0$ and $S_B = 0$. Otherwise,
 
 ```math
-E S_E(E) = S_B q(E-S_A)
+E S_E(E) = S_B \text{qramp}(E-S_A)
 ```
 
 When one saturation value is zero,
@@ -216,25 +216,26 @@ $V_{\mathrm{uel}}$ | [p.u.] | Under-excitation limiter input        | Signal por
 
 ## Model Equations
 
-Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`max`](../../../../CommonMath.md#maximum), [$q$](../../../../CommonMath.md#quadratic-ramp), [$\rho$](../../../../CommonMath.md#ramp).
+Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`max`](../../../../CommonMath.md#maximum), [`qramp`](../../../../CommonMath.md#quadratic-ramp), [$\rho$](../../../../CommonMath.md#ramp).
+
+Define the pre-limit exciter field-voltage rate and its limited value:
+
+```math
+\begin{aligned}
+  f_E &= \dfrac{V_R-V_{\mathrm{FE}}}{T_E} \\
+  f_E^{\lim} &= (1-s_{\mathrm{lim}})f_E + s_{\mathrm{lim}}\,\text{awmin}(E_{\mathrm{fd}}',f_E;0)
+\end{aligned}
+```
 
 ### Internal Equations
 
 #### Differential
 
-Define the pre-limit exciter field-voltage rate:
-
-```math
-f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}
-```
-
 ```math
 \begin{aligned}
   0 &=
     -\dot{E}_{\mathrm{fd}}'
-    + (1-s_{\mathrm{lim}})f_E
-    + s_{\mathrm{lim}}\,
-      \text{awmin}(E_{\mathrm{fd}}',f_E;0) \\
+    + f_E^{\lim} \\
   0 &=
     -\dot{V}_C
     + \dfrac{1}{T_R}
@@ -254,11 +255,7 @@ f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}
   0 &=
     -\dot{V}_F
     + \dfrac{1}{T_{F1}}
-      \left[
-        -V_F
-        + \dfrac{K_F}{T_E}
-          (V_R - V_{\mathrm{FE}})
-      \right] \\
+      (-V_F + K_F f_E^{\lim}) \\
   0 &=
     -\dot{x}_{\mathrm{LL}}
     + \dfrac{1}{T_B}
@@ -295,7 +292,7 @@ of [Appendix A](#appendix-a-awmin).
       \end{cases} \\
   0 &=
     -s_e
-    + S_B q(E_{\mathrm{fd}}' - S_A) \\
+    + S_B \text{qramp}(E_{\mathrm{fd}}' - S_A) \\
   0 &=
     -V_{\mathrm{FE}}
     + K_E^{\mathrm{eff}} E_{\mathrm{fd}}'
@@ -344,7 +341,7 @@ inverse smooth [ramp](../../../../CommonMath.md#ramp) $\rho^{-1}$:
     &\leftarrow
       \dfrac{E_{\mathrm{fd}}}{1 + s_{\mathrm{spd}}\omega} \\
   s_e
-    &\leftarrow S_B q(E_{\mathrm{fd}}' - S_A) \\
+    &\leftarrow S_B \text{qramp}(E_{\mathrm{fd}}' - S_A) \\
   V_{\mathrm{FE}}
     &\leftarrow K_E^{\mathrm{eff}} E_{\mathrm{fd}}' + s_e \\
   V_R

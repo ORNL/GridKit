@@ -206,6 +206,11 @@ namespace GridKit
         RealT ref_off_{ZERO<RealT>};
         RealT freq_on_{ZERO<RealT>};
 
+        RealT q_feedback_gain_{ONE<RealT>};
+        RealT q_integral_gain_{ZERO<RealT>};
+        RealT p_feedback_gain_{ONE<RealT>};
+        RealT p_integral_gain_{ZERO<RealT>};
+
         ScalarT freqref_set_{ONE<RealT>};
         ScalarT vref_set_{ONE<RealT>};
         ScalarT qref_set_{ZERO<RealT>};

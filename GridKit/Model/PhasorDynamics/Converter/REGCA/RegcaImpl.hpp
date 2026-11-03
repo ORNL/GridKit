@@ -145,6 +145,26 @@ namespace GridKit
       }
 
       /**
+       * @brief Invert the smooth ramp on its positive range
+       *
+       * This initialization-only helper is not called by the differentiated
+       * residual path.
+       *
+       * @param[in] value Positive smooth-ramp output.
+       * @return Input whose smooth-ramp output equals `value`.
+       *
+       * @pre `value` is finite and strictly positive.
+       */
+      template <typename scalar_type, typename index_type>
+      auto Regca<scalar_type, index_type>::iramp(RealT value) -> RealT
+      {
+        assert(std::isfinite(value) && value > ZERO<RealT>);
+
+        const RealT mu = Math::MU<RealT>;
+        return value + std::log(-std::expm1(-mu * value)) / mu;
+      }
+
+      /**
        * @brief Read parameters from the model data.
        *
        * Every parameter keeps its default when omitted. Invalid values throw
@@ -175,7 +195,6 @@ namespace GridKit
         VA0_      = reader.readReal(Params::VA0).value_or(VA0_);
         VA1_      = reader.readReal(Params::VA1).value_or(VA1_);
         Vhvmax_   = reader.readReal(Params::Vhvmax).value_or(Vhvmax_);
-        Khv_      = reader.readReal(Params::Khv).value_or(Khv_);
 
         setDerivedParameters();
       }
@@ -316,8 +335,6 @@ namespace GridKit
         checks.check(mva_base_ > ZERO<RealT>, "mva must be positive");
         checks.check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
         checks.check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
-        checks.check(std::isfinite(Khv_) && Khv_ >= ZERO<RealT>,
-                     "Khv must be finite and non-negative");
         checks.check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
         checks.check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
                      "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
@@ -350,7 +367,7 @@ namespace GridKit
        *
        * @pre allocate() has completed, verify() reports no errors, and the
        *      terminal bus has been initialized.
-       * @pre \f$V_{A1} \le V_{T,0}\f$, and with LVPL enabled
+       * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with LVPL enabled
        *      \f$I_{p,0} \le I_{L,0}\f$.
        * @post All internal derivatives are zero. Unattached command ports retain
        *       the resolved setpoints as constant commands.
@@ -386,6 +403,12 @@ namespace GridKit
               << "Regca: terminal voltage magnitude must be at least VA1 at initialization\n";
           return 1;
         }
+        if (vt >= Vhvmax_)
+        {
+          Log::error()
+              << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
+          return 1;
+        }
 
         // P0 is a system-base power-flow injection. Resolve the component-base
         // active current through the LVACM network-interface gain.
@@ -401,8 +424,9 @@ namespace GridKit
         }
         const ScalarT ipcmd0 = ip0;
 
-        // Evaluate the HVRCM law and preserve the requested Q0.
-        const ScalarT iqextra0 = Khv_ * Math::ramp(vt - Vhvmax_);
+        // Invert the HVRCM ceiling and preserve the requested Q0.
+        const RealT   margin   = Vhvmax_ - static_cast<RealT>(vt);
+        const ScalarT iqextra0 = static_cast<ScalarT>(margin - iramp(margin));
         const ScalarT qnet0    = this->toComponentBase(static_cast<ScalarT>(q0_) / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
         const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
@@ -555,7 +579,7 @@ namespace GridKit
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
-        f[IQEXTRA] = -iqextra + Khv_ * Math::ramp(vt - Vhvmax_);
+        f[IQEXTRA] = -Math::min(iqextra, Vhvmax_ - vt);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
                 + KL_ * Math::ramp(vm - VL1_);
         f[PBR] = -pbr + vr * ir + vi * ii;

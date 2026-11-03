@@ -32,12 +32,15 @@ $V_{L0}$               | [p.u.]   | `VL0`    | LVPL zero-crossing voltage       
 $V_{L1}$               | [p.u.]   | `VL1`    | LVPL upper breakpoint voltage                 | 0.9           | Source label: `brkpt`
 $V_{A0}$               | [p.u.]   | `VA0`    | LVACM lower breakpoint voltage                | 0.4           | Source label: `LVPnt0`
 $V_{A1}$               | [p.u.]   | `VA1`    | LVACM upper breakpoint voltage                | 0.9           | Source label: `LVPnt1`
-$V_\mathrm{hv}^{\max}$ | [p.u.]   | `Vhvmax` | HV reactive management activation threshold   | 1.2           | Source label: `VLim`
-$Q^{\min}$             | [p.u.]   | `Qmin`   | PowerWorld compatibility field                |               | Optional; accepted but unused
-$K_\mathrm{hv}$        | [p.u.]   | `Khv`    | HV reactive management gain                   | 0.7           | Optional; defaults to 0.7; block name: `Khv`
-$X_\mathrm{e}$         | [p.u.]   | `Xe`     | PowerWorld compatibility field                |               | Optional; accepted but unused
+$V_\mathrm{hv}^{\max}$ | [p.u.]   | `Vhvmax` | Terminal-voltage ceiling                      | 1.2           | Source label: `VLim`
+$Q^{\min}$             | [p.u.]   | `Qmin`   | Case-file compatibility field                 |               | Optional; accepted but unused
+$K_\mathrm{hv}$        | [p.u.]   | `Khv`    | Case-file compatibility field                 |               | Optional; accepted but unused
+$X_\mathrm{e}$         | [p.u.]   | `Xe`     | Case-file compatibility field                 |               | Optional; accepted but unused
 
 Omitted parameters default to 0 unless noted.
+
+`Qmin`, `Khv`, and `Xe` are retained for compatibility with existing case
+files and do not affect this model's equations.
 
 ### Parameter Validation
 
@@ -61,9 +64,7 @@ A valid REGCA parameter set must satisfy the following conditions:
   0
     &\le V_{L0} < V_{L1} \\
   0
-    &\le V_{A0} < V_{A1} < V_\mathrm{hv}^{\max} \\
-  0 \le K_\mathrm{hv}
-    &< \infty
+    &\le V_{A0} < V_{A1} < V_\mathrm{hv}^{\max}
 \end{aligned}
 ```
 
@@ -199,8 +200,7 @@ the sign that enables the corresponding limit.
   0 &= -k_\mathrm{base} V_T I_i
        - V_r(I_q - I_q^\mathrm{extra})
        + V_i I_p\,\text{linseg}(V_T; V_{A0}, V_{A1}, 1) \\
-  0 &= -I_q^\mathrm{extra}
-       + K_\mathrm{hv}\,\text{ramp}(V_T - V_\mathrm{hv}^{\max}) \\
+  0 &= -\text{min}(I_q^\mathrm{extra}, V_\mathrm{hv}^{\max}-V_T) \\
   0 &= -I_L
        + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1})
        + K_L\,\text{ramp}(V_M - V_{L1}) \\
@@ -233,8 +233,8 @@ the sign that enables the corresponding limit.
 
 ### Internal Initialization
 
-Initialization requires $V_{A1}\le V_T$ and, with LVPL enabled, $I_p\le I_L$.
-All internal derivatives initialize to zero.
+Initialization requires $V_{A1}\le V_T<V_\mathrm{hv}^{\max}$ and, with LVPL enabled, $I_p\le I_L$.
+All internal derivatives initialize to zero. [Appendix C](#appendix-c-iramp) defines `iramp`.
 
 ```math
 \begin{aligned}
@@ -243,7 +243,7 @@ All internal derivatives initialize to zero.
   I_L &\leftarrow \text{linseg}(V_T;V_{L0},V_{L1},I_{L1})
     +K_L\,\text{ramp}(V_T-V_{L1}) \\
   I_p &\leftarrow \dfrac{k_\mathrm{base}P_0}{V_T\,\text{linseg}(V_T;V_{A0},V_{A1},1)} \\
-  I_q^\mathrm{extra} &\leftarrow K_\mathrm{hv}\,\text{ramp}(V_T-V_\mathrm{hv}^{\max}) \\
+  I_q^\mathrm{extra} &\leftarrow V_\mathrm{hv}^{\max}-V_T-\text{iramp}(V_\mathrm{hv}^{\max}-V_T) \\
   I_q &\leftarrow \dfrac{k_\mathrm{base}Q_0}{V_T}+I_q^\mathrm{extra} \\
   I_r &\leftarrow \dfrac{V_rP_0+V_iQ_0}{V_T^2} \\
   I_i &\leftarrow \dfrac{V_iP_0-V_rQ_0}{V_T^2} \\
@@ -333,3 +333,14 @@ The model evaluates this rule with the following smooth approximation:
 
 With a stationary bound ($\dot u = 0$) this reduces to the `antiwindup` of
 CommonMath restricted to its upper limit, which admits an algebraic bound $u$.
+
+## Appendix C: `iramp`
+
+For a positive smooth-ramp output $v>0$ and smoothing parameter $\mu$,
+
+```math
+\text{iramp}(v) = v+\dfrac{1}{\mu}\log(1-\exp(-\mu v))
+```
+
+This is the positive-range inverse of GridKit's smooth
+[`ramp`](../../../../CommonMath.md#ramp).

@@ -5,3 +5,5 @@ add_subdirectory(TwoBusGensal)
 add_subdirectory(ThreeBusBasic)
 add_subdirectory(ThreeBusClassical)
 add_subdirectory(ThreeBusZipLoad)
+
+add_subdirectory(FourBusLimits)

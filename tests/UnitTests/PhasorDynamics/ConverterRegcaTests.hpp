@@ -82,12 +82,6 @@ namespace GridKit
         success *= invalidParameterCase(bus, Params::Vhvmax, kVa1);
         success *= invalidParameterCase(bus, Params::Vhvmax, HALF<RealT> * kVa1);
 
-        // Khv is optional, finite, and non-negative.
-        success *= invalidParameterCase(bus, Params::Khv, -0.1);
-        success *= invalidParameterCase(bus,
-                                        Params::Khv,
-                                        std::numeric_limits<RealT>::infinity());
-
         // A null bus and an attached command with no linked source count as
         // configuration errors on the same footing as bad parameters.
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> busless(nullptr, makeData());
@@ -206,8 +200,9 @@ namespace GridKit
           RealT       vr;
         };
 
-        const std::array<RejectionCase, 2> rejected{{
+        const std::array<RejectionCase, 3> rejected{{
             {"terminal voltage below VA1", HALF<RealT> * kVa1},
+            {"terminal voltage at Vhvmax", kHvrcmVoltageLimit},
             {"zero terminal voltage", 0.0},
         }};
 
@@ -565,15 +560,15 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// High-voltage reactive current management: initialization, gain,
+      /// High-voltage reactive current management: initialization, compatibility,
       /// threshold behavior, and the local derivative.
       TestOutcome highVoltageManagement()
       {
         TestStatus success = true;
 
-        // Initialization above Vhvmax activates HVRCM and preserves Q0.
+        // Equal current and voltage margins give min(x, x) = x - ln(2)/MU.
         {
-          const RealT terminal_voltage = kHvrcmVoltageLimit + kHvrcmOffset;
+          const RealT terminal_voltage = kHvrcmVoltageLimit - hvrcmTransition();
 
           auto data                   = makeData();
           data.parameters[Params::q0] = 0.1;
@@ -586,32 +581,31 @@ namespace GridKit
           const auto* y              = fixture.regca.y().getData();
           const RealT extra_current  = y[index(Vars::IQEXTRA)];
           success                   *= scalarMatches(
-              extra_current, kHvrcmGain * kHvrcmOffset, "IQEXTRA with the default Khv", kSmoothTol);
+              extra_current, hvrcmTransition(), "IQEXTRA at initialization");
           success *= scalarMatches(
               y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)], 0.1 / terminal_voltage, "IQ preserves Q0 after HVRCM compensation");
           success *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR");
         }
 
-        // At the activation threshold, the analytical ramp value is ln(2)/MU.
-        // This also checks that a supplied Khv replaces the default.
+        // Khv is accepted for compatibility and does not change the ceiling.
         {
-          for (const RealT gain : {0.0, 0.5})
+          for (const RealT gain : {-0.5, 0.0, 0.5})
           {
             auto data                    = makeData();
             data.parameters[Params::Khv] = gain;
 
-            Fixture<ScalarT> fixture(data, kHvrcmVoltageLimit);
+            Fixture<ScalarT> fixture(data, kHvrcmVoltageLimit - hvrcmTransition());
             success *= fixture.initialize();
             success *= (fixture.evaluate() == 0);
             success *= allResidualsZero(fixture.regca);
 
             const auto* y  = fixture.regca.y().getData();
-            success       *= scalarMatches(y[index(Vars::IQEXTRA)], gain * hvrcmTransition(), "IQEXTRA at a supplied Khv");
+            success       *= scalarMatches(y[index(Vars::IQEXTRA)], hvrcmTransition(), "IQEXTRA at a supplied Khv");
           }
         }
 
         // The ramp identity ramp(x) - ramp(-x) = x pins the orientation and
-        // gain without encoding a MU-specific decimal.
+        // sign without encoding a MU-specific decimal.
         {
           Fixture<ScalarT> fixture(makeData());
           success *= fixture.initialize();
@@ -630,14 +624,14 @@ namespace GridKit
           const RealT at    = residualAt(kHvrcmVoltageLimit, 0.0);
           const RealT above = residualAt(kHvrcmVoltageLimit + kHvrcmOffset, 0.0);
 
-          success *= scalarMatches(at, kHvrcmGain * hvrcmTransition(), "HVRCM residual at the threshold");
-          success *= scalarMatches(above - below, kHvrcmGain * kHvrcmOffset, "HVRCM symmetric residual difference");
+          success *= scalarMatches(at, hvrcmTransition(), "HVRCM residual at the threshold");
+          success *= scalarMatches(above - below, kHvrcmOffset, "HVRCM symmetric residual difference");
 
-          const RealT shifted  = residualAt(kHvrcmVoltageLimit, 0.1);
-          success             *= scalarMatches(shifted - at, -0.1, "HVRCM extra-current residual shift");
+          const RealT shifted  = residualAt(kHvrcmVoltageLimit - 0.1, 0.1);
+          success             *= scalarMatches(shifted - at, -0.1, "HVRCM equal-margin residual shift");
         }
 
-        // At the threshold, the voltage sensitivity is half the Khv gain.
+        // At the threshold, voltage and current sensitivities have magnitude 1/2.
         {
           using DepVar = DependencyTracking::Variable;
 
@@ -656,8 +650,8 @@ namespace GridKit
               fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)].getDependencies();
 
           const DepVar::DependencyMap expected{{
-              {2 * index(Vars::VT), 0.5 * kHvrcmGain}, // @todo remove these
-              {2 * index(Vars::IQEXTRA), -1.0},        // @todo remove these
+              {2 * index(Vars::VT), 0.5},       // @todo remove these
+              {2 * index(Vars::IQEXTRA), -0.5}, // @todo remove these
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -818,8 +812,6 @@ namespace GridKit
       /// Vhvmax in makeData() and in makeDynamicData().
       static constexpr RealT kHvrcmVoltageLimit        = 1.2;
       static constexpr RealT kDynamicHvrcmVoltageLimit = 1.3;
-
-      static constexpr RealT kHvrcmGain = 0.7;
 
       /// Offset whose smooth-ramp tail decays by one significand width.
       static constexpr RealT kHvrcmOffset =
@@ -1007,7 +999,7 @@ namespace GridKit
         y[index(Vars::IP)]      = current;
         y[index(Vars::IL)]      = 0.0;
         y[index(Vars::VT)]      = kDynamicHvrcmVoltageLimit;
-        y[index(Vars::IQEXTRA)] = kHvrcmGain * hvrcmTransition();
+        y[index(Vars::IQEXTRA)] = 0.0;
         regca.y().setDataUpdated();
       }
 
