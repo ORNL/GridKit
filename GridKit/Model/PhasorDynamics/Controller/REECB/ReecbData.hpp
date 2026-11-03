@@ -81,6 +81,11 @@ namespace GridKit
         pmeas, ///< \f$P^\mathrm{meas}\f$ Filtered electrical power on component base [p.u.]
       };
 
+      /// Initial values for the REECB electrical-control model.
+      enum class ReecbInitialValues : size_t
+      {
+      };
+
       /**
        * @brief Model data for REECB parameters, bus and signal ports, and monitored variables.
        *

@@ -73,6 +73,14 @@ namespace GridKit
       iq,     ///< \f$I_q\f$ Q-axis current
     };
 
+    /// Initial values for a Gensal generator model
+    enum class GensalInitialValues : size_t
+    {
+      ir,         ///< \f$I_r\f$ Initial real terminal current into the bus on system base
+      ii,         ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
+      in_service, ///< Initial service status; defaults to true
+    };
+
     /**
      * @brief Contains modeling data for a Gensal generator model.
      *

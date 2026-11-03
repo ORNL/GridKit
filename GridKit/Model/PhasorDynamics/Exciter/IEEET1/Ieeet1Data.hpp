@@ -63,6 +63,11 @@ namespace GridKit
         ksat,
       };
 
+      /// Initial values for a IEEET1 Exciter model
+      enum class Ieeet1InitialValues : size_t
+      {
+      };
+
       /**
        * @brief Contains modeling data for a IEEET1 Exciter model.
        *

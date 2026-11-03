@@ -55,10 +55,10 @@ namespace GridKit
       /// Signal outputs for the REGCA converter model.
       enum class RegcaSignalOutputs : size_t
       {
-        ibranchr, ///< Optional branch-current real-component output signal ID
-        ibranchi, ///< Optional branch-current imaginary-component output signal ID
-        pbranch,  ///< Optional branch active-power output signal ID
-        qbranch,  ///< Optional branch reactive-power output signal ID
+        ir,      ///< Optional terminal-current real-component output signal ID
+        ii,      ///< Optional terminal-current imaginary-component output signal ID
+        pbranch, ///< Optional branch active-power output signal ID
+        qbranch, ///< Optional branch reactive-power output signal ID
       };
 
       /// Variables available through the monitor interface.
@@ -68,6 +68,14 @@ namespace GridKit
         ii, ///< Branch-current imaginary component on system base
         p,  ///< Branch active power on system base
         q,  ///< Branch reactive power on system base
+      };
+
+      /// Initial values for the REGCA converter model.
+      enum class RegcaInitialValues : size_t
+      {
+        ir,         ///< Initial real terminal current into the bus on system base
+        ii,         ///< Initial imaginary terminal current into the bus on system base
+        in_service, ///< Initial service status; defaults to true
       };
 
       /**

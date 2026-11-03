@@ -71,6 +71,13 @@ namespace GridKit
       };
 
       /**
+       * @brief Initial value keys for IEEEST Stabilizer model.
+       */
+      enum class IeeestInitialValues : size_t
+      {
+      };
+
+      /**
        * @brief Contains modeling data for a IEEEST Stabilizer model.
        *
        * @tparam real_type  Real parameter data type

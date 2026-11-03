@@ -50,6 +50,13 @@ namespace GridKit
       Va
     };
 
+    /// Initial values for a bus
+    enum class BusInitialValues : size_t
+    {
+      Vr, ///< Initial value for the real bus voltage
+      Vi, ///< Initial value for the imaginary bus voltage
+    };
+
     /**
      * @brief Contains modeling data for a Bus
      *

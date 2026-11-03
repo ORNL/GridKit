@@ -55,6 +55,14 @@ namespace GridKit
       speed, ///< \f$1+\omega\f$ Per-unit machine speed
     };
 
+    /// Initial values for a classical generator model
+    enum class GenClassicalInitialValues : size_t
+    {
+      ir,         ///< \f$I_r\f$ Initial real terminal current into the bus on system base
+      ii,         ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
+      in_service, ///< Initial service status; defaults to true
+    };
+
     /**
      * @brief Contains modeling data for a classical generator model.
      *

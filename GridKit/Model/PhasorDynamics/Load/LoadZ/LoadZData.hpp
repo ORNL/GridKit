@@ -42,6 +42,14 @@ namespace GridKit
       q,
     };
 
+    /// Initial values supported for a load
+    enum class LoadZInitialValues : size_t
+    {
+      ir,         ///< Initial real terminal current into the bus on system base
+      ii,         ///< Initial imaginary terminal current into the bus on system base
+      in_service, ///< Initial service status; defaults to true
+    };
+
     /**
      * @brief Contains modeling data for a load
      *
