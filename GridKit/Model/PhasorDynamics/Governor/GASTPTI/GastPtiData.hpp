@@ -79,7 +79,8 @@ namespace GridKit
                         GastPtiBuses,
                         GastPtiSignalInputs,
                         GastPtiSignalOutputs,
-                        GastPtiMonitorableVariables>;
+                        GastPtiMonitorableVariables,
+                        GastPtiInitialValues>;
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit

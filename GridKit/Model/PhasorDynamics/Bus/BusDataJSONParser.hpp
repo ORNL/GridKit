@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/String.hpp>
@@ -43,23 +44,7 @@ namespace GridKit
 
       if (j.contains("init"))
       {
-        for (auto& raw_parameter : j.at("init").items())
-        {
-          if (raw_parameter.key() == "Vi")
-          {
-            raw_parameter.value().get_to(bd.Vi0);
-          }
-          else if (raw_parameter.key() == "Vr")
-          {
-            raw_parameter.value().get_to(bd.Vr0);
-          }
-          else
-          {
-            Log::error() << "\n\tInvalid initial parameter \""
-                         << raw_parameter.key() << "\" in \"init\" section."
-                         << error_context.str() << std::endl;
-          }
-        }
+        readValues<RealT, IdxT>(j.at("init"), bd.initial_values, error_context.str());
       }
 
       auto string_class = j.at("class").get<std::string>();

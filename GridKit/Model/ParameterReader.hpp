@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cmath>
+#include <concepts>
 #include <format>
 #include <optional>
 #include <stdexcept>
@@ -33,14 +34,18 @@ namespace GridKit
         }
         && Utilities::SizedEnum<typename T::Parameters>;
 
+    /// Key into a model data container: a parameter or an initial value
+    template <typename KeyT, typename T>
+    concept DataKey = std::same_as<KeyT, typename T::Parameters>
+                      || std::same_as<KeyT, typename T::InitialValues>;
+
     /**
-     * @brief Reads typed parameters out of a model data container.
+     * @brief Reads typed parameters and initial values out of a model data container.
      *
      * A read method returns the provided value or std::nullopt when the
-     * parameter is omitted. The model chooses a default or requires a value.
+     * value is omitted. The model chooses a default or requires a value.
      * Invalid values are rejected with std::invalid_argument naming the
-     * model and parameter. Real parameters accept integer values and must
-     * be finite.
+     * model and key. Real values accept integers and must be finite.
      *
      * @tparam ModelDataT A model data container satisfying ParameterData.
      */
@@ -57,13 +62,14 @@ namespace GridKit
        * @param[in] model Model name used in rejection messages.
        */
       ParameterReader(const ModelDataT& data, const char* model)
-        : parameters_(data.parameters),
+        : data_(data),
           model_(model)
       {
       }
 
-      /// Read an optional real parameter.
-      [[nodiscard]] std::optional<RealT> readReal(ParametersT key) const
+      /// Read an optional real parameter or initial value.
+      template <DataKey<ModelDataT> KeyT>
+      [[nodiscard]] std::optional<RealT> readReal(KeyT key) const
       {
         const auto* value = find(key);
         if (value == nullptr)
@@ -120,11 +126,26 @@ namespace GridKit
       using ParameterMapT = decltype(ModelDataT::parameters);
       using ValueT        = typename ParameterMapT::mapped_type;
 
-      /// The provided value, or nullptr when the parameter is omitted.
-      const ValueT* find(ParametersT key) const
+      /// The provided value, or nullptr when the key is omitted.
+      template <DataKey<ModelDataT> KeyT>
+      const ValueT* find(KeyT key) const
       {
-        const auto entry = parameters_.find(key);
-        if (entry == parameters_.end())
+        if constexpr (std::same_as<KeyT, ParametersT>)
+        {
+          return lookup(data_.parameters, key);
+        }
+        else
+        {
+          return lookup(data_.initial_values, key);
+        }
+      }
+
+      /// The value of `key` in `values`, or nullptr when it is omitted.
+      template <typename MapT, typename KeyT>
+      static const ValueT* lookup(const MapT& values, KeyT key)
+      {
+        const auto entry = values.find(key);
+        if (entry == values.end())
         {
           return nullptr;
         }
@@ -150,15 +171,21 @@ namespace GridKit
         return *exact_value;
       }
 
-      /// Reject the model data with a message naming the model and parameter.
-      [[noreturn]] void reject(ParametersT key, std::string_view reason) const
+      /// Reject the model data with a message naming the model and key.
+      template <DataKey<ModelDataT> KeyT>
+      [[noreturn]] void reject(KeyT key, std::string_view reason) const
       {
+        std::string_view kind = "parameter";
+        if constexpr (!std::same_as<KeyT, ParametersT>)
+        {
+          kind = "initial value";
+        }
         throw std::invalid_argument(
-            std::format("{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason));
+            std::format("{}: {} '{}' {}", model_, kind, magic_enum::enum_name(key), reason));
       }
 
-      const ParameterMapT& parameters_;
-      const char*          model_;
+      const ModelDataT& data_;
+      const char*       model_;
     };
   } // namespace Model
 } // namespace GridKit

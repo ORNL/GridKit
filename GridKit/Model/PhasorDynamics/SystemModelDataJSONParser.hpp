@@ -261,20 +261,51 @@ namespace GridKit
       }
     }
 
-    /// Apply a state file to system model data: set the initial bus voltages by case bus number
+    /// Apply a state file to system model data: each bus and device entry sets
+    /// that element's initial values by name
     template <typename RealT, typename IdxT>
     void applyState(SystemModelData<RealT, IdxT>& sm, const json& state)
     {
-      const auto& buses = state.at("buses");
+      const auto& buses   = state.at("buses");
+      const auto& devices = state.at("devices");
+
+      auto apply = [](const json& entries, const std::string& key, auto& element)
+      {
+        if (entries.contains(key))
+        {
+          readValues<RealT, IdxT>(entries.at(key), element.initial_values, "\n\tSee \"" + key + "\" in your state file.");
+        }
+      };
       for (auto& bus : sm.bus)
       {
-        const auto number = std::to_string(bus.bus_id);
-        if (buses.contains(number))
-        {
-          buses.at(number).at("Vr").get_to(bus.Vr0);
-          buses.at(number).at("Vi").get_to(bus.Vi0);
-        }
+        apply(buses, std::to_string(bus.bus_id), bus);
       }
+      auto applyAll = [&devices, &apply](auto& list)
+      {
+        for (auto& device : list)
+        {
+          apply(devices, device.disambiguation_string, device);
+        }
+      };
+      applyAll(sm.branch);
+      applyAll(sm.regca);
+      applyAll(sm.reecb);
+      applyAll(sm.repca);
+      applyAll(sm.genrou);
+      applyAll(sm.gensal);
+      applyAll(sm.genclassical);
+      applyAll(sm.loadz);
+      applyAll(sm.loadzip);
+      applyAll(sm.gov);
+      applyAll(sm.esdc1a);
+      applyAll(sm.gastpti);
+      applyAll(sm.hygov);
+      applyAll(sm.exciter);
+      applyAll(sm.sexspti);
+      applyAll(sm.stabilizer);
+      applyAll(sm.constant_source);
+      applyAll(sm.function_source);
+
       for (auto& subsystem : sm.subsystems)
       {
         applyState(subsystem, state);

@@ -96,7 +96,8 @@ namespace GridKit
                         RegcaBuses,
                         RegcaSignalInputs,
                         RegcaSignalOutputs,
-                        RegcaMonitorableVariables>;
+                        RegcaMonitorableVariables,
+                        RegcaInitialValues>;
     } // namespace Converter
   } // namespace PhasorDynamics
 } // namespace GridKit

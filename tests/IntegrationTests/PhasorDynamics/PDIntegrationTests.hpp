@@ -50,8 +50,7 @@ namespace GridKit
 
           success *= abus.bus_id == bbus.bus_id;
           success *= abus.bus_type == bbus.bus_type;
-          success *= abus.Vr0 == bbus.Vr0;
-          success *= abus.Vi0 == bbus.Vi0;
+          success *= abus.initial_values == bbus.initial_values;
         }
 
         success *= a.signal.size() == b.signal.size();
@@ -265,16 +264,16 @@ namespace GridKit
         SystemModelDataT set_data;
 
         set_data.bus.resize(2);
-        set_data.bus[0].bus_id   = 0;
-        set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
+        set_data.bus[0].bus_id                                               = 0;
+        set_data.bus[0].bus_type                                             = BusType::DEFAULT;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vr] = 0.9949877346411762;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
 
-        set_data.bus[1].bus_id   = 1;
-        set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
+        set_data.bus[1].bus_id                                               = 1;
+        set_data.bus[1].bus_type                                             = BusType::SLACK;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.0;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.0;
 
         set_data.branch.resize(1);
         set_data.branch[0].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
@@ -335,15 +334,15 @@ namespace GridKit
         SystemModelDataT set_data;
 
         set_data.bus.resize(2);
-        set_data.bus[0].bus_id   = 0;
-        set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
+        set_data.bus[0].bus_id                                               = 0;
+        set_data.bus[0].bus_type                                             = BusType::DEFAULT;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vr] = 0.9949877346411762;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
-        set_data.bus[1].bus_id   = 1;
-        set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
+        set_data.bus[1].bus_id                                               = 1;
+        set_data.bus[1].bus_type                                             = BusType::SLACK;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.0;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.0;
 
         set_data.signal.resize(3);
         set_data.signal[0].name      = "Machine Speed Deviation";
@@ -438,15 +437,15 @@ namespace GridKit
         SystemModelDataT set_data;
 
         set_data.bus.resize(2);
-        set_data.bus[0].bus_id   = 0;
-        set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
+        set_data.bus[0].bus_id                                               = 0;
+        set_data.bus[0].bus_type                                             = BusType::DEFAULT;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vr] = 0.9949877346411762;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
-        set_data.bus[1].bus_id   = 1;
-        set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
+        set_data.bus[1].bus_id                                               = 1;
+        set_data.bus[1].bus_type                                             = BusType::SLACK;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.0;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.0;
 
         set_data.signal.resize(2);
         set_data.signal[0].name      = "Machine Speed Deviation";
@@ -516,20 +515,20 @@ namespace GridKit
         SystemModelDataT set_data;
 
         set_data.bus.resize(3);
-        set_data.bus[0].bus_id   = 0;
-        set_data.bus[0].bus_type = BusType::SLACK;
-        set_data.bus[0].Vr0      = 1.06;
-        set_data.bus[0].Vi0      = 0.0;
+        set_data.bus[0].bus_id                                               = 0;
+        set_data.bus[0].bus_type                                             = BusType::SLACK;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.06;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.0;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
-        set_data.bus[1].bus_id   = 1;
-        set_data.bus[1].bus_type = BusType::DEFAULT;
-        set_data.bus[1].Vr0      = 1.0599558398065716;
-        set_data.bus[1].Vi0      = -0.009675621941024773;
+        set_data.bus[1].bus_id                                               = 1;
+        set_data.bus[1].bus_type                                             = BusType::DEFAULT;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.0599558398065716;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vi] = -0.009675621941024773;
         set_data.bus[1].monitored_variables.insert(BusVar::Vm);
-        set_data.bus[2].bus_id   = 2;
-        set_data.bus[2].bus_type = BusType::DEFAULT;
-        set_data.bus[2].Vr0      = 0.9610827543495831;
-        set_data.bus[2].Vi0      = -0.13122476630506485;
+        set_data.bus[2].bus_id                                               = 2;
+        set_data.bus[2].bus_type                                             = BusType::DEFAULT;
+        set_data.bus[2].initial_values[PhasorDynamics::BusInitialValues::Vr] = 0.9610827543495831;
+        set_data.bus[2].initial_values[PhasorDynamics::BusInitialValues::Vi] = -0.13122476630506485;
         set_data.bus[2].monitored_variables.insert(BusVar::Vm);
 
         set_data.branch.resize(3);
@@ -616,19 +615,19 @@ namespace GridKit
         SystemModelDataT set_data;
 
         set_data.bus.resize(3);
-        set_data.bus[0].bus_id   = 0;
-        set_data.bus[0].bus_type = BusType::SLACK;
-        set_data.bus[0].Vr0      = 1.06;
-        set_data.bus[0].Vi0      = 0.0;
-        set_data.bus[1].bus_id   = 1;
-        set_data.bus[1].bus_type = BusType::DEFAULT;
-        set_data.bus[1].Vr0      = 1.0599558398065716;
-        set_data.bus[1].Vi0      = -0.009675621941024773;
+        set_data.bus[0].bus_id                                               = 0;
+        set_data.bus[0].bus_type                                             = BusType::SLACK;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.06;
+        set_data.bus[0].initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.0;
+        set_data.bus[1].bus_id                                               = 1;
+        set_data.bus[1].bus_type                                             = BusType::DEFAULT;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.0599558398065716;
+        set_data.bus[1].initial_values[PhasorDynamics::BusInitialValues::Vi] = -0.009675621941024773;
         set_data.bus[1].monitored_variables.insert(BusVar::Vm);
-        set_data.bus[2].bus_id   = 2;
-        set_data.bus[2].bus_type = BusType::DEFAULT;
-        set_data.bus[2].Vr0      = 0.9610827543495831;
-        set_data.bus[2].Vi0      = -0.13122476630506485;
+        set_data.bus[2].bus_id                                               = 2;
+        set_data.bus[2].bus_type                                             = BusType::DEFAULT;
+        set_data.bus[2].initial_values[PhasorDynamics::BusInitialValues::Vr] = 0.9610827543495831;
+        set_data.bus[2].initial_values[PhasorDynamics::BusInitialValues::Vi] = -0.13122476630506485;
         set_data.bus[2].monitored_variables.insert(BusVar::Vm);
 
         set_data.branch.resize(3);
@@ -733,11 +732,11 @@ namespace GridKit
         SystemModelDataT data;
         data.va_base = SYSTEM_MVA * static_cast<RealT>(1.0e6);
 
-        auto& bus    = data.bus.emplace_back();
-        bus.bus_id   = RENEWABLE_BUS_ID;
-        bus.bus_type = BusDataT::BusType::SLACK;
-        bus.Vr0      = ONE<RealT>;
-        bus.Vi0      = ZERO<RealT>;
+        auto& bus                                                = data.bus.emplace_back();
+        bus.bus_id                                               = RENEWABLE_BUS_ID;
+        bus.bus_type                                             = BusDataT::BusType::SLACK;
+        bus.initial_values[PhasorDynamics::BusInitialValues::Vr] = ONE<RealT>;
+        bus.initial_values[PhasorDynamics::BusInitialValues::Vi] = ZERO<RealT>;
 
         data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD)},
                        {"Reactive Current Command", signalId(LoopSignal::IQCMD)},

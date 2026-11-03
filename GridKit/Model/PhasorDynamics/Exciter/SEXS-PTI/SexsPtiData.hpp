@@ -65,7 +65,8 @@ namespace GridKit
                         SexsPtiBuses,
                         SexsPtiSignalInputs,
                         SexsPtiSignalOutputs,
-                        SexsPtiMonitorableVariables>;
+                        SexsPtiMonitorableVariables,
+                        SexsPtiInitialValues>;
 
     } // namespace Exciter
   } // namespace PhasorDynamics

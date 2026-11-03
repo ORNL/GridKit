@@ -67,10 +67,10 @@ namespace GridKit
         using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
-        busdata.bus_id   = 0;
-        busdata.bus_type = BusType::DEFAULT;
-        busdata.Vr0      = 1.0;
-        busdata.Vi0      = 0.0;
+        busdata.bus_id                                               = 0;
+        busdata.bus_type                                             = BusType::DEFAULT;
+        busdata.initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.0;
+        busdata.initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;
@@ -174,10 +174,10 @@ namespace GridKit
         using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
-        busdata.bus_id   = 0;
-        busdata.bus_type = BusType::DEFAULT;
-        busdata.Vr0      = 1.0;
-        busdata.Vi0      = 0.0;
+        busdata.bus_id                                               = 0;
+        busdata.bus_type                                             = BusType::DEFAULT;
+        busdata.initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.0;
+        busdata.initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;
@@ -260,10 +260,10 @@ namespace GridKit
         using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
-        busdata.bus_id   = 0;
-        busdata.bus_type = BusType::DEFAULT;
-        busdata.Vr0      = 1.0;
-        busdata.Vi0      = 0.0;
+        busdata.bus_id                                               = 0;
+        busdata.bus_type                                             = BusType::DEFAULT;
+        busdata.initial_values[PhasorDynamics::BusInitialValues::Vr] = 1.0;
+        busdata.initial_values[PhasorDynamics::BusInitialValues::Vi] = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;

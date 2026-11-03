@@ -26,6 +26,7 @@ namespace GridKit
           typename T::SignalInputs;
           typename T::SignalOutputs;
           typename T::MonitorableVariables;
+          typename T::InitialValues;
         }
         && std::derived_from<T,
                              ComponentData<typename T::RealT,
@@ -34,11 +35,13 @@ namespace GridKit
                                            typename T::Buses,
                                            typename T::SignalInputs,
                                            typename T::SignalOutputs,
-                                           typename T::MonitorableVariables>>
+                                           typename T::MonitorableVariables,
+                                           typename T::InitialValues>>
         && Utilities::SizedEnum<typename T::Parameters>
         && Utilities::SizedEnum<typename T::Buses>
         && Utilities::SizedEnum<typename T::SignalInputs>
         && Utilities::SizedEnum<typename T::SignalOutputs>
-        && Utilities::SizedEnum<typename T::MonitorableVariables>;
+        && Utilities::SizedEnum<typename T::MonitorableVariables>
+        && Utilities::SizedEnum<typename T::InitialValues>;
   } // namespace PhasorDynamics
 } // namespace GridKit

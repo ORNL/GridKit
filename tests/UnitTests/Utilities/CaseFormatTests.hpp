@@ -190,16 +190,16 @@ namespace GridKit
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
         success *= result.bus[0].name == "Bus 1";
-        success *= result.bus[0].Vr0 == 0.994988;
-        success *= result.bus[0].Vi0 == 0.099997;
+        success *= std::get<RealT>(result.bus[0].initial_values[BusData::InitialValues::Vr]) == 0.994988;
+        success *= std::get<RealT>(result.bus[0].initial_values[BusData::InitialValues::Vi]) == 0.099997;
         success *= std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
-        success *= result.bus[1].Vr0 == 1.0;
-        success *= result.bus[1].Vi0 == 0.0;
+        success *= std::get<RealT>(result.bus[1].initial_values[BusData::InitialValues::Vr]) == 1.0;
+        success *= std::get<RealT>(result.bus[1].initial_values[BusData::InitialValues::Vi]) == 0.0;
         success *= std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[1].monitored_variables.empty();
 
@@ -379,16 +379,16 @@ namespace GridKit
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
         success *= result.bus[0].name == "Bus 1";
-        success *= result.bus[0].Vr0 == 0.994988;
-        success *= result.bus[0].Vi0 == 0.099997;
+        success *= std::get<RealT>(result.bus[0].initial_values[BusData::InitialValues::Vr]) == 0.994988;
+        success *= std::get<RealT>(result.bus[0].initial_values[BusData::InitialValues::Vi]) == 0.099997;
         success *= std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
-        success *= result.bus[1].Vr0 == 1.0;
-        success *= result.bus[1].Vi0 == 0.0;
+        success *= std::get<RealT>(result.bus[1].initial_values[BusData::InitialValues::Vr]) == 1.0;
+        success *= std::get<RealT>(result.bus[1].initial_values[BusData::InitialValues::Vi]) == 0.0;
         success *= std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[1].monitored_variables.empty();
 

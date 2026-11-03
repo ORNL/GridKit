@@ -20,6 +20,51 @@ namespace GridKit
     using json = nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
+    /// Read named values of a JSON object into a map keyed by an enumeration
+    template <typename RealT, typename IdxT, typename MapT>
+    void readValues(const json& j, MapT& values, const std::string& error_context)
+    {
+      for (auto& raw_parameter : j.items())
+      {
+        auto key = Utilities::enum_cast<typename MapT::key_type>(raw_parameter.key());
+        if (key.has_value())
+        {
+          // NOTE: this is necessary because it doesn't seem like nlohmann/json
+          //       handles std::variant out of the box
+          if (raw_parameter.value().is_string())
+          {
+            values[key.value()] = raw_parameter.value().template get<std::string>();
+          }
+          else if (raw_parameter.value().is_boolean())
+          {
+            values[key.value()] = raw_parameter.value().template get<bool>();
+          }
+          else if (raw_parameter.value().is_number_float())
+          {
+            values[key.value()] = raw_parameter.value().template get<RealT>();
+          }
+          else if (raw_parameter.value().is_number_integer())
+          {
+            values[key.value()] = raw_parameter.value().template get<IdxT>();
+          }
+          else
+          {
+            Log::error() << "\n\tInvalid initial parameter value type: "
+                         << "\"" << raw_parameter.key() << "\": "
+                         << raw_parameter.value()
+                         << " (typed as \"" << raw_parameter.value().type_name()
+                         << "\")." << error_context << std::endl;
+          }
+        }
+        else
+        {
+          Log::error() << "\n\tInitial parameter \"" << raw_parameter.key()
+                       << "\" has no value." << error_context
+                       << std::endl;
+        }
+      }
+    }
+
     /// JSON parser function for the `ComponentData` class and descendants
     template <typename RealT,
               typename IdxT,
@@ -27,20 +72,23 @@ namespace GridKit
               typename Buses,
               typename SignalInputs,
               typename SignalOutputs,
-              typename MonitorableVariables>
+              typename MonitorableVariables,
+              typename InitialValues>
       requires std::is_enum_v<Parameters>
                && std::is_enum_v<Buses>
                && std::is_enum_v<SignalInputs>
                && std::is_enum_v<SignalOutputs>
                && std::is_enum_v<MonitorableVariables>
-    void from_json(const json&                          j,
+               && std::is_enum_v<InitialValues>
+    void from_json(const json&                   j,
                    ComponentData<RealT,
                                  IdxT,
                                  Parameters,
                                  Buses,
                                  SignalInputs,
                                  SignalOutputs,
-                                 MonitorableVariables>& c)
+                                 MonitorableVariables,
+                                 InitialValues>& c)
     {
       j.at("class").get_to(c.device_class);
 
@@ -60,46 +108,7 @@ namespace GridKit
         throw std::runtime_error("JSON parser failed");
       }
 
-      for (auto& raw_parameter : j.at("params").items())
-      {
-        auto key = Utilities::enum_cast<Parameters>(raw_parameter.key());
-        if (key.has_value())
-        {
-          // NOTE: this is necessary because it doesn't seem like nlohmann/json
-          //       handles std::variant out of the box
-          if (raw_parameter.value().is_string())
-          {
-            auto str                  = raw_parameter.value().template get<std::string>();
-            c.parameters[key.value()] = raw_parameter.value().template get<std::string>();
-          }
-          else if (raw_parameter.value().is_boolean())
-          {
-            c.parameters[key.value()] = raw_parameter.value().template get<bool>();
-          }
-          else if (raw_parameter.value().is_number_float())
-          {
-            c.parameters[key.value()] = raw_parameter.value().template get<RealT>();
-          }
-          else if (raw_parameter.value().is_number_integer())
-          {
-            c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
-          }
-          else
-          {
-            Log::error() << "\n\tInvalid initial parameter value type: "
-                         << "\"" << raw_parameter.key() << "\": "
-                         << raw_parameter.value()
-                         << " (typed as \"" << raw_parameter.value().type_name()
-                         << "\")." << error_context.str() << std::endl;
-          }
-        }
-        else
-        {
-          Log::error() << "\n\tInitial parameter \"" << raw_parameter.key()
-                       << "\" has no value." << error_context.str()
-                       << std::endl;
-        }
-      }
+      readValues<RealT, IdxT>(j.at("params"), c.parameters, error_context.str());
 
       // WARNING --- TEMPORARY --- : the C++ model data is
       // intentionally split into buses, signal inputs, and signal outputs.

@@ -561,11 +561,11 @@ namespace GridKit
         SystemDataT data;
         data.va_base = kSystemBaseVa;
 
-        auto& bus    = data.bus.emplace_back();
-        bus.bus_id   = kBusId;
-        bus.bus_type = BusData<RealT, IdxT>::BusType::SLACK;
-        bus.Vr0      = ONE<RealT>;
-        bus.Vi0      = ZERO<RealT>;
+        auto& bus                                                = data.bus.emplace_back();
+        bus.bus_id                                               = kBusId;
+        bus.bus_type                                             = BusData<RealT, IdxT>::BusType::SLACK;
+        bus.initial_values[PhasorDynamics::BusInitialValues::Vr] = ONE<RealT>;
+        bus.initial_values[PhasorDynamics::BusInitialValues::Vi] = ZERO<RealT>;
 
         data.signal = {{"Machine Speed Deviation", kSpeedSignalId},
                        {"Mechanical Power", kPmechSignalId},

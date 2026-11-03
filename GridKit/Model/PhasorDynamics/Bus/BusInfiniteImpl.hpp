@@ -1,6 +1,7 @@
 
 #include <iostream>
 
+#include <GridKit/Model/ParameterReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -60,9 +61,14 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusInfinite<scalar_type, index_type>::BusInfinite(const ModelDataT& data)
-      : Vr_(data.Vr0),
-        Vi_(data.Vi0)
     {
+      using InitialValue = typename ModelDataT::InitialValues;
+
+      const Model::ParameterReader reader(data, "BusInfinite");
+
+      Vr_ = reader.readReal(InitialValue::Vr).value_or(ONE<RealT>);
+      Vi_ = reader.readReal(InitialValue::Vi).value_or(ZERO<RealT>);
+
       bus_id_        = data.bus_id;
       size_          = 0;
       monitor_       = std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);

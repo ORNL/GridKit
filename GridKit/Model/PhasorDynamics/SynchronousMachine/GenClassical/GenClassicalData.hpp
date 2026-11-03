@@ -79,6 +79,7 @@ namespace GridKit
                       GenClassicalBuses,
                       GenClassicalSignalInputs,
                       GenClassicalSignalOutputs,
-                      GenClassicalMonitorableVariables>;
+                      GenClassicalMonitorableVariables,
+                      GenClassicalInitialValues>;
   } // namespace PhasorDynamics
 } // namespace GridKit
