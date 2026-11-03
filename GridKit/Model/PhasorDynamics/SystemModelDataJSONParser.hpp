@@ -240,9 +240,10 @@ namespace GridKit
           subsystem.va_base   = sm.va_base;
           subsystem.level     = sm.level + 1;
 
-          if (!raw_subsystem.contains("id") || !raw_subsystem.at("id").is_string())
+          if (!raw_subsystem.contains("id") || !raw_subsystem.at("id").is_string()
+              || raw_subsystem.at("id").template get<std::string>().empty())
           {
-            Log::error() << "\n\tEach subsystem requires a string \"id\".\n";
+            Log::error() << "\n\tEach subsystem requires a non-empty string \"id\".\n";
             throw std::runtime_error("JSON parser failed");
           }
           raw_subsystem.at("id").get_to(subsystem.id);
