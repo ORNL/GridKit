@@ -15,6 +15,10 @@ target_link_libraries(
           GridKit::sparse_matrix
           GridKit::Utilities)
 
+if(GRIDKIT_ENABLE_OPENMP)
+  target_link_libraries(test_partition_power_electronics PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 add_executable(test_power_electronics_component_clone runComponentCloneTests.cpp)
 target_link_libraries(
   test_power_electronics_component_clone

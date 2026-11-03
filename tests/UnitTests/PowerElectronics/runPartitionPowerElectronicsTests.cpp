@@ -1,7 +1,6 @@
 #include <cstddef>
 
 #include "PartitionPowerElectronicsTests.hpp"
-#include <tests/UnitTests/PowerElectronics/PartitionPowerElectronicsTests.hpp>
 
 int main()
 {

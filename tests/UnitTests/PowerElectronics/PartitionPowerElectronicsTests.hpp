@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <omp.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -336,12 +338,12 @@ namespace GridKit
          */
         std::vector<ScalarT> evaluatePartitions([[maybe_unused]] bool parallel)
         {
-          const int num_partitions = static_cast<int>(partitions_.size());
+          const size_t num_partitions = partitions_.size();
 
 #ifdef _OPENMP
-#pragma omp parallel for if (parallel) schedule(static)
+#pragma omp parallel for if (parallel) num_threads(2) schedule(static)
 #endif
-          for (int p = 0; p < num_partitions; ++p)
+          for (size_t p = 0; p < num_partitions; ++p)
           {
             auto* partition = partitions_[p];
 
