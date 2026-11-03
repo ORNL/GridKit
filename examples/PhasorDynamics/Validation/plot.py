@@ -46,7 +46,10 @@ def column_key(column):
 def load(path):
     """Read column labels, times, and values from a CSV."""
     with path.open() as stream:
-        labels = [column_key(column) for column in stream.readline().strip().split(",")[1:]]
+        columns = stream.readline().strip().split(",")[1:]
+    labels = [column_key(column) for column in columns]
+    if len(set(labels)) != len(labels):
+        labels = [f"{label} {column.rsplit('_', 1)[-1]}" for label, column in zip(labels, columns)]
     data = np.loadtxt(path, delimiter=",", skiprows=1)
     return labels, data[:, 0], data[:, 1:]
 
@@ -207,7 +210,7 @@ def main():
         output = solver_dir / solver["output_file"]
         reference = solver_dir / solver["reference_file"]
         field = variable(reference)
-        symbol, unit, description = FIELDS.get(field, (field, "pu", field))
+        symbol, unit, description = FIELDS.get(field, ("value", "pu", "monitored variables"))
         png = (args.dir or output.parent).resolve() / f"{output.stem}.png"
         png.parent.mkdir(parents=True, exist_ok=True)
         plot(output, reference, png, f"{case_name} · {description}", f"{symbol}  ({unit})", unit, fault_data)

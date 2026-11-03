@@ -1,0 +1,367 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "FourBusLimits",
+    "case_description": "GENROU with ESDC1A and a REGCA/REECB/REPCA plant beside a long charged line.",
+    "case_comments": "Monitors bus voltages, machine and plant power, field voltage, and the plant voltage reference."
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "buses": [
+    {
+      "number": 1,
+      "class": "BusInfinite",
+      "name": "Grid",
+      "init": {
+        "Vr": 1.0,
+        "Vi": 0.0
+      },
+      "params": {
+        "kv": 115.0
+      }
+    },
+    {
+      "number": 2,
+      "class": "Bus",
+      "name": "Machine",
+      "init": {
+        "Vr": 1.0512044703293908,
+        "Vi": 0.03945205479452054
+      },
+      "params": {
+        "kv": 115.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 3,
+      "class": "Bus",
+      "name": "Plant",
+      "init": {
+        "Vr": 1.050476503149779,
+        "Vi": 0.053694079654108655
+      },
+      "params": {
+        "kv": 115.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    },
+    {
+      "number": 4,
+      "class": "Bus",
+      "name": "Remote",
+      "init": {
+        "Vr": 1.0683356616298911,
+        "Vi": 0.020547945205479447
+      },
+      "params": {
+        "kv": 115.0
+      },
+      "mon": [
+        "Vm"
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "signal_id": 0,
+      "name": "Machine Speed"
+    },
+    {
+      "signal_id": 1,
+      "name": "Excitation Field"
+    },
+    {
+      "signal_id": 2,
+      "name": "Active Current Command"
+    },
+    {
+      "signal_id": 3,
+      "name": "Reactive Current Command"
+    },
+    {
+      "signal_id": 4,
+      "name": "Plant Current Real"
+    },
+    {
+      "signal_id": 5,
+      "name": "Plant Current Imaginary"
+    },
+    {
+      "signal_id": 6,
+      "name": "Plant Active Power"
+    },
+    {
+      "signal_id": 7,
+      "name": "Plant Reactive Power"
+    },
+    {
+      "signal_id": 8,
+      "name": "Reactive Command"
+    },
+    {
+      "signal_id": 9,
+      "name": "Active Command"
+    }
+  ],
+  "devices": [
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 1,
+        "bus2": 2
+      },
+      "id": "BR_1_2",
+      "params": {
+        "R": 0.0,
+        "X": 0.1,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 2,
+        "bus2": 3
+      },
+      "id": "BR_2_3",
+      "params": {
+        "R": 0.0,
+        "X": 0.05,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 2,
+        "bus2": 4
+      },
+      "id": "BR_2_4",
+      "params": {
+        "R": 0.0,
+        "X": 0.1,
+        "G": 0.0,
+        "B": 1.6
+      }
+    },
+    {
+      "class": "Branch",
+      "ports": {
+        "bus1": 1,
+        "bus2": 4
+      },
+      "id": "BR_1_4",
+      "params": {
+        "R": 0.0,
+        "X": 0.1,
+        "G": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "class": "Genrou",
+      "ports": {
+        "bus": 2,
+        "speed": 0,
+        "efd": 1
+      },
+      "id": "2_1_genrou",
+      "params": {
+        "p0": 0.30000001192092896,
+        "q0": -0.5,
+        "mva": 100.0,
+        "H": 3.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.04,
+        "Tqop": 0.75,
+        "Tqopp": 0.05,
+        "Xd": 1.8,
+        "Xdp": 0.3,
+        "Xdpp": 0.2,
+        "Xq": 1.7,
+        "Xqp": 0.55,
+        "Xqpp": 0.2,
+        "Xl": 0.15,
+        "S10": 0.0,
+        "S12": 0.0
+      },
+      "mon": [
+        "p",
+        "q",
+        "speed"
+      ]
+    },
+    {
+      "class": "Esdc1a",
+      "ports": {
+        "bus": 2,
+        "speed": 0,
+        "efd": 1
+      },
+      "id": "2_1_esdc1a",
+      "params": {
+        "Tr": 0.02,
+        "Ka": 40.0,
+        "Ta": 0.1,
+        "Tb": 0.05,
+        "Tc": 0.05,
+        "Vrmax": 5.0,
+        "Vrmin": -5.0,
+        "Ke": 1.0,
+        "Te": 0.5,
+        "Kf": 0.05,
+        "Tf1": 0.7,
+        "Spdmlt": false,
+        "E1": 2.8,
+        "Se1": 0.0,
+        "E2": 3.7,
+        "Se2": 0.0,
+        "UEL": 2,
+        "exclim": true
+      },
+      "mon": [
+        "efd",
+        "vf"
+      ]
+    },
+    {
+      "class": "Regca",
+      "ports": {
+        "bus": 3,
+        "ipcmd": 2,
+        "iqcmd": 3,
+        "ir": 4,
+        "ii": 5,
+        "pbranch": 6,
+        "qbranch": 7
+      },
+      "id": "3_1_regca",
+      "params": {
+        "p0": 0.30000001192092896,
+        "q0": 0.0,
+        "mva": 100.0,
+        "Tg": 0.02,
+        "TM": 0.02,
+        "Rqmax": 10.0,
+        "Rqmin": -10.0,
+        "Rpmax": 10.0,
+        "sL": false,
+        "IL1": 1.22,
+        "VL0": 0.4,
+        "VL1": 0.9,
+        "VA0": 0.4,
+        "VA1": 0.8,
+        "Vhvmax": 1.08
+      },
+      "mon": [
+        "p",
+        "q"
+      ]
+    },
+    {
+      "class": "Reecb",
+      "ports": {
+        "bus": 3,
+        "ipcmd": 2,
+        "iqcmd": 3,
+        "pe": 6,
+        "qgen": 7,
+        "qext": 8,
+        "pref": 9
+      },
+      "id": "3_1_reecb",
+      "params": {
+        "mva": 100.0,
+        "PfFlag": false,
+        "VFlag": false,
+        "QFlag": true,
+        "Pqflag": false,
+        "Trv": 0.02,
+        "Tp": 0.02,
+        "Vdip": 0.5,
+        "Vup": 1.5,
+        "dbd1": -0.05,
+        "dbd2": 0.05,
+        "kqv": 0.0,
+        "Iql1": -1.1,
+        "Iqh1": 1.1,
+        "Qmax": 0.8,
+        "Qmin": -0.8,
+        "Kqp": 1.0,
+        "Kqi": 1.0,
+        "Vmax": 1.1,
+        "Vmin": 0.9,
+        "Kvp": 2.0,
+        "Kvi": 5.0,
+        "Tiq": 0.02,
+        "Tpord": 0.02,
+        "dPmax": 10.0,
+        "dPmin": -10.0,
+        "Pmax": 1.0,
+        "Pmin": 0.0,
+        "Imax": 1.2
+      }
+    },
+    {
+      "class": "Repca",
+      "ports": {
+        "bus": 3,
+        "ir": 4,
+        "ii": 5,
+        "p": 6,
+        "q": 7,
+        "qext": 8,
+        "pext": 9
+      },
+      "id": "3_1_repca",
+      "params": {
+        "mva": 100.0,
+        "VcompFlag": true,
+        "RefFlag": true,
+        "Freqflag": true,
+        "Tfltr": 0.02,
+        "Vfrz": 0.3,
+        "Rc": 0.0,
+        "Xc": 0.0,
+        "Kc": 0.0,
+        "dbdlow": 0.0,
+        "dbdupper": 0.0,
+        "emax": 1.0,
+        "emin": -1.0,
+        "Kp": 1.0,
+        "Ki": 5.0,
+        "Qmax": 1.15,
+        "Qmin": 0.95,
+        "Tft": 0.0,
+        "Tfv": 0.05,
+        "Tp": 0.02,
+        "fdbd1": 0.0,
+        "fdbd2": 0.0,
+        "Ddn": 0.0,
+        "Dup": 0.0,
+        "femax": 1.0,
+        "femin": -1.0,
+        "Kpg": 1.0,
+        "Kig": 2.0,
+        "Pmax": 0.6,
+        "Pmin": 0.1,
+        "Tlag": 0.05
+      },
+      "mon": [
+        "qext"
+      ]
+    }
+  ]
+}

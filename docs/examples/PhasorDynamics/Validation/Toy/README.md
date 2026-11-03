@@ -12,4 +12,5 @@ TwoBusGensal <TwoBusGensal/README>
 ThreeBusBasic <ThreeBusBasic/README>
 ThreeBusClassical <ThreeBusClassical/README>
 ThreeBusZipLoad <ThreeBusZipLoad/README>
+FourBusLimits <FourBusLimits/README>
 ```
