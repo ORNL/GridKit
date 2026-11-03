@@ -73,10 +73,16 @@ namespace GridKit
       /// Disambiguation string for this device
       std::string disambiguation_string;
 
-      /// Device class and disambiguation string (e.g. "Genrou_1"), for component lookups
+      /// Device class and disambiguation string (e.g. "Genrou_1"), for component lookups.
+      /// Empty for data built in code with neither, which is not looked up.
       std::string label() const
       {
-        return device_class + "_" + disambiguation_string;
+        std::string device_label;
+        if (!device_class.empty() || !disambiguation_string.empty())
+        {
+          device_label = device_class + "_" + disambiguation_string;
+        }
+        return device_label;
       }
     };
   } // namespace PhasorDynamics

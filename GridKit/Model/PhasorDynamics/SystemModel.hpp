@@ -139,6 +139,7 @@ namespace GridKit
       BusT*        findBus(IdxT bus_id);
       SignalNodeT* findSignalNode(IdxT signal_id);
       ComponentT*  findComponent(const std::string& label);
+      void         checkUniqueIds(Model::ConfigurationChecks& checks) const;
       IdxT         computeSize();
       void         bindChildren(IdxT global_offset);
       void         addMonitorsTo(MonitorT& monitor) const;
@@ -159,9 +160,10 @@ namespace GridKit
       std::map<IdxT, BusT*> external_buses_;         ///< Parent's buses by bus_id, not owned
       std::vector<BusT*>    ordered_external_buses_; ///< External buses in construction order, not owned
 
-      IdxT offset_{0};           ///< Global index of this system's first variable
-      bool is_subsystem_{false}; ///< Allocated and bound by a parent system
-      bool owns_components_{false};
+      std::string id_;                  ///< Subsystem ID from the input data, empty if none
+      IdxT        offset_{0};           ///< Global index of this system's first variable
+      bool        is_subsystem_{false}; ///< Allocated and bound by a parent system
+      bool        owns_components_{false};
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
