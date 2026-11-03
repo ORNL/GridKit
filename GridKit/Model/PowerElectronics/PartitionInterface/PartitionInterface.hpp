@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PowerElectronics/Component.hpp>
 
@@ -26,7 +25,7 @@ namespace GridKit
     public:
       PartitionInterface() = default;
 
-      ~PartitionInterface() = default;
+      ~PartitionInterface() override = default;
     };
   } // namespace PowerElectronics
 } // namespace GridKit
