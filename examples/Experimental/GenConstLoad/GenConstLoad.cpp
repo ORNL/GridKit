@@ -25,10 +25,12 @@ int main()
   BaseBus<double, size_t>* bus = new BusPQ<double, size_t>(1.0, 0.0);
 
   // Attach a generator to the bus and signal ports
-  ModelEvaluatorImpl<double, size_t>* gen = new Generator4Governor<double, size_t>(bus, 0.8, 0.3);
+  ModelEvaluatorImpl<double, size_t>* gen =
+    new Generator4Governor<double, size_t>(bus, 0.8, 0.3);
 
   // Attach load to the bus
-  ModelEvaluatorImpl<double, size_t>* load = new Load<double, size_t>(bus, 0.8, 0.3);
+  ModelEvaluatorImpl<double, size_t>* load =
+    new Load<double, size_t>(bus, 0.8, 0.3);
 
   // Create system model
   SystemModel<double, size_t>* model = new SystemModel<double, size_t>();
@@ -80,7 +82,9 @@ int main()
   const double tol = 1e-4;
 
   // Configure Ipopt application
-  ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
+  ipoptApp->Options()->SetStringValue(
+    "hessian_approximation", "limited-memory"
+  );
   ipoptApp->Options()->SetNumericValue("tol", tol);
   ipoptApp->Options()->SetIntegerValue("print_level", 5);
 
@@ -104,12 +108,9 @@ int main()
   {
     // Print result
     std::cout << "\nSuccess: The problem solved in "
-              << ipoptApp->Statistics()->IterationCount()
-              << " iterations!\n";
-    std::cout << "Optimal value: T2 = "
-              << param[0]
-              << ", K = "
-              << param[1] << "\n";
+              << ipoptApp->Statistics()->IterationCount() << " iterations!\n";
+    std::cout << "Optimal value: T2 = " << param[0] << ", K = " << param[1]
+              << "\n";
     std::cout << "The final value of the objective function G(T2,K) = "
               << ipoptApp->Statistics()->FinalObjective() << "\n\n";
   }

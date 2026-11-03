@@ -25,13 +25,15 @@ template <class ScalarT, typename IdxT>
 struct ScaleMicrogridNetwork
 {
 
-  using SignalNode  = GridKit::PowerElectronics::SignalNode<ScalarT, IdxT>;
-  using Bus         = GridKit::PowerElectronics::MicrogridBus<ScalarT, IdxT>;
-  using BusDQ       = GridKit::PowerElectronics::MicrogridBusDQ<ScalarT, IdxT>;
-  using DGGenerator = GridKit::PowerElectronics::DistributedGenerator<ScalarT, IdxT>;
-  using Line        = GridKit::PowerElectronics::MicrogridLine<ScalarT, IdxT>;
-  using Load        = GridKit::PowerElectronics::MicrogridLoad<ScalarT, IdxT>;
-  using GenParams   = GridKit::PowerElectronics::DistributedGeneratorParameters<ScalarT, IdxT>;
+  using SignalNode = GridKit::PowerElectronics::SignalNode<ScalarT, IdxT>;
+  using Bus        = GridKit::PowerElectronics::MicrogridBus<ScalarT, IdxT>;
+  using BusDQ      = GridKit::PowerElectronics::MicrogridBusDQ<ScalarT, IdxT>;
+  using DGGenerator =
+    GridKit::PowerElectronics::DistributedGenerator<ScalarT, IdxT>;
+  using Line = GridKit::PowerElectronics::MicrogridLine<ScalarT, IdxT>;
+  using Load = GridKit::PowerElectronics::MicrogridLoad<ScalarT, IdxT>;
+  using GenParams =
+    GridKit::PowerElectronics::DistributedGeneratorParameters<ScalarT, IdxT>;
 
   size_t                    model_id_next;
   size_t                    N_size;
@@ -77,7 +79,8 @@ struct ScaleMicrogridNetwork
    * @post The network contains @c 2*N_size-1 transmission lines connecting
    *       consecutive buses.
    * @post The network contains @c N_size loads connected to every other bus.
-   * @post @c DGParam_list contains the parameters associated with each generator.
+   * @post @c DGParam_list contains the parameters associated with each
+   * generator.
    * @post @c model_id_next is advanced for every component created.
    *
    * @note Components are dynamically allocated and their pointers are stored
@@ -86,7 +89,8 @@ struct ScaleMicrogridNetwork
   void buildScaleMicrogridNetwork()
   {
     assert(N_size > 0);
-    // Every Bus has the same virtual resistance. This is due to numerical stability as mentioned in the paper.
+    // Every Bus has the same virtual resistance. This is due to numerical
+    // stability as mentioned in the paper.
     ScalarT RN = 1.0e4;
 
     // TODO: add this as parameters
@@ -139,7 +143,8 @@ struct ScaleMicrogridNetwork
     }
 
     // line vector params
-    // Every odd line has the same parameters and every even line has the same parameters
+    // Every odd line has the same parameters and every even line has the same
+    // parameters
     ScalarT              rline1 = 0.23;
     ScalarT              Lline1 = 0.1 / (2.0 * M_PI * 50.0);
     ScalarT              rline2 = 0.35;

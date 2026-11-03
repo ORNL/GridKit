@@ -59,7 +59,9 @@ namespace GridKit
         return data;
       }
 
-      static PhasorDynamics::LoadZData<RealT, IdxT> loadZData(const RealT R, const RealT X)
+      static PhasorDynamics::LoadZData<RealT, IdxT> loadZData(
+        const RealT R, const RealT X
+      )
       {
         using Params = PhasorDynamics::LoadZParameters;
 
@@ -159,16 +161,18 @@ namespace GridKit
         data.bus.resize(2);
 
         // Bus 0
-        data.bus[0].bus_id   = 0;
-        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = 10.0;
-        data.bus[0].Vi0      = 20.0;
+        data.bus[0].bus_id = 0;
+        data.bus[0].bus_type =
+          PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0 = 10.0;
+        data.bus[0].Vi0 = 20.0;
 
         // Bus 1
-        data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
-        data.bus[1].Vr0      = 30.0;
-        data.bus[1].Vi0      = 40.0;
+        data.bus[1].bus_id = 1;
+        data.bus[1].bus_type =
+          PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].Vr0 = 30.0;
+        data.bus[1].Vi0 = 40.0;
 
         // Set branch data
         data.branch.resize(1);
@@ -188,10 +192,12 @@ namespace GridKit
         system->evaluateResidual();
 
         // Answer keys
-        const ScalarT Ir0{17.0};  ///< Solution: real current entering bus-0
-        const ScalarT Ii0{-10.0}; ///< Solution: imaginary current entering bus-0
-        const ScalarT Ir1{15.0};  ///< Solution: real current entering bus-1
-        const ScalarT Ii1{-20.0}; ///< Solution: imaginary current entering bus-1
+        const ScalarT Ir0{17.0}; ///< Solution: real current entering bus-0
+        const ScalarT Ii0{-10.0
+        };                       ///< Solution: imaginary current entering bus-0
+        const ScalarT Ir1{15.0}; ///< Solution: real current entering bus-1
+        const ScalarT Ii1{-20.0
+        }; ///< Solution: imaginary current entering bus-1
 
         auto* bus0 = system->getBus(0);
         auto* bus1 = system->getBus(1);
@@ -221,10 +227,12 @@ namespace GridKit
         ScalarT Vr2{30.0}; ///< Bus-2 real voltage
         ScalarT Vi2{40.0}; ///< Bus-2 imaginary voltage
 
-        const ScalarT Ir1{17.0};  ///< Solution: real current entering bus-1
-        const ScalarT Ii1{-10.0}; ///< Solution: imaginary current entering bus-1
-        const ScalarT Ir2{15.0};  ///< Solution: real current entering bus-2
-        const ScalarT Ii2{-20.0}; ///< Solution: imaginary current entering bus-2
+        const ScalarT Ir1{17.0}; ///< Solution: real current entering bus-1
+        const ScalarT Ii1{-10.0
+        };                       ///< Solution: imaginary current entering bus-1
+        const ScalarT Ir2{15.0}; ///< Solution: real current entering bus-2
+        const ScalarT Ii2{-20.0
+        }; ///< Solution: imaginary current entering bus-2
 
         // Create an empty system model
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
@@ -237,7 +245,9 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
         system.addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B));
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(
+          &bus1, &bus2, branchData(R, X, G, B)
+        );
         system.addComponent(&branch);
 
         system.allocate();
@@ -259,7 +269,9 @@ namespace GridKit
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> source(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus(1.0, 0.0);
-        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&source, &bus, branchData(0.1, 0.2, 0.0, 0.0));
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(
+          &source, &bus, branchData(0.1, 0.2, 0.0, 0.0)
+        );
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         system.addBus(&source);
         system.addBus(&bus);
@@ -278,7 +290,8 @@ namespace GridKit
         success *= isEqual(bus.Ir(), ScalarT{0.0});
         success *= isEqual(bus.Ii(), ScalarT{0.0});
 
-        // Both voltage variables remain, but their KCL rows are identically zero.
+        // Both voltage variables remain, but their KCL rows are identically
+        // zero.
         auto* jacobian  = system.getCsrJacobian();
         success        *= jacobian->getNnz() == nnz;
         for (IdxT i = 0; i < nnz; ++i)
@@ -297,7 +310,9 @@ namespace GridKit
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus1, PhasorDynamics::LoadZData<RealT, IdxT>{});
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(
+          &bus1, PhasorDynamics::LoadZData<RealT, IdxT>{}
+        );
 
         system.addBus(&bus1);
         system.addComponent(&load);
@@ -321,7 +336,9 @@ namespace GridKit
         }
 #endif
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(
+          &bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{}
+        );
         system.addComponent(&branch);
         success *= system.allocate() == 0;
         success *= system.evaluateJacobian() == 0;
@@ -348,8 +365,10 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 2.0);
         PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
-        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, loadZData(1.0, 1.0));
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(
+          &bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{}
+        );
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus2, loadZData(1.0, 1.0));
 
         system.addBus(&bus1);
         system.addBus(&infinite_bus);
@@ -357,14 +376,14 @@ namespace GridKit
         system.addComponent(&branch);
         system.addComponent(&load);
 
-        if (system.allocate() != 0
-            || system.setAbsoluteTolerance(1e-4) != 0)
+        if (system.allocate() != 0 || system.setAbsoluteTolerance(1e-4) != 0)
         {
           success = false;
           return success.report(__func__);
         }
 
-        auto checkAlias = [&](auto& system_vector, auto& model_vector, IdxT offset)
+        auto checkAlias =
+          [&](auto& system_vector, auto& model_vector, IdxT offset)
         {
           auto*      system_data = system_vector.getData();
           auto*      model_data  = model_vector.getData();
@@ -391,7 +410,9 @@ namespace GridKit
           checkAlias(system.y(), model.y(), offset);
           checkAlias(system.yp(), model.yp(), offset);
           checkAlias(system.getResidual(), model.getResidual(), offset);
-          checkAlias(system.absoluteTolerance(), model.absoluteTolerance(), offset);
+          checkAlias(
+            system.absoluteTolerance(), model.absoluteTolerance(), offset
+          );
         };
 
         const IdxT bus2_offset = bus1.size();
@@ -470,7 +491,8 @@ namespace GridKit
         return status.report(__func__);
       }
 
-      /// SystemModel propagates a statically valid component's initialization error.
+      /// SystemModel propagates a statically valid component's initialization
+      /// error.
       TestOutcome componentInitializationError()
       {
         TestStatus success = true;
@@ -486,8 +508,7 @@ namespace GridKit
 
         if (system.hasJacobian())
         {
-          success *= throws<std::runtime_error>([&]()
-                                                { system.allocate(); });
+          success *= throws<std::runtime_error>([&]() { system.allocate(); });
         }
         else
         {
@@ -510,16 +531,18 @@ namespace GridKit
         data.bus.resize(2);
 
         // Bus 0
-        data.bus[0].bus_id   = 0;
-        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = 10.0;
-        data.bus[0].Vi0      = 20.0;
+        data.bus[0].bus_id = 0;
+        data.bus[0].bus_type =
+          PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0 = 10.0;
+        data.bus[0].Vi0 = 20.0;
 
         // Bus 1
-        data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
-        data.bus[1].Vr0      = 30.0;
-        data.bus[1].Vi0      = 40.0;
+        data.bus[1].bus_id = 1;
+        data.bus[1].bus_type =
+          PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].Vr0 = 30.0;
+        data.bus[1].Vi0 = 40.0;
 
         // Set branch data
         data.branch.resize(1);
@@ -533,15 +556,19 @@ namespace GridKit
         data.branch[0].parameters[BranchParameters::B] = 1.2;
 
         // Jacobian via DependencyTracking
-        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(data);
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          dependency_tracking_jacobian = DependencyTrackingJacobian(data);
 
         // Jacobian via Enzyme
-        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(data);
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          enzyme_jacobian = EnzymeJacobian(data);
 
         /// Compare DependencyTracking dependencies to Enzyme's
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
+          success *= (GridKit::Testing::isEqual(
+            dependency_tracking_jacobian[i], enzyme_jacobian[i]
+          ));
         }
 
         return success.report(__func__);
@@ -554,7 +581,9 @@ namespace GridKit
       )
       {
         // Create an empty system model
-        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
+        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(
+          data
+        );
 
         // Allocate and initialize the system
         system.allocate();
@@ -565,7 +594,8 @@ namespace GridKit
         system.evaluateJacobian();
         auto* system_jacobian = system.getCsrJacobian();
         auto& output_stream   = Log::misc();
-        output_stream << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
+        output_stream
+          << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
         system_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(system_jacobian);

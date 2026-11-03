@@ -18,7 +18,8 @@ namespace GridKit
       /**
        * @brief Parameter keys for TGOV1 Governor model.
        *
-       * These enum values serve as keys for the parameters map in ComponentData.
+       * These enum values serve as keys for the parameters map in
+       * ComponentData.
        */
       enum class Tgov1Parameters : size_t
       {

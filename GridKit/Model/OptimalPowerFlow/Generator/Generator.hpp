@@ -23,7 +23,8 @@ namespace GridKit
       Q, ///< \f$Q\f$ Reactive power into the bus [p.u.]
     };
 
-    /// External constraint contributions of a `Generator`, the power into its bus
+    /// External constraint contributions of a `Generator`, the power into its
+    /// bus
     enum class GeneratorExternalConstraints : size_t
     {
       DP, ///< \f$\Delta P^\mathrm{bus}\f$ Active power into the bus [p.u.]
@@ -54,7 +55,8 @@ namespace GridKit
       using InternalConstraintsT = Utilities::EmptyEnum;
       using ExternalConstraintsT = GeneratorExternalConstraints;
 
-      static constexpr std::array<IdxT, Utilities::enum_size<GeneratorPorts>()> NUM_PORT_VARIABLES{0};
+      static constexpr std::array<IdxT, Utilities::enum_size<GeneratorPorts>()>
+        NUM_PORT_VARIABLES{0};
       static constexpr std::array<IdxT, Utilities::enum_size<GeneratorPorts>()>
         NUM_PORT_CONSTRAINTS{BusT::NUM_SHARED_CONSTRAINTS};
 
@@ -67,8 +69,12 @@ namespace GridKit
       int evaluateJacobian() override;
       int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] ScalarT objective(const ScalarT* x, const ScalarT* external) const override;
-      [[gnu::always_inline]] void    externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
+      [[gnu::always_inline]] ScalarT objective(
+        const ScalarT* x, const ScalarT* external
+      ) const override;
+      [[gnu::always_inline]] void externalConstraints(
+        const ScalarT* x, const ScalarT* external, ScalarT* g
+      ) const override;
 
       /// Active power into the bus [p.u.]
       const ScalarT& P() const

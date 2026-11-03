@@ -19,7 +19,9 @@ namespace GridKit
       return json::parse(stream).get<SystemModelData<double, size_t>>();
     }
 
-    SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& file)
+    SystemModelData<double, size_t> parseSystemModelData(
+      const std::filesystem::path& file
+    )
     {
       std::ifstream stream(file);
       if (!stream)

@@ -70,28 +70,32 @@ namespace GridKit
           //       handles std::variant out of the box
           if (raw_parameter.value().is_string())
           {
-            auto str                  = raw_parameter.value().template get<std::string>();
-            c.parameters[key.value()] = raw_parameter.value().template get<std::string>();
+            auto str = raw_parameter.value().template get<std::string>();
+            c.parameters[key.value()] =
+              raw_parameter.value().template get<std::string>();
           }
           else if (raw_parameter.value().is_boolean())
           {
-            c.parameters[key.value()] = raw_parameter.value().template get<bool>();
+            c.parameters[key.value()] =
+              raw_parameter.value().template get<bool>();
           }
           else if (raw_parameter.value().is_number_float())
           {
-            c.parameters[key.value()] = raw_parameter.value().template get<RealT>();
+            c.parameters[key.value()] =
+              raw_parameter.value().template get<RealT>();
           }
           else if (raw_parameter.value().is_number_integer())
           {
-            c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
+            c.parameters[key.value()] =
+              raw_parameter.value().template get<IdxT>();
           }
           else
           {
             Log::error() << "\n\tInvalid initial parameter value type: "
-                         << "\"" << raw_parameter.key() << "\": "
-                         << raw_parameter.value()
-                         << " (typed as \"" << raw_parameter.value().type_name()
-                         << "\")." << error_context.str() << std::endl;
+                         << "\"" << raw_parameter.key()
+                         << "\": " << raw_parameter.value() << " (typed as \""
+                         << raw_parameter.value().type_name() << "\")."
+                         << error_context.str() << std::endl;
           }
         }
         else
@@ -106,7 +110,8 @@ namespace GridKit
       // intentionally split into buses, signal inputs, and signal outputs.
       // This backward-compatible flat JSON "ports" parsing SHOULD NOT become
       // the supported design; it only avoids changing every tracked case in
-      // this PR. The JSON schema should be split once the ingress changes are merged
+      // this PR. The JSON schema should be split once the ingress changes are
+      // merged
       for (auto& raw_port : j.at("ports").items())
       {
         auto bus = Utilities::enum_cast<Buses>(raw_port.key());
@@ -137,8 +142,7 @@ namespace GridKit
         }
 
         Log::error() << "\n\tInvalid port mapping: \"" << raw_port.key()
-                     << "\" has no value." << error_context.str()
-                     << std::endl;
+                     << "\" has no value." << error_context.str() << std::endl;
         throw std::runtime_error("JSON parser failed");
       }
 

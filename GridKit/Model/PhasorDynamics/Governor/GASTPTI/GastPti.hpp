@@ -24,20 +24,28 @@ namespace GridKit
       /// Internal variables and residual rows of a `GastPti`.
       enum class GastPtiInternalVariables : size_t
       {
-        XVALVE, ///< \f$x_V\f$ Differential fuel-valve state on component base [p.u.]
-        XFLOW,  ///< \f$x_F\f$ Differential fuel-flow state on component base [p.u.]
-        XTEMP,  ///< \f$x_T\f$ Differential exhaust-temperature feedback state on component base [p.u.]
-        VLOAD,  ///< \f$V_D\f$ Algebraic speed/load fuel demand on component base [p.u.]
-        VTEMP,  ///< \f$V_T\f$ Algebraic temperature-limit demand on component base [p.u.]
-        VLV,    ///< \f$V\f$ Algebraic smooth low-value selector output on component base [p.u.]
-        PMECH,  ///< \f$P_{\text{m}}\f$ Algebraic mechanical-power output on system base [p.u.]
+        XVALVE, ///< \f$x_V\f$ Differential fuel-valve state on component base
+                ///< [p.u.]
+        XFLOW,  ///< \f$x_F\f$ Differential fuel-flow state on component base
+                ///< [p.u.]
+        XTEMP, ///< \f$x_T\f$ Differential exhaust-temperature feedback state on
+               ///< component base [p.u.]
+        VLOAD, ///< \f$V_D\f$ Algebraic speed/load fuel demand on component base
+               ///< [p.u.]
+        VTEMP, ///< \f$V_T\f$ Algebraic temperature-limit demand on component
+               ///< base [p.u.]
+        VLV,   ///< \f$V\f$ Algebraic smooth low-value selector output on
+               ///< component base [p.u.]
+        PMECH, ///< \f$P_{\text{m}}\f$ Algebraic mechanical-power output on
+               ///< system base [p.u.]
       };
 
       /// External signal variables read or initialized by a `GastPti`.
       enum class GastPtiExternalVariables : size_t
       {
         OMEGA, ///< \f$\omega\f$ Machine speed deviation [p.u.]
-        PREF,  ///< \f$P^\mathrm{ref}\f$ Active-power/load reference on system base [p.u.]
+        PREF,  ///< \f$P^\mathrm{ref}\f$ Active-power/load reference on system
+               ///< base [p.u.]
       };
 
       /**
@@ -120,8 +128,9 @@ namespace GridKit
 
         static RealT iramp(RealT value);
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
+        static constexpr RealT TIME_CONSTANT_MINIMUM =
+          static_cast<RealT>(1.0e-3);
+        static void logTimeConstantWarning();
 
         RealT R_{static_cast<RealT>(0.05)};
         RealT T1_{static_cast<RealT>(0.4)};

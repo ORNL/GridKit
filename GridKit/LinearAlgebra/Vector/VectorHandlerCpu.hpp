@@ -25,7 +25,9 @@ namespace GridKit
       ~VectorHandlerCpu() = default;
 
       // y = alpha * x + y
-      void axpy(const ScalarT alpha, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y);
+      void axpy(
+        const ScalarT alpha, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y
+      );
 
       // dot: x \cdot y
       ScalarT dot(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y);
@@ -36,11 +38,25 @@ namespace GridKit
       // vector infinity norm
       ScalarT amax(Vector<ScalarT, IdxT>* x);
 
-      // mass axpy: y = y - x*alpha, where x is [n x k] and alpha is [k x 1]; x is stored columnwise
-      void axpyMulti(IdxT size, Vector<ScalarT, IdxT>* alpha, IdxT k, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y);
+      // mass axpy: y = y - x*alpha, where x is [n x k] and alpha is [k x 1]; x
+      // is stored columnwise
+      void axpyMulti(
+        IdxT                   size,
+        Vector<ScalarT, IdxT>* alpha,
+        IdxT                   k,
+        Vector<ScalarT, IdxT>* x,
+        Vector<ScalarT, IdxT>* y
+      );
 
-      // mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
-      void dot2Multi(IdxT size, Vector<ScalarT, IdxT>* V, IdxT k, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* res);
+      // mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is
+      // stored and returned columnwise
+      void dot2Multi(
+        IdxT                   size,
+        Vector<ScalarT, IdxT>* V,
+        IdxT                   k,
+        Vector<ScalarT, IdxT>* x,
+        Vector<ScalarT, IdxT>* res
+      );
 
       /** gemv:
        * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,
@@ -60,13 +76,21 @@ namespace GridKit
 
       // Scale a vector by a diagonal matrix
       void scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec);
-      void scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, IdxT diag_offset);
+      void scal(
+        Vector<ScalarT, IdxT>* diag,
+        Vector<ScalarT, IdxT>* vec,
+        IdxT                   diag_offset
+      );
 
       // Divide the elements of a vector by the elements of another vector
       int diagSolve(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec);
 
       // Compute element-wise max of two vectors
-      int max(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, Vector<ScalarT, IdxT>* out);
+      int max(
+        Vector<ScalarT, IdxT>* x,
+        Vector<ScalarT, IdxT>* y,
+        Vector<ScalarT, IdxT>* out
+      );
 
       // Compute element-wise absolute value of a vector
       int abs(Vector<ScalarT, IdxT>* in, Vector<ScalarT, IdxT>* out);

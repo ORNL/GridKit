@@ -92,8 +92,10 @@ namespace GridKit
         INVALID,
         DEFAULT,
         SLACK,
-        SIGNAL_VOLTAGE_OUT, ///< Bus with voltage signal outputs and current signal inputs
-        SIGNAL_VOLTAGE_IN,  ///< Bus with voltage signal inputs and current signal outputs
+        SIGNAL_VOLTAGE_OUT, ///< Bus with voltage signal outputs and current
+                            ///< signal inputs
+        SIGNAL_VOLTAGE_IN,  ///< Bus with voltage signal inputs and current
+                            ///< signal outputs
       };
 
       BusType bus_type{BusType::INVALID}; ///< The kind of bus this data is for

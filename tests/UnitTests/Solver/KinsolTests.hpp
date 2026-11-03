@@ -70,8 +70,7 @@ namespace GridKit
 
         std::array values{1.0, 1.0};
 
-        outcome *= throws<int>([&]
-                               { solver.runSimulation(values, residual); });
+        outcome *= throws<int>([&] { solver.runSimulation(values, residual); });
 
         fail = false;
         solver.runSimulation(values, residual, false);

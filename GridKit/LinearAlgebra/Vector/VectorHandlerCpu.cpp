@@ -21,7 +21,9 @@ namespace GridKit
      * @return dot product of _x_ and _y_
      */
     template <typename ScalarT, typename IdxT>
-    ScalarT VectorHandlerCpu<ScalarT, IdxT>::dot(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y)
+    ScalarT VectorHandlerCpu<ScalarT, IdxT>::dot(
+      Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y
+    )
     {
       const ScalarT* x_data = x->getData(memory::HOST);
       const ScalarT* y_data = y->getData(memory::HOST);
@@ -39,13 +41,16 @@ namespace GridKit
     }
 
     /**
-     * @brief scale a vector by a constant i.e, x = alpha*x where alpha is a constant
+     * @brief scale a vector by a constant i.e, x = alpha*x where alpha is a
+     * constant
      *
      * @param[in] alpha The constant
      * @param[in,out] x The vector
      */
     template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::scal(const ScalarT alpha, Vector<ScalarT, IdxT>* x)
+    void VectorHandlerCpu<ScalarT, IdxT>::scal(
+      const ScalarT alpha, Vector<ScalarT, IdxT>* x
+    )
     {
       ScalarT* x_data = x->getData(memory::HOST);
 
@@ -57,7 +62,8 @@ namespace GridKit
     }
 
     /**
-     * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
+     * @brief compute infinity norm of a vector (i.e., find an entry with
+     * largest absolute value)
      *
      * @param[in] x vector
      *
@@ -89,7 +95,9 @@ namespace GridKit
      * @param[in,out] y The second vector (result is returned in y)
      */
     template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::axpy(const ScalarT alpha, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y)
+    void VectorHandlerCpu<ScalarT, IdxT>::axpy(
+      const ScalarT alpha, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y
+    )
     {
       ScalarT* x_data = x->getData(memory::HOST);
       ScalarT* y_data = y->getData(memory::HOST);
@@ -101,8 +109,8 @@ namespace GridKit
     }
 
     /**
-     * @brief gemv computes matrix-vector product where the matrix and vectors are dense.
-     *        i.e., x = beta*x + alpha*V*y
+     * @brief gemv computes matrix-vector product where the matrix and vectors
+     * are dense. i.e., x = beta*x + alpha*V*y
      *
      * @param[in] transpose - transposed = 'T' or not 'N'
      * @param[in] k Number of columns in (non-transposed) matrix to use
@@ -180,7 +188,8 @@ namespace GridKit
         break;
       default:
         Log::error() << "Unrecognized transpose option " << transpose
-                     << " in gemv. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
+                     << " in gemv. Valid options are 'N' (not transposed) and "
+                        "'T' (transposed).\n";
       } // switch
       x->setDataUpdated(memory::HOST);
     }
@@ -191,7 +200,8 @@ namespace GridKit
      * @param[in] size number of elements in y
      * @param[in] alpha vector size k x 1
      * @param[in] x (multi)vector size size x k
-     * @param[in,out] y vector size size x 1 (this is where the result is stored)
+     * @param[in,out] y vector size size x 1 (this is where the result is
+     * stored)
      *
      * @pre _k_ > 0, _size_ > 0, _size_ = x->getSize()
      */
@@ -223,17 +233,20 @@ namespace GridKit
     }
 
     /**
-     * @brief mass (bulk) dot product i.e, V^T x, where V is n x k dense multivector (a dense
-     * multivector consisting of k vectors size n) and x is k x 2 dense multivector (a multivector
-     * consisting of two vectors size n each)
+     * @brief mass (bulk) dot product i.e, V^T x, where V is n x k dense
+     * multivector (a dense multivector consisting of k vectors size n) and x is
+     * k x 2 dense multivector (a multivector consisting of two vectors size n
+     * each)
      *
      * @param[in] size Number of elements in a single vector in V
      * @param[in] V Multivector; k vectors size n x 1 each
      * @param[in] k Number of vectors in V
      * @param[in] x Multivector; 2 vectors size n x 1 each
-     * @param[out] res Multivector; 2 vectors size k x 1 each (result is returned in res)
+     * @param[out] res Multivector; 2 vectors size k x 1 each (result is
+     * returned in res)
      *
-     * @pre _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
+     * @pre _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be
+     * allocated
      */
     template <typename ScalarT, typename IdxT>
     void VectorHandlerCpu<ScalarT, IdxT>::dot2Multi(
@@ -280,7 +293,9 @@ namespace GridKit
      * @param[in,out] vec Vector to be scaled
      */
     template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec)
+    void VectorHandlerCpu<ScalarT, IdxT>::scal(
+      Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec
+    )
     {
       const ScalarT* diag_data = diag->getData(memory::HOST);
       ScalarT*       vec_data  = vec->getData(memory::HOST);
@@ -294,14 +309,18 @@ namespace GridKit
     }
 
     /**
-     * @brief Scale a vector by a diagonal matrix represented by a contiguous subvector of diag
+     * @brief Scale a vector by a diagonal matrix represented by a contiguous
+     * subvector of diag
      *
      * @param[in] diag Diagonal vector
      * @param[in,out] vec Vector to be scaled
-     * @param[in] diag_offset - the index of diag where the diagonal matrix begins
+     * @param[in] diag_offset - the index of diag where the diagonal matrix
+     * begins
      */
     template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, IdxT diag_offset)
+    void VectorHandlerCpu<ScalarT, IdxT>::scal(
+      Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, IdxT diag_offset
+    )
     {
       const ScalarT* diag_data = &diag->getData(memory::HOST)[diag_offset];
       ScalarT*       vec_data  = vec->getData(memory::HOST);
@@ -328,7 +347,9 @@ namespace GridKit
      * @return 0 if successful, 1 otherwise
      */
     template <typename ScalarT, typename IdxT>
-    int VectorHandlerCpu<ScalarT, IdxT>::diagSolve(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec)
+    int VectorHandlerCpu<ScalarT, IdxT>::diagSolve(
+      Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec
+    )
     {
       ScalarT* diag_data = diag->getData(memory::HOST);
       ScalarT* vec_data  = vec->getData(memory::HOST);
@@ -344,8 +365,8 @@ namespace GridKit
 
     /**
      * @brief Take the element-wise max of two vectors.
-     * Each element of the output will be the maximum value of the corresponding elements in the
-     * input vectors.
+     * Each element of the output will be the maximum value of the corresponding
+     * elements in the input vectors.
      *
      * @param[in]  x   - First input vector
      * @param[in]  y   - Second input vector
@@ -356,7 +377,11 @@ namespace GridKit
      * @return 0 if successful, 1 otherwise
      */
     template <typename ScalarT, typename IdxT>
-    int VectorHandlerCpu<ScalarT, IdxT>::max(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, Vector<ScalarT, IdxT>* out)
+    int VectorHandlerCpu<ScalarT, IdxT>::max(
+      Vector<ScalarT, IdxT>* x,
+      Vector<ScalarT, IdxT>* y,
+      Vector<ScalarT, IdxT>* out
+    )
     {
       const ScalarT* x_data   = x->getData(memory::HOST);
       const ScalarT* y_data   = y->getData(memory::HOST);
@@ -380,7 +405,9 @@ namespace GridKit
      * @return 0 if successful, 1 otherwise
      */
     template <typename ScalarT, typename IdxT>
-    int VectorHandlerCpu<ScalarT, IdxT>::abs(Vector<ScalarT, IdxT>* in, Vector<ScalarT, IdxT>* out)
+    int VectorHandlerCpu<ScalarT, IdxT>::abs(
+      Vector<ScalarT, IdxT>* in, Vector<ScalarT, IdxT>* out
+    )
     {
       const ScalarT* in_data  = in->getData(memory::HOST);
       ScalarT*       out_data = out->getData(memory::HOST);

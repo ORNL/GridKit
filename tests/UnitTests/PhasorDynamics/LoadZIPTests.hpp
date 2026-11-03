@@ -48,8 +48,9 @@ namespace GridKit
 
         auto                                      data = makeData();
         PhasorDynamics::LoadZIP<ScalarT, IdxT>    monitored_load(bus, data);
-        PhasorDynamics::Component<ScalarT, IdxT>& monitored_component  = monitored_load;
-        success                                                       *= (monitored_component.getMonitor() != nullptr);
+        PhasorDynamics::Component<ScalarT, IdxT>& monitored_component =
+          monitored_load;
+        success *= (monitored_component.getMonitor() != nullptr);
 
         delete bus;
 
@@ -61,7 +62,9 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, loadZIPData(2.0, 0.5, 0.2, 0.4));
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(
+          &bus, loadZIPData(2.0, 0.5, 0.2, 0.4)
+        );
 
         bus.allocate();
         load.allocate();
@@ -89,7 +92,9 @@ namespace GridKit
         const RealT Qnom{0.5};
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.2, 0.9);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, loadZIPData(Pnom, Qnom, 0.2, 0.4));
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(
+          &bus, loadZIPData(Pnom, Qnom, 0.2, 0.4)
+        );
 
         bus.allocate();
         load.allocate();
@@ -129,7 +134,9 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, loadZIPData(2.0, 0.5, 0.2, 0.4));
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(
+          &bus, loadZIPData(2.0, 0.5, 0.2, 0.4)
+        );
 
         bus.allocate();
         load.allocate();
@@ -144,11 +151,11 @@ namespace GridKit
         bus.evaluateResidual();
         load.evaluateResidual();
 
-        const auto* f  = load.getResidual().getData();
-        success       *= isEqual(f[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
-        success       *= isEqual(f[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
-        success       *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
-        success       *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
+        const auto* f = load.getResidual().getData();
+        success *= isEqual(f[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
+        success *= isEqual(f[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
+        success *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
+        success *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
 
         return success.report(__func__);
       }
@@ -203,12 +210,15 @@ namespace GridKit
         const RealT alphaI{4.0};
         const RealT alphaP{2.0};
 
-        auto dependency_tracking_jacobian = DependencyTrackingJacobian(Pnom, Qnom, alphaI, alphaP);
-        auto enzyme_jacobian              = EnzymeJacobian(Pnom, Qnom, alphaI, alphaP);
+        auto dependency_tracking_jacobian =
+          DependencyTrackingJacobian(Pnom, Qnom, alphaI, alphaP);
+        auto enzyme_jacobian = EnzymeJacobian(Pnom, Qnom, alphaI, alphaP);
 
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]);
+          success *= GridKit::Testing::isEqual(
+            dependency_tracking_jacobian[i], enzyme_jacobian[i]
+          );
         }
 
         return success.report(__func__);
@@ -227,15 +237,21 @@ namespace GridKit
         DependencyTracking::Variable Vi{0.4};
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(&bus, loadZIPData(Pnom, Qnom, alphaI, alphaP));
+        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(
+          &bus, loadZIPData(Pnom, Qnom, alphaI, alphaP)
+        );
 
         bus.allocate();
         load.allocate();
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+          bus.setVariableIndex(
+            i, i + load.size()
+          ); // Reset bus variable indices
+          bus.setResidualIndex(
+            i, i + load.size()
+          ); // Reset bus residual indices
         }
 
         bus.initialize();
@@ -248,7 +264,8 @@ namespace GridKit
         load.evaluateJacobian(); //< Converts dependencies to CSR
         auto* model_jacobian = load.getCsrJacobian();
         auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
+        output_stream
+          << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
@@ -265,15 +282,21 @@ namespace GridKit
         ScalarT Vi{0.4};
 
         PhasorDynamics::Bus<ScalarT, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, loadZIPData(Pnom, Qnom, alphaI, alphaP));
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(
+          &bus, loadZIPData(Pnom, Qnom, alphaI, alphaP)
+        );
 
         bus.allocate();
         load.allocate();
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+          bus.setVariableIndex(
+            i, i + load.size()
+          ); // Reset bus variable indices
+          bus.setResidualIndex(
+            i, i + load.size()
+          ); // Reset bus residual indices
         }
 
         bus.initialize();
@@ -297,7 +320,8 @@ namespace GridKit
 #endif
 
     private:
-      static constexpr RealT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+      static constexpr RealT tol_ =
+        10 * std::numeric_limits<ScalarT>::epsilon();
 
       auto makeData() -> DataT
       {
@@ -322,7 +346,12 @@ namespace GridKit
         return data;
       }
 
-      static DataT loadZIPData(const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP)
+      static DataT loadZIPData(
+        const RealT Pnom,
+        const RealT Qnom,
+        const RealT alphaI,
+        const RealT alphaP
+      )
       {
         using Params = PhasorDynamics::LoadZIPParameters;
 

@@ -66,17 +66,19 @@ namespace GridKit
     /**
      * @brief Constructor for the system model
      */
-    SystemSteadyStateModel()
-      : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+    SystemSteadyStateModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
     }
 
     /**
-     * @brief Construct a new System Steady State Model object. Allows for simple allocation.
+     * @brief Construct a new System Steady State Model object. Allows for
+     * simple allocation.
      *
      * @param mp model data
      */
-    SystemSteadyStateModel(GridKit::PowerFlowData::SystemModelData<ScalarT, IdxT> mp)
+    SystemSteadyStateModel(
+      GridKit::PowerFlowData::SystemModelData<ScalarT, IdxT> mp
+    )
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
       // add buses
@@ -89,21 +91,28 @@ namespace GridKit
       // add generators
       for (auto gendata : mp.gen)
       {
-        auto* gen = GeneratorFactory<double, size_t>::create(this->getBus(gendata.bus), gendata);
+        auto* gen = GeneratorFactory<double, size_t>::create(
+          this->getBus(gendata.bus), gendata
+        );
         this->addComponent(gen);
       }
 
       // add branches
       for (auto branchdata : mp.branch)
       {
-        auto* branch = new Branch<double, size_t>(this->getBus(branchdata.fbus), this->getBus(branchdata.tbus), branchdata);
+        auto* branch = new Branch<double, size_t>(
+          this->getBus(branchdata.fbus),
+          this->getBus(branchdata.tbus),
+          branchdata
+        );
         this->addComponent(branch);
       }
 
       // add loads
       for (auto loaddata : mp.load)
       {
-        auto* loadm = new Load<double, size_t>(this->getBus(loaddata.bus_i), loaddata);
+        auto* loadm =
+          new Load<double, size_t>(this->getBus(loaddata.bus_i), loaddata);
         this->addComponent(loadm);
       }
 

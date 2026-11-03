@@ -11,8 +11,10 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     bool SystemModel<scalar_type, index_type>::hasJacobian()
     {
-      Log::warning() << "DependencyTracking::Variable Jacobians are only available for testing.\n"
-                     << "Falling back to dense Jacobians for PhasorDyanmics simulations.\n";
+      Log::warning(
+      ) << "DependencyTracking::Variable Jacobians are only available for "
+           "testing.\n"
+        << "Falling back to dense Jacobians for PhasorDyanmics simulations.\n";
 
       return false;
     }

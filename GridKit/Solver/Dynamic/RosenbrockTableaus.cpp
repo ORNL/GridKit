@@ -5,7 +5,8 @@ namespace AnalysisManager
   namespace NativeDynamicSolver
   {
     template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::linImplicitEuler()
+    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::
+      linImplicitEuler()
     {
       constexpr size_t num_stages = 1;
 
@@ -39,12 +40,14 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief A 5th order Rosenbrock method suitable for solving parabolic PDEs. Created in \cite steinebach2023construction.
+     * @brief A 5th order Rosenbrock method suitable for solving parabolic PDEs.
+     * Created in \cite steinebach2023construction.
      *
      *
      */
     template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::rodas5p()
+    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::
+      rodas5p()
     {
       constexpr size_t num_stages = 8;
 

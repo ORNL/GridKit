@@ -36,12 +36,12 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Repca<scalar_type, index_type>::Repca(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+        : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(Utilities::enum_size<RepcaInternalVariables>());
+        size_ =
+          static_cast<IdxT>(Utilities::enum_size<RepcaInternalVariables>());
       }
 
       /**
@@ -58,7 +58,9 @@ namespace GridKit
        * @param[in] component_id Identifier assigned by the system model.
        */
       template <typename scalar_type, typename index_type>
-      int Repca<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      int Repca<scalar_type, index_type>::setGridKitComponentID(
+        IdxT component_id
+      )
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -67,9 +69,9 @@ namespace GridKit
       /**
        * @brief Allocate model vectors and wire assigned command outputs
        *
-       * Sizes the state, residual, bus, and signal-interface buffers, initializes
-       * identity index maps, and points assigned `qext` and `pext` nodes at
-       * the internal system-base states that REPCA publishes. Repeated
+       * Sizes the state, residual, bus, and signal-interface buffers,
+       * initializes identity index maps, and points assigned `qext` and `pext`
+       * nodes at the internal system-base states that REPCA publishes. Repeated
        * allocation reuses the existing model vectors and signal links.
        */
       template <typename scalar_type, typename index_type>
@@ -106,12 +108,16 @@ namespace GridKit
 
         if (auto port = ports_.out.template port<RepcaSignalOutputs::qext>())
         {
-          port.link(&y[QEXT], &(this->getVariableIndex(static_cast<IdxT>(QEXT))));
+          port.link(
+            &y[QEXT], &(this->getVariableIndex(static_cast<IdxT>(QEXT)))
+          );
         }
 
         if (auto port = ports_.out.template port<RepcaSignalOutputs::pext>())
         {
-          port.link(&y[PEXT], &(this->getVariableIndex(static_cast<IdxT>(PEXT))));
+          port.link(
+            &y[PEXT], &(this->getVariableIndex(static_cast<IdxT>(PEXT)))
+          );
         }
 
         allocated_ = true;
@@ -139,17 +145,21 @@ namespace GridKit
                                           && mva_base_ > ZERO<RealT>
                                           && std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
-        const bool valid_system_base = std::isfinite(va_system_base_)
-                                       && va_system_base_ > ZERO<RealT>;
+        const bool valid_system_base =
+          std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
         checks.check(
           valid_component_base,
           "mva must define a finite positive component power base"
         );
-        checks.check(valid_system_base, "system power base must be finite and positive");
+        checks.check(
+          valid_system_base, "system power base must be finite and positive"
+        );
         if (valid_component_base && valid_system_base)
         {
-          const RealT system_to_component = va_system_base_ / va_component_base_;
-          const RealT component_to_system = va_component_base_ / va_system_base_;
+          const RealT system_to_component =
+            va_system_base_ / va_component_base_;
+          const RealT component_to_system =
+            va_component_base_ / va_system_base_;
           checks.check(
             std::isfinite(system_to_component)
               && system_to_component > ZERO<RealT>
@@ -183,7 +193,8 @@ namespace GridKit
         );
         checks.check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
 
-        auto check_required_signal = [&]<RepcaSignalInputs variable>(const char* name)
+        auto check_required_signal =
+          [&]<RepcaSignalInputs variable>(const char* name)
         {
           if (!ports_.in.template port<variable>().connected())
           {
@@ -191,7 +202,9 @@ namespace GridKit
           }
           else if (!ports_.in.template port<variable>().linked())
           {
-            checks.fail(std::format("{} signal attached with no linked source", name));
+            checks.fail(
+              std::format("{} signal attached with no linked source", name)
+            );
           }
         };
 
@@ -200,20 +213,28 @@ namespace GridKit
         check_required_signal.template operator()<RepcaSignalInputs::p>("p");
         check_required_signal.template operator()<RepcaSignalInputs::q>("q");
 
-        auto check_optional_signal = [&]<RepcaSignalInputs variable>(const char* name)
+        auto check_optional_signal =
+          [&]<RepcaSignalInputs variable>(const char* name)
         {
           if (ports_.in.template port<variable>().connected()
               && !ports_.in.template port<variable>().linked())
           {
-            checks.fail(std::format("{} signal attached with no linked source", name));
+            checks.fail(
+              std::format("{} signal attached with no linked source", name)
+            );
           }
         };
 
-        check_optional_signal.template operator()<RepcaSignalInputs::vref>("vref");
-        check_optional_signal.template operator()<RepcaSignalInputs::pref>("pref");
-        check_optional_signal.template operator()<RepcaSignalInputs::qref>("qref");
-        check_optional_signal.template operator()<RepcaSignalInputs::freq>("freq");
-        check_optional_signal.template operator()<RepcaSignalInputs::freqref>("freqref");
+        check_optional_signal.template operator(
+        )<RepcaSignalInputs::vref>("vref");
+        check_optional_signal.template operator(
+        )<RepcaSignalInputs::pref>("pref");
+        check_optional_signal.template operator(
+        )<RepcaSignalInputs::qref>("qref");
+        check_optional_signal.template operator(
+        )<RepcaSignalInputs::freq>("freq");
+        check_optional_signal.template operator(
+        )<RepcaSignalInputs::freqref>("freqref");
 
         return checks;
       }
@@ -222,9 +243,9 @@ namespace GridKit
        * @brief Initialize REPCA from the initial plant commands
        *
        * Reads the required bus and measurement ports, preserves the initial
-       * system-base `qext` value and, when frequency control is enabled, `pext`,
-       * reconstructs the steady controller state, and publishes the resolved
-       * optional references.
+       * system-base `qext` value and, when frequency control is enabled,
+       * `pext`, reconstructs the steady controller state, and publishes the
+       * resolved optional references.
        *
        * @pre allocate() has completed.
        * @pre verify() reports a valid parameter and port configuration.
@@ -271,7 +292,8 @@ namespace GridKit
 
         if (!this->verifyAndLog())
         {
-          Log::error() << "Repca: cannot initialize with invalid configuration\n";
+          Log::error(
+          ) << "Repca: cannot initialize with invalid configuration\n";
           return 1;
         }
 
@@ -301,15 +323,14 @@ namespace GridKit
         }
 
         auto is_finite = [](ScalarT value)
-        {
-          return std::isfinite(static_cast<RealT>(value));
-        };
+        { return std::isfinite(static_cast<RealT>(value)); };
         if (!is_finite(vr) || !is_finite(vi) || !is_finite(ir_system)
             || !is_finite(ii_system) || !is_finite(p_system)
             || !is_finite(q_system) || !is_finite(freq) || !is_finite(qext0)
             || (Freqflag_ && !is_finite(pext0)))
         {
-          Log::error() << "Repca: initial bus, signal, and command values must be finite\n";
+          Log::error() << "Repca: initial bus, signal, and command values must "
+                          "be finite\n";
           return 1;
         }
 
@@ -334,7 +355,8 @@ namespace GridKit
         if (!invertClamp(zero, emin_, emax_, erqdb0)
             || !invertDeadband(erqdb0, dbdlow_, dbdupper_, erq0))
         {
-          Log::error() << "Repca: reactive error blocks have no finite steady input\n";
+          Log::error(
+          ) << "Repca: reactive error blocks have no finite steady input\n";
           return 1;
         }
         const ScalarT erqlim0 = zero;
@@ -347,7 +369,8 @@ namespace GridKit
         ScalarT qpi_input0{};
         if (!invertClamp(qpi0, qmin, qmax, qpi_input0))
         {
-          Log::error() << "Repca: reactive-power PI limiter has no finite steady input\n";
+          Log::error(
+          ) << "Repca: reactive-power PI limiter has no finite steady input\n";
           return 1;
         }
         const ScalarT xqpi0 = qpi_input0 - Kp_ * erqlim0;
@@ -357,7 +380,8 @@ namespace GridKit
         if (!invertDeadband(zero, fdbd1_, fdbd2_, frequency_error0)
             || !invertClamp(zero, femin_, femax_, ep0))
         {
-          Log::error() << "Repca: active error blocks have no finite steady input\n";
+          Log::error(
+          ) << "Repca: active error blocks have no finite steady input\n";
           return 1;
         }
         const ScalarT ef0    = zero;
@@ -372,7 +396,8 @@ namespace GridKit
         ScalarT ppi_input0{};
         if (!invertClamp(ppi0, pmin, pmax, ppi_input0))
         {
-          Log::error() << "Repca: active-power PI limiter has no finite steady input\n";
+          Log::error(
+          ) << "Repca: active-power PI limiter has no finite steady input\n";
           return 1;
         }
         const ScalarT xppi0 = ppi_input0 - Kpg_ * eplim0;
@@ -389,7 +414,8 @@ namespace GridKit
         {
           qref0_system = this->toSystemBase(qmeas0 + erq0);
         }
-        const ScalarT pref0_system = p_system + this->toSystemBase(ep0 - pfreq0);
+        const ScalarT pref0_system =
+          p_system + this->toSystemBase(ep0 - pfreq0);
 
         const bool candidates_are_finite =
           is_finite(qext0_system) && (!Freqflag_ || is_finite(pext0_system))
@@ -458,27 +484,30 @@ namespace GridKit
         {
           qref_port.writeValue(qref_set_);
         }
-        if (auto freqref_port = ports_.in.template port<RepcaSignalInputs::freqref>())
+        if (auto freqref_port =
+              ports_.in.template port<RepcaSignalInputs::freqref>())
         {
           freqref_port.writeValue(freqref_set_);
         }
 
         if (q_adjusted)
         {
-          Log::warning() << "Repca: initial reactive PI output is outside [Qmin, Qmax]; "
-                            "the limits are adjusted to include the initialized value\n";
+          Log::warning(
+          ) << "Repca: initial reactive PI output is outside [Qmin, Qmax]; "
+               "the limits are adjusted to include the initialized value\n";
         }
         if (p_adjusted)
         {
-          Log::warning() << "Repca: initial active PI output is outside [Pmin, Pmax]; "
-                            "the limits are adjusted to include the initialized value\n";
+          Log::warning(
+          ) << "Repca: initial active PI output is outside [Pmin, Pmax]; "
+               "the limits are adjusted to include the initialized value\n";
         }
-        if (Freqflag_
-            && (Ddn_ != ZERO<RealT> || Dup_ != ZERO<RealT>)
+        if (Freqflag_ && (Ddn_ != ZERO<RealT> || Dup_ != ZERO<RealT>)
             && !ports_.in.template port<RepcaSignalInputs::freq>())
         {
           Log::warning() << "Repca: Freqflag is enabled without a freq signal; "
-                            "frequency remains nominal and cannot track bus-frequency deviations\n";
+                            "frequency remains nominal and cannot track "
+                            "bus-frequency deviations\n";
         }
 
         y_.setDataUpdated();
@@ -545,21 +574,28 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::setSignalIndices()
       {
-        const auto IR      = static_cast<size_t>(RepcaExternalVariables::IR);
-        const auto II      = static_cast<size_t>(RepcaExternalVariables::II);
-        const auto P       = static_cast<size_t>(RepcaExternalVariables::P);
-        const auto Q       = static_cast<size_t>(RepcaExternalVariables::Q);
-        const auto FREQ    = static_cast<size_t>(RepcaExternalVariables::FREQ);
-        const auto VREF    = static_cast<size_t>(RepcaExternalVariables::VREF);
-        const auto PREF    = static_cast<size_t>(RepcaExternalVariables::PREF);
-        const auto QREF    = static_cast<size_t>(RepcaExternalVariables::QREF);
-        const auto FREQREF = static_cast<size_t>(RepcaExternalVariables::FREQREF);
+        const auto IR   = static_cast<size_t>(RepcaExternalVariables::IR);
+        const auto II   = static_cast<size_t>(RepcaExternalVariables::II);
+        const auto P    = static_cast<size_t>(RepcaExternalVariables::P);
+        const auto Q    = static_cast<size_t>(RepcaExternalVariables::Q);
+        const auto FREQ = static_cast<size_t>(RepcaExternalVariables::FREQ);
+        const auto VREF = static_cast<size_t>(RepcaExternalVariables::VREF);
+        const auto PREF = static_cast<size_t>(RepcaExternalVariables::PREF);
+        const auto QREF = static_cast<size_t>(RepcaExternalVariables::QREF);
+        const auto FREQREF =
+          static_cast<size_t>(RepcaExternalVariables::FREQREF);
 
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
-        ws_indices_[IR] = ports_.in.template port<RepcaSignalInputs::ir>().signalVariableIndex();
-        ws_indices_[II] = ports_.in.template port<RepcaSignalInputs::ii>().signalVariableIndex();
-        ws_indices_[P]  = ports_.in.template port<RepcaSignalInputs::p>().signalVariableIndex();
-        ws_indices_[Q]  = ports_.in.template port<RepcaSignalInputs::q>().signalVariableIndex();
+        ws_indices_[IR] =
+          ports_.in.template port<RepcaSignalInputs::ir>().signalVariableIndex(
+          );
+        ws_indices_[II] =
+          ports_.in.template port<RepcaSignalInputs::ii>().signalVariableIndex(
+          );
+        ws_indices_[P] =
+          ports_.in.template port<RepcaSignalInputs::p>().signalVariableIndex();
+        ws_indices_[Q] =
+          ports_.in.template port<RepcaSignalInputs::q>().signalVariableIndex();
         if (auto freq_port = ports_.in.template port<RepcaSignalInputs::freq>())
         {
           ws_indices_[FREQ] = freq_port.signalVariableIndex();
@@ -576,7 +612,8 @@ namespace GridKit
         {
           ws_indices_[QREF] = qref_port.signalVariableIndex();
         }
-        if (auto freqref_port = ports_.in.template port<RepcaSignalInputs::freqref>())
+        if (auto freqref_port =
+              ports_.in.template port<RepcaSignalInputs::freqref>())
         {
           ws_indices_[FREQREF] = freqref_port.signalVariableIndex();
         }
@@ -594,15 +631,16 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateResidual()
       {
-        const auto IR      = static_cast<size_t>(RepcaExternalVariables::IR);
-        const auto II      = static_cast<size_t>(RepcaExternalVariables::II);
-        const auto P       = static_cast<size_t>(RepcaExternalVariables::P);
-        const auto Q       = static_cast<size_t>(RepcaExternalVariables::Q);
-        const auto FREQ    = static_cast<size_t>(RepcaExternalVariables::FREQ);
-        const auto VREF    = static_cast<size_t>(RepcaExternalVariables::VREF);
-        const auto PREF    = static_cast<size_t>(RepcaExternalVariables::PREF);
-        const auto QREF    = static_cast<size_t>(RepcaExternalVariables::QREF);
-        const auto FREQREF = static_cast<size_t>(RepcaExternalVariables::FREQREF);
+        const auto IR   = static_cast<size_t>(RepcaExternalVariables::IR);
+        const auto II   = static_cast<size_t>(RepcaExternalVariables::II);
+        const auto P    = static_cast<size_t>(RepcaExternalVariables::P);
+        const auto Q    = static_cast<size_t>(RepcaExternalVariables::Q);
+        const auto FREQ = static_cast<size_t>(RepcaExternalVariables::FREQ);
+        const auto VREF = static_cast<size_t>(RepcaExternalVariables::VREF);
+        const auto PREF = static_cast<size_t>(RepcaExternalVariables::PREF);
+        const auto QREF = static_cast<size_t>(RepcaExternalVariables::QREF);
+        const auto FREQREF =
+          static_cast<size_t>(RepcaExternalVariables::FREQREF);
 
         auto* ws = ws_.getData();
 
@@ -633,7 +671,8 @@ namespace GridKit
         {
           ws[QREF] = qref_port.readSignal();
         }
-        if (auto freqref_port = ports_.in.template port<RepcaSignalInputs::freqref>())
+        if (auto freqref_port =
+              ports_.in.template port<RepcaSignalInputs::freqref>())
         {
           ws[FREQREF] = freqref_port.readSignal();
         }
@@ -654,10 +693,12 @@ namespace GridKit
       /**
        * @brief Access the configured monitor
        *
-       * @return Monitor for this model, or nullptr when constructed without data.
+       * @return Monitor for this model, or nullptr when constructed without
+       * data.
        */
       template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Repca<scalar_type, index_type>::getMonitor() const
+      const Model::VariableMonitorBase* Repca<scalar_type, index_type>::
+        getMonitor() const
       {
         return monitor_.get();
       }
@@ -687,38 +728,41 @@ namespace GridKit
           ScalarT*       f
         )
       {
-        const auto VMEAS      = static_cast<size_t>(RepcaInternalVariables::VMEAS);
-        const auto QMEAS      = static_cast<size_t>(RepcaInternalVariables::QMEAS);
-        const auto XQPI       = static_cast<size_t>(RepcaInternalVariables::XQPI);
-        const auto XQLAG      = static_cast<size_t>(RepcaInternalVariables::XQLAG);
-        const auto PMEAS      = static_cast<size_t>(RepcaInternalVariables::PMEAS);
-        const auto XPPI       = static_cast<size_t>(RepcaInternalVariables::XPPI);
-        const auto PREF_STATE = static_cast<size_t>(RepcaInternalVariables::PREF);
-        const auto V          = static_cast<size_t>(RepcaInternalVariables::V);
-        const auto VLDC       = static_cast<size_t>(RepcaInternalVariables::VLDC);
-        const auto VDROOP     = static_cast<size_t>(RepcaInternalVariables::VDROOP);
-        const auto VCTRL      = static_cast<size_t>(RepcaInternalVariables::VCTRL);
-        const auto SFRZ       = static_cast<size_t>(RepcaInternalVariables::SFRZ);
-        const auto ERQ        = static_cast<size_t>(RepcaInternalVariables::ERQ);
-        const auto ERQDB      = static_cast<size_t>(RepcaInternalVariables::ERQDB);
-        const auto ERQLIM     = static_cast<size_t>(RepcaInternalVariables::ERQLIM);
-        const auto QPI        = static_cast<size_t>(RepcaInternalVariables::QPI);
-        const auto QEXT       = static_cast<size_t>(RepcaInternalVariables::QEXT);
-        const auto EF         = static_cast<size_t>(RepcaInternalVariables::EF);
-        const auto EP         = static_cast<size_t>(RepcaInternalVariables::EP);
-        const auto EPLIM      = static_cast<size_t>(RepcaInternalVariables::EPLIM);
-        const auto PPI        = static_cast<size_t>(RepcaInternalVariables::PPI);
-        const auto PEXT       = static_cast<size_t>(RepcaInternalVariables::PEXT);
+        const auto VMEAS = static_cast<size_t>(RepcaInternalVariables::VMEAS);
+        const auto QMEAS = static_cast<size_t>(RepcaInternalVariables::QMEAS);
+        const auto XQPI  = static_cast<size_t>(RepcaInternalVariables::XQPI);
+        const auto XQLAG = static_cast<size_t>(RepcaInternalVariables::XQLAG);
+        const auto PMEAS = static_cast<size_t>(RepcaInternalVariables::PMEAS);
+        const auto XPPI  = static_cast<size_t>(RepcaInternalVariables::XPPI);
+        const auto PREF_STATE =
+          static_cast<size_t>(RepcaInternalVariables::PREF);
+        const auto V      = static_cast<size_t>(RepcaInternalVariables::V);
+        const auto VLDC   = static_cast<size_t>(RepcaInternalVariables::VLDC);
+        const auto VDROOP = static_cast<size_t>(RepcaInternalVariables::VDROOP);
+        const auto VCTRL  = static_cast<size_t>(RepcaInternalVariables::VCTRL);
+        const auto SFRZ   = static_cast<size_t>(RepcaInternalVariables::SFRZ);
+        const auto ERQ    = static_cast<size_t>(RepcaInternalVariables::ERQ);
+        const auto ERQDB  = static_cast<size_t>(RepcaInternalVariables::ERQDB);
+        const auto ERQLIM = static_cast<size_t>(RepcaInternalVariables::ERQLIM);
+        const auto QPI    = static_cast<size_t>(RepcaInternalVariables::QPI);
+        const auto QEXT   = static_cast<size_t>(RepcaInternalVariables::QEXT);
+        const auto EF     = static_cast<size_t>(RepcaInternalVariables::EF);
+        const auto EP     = static_cast<size_t>(RepcaInternalVariables::EP);
+        const auto EPLIM  = static_cast<size_t>(RepcaInternalVariables::EPLIM);
+        const auto PPI    = static_cast<size_t>(RepcaInternalVariables::PPI);
+        const auto PEXT   = static_cast<size_t>(RepcaInternalVariables::PEXT);
 
-        const auto IR         = static_cast<size_t>(RepcaExternalVariables::IR);
-        const auto II         = static_cast<size_t>(RepcaExternalVariables::II);
-        const auto P          = static_cast<size_t>(RepcaExternalVariables::P);
-        const auto Q          = static_cast<size_t>(RepcaExternalVariables::Q);
-        const auto FREQ       = static_cast<size_t>(RepcaExternalVariables::FREQ);
-        const auto VREF       = static_cast<size_t>(RepcaExternalVariables::VREF);
-        const auto PREF_INPUT = static_cast<size_t>(RepcaExternalVariables::PREF);
-        const auto QREF       = static_cast<size_t>(RepcaExternalVariables::QREF);
-        const auto FREQREF    = static_cast<size_t>(RepcaExternalVariables::FREQREF);
+        const auto IR   = static_cast<size_t>(RepcaExternalVariables::IR);
+        const auto II   = static_cast<size_t>(RepcaExternalVariables::II);
+        const auto P    = static_cast<size_t>(RepcaExternalVariables::P);
+        const auto Q    = static_cast<size_t>(RepcaExternalVariables::Q);
+        const auto FREQ = static_cast<size_t>(RepcaExternalVariables::FREQ);
+        const auto VREF = static_cast<size_t>(RepcaExternalVariables::VREF);
+        const auto PREF_INPUT =
+          static_cast<size_t>(RepcaExternalVariables::PREF);
+        const auto QREF = static_cast<size_t>(RepcaExternalVariables::QREF);
+        const auto FREQREF =
+          static_cast<size_t>(RepcaExternalVariables::FREQREF);
 
         const ScalarT vmeas  = y[VMEAS];
         const ScalarT qmeas  = y[QMEAS];
@@ -768,10 +812,12 @@ namespace GridKit
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
         const ScalarT pfreq  = droop(ef, Ddn_, Dup_);
 
-        const ScalarT q_pi_rate = q_feedback_gain_ * (qpi - Math::clamp(xqpi, Qmin_, Qmax_))
-                                  + Math::antiwindup(xqpi, q_integral_gain_ * erqlim, Qmin_, Qmax_);
-        const ScalarT p_pi_rate = p_feedback_gain_ * (ppi - Math::clamp(xppi, Pmin_, Pmax_))
-                                  + Math::antiwindup(xppi, p_integral_gain_ * eplim, Pmin_, Pmax_);
+        const ScalarT q_pi_rate =
+          q_feedback_gain_ * (qpi - Math::clamp(xqpi, Qmin_, Qmax_))
+          + Math::antiwindup(xqpi, q_integral_gain_ * erqlim, Qmin_, Qmax_);
+        const ScalarT p_pi_rate =
+          p_feedback_gain_ * (ppi - Math::clamp(xppi, Pmin_, Pmax_))
+          + Math::antiwindup(xppi, p_integral_gain_ * eplim, Pmin_, Pmax_);
 
         f[VMEAS]      = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
         f[QMEAS]      = -qmeas_dot + (q - qmeas) / Tfltr_;
@@ -814,8 +860,9 @@ namespace GridKit
        * @return Active-power frequency response.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline scalar_type
-      Repca<scalar_type, index_type>::droop(ScalarT error, RealT down, RealT up)
+      __attribute__((always_inline)) inline scalar_type Repca<
+        scalar_type,
+        index_type>::droop(ScalarT error, RealT down, RealT up)
       {
         return error * (down + (up - down) * Math::sigmoid(error));
       }
@@ -830,7 +877,9 @@ namespace GridKit
        * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      void Repca<scalar_type, index_type>::initializeParameters(
+        const ModelDataT& data
+      )
       {
         using Params = typename ModelDataT::Parameters;
 
@@ -879,16 +928,46 @@ namespace GridKit
       {
         using Variable = typename ModelDataT::MonitorableVariables;
 
-        monitor_->set(Variable::qext, [this]
-                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::QEXT)]; });
-        monitor_->set(Variable::pext, [this]
-                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::PEXT)]; });
-        monitor_->set(Variable::vmeas, [this]
-                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::VMEAS)]; });
-        monitor_->set(Variable::qmeas, [this]
-                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::QMEAS)]; });
-        monitor_->set(Variable::pmeas, [this]
-                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::PMEAS)]; });
+        monitor_->set(
+          Variable::qext,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(RepcaInternalVariables::QEXT)];
+          }
+        );
+        monitor_->set(
+          Variable::pext,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(RepcaInternalVariables::PEXT)];
+          }
+        );
+        monitor_->set(
+          Variable::vmeas,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(RepcaInternalVariables::VMEAS)];
+          }
+        );
+        monitor_->set(
+          Variable::qmeas,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(RepcaInternalVariables::QMEAS)];
+          }
+        );
+        monitor_->set(
+          Variable::pmeas,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(RepcaInternalVariables::PMEAS)];
+          }
+        );
       }
 
       /**
@@ -902,7 +981,8 @@ namespace GridKit
       {
         Log::warning() << "Repca: Tfltr, Tfv, Tp, and Tlag below "
                        << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor to keep the controller lags well posed\n";
+                       << " s are raised to that floor to keep the controller "
+                          "lags well posed\n";
       }
 
       /**
@@ -970,15 +1050,14 @@ namespace GridKit
        *          do not use it during residual evaluation.
        */
       template <typename scalar_type, typename index_type>
-      bool Repca<scalar_type, index_type>::invertClamp(ScalarT output, RealT lower, RealT upper, ScalarT& input) const
+      bool Repca<scalar_type, index_type>::invertClamp(
+        ScalarT output, RealT lower, RealT upper, ScalarT& input
+      ) const
       {
         const RealT value = static_cast<RealT>(output);
 
-        if (!std::isfinite(value)
-            || !std::isfinite(lower)
-            || !std::isfinite(upper)
-            || lower > upper
-            || value < lower
+        if (!std::isfinite(value) || !std::isfinite(lower)
+            || !std::isfinite(upper) || lower > upper || value < lower
             || value > upper)
         {
           return false;
@@ -1007,9 +1086,10 @@ namespace GridKit
         const RealT mu                    = Math::MU<RealT>;
         const RealT scaled_lower_distance = mu * distance_from_lower;
         const RealT scaled_upper_distance = mu * distance_from_upper;
-        const RealT log_lower             = logOneMinusExp(scaled_lower_distance);
-        const RealT log_upper             = logOneMinusExp(scaled_upper_distance);
-        const RealT correction            = (scaled_lower_distance + log_lower - log_upper) / mu;
+        const RealT log_lower = logOneMinusExp(scaled_lower_distance);
+        const RealT log_upper = logOneMinusExp(scaled_upper_distance);
+        const RealT correction =
+          (scaled_lower_distance + log_lower - log_upper) / mu;
 
         input = static_cast<ScalarT>(lower + correction);
         return std::isfinite(static_cast<RealT>(input));
@@ -1027,14 +1107,14 @@ namespace GridKit
        *          do not use it during residual evaluation.
        */
       template <typename scalar_type, typename index_type>
-      bool Repca<scalar_type, index_type>::invertDeadband(ScalarT output, RealT lower, RealT upper, ScalarT& input) const
+      bool Repca<scalar_type, index_type>::invertDeadband(
+        ScalarT output, RealT lower, RealT upper, ScalarT& input
+      ) const
       {
         const RealT value = static_cast<RealT>(output);
 
-        if (!std::isfinite(value)
-            || !std::isfinite(lower)
-            || !std::isfinite(upper)
-            || lower > upper)
+        if (!std::isfinite(value) || !std::isfinite(lower)
+            || !std::isfinite(upper) || lower > upper)
         {
           return false;
         }
@@ -1059,8 +1139,7 @@ namespace GridKit
 
         const RealT lower_output = Math::deadband2(lower_input, lower, upper);
         const RealT upper_output = Math::deadband2(upper_input, lower, upper);
-        if (!std::isfinite(lower_output)
-            || !std::isfinite(upper_output)
+        if (!std::isfinite(lower_output) || !std::isfinite(upper_output)
             || lower_output - value > INITIALIZATION_TOLERANCE
             || value - upper_output > INITIALIZATION_TOLERANCE)
         {
@@ -1069,7 +1148,8 @@ namespace GridKit
 
         for (std::size_t iteration = 0; iteration < 128; ++iteration)
         {
-          const RealT mid = lower_input + HALF<RealT> * (upper_input - lower_input);
+          const RealT mid =
+            lower_input + HALF<RealT> * (upper_input - lower_input);
           if (Math::deadband2(mid, lower, upper) < value)
           {
             lower_input = mid;
@@ -1080,8 +1160,9 @@ namespace GridKit
           }
         }
 
-        const RealT result = lower_input + HALF<RealT> * (upper_input - lower_input);
-        input              = static_cast<ScalarT>(result);
+        const RealT result =
+          lower_input + HALF<RealT> * (upper_input - lower_input);
+        input = static_cast<ScalarT>(result);
         return std::isfinite(result)
                && std::abs(Math::deadband2(result, lower, upper) - value)
                     <= INITIALIZATION_TOLERANCE;
@@ -1098,8 +1179,9 @@ namespace GridKit
        * @return Numerically stable value of log(1 - exp(-x)).
        */
       template <typename scalar_type, typename index_type>
-      typename Repca<scalar_type, index_type>::RealT
-      Repca<scalar_type, index_type>::logOneMinusExp(RealT x)
+      typename Repca<scalar_type, index_type>::RealT Repca<
+        scalar_type,
+        index_type>::logOneMinusExp(RealT x)
       {
         static constexpr auto log_two = std::numbers::ln2_v<RealT>;
 

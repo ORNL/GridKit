@@ -27,14 +27,18 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    Component<scalar_type, index_type>::Component(std::type_identity<ModelT>, std::string id)
-      : id_(std::move(id)),
-        size_(internalSize<ModelT>())
+    Component<scalar_type, index_type>::Component(
+      std::type_identity<ModelT>, std::string id
+    )
+      : id_(std::move(id)), size_(internalSize<ModelT>())
     {
       tag_.assign(size_.constraints, false);
       for (IdxT port = 0; port < ModelT::NUM_PORT_VARIABLES.size(); ++port)
       {
-        ports_.push_back({{ModelT::NUM_PORT_VARIABLES[port], ModelT::NUM_PORT_CONSTRAINTS[port]}});
+        ports_.push_back(
+          {{ModelT::NUM_PORT_VARIABLES[port], ModelT::NUM_PORT_CONSTRAINTS[port]
+          }}
+        );
       }
 
       constexpr Block local = localSize<ModelT>();
@@ -51,7 +55,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Component<scalar_type, index_type>::connect(IdxT port, Component& component, const Block& offset)
+    int Component<scalar_type, index_type>::connect(
+      IdxT port, Component& component, const Block& offset
+    )
     {
       if (bound_ || port >= ports_.size())
       {
@@ -95,29 +101,40 @@ namespace GridKit
       return 0;
     }
 
-    /// Copy the internal variables, then the variables each port reads from its component, into `x`
+    /// Copy the internal variables, then the variables each port reads from its
+    /// component, into `x`
     template <typename scalar_type, typename index_type>
     void Component<scalar_type, index_type>::gather(ScalarT* x) const
     {
       x = std::copy_n(x_.getData(), size_.variables, x);
       for (const Port& port : ports_)
       {
-        x = std::copy_n(port.component->x_.getData() + port.offset.variables, port.size.variables, x);
+        x = std::copy_n(
+          port.component->x_.getData() + port.offset.variables,
+          port.size.variables,
+          x
+        );
       }
     }
 
     /// Multipliers of the internal, then each port's constraints
     template <typename scalar_type, typename index_type>
-    void Component<scalar_type, index_type>::gatherMultipliers(RealT* lambda) const
+    void Component<scalar_type, index_type>::gatherMultipliers(RealT* lambda
+    ) const
     {
       lambda = std::copy_n(lambda_.getData(), size_.constraints, lambda);
       for (const Port& port : ports_)
       {
-        lambda = std::copy_n(port.component->lambda_.getData() + port.offset.constraints, port.size.constraints, lambda);
+        lambda = std::copy_n(
+          port.component->lambda_.getData() + port.offset.constraints,
+          port.size.constraints,
+          lambda
+        );
       }
     }
 
-    /// Global column of each local variable and row of each local constraint contribution
+    /// Global column of each local variable and row of each local constraint
+    /// contribution
     template <typename scalar_type, typename index_type>
     void Component<scalar_type, index_type>::setIndices()
     {
@@ -129,8 +146,16 @@ namespace GridKit
       rows    += size_.constraints;
       for (const Port& port : ports_)
       {
-        std::iota(columns, columns + port.size.variables, port.component->offset_.variables + port.offset.variables);
-        std::iota(rows, rows + port.size.constraints, port.component->offset_.constraints + port.offset.constraints);
+        std::iota(
+          columns,
+          columns + port.size.variables,
+          port.component->offset_.variables + port.offset.variables
+        );
+        std::iota(
+          rows,
+          rows + port.size.constraints,
+          port.component->offset_.constraints + port.offset.constraints
+        );
         columns += port.size.variables;
         rows    += port.size.constraints;
       }
@@ -138,7 +163,9 @@ namespace GridKit
 
     /// Add the local gradient to the system gradient
     template <typename scalar_type, typename index_type>
-    void Component<scalar_type, index_type>::scatterGradient(const RealT* gradient)
+    void Component<scalar_type, index_type>::scatterGradient(
+      const RealT* gradient
+    )
     {
       RealT* own = gradient_.getData();
       for (IdxT i = 0; i < size_.variables; ++i)
@@ -147,7 +174,8 @@ namespace GridKit
       }
       for (const Port& port : ports_)
       {
-        RealT* target = port.component->gradient_.getData() + port.offset.variables;
+        RealT* target =
+          port.component->gradient_.getData() + port.offset.variables;
         for (IdxT i = 0; i < port.size.variables; ++i)
         {
           target[i] += *gradient++;
@@ -157,7 +185,8 @@ namespace GridKit
 
     /// Add the local contributions to the system constraints
     template <typename scalar_type, typename index_type>
-    void Component<scalar_type, index_type>::scatterConstraints(const ScalarT* g)
+    void Component<scalar_type, index_type>::scatterConstraints(const ScalarT* g
+    )
     {
       ScalarT* own = g_.getData();
       for (IdxT i = 0; i < size_.constraints; ++i)
@@ -166,7 +195,8 @@ namespace GridKit
       }
       for (const Port& port : ports_)
       {
-        ScalarT* target = port.component->g_.getData() + port.offset.constraints;
+        ScalarT* target =
+          port.component->g_.getData() + port.offset.constraints;
         for (IdxT i = 0; i < port.size.constraints; ++i)
         {
           target[i] += *g++;

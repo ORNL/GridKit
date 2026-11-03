@@ -242,12 +242,10 @@ namespace GridKit
             evaluate(values, residual);
             if (!converged())
             {
-              throw std::runtime_error(
-                std::format(
-                  "co-simulation interface did not converge at t={}",
-                  simulation_->time()
-                )
-              );
+              throw std::runtime_error(std::format(
+                "co-simulation interface did not converge at t={}",
+                simulation_->time()
+              ));
             }
           }
         }

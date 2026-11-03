@@ -110,7 +110,12 @@ namespace GridKit
       {
         for (auto v : variables_)
         {
-          entries.emplace_back(device_class_, id_, enum_name(v), f_[static_cast<size_t>(enum_integer(v))]);
+          entries.emplace_back(
+            device_class_,
+            id_,
+            enum_name(v),
+            f_[static_cast<size_t>(enum_integer(v))]
+          );
         }
       }
 

@@ -15,15 +15,16 @@ namespace GridKit
      * Calls default ModelEvaluatorImpl constructor.
      *
      * This is the Medium distance form with the use of the admittance matrix.
-     * Since the line is of medium length then there is no real part for shunt admittance
+     * Since the line is of medium length then there is no real part for shunt
+     * admittance
      * @todo needs to used in a model
      * @todo test for correctness
      */
     template <class ScalarT, typename IdxT>
-    TransmissionLine<ScalarT, IdxT>::TransmissionLine(IdxT id, RealT R, RealT X, RealT B)
-      : R_(R),
-        X_(X),
-        B_(B)
+    TransmissionLine<ScalarT, IdxT>::TransmissionLine(
+      IdxT id, RealT R, RealT X, RealT B
+    )
+      : R_(R), X_(X), B_(B)
     {
       // internals [Iret1, Iimt1, Iret2, Iimt2]
       // externals [Vre11, Vim11, Vre12, Vim12, Vre21, Vim21, Vre22, Vim22]
@@ -100,7 +101,8 @@ namespace GridKit
      *  Ire = Dre Vre - Dim Vim
      *  Iim = Dre Vim + Dim Vre
      *
-     * To express this for Modified Nodal Analysis the Voltages of the admittance matrix are put into voltage drops
+     * To express this for Modified Nodal Analysis the Voltages of the
+     * admittance matrix are put into voltage drops
      */
     template <class ScalarT, typename IdxT>
     int TransmissionLine<ScalarT, IdxT>::evaluateInternalResidual()
@@ -113,12 +115,16 @@ namespace GridKit
 
       // Internal variables
       // row 1
-      f_int_[0] = YReMat_ * (V1re - V2re) - (YImMatDi_ * V1im + YImMatOff_ * V2im) - y_int_[0];
-      f_int_[1] = YReMat_ * (V1im - V2im) + (YImMatDi_ * V1re + YImMatOff_ * V2re) - y_int_[1];
+      f_int_[0] = YReMat_ * (V1re - V2re)
+                  - (YImMatDi_ * V1im + YImMatOff_ * V2im) - y_int_[0];
+      f_int_[1] = YReMat_ * (V1im - V2im)
+                  + (YImMatDi_ * V1re + YImMatOff_ * V2re) - y_int_[1];
 
       // row2
-      f_int_[2] = YReMat_ * (V2re - V1re) - (YImMatOff_ * V1im + YImMatDi_ * V2im) - y_int_[2];
-      f_int_[3] = YReMat_ * (V2im - V1im) + (YImMatOff_ * V1re + YImMatDi_ * V2re) - y_int_[3];
+      f_int_[2] = YReMat_ * (V2re - V1re)
+                  - (YImMatOff_ * V1im + YImMatDi_ * V2im) - y_int_[2];
+      f_int_[3] = YReMat_ * (V2im - V1im)
+                  + (YImMatOff_ * V1re + YImMatDi_ * V2re) - y_int_[3];
 
       return 0;
     }
@@ -157,25 +163,63 @@ namespace GridKit
       // Create dF/dy
       std::vector<IdxT>  rtemp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
       std::vector<IdxT>  ctemp{8, 9, 10, 11, 8, 9, 10, 11, 8, 9, 10, 11};
-      std::vector<RealT> vals{1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0};
+      std::vector<RealT> vals{
+        1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0
+      };
       this->setJacValues(rtemp, ctemp, vals);
 
       std::vector<IdxT> ccord{0, 1, 2, 3, 4, 5, 6, 7};
 
       std::vector<IdxT> rcord(ccord.size(), 8);
-      vals = {YReMat_, -YImMatDi_, -YReMat_, -YImMatOff_, -YReMat_, YImMatDi_, YReMat_, YImMatOff_};
+      vals = {
+        YReMat_,
+        -YImMatDi_,
+        -YReMat_,
+        -YImMatOff_,
+        -YReMat_,
+        YImMatDi_,
+        YReMat_,
+        YImMatOff_
+      };
       this->setJacValues(rtemp, ctemp, vals);
 
       std::fill(rcord.begin(), rcord.end(), 9);
-      vals = {YImMatDi_, YReMat_, YImMatOff_, -YReMat_, -YImMatDi_, -YReMat_, -YImMatOff_, YReMat_};
+      vals = {
+        YImMatDi_,
+        YReMat_,
+        YImMatOff_,
+        -YReMat_,
+        -YImMatDi_,
+        -YReMat_,
+        -YImMatOff_,
+        YReMat_
+      };
       this->setJacValues(rtemp, ctemp, vals);
 
       std::fill(rcord.begin(), rcord.end(), 10);
-      vals = {-YReMat_, -YImMatDi_, YReMat_, -YImMatOff_, YReMat_, YImMatDi_, -YReMat_, YImMatOff_};
+      vals = {
+        -YReMat_,
+        -YImMatDi_,
+        YReMat_,
+        -YImMatOff_,
+        YReMat_,
+        YImMatDi_,
+        -YReMat_,
+        YImMatOff_
+      };
       this->setJacValues(rtemp, ctemp, vals);
 
       std::fill(rcord.begin(), rcord.end(), 11);
-      vals = {YImMatDi_, -YReMat_, YImMatOff_, YReMat_, -YImMatDi_, YReMat_, -YImMatOff_, -YReMat_};
+      vals = {
+        YImMatDi_,
+        -YReMat_,
+        YImMatOff_,
+        YReMat_,
+        -YImMatDi_,
+        YReMat_,
+        -YImMatOff_,
+        -YReMat_
+      };
       this->setJacValues(rtemp, ctemp, vals);
 
       return 0;

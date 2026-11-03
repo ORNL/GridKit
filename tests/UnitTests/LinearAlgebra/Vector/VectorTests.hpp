@@ -36,7 +36,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Test vector constructor with specified size and number of vectors.
+       * @brief Test vector constructor with specified size and number of
+       * vectors.
        *
        * @param[in] N Number of elements in the vector.
        * @param[in] k Number of vectors in the multivector.
@@ -65,8 +66,8 @@ namespace GridKit
 
         if (x.getNumVectors() != k)
         {
-          std::cout << "The number of vectors in the multivector is " << x.getNumVectors()
-                    << ", expected: " << k << "\n";
+          std::cout << "The number of vectors in the multivector is "
+                    << x.getNumVectors() << ", expected: " << k << "\n";
           status *= false;
         }
 
@@ -74,7 +75,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Test vector constructor with specified size and default number of vectors (1).
+       * @brief Test vector constructor with specified size and default number
+       * of vectors (1).
        *
        * @param[in] N Number of elements in the vector.
        * @return TestOutcome indicating success or failure of the test.
@@ -103,8 +105,8 @@ namespace GridKit
 
         if (x.getSize() != new_N)
         {
-          std::cout << "The size of the vector after resizing is " << x.getSize()
-                    << ", expected: " << new_N << "\n";
+          std::cout << "The size of the vector after resizing is "
+                    << x.getSize() << ", expected: " << new_N << "\n";
           status *= false;
         }
 
@@ -112,7 +114,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Test that resizing an empty vector allocates initialized HOST data.
+       * @brief Test that resizing an empty vector allocates initialized HOST
+       * data.
        */
       TestOutcome resizeEmpty(IdxT N)
       {
@@ -166,8 +169,8 @@ namespace GridKit
             if (!isEqual(x_data[i], data[i]))
             {
               std::cout << "The data in the vector is incorrect at index " << i
-                        << ", expected: " << data[i]
-                        << ", got: " << x_data[i] << "\n";
+                        << ", expected: " << data[i] << ", got: " << x_data[i]
+                        << "\n";
               status *= false;
               break;
             }
@@ -207,14 +210,15 @@ namespace GridKit
         // Owned vector storage must not be replaced by external storage.
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that owned vector storage cannot be replaced by external storage. "
+        Log::misc() << "Testing that owned vector storage cannot be replaced "
+                       "by external storage. "
                     << "Logged errors are expected.\n";
         Log::setVerbosity(previous_verbosity);
         Vector<ScalarT, IdxT> owned(N);
         status                 *= owned.allocate(memory::HOST) == 0;
         auto* const owned_data  = owned.getData(memory::HOST);
-        status                 *= owned.setData(initial_storage, N, memory::HOST) != 0;
-        status                 *= owned.getData(memory::HOST) == owned_data;
+        status *= owned.setData(initial_storage, N, memory::HOST) != 0;
+        status *= owned.getData(memory::HOST) == owned_data;
 
         delete[] initial_storage;
         delete[] replacement_storage;
@@ -224,10 +228,10 @@ namespace GridKit
       /**
        * @brief Test copying data between vector-array and vector-vector.
        *
-       * This creates an array, copies it to a vector in the current memory space, then
-       * copies it to another vector in the same memory space, and finally back to a third on the
-       * HOST. Then, it verifies the content of the final vector. This test only passes if all
-       * copies are successful.
+       * This creates an array, copies it to a vector in the current memory
+       * space, then copies it to another vector in the same memory space, and
+       * finally back to a third on the HOST. Then, it verifies the content of
+       * the final vector. This test only passes if all copies are successful.
        *
        * @param[in] N Number of elements in the vector.
        * @return TestOutcome indicating success or failure of the test.
@@ -271,9 +275,9 @@ namespace GridKit
           {
             if (!isEqual(z_data[i], data[i]))
             {
-              std::cout << "The data in the copied vector is incorrect at index " << i
-                        << ", expected: " << data[i]
-                        << ", got: " << z_data[i] << "\n";
+              std::cout
+                << "The data in the copied vector is incorrect at index " << i
+                << ", expected: " << data[i] << ", got: " << z_data[i] << "\n";
               status *= false;
               break;
             }
@@ -287,9 +291,9 @@ namespace GridKit
       /**
        * @brief Test copying data from vector to an array.
        *
-       * This creates a vector, copies data to it, and then copies the data to an array
-       * in the current memory space. Finally, it uses the MemoryManager to copy the data
-       * to HOST for verification.
+       * This creates a vector, copies data to it, and then copies the data to
+       * an array in the current memory space. Finally, it uses the
+       * MemoryManager to copy the data to HOST for verification.
        *
        * @param[in] N Number of elements in the vector.
        * @return TestOutcome indicating success or failure of the test.
@@ -332,9 +336,9 @@ namespace GridKit
         {
           if (!isEqual(dest_h[i], data[i]))
           {
-            std::cout << "The data in the destination array is incorrect at index " << i
-                      << ", expected: " << data[i]
-                      << ", got: " << dest_h[i] << "\n";
+            std::cout
+              << "The data in the destination array is incorrect at index " << i
+              << ", expected: " << data[i] << ", got: " << dest_h[i] << "\n";
             status *= false;
             break;
           }
@@ -451,7 +455,8 @@ namespace GridKit
           {
             std::cout << std::setprecision(16);
             success = false;
-            std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+            std::cout << "Solution vector element x[" << i
+                      << "] = " << x.getData(memory::HOST)[i]
                       << ", expected: " << answer << "\n";
             break;
           }

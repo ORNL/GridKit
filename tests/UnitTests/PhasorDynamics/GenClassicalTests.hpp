@@ -31,9 +31,10 @@ namespace GridKit
     class GenClassicalTests
     {
     private:
-      using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-      using GenClassicalDataT       = PhasorDynamics::GenClassicalData<RealT, IdxT>;
-      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using GenClassicalDataT = PhasorDynamics::GenClassicalData<RealT, IdxT>;
+      static constexpr ScalarT tol_ =
+        10 * std::numeric_limits<ScalarT>::epsilon();
 
       static GenClassicalDataT makeGenClassicalData()
       {
@@ -118,16 +119,15 @@ namespace GridKit
         {
           if (!isEqual(y[i], var_answer[i], tol_))
           {
-            std::cout << "Incorrect result: "
-                      << y[i] << " != " << var_answer[i] << "\n";
+            std::cout << "Incorrect result: " << y[i] << " != " << var_answer[i]
+                      << "\n";
             success = false;
             break;
           }
 
           if (!isEqual(yp[i], 0.0, tol_))
           {
-            std::cout << "Incorrect result: "
-                      << yp[i] << " != 0\n";
+            std::cout << "Incorrect result: " << yp[i] << " != 0\n";
             success = false;
             break;
           }
@@ -143,8 +143,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
-        auto                                        data = makeGenClassicalData();
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        auto                               data = makeGenClassicalData();
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
 
         bus.allocate();
@@ -170,7 +170,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Checks initialized steady state with nonzero armature resistance.
+       * @brief Checks initialized steady state with nonzero armature
+       * resistance.
        */
       TestOutcome residual_nonzero_ra()
       {
@@ -218,8 +219,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
-        auto                                        data = makeGenClassicalData();
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        auto                               data = makeGenClassicalData();
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
 
         bus.allocate();
@@ -432,25 +433,32 @@ namespace GridKit
 
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian();
-        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian              = EnzymeJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          dependency_tracking_jacobian = DependencyTrackingJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          enzyme_jacobian = EnzymeJacobian();
 
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+          success *= (GridKit::Testing::isEqual(
+            dependency_tracking_jacobian[i], enzyme_jacobian[i], tol
+          ));
         }
 
         return success.report(__func__);
       }
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian()
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      DependencyTrackingJacobian()
       {
-        DependencyTracking::Variable                                     Vr1{1.0};
-        DependencyTracking::Variable                                     Vi1{1.0};
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>          bus(Vr1, Vi1);
-        auto                                                             data = makeGenClassicalData();
-        PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(&bus, data);
+        DependencyTracking::Variable                            Vr1{1.0};
+        DependencyTracking::Variable                            Vi1{1.0};
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus(Vr1, Vi1);
+        auto data = makeGenClassicalData();
+        PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(
+          &bus, data
+        );
 
         bus.allocate();
         gen.allocate();
@@ -472,7 +480,8 @@ namespace GridKit
         gen.evaluateJacobian();
         auto* model_jacobian = gen.getCsrJacobian();
         auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: GenClassical DependencyTracking Jacobian\n";
+        output_stream
+          << "Sparse Csr Matrix: GenClassical DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
@@ -480,10 +489,10 @@ namespace GridKit
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
       {
-        ScalarT                                     Vr1{1.0};
-        ScalarT                                     Vi1{1.0};
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        auto                                        data = makeGenClassicalData();
+        ScalarT                            Vr1{1.0};
+        ScalarT                            Vi1{1.0};
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
+        auto                               data = makeGenClassicalData();
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
 
         bus.allocate();

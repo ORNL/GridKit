@@ -156,8 +156,7 @@ namespace GridKit
         Log::misc() << "Expect error while testing that unrecognized options "
                        "are rejected\n";
         Log::setVerbosity(previous_verbosity);
-        status *= throws<std::runtime_error>([&]()
-                                             { args.get("bad"); });
+        status *= throws<std::runtime_error>([&]() { args.get("bad"); });
 
         return status.report(__func__);
       }
@@ -242,8 +241,10 @@ namespace GridKit
         };
         TestStatus status{true};
         status *= argsAreBad(CommandLine{"app"});
-        status *= argsAreBad(CommandLine{"app", "a.solver.json", "b.solver.json"});
-        status *= argsAreBad(CommandLine{"app", "--solver-file", "a.solver.json"});
+        status *=
+          argsAreBad(CommandLine{"app", "a.solver.json", "b.solver.json"});
+        status *=
+          argsAreBad(CommandLine{"app", "--solver-file", "a.solver.json"});
         status *= argsAreBad(
           CommandLine{"app", "a.solver.json", "--one", "1", "--one", "2"}
         );
@@ -253,8 +254,10 @@ namespace GridKit
         status *= argsAreBad(
           CommandLine{"app", "a.solver.json", "--item", "1", "2", "--item", "3"}
         );
-        status *= argsAreBad(CommandLine{"app", "a.solver.json", "--item", "--flag"});
-        status *= argsAreBad(CommandLine{"app", "a.solver.json", "--flag", "--flag"});
+        status *=
+          argsAreBad(CommandLine{"app", "a.solver.json", "--item", "--flag"});
+        status *=
+          argsAreBad(CommandLine{"app", "a.solver.json", "--flag", "--flag"});
         status *= throws<std::runtime_error>(
           []
           {

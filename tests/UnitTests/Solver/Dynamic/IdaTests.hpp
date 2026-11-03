@@ -126,7 +126,8 @@ namespace GridKit
         return 0;
       }
 
-      void updateTime([[maybe_unused]] RealT t, [[maybe_unused]] RealT a) override
+      void updateTime([[maybe_unused]] RealT t, [[maybe_unused]] RealT a)
+        override
       {
       }
 
@@ -230,7 +231,8 @@ namespace GridKit
         return f_;
       }
 
-      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* getCsrJacobian() const override
+      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* getCsrJacobian(
+      ) const override
       {
         return csr_jac_;
       }
@@ -401,9 +403,12 @@ namespace GridKit
         auto* abs_tol = abs_tol_.getData();
         auto* f       = f_.getData();
 
-        y[0]       = 0.0;
-        y[1]       = 10.0;
-        yp[0]      = steady_state_ ? 0.0 : 2.0; // Purposefully inconsistent guess for non-steady-state case.
+        y[0] = 0.0;
+        y[1] = 10.0;
+        yp[0] =
+          steady_state_
+            ? 0.0
+            : 2.0; // Purposefully inconsistent guess for non-steady-state case.
         yp[1]      = 0.0;
         tag_       = {true, false};
         abs_tol[0] = 0.0;
@@ -456,10 +461,7 @@ namespace GridKit
         ida.configureSimulation();
 
         unsigned observed_steps = 0;
-        auto     output_cb      = [&]([[maybe_unused]] double t)
-        {
-          observed_steps++;
-        };
+        auto output_cb = [&]([[maybe_unused]] double t) { observed_steps++; };
 
         ida.initializeSimulation(0.0, false);
         ida.runSimulation(1.0, 1.0 / n_steps, output_cb);
@@ -583,16 +585,21 @@ namespace GridKit
 
         using RealT = typename ScalarTraits<ScalarT>::RealT;
 
-        // If the tolerances are too tight, a finite difference approximation to the Jacobian
-        // cannot be generated, and initialization will fail with bad initial guesses.
-        static constexpr auto tol = 100.0 * std::numeric_limits<RealT>::epsilon();
+        // If the tolerances are too tight, a finite difference approximation to
+        // the Jacobian cannot be generated, and initialization will fail with
+        // bad initial guesses.
+        static constexpr auto tol =
+          100.0 * std::numeric_limits<RealT>::epsilon();
 
-        // IdaConsistentICType::YA_YDP with non-steady-state initial guess for the derivatives
+        // IdaConsistentICType::YA_YDP with non-steady-state initial guess for
+        // the derivatives
         {
           Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model(false);
 
           Ida<ScalarT, IdxT> ida(&model);
-          ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::YA_YDP);
+          ida.setConsistentICType(
+            AnalysisManager::Sundials::IdaConsistentICType::YA_YDP
+          );
           ida.setTolerance(tol);
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
@@ -603,12 +610,15 @@ namespace GridKit
           success *= isEqual(model.y().getData()[1], 0.0, tol);
         }
 
-        // IdaConsistentICType::Y with steady-state initial guess for the derivatives
+        // IdaConsistentICType::Y with steady-state initial guess for the
+        // derivatives
         {
           Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model(true);
 
           Ida<ScalarT, IdxT> ida(&model);
-          ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::Y);
+          ida.setConsistentICType(
+            AnalysisManager::Sundials::IdaConsistentICType::Y
+          );
           ida.setTolerance(tol);
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
@@ -623,7 +633,9 @@ namespace GridKit
           Model::NullEvaluator<ScalarT, IdxT> model;
 
           Ida<ScalarT, IdxT> ida(&model);
-          ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::Y);
+          ida.setConsistentICType(
+            AnalysisManager::Sundials::IdaConsistentICType::Y
+          );
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 

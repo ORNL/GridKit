@@ -59,16 +59,25 @@ namespace GridKit
           static_cast<ScalarT>(1.0), static_cast<ScalarT>(0.0)
         );
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd;
-        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
+        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(
+          &bus, PhasorDynamics::GenrouData<RealT, IdxT>{}
+        );
 
         PhasorDynamics::Exciter::Esdc1aData<RealT, IdxT> exciter_data;
         exciter_data.parameters[ExciterParams::Tr] = static_cast<RealT>(0.02);
         exciter_data.parameters[ExciterParams::Tb] = static_cast<RealT>(0.5);
 
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(&bus, exciter_data);
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(
+          &bus, exciter_data
+        );
 
-        machine.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::efd>().connect(&efd);
-        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&efd);
+        machine.getPorts()
+          .in.template port<PhasorDynamics::GenrouSignalInputs::efd>()
+          .connect(&efd);
+        exciter.getPorts()
+          .out
+          .template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>()
+          .connect(&efd);
 
         system.addBus(&bus);
         system.addComponent(&machine);
@@ -107,16 +116,24 @@ namespace GridKit
           static_cast<ScalarT>(1.0), static_cast<ScalarT>(0.0)
         );
         PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
-        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
+        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(
+          &bus, PhasorDynamics::GenrouData<RealT, IdxT>{}
+        );
 
         PhasorDynamics::Governor::HygovData<RealT, IdxT> governor_data;
-        governor_data.parameters[GovernorParams::Trate] = static_cast<RealT>(100.0);
-        governor_data.parameters[GovernorParams::Tnp]   = static_cast<RealT>(1.0);
+        governor_data.parameters[GovernorParams::Trate] =
+          static_cast<RealT>(100.0);
+        governor_data.parameters[GovernorParams::Tnp] = static_cast<RealT>(1.0);
 
         PhasorDynamics::Governor::Hygov<ScalarT, IdxT> governor(governor_data);
 
-        machine.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::pmech>().connect(&pmech);
-        governor.getPorts().out.template port<PhasorDynamics::Governor::HygovSignalOutputs::pmech>().connect(&pmech);
+        machine.getPorts()
+          .in.template port<PhasorDynamics::GenrouSignalInputs::pmech>()
+          .connect(&pmech);
+        governor.getPorts()
+          .out
+          .template port<PhasorDynamics::Governor::HygovSignalOutputs::pmech>()
+          .connect(&pmech);
 
         system.addBus(&bus);
         system.addComponent(&machine);
@@ -155,16 +172,23 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd;
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> machine_data;
-        PhasorDynamics::GenClassical<ScalarT, IdxT>   machine(&bus, machine_data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> machine(&bus, machine_data);
 
         PhasorDynamics::Exciter::Esdc1aData<RealT, IdxT> exciter_data;
         exciter_data.parameters[ExciterParams::Tr] = static_cast<RealT>(0.02);
         exciter_data.parameters[ExciterParams::Tb] = static_cast<RealT>(0.5);
 
-        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(&bus, exciter_data);
+        PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(
+          &bus, exciter_data
+        );
 
-        machine.getPorts().in.template port<PhasorDynamics::GenClassicalSignalInputs::efd>().connect(&efd);
-        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&efd);
+        machine.getPorts()
+          .in.template port<PhasorDynamics::GenClassicalSignalInputs::efd>()
+          .connect(&efd);
+        exciter.getPorts()
+          .out
+          .template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>()
+          .connect(&efd);
 
         system.addBus(&bus);
         system.addComponent(&machine);
@@ -203,16 +227,22 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> machine_data;
-        PhasorDynamics::GenClassical<ScalarT, IdxT>   machine(&bus, machine_data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> machine(&bus, machine_data);
 
         PhasorDynamics::Governor::HygovData<RealT, IdxT> governor_data;
-        governor_data.parameters[GovernorParams::Trate] = static_cast<RealT>(100.0);
-        governor_data.parameters[GovernorParams::Tnp]   = static_cast<RealT>(1.0);
+        governor_data.parameters[GovernorParams::Trate] =
+          static_cast<RealT>(100.0);
+        governor_data.parameters[GovernorParams::Tnp] = static_cast<RealT>(1.0);
 
         PhasorDynamics::Governor::Hygov<ScalarT, IdxT> governor(governor_data);
 
-        machine.getPorts().in.template port<PhasorDynamics::GenClassicalSignalInputs::pmech>().connect(&pmech);
-        governor.getPorts().out.template port<PhasorDynamics::Governor::HygovSignalOutputs::pmech>().connect(&pmech);
+        machine.getPorts()
+          .in.template port<PhasorDynamics::GenClassicalSignalInputs::pmech>()
+          .connect(&pmech);
+        governor.getPorts()
+          .out
+          .template port<PhasorDynamics::Governor::HygovSignalOutputs::pmech>()
+          .connect(&pmech);
 
         system.addBus(&bus);
         system.addComponent(&machine);
@@ -241,8 +271,9 @@ namespace GridKit
       TestOutcome regcaRepca()
       {
         using ConverterParams = PhasorDynamics::Converter::RegcaParameters;
-        using PlantInternal   = PhasorDynamics::Controller::RepcaInternalVariables;
-        using PlantParams     = PhasorDynamics::Controller::RepcaParameters;
+        using PlantInternal =
+          PhasorDynamics::Controller::RepcaInternalVariables;
+        using PlantParams = PhasorDynamics::Controller::RepcaParameters;
 
         TestStatus success = true;
 
@@ -256,37 +287,77 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> q;
 
         PhasorDynamics::Converter::RegcaData<RealT, IdxT> converter_data;
-        converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.4);
-        converter_data.parameters[ConverterParams::q0]     = static_cast<RealT>(0.1);
-        converter_data.parameters[ConverterParams::mva]    = static_cast<RealT>(100.0);
-        converter_data.parameters[ConverterParams::Tg]     = static_cast<RealT>(0.02);
-        converter_data.parameters[ConverterParams::TM]     = static_cast<RealT>(0.02);
-        converter_data.parameters[ConverterParams::Rqmax]  = static_cast<RealT>(999.0);
-        converter_data.parameters[ConverterParams::Rqmin]  = static_cast<RealT>(-999.0);
-        converter_data.parameters[ConverterParams::Rpmax]  = static_cast<RealT>(999.0);
-        converter_data.parameters[ConverterParams::sL]     = true;
-        converter_data.parameters[ConverterParams::IL1]    = static_cast<RealT>(1.1);
-        converter_data.parameters[ConverterParams::VL0]    = static_cast<RealT>(0.4);
-        converter_data.parameters[ConverterParams::VL1]    = static_cast<RealT>(0.9);
-        converter_data.parameters[ConverterParams::VA0]    = static_cast<RealT>(0.4);
-        converter_data.parameters[ConverterParams::VA1]    = static_cast<RealT>(0.9);
-        converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.2);
+        converter_data.parameters[ConverterParams::p0] =
+          static_cast<RealT>(0.4);
+        converter_data.parameters[ConverterParams::q0] =
+          static_cast<RealT>(0.1);
+        converter_data.parameters[ConverterParams::mva] =
+          static_cast<RealT>(100.0);
+        converter_data.parameters[ConverterParams::Tg] =
+          static_cast<RealT>(0.02);
+        converter_data.parameters[ConverterParams::TM] =
+          static_cast<RealT>(0.02);
+        converter_data.parameters[ConverterParams::Rqmax] =
+          static_cast<RealT>(999.0);
+        converter_data.parameters[ConverterParams::Rqmin] =
+          static_cast<RealT>(-999.0);
+        converter_data.parameters[ConverterParams::Rpmax] =
+          static_cast<RealT>(999.0);
+        converter_data.parameters[ConverterParams::sL] = true;
+        converter_data.parameters[ConverterParams::IL1] =
+          static_cast<RealT>(1.1);
+        converter_data.parameters[ConverterParams::VL0] =
+          static_cast<RealT>(0.4);
+        converter_data.parameters[ConverterParams::VL1] =
+          static_cast<RealT>(0.9);
+        converter_data.parameters[ConverterParams::VA0] =
+          static_cast<RealT>(0.4);
+        converter_data.parameters[ConverterParams::VA1] =
+          static_cast<RealT>(0.9);
+        converter_data.parameters[ConverterParams::Vhvmax] =
+          static_cast<RealT>(1.2);
 
         PhasorDynamics::Controller::RepcaData<RealT, IdxT> plant_data;
         plant_data.parameters[PlantParams::mva] = static_cast<RealT>(50.0);
         plant_data.parameters[PlantParams::Tp]  = static_cast<RealT>(0.05);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT>  converter(&bus, converter_data);
-        PhasorDynamics::Controller::Repca<ScalarT, IdxT> plant(&bus, plant_data);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(
+          &bus, converter_data
+        );
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> plant(
+          &bus, plant_data
+        );
 
-        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ir>().connect(&ir);
-        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ii>().connect(&ii);
-        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::pbranch>().connect(&p);
-        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::qbranch>().connect(&q);
-        plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::ir>().connect(&ir);
-        plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::ii>().connect(&ii);
-        plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::p>().connect(&p);
-        plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::q>().connect(&q);
+        converter.getPorts()
+          .out
+          .template port<PhasorDynamics::Converter::RegcaSignalOutputs::ir>()
+          .connect(&ir);
+        converter.getPorts()
+          .out
+          .template port<PhasorDynamics::Converter::RegcaSignalOutputs::ii>()
+          .connect(&ii);
+        converter.getPorts()
+          .out
+          .template port<
+            PhasorDynamics::Converter::RegcaSignalOutputs::pbranch>()
+          .connect(&p);
+        converter.getPorts()
+          .out
+          .template port<
+            PhasorDynamics::Converter::RegcaSignalOutputs::qbranch>()
+          .connect(&q);
+        plant.getPorts()
+          .in.template port<PhasorDynamics::Controller::RepcaSignalInputs::ir>()
+          .connect(&ir);
+        plant.getPorts()
+          .in.template port<PhasorDynamics::Controller::RepcaSignalInputs::ii>()
+          .connect(&ii);
+        plant.getPorts()
+          .in.template port<PhasorDynamics::Controller::RepcaSignalInputs::p>()
+          .connect(&p);
+        plant.getPorts()
+          .in.template port<PhasorDynamics::Controller::RepcaSignalInputs::q>()
+          .connect(&q);
 
         system.addBus(&bus);
         system.addComponent(&converter);
@@ -350,63 +421,110 @@ namespace GridKit
         // The operating point is exactly representable, so the pair rests at
         // an exact steady state.
         PhasorDynamics::Converter::RegcaData<RealT, IdxT> converter_data;
-        converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.375);
-        converter_data.parameters[ConverterParams::q0]     = static_cast<RealT>(0.0625);
-        converter_data.parameters[ConverterParams::mva]    = static_cast<RealT>(100.0);
-        converter_data.parameters[ConverterParams::Tg]     = static_cast<RealT>(0.02);
-        converter_data.parameters[ConverterParams::TM]     = static_cast<RealT>(0.02);
-        converter_data.parameters[ConverterParams::Rqmax]  = static_cast<RealT>(999.0);
-        converter_data.parameters[ConverterParams::Rqmin]  = static_cast<RealT>(-999.0);
-        converter_data.parameters[ConverterParams::Rpmax]  = static_cast<RealT>(999.0);
-        converter_data.parameters[ConverterParams::sL]     = true;
-        converter_data.parameters[ConverterParams::IL1]    = static_cast<RealT>(1.1);
-        converter_data.parameters[ConverterParams::VL0]    = static_cast<RealT>(0.25);
-        converter_data.parameters[ConverterParams::VL1]    = static_cast<RealT>(0.75);
-        converter_data.parameters[ConverterParams::VA0]    = static_cast<RealT>(0.25);
-        converter_data.parameters[ConverterParams::VA1]    = static_cast<RealT>(0.75);
-        converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.5);
+        converter_data.parameters[ConverterParams::p0] =
+          static_cast<RealT>(0.375);
+        converter_data.parameters[ConverterParams::q0] =
+          static_cast<RealT>(0.0625);
+        converter_data.parameters[ConverterParams::mva] =
+          static_cast<RealT>(100.0);
+        converter_data.parameters[ConverterParams::Tg] =
+          static_cast<RealT>(0.02);
+        converter_data.parameters[ConverterParams::TM] =
+          static_cast<RealT>(0.02);
+        converter_data.parameters[ConverterParams::Rqmax] =
+          static_cast<RealT>(999.0);
+        converter_data.parameters[ConverterParams::Rqmin] =
+          static_cast<RealT>(-999.0);
+        converter_data.parameters[ConverterParams::Rpmax] =
+          static_cast<RealT>(999.0);
+        converter_data.parameters[ConverterParams::sL] = true;
+        converter_data.parameters[ConverterParams::IL1] =
+          static_cast<RealT>(1.1);
+        converter_data.parameters[ConverterParams::VL0] =
+          static_cast<RealT>(0.25);
+        converter_data.parameters[ConverterParams::VL1] =
+          static_cast<RealT>(0.75);
+        converter_data.parameters[ConverterParams::VA0] =
+          static_cast<RealT>(0.25);
+        converter_data.parameters[ConverterParams::VA1] =
+          static_cast<RealT>(0.75);
+        converter_data.parameters[ConverterParams::Vhvmax] =
+          static_cast<RealT>(1.5);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(&bus, converter_data);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(
+          &bus, converter_data
+        );
 
         PhasorDynamics::Controller::ReecbData<RealT, IdxT> controller_data;
-        controller_data.parameters[ControllerParams::mva]    = static_cast<RealT>(100.0);
-        controller_data.parameters[ControllerParams::Tp]     = static_cast<RealT>(0.02);
+        controller_data.parameters[ControllerParams::mva] =
+          static_cast<RealT>(100.0);
+        controller_data.parameters[ControllerParams::Tp] =
+          static_cast<RealT>(0.02);
         controller_data.parameters[ControllerParams::QFlag]  = true;
         controller_data.parameters[ControllerParams::VFlag]  = true;
         controller_data.parameters[ControllerParams::Pqflag] = true;
-        controller_data.parameters[ControllerParams::Imax]   = static_cast<RealT>(0.625);
-        controller_data.parameters[ControllerParams::Vmin]   = static_cast<RealT>(0.5);
-        controller_data.parameters[ControllerParams::Vmax]   = static_cast<RealT>(1.5);
+        controller_data.parameters[ControllerParams::Imax] =
+          static_cast<RealT>(0.625);
+        controller_data.parameters[ControllerParams::Vmin] =
+          static_cast<RealT>(0.5);
+        controller_data.parameters[ControllerParams::Vmax] =
+          static_cast<RealT>(1.5);
 
-        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> controller(&bus, controller_data);
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> controller(
+          &bus, controller_data
+        );
 
-        controller.getPorts().out.template port<PhasorDynamics::Controller::ReecbSignalOutputs::ipcmd>().connect(&ipcmd);
-        controller.getPorts().out.template port<PhasorDynamics::Controller::ReecbSignalOutputs::iqcmd>().connect(&iqcmd);
-        converter.getPorts().in.template port<PhasorDynamics::Converter::RegcaSignalInputs::ipcmd>().connect(&ipcmd);
-        converter.getPorts().in.template port<PhasorDynamics::Converter::RegcaSignalInputs::iqcmd>().connect(&iqcmd);
-        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::pbranch>().connect(&pe);
-        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::qbranch>().connect(&qgen);
-        controller.getPorts().in.template port<PhasorDynamics::Controller::ReecbSignalInputs::pe>().connect(&pe);
-        controller.getPorts().in.template port<PhasorDynamics::Controller::ReecbSignalInputs::qgen>().connect(&qgen);
+        controller.getPorts()
+          .out
+          .template port<PhasorDynamics::Controller::ReecbSignalOutputs::ipcmd>(
+          )
+          .connect(&ipcmd);
+        controller.getPorts()
+          .out
+          .template port<PhasorDynamics::Controller::ReecbSignalOutputs::iqcmd>(
+          )
+          .connect(&iqcmd);
+        converter.getPorts()
+          .in
+          .template port<PhasorDynamics::Converter::RegcaSignalInputs::ipcmd>()
+          .connect(&ipcmd);
+        converter.getPorts()
+          .in
+          .template port<PhasorDynamics::Converter::RegcaSignalInputs::iqcmd>()
+          .connect(&iqcmd);
+        converter.getPorts()
+          .out
+          .template port<
+            PhasorDynamics::Converter::RegcaSignalOutputs::pbranch>()
+          .connect(&pe);
+        converter.getPorts()
+          .out
+          .template port<
+            PhasorDynamics::Converter::RegcaSignalOutputs::qbranch>()
+          .connect(&qgen);
+        controller.getPorts()
+          .in.template port<PhasorDynamics::Controller::ReecbSignalInputs::pe>()
+          .connect(&pe);
+        controller.getPorts()
+          .in
+          .template port<PhasorDynamics::Controller::ReecbSignalInputs::qgen>()
+          .connect(&qgen);
 
         system.addBus(&bus);
         system.addComponent(&converter);
         system.addComponent(&controller);
 
         success *= system.allocate() == 0;
-        success *= ipcmd.linked() && iqcmd.linked() && pe.linked() && qgen.linked();
+        success *=
+          ipcmd.linked() && iqcmd.linked() && pe.linked() && qgen.linked();
         success *= ipcmd.getVariableIndex()
-                   == controller.getVariableIndex(
-                     static_cast<IdxT>(
-                       PhasorDynamics::Controller::ReecbInternalVariables::IPCMD
-                     )
-                   );
+                   == controller.getVariableIndex(static_cast<IdxT>(
+                     PhasorDynamics::Controller::ReecbInternalVariables::IPCMD
+                   ));
         success *= iqcmd.getVariableIndex()
-                   == controller.getVariableIndex(
-                     static_cast<IdxT>(
-                       PhasorDynamics::Controller::ReecbInternalVariables::IQCMD
-                     )
-                   );
+                   == controller.getVariableIndex(static_cast<IdxT>(
+                     PhasorDynamics::Controller::ReecbInternalVariables::IQCMD
+                   ));
         success *= system.initialize() == 0;
         success *= system.evaluateResidual() == 0;
 
@@ -426,7 +544,8 @@ namespace GridKit
       }
     };
 
-    /// Production SystemModel wiring tests for GASTPTI and synchronous machines.
+    /// Production SystemModel wiring tests for GASTPTI and synchronous
+    /// machines.
     template <typename scalar_type, typename index_type>
     class GastPtiConnectionTests
     {
@@ -488,10 +607,10 @@ namespace GridKit
       static constexpr IdxT kMachineComponentId  = static_cast<IdxT>(0);
       static constexpr IdxT kGovernorComponentId = static_cast<IdxT>(1);
 
-      static constexpr RealT kSystemBaseVa         = static_cast<RealT>(100.0e6);
-      static constexpr RealT kMachineBaseMva       = static_cast<RealT>(100.0);
-      static constexpr RealT kTurbineRatingMw      = static_cast<RealT>(100.0);
-      static constexpr RealT kInitialActivePower   = static_cast<RealT>(0.4);
+      static constexpr RealT kSystemBaseVa       = static_cast<RealT>(100.0e6);
+      static constexpr RealT kMachineBaseMva     = static_cast<RealT>(100.0);
+      static constexpr RealT kTurbineRatingMw    = static_cast<RealT>(100.0);
+      static constexpr RealT kInitialActivePower = static_cast<RealT>(0.4);
       static constexpr RealT kInitialReactivePower = static_cast<RealT>(0.05);
 
       template <
@@ -510,11 +629,13 @@ namespace GridKit
 
         success *= system.allocate() == 0;
 
-        auto* machine  = dynamic_cast<MachineT*>(system.getComponent(kMachineComponentId));
-        auto* governor = dynamic_cast<GastPtiT*>(system.getComponent(kGovernorComponentId));
-        auto* speed    = system.getSignalNode(kSpeedSignalId);
-        auto* pmech    = system.getSignalNode(kPmechSignalId);
-        auto* pref     = system.getSignalNode(kPrefSignalId);
+        auto* machine =
+          dynamic_cast<MachineT*>(system.getComponent(kMachineComponentId));
+        auto* governor =
+          dynamic_cast<GastPtiT*>(system.getComponent(kGovernorComponentId));
+        auto* speed = system.getSignalNode(kSpeedSignalId);
+        auto* pmech = system.getSignalNode(kPmechSignalId);
+        auto* pref  = system.getSignalNode(kPrefSignalId);
 
         if (machine == nullptr || governor == nullptr || speed == nullptr
             || pmech == nullptr || pref == nullptr)
@@ -523,8 +644,9 @@ namespace GridKit
           return success.report(test_name);
         }
 
-        const bool signals_linked  = speed->linked() && pmech->linked() && pref->linked();
-        success                   *= signals_linked;
+        const bool signals_linked =
+          speed->linked() && pmech->linked() && pref->linked();
+        success *= signals_linked;
         if (!signals_linked)
         {
           return success.report(test_name);
@@ -553,8 +675,9 @@ namespace GridKit
         const IdxT pref_index  = pref->getVariableIndex();
 
         success *= speed_index != pmech_index;
-        success *= speed_index
-                   == machine->getVariableIndex(static_cast<IdxT>(speed_state_variable));
+        success *=
+          speed_index
+          == machine->getVariableIndex(static_cast<IdxT>(speed_state_variable));
         success *=
           speed_index
           == governor_ports.in.template port<GastPtiSignalInputs::speed>()
@@ -594,15 +717,16 @@ namespace GridKit
           {"Active Power Reference", kPrefSignalId}
         };
 
-        auto& governor                                       = data.gastpti.emplace_back();
+        auto& governor = data.gastpti.emplace_back();
         governor.signal_inputs[GastPtiSignalInputs::speed]   = kSpeedSignalId;
         governor.signal_inputs[GastPtiSignalInputs::pref]    = kPrefSignalId;
         governor.signal_outputs[GastPtiSignalOutputs::pmech] = kPmechSignalId;
         governor.parameters[GastPtiParameters::Trate]        = kTurbineRatingMw;
 
-        auto& source                                                 = data.constant_source.emplace_back();
-        source.signal_outputs[ConstantSignalSourceSignalOutputs::sr] = kPrefSignalId;
-        source.parameters[ConstantSignalSourceParameters::Sr]        = ZERO<RealT>;
+        auto& source = data.constant_source.emplace_back();
+        source.signal_outputs[ConstantSignalSourceSignalOutputs::sr] =
+          kPrefSignalId;
+        source.parameters[ConstantSignalSourceParameters::Sr] = ZERO<RealT>;
 
         return data;
       }
@@ -613,29 +737,29 @@ namespace GridKit
 
         auto data = makeGastPtiCase();
 
-        auto& machine                                      = data.genrou.emplace_back();
-        machine.buses[GenrouBuses::bus]                    = kBusId;
+        auto& machine                   = data.genrou.emplace_back();
+        machine.buses[GenrouBuses::bus] = kBusId;
         machine.signal_outputs[GenrouSignalOutputs::speed] = kSpeedSignalId;
         machine.signal_inputs[GenrouSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GenrouParameters::p0]           = kInitialActivePower;
-        machine.parameters[GenrouParameters::q0]           = kInitialReactivePower;
-        machine.parameters[GenrouParameters::H]            = RealT{3.0};
-        machine.parameters[GenrouParameters::D]            = ZERO<RealT>;
-        machine.parameters[GenrouParameters::Ra]           = ZERO<RealT>;
-        machine.parameters[GenrouParameters::Tdop]         = RealT{7.0};
-        machine.parameters[GenrouParameters::Tdopp]        = RealT{0.04};
-        machine.parameters[GenrouParameters::Tqop]         = RealT{0.75};
-        machine.parameters[GenrouParameters::Tqopp]        = RealT{0.05};
-        machine.parameters[GenrouParameters::Xd]           = RealT{2.1};
-        machine.parameters[GenrouParameters::Xdp]          = RealT{0.2};
-        machine.parameters[GenrouParameters::Xdpp]         = RealT{0.18};
-        machine.parameters[GenrouParameters::Xq]           = RealT{0.5};
-        machine.parameters[GenrouParameters::Xqp]          = RealT{0.5};
-        machine.parameters[GenrouParameters::Xqpp]         = RealT{0.18};
-        machine.parameters[GenrouParameters::Xl]           = RealT{0.15};
-        machine.parameters[GenrouParameters::S10]          = ZERO<RealT>;
-        machine.parameters[GenrouParameters::S12]          = ZERO<RealT>;
-        machine.parameters[GenrouParameters::mva]          = kMachineBaseMva;
+        machine.parameters[GenrouParameters::p0]    = kInitialActivePower;
+        machine.parameters[GenrouParameters::q0]    = kInitialReactivePower;
+        machine.parameters[GenrouParameters::H]     = RealT{3.0};
+        machine.parameters[GenrouParameters::D]     = ZERO<RealT>;
+        machine.parameters[GenrouParameters::Ra]    = ZERO<RealT>;
+        machine.parameters[GenrouParameters::Tdop]  = RealT{7.0};
+        machine.parameters[GenrouParameters::Tdopp] = RealT{0.04};
+        machine.parameters[GenrouParameters::Tqop]  = RealT{0.75};
+        machine.parameters[GenrouParameters::Tqopp] = RealT{0.05};
+        machine.parameters[GenrouParameters::Xd]    = RealT{2.1};
+        machine.parameters[GenrouParameters::Xdp]   = RealT{0.2};
+        machine.parameters[GenrouParameters::Xdpp]  = RealT{0.18};
+        machine.parameters[GenrouParameters::Xq]    = RealT{0.5};
+        machine.parameters[GenrouParameters::Xqp]   = RealT{0.5};
+        machine.parameters[GenrouParameters::Xqpp]  = RealT{0.18};
+        machine.parameters[GenrouParameters::Xl]    = RealT{0.15};
+        machine.parameters[GenrouParameters::S10]   = ZERO<RealT>;
+        machine.parameters[GenrouParameters::S12]   = ZERO<RealT>;
+        machine.parameters[GenrouParameters::mva]   = kMachineBaseMva;
 
         return data;
       }
@@ -646,13 +770,13 @@ namespace GridKit
 
         auto data = makeGastPtiCase();
 
-        auto& machine                                      = data.gensal.emplace_back();
-        machine.buses[GensalBuses::bus]                    = kBusId;
+        auto& machine                   = data.gensal.emplace_back();
+        machine.buses[GensalBuses::bus] = kBusId;
         machine.signal_outputs[GensalSignalOutputs::speed] = kSpeedSignalId;
         machine.signal_inputs[GensalSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GensalParameters::p0]           = kInitialActivePower;
-        machine.parameters[GensalParameters::q0]           = kInitialReactivePower;
-        machine.parameters[GensalParameters::mva]          = kMachineBaseMva;
+        machine.parameters[GensalParameters::p0]  = kInitialActivePower;
+        machine.parameters[GensalParameters::q0]  = kInitialReactivePower;
+        machine.parameters[GensalParameters::mva] = kMachineBaseMva;
 
         return data;
       }
@@ -663,13 +787,14 @@ namespace GridKit
 
         auto data = makeGastPtiCase();
 
-        auto& machine                                            = data.genclassical.emplace_back();
-        machine.buses[GenClassicalBuses::bus]                    = kBusId;
-        machine.signal_outputs[GenClassicalSignalOutputs::speed] = kSpeedSignalId;
-        machine.signal_inputs[GenClassicalSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GenClassicalParameters::p0]           = kInitialActivePower;
-        machine.parameters[GenClassicalParameters::q0]           = kInitialReactivePower;
-        machine.parameters[GenClassicalParameters::mva]          = kMachineBaseMva;
+        auto& machine = data.genclassical.emplace_back();
+        machine.buses[GenClassicalBuses::bus] = kBusId;
+        machine.signal_outputs[GenClassicalSignalOutputs::speed] =
+          kSpeedSignalId;
+        machine.signal_inputs[GenClassicalSignalInputs::pmech] = kPmechSignalId;
+        machine.parameters[GenClassicalParameters::p0]  = kInitialActivePower;
+        machine.parameters[GenClassicalParameters::q0]  = kInitialReactivePower;
+        machine.parameters[GenClassicalParameters::mva] = kMachineBaseMva;
 
         return data;
       }

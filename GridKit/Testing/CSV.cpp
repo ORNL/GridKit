@@ -28,8 +28,8 @@ namespace GridKit
       std::ifstream ifs(f);
       if (!ifs)
       {
-        Log::error() << "\n\tCould not open file \"" << f
-                     << "\" for input." << std::endl;
+        Log::error() << "\n\tCould not open file \"" << f << "\" for input."
+                     << std::endl;
         throw std::runtime_error("Failed to open file");
       }
       return ifs;

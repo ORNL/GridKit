@@ -72,8 +72,10 @@ namespace GridKit
           const auto& abr = a.branch[i];
           const auto& bbr = b.branch[i];
 
-          success *= abr.buses.at(BranchBuses::bus1) == bbr.buses.at(BranchBuses::bus1);
-          success *= abr.buses.at(BranchBuses::bus2) == bbr.buses.at(BranchBuses::bus2);
+          success *=
+            abr.buses.at(BranchBuses::bus1) == bbr.buses.at(BranchBuses::bus1);
+          success *=
+            abr.buses.at(BranchBuses::bus2) == bbr.buses.at(BranchBuses::bus2);
           success *= abr.parameters.at(Param::R) == bbr.parameters.at(Param::R);
           success *= abr.parameters.at(Param::X) == bbr.parameters.at(Param::X);
           success *= abr.parameters.at(Param::G) == bbr.parameters.at(Param::G);
@@ -95,19 +97,29 @@ namespace GridKit
           success *= ag.parameters.at(Param::H) == bg.parameters.at(Param::H);
           success *= ag.parameters.at(Param::D) == bg.parameters.at(Param::D);
           success *= ag.parameters.at(Param::Ra) == bg.parameters.at(Param::Ra);
-          success *= ag.parameters.at(Param::Tdop) == bg.parameters.at(Param::Tdop);
-          success *= ag.parameters.at(Param::Tdopp) == bg.parameters.at(Param::Tdopp);
-          success *= ag.parameters.at(Param::Tqopp) == bg.parameters.at(Param::Tqopp);
-          success *= ag.parameters.at(Param::Tqop) == bg.parameters.at(Param::Tqop);
+          success *=
+            ag.parameters.at(Param::Tdop) == bg.parameters.at(Param::Tdop);
+          success *=
+            ag.parameters.at(Param::Tdopp) == bg.parameters.at(Param::Tdopp);
+          success *=
+            ag.parameters.at(Param::Tqopp) == bg.parameters.at(Param::Tqopp);
+          success *=
+            ag.parameters.at(Param::Tqop) == bg.parameters.at(Param::Tqop);
           success *= ag.parameters.at(Param::Xd) == bg.parameters.at(Param::Xd);
-          success *= ag.parameters.at(Param::Xdp) == bg.parameters.at(Param::Xdp);
-          success *= ag.parameters.at(Param::Xdpp) == bg.parameters.at(Param::Xdpp);
+          success *=
+            ag.parameters.at(Param::Xdp) == bg.parameters.at(Param::Xdp);
+          success *=
+            ag.parameters.at(Param::Xdpp) == bg.parameters.at(Param::Xdpp);
           success *= ag.parameters.at(Param::Xq) == bg.parameters.at(Param::Xq);
-          success *= ag.parameters.at(Param::Xqp) == bg.parameters.at(Param::Xqp);
-          success *= ag.parameters.at(Param::Xqpp) == bg.parameters.at(Param::Xqpp);
+          success *=
+            ag.parameters.at(Param::Xqp) == bg.parameters.at(Param::Xqp);
+          success *=
+            ag.parameters.at(Param::Xqpp) == bg.parameters.at(Param::Xqpp);
           success *= ag.parameters.at(Param::Xl) == bg.parameters.at(Param::Xl);
-          success *= ag.parameters.at(Param::S10) == bg.parameters.at(Param::S10);
-          success *= ag.parameters.at(Param::S12) == bg.parameters.at(Param::S12);
+          success *=
+            ag.parameters.at(Param::S10) == bg.parameters.at(Param::S10);
+          success *=
+            ag.parameters.at(Param::S12) == bg.parameters.at(Param::S12);
         }
 
         success *= a.genclassical.size() == b.genclassical.size();
@@ -125,7 +137,8 @@ namespace GridKit
           success *= ag.parameters.at(Param::H) == bg.parameters.at(Param::H);
           success *= ag.parameters.at(Param::D) == bg.parameters.at(Param::D);
           success *= ag.parameters.at(Param::Ra) == bg.parameters.at(Param::Ra);
-          success *= ag.parameters.at(Param::Xdp) == bg.parameters.at(Param::Xdp);
+          success *=
+            ag.parameters.at(Param::Xdp) == bg.parameters.at(Param::Xdp);
         }
 
         success *= a.gov.size() == b.gov.size();
@@ -138,20 +151,27 @@ namespace GridKit
           const auto& ag = a.gov[i];
           const auto& bg = b.gov[i];
 
-          success *= ag.signal_inputs.count(SignalIn::speed) == bg.signal_inputs.count(SignalIn::speed);
+          success *= ag.signal_inputs.count(SignalIn::speed)
+                     == bg.signal_inputs.count(SignalIn::speed);
           if (ag.signal_inputs.count(SignalIn::speed))
           {
-            success *= ag.signal_inputs.at(SignalIn::speed) == bg.signal_inputs.at(SignalIn::speed);
+            success *= ag.signal_inputs.at(SignalIn::speed)
+                       == bg.signal_inputs.at(SignalIn::speed);
           }
-          success *= ag.signal_outputs.count(SignalOut::pmech) == bg.signal_outputs.count(SignalOut::pmech);
+          success *= ag.signal_outputs.count(SignalOut::pmech)
+                     == bg.signal_outputs.count(SignalOut::pmech);
           if (ag.signal_outputs.count(SignalOut::pmech))
           {
-            success *= ag.signal_outputs.at(SignalOut::pmech) == bg.signal_outputs.at(SignalOut::pmech);
+            success *= ag.signal_outputs.at(SignalOut::pmech)
+                       == bg.signal_outputs.at(SignalOut::pmech);
           }
-          success *= ag.parameters.at(Param::Trate) == bg.parameters.at(Param::Trate);
+          success *=
+            ag.parameters.at(Param::Trate) == bg.parameters.at(Param::Trate);
           success *= ag.parameters.at(Param::R) == bg.parameters.at(Param::R);
-          success *= ag.parameters.at(Param::Pvmin) == bg.parameters.at(Param::Pvmin);
-          success *= ag.parameters.at(Param::Pvmax) == bg.parameters.at(Param::Pvmax);
+          success *=
+            ag.parameters.at(Param::Pvmin) == bg.parameters.at(Param::Pvmin);
+          success *=
+            ag.parameters.at(Param::Pvmax) == bg.parameters.at(Param::Pvmax);
           success *= ag.parameters.at(Param::T1) == bg.parameters.at(Param::T1);
           success *= ag.parameters.at(Param::T2) == bg.parameters.at(Param::T2);
           success *= ag.parameters.at(Param::T3) == bg.parameters.at(Param::T3);
@@ -168,16 +188,21 @@ namespace GridKit
           const auto& ae = a.exciter[i];
           const auto& be = b.exciter[i];
 
-          success *= ae.buses.at(Ieeet1Buses::bus) == be.buses.at(Ieeet1Buses::bus);
-          success *= ae.signal_inputs.count(SignalIn::speed) == be.signal_inputs.count(SignalIn::speed);
+          success *=
+            ae.buses.at(Ieeet1Buses::bus) == be.buses.at(Ieeet1Buses::bus);
+          success *= ae.signal_inputs.count(SignalIn::speed)
+                     == be.signal_inputs.count(SignalIn::speed);
           if (ae.signal_inputs.count(SignalIn::speed))
           {
-            success *= ae.signal_inputs.at(SignalIn::speed) == be.signal_inputs.at(SignalIn::speed);
+            success *= ae.signal_inputs.at(SignalIn::speed)
+                       == be.signal_inputs.at(SignalIn::speed);
           }
-          success *= ae.signal_outputs.count(SignalOut::efd) == be.signal_outputs.count(SignalOut::efd);
+          success *= ae.signal_outputs.count(SignalOut::efd)
+                     == be.signal_outputs.count(SignalOut::efd);
           if (ae.signal_outputs.count(SignalOut::efd))
           {
-            success *= ae.signal_outputs.at(SignalOut::efd) == be.signal_outputs.at(SignalOut::efd);
+            success *= ae.signal_outputs.at(SignalOut::efd)
+                       == be.signal_outputs.at(SignalOut::efd);
           }
           success *= ae.parameters.at(Param::Tr) == be.parameters.at(Param::Tr);
           success *= ae.parameters.at(Param::Ka) == be.parameters.at(Param::Ka);
@@ -186,13 +211,18 @@ namespace GridKit
           success *= ae.parameters.at(Param::Te) == be.parameters.at(Param::Te);
           success *= ae.parameters.at(Param::Kf) == be.parameters.at(Param::Kf);
           success *= ae.parameters.at(Param::Tf) == be.parameters.at(Param::Tf);
-          success *= ae.parameters.at(Param::Vrmin) == be.parameters.at(Param::Vrmin);
-          success *= ae.parameters.at(Param::Vrmax) == be.parameters.at(Param::Vrmax);
+          success *=
+            ae.parameters.at(Param::Vrmin) == be.parameters.at(Param::Vrmin);
+          success *=
+            ae.parameters.at(Param::Vrmax) == be.parameters.at(Param::Vrmax);
           success *= ae.parameters.at(Param::E1) == be.parameters.at(Param::E1);
           success *= ae.parameters.at(Param::E2) == be.parameters.at(Param::E2);
-          success *= ae.parameters.at(Param::Se1) == be.parameters.at(Param::Se1);
-          success *= ae.parameters.at(Param::Se2) == be.parameters.at(Param::Se2);
-          success *= ae.parameters.at(Param::Ispdlim) == be.parameters.at(Param::Ispdlim);
+          success *=
+            ae.parameters.at(Param::Se1) == be.parameters.at(Param::Se1);
+          success *=
+            ae.parameters.at(Param::Se2) == be.parameters.at(Param::Se2);
+          success *= ae.parameters.at(Param::Ispdlim)
+                     == be.parameters.at(Param::Ispdlim);
         }
 
         success *= a.loadz.size() == b.loadz.size();
@@ -203,7 +233,8 @@ namespace GridKit
           const auto& al = a.loadz[i];
           const auto& bl = b.loadz[i];
 
-          success *= al.buses.at(LoadZBuses::bus) == bl.buses.at(LoadZBuses::bus);
+          success *=
+            al.buses.at(LoadZBuses::bus) == bl.buses.at(LoadZBuses::bus);
           success *= al.parameters.at(Param::R) == bl.parameters.at(Param::R);
           success *= al.parameters.at(Param::X) == bl.parameters.at(Param::X);
         }
@@ -219,7 +250,9 @@ namespace GridKit
         const std::string& ref_file
       )
       {
-        system_data.monitor_sink.emplace_back(VariableMonitorFormat::CSV, "mon.csv");
+        system_data.monitor_sink.emplace_back(
+          VariableMonitorFormat::CSV, "mon.csv"
+        );
 
         // Create system model
         SystemModel<RealT, IdxT> sys(system_data);
@@ -280,8 +313,8 @@ namespace GridKit
         set_data.bus[1].Vi0      = 0.0;
 
         set_data.branch.resize(1);
-        set_data.branch[0].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
-        set_data.branch[0].buses[BranchBuses::bus2]        = set_data.bus[1].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus1] = set_data.bus[0].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus2] = set_data.bus[1].bus_id;
         set_data.branch[0].parameters[BranchParameters::R] = 0.0;
         set_data.branch[0].parameters[BranchParameters::X] = 0.1;
         set_data.branch[0].parameters[BranchParameters::G] = 0.0;
@@ -314,7 +347,9 @@ namespace GridKit
 
         auto success = compare(set_data, file_data);
 
-        auto error_set = runSimulation(set_data, 0, 0.0, 1e-3, "TwoBusBasic/reference/TwoBusBasic.ref.csv");
+        auto error_set = runSimulation(
+          set_data, 0, 0.0, 1e-3, "TwoBusBasic/reference/TwoBusBasic.ref.csv"
+        );
 
         RealT error_V_allowed = 2.01e-4;
         RealT error_w_allowed = 1e-4;
@@ -357,8 +392,8 @@ namespace GridKit
         set_data.signal[2].signal_id = 2;
 
         set_data.branch.resize(1);
-        set_data.branch[0].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
-        set_data.branch[0].buses[BranchBuses::bus2]        = set_data.bus[1].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus1] = set_data.bus[0].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus2] = set_data.bus[1].bus_id;
         set_data.branch[0].parameters[BranchParameters::R] = 0.0;
         set_data.branch[0].parameters[BranchParameters::X] = 0.1;
         set_data.branch[0].parameters[BranchParameters::G] = 0.0;
@@ -458,8 +493,8 @@ namespace GridKit
         set_data.signal[1].signal_id = 1;
 
         set_data.branch.resize(1);
-        set_data.branch[0].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
-        set_data.branch[0].buses[BranchBuses::bus2]        = set_data.bus[1].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus1] = set_data.bus[0].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus2] = set_data.bus[1].bus_id;
         set_data.branch[0].parameters[BranchParameters::R] = 0.0;
         set_data.branch[0].parameters[BranchParameters::X] = 0.1;
         set_data.branch[0].parameters[BranchParameters::G] = 0.0;
@@ -536,20 +571,20 @@ namespace GridKit
         set_data.bus[2].monitored_variables.insert(BusVar::Vm);
 
         set_data.branch.resize(3);
-        set_data.branch[0].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
-        set_data.branch[0].buses[BranchBuses::bus2]        = set_data.bus[1].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus1] = set_data.bus[0].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus2] = set_data.bus[1].bus_id;
         set_data.branch[0].parameters[BranchParameters::R] = 0.05;
         set_data.branch[0].parameters[BranchParameters::X] = 0.21;
         set_data.branch[0].parameters[BranchParameters::G] = 0.0;
         set_data.branch[0].parameters[BranchParameters::B] = 0.1;
-        set_data.branch[1].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
-        set_data.branch[1].buses[BranchBuses::bus2]        = set_data.bus[2].bus_id;
+        set_data.branch[1].buses[BranchBuses::bus1] = set_data.bus[0].bus_id;
+        set_data.branch[1].buses[BranchBuses::bus2] = set_data.bus[2].bus_id;
         set_data.branch[1].parameters[BranchParameters::R] = 0.06;
         set_data.branch[1].parameters[BranchParameters::X] = 0.15;
         set_data.branch[1].parameters[BranchParameters::G] = 0.;
         set_data.branch[1].parameters[BranchParameters::B] = 0.12;
-        set_data.branch[2].buses[BranchBuses::bus1]        = set_data.bus[1].bus_id;
-        set_data.branch[2].buses[BranchBuses::bus2]        = set_data.bus[2].bus_id;
+        set_data.branch[2].buses[BranchBuses::bus1] = set_data.bus[1].bus_id;
+        set_data.branch[2].buses[BranchBuses::bus2] = set_data.bus[2].bus_id;
         set_data.branch[2].parameters[BranchParameters::R] = 0.08;
         set_data.branch[2].parameters[BranchParameters::X] = 0.27;
         set_data.branch[2].parameters[BranchParameters::G] = 0.;
@@ -635,37 +670,41 @@ namespace GridKit
         set_data.bus[2].monitored_variables.insert(BusVar::Vm);
 
         set_data.branch.resize(3);
-        set_data.branch[0].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
-        set_data.branch[0].buses[BranchBuses::bus2]        = set_data.bus[1].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus1] = set_data.bus[0].bus_id;
+        set_data.branch[0].buses[BranchBuses::bus2] = set_data.bus[1].bus_id;
         set_data.branch[0].parameters[BranchParameters::R] = 0.05;
         set_data.branch[0].parameters[BranchParameters::X] = 0.21;
         set_data.branch[0].parameters[BranchParameters::G] = 0.0;
         set_data.branch[0].parameters[BranchParameters::B] = 0.1;
-        set_data.branch[1].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
-        set_data.branch[1].buses[BranchBuses::bus2]        = set_data.bus[2].bus_id;
+        set_data.branch[1].buses[BranchBuses::bus1] = set_data.bus[0].bus_id;
+        set_data.branch[1].buses[BranchBuses::bus2] = set_data.bus[2].bus_id;
         set_data.branch[1].parameters[BranchParameters::R] = 0.06;
         set_data.branch[1].parameters[BranchParameters::X] = 0.15;
         set_data.branch[1].parameters[BranchParameters::G] = 0.;
         set_data.branch[1].parameters[BranchParameters::B] = 0.12;
-        set_data.branch[2].buses[BranchBuses::bus1]        = set_data.bus[1].bus_id;
-        set_data.branch[2].buses[BranchBuses::bus2]        = set_data.bus[2].bus_id;
+        set_data.branch[2].buses[BranchBuses::bus1] = set_data.bus[1].bus_id;
+        set_data.branch[2].buses[BranchBuses::bus2] = set_data.bus[2].bus_id;
         set_data.branch[2].parameters[BranchParameters::R] = 0.08;
         set_data.branch[2].parameters[BranchParameters::X] = 0.27;
         set_data.branch[2].parameters[BranchParameters::G] = 0.;
         set_data.branch[2].parameters[BranchParameters::B] = 0.45;
 
         set_data.genclassical.resize(2);
-        set_data.genclassical[0].buses[GenClassicalBuses::bus]           = set_data.bus[1].bus_id;
-        set_data.genclassical[0].parameters[GenClassicalParameters::p0]  = 0.5;
-        set_data.genclassical[0].parameters[GenClassicalParameters::q0]  = -0.07588;
+        set_data.genclassical[0].buses[GenClassicalBuses::bus] =
+          set_data.bus[1].bus_id;
+        set_data.genclassical[0].parameters[GenClassicalParameters::p0] = 0.5;
+        set_data.genclassical[0].parameters[GenClassicalParameters::q0] =
+          -0.07588;
         set_data.genclassical[0].parameters[GenClassicalParameters::H]   = 2.7;
         set_data.genclassical[0].parameters[GenClassicalParameters::D]   = 0.;
         set_data.genclassical[0].parameters[GenClassicalParameters::Ra]  = 0.;
         set_data.genclassical[0].parameters[GenClassicalParameters::Xdp] = 0.17;
         set_data.genclassical[0].monitored_variables.insert(GenVar::speed);
-        set_data.genclassical[1].buses[GenClassicalBuses::bus]           = set_data.bus[2].bus_id;
-        set_data.genclassical[1].parameters[GenClassicalParameters::p0]  = 0.25;
-        set_data.genclassical[1].parameters[GenClassicalParameters::q0]  = 0.26587;
+        set_data.genclassical[1].buses[GenClassicalBuses::bus] =
+          set_data.bus[2].bus_id;
+        set_data.genclassical[1].parameters[GenClassicalParameters::p0] = 0.25;
+        set_data.genclassical[1].parameters[GenClassicalParameters::q0] =
+          0.26587;
         set_data.genclassical[1].parameters[GenClassicalParameters::H]   = 1.6;
         set_data.genclassical[1].parameters[GenClassicalParameters::D]   = 0.;
         set_data.genclassical[1].parameters[GenClassicalParameters::Ra]  = 0.;
@@ -677,7 +716,7 @@ namespace GridKit
         set_data.loadz[0].parameters[LoadZParameters::R] = 0.4447197839297772;
         set_data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
 
-        std::string      in_file   = "ThreeBusClassical/ThreeBusClassical.case.json";
+        std::string in_file = "ThreeBusClassical/ThreeBusClassical.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
 
         auto success = compare(set_data, file_data);
@@ -685,14 +724,16 @@ namespace GridKit
       }
 
       /// A finite plant-reference pulse propagates through the public REPCA,
-      /// REECB, and REGCA signals before the closed loop returns to equilibrium.
+      /// REECB, and REGCA signals before the closed loop returns to
+      /// equilibrium.
       TestOutcome regcaReecbRepca()
       {
         using namespace GridKit::PhasorDynamics::Controller;
         using namespace GridKit::PhasorDynamics::Converter;
 
         // Signal IDs are local graph keys. Their enum values only provide a
-        // compact set of unique identifiers; the numbers carry no model meaning.
+        // compact set of unique identifiers; the numbers carry no model
+        // meaning.
         enum class LoopSignal : size_t
         {
           IPCMD,
@@ -706,14 +747,12 @@ namespace GridKit
           PLANT_PREF,
         };
         const auto signalId = [](LoopSignal signal)
-        {
-          return static_cast<IdxT>(signal);
-        };
+        { return static_cast<IdxT>(signal); };
 
-        constexpr IdxT  RENEWABLE_BUS_ID       = static_cast<IdxT>(0);
-        constexpr RealT SYSTEM_MVA             = static_cast<RealT>(100.0);
+        constexpr IdxT  RENEWABLE_BUS_ID = static_cast<IdxT>(0);
+        constexpr RealT SYSTEM_MVA       = static_cast<RealT>(100.0);
         // The 2:1 base ratio exercises each controller power-base conversion.
-        constexpr RealT COMPONENT_MVA          = SYSTEM_MVA / static_cast<RealT>(2.0);
+        constexpr RealT COMPONENT_MVA    = SYSTEM_MVA / static_cast<RealT>(2.0);
         // A nonzero interior operating point stays clear of controller limits.
         constexpr RealT INITIAL_ACTIVE_POWER   = static_cast<RealT>(0.4);
         constexpr RealT INITIAL_REACTIVE_POWER = static_cast<RealT>(0.05);
@@ -723,13 +762,16 @@ namespace GridKit
         // Five fast time constants let the perturbation propagate through the
         // converter and electrical controller. One fifth of the pulse proves a
         // material response without pinning an exact transient trajectory.
-        constexpr RealT PULSE_DURATION         = static_cast<RealT>(5.0) * FAST_TIME_CONSTANT;
-        constexpr RealT MINIMUM_RESPONSE       = REFERENCE_PULSE / static_cast<RealT>(5.0);
+        constexpr RealT PULSE_DURATION =
+          static_cast<RealT>(5.0) * FAST_TIME_CONSTANT;
+        constexpr RealT MINIMUM_RESPONSE =
+          REFERENCE_PULSE / static_cast<RealT>(5.0);
         // Preserve the conservative fifty-plant-time-constant recovery window.
-        constexpr RealT RECOVERY_HORIZON       = static_cast<RealT>(50.0) * PLANT_TIME_CONSTANT;
+        constexpr RealT RECOVERY_HORIZON =
+          static_cast<RealT>(50.0) * PLANT_TIME_CONSTANT;
         // This is an output cadence; IDA still selects its internal steps.
-        constexpr RealT OUTPUT_INTERVAL        = ONE<RealT> / static_cast<RealT>(60.0);
-        constexpr RealT RECOVERY_TOLERANCE     = static_cast<RealT>(1.0e-6);
+        constexpr RealT OUTPUT_INTERVAL = ONE<RealT> / static_cast<RealT>(60.0);
+        constexpr RealT RECOVERY_TOLERANCE = static_cast<RealT>(1.0e-6);
 
         TestStatus success = true;
 
@@ -754,76 +796,100 @@ namespace GridKit
           {"Plant Active Power Reference", signalId(LoopSignal::PLANT_PREF)}
         };
 
-        auto& converter                                       = data.regca.emplace_back();
-        converter.buses[RegcaBuses::bus]                      = RENEWABLE_BUS_ID;
-        converter.signal_inputs[RegcaSignalInputs::ipcmd]     = signalId(LoopSignal::IPCMD);
-        converter.signal_inputs[RegcaSignalInputs::iqcmd]     = signalId(LoopSignal::IQCMD);
-        converter.signal_outputs[RegcaSignalOutputs::ir]      = signalId(LoopSignal::IR);
-        converter.signal_outputs[RegcaSignalOutputs::ii]      = signalId(LoopSignal::II);
-        converter.signal_outputs[RegcaSignalOutputs::pbranch] = signalId(LoopSignal::PBRANCH);
-        converter.signal_outputs[RegcaSignalOutputs::qbranch] = signalId(LoopSignal::QBRANCH);
-        converter.parameters[RegcaParameters::p0]             = INITIAL_ACTIVE_POWER;
-        converter.parameters[RegcaParameters::q0]             = INITIAL_REACTIVE_POWER;
-        converter.parameters[RegcaParameters::mva]            = COMPONENT_MVA;
-        converter.parameters[RegcaParameters::Tg]             = FAST_TIME_CONSTANT;
-        converter.parameters[RegcaParameters::TM]             = FAST_TIME_CONSTANT;
-        converter.parameters[RegcaParameters::Rqmax]          = static_cast<RealT>(999.0);
-        converter.parameters[RegcaParameters::Rqmin]          = static_cast<RealT>(-999.0);
-        converter.parameters[RegcaParameters::Rpmax]          = static_cast<RealT>(999.0);
-        converter.parameters[RegcaParameters::sL]             = true;
-        converter.parameters[RegcaParameters::IL1]            = static_cast<RealT>(1.1);
-        converter.parameters[RegcaParameters::VL0]            = static_cast<RealT>(0.4);
-        converter.parameters[RegcaParameters::VL1]            = static_cast<RealT>(0.9);
-        converter.parameters[RegcaParameters::VA0]            = static_cast<RealT>(0.4);
-        converter.parameters[RegcaParameters::VA1]            = static_cast<RealT>(0.9);
-        converter.parameters[RegcaParameters::Vhvmax]         = static_cast<RealT>(1.2);
+        auto& converter                  = data.regca.emplace_back();
+        converter.buses[RegcaBuses::bus] = RENEWABLE_BUS_ID;
+        converter.signal_inputs[RegcaSignalInputs::ipcmd] =
+          signalId(LoopSignal::IPCMD);
+        converter.signal_inputs[RegcaSignalInputs::iqcmd] =
+          signalId(LoopSignal::IQCMD);
+        converter.signal_outputs[RegcaSignalOutputs::ir] =
+          signalId(LoopSignal::IR);
+        converter.signal_outputs[RegcaSignalOutputs::ii] =
+          signalId(LoopSignal::II);
+        converter.signal_outputs[RegcaSignalOutputs::pbranch] =
+          signalId(LoopSignal::PBRANCH);
+        converter.signal_outputs[RegcaSignalOutputs::qbranch] =
+          signalId(LoopSignal::QBRANCH);
+        converter.parameters[RegcaParameters::p0]  = INITIAL_ACTIVE_POWER;
+        converter.parameters[RegcaParameters::q0]  = INITIAL_REACTIVE_POWER;
+        converter.parameters[RegcaParameters::mva] = COMPONENT_MVA;
+        converter.parameters[RegcaParameters::Tg]  = FAST_TIME_CONSTANT;
+        converter.parameters[RegcaParameters::TM]  = FAST_TIME_CONSTANT;
+        converter.parameters[RegcaParameters::Rqmax] =
+          static_cast<RealT>(999.0);
+        converter.parameters[RegcaParameters::Rqmin] =
+          static_cast<RealT>(-999.0);
+        converter.parameters[RegcaParameters::Rpmax] =
+          static_cast<RealT>(999.0);
+        converter.parameters[RegcaParameters::sL]     = true;
+        converter.parameters[RegcaParameters::IL1]    = static_cast<RealT>(1.1);
+        converter.parameters[RegcaParameters::VL0]    = static_cast<RealT>(0.4);
+        converter.parameters[RegcaParameters::VL1]    = static_cast<RealT>(0.9);
+        converter.parameters[RegcaParameters::VA0]    = static_cast<RealT>(0.4);
+        converter.parameters[RegcaParameters::VA1]    = static_cast<RealT>(0.9);
+        converter.parameters[RegcaParameters::Vhvmax] = static_cast<RealT>(1.2);
 
-        auto& controller                                     = data.reecb.emplace_back();
-        controller.buses[ReecbBuses::bus]                    = RENEWABLE_BUS_ID;
-        controller.signal_inputs[ReecbSignalInputs::pe]      = signalId(LoopSignal::PBRANCH);
-        controller.signal_inputs[ReecbSignalInputs::qgen]    = signalId(LoopSignal::QBRANCH);
-        controller.signal_inputs[ReecbSignalInputs::qext]    = signalId(LoopSignal::QEXT);
-        controller.signal_inputs[ReecbSignalInputs::pref]    = signalId(LoopSignal::PEXT);
-        controller.signal_outputs[ReecbSignalOutputs::ipcmd] = signalId(LoopSignal::IPCMD);
-        controller.signal_outputs[ReecbSignalOutputs::iqcmd] = signalId(LoopSignal::IQCMD);
-        controller.parameters[ReecbParameters::mva]          = COMPONENT_MVA;
-        controller.parameters[ReecbParameters::Trv]          = FAST_TIME_CONSTANT;
-        controller.parameters[ReecbParameters::Tp]           = FAST_TIME_CONSTANT;
-        controller.parameters[ReecbParameters::Kvi]          = static_cast<RealT>(5.0);
-        controller.parameters[ReecbParameters::QFlag]        = true;
-        controller.parameters[ReecbParameters::VFlag]        = true;
+        auto& controller                  = data.reecb.emplace_back();
+        controller.buses[ReecbBuses::bus] = RENEWABLE_BUS_ID;
+        controller.signal_inputs[ReecbSignalInputs::pe] =
+          signalId(LoopSignal::PBRANCH);
+        controller.signal_inputs[ReecbSignalInputs::qgen] =
+          signalId(LoopSignal::QBRANCH);
+        controller.signal_inputs[ReecbSignalInputs::qext] =
+          signalId(LoopSignal::QEXT);
+        controller.signal_inputs[ReecbSignalInputs::pref] =
+          signalId(LoopSignal::PEXT);
+        controller.signal_outputs[ReecbSignalOutputs::ipcmd] =
+          signalId(LoopSignal::IPCMD);
+        controller.signal_outputs[ReecbSignalOutputs::iqcmd] =
+          signalId(LoopSignal::IQCMD);
+        controller.parameters[ReecbParameters::mva]   = COMPONENT_MVA;
+        controller.parameters[ReecbParameters::Trv]   = FAST_TIME_CONSTANT;
+        controller.parameters[ReecbParameters::Tp]    = FAST_TIME_CONSTANT;
+        controller.parameters[ReecbParameters::Kvi]   = static_cast<RealT>(5.0);
+        controller.parameters[ReecbParameters::QFlag] = true;
+        controller.parameters[ReecbParameters::VFlag] = true;
 
-        auto& plant                                    = data.repca.emplace_back();
-        plant.buses[RepcaBuses::bus]                   = RENEWABLE_BUS_ID;
-        plant.signal_inputs[RepcaSignalInputs::ir]     = signalId(LoopSignal::IR);
-        plant.signal_inputs[RepcaSignalInputs::ii]     = signalId(LoopSignal::II);
-        plant.signal_inputs[RepcaSignalInputs::p]      = signalId(LoopSignal::PBRANCH);
-        plant.signal_inputs[RepcaSignalInputs::q]      = signalId(LoopSignal::QBRANCH);
-        plant.signal_inputs[RepcaSignalInputs::pref]   = signalId(LoopSignal::PLANT_PREF);
-        plant.signal_outputs[RepcaSignalOutputs::qext] = signalId(LoopSignal::QEXT);
-        plant.signal_outputs[RepcaSignalOutputs::pext] = signalId(LoopSignal::PEXT);
-        plant.parameters[RepcaParameters::mva]         = COMPONENT_MVA;
-        plant.parameters[RepcaParameters::Freqflag]    = true;
-        plant.parameters[RepcaParameters::Ddn]         = ZERO<RealT>;
-        plant.parameters[RepcaParameters::Dup]         = ZERO<RealT>;
-        plant.parameters[RepcaParameters::Tp]          = FAST_TIME_CONSTANT;
-        plant.parameters[RepcaParameters::Tlag]        = PLANT_TIME_CONSTANT;
+        auto& plant                                = data.repca.emplace_back();
+        plant.buses[RepcaBuses::bus]               = RENEWABLE_BUS_ID;
+        plant.signal_inputs[RepcaSignalInputs::ir] = signalId(LoopSignal::IR);
+        plant.signal_inputs[RepcaSignalInputs::ii] = signalId(LoopSignal::II);
+        plant.signal_inputs[RepcaSignalInputs::p] =
+          signalId(LoopSignal::PBRANCH);
+        plant.signal_inputs[RepcaSignalInputs::q] =
+          signalId(LoopSignal::QBRANCH);
+        plant.signal_inputs[RepcaSignalInputs::pref] =
+          signalId(LoopSignal::PLANT_PREF);
+        plant.signal_outputs[RepcaSignalOutputs::qext] =
+          signalId(LoopSignal::QEXT);
+        plant.signal_outputs[RepcaSignalOutputs::pext] =
+          signalId(LoopSignal::PEXT);
+        plant.parameters[RepcaParameters::mva]      = COMPONENT_MVA;
+        plant.parameters[RepcaParameters::Freqflag] = true;
+        plant.parameters[RepcaParameters::Ddn]      = ZERO<RealT>;
+        plant.parameters[RepcaParameters::Dup]      = ZERO<RealT>;
+        plant.parameters[RepcaParameters::Tp]       = FAST_TIME_CONSTANT;
+        plant.parameters[RepcaParameters::Tlag]     = PLANT_TIME_CONSTANT;
 
-        auto& reference                                          = data.constant_source.emplace_back();
-        reference.parameters[ConstantSignalSourceParameters::Sr] = INITIAL_ACTIVE_POWER;
+        auto& reference = data.constant_source.emplace_back();
+        reference.parameters[ConstantSignalSourceParameters::Sr] =
+          INITIAL_ACTIVE_POWER;
         reference.signal_outputs[ConstantSignalSourceSignalOutputs::sr] =
           signalId(LoopSignal::PLANT_PREF);
 
         SystemModel<RealT, IdxT> system(data);
         success *= system.allocate() == 0;
 
-        auto* pref_signal    = system.getSignalNode(signalId(LoopSignal::PLANT_PREF));
-        auto* pext_signal    = system.getSignalNode(signalId(LoopSignal::PEXT));
-        auto* qext_signal    = system.getSignalNode(signalId(LoopSignal::QEXT));
-        auto* ipcmd_signal   = system.getSignalNode(signalId(LoopSignal::IPCMD));
-        auto* pbranch_signal = system.getSignalNode(signalId(LoopSignal::PBRANCH));
-        if (pref_signal == nullptr || pext_signal == nullptr || qext_signal == nullptr
-            || ipcmd_signal == nullptr || pbranch_signal == nullptr)
+        auto* pref_signal =
+          system.getSignalNode(signalId(LoopSignal::PLANT_PREF));
+        auto* pext_signal  = system.getSignalNode(signalId(LoopSignal::PEXT));
+        auto* qext_signal  = system.getSignalNode(signalId(LoopSignal::QEXT));
+        auto* ipcmd_signal = system.getSignalNode(signalId(LoopSignal::IPCMD));
+        auto* pbranch_signal =
+          system.getSignalNode(signalId(LoopSignal::PBRANCH));
+        if (pref_signal == nullptr || pext_signal == nullptr
+            || qext_signal == nullptr || ipcmd_signal == nullptr
+            || pbranch_signal == nullptr)
         {
           std::cout << "Renewable-control loop is missing a required signal\n";
           success = false;
@@ -881,8 +947,8 @@ namespace GridKit
         {
           if (response.value <= MINIMUM_RESPONSE)
           {
-            std::cout << response.label << " responded by only " << response.value
-                      << " during the reference pulse\n";
+            std::cout << response.label << " responded by only "
+                      << response.value << " during the reference pulse\n";
             success = false;
           }
         }

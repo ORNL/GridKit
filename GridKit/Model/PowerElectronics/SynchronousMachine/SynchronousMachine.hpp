@@ -43,7 +43,22 @@ namespace GridKit
       using Component<ScalarT, IdxT>::n_intern_;
 
     public:
-      SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub);
+      SynchronousMachine(
+        IdxT                     id,
+        RealT                    Lls,
+        std::tuple<RealT, RealT> Llkq,
+        RealT                    Llfd,
+        RealT                    Llkd,
+        RealT                    Lmq,
+        RealT                    Lmd,
+        RealT                    Rs,
+        std::tuple<RealT, RealT> Rkq,
+        RealT                    Rfd,
+        RealT                    Rkd,
+        RealT                    RJ,
+        RealT                    P,
+        RealT                    mub
+      );
       virtual ~SynchronousMachine();
 
       int initialize();

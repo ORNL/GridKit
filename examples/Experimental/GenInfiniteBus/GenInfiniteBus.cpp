@@ -82,7 +82,9 @@ int main()
   const double tol = 1e-4;
 
   // Configure Ipopt application
-  ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
+  ipoptApp->Options()->SetStringValue(
+    "hessian_approximation", "limited-memory"
+  );
   ipoptApp->Options()->SetNumericValue("tol", tol);
   ipoptApp->Options()->SetIntegerValue("print_level", 0);
   ipoptApp->Options()->SetIntegerValue("mumps_print_level", 0);
@@ -143,7 +145,8 @@ int main()
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);
-  std::cout << "\n\nProblem formulated as dynamic constraint optimization ...\n";
+  std::cout
+    << "\n\nProblem formulated as dynamic constraint optimization ...\n";
 
   if (status == Ipopt::Solve_Succeeded)
   {

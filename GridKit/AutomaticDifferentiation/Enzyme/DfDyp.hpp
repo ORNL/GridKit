@@ -18,7 +18,8 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal Jacobian, alpha*df/dyp
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal
+       * Jacobian, alpha*df/dyp
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
@@ -26,9 +27,10 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function>
       struct DfDyp
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
-        using IdxT    = typename GridKit::Model::EvaluatorTraits<ModelT>::IdxT;
-        using RealT   = typename GridKit::Model::EvaluatorTraits<ModelT>::RealT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using IdxT  = typename GridKit::Model::EvaluatorTraits<ModelT>::IdxT;
+        using RealT = typename GridKit::Model::EvaluatorTraits<ModelT>::RealT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -84,8 +86,9 @@ namespace GridKit
                 &nnz
               );
 
-              // Core automatic differentiation intrinsic that will be replaced by a derivative
-              // The dummy primal pointer is safe only while residuals never read back their output
+              // Core automatic differentiation intrinsic that will be replaced
+              // by a derivative The dummy primal pointer is safe only while
+              // residuals never read back their output
               __enzyme_fwddiff<void>(
                 (void*) ModelWrapper<ModelT, function>::eval,
                 enzyme_const,
@@ -109,8 +112,10 @@ namespace GridKit
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_res - Number of residual functions
          * @param[in] n_var - Number of independent variables
-         * @param[in] res_indices - Map from local residual indices to global indices
-         * @param[in] var_indices - Map from local variable indices to global indices
+         * @param[in] res_indices - Map from local residual indices to global
+         * indices
+         * @param[in] var_indices - Map from local variable indices to global
+         * indices
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
@@ -161,8 +166,9 @@ namespace GridKit
                 &nnz
               );
 
-              // Core automatic differentiation intrinsic that will be replaced by a derivative
-              // The dummy primal pointer is safe only while residuals never read back their output
+              // Core automatic differentiation intrinsic that will be replaced
+              // by a derivative The dummy primal pointer is safe only while
+              // residuals never read back their output
               __enzyme_fwddiff<void>(
                 (void*) ModelWrapper<ModelT, function>::eval,
                 enzyme_const,

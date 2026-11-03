@@ -23,8 +23,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Gensal<scalar_type, index_type>::Gensal(BusT* bus, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+      : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -38,10 +37,12 @@ namespace GridKit
     {
     }
 
-    /// Helper function to extract and assign model parameters from the model's associated
-    /// data structure.
+    /// Helper function to extract and assign model parameters from the model's
+    /// associated data structure.
     template <typename scalar_type, typename index_type>
-    void Gensal<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void Gensal<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Parameter = typename ModelDataT::Parameters;
 
@@ -66,7 +67,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    const Model::VariableMonitorBase* Gensal<scalar_type, index_type>::getMonitor() const
+    const Model::VariableMonitorBase* Gensal<scalar_type, index_type>::
+      getMonitor() const
     {
       return monitor_.get();
     }
@@ -76,45 +78,50 @@ namespace GridKit
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
-      monitor_->set(Variable::ir, [this]
-                    { return this->toSystemBase(y_.getData()[12]); });
-      monitor_->set(Variable::ii, [this]
-                    { return this->toSystemBase(y_.getData()[13]); });
-      monitor_->set(Variable::p, [this]
-                    { return this->toSystemBase(Vr() * y_.getData()[12] + Vi() * y_.getData()[13]); });
-      monitor_->set(Variable::q, [this]
-                    { return this->toSystemBase(Vi() * y_.getData()[12] - Vr() * y_.getData()[13]); });
-      monitor_->set(Variable::delta, [this]
-                    { return y_.getData()[0]; });
-      monitor_->set(Variable::omega, [this]
-                    { return y_.getData()[1]; });
-      monitor_->set(Variable::speed, [this]
-                    { return 1.0 + y_.getData()[1]; });
-      monitor_->set(Variable::Eqp, [this]
-                    { return y_.getData()[2]; });
-      monitor_->set(Variable::psidp, [this]
-                    { return y_.getData()[3]; });
-      monitor_->set(Variable::psiqpp, [this]
-                    { return y_.getData()[4]; });
-      monitor_->set(Variable::psidpp, [this]
-                    { return y_.getData()[5]; });
-      monitor_->set(Variable::vd, [this]
-                    { return y_.getData()[7]; });
-      monitor_->set(Variable::vq, [this]
-                    { return y_.getData()[8]; });
-      monitor_->set(Variable::te, [this]
-                    { return y_.getData()[9]; });
-      monitor_->set(Variable::id, [this]
-                    { return y_.getData()[10]; });
-      monitor_->set(Variable::iq, [this]
-                    { return y_.getData()[11]; });
+      monitor_->set(
+        Variable::ir, [this] { return this->toSystemBase(y_.getData()[12]); }
+      );
+      monitor_->set(
+        Variable::ii, [this] { return this->toSystemBase(y_.getData()[13]); }
+      );
+      monitor_->set(
+        Variable::p,
+        [this]
+        {
+          return this->toSystemBase(
+            Vr() * y_.getData()[12] + Vi() * y_.getData()[13]
+          );
+        }
+      );
+      monitor_->set(
+        Variable::q,
+        [this]
+        {
+          return this->toSystemBase(
+            Vi() * y_.getData()[12] - Vr() * y_.getData()[13]
+          );
+        }
+      );
+      monitor_->set(Variable::delta, [this] { return y_.getData()[0]; });
+      monitor_->set(Variable::omega, [this] { return y_.getData()[1]; });
+      monitor_->set(Variable::speed, [this] { return 1.0 + y_.getData()[1]; });
+      monitor_->set(Variable::Eqp, [this] { return y_.getData()[2]; });
+      monitor_->set(Variable::psidp, [this] { return y_.getData()[3]; });
+      monitor_->set(Variable::psiqpp, [this] { return y_.getData()[4]; });
+      monitor_->set(Variable::psidpp, [this] { return y_.getData()[5]; });
+      monitor_->set(Variable::vd, [this] { return y_.getData()[7]; });
+      monitor_->set(Variable::vq, [this] { return y_.getData()[8]; });
+      monitor_->set(Variable::te, [this] { return y_.getData()[9]; });
+      monitor_->set(Variable::id, [this] { return y_.getData()[10]; });
+      monitor_->set(Variable::iq, [this] { return y_.getData()[11]; });
     }
 
     /**
      * @brief Set the component ID
      */
     template <typename scalar_type, typename index_type>
-    int Gensal<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+    int Gensal<scalar_type, index_type>::setGridKitComponentID(IdxT component_id
+    )
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -153,7 +160,8 @@ namespace GridKit
       ws_indices_[1] = INVALID_INDEX<IdxT>;
 
       // Set output signals
-      if (auto speed_port = ports_.out.template port<GensalSignalOutputs::speed>())
+      if (auto speed_port =
+            ports_.out.template port<GensalSignalOutputs::speed>())
       {
         speed_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
       }
@@ -210,7 +218,8 @@ namespace GridKit
       ScalarT iq     = ir * std::cos(delta) + ii * std::sin(delta);
       ScalarT psiqpp = -Xq2_ * iq;
       ScalarT vd     = -psiqpp * (ONE<RealT> + omega);
-      ScalarT vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xdpp_ + iq * Ra_;
+      ScalarT vq =
+        vr * std::cos(delta) + vi * std::sin(delta) + id * Xdpp_ + iq * Ra_;
       ScalarT psidpp = vq / (ONE<RealT> + omega);
       ScalarT psidp  = psidpp - (Xdpp_ - Xl_) * id;
       ScalarT Eqp    = psidp + Xd2_ * id;
@@ -237,12 +246,15 @@ namespace GridKit
 
       // Convert Te to system base for governor PM signal.
       pmech_set_ = static_cast<RealT>(this->toSystemBase(Te));
-      if (auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>())
+      if (auto pmech_port =
+            ports_.in.template port<GensalSignalInputs::pmech>())
       {
         pmech_port.writeValue(pmech_set_);
       }
 
-      efd_set_ = static_cast<RealT>(Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat);
+      efd_set_ = static_cast<RealT>(
+        Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat
+      );
       if (auto efd_port = ports_.in.template port<GensalSignalInputs::efd>())
       {
         efd_port.writeValue(efd_set_);
@@ -346,8 +358,13 @@ namespace GridKit
 
       /* 5 Gensal differential equations */
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
-      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
-      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat));
+      f[1] = omega_dot
+             - (ONE<RealT> / (TWO<RealT> * H_))
+                 * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
+      f[2] =
+        Eqp_dot
+        - (ONE<RealT> / Tdop_)
+            * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat));
       f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
       f[4] = psiqpp_dot - (ONE<RealT> / Tqopp_) * (-psiqpp - Xq2_ * iq);
 
@@ -359,8 +376,12 @@ namespace GridKit
       f[9]  = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
       f[10] = id - (ir * std::sin(delta) - ii * std::cos(delta));
       f[11] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[12] = ir - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
-      f[13] = ii - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
+      f[12] =
+        ir
+        - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
+      f[13] =
+        ii
+        - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
 
       return 0;
     }
@@ -396,7 +417,8 @@ namespace GridKit
     int Gensal<scalar_type, index_type>::setSignalIndices()
     {
       ws_indices_[0] = INVALID_INDEX<IdxT>;
-      if (auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>())
+      if (auto pmech_port =
+            ports_.in.template port<GensalSignalInputs::pmech>())
       {
         ws_indices_[0] = pmech_port.signalVariableIndex();
       }
@@ -421,7 +443,8 @@ namespace GridKit
 
       // Mechanical Power
       ws[0] = pmech_set_;
-      if (auto pmech_port = ports_.in.template port<GensalSignalInputs::pmech>())
+      if (auto pmech_port =
+            ports_.in.template port<GensalSignalInputs::pmech>())
       {
         ws[0] = pmech_port.readSignal();
       }

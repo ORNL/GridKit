@@ -10,8 +10,7 @@ namespace GridKit
     class Bus : public NodeBase<ScalarT, IdxT>
     {
     public:
-      Bus()
-        : NodeBase<ScalarT, IdxT>(1, 0)
+      Bus() : NodeBase<ScalarT, IdxT>(1, 0)
       {
       }
     };

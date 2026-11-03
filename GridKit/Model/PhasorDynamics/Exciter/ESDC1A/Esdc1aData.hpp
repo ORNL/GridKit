@@ -29,26 +29,31 @@ namespace GridKit
         Te,     ///< \f$T_E\f$ Exciter time constant [sec]
         Kf,     ///< \f$K_F\f$ Stabilizing feedback gain [p.u.]
         Tf1,    ///< \f$T_{F1}\f$ Stabilizing feedback time constant [sec]
-        Spdmlt, ///< \f$s_{\mathrm{spd}}\f$ Field-voltage speed-multiplier flag [boolean]
+        Spdmlt, ///< \f$s_{\mathrm{spd}}\f$ Field-voltage speed-multiplier flag
+                ///< [boolean]
         E1,     ///< \f$E_1\f$ First saturation voltage point [p.u.]
         Se1,    ///< \f$S_E(E_1)\f$ Saturation coefficient at \f$E_1\f$ [p.u.]
         E2,     ///< \f$E_2\f$ Second saturation voltage point [p.u.]
         Se2,    ///< \f$S_E(E_2)\f$ Saturation coefficient at \f$E_2\f$ [p.u.]
         UEL,    ///< \f$I_{\mathrm{UEL}}\f$ UEL input-routing selector [integer]
-        exclim, ///< \f$s_{\mathrm{lim}}\f$ Exciter field-voltage-state lower-limit flag [boolean]
+        exclim, ///< \f$s_{\mathrm{lim}}\f$ Exciter field-voltage-state
+                ///< lower-limit flag [boolean]
       };
 
       /// Buses for the ESDC1A exciter model.
       enum class Esdc1aBuses : size_t
       {
-        bus, ///< \f$V_{\mathrm{r}},V_{\mathrm{i}}\f$ Required Known terminal-bus voltage [p.u.]
+        bus, ///< \f$V_{\mathrm{r}},V_{\mathrm{i}}\f$ Required Known
+             ///< terminal-bus voltage [p.u.]
       };
 
       /// Signal inputs for the ESDC1A exciter model.
       enum class Esdc1aSignalInputs : size_t
       {
-        speed, ///< \f$\omega\f$ Known machine speed-deviation input [p.u.]; required when \f$s_{\mathrm{spd}}=1\f$
-        vref,  ///< \f$V_{\mathrm{ref}}\f$ Optional Unknown voltage-reference input [p.u.]
+        speed, ///< \f$\omega\f$ Known machine speed-deviation input [p.u.];
+               ///< required when \f$s_{\mathrm{spd}}=1\f$
+        vref,  ///< \f$V_{\mathrm{ref}}\f$ Optional Unknown voltage-reference
+               ///< input [p.u.]
         vs,    ///< \f$V_S\f$ Optional Known stabilizer input [p.u.]
         vuel,  ///< \f$V_{\mathrm{UEL}}\f$ Optional Known UEL input [p.u.]
       };
@@ -56,7 +61,8 @@ namespace GridKit
       /// Signal outputs for the ESDC1A exciter model.
       enum class Esdc1aSignalOutputs : size_t
       {
-        efd, ///< \f$E_{\mathrm{fd}}\f$ Required Known field-voltage output [p.u.]
+        efd, ///< \f$E_{\mathrm{fd}}\f$ Required Known field-voltage output
+             ///< [p.u.]
       };
 
       /// Variables available through the monitor interface.

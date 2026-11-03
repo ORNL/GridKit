@@ -49,8 +49,7 @@ namespace GridKit
       Isolated
     };
 
-    BaseBus(IdxT id)
-      : busID_(id)
+    BaseBus(IdxT id) : busID_(id)
     {
     }
 

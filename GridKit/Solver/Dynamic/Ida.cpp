@@ -302,7 +302,9 @@ namespace AnalysisManager
      * repeated time-step arithmetic.
      */
     template <class ScalarT, typename IdxT>
-    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
+    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(
+      RealT tf, RealT dt_monitor, int step, int nsteps
+    ) const
     {
       return step == nsteps ? tf : std::fma((RealT) step, dt_monitor, t_init_);
     }
@@ -1269,7 +1271,9 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureTolerance(ScalarT rel_tol, ScalarT abs_tol_override)
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(
+      ScalarT rel_tol, ScalarT abs_tol_override
+    )
     {
       quadrature_rel_tol_          = rel_tol;
       quadrature_abs_tol_override_ = abs_tol_override;
@@ -1287,7 +1291,9 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(ScalarT rel_tol, ScalarT abs_tol_override)
+    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(
+      ScalarT rel_tol, ScalarT abs_tol_override
+    )
     {
       backward_quadrature_rel_tol_          = rel_tol;
       backward_quadrature_abs_tol_override_ = abs_tol_override;
@@ -1331,7 +1337,9 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setConsistentICType(IdaConsistentICType consistent_ic_type)
+    void Ida<ScalarT, IdxT>::setConsistentICType(
+      IdaConsistentICType consistent_ic_type
+    )
     {
       consistent_ic_type_ = consistent_ic_type;
     }

@@ -36,12 +36,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class SystemModel : public Component<scalar_type, index_type>
     {
-      using ComponentT   = Component<scalar_type, index_type>;
-      using EvaluatorT   = Model::OptimizationEvaluator<scalar_type, index_type>;
-      using ScalarT      = scalar_type;
-      using IdxT         = index_type;
-      using RealT        = typename EvaluatorT::RealT;
-      using RealVectorT  = typename EvaluatorT::RealVectorT;
+      using ComponentT  = Component<scalar_type, index_type>;
+      using EvaluatorT  = Model::OptimizationEvaluator<scalar_type, index_type>;
+      using ScalarT     = scalar_type;
+      using IdxT        = index_type;
+      using RealT       = typename EvaluatorT::RealT;
+      using RealVectorT = typename EvaluatorT::RealVectorT;
       using IndexVectorT = LinearAlgebra::Vector<IdxT, IdxT>;
       using CsrMatrixT   = typename EvaluatorT::CsrMatrixT;
       using BusT         = Bus<ScalarT, IdxT>;
@@ -83,7 +83,8 @@ namespace GridKit
       /// Bus by number, which views its solution after `allocate()`
       BusT* getBus(IdxT number);
 
-      /// Generator by case-file `id`, which views its solution after `allocate()`
+      /// Generator by case-file `id`, which views its solution after
+      /// `allocate()`
       GeneratorT* getGenerator(const std::string& id);
 
     private:
@@ -103,8 +104,10 @@ namespace GridKit
       int bind(ComponentT& component, const Block& offset);
       int allocateDerivatives();
 
-      std::unique_ptr<CsrMatrixT> assemble(IdxT rows, IdxT cols, Assembly& assembly) const;
-      int                         refill(CsrMatrixT& matrix, const Assembly& assembly) const;
+      std::unique_ptr<CsrMatrixT> assemble(
+        IdxT rows, IdxT cols, Assembly& assembly
+      ) const;
+      int refill(CsrMatrixT& matrix, const Assembly& assembly) const;
 
       /// Buses first, then devices
       std::vector<std::unique_ptr<ComponentT>> components_;

@@ -36,8 +36,9 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(3.0, 4.0);
-        auto                               data    = makeTestData();
-        auto*                              exciter = new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(&bus, data);
+        auto                               data = makeTestData();
+        auto*                              exciter =
+          new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(&bus, data);
 
         success *= (exciter != nullptr);
         success *= (exciter->size() == 9);
@@ -71,7 +72,8 @@ namespace GridKit
         {
           if (!isEqual(residual_data[i], static_cast<ScalarT>(0.0)))
           {
-            std::cout << "Non-zero Ieeet1 residual at index " << i << ": " << residual_data[i] << "\n";
+            std::cout << "Non-zero Ieeet1 residual at index " << i << ": "
+                      << residual_data[i] << "\n";
             success = false;
           }
         }
@@ -101,10 +103,13 @@ namespace GridKit
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
         ScalarT                                        efd_value{0.0};
-        IdxT                                           efd_index = INVALID_INDEX<IdxT>;
+        IdxT efd_index = INVALID_INDEX<IdxT>;
 
         efd_node.link(&efd_value, &efd_index);
-        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
+        exciter.getPorts()
+          .out
+          .template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>()
+          .connect(&efd_node);
 
         bus.allocate();
         exciter.allocate();
@@ -137,7 +142,11 @@ namespace GridKit
         for (IdxT i = 0; i < exciter.getResidual().getSize(); ++i)
         {
           success *= std::isfinite(f[i]);
-          success *= isEqual(f[i], static_cast<ScalarT>(0.0), 100.0 * std::numeric_limits<RealT>::epsilon());
+          success *= isEqual(
+            f[i],
+            static_cast<ScalarT>(0.0),
+            100.0 * std::numeric_limits<RealT>::epsilon()
+          );
         }
 
         y[2] = 4.0;
@@ -222,19 +231,28 @@ namespace GridKit
         ScalarT                                        vref_value{0.0};
         ScalarT                                        vuel_value{-0.4};
         ScalarT                                        voel_value{0.2};
-        IdxT                                           efd_index  = INVALID_INDEX<IdxT>;
-        IdxT                                           vref_index = 11;
-        IdxT                                           vuel_index = 12;
-        IdxT                                           voel_index = 13;
+        IdxT efd_index  = INVALID_INDEX<IdxT>;
+        IdxT vref_index = 11;
+        IdxT vuel_index = 12;
+        IdxT voel_index = 13;
 
         efd_node.link(&efd_value, &efd_index);
         vref_node.link(&vref_value, &vref_index);
         vuel_node.link(&vuel_value, &vuel_index);
         voel_node.link(&voel_value, &voel_index);
-        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
-        exciter.getPorts().in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::vref>().connect(&vref_node);
-        exciter.getPorts().in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::vuel>().connect(&vuel_node);
-        exciter.getPorts().in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::voel>().connect(&voel_node);
+        exciter.getPorts()
+          .out
+          .template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>()
+          .connect(&efd_node);
+        exciter.getPorts()
+          .in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::vref>()
+          .connect(&vref_node);
+        exciter.getPorts()
+          .in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::vuel>()
+          .connect(&vuel_node);
+        exciter.getPorts()
+          .in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::voel>()
+          .connect(&voel_node);
 
         bus.allocate();
         exciter.allocate();
@@ -276,37 +294,47 @@ namespace GridKit
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
         // Jacobian via DependencyTracking
-        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          dependency_tracking_jacobian = DependencyTrackingJacobian();
 
         // Jacobian via Enzyme
-        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          enzyme_jacobian = EnzymeJacobian();
 
         // Compare DependencyTracking dependencies to Enzyme's
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+          success *= (GridKit::Testing::isEqual(
+            dependency_tracking_jacobian[i], enzyme_jacobian[i], tol
+          ));
         }
 
         return success.report(__func__);
       }
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian()
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      DependencyTrackingJacobian()
       {
         auto data = makeTestData();
 
-        DependencyTracking::Variable                                        Vr1{3.0};
-        DependencyTracking::Variable                                        Vi1{4.0};
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(Vr1, Vi1);
-        PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT> exciter(&bus, data);
+        DependencyTracking::Variable                            Vr1{3.0};
+        DependencyTracking::Variable                            Vi1{4.0};
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus(Vr1, Vi1);
+        PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT>
+          exciter(&bus, data);
 
         bus.allocate();
         exciter.allocate();
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + exciter.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + exciter.size()); // Reset bus residual indices
+          bus.setVariableIndex(
+            i, i + exciter.size()
+          ); // Reset bus variable indices
+          bus.setResidualIndex(
+            i, i + exciter.size()
+          ); // Reset bus residual indices
         }
 
         bus.initialize();
@@ -321,7 +349,8 @@ namespace GridKit
         exciter.evaluateJacobian();
         auto* model_jacobian = exciter.getCsrJacobian();
         auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: Ieeet1 DependencyTracking Jacobian\n";
+        output_stream
+          << "Sparse Csr Matrix: Ieeet1 DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
@@ -339,8 +368,12 @@ namespace GridKit
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + exciter.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + exciter.size()); // Reset bus residual indices
+          bus.setVariableIndex(
+            i, i + exciter.size()
+          ); // Reset bus variable indices
+          bus.setResidualIndex(
+            i, i + exciter.size()
+          ); // Reset bus residual indices
         }
 
         bus.initialize();
@@ -371,7 +404,9 @@ namespace GridKit
         PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT> data;
         data.device_class          = "exciter";
         data.disambiguation_string = "ieeet1_test";
-        data.monitored_variables.insert(PhasorDynamics::Exciter::Ieeet1MonitorableVariables::efd);
+        data.monitored_variables.insert(
+          PhasorDynamics::Exciter::Ieeet1MonitorableVariables::efd
+        );
 
         data.parameters[Params::Tr]      = 0.0;
         data.parameters[Params::Ka]      = 50.0;

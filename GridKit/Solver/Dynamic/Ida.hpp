@@ -152,8 +152,12 @@ namespace AnalysisManager
       using DynamicSolver<ScalarT, IdxT>::setTolerance;
       void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) override;
       void setBackwardTolerance(ScalarT rel_tol, ScalarT abs_tol_override = 0);
-      void setQuadratureTolerance(ScalarT rel_tol, ScalarT abs_tol_override = 0);
-      void setBackwardQuadratureTolerance(ScalarT rel_tol, ScalarT abs_tol_override = 0);
+      void setQuadratureTolerance(
+        ScalarT rel_tol, ScalarT abs_tol_override = 0
+      );
+      void setBackwardQuadratureTolerance(
+        ScalarT rel_tol, ScalarT abs_tol_override = 0
+      );
       void setSuppressAlgebraicErrors(bool suppress);
       void setBackwardSuppressAlgebraicErrors(bool suppress);
       void setConsistentICType(IdaConsistentICType consistent_ic_type);
@@ -165,7 +169,9 @@ namespace AnalysisManager
       IdaStats getStats() const;
 
     private:
-      static int Residual(RealT t, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data);
+      static int Residual(
+        RealT t, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data
+      );
 
       static int Jac(
         RealT     t,
@@ -180,7 +186,9 @@ namespace AnalysisManager
         N_Vector  tmp3
       );
 
-      static int Integrand(RealT t, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data);
+      static int Integrand(
+        RealT t, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data
+      );
 
       static int adjointResidual(
         RealT    t,
@@ -202,9 +210,10 @@ namespace AnalysisManager
         void*    user_data
       );
 
-      RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
-      int   getIDAConsistentICType() const;
-      void  updateModelState(RealT t);
+      RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps)
+        const;
+      int  getIDAConsistentICType() const;
+      void updateModelState(RealT t);
 
     private:
       static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
@@ -278,7 +287,9 @@ namespace AnalysisManager
         ScalarT abs_tol_override,
         ScalarT tol_fac = 1
       );
-      void setQuadratureTolerance(void* mem, ScalarT rel_tol, ScalarT abs_tol_override);
+      void setQuadratureTolerance(
+        void* mem, ScalarT rel_tol, ScalarT abs_tol_override
+      );
     };
 
   } // namespace Sundials

@@ -30,7 +30,8 @@ namespace GridKit
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_var - Number of local variables
-         * @param[in] row_indices - Global row of each local constraint contribution
+         * @param[in] row_indices - Global row of each local constraint
+         * contribution
          * @param[in] col_indices - Global column of each local variable
          * @param[in] x - Local variables
          * @param[out] rows - Row indices

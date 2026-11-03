@@ -30,7 +30,13 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style)
+    bool DynamicObjective<ScalarT, IdxT>::get_nlp_info(
+      Index&          n,
+      Index&          m,
+      Index&          nnz_jac_g,
+      Index&          nnz_h_lag,
+      IndexStyleEnum& index_style
+    )
     {
       // This code handles one objective function
       assert(model_->sizeQuadrature() == 1);
@@ -159,7 +165,8 @@ namespace AnalysisManager
       integrator_->initializeBackwardSimulation(t_final_);
       integrator_->runBackwardSimulation(t_init_);
 
-      // For now assumes only one forward integrand and multiple optimization parameters.
+      // For now assumes only one forward integrand and multiple optimization
+      // parameters.
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
         grad_f[i] = -((integrator_->getAdjointIntegral())[i]);
 

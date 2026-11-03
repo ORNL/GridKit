@@ -56,7 +56,8 @@ namespace GridKit
       std::string device_class;
 
       /// Mapping of parameters to parameter values
-      std::map<Parameters, std::variant<std::string, bool, RealT, IdxT>> parameters;
+      std::map<Parameters, std::variant<std::string, bool, RealT, IdxT>>
+        parameters;
 
       /// Mapping of terminal attachments to bus identifiers
       std::map<Buses, IdxT> buses;
@@ -73,7 +74,8 @@ namespace GridKit
       /// Disambiguation string for this device
       std::string disambiguation_string;
 
-      /// Device class and disambiguation string (e.g. "Genrou_1"), for component lookups
+      /// Device class and disambiguation string (e.g. "Genrou_1"), for
+      /// component lookups
       std::string label() const
       {
         return device_class + "_" + disambiguation_string;

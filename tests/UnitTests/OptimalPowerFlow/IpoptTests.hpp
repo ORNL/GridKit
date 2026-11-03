@@ -22,8 +22,8 @@ namespace GridKit
       using SystemT = OPF::SystemModel<RealT, IdxT>;
 
     public:
-      // Ipopt stops with the constraints and the stationarity within its tolerance. They reach 5e-13 and 2e-13,
-      // and the marginal prices 8e-13.
+      // Ipopt stops with the constraints and the stationarity within its
+      // tolerance. They reach 5e-13 and 2e-13, and the marginal prices 8e-13.
       static constexpr RealT kTol = static_cast<RealT>(1.0e-10);
 
       TestOutcome reference()
@@ -70,7 +70,11 @@ namespace GridKit
         {
           success *= isEqual(g[i], ZERO<RealT>, kTol);
         }
-        success *= isEqual(g[SystemTestData::FLOW_ROWS[0]], SystemTestData::SMAX * SystemTestData::SMAX, kTol);
+        success *= isEqual(
+          g[SystemTestData::FLOW_ROWS[0]],
+          SystemTestData::SMAX * SystemTestData::SMAX,
+          kTol
+        );
 
         const RealT p1 = system.getGenerator("gen_1")->P();
         const RealT p3 = system.getGenerator("gen_3")->P();
@@ -105,10 +109,18 @@ namespace GridKit
           return -system.getBus(number)->lambda().getData()[P];
         };
         const auto marginalCost = [&system](const char* id, RealT c1)
-        { return c1 + TWO<RealT> * SystemTestData::C2 * system.getGenerator(id)->P(); };
+        {
+          return c1
+                 + TWO<RealT>
+                     * SystemTestData::C2 * system.getGenerator(id)->P();
+        };
 
-        success *= isEqual(price(1), marginalCost("gen_1", SystemTestData::C1_GEN_1), kTol);
-        success *= isEqual(price(3), marginalCost("gen_3", SystemTestData::C1_GEN_3), kTol);
+        success *= isEqual(
+          price(1), marginalCost("gen_1", SystemTestData::C1_GEN_1), kTol
+        );
+        success *= isEqual(
+          price(3), marginalCost("gen_3", SystemTestData::C1_GEN_3), kTol
+        );
 
         return success.report(__func__);
       }
@@ -126,18 +138,22 @@ namespace GridKit
           return success.report(__func__);
         }
         success *= optimize(system);
-        success *= system.evaluateGradient() == 0 && system.evaluateJacobian() == 0;
+        success *=
+          system.evaluateGradient() == 0 && system.evaluateJacobian() == 0;
         if (!success)
         {
           return success.report(__func__);
         }
 
-        std::vector<RealT> stationarity(system.gradient().getData(), system.gradient().getData() + system.size());
-        auto*              jacobian = system.getCsrJacobian();
-        const IdxT*        row_ptrs = jacobian->getRowData();
-        const IdxT*        cols     = jacobian->getColData();
-        const RealT*       values   = jacobian->getValues();
-        const RealT*       lambda   = system.lambda().getData();
+        std::vector<RealT> stationarity(
+          system.gradient().getData(),
+          system.gradient().getData() + system.size()
+        );
+        auto*        jacobian = system.getCsrJacobian();
+        const IdxT*  row_ptrs = jacobian->getRowData();
+        const IdxT*  cols     = jacobian->getColData();
+        const RealT* values   = jacobian->getValues();
+        const RealT* lambda   = system.lambda().getData();
         for (IdxT row = 0; row < jacobian->getNumRows(); ++row)
         {
           for (IdxT k = row_ptrs[row]; k < row_ptrs[row + 1]; ++k)
@@ -150,7 +166,9 @@ namespace GridKit
         const RealT* z_upper = system.zUpper().getData();
         for (IdxT j = 0; j < system.size(); ++j)
         {
-          success *= isEqual(stationarity[j] - z_lower[j] + z_upper[j], ZERO<RealT>, kTol);
+          success *= isEqual(
+            stationarity[j] - z_lower[j] + z_upper[j], ZERO<RealT>, kTol
+          );
         }
 
         return success.report(__func__);
@@ -159,7 +177,8 @@ namespace GridKit
     private:
       static bool optimize(SystemT& system)
       {
-        Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
+        Ipopt::SmartPtr<Ipopt::IpoptApplication> app =
+          IpoptApplicationFactory();
         app->Options()->SetIntegerValue("print_level", 0);
         app->Options()->SetNumericValue("bound_relax_factor", 0.0);
         app->Options()->SetNumericValue("tol", kTol);
@@ -169,7 +188,9 @@ namespace GridKit
           return false;
         }
 
-        Ipopt::SmartPtr<Ipopt::TNLP> problem = new AnalysisManager::SteadyState::IpoptInterface<RealT, IdxT>(&system);
+        Ipopt::SmartPtr<Ipopt::TNLP> problem =
+          new AnalysisManager::SteadyState::IpoptInterface<RealT, IdxT>(&system
+          );
         return app->OptimizeTNLP(problem) == Ipopt::Solve_Succeeded;
       }
     };

@@ -33,7 +33,8 @@ namespace GridKit
         VF,   ///< Feedback voltage
         VE,   ///< Exciter control voltage
         EFD,  ///< Efd
-        KSAT, ///< \f$E_{\mathrm{fd}}'S(E_{\mathrm{fd}}')\f$ Scaled-quadratic saturation contribution
+        KSAT, ///< \f$E_{\mathrm{fd}}'S(E_{\mathrm{fd}}')\f$ Scaled-quadratic
+              ///< saturation contribution
       };
 
       /// External variables of a `Ieeet1`
@@ -103,17 +104,13 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
-          const ScalarT*,
-          const ScalarT*,
-          const ScalarT*,
-          const ScalarT*,
-          ScalarT*
-        );
+        __attribute__((always_inline)) inline int
+        evaluateInternalResidual(const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
+        static constexpr RealT TIME_CONSTANT_MINIMUM =
+          static_cast<RealT>(1.0e-3);
+        static void logTimeConstantWarning();
 
         // Signal pointers
         BusT* bus_;
@@ -141,7 +138,8 @@ namespace GridKit
         RealT SA_{0};
         RealT SB_{0};
 
-        // Runtime connection masks keep the summing junction Enzyme sparse-solvable
+        // Runtime connection masks keep the summing junction Enzyme
+        // sparse-solvable
         RealT uel_on_{0};
         RealT oel_on_{0};
 

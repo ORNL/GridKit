@@ -23,7 +23,8 @@ namespace GridKit
         Tr,    ///< \f$T_r\f$ Temporary-droop reset time constant
         Tf,    ///< \f$T_f\f$ Governor error filter time constant
         Tg,    ///< \f$T_g\f$ Gate servo time constant
-        Velm,  ///< \f$V_{\mathrm{elm}}\f$ Maximum desired-gate velocity magnitude
+        Velm,  ///< \f$V_{\mathrm{elm}}\f$ Maximum desired-gate velocity
+               ///< magnitude
         Gmax,  ///< \f$G^{\max}\f$ Configured upper gate response limit
         Gmin,  ///< \f$G^{\min}\f$ Configured lower gate response limit
         Tw,    ///< \f$T_w\f$ Water inertia time constant
@@ -31,22 +32,23 @@ namespace GridKit
         Dturb, ///< \f$D_{\mathrm{turb}}\f$ Turbine damping coefficient
         Qnl,   ///< \f$q_{\mathrm{NL}}\f$ No-load flow at nominal head
         Tn,    ///< \f$T_n\f$ Speed lead-lag numerator time constant
-        Tnp,   ///< \f$T_{\mathrm{np}}\f$ Speed lead-lag denominator time constant
-        db1,   ///< \f$D_{\omega}\f$ Type 1 speed deadband threshold
-        db2,   ///< \f$D_2\f$ Unsupported mechanical backlash. Nonzero values warn and are ignored
-        Hdam,  ///< \f$H_{\mathrm{dam}}\f$ Head available at dam
-        Gv0,   ///< \f$G_V^{(0)}\f$ Gate point 0
-        Gv1,   ///< \f$G_V^{(1)}\f$ Gate point 1
-        Gv2,   ///< \f$G_V^{(2)}\f$ Gate point 2
-        Gv3,   ///< \f$G_V^{(3)}\f$ Gate point 3
-        Gv4,   ///< \f$G_V^{(4)}\f$ Gate point 4
-        Gv5,   ///< \f$G_V^{(5)}\f$ Gate point 5
-        Pgv0,  ///< \f$P_{\mathrm{GV}}^{(0)}\f$ Power point 0
-        Pgv1,  ///< \f$P_{\mathrm{GV}}^{(1)}\f$ Power point 1
-        Pgv2,  ///< \f$P_{\mathrm{GV}}^{(2)}\f$ Power point 2
-        Pgv3,  ///< \f$P_{\mathrm{GV}}^{(3)}\f$ Power point 3
-        Pgv4,  ///< \f$P_{\mathrm{GV}}^{(4)}\f$ Power point 4
-        Pgv5,  ///< \f$P_{\mathrm{GV}}^{(5)}\f$ Power point 5
+        Tnp, ///< \f$T_{\mathrm{np}}\f$ Speed lead-lag denominator time constant
+        db1, ///< \f$D_{\omega}\f$ Type 1 speed deadband threshold
+        db2, ///< \f$D_2\f$ Unsupported mechanical backlash. Nonzero values warn
+             ///< and are ignored
+        Hdam, ///< \f$H_{\mathrm{dam}}\f$ Head available at dam
+        Gv0,  ///< \f$G_V^{(0)}\f$ Gate point 0
+        Gv1,  ///< \f$G_V^{(1)}\f$ Gate point 1
+        Gv2,  ///< \f$G_V^{(2)}\f$ Gate point 2
+        Gv3,  ///< \f$G_V^{(3)}\f$ Gate point 3
+        Gv4,  ///< \f$G_V^{(4)}\f$ Gate point 4
+        Gv5,  ///< \f$G_V^{(5)}\f$ Gate point 5
+        Pgv0, ///< \f$P_{\mathrm{GV}}^{(0)}\f$ Power point 0
+        Pgv1, ///< \f$P_{\mathrm{GV}}^{(1)}\f$ Power point 1
+        Pgv2, ///< \f$P_{\mathrm{GV}}^{(2)}\f$ Power point 2
+        Pgv3, ///< \f$P_{\mathrm{GV}}^{(3)}\f$ Power point 3
+        Pgv4, ///< \f$P_{\mathrm{GV}}^{(4)}\f$ Power point 4
+        Pgv5, ///< \f$P_{\mathrm{GV}}^{(5)}\f$ Power point 5
       };
 
       /// Buses for the HYGOV governor model.

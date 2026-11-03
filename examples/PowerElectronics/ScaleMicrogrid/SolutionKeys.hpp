@@ -16,8 +16,9 @@
 
 ///
 /**
- * The SCALE_MICROGRID_ERROR_TOL is a metric to determine if the error is good enough to pass the test.
- * REL_TOL and ABS_TOL determine the amount of error the problem produces. As the tolerance decrease so does the error.
+ * The SCALE_MICROGRID_ERROR_TOL is a metric to determine if the error is good
+ * enough to pass the test. REL_TOL and ABS_TOL determine the amount of error
+ * the problem produces. As the tolerance decrease so does the error.
  *
  * For References keys on N=8:
  * 2-Norm Relative Error: 2.33318e-07  (rel/abs tol = 1e-6)

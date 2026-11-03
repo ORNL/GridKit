@@ -68,12 +68,12 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     private:
-      using ScalarT        = scalar_type;
-      using IdxT           = index_type;
-      using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using CsrMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
-      using CooMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
-      using BusT           = BusBase<ScalarT, IdxT>;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
+      using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
+      using BusT       = BusBase<ScalarT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
       using ComponentT     = Component<ScalarT, IdxT>;
@@ -149,17 +149,22 @@ namespace GridKit
       std::vector<ComponentT*>  components_;
       std::vector<SystemModel*> subsystems_;
 
-      /// Component labels (device class and case-file ID), by gridkit_component_id
+      /// Component labels (device class and case-file ID), by
+      /// gridkit_component_id
       std::vector<std::string> component_labels_;
 
       /// Map between component label and gridkit_component_id
       std::map<std::string, IdxT> gridkit_component_indices_;
 
-      std::map<IdxT, IdxT>  gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
-      std::map<IdxT, BusT*> external_buses_;         ///< Parent's buses by bus_id, not owned
-      std::vector<BusT*>    ordered_external_buses_; ///< External buses in construction order, not owned
+      std::map<IdxT, IdxT>
+        gridkit_bus_indices_; ///< Map between gridkit_bus_id and bus_id
+      std::map<IdxT, BusT*>
+        external_buses_; ///< Parent's buses by bus_id, not owned
+      std::vector<BusT*>
+        ordered_external_buses_; ///< External buses in construction order, not
+                                 ///< owned
 
-      IdxT offset_{0};           ///< Global index of this system's first variable
+      IdxT offset_{0}; ///< Global index of this system's first variable
       bool is_subsystem_{false}; ///< Allocated and bound by a parent system
       bool owns_components_{false};
 

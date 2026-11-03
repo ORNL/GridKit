@@ -25,7 +25,8 @@ namespace AnalysisManager
      *
      */
     template <class ScalarT, typename IdxT>
-    class DynamicConstraint : public Ipopt::TNLP, public OptimizationSolver<ScalarT, IdxT>
+    class DynamicConstraint : public Ipopt::TNLP,
+                              public OptimizationSolver<ScalarT, IdxT>
     {
       using OptimizationSolver<ScalarT, IdxT>::integrator_;
       using OptimizationSolver<ScalarT, IdxT>::model_;
@@ -48,28 +49,73 @@ namespace AnalysisManager
       virtual ~DynamicConstraint();
 
       /// Returns sizes of the model components
-      virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style);
+      virtual bool get_nlp_info(
+        Index&          n,
+        Index&          m,
+        Index&          nnz_jac_g,
+        Index&          nnz_h_lag,
+        IndexStyleEnum& index_style
+      );
 
       /// Returns problem bounds
-      virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u, Index m, Number* g_l, Number* g_u);
+      virtual bool get_bounds_info(
+        Index n, Number* x_l, Number* x_u, Index m, Number* g_l, Number* g_u
+      );
 
       /// Initialize optimization
-      virtual bool get_starting_point(Index n, bool init_x, Number* x, bool init_z, Number* z_L, Number* z_U, Index m, bool init_lambda, Number* lambda);
+      virtual bool get_starting_point(
+        Index   n,
+        bool    init_x,
+        Number* x,
+        bool    init_z,
+        Number* z_L,
+        Number* z_U,
+        Index   m,
+        bool    init_lambda,
+        Number* lambda
+      );
 
       /// Evaluate objective
-      virtual bool eval_f(Index n, const Number* x, bool new_x, Number& obj_value);
+      virtual bool eval_f(
+        Index n, const Number* x, bool new_x, Number& obj_value
+      );
 
       /// Evaluate objective gradient
-      virtual bool eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f);
+      virtual bool eval_grad_f(
+        Index n, const Number* x, bool new_x, Number* grad_f
+      );
 
       /// Evaluate constraint residuals (not used here)
-      virtual bool eval_g(Index n, const Number* x, bool new_x, Index m, Number* g);
+      virtual bool eval_g(
+        Index n, const Number* x, bool new_x, Index m, Number* g
+      );
 
       /// Evaluate Jacobian (not used here)
-      virtual bool eval_jac_g(Index n, const Number* x, bool new_x, Index m, Index nele_jac, Index* iRow, Index* jCol, Number* values);
+      virtual bool eval_jac_g(
+        Index         n,
+        const Number* x,
+        bool          new_x,
+        Index         m,
+        Index         nele_jac,
+        Index*        iRow,
+        Index*        jCol,
+        Number*       values
+      );
 
       /// Evaluate Hessian (have Ipopt estimate Hessian)
-      virtual bool eval_h(Index n, const Number* x, bool new_x, Number obj_factor, Index m, const Number* lambda, bool new_lambda, Index nele_hess, Index* iRow, Index* jCol, Number* values);
+      virtual bool eval_h(
+        Index         n,
+        const Number* x,
+        bool          new_x,
+        Number        obj_factor,
+        Index         m,
+        const Number* lambda,
+        bool          new_lambda,
+        Index         nele_hess,
+        Index*        iRow,
+        Index*        jCol,
+        Number*       values
+      );
 
       /// Postprocessing of the results (not used here)
       virtual void finalize_solution(

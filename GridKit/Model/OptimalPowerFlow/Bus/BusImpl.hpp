@@ -18,7 +18,9 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus(const ModelDataT& data)
-      : ComponentT(std::type_identity<Bus>{}, std::format("bus {}", data.number))
+      : ComponentT(
+          std::type_identity<Bus>{}, std::format("bus {}", data.number)
+        )
     {
       initializeParameters(data);
     }
@@ -74,7 +76,8 @@ namespace GridKit
       return 0;
     }
 
-    /// Shunt power into the bus, which starts its balance, and the squared voltage magnitude
+    /// Shunt power into the bus, which starts its balance, and the squared
+    /// voltage magnitude
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] void Bus<scalar_type, index_type>::
       internalConstraints(
@@ -95,7 +98,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Bus<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void Bus<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Params = BusParameters;
 

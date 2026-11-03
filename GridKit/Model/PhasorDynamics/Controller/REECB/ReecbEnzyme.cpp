@@ -35,15 +35,17 @@ namespace GridKit
           const auto size        = static_cast<size_t>(size_);
           const auto bus_size    = static_cast<size_t>(bus_->size());
           const auto signal_size = static_cast<size_t>(ws_.getSize());
-          const auto buffer_size = 2 * size * size + size * bus_size + size * signal_size;
+          const auto buffer_size =
+            2 * size * size + size * bus_size + size * signal_size;
 
           J_rows_buffer_ = new IdxT[buffer_size];
           J_cols_buffer_ = new IdxT[buffer_size];
           J_vals_buffer_ = new RealT[buffer_size];
         }
 
-        using ModelT = GridKit::PhasorDynamics::Controller::Reecb<scalar_type, index_type>;
-        using Fn     = GridKit::Enzyme::Sparse::MemberFunctions;
+        using ModelT =
+          GridKit::PhasorDynamics::Controller::Reecb<scalar_type, index_type>;
+        using Fn = GridKit::Enzyme::Sparse::MemberFunctions;
 
         nnz_ = 0;
 

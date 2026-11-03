@@ -22,9 +22,11 @@ namespace GridKit
     class VectorHandlerTests
     {
     public:
-      VectorHandlerTests(VectorHandler<ScalarT, IdxT>& handler, memory::MemorySpace memspace = memory::HOST)
-        : handler_(handler),
-          memspace_(memspace)
+      VectorHandlerTests(
+        VectorHandler<ScalarT, IdxT>& handler,
+        memory::MemorySpace           memspace = memory::HOST
+      )
+        : handler_(handler), memspace_(memspace)
       {
       }
 
@@ -59,7 +61,8 @@ namespace GridKit
         x.copyFromExternal(data, memory::HOST, memspace_);
 
         ScalarT result = handler_.amax(&x, memspace_);
-        ScalarT answer = static_cast<ScalarT>(N - 1) * static_cast<ScalarT>(0.1);
+        ScalarT answer =
+          static_cast<ScalarT>(N - 1) * static_cast<ScalarT>(0.1);
 
         if (!isEqual(result, answer))
         {
@@ -154,7 +157,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Test mass (bulk) axpy: y = y - x*alpha, where x is [N x K] and alpha is [K x 1].
+       * @brief Test mass (bulk) axpy: y = y - x*alpha, where x is [N x K] and
+       * alpha is [K x 1].
        */
       TestOutcome axpyMulti(IdxT N, IdxT K)
       {
@@ -254,9 +258,11 @@ namespace GridKit
         ScalarT alpha = -1.0;
         ScalarT beta  = 1.0;
         handler_.gemv('N', K, alpha, beta, &V, &yN, &xN, memspace_);
-        status *= verifyAnswer(xN, static_cast<ScalarT>(K) + static_cast<ScalarT>(0.5));
+        status *=
+          verifyAnswer(xN, static_cast<ScalarT>(K) + static_cast<ScalarT>(0.5));
         handler_.gemv('T', K, alpha, beta, &V, &yT, &xT, memspace_);
-        status *= verifyAnswer(xT, static_cast<ScalarT>(N) + static_cast<ScalarT>(0.5));
+        status *=
+          verifyAnswer(xT, static_cast<ScalarT>(N) + static_cast<ScalarT>(0.5));
 
         return status.report(__func__);
       }
@@ -295,10 +301,14 @@ namespace GridKit
 
         for (IdxT i = 0; i < N; ++i)
         {
-          if (!isEqual(vec.getData(memory::HOST)[i], static_cast<ScalarT>(i + 1) * 3.0))
+          if (!isEqual(
+                vec.getData(memory::HOST)[i], static_cast<ScalarT>(i + 1) * 3.0
+              ))
           {
-            std::cout << "Solution vector element vec[" << i << "] = " << vec.getData(memory::HOST)[i]
-                      << ", expected: " << static_cast<ScalarT>(i + 1) * 3.0 << "\n";
+            std::cout << "Solution vector element vec[" << i
+                      << "] = " << vec.getData(memory::HOST)[i]
+                      << ", expected: " << static_cast<ScalarT>(i + 1) * 3.0
+                      << "\n";
             status *= false;
             break;
           }
@@ -344,10 +354,16 @@ namespace GridKit
 
         for (IdxT i = 0; i < N; ++i)
         {
-          if (!isEqual(vec.getData(memory::HOST)[i], static_cast<ScalarT>(3.0) / static_cast<ScalarT>(i + 1)))
+          if (!isEqual(
+                vec.getData(memory::HOST)[i],
+                static_cast<ScalarT>(3.0) / static_cast<ScalarT>(i + 1)
+              ))
           {
-            std::cout << "Solution vector element vec[" << i << "] = " << vec.getData(memory::HOST)[i]
-                      << ", expected: " << static_cast<ScalarT>(3.0) / static_cast<ScalarT>(i + 1) << "\n";
+            std::cout << "Solution vector element vec[" << i
+                      << "] = " << vec.getData(memory::HOST)[i]
+                      << ", expected: "
+                      << static_cast<ScalarT>(3.0) / static_cast<ScalarT>(i + 1)
+                      << "\n";
             status *= false;
             break;
           }
@@ -405,7 +421,8 @@ namespace GridKit
         {
           if (!isEqual(y.getData(memory::HOST)[i], static_cast<ScalarT>(i + 1)))
           {
-            std::cout << "Solution vector element y[" << i << "] = " << y.getData(memory::HOST)[i]
+            std::cout << "Solution vector element y[" << i
+                      << "] = " << y.getData(memory::HOST)[i]
                       << ", expected: " << static_cast<ScalarT>(i + 1) << "\n";
             status *= false;
             break;
@@ -413,7 +430,8 @@ namespace GridKit
 
           if (!isEqual(z.getData(memory::HOST)[i], static_cast<ScalarT>(i + 1)))
           {
-            std::cout << "Solution vector element z[" << i << "] = " << z.getData(memory::HOST)[i]
+            std::cout << "Solution vector element z[" << i
+                      << "] = " << z.getData(memory::HOST)[i]
                       << ", expected: " << static_cast<ScalarT>(i + 1) << "\n";
             status *= false;
             break;
@@ -466,7 +484,8 @@ namespace GridKit
         {
           if (!isEqual(x.getData(memory::HOST)[i], static_cast<ScalarT>(i)))
           {
-            std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+            std::cout << "Solution vector element x[" << i
+                      << "] = " << x.getData(memory::HOST)[i]
                       << ", expected: " << static_cast<ScalarT>(i) << "\n";
             status *= false;
             break;
@@ -474,7 +493,8 @@ namespace GridKit
 
           if (!isEqual(y.getData(memory::HOST)[i], static_cast<ScalarT>(i)))
           {
-            std::cout << "Solution vector element y[" << i << "] = " << y.getData(memory::HOST)[i]
+            std::cout << "Solution vector element y[" << i
+                      << "] = " << y.getData(memory::HOST)[i]
                       << ", expected: " << static_cast<ScalarT>(i) << "\n";
             status *= false;
             break;
@@ -488,7 +508,8 @@ namespace GridKit
       VectorHandler<ScalarT, IdxT>& handler_;
       memory::MemorySpace           memspace_{memory::HOST};
 
-      // We could verify through norm but that would defeat the purpose of testing vector handler.
+      // We could verify through norm but that would defeat the purpose of
+      // testing vector handler.
       bool verifyAnswer(Vector<ScalarT, IdxT>& x, ScalarT answer)
       {
         bool success = true;
@@ -504,7 +525,8 @@ namespace GridKit
           {
             std::cout << std::setprecision(16);
             success = false;
-            std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+            std::cout << "Solution vector element x[" << i
+                      << "] = " << x.getData(memory::HOST)[i]
                       << ", expected: " << answer << "\n";
             break;
           }

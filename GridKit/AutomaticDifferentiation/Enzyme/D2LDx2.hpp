@@ -19,8 +19,9 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme sparse Hessian of \f$L = \sigma f + \lambda^T g\f$, by one
-       * forward sweep per local variable over the reverse gradient of \f$L\f$
+       * @brief Enzyme sparse Hessian of \f$L = \sigma f + \lambda^T g\f$, by
+       * one forward sweep per local variable over the reverse gradient of
+       * \f$L\f$
        *
        * @tparam ModelT - optimization component model
        */
@@ -116,7 +117,8 @@ namespace GridKit
           return value;
         }
 
-        /// Add the Lagrangian gradient to `gradient`, whose tangent alone is used
+        /// Add the Lagrangian gradient to `gradient`, whose tangent alone is
+        /// used
         template <typename ScalarT, typename RealT>
         [[gnu::always_inline]] inline static void lagrangianGradient(
           const ModelT*  model,

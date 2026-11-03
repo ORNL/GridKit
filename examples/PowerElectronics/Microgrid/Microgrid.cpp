@@ -11,15 +11,17 @@
 
 int main(int /* argc */, char const** /* argv */)
 {
-  /// @todo Needs to be modified. Some components are small relative to others thus
-  /// there error is high (or could be matlab vector issue)
+  /// @todo Needs to be modified. Some components are small relative to others
+  /// thus there error is high (or could be matlab vector issue)
   double rel_tol         = 1.0e-8;
   size_t max_step_number = 3000;
   bool   use_jac         = true;
-  bool   debug_output    = false; // set to true to print residuals, Jacobian and final solution
+  bool   debug_output =
+    false; // set to true to print residuals, Jacobian and final solution
 
   // Create model
-  auto* sysmodel = new GridKit::PowerElectronics::SystemModel<double, size_t>(use_jac);
+  auto* sysmodel =
+    new GridKit::PowerElectronics::SystemModel<double, size_t>(use_jac);
 
   // Build the four-generator microgrid network.
   size_t                                N_size = 2;
@@ -96,14 +98,18 @@ int main(int /* argc */, char const** /* argv */)
   bool all_internal_diff = true;
   bool all_external_alg  = true;
 
-  const size_t num_node_vars = network.buses[0].size() + network.buses[1].size() + network.buses[2].size() + network.buses[3].size() + network.dg_signal.size();
+  const size_t num_node_vars =
+    network.buses[0].size() + network.buses[1].size() + network.buses[2].size()
+    + network.buses[3].size() + network.dg_signal.size();
 
   for (size_t i = 0; i < sysmodel->size() - num_node_vars; i++)
   {
     all_internal_diff = all_internal_diff && sysmodel->tag()[i];
     if (!sysmodel->tag()[i])
     {
-      std::cout << "Unexpected algebraic-tagged internal variable found in index " << i << '\n';
+      std::cout
+        << "Unexpected algebraic-tagged internal variable found in index " << i
+        << '\n';
     }
   }
 
@@ -112,11 +118,16 @@ int main(int /* argc */, char const** /* argv */)
     all_external_alg = all_external_alg && !sysmodel->tag()[i];
     if (sysmodel->tag()[i])
     {
-      std::cout << "Unexpected differential-tagged external variable found in index " << i << '\n';
+      std::cout
+        << "Unexpected differential-tagged external variable found in index "
+        << i << '\n';
     }
   }
 
-  std::cout << "Verify all internal variables are differential: " << all_internal_diff << ", and all external variables are algebraic: " << all_external_alg << '\n';
+  std::cout << "Verify all internal variables are differential: "
+            << all_internal_diff
+            << ", and all external variables are algebraic: "
+            << all_external_alg << '\n';
 
   // Create numerical integrator and configure it for the generator model
   auto* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
@@ -179,7 +190,8 @@ int main(int /* argc */, char const** /* argv */)
   double max_error     = 0.0;
   for (size_t i = 0; i < true_vec.size(); i++)
   {
-    double error = std::abs(true_vec[i] - yfinal_data[i]) / std::abs(1.0 + true_vec[i]);
+    double error =
+      std::abs(true_vec[i] - yfinal_data[i]) / std::abs(1.0 + true_vec[i]);
     if (error > max_error)
       max_error = error;
     if (error > error_allowed)

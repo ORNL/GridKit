@@ -45,6 +45,8 @@ namespace GridKit
      * std::invalid_argument for an unknown device class, parameter, or port
      */
     SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);
-    SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& file);
+    SystemModelData<double, size_t> parseSystemModelData(
+      const std::filesystem::path& file
+    );
   } // namespace OptimalPowerFlow
 } // namespace GridKit

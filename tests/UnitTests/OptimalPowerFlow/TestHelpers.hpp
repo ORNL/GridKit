@@ -24,7 +24,9 @@ namespace GridKit
     using EntryMap = std::map<std::pair<size_t, size_t>, double>;
 
     template <typename ScalarT, typename... ModelsT>
-    OPF::SystemModel<ScalarT, size_t> makeSystem(std::unique_ptr<ModelsT>... models)
+    OPF::SystemModel<ScalarT, size_t> makeSystem(
+      std::unique_ptr<ModelsT>... models
+    )
     {
       std::vector<std::unique_ptr<OPF::Component<ScalarT, size_t>>> components;
       components.reserve(sizeof...(ModelsT));
@@ -33,7 +35,9 @@ namespace GridKit
     }
 
     template <typename ScalarT>
-    void setVariables(OPF::SystemModel<ScalarT, size_t>& system, std::span<const double> values)
+    void setVariables(
+      OPF::SystemModel<ScalarT, size_t>& system, std::span<const double> values
+    )
     {
       if (values.size() != system.size())
       {
@@ -52,7 +56,9 @@ namespace GridKit
     }
 
     template <typename ScalarT>
-    void setMultipliers(OPF::SystemModel<ScalarT, size_t>& system, std::span<const double> values)
+    void setMultipliers(
+      OPF::SystemModel<ScalarT, size_t>& system, std::span<const double> values
+    )
     {
       if (values.size() != system.sizeConstraints())
       {
@@ -62,17 +68,20 @@ namespace GridKit
       system.lambda().setDataUpdated();
     }
 
-    inline EntryMap sum(const OPF::Component<double, size_t>::CooBuffer& entries)
+    inline EntryMap sum(const OPF::Component<double, size_t>::CooBuffer& entries
+    )
     {
       EntryMap result;
       for (size_t k = 0; k < entries.nnz; ++k)
       {
-        result[{entries.rows.getData()[k], entries.cols.getData()[k]}] += entries.values.getData()[k];
+        result[{entries.rows.getData()[k], entries.cols.getData()[k]}] +=
+          entries.values.getData()[k];
       }
       return result;
     }
 
-    inline auto pattern(const OPF::Component<double, size_t>::CooBuffer& entries)
+    inline auto pattern(const OPF::Component<double, size_t>::CooBuffer& entries
+    )
     {
       return std::pair{
         std::vector<size_t>(
@@ -96,11 +105,21 @@ namespace GridKit
       };
     }
 
-    inline bool matches(const EntryMap& actual, const EntryMap& expected, double tolerance)
+    inline bool matches(
+      const EntryMap& actual, const EntryMap& expected, double tolerance
+    )
     {
       return actual.size() == expected.size()
-             && std::equal(actual.begin(), actual.end(), expected.begin(), [tolerance](const auto& a, const auto& b)
-                           { return a.first == b.first && isEqual(a.second, b.second, tolerance); });
+             && std::equal(
+               actual.begin(),
+               actual.end(),
+               expected.begin(),
+               [tolerance](const auto& a, const auto& b)
+               {
+                 return a.first == b.first
+                        && isEqual(a.second, b.second, tolerance);
+               }
+             );
     }
   } // namespace Testing
 } // namespace GridKit

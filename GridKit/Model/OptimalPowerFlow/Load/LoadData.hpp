@@ -33,6 +33,7 @@ namespace GridKit
 
     /// Data of a `Load`
     template <typename real_type, typename index_type>
-    using LoadData = ComponentData<real_type, index_type, LoadParameters, LoadPorts>;
+    using LoadData =
+      ComponentData<real_type, index_type, LoadParameters, LoadPorts>;
   } // namespace OptimalPowerFlow
 } // namespace GridKit

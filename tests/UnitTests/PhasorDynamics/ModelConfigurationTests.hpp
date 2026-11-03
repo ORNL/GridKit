@@ -74,7 +74,8 @@ namespace GridKit
         success *= !reader.readNonNegative(Params::omitted).has_value();
         success *= !reader.readBool(Params::omitted).has_value();
         success *= !reader.readInteger(Params::omitted).has_value();
-        success *= (reader.readReal(Params::omitted).value_or(ONE<RealT>) == ONE<RealT>);
+        success *=
+          (reader.readReal(Params::omitted).value_or(ONE<RealT>) == ONE<RealT>);
         success *= reader.readBool(Params::omitted).value_or(true);
 
         success *= (reader.readReal(Params::integer) == TWO<RealT>);
@@ -82,27 +83,36 @@ namespace GridKit
         success *= (reader.readReal(Params::negative) == -ONE<RealT>);
         success *= (reader.readNonNegative(Params::zero) == ZERO<RealT>);
         success *= (reader.readNonNegative(Params::integer) == TWO<RealT>);
-        success *= (reader.readInteger(Params::integer) == static_cast<IdxT>(2));
+        success *=
+          (reader.readInteger(Params::integer) == static_cast<IdxT>(2));
         success *= (reader.readBool(Params::false_flag) == false);
         success *= (reader.readBool(Params::true_flag) == true);
         success *= !reader.readBool(Params::false_flag).value_or(true);
 
-        success *= throws<std::invalid_argument>([&]()
-                                                 { static_cast<void>(reader.readReal(Params::infinite)); });
-        success *= throws<std::invalid_argument>([&]()
-                                                 { static_cast<void>(reader.readReal(Params::not_a_number)); });
-        success *= throws<std::invalid_argument>([&]()
-                                                 { static_cast<void>(reader.readReal(Params::text)); });
-        success *= throws<std::invalid_argument>([&]()
-                                                 { static_cast<void>(reader.readReal(Params::true_flag)); });
-        success *= throws<std::invalid_argument>([&]()
-                                                 { static_cast<void>(reader.readInteger(Params::real)); });
-        success *= throws<std::invalid_argument>([&]()
-                                                 { static_cast<void>(reader.readInteger(Params::zero)); });
-        success *= throws<std::invalid_argument>([&]()
-                                                 { static_cast<void>(reader.readInteger(Params::true_flag)); });
-        success *= throws<std::invalid_argument>([&]()
-                                                 { static_cast<void>(reader.readNonNegative(Params::negative)); });
+        success *= throws<std::invalid_argument>(
+          [&]() { static_cast<void>(reader.readReal(Params::infinite)); }
+        );
+        success *= throws<std::invalid_argument>(
+          [&]() { static_cast<void>(reader.readReal(Params::not_a_number)); }
+        );
+        success *= throws<std::invalid_argument>(
+          [&]() { static_cast<void>(reader.readReal(Params::text)); }
+        );
+        success *= throws<std::invalid_argument>(
+          [&]() { static_cast<void>(reader.readReal(Params::true_flag)); }
+        );
+        success *= throws<std::invalid_argument>(
+          [&]() { static_cast<void>(reader.readInteger(Params::real)); }
+        );
+        success *= throws<std::invalid_argument>(
+          [&]() { static_cast<void>(reader.readInteger(Params::zero)); }
+        );
+        success *= throws<std::invalid_argument>(
+          [&]() { static_cast<void>(reader.readInteger(Params::true_flag)); }
+        );
+        success *= throws<std::invalid_argument>(
+          [&]() { static_cast<void>(reader.readNonNegative(Params::negative)); }
+        );
 
         try
         {
@@ -111,7 +121,9 @@ namespace GridKit
         }
         catch (const std::invalid_argument& error)
         {
-          success *= (std::string_view(error.what()) == "Test: parameter 'integer_flag' must be boolean");
+          success *=
+            (std::string_view(error.what())
+             == "Test: parameter 'integer_flag' must be boolean");
         }
 
         return success.report(__func__);
@@ -128,7 +140,9 @@ namespace GridKit
 
         checks.check(false, "x must be positive");
         success *= !checks.passed();
-        success *= (checks.errors() == std::vector<std::string>{"Test: x must be positive"});
+        success *=
+          (checks.errors()
+           == std::vector<std::string>{"Test: x must be positive"});
 
         return success.report(__func__);
       }

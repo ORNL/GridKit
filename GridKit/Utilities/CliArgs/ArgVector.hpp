@@ -50,13 +50,11 @@ namespace GridKit
        * @brief Construct with a single value
        */
       template <typename T>
-      ArgVector(T&& val)
-        : vec_{val}
+      ArgVector(T&& val) : vec_{val}
       {
       }
 
-      ArgVector(std::initializer_list<ArgValue> vals)
-        : vec_{vals}
+      ArgVector(std::initializer_list<ArgValue> vals) : vec_{vals}
       {
       }
 

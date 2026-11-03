@@ -37,13 +37,15 @@ namespace GridKit
       /// Internal variables of a `Regca`
       enum class RegcaInternalVariables : size_t
       {
-        VM,      ///< \f$V_M\f$ Filtered terminal voltage
-        IQ,      ///< \f$I_q\f$ Reactive-current state on component base
-        IP,      ///< \f$I_p\f$ Active-current state on component base
-        VT,      ///< \f$V_T\f$ Terminal voltage magnitude
-        IR,      ///< \f$I_\mathrm{r}\f$ Branch-current real component on system base
-        II,      ///< \f$I_\mathrm{i}\f$ Branch-current imaginary component on system base
-        IQEXTRA, ///< \f$I_q^\mathrm{extra}\f$ Extra inductive current from HVRCM on component base
+        VM, ///< \f$V_M\f$ Filtered terminal voltage
+        IQ, ///< \f$I_q\f$ Reactive-current state on component base
+        IP, ///< \f$I_p\f$ Active-current state on component base
+        VT, ///< \f$V_T\f$ Terminal voltage magnitude
+        IR, ///< \f$I_\mathrm{r}\f$ Branch-current real component on system base
+        II, ///< \f$I_\mathrm{i}\f$ Branch-current imaginary component on system
+            ///< base
+        IQEXTRA, ///< \f$I_q^\mathrm{extra}\f$ Extra inductive current from
+                 ///< HVRCM on component base
         IL,      ///< \f$I_L\f$ LVPL upper-limit current curve on component base
         PBR,     ///< \f$P^\mathrm{br}\f$ Branch active power on system base
         QBR,     ///< \f$Q^\mathrm{br}\f$ Branch reactive power on system base
@@ -53,11 +55,13 @@ namespace GridKit
       enum class RegcaExternalVariables : size_t
       {
         IPCMD, ///< \f$I_p^\mathrm{cmd}\f$ Active-current command on system base
-        IQCMD, ///< \f$I_q^\mathrm{cmd}\f$ Reactive-current command on system base
+        IQCMD, ///< \f$I_q^\mathrm{cmd}\f$ Reactive-current command on system
+               ///< base
       };
 
       /**
-       * @brief First-generation WECC renewable generator/converter model (REGCA).
+       * @brief First-generation WECC renewable generator/converter model
+       * (REGCA).
        *
        * @tparam scalar_type Plain real or differentiable scalar type.
        * @tparam index_type Integer index type.
@@ -204,8 +208,9 @@ namespace GridKit
 
         static RealT iramp(RealT value);
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static constexpr RealT KL_                   = static_cast<RealT>(100.0);
+        static constexpr RealT TIME_CONSTANT_MINIMUM =
+          static_cast<RealT>(1.0e-3);
+        static constexpr RealT KL_ = static_cast<RealT>(100.0);
         static void            logTimeConstantWarning();
 
         BusT* bus_{nullptr};

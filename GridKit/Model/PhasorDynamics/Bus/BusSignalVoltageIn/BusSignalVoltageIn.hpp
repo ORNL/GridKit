@@ -32,8 +32,8 @@ namespace GridKit
      * and Ii(); the resulting sums are published on signal outlets `ir`
      * and `ii`.
      *
-     * @note Signal ports have to be connected before allocate() is called, since
-     *       the output signals are linked there.
+     * @note Signal ports have to be connected before allocate() is called,
+     * since the output signals are linked there.
      *
      * @warning The current sums are complete only after all attached
      *          components have evaluated their residuals. A consumer of the
@@ -155,7 +155,9 @@ namespace GridKit
         {
           Log::error() << "BusSignalVoltageIn: voltage inlet " << name
                        << " read without a linked signal\n";
-          throw std::runtime_error("BusSignalVoltageIn: voltage inlet has no linked signal");
+          throw std::runtime_error(
+            "BusSignalVoltageIn: voltage inlet has no linked signal"
+          );
         }
         return port.readSignal();
       }
@@ -163,7 +165,8 @@ namespace GridKit
       ScalarT Ir_{0.0};
       ScalarT Ii_{0.0};
 
-      /// Current sums are not system variables; the output signals carry no valid index.
+      /// Current sums are not system variables; the output signals carry no
+      /// valid index.
       IdxT ir_index_{INVALID_INDEX<IdxT>};
       IdxT ii_index_{INVALID_INDEX<IdxT>};
 

@@ -28,7 +28,9 @@ namespace AnalysisManager
   namespace Sundials
   {
     template <class ScalarT, typename IdxT>
-    Kinsol<ScalarT, IdxT>::Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
+    Kinsol<ScalarT, IdxT>::Kinsol(
+      GridKit::Model::Evaluator<ScalarT, IdxT>* model
+    )
       : Kinsol(model->size())
     {
       model_ = model;
@@ -215,7 +217,9 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Kinsol<ScalarT, IdxT>::Residual(N_Vector yy, N_Vector rr, void* user_data)
+    int Kinsol<ScalarT, IdxT>::Residual(
+      N_Vector yy, N_Vector rr, void* user_data
+    )
     {
       auto& self = *static_cast<Kinsol*>(user_data);
       try
@@ -283,7 +287,9 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::checkAllocation(SUNContext c, void* v, const char* functionName)
+    void Kinsol<ScalarT, IdxT>::checkAllocation(
+      SUNContext c, void* v, const char* functionName
+    )
     {
       if (v == NULL)
       {
@@ -297,7 +303,9 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::checkOutput(int retval, const char* functionName)
+    void Kinsol<ScalarT, IdxT>::checkOutput(
+      int retval, const char* functionName
+    )
     {
       if (retval < 0)
       {
@@ -315,7 +323,9 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::setTolerance(ScalarT residual_tol, ScalarT step_tol)
+    void Kinsol<ScalarT, IdxT>::setTolerance(
+      ScalarT residual_tol, ScalarT step_tol
+    )
     {
       int retval = KINSetFuncNormTol(solver_, residual_tol);
       checkOutput(retval, "KINSetFuncNormTol");

@@ -23,19 +23,25 @@ namespace GridKit
 
     /// Enumerator named `key`, or throw naming its `kind` and `owner`
     template <Utilities::SizedEnum EnumT>
-    EnumT enumKey(const std::string& key, std::string_view kind, std::string_view owner)
+    EnumT enumKey(
+      const std::string& key, std::string_view kind, std::string_view owner
+    )
     {
       const auto value = Utilities::enum_cast<EnumT>(key);
       if (!value)
       {
-        throw std::invalid_argument(std::format("{}: unknown {} '{}'", owner, kind, key));
+        throw std::invalid_argument(
+          std::format("{}: unknown {} '{}'", owner, kind, key)
+        );
       }
       return *value;
     }
 
     /// Value of each entry of `params`, typed as in the input file
     template <typename Parameters, typename RealT, typename IdxT>
-    ParameterMap<Parameters, RealT, IdxT> readParameters(const json& params, std::string_view owner)
+    ParameterMap<Parameters, RealT, IdxT> readParameters(
+      const json& params, std::string_view owner
+    )
     {
       ParameterMap<Parameters, RealT, IdxT> parameters;
       for (const auto& [key, value] : params.items())
@@ -65,14 +71,23 @@ namespace GridKit
     void from_json(const json& j, BusData<RealT, IdxT>& bus)
     {
       j.at("number").get_to(bus.number);
-      bus.parameters = readParameters<BusParameters, RealT, IdxT>(j.at("params"), std::format("bus {}", bus.number));
+      bus.parameters = readParameters<BusParameters, RealT, IdxT>(
+        j.at("params"), std::format("bus {}", bus.number)
+      );
     }
 
-    template <typename RealT, typename IdxT, typename Parameters, typename Ports>
-    void from_json(const json& j, ComponentData<RealT, IdxT, Parameters, Ports>& device)
+    template <
+      typename RealT,
+      typename IdxT,
+      typename Parameters,
+      typename Ports>
+    void from_json(
+      const json& j, ComponentData<RealT, IdxT, Parameters, Ports>& device
+    )
     {
       j.at("id").get_to(device.id);
-      device.parameters = readParameters<Parameters, RealT, IdxT>(j.at("params"), device.id);
+      device.parameters =
+        readParameters<Parameters, RealT, IdxT>(j.at("params"), device.id);
       for (const auto& [key, value] : j.at("ports").items())
       {
         value.get_to(device.ports[enumKey<Ports>(key, "port", device.id)]);
@@ -97,7 +112,8 @@ namespace GridKit
         }
         else if (kind == "Generator")
         {
-          data.generator.push_back(device.get<typename DataT::GeneratorDataT>());
+          data.generator.push_back(device.get<typename DataT::GeneratorDataT>()
+          );
         }
         else if (kind == "Load")
         {
@@ -105,7 +121,9 @@ namespace GridKit
         }
         else
         {
-          throw std::invalid_argument(std::format("OptimalPowerFlow: unknown device class '{}'", kind));
+          throw std::invalid_argument(
+            std::format("OptimalPowerFlow: unknown device class '{}'", kind)
+          );
         }
       }
     }

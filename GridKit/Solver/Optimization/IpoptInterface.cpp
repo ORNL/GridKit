@@ -28,9 +28,11 @@ namespace AnalysisManager
       IndexStyleEnum& index_style
     )
     {
-      if (model_->getCsrJacobian() == nullptr || model_->getCsrHessian() == nullptr)
+      if (model_->getCsrJacobian() == nullptr
+          || model_->getCsrHessian() == nullptr)
       {
-        GridKit::Utilities::Logger::error() << "IpoptInterface: allocate() the model before solving it\n";
+        GridKit::Utilities::Logger::error()
+          << "IpoptInterface: allocate() the model before solving it\n";
         return false;
       }
 
@@ -230,14 +232,18 @@ namespace AnalysisManager
 
     template <typename scalar_type, typename index_type>
     template <typename VectorT>
-    void IpoptInterface<scalar_type, index_type>::copyInto(VectorT& vector, const ipnumber* values)
+    void IpoptInterface<scalar_type, index_type>::copyInto(
+      VectorT& vector, const ipnumber* values
+    )
     {
       std::copy_n(values, vector.getSize(), vector.getData());
       vector.setDataUpdated();
     }
 
     template <typename scalar_type, typename index_type>
-    void IpoptInterface<scalar_type, index_type>::structure(CsrMatrixT& matrix, ipindex* iRow, ipindex* jCol)
+    void IpoptInterface<scalar_type, index_type>::structure(
+      CsrMatrixT& matrix, ipindex* iRow, ipindex* jCol
+    )
     {
       const IdxT* row_ptrs = matrix.getRowData();
       const IdxT* cols     = matrix.getColData();

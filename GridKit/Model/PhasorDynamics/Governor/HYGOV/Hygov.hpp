@@ -37,16 +37,18 @@ namespace GridKit
         EF,      ///< \f$e_f\f$ Governor error on component base
         FC,      ///< \f$f_c\f$ Desired-gate derivative target
         RC,      ///< \f$r_c\f$ Rate-limited desired-gate derivative target
-        PGV,     ///< \f$P_{\mathrm{GV}}\f$ Gate-to-power curve output on component base
-        H,       ///< \f$H\f$ Turbine head on component base
-        PMECH,   ///< \f$P_{\mathrm{m}}\f$ Mechanical-power output on system base
+        PGV, ///< \f$P_{\mathrm{GV}}\f$ Gate-to-power curve output on component
+             ///< base
+        H,   ///< \f$H\f$ Turbine head on component base
+        PMECH, ///< \f$P_{\mathrm{m}}\f$ Mechanical-power output on system base
       };
 
       /// External variables of a `Hygov`.
       enum class HygovExternalVariables : size_t
       {
         OMEGA, ///< \f$\omega\f$ Machine speed deviation
-        PREF,  ///< \f$P^{\mathrm{ref}}\f$ Active-power/load reference on system base
+        PREF,  ///< \f$P^{\mathrm{ref}}\f$ Active-power/load reference on system
+               ///< base
         PAUX,  ///< \f$P^{\mathrm{aux}}\f$ Auxiliary power input on system base
       };
 
@@ -130,7 +132,8 @@ namespace GridKit
 
         /// Evaluate the nonlinear gate-to-power curve as a fixed sum of
         /// smooth linear segments.
-        __attribute__((always_inline)) inline ScalarT gatePower(ScalarT gate) const;
+        __attribute__((always_inline)) inline ScalarT gatePower(ScalarT gate
+        ) const;
 
         /// Steady component-base mechanical power at a gate and dam head.
         RealT initialMechanicalPower(RealT gate, RealT Hdam) const;
@@ -147,8 +150,9 @@ namespace GridKit
         /// Solve the dam head that reproduces mechanical power at Gv5.
         RealT solveInitialDamHead(RealT pmech) const;
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
+        static constexpr RealT TIME_CONSTANT_MINIMUM =
+          static_cast<RealT>(1.0e-3);
+        static void logTimeConstantWarning();
 
         /// Accepted seed distance beyond the achievable-power range edge.
         static constexpr RealT INITIALIZATION_TOLERANCE =

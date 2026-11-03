@@ -49,8 +49,9 @@ namespace GridKit
 
         auto                                      data = makeData();
         PhasorDynamics::LoadZ<ScalarT, IdxT>      monitored_load(bus, data);
-        PhasorDynamics::Component<ScalarT, IdxT>& monitored_component  = monitored_load;
-        success                                                       *= (monitored_component.getMonitor() != nullptr);
+        PhasorDynamics::Component<ScalarT, IdxT>& monitored_component =
+          monitored_load;
+        success *= (monitored_component.getMonitor() != nullptr);
 
         delete bus;
 
@@ -99,15 +100,21 @@ namespace GridKit
         DependencyTracking::Variable Vi{20.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>   bus(Vr, Vi);
-        PhasorDynamics::LoadZ<DependencyTracking::Variable, IdxT> load(&bus, loadZData(R, X));
+        PhasorDynamics::LoadZ<DependencyTracking::Variable, IdxT> load(
+          &bus, loadZData(R, X)
+        );
 
         bus.allocate();
         load.allocate();
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+          bus.setVariableIndex(
+            i, i + load.size()
+          ); // Reset bus variable indices
+          bus.setResidualIndex(
+            i, i + load.size()
+          ); // Reset bus residual indices
         }
 
         bus.initialize();
@@ -118,7 +125,8 @@ namespace GridKit
         load.evaluateJacobian(); //< Converts dependencies to CSR
         auto* model_jacobian = load.getCsrJacobian();
         auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: Load DependencyTracking Jacobian\n";
+        output_stream
+          << "Sparse Csr Matrix: Load DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
         // Compare model Jacobian with dependencies computed analytically
@@ -188,8 +196,12 @@ namespace GridKit
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+          bus.setVariableIndex(
+            i, i + load.size()
+          ); // Reset bus variable indices
+          bus.setResidualIndex(
+            i, i + load.size()
+          ); // Reset bus residual indices
         }
 
         bus.initialize();
@@ -207,8 +219,10 @@ namespace GridKit
         model_jacobian->print(output_stream);
 
         // Compare model Jacobian with dependencies computed analytically
-        std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian(R, X);
-        std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
+        std::vector<DependencyTracking::Variable::DependencyMap> ref =
+          analyticalJacobian(R, X);
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)
         {
           success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));
@@ -219,7 +233,8 @@ namespace GridKit
 #endif
 
     private:
-      static constexpr RealT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+      static constexpr RealT tol_ =
+        10 * std::numeric_limits<ScalarT>::epsilon();
 
       auto makeData() -> DataT
       {
@@ -255,7 +270,8 @@ namespace GridKit
         const RealT b = -X / (R * R + X * X);
         const RealT g = R / (R * R + X * X);
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2);
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2
+        );
         dependencies[0] = {{0, 1.0}, {2, g}, {3, -b}};
         dependencies[1] = {{1, 1.0}, {2, b}, {3, g}};
 

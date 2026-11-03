@@ -24,9 +24,10 @@ namespace GridKit
     class GenrouTests
     {
     private:
-      using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-      using GenrouDataT             = PhasorDynamics::GenrouData<RealT, IdxT>;
-      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using GenrouDataT = PhasorDynamics::GenrouData<RealT, IdxT>;
+      static constexpr ScalarT tol_ =
+        10 * std::numeric_limits<ScalarT>::epsilon();
 
       static GenrouDataT makeGenrouData()
       {
@@ -170,8 +171,9 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      // A test to verify that the hard coded answers match those given by the residual functions
-      // Hard coded parameters, differential, and algebraic terms
+      // A test to verify that the hard coded answers match those given by the
+      // residual functions Hard coded parameters, differential, and algebraic
+      // terms
       TestOutcome hard_coded_residual()
       {
         TestStatus success = true;
@@ -251,9 +253,10 @@ namespace GridKit
 
         // Allocate but not initialize generator model
         gen.allocate();
-        // TODO: Set pmech and efd. They are currently not set in this test, as we are not
-        // calling gen.initialize(). The private members are initialized to 0 as a workaround,
-        // but this needs to be better handled in the model implementation.
+        // TODO: Set pmech and efd. They are currently not set in this test, as
+        // we are not calling gen.initialize(). The private members are
+        // initialized to 0 as a workaround, but this needs to be better handled
+        // in the model implementation.
 
         // Set variable values matching the answer key
         auto* y  = gen.y().getData();
@@ -326,27 +329,34 @@ namespace GridKit
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
         // Jacobian via DependencyTracking
-        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          dependency_tracking_jacobian = DependencyTrackingJacobian();
 
         // Jacobian via Enzyme
-        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          enzyme_jacobian = EnzymeJacobian();
 
         /// Compare DependencyTracking dependencies to Enzyme's
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+          success *= (GridKit::Testing::isEqual(
+            dependency_tracking_jacobian[i], enzyme_jacobian[i], tol
+          ));
         }
 
         return success.report(__func__);
       }
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian()
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      DependencyTrackingJacobian()
       {
-        DependencyTracking::Variable                               Vr1{1.0}; ///< Bus real voltage
-        DependencyTracking::Variable                               Vi1{0.0}; ///< Bus imaginary voltage
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(&bus, makeGenrouData());
+        DependencyTracking::Variable Vr1{1.0}; ///< Bus real voltage
+        DependencyTracking::Variable Vi1{0.0}; ///< Bus imaginary voltage
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus(Vr1, Vi1);
+        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(
+          &bus, makeGenrouData()
+        );
 
         bus.allocate();
         gen.allocate();
@@ -369,7 +379,8 @@ namespace GridKit
         gen.evaluateJacobian();
         auto* model_jacobian = gen.getCsrJacobian();
         auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: Genrou DependencyTracking Jacobian\n";
+        output_stream
+          << "Sparse Csr Matrix: Genrou DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
@@ -377,9 +388,9 @@ namespace GridKit
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
       {
-        ScalarT                               Vr1{1.0}; ///< Bus real voltage
-        ScalarT                               Vi1{0.0}; ///< Bus imaginary voltage
-        PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
+        ScalarT                            Vr1{1.0}; ///< Bus real voltage
+        ScalarT                            Vi1{0.0}; ///< Bus imaginary voltage
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
         PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, makeGenrouData());
 
         bus.allocate();

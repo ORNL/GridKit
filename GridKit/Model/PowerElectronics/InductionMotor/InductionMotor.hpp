@@ -41,7 +41,16 @@ namespace GridKit
       using Component<ScalarT, IdxT>::n_intern_;
 
     public:
-      InductionMotor(IdxT id, RealT Lls, RealT Rs, RealT Llr, RealT Rr, RealT Lms, RealT RJ, RealT P);
+      InductionMotor(
+        IdxT  id,
+        RealT Lls,
+        RealT Rs,
+        RealT Llr,
+        RealT Rr,
+        RealT Lms,
+        RealT RJ,
+        RealT P
+      );
       virtual ~InductionMotor();
 
       int initialize();

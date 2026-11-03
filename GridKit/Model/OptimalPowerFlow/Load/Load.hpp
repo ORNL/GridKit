@@ -63,7 +63,9 @@ namespace GridKit
       int evaluateJacobian() override;
       int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] void externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
+      [[gnu::always_inline]] void externalConstraints(
+        const ScalarT* x, const ScalarT* external, ScalarT* g
+      ) const override;
 
     private:
       void initializeParameters(const ModelDataT& data);

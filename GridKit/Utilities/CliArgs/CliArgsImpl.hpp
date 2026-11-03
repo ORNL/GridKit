@@ -14,8 +14,7 @@ namespace GridKit
     {
       /// Construct an @ref OptionArgumentPair with a specification and an empty
       /// set of values.
-      explicit OptionArgumentPair(Option opt)
-        : option(std::move(opt))
+      explicit OptionArgumentPair(Option opt) : option(std::move(opt))
       {
       }
 
@@ -138,8 +137,7 @@ namespace GridKit
       }
       for (auto&& [key, arg] : args.name_map_)
       {
-        os << key << " =>\n"
-           << *arg << "\n\n";
+        os << key << " =>\n" << *arg << "\n\n";
       }
       return os;
     }
@@ -217,19 +215,16 @@ namespace GridKit
       // add "help" entry on behalf of the user
       if (!name_map_.count("help") && !name_map_.count("h"))
       {
-        auto& help = table_.emplace_back(
-          Option{
-            .name = {"--help", "-h"},
-            .help = "Print this help message",
-            .flag = true
-          }
-        );
+        auto& help = table_.emplace_back(Option{
+          .name = {"--help", "-h"},
+          .help = "Print this help message",
+          .flag = true
+        });
         setupArg(help);
       }
     }
 
-    const OptionArgumentPair* CliArgsImpl::findByName(
-      const std::string& name
+    const OptionArgumentPair* CliArgsImpl::findByName(const std::string& name
     ) const
     {
       auto ret = name_map_.find(name);
@@ -282,9 +277,8 @@ namespace GridKit
           auto* arg = findByRawName(token);
           if (!arg || arg->option.positional)
           {
-            Log::error() << std::format(
-              "CliArgs: unrecognized option \"{}\"\n", token
-            );
+            Log::error(
+            ) << std::format("CliArgs: unrecognized option \"{}\"\n", token);
             status = false;
             continue;
           }
@@ -334,9 +328,8 @@ namespace GridKit
         }
         if (positional == positionals_.size())
         {
-          Log::error() << std::format(
-            "CliArgs: unexpected argument \"{}\"\n", token
-          );
+          Log::error(
+          ) << std::format("CliArgs: unexpected argument \"{}\"\n", token);
           status = false;
         }
         else

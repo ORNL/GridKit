@@ -28,7 +28,9 @@ namespace GridKit
     Model::ConfigurationChecks Branch<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks("Branch");
-      checks.check(R_ * R_ + X_ * X_ > ZERO<RealT>, "R and X cannot both be zero");
+      checks.check(
+        R_ * R_ + X_ * X_ > ZERO<RealT>, "R and X cannot both be zero"
+      );
       checks.check(tap_ > ZERO<RealT>, "tap must be positive");
       checks.check(Smax_ > ZERO<RealT>, "Smax must be positive");
       return checks;
@@ -88,7 +90,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void Branch<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Params = BranchParameters;
 
@@ -107,7 +111,8 @@ namespace GridKit
       setDerivedParameters();
     }
 
-    /// Pi-model admittance with the tap and phase shift on the bus-1 side, zero out of service
+    /// Pi-model admittance with the tap and phase shift on the bus-1 side, zero
+    /// out of service
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::setDerivedParameters()
     {
@@ -136,8 +141,9 @@ namespace GridKit
 
     /// Power \f$P + jQ = V I^*\f$ into bus 1, then into bus 2
     template <typename scalar_type, typename index_type>
-    [[gnu::always_inline]] void
-    Branch<scalar_type, index_type>::power(const ScalarT* external, ScalarT* s) const
+    [[gnu::always_inline]] void Branch<scalar_type, index_type>::power(
+      const ScalarT* external, ScalarT* s
+    ) const
     {
       const auto VR1 = static_cast<size_t>(BranchExternalVariables::VR1);
       const auto VI1 = static_cast<size_t>(BranchExternalVariables::VI1);

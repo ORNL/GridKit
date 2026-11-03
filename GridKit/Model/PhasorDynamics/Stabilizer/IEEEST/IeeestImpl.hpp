@@ -39,7 +39,9 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      void Ieeest<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      void Ieeest<scalar_type, index_type>::initializeParameters(
+        const ModelDataT& data
+      )
       {
         using Parameter = typename ModelDataT::Parameters;
 
@@ -70,16 +72,18 @@ namespace GridKit
         a3_ = A1_ * A4_ + A2_ * A3_;
         a4_ = A2_ * A4_;
 
-        // Precompute masks and safe inverse coefficients so the residual stays branch-free.
-        use_notch_    = static_cast<RealT>(a2_ != 0.0 || a3_ != 0.0 || a4_ != 0.0);
+        // Precompute masks and safe inverse coefficients so the residual stays
+        // branch-free.
+        use_notch_ = static_cast<RealT>(a2_ != 0.0 || a3_ != 0.0 || a4_ != 0.0);
         bypass_notch_ = 1.0 - use_notch_;
 
         use_4th_order_ = static_cast<RealT>(a4_ != 0.0);
         use_3rd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ != 0.0);
-        use_2nd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ == 0.0 && a2_ != 0.0);
-        safe_inv_a4_   = use_4th_order_ / (a4_ + (1.0 - use_4th_order_));
-        safe_inv_a3_   = use_3rd_order_ / (a3_ + (1.0 - use_3rd_order_));
-        safe_inv_a2_   = use_2nd_order_ / (a2_ + (1.0 - use_2nd_order_));
+        use_2nd_order_ =
+          static_cast<RealT>(a4_ == 0.0 && a3_ == 0.0 && a2_ != 0.0);
+        safe_inv_a4_ = use_4th_order_ / (a4_ + (1.0 - use_4th_order_));
+        safe_inv_a3_ = use_3rd_order_ / (a3_ + (1.0 - use_3rd_order_));
+        safe_inv_a2_ = use_2nd_order_ / (a2_ + (1.0 - use_2nd_order_));
 
         use_T2_block_    = static_cast<RealT>(T2_ != 0.0);
         bypass_T2_block_ = 1.0 - use_T2_block_;
@@ -92,7 +96,9 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      int Ieeest<scalar_type, index_type>::setGridKitComponentID(
+        IdxT component_id
+      )
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -122,7 +128,8 @@ namespace GridKit
         ws_indices_.resize(1);
         ws_indices_[0] = INVALID_INDEX<IdxT>;
 
-        if (auto output_port = ports_.out.template port<IeeestSignalOutputs::output>())
+        if (auto output_port =
+              ports_.out.template port<IeeestSignalOutputs::output>())
         {
           output_port.link(&y_.getData()[11], &(this->getVariableIndex(11)));
         }
@@ -159,12 +166,13 @@ namespace GridKit
       {
         if (!this->verifyAndLog())
         {
-          Log::error() << "Ieeest: cannot initialize with invalid configuration\n";
+          Log::error(
+          ) << "Ieeest: cannot initialize with invalid configuration\n";
           return 1;
         }
 
-        auto          input_port = ports_.in.template port<IeeestSignalInputs::input>();
-        const ScalarT u          = input_port.readSignal();
+        auto input_port = ports_.in.template port<IeeestSignalInputs::input>();
+        const ScalarT u = input_port.readSignal();
 
         auto* y  = y_.getData();
         auto* yp = yp_.getData();
@@ -272,21 +280,30 @@ namespace GridKit
 
         ScalarT u = ws[0];
 
-        const ScalarT x2_rhs = (use_4th_order_ + use_3rd_order_) * x3
-                               + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
+        const ScalarT x2_rhs =
+          (use_4th_order_ + use_3rd_order_) * x3
+          + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
 
         f[0] = -x1_dot + use_notch_ * x2;
         f[1] = -x2_dot + x2_rhs;
         f[2] = -x3_dot + use_4th_order_ * x4
-               + use_3rd_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 + u) * safe_inv_a3_;
-        f[3]  = -x4_dot + use_4th_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u) * safe_inv_a4_;
-        f[4]  = -T2_ * x5_dot - x5 + v4;
-        f[5]  = -T4_ * x6_dot - x6 + v5;
-        f[6]  = -T6_ * x7_dot - x7 + v6;
-        f[7]  = -v4 + bypass_notch_ * u + use_notch_ * (x1 + A5_ * x2 + A6_ * x2_rhs);
-        f[8]  = use_T2_block_ * (-T2_ * (v5 - x5) + T1_ * (v4 - x5)) + bypass_T2_block_ * (v4 - v5);
-        f[9]  = use_T4_block_ * (-T4_ * (v6 - x6) + T3_ * (v5 - x6)) + bypass_T4_block_ * (v5 - v6);
-        f[10] = use_T6_block_ * (-T6_ * v7 + Ks_ * T5_ * (v6 - x7)) + bypass_T6_block_ * (Ks_ * v6 - v7);
+               + use_3rd_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 + u)
+                   * safe_inv_a3_;
+        f[3] = -x4_dot
+               + use_4th_order_
+                   * (-a0_ * x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u)
+                   * safe_inv_a4_;
+        f[4] = -T2_ * x5_dot - x5 + v4;
+        f[5] = -T4_ * x6_dot - x6 + v5;
+        f[6] = -T6_ * x7_dot - x7 + v6;
+        f[7] =
+          -v4 + bypass_notch_ * u + use_notch_ * (x1 + A5_ * x2 + A6_ * x2_rhs);
+        f[8] = use_T2_block_ * (-T2_ * (v5 - x5) + T1_ * (v4 - x5))
+               + bypass_T2_block_ * (v4 - v5);
+        f[9] = use_T4_block_ * (-T4_ * (v6 - x6) + T3_ * (v5 - x6))
+               + bypass_T4_block_ * (v5 - v6);
+        f[10] = use_T6_block_ * (-T6_ * v7 + Ks_ * T5_ * (v6 - x7))
+                + bypass_T6_block_ * (Ks_ * v6 - v7);
         f[11] = -vss + Math::clamp(v7, Lsmin_, Lsmax_);
 
         return 0;
@@ -300,7 +317,8 @@ namespace GridKit
       int Ieeest<scalar_type, index_type>::setSignalIndices()
       {
         ws_indices_[0] = INVALID_INDEX<IdxT>;
-        if (auto input_port = ports_.in.template port<IeeestSignalInputs::input>())
+        if (auto input_port =
+              ports_.in.template port<IeeestSignalInputs::input>())
         {
           ws_indices_[0] = input_port.signalVariableIndex();
         }
@@ -313,7 +331,8 @@ namespace GridKit
       {
         auto* ws = ws_.getData();
 
-        if (auto input_port = ports_.in.template port<IeeestSignalInputs::input>())
+        if (auto input_port =
+              ports_.in.template port<IeeestSignalInputs::input>())
         {
           ws[0] = input_port.readSignal();
         }
@@ -328,7 +347,8 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Ieeest<scalar_type, index_type>::getMonitor() const
+      const Model::VariableMonitorBase* Ieeest<scalar_type, index_type>::
+        getMonitor() const
       {
         return monitor_.get();
       }
@@ -337,8 +357,7 @@ namespace GridKit
       void Ieeest<scalar_type, index_type>::initializeMonitor()
       {
         using Variable = typename ModelDataT::MonitorableVariables;
-        monitor_->set(Variable::vss, [this]
-                      { return y_.getData()[11]; });
+        monitor_->set(Variable::vss, [this] { return y_.getData()[11]; });
       }
 
     } // namespace Stabilizer

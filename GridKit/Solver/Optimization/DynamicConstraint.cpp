@@ -32,7 +32,13 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style)
+    bool DynamicConstraint<ScalarT, IdxT>::get_nlp_info(
+      Index&          n,
+      Index&          m,
+      Index&          nnz_jac_g,
+      Index&          nnz_h_lag,
+      IndexStyleEnum& index_style
+    )
     {
       // This code handles one objective function
       assert(model_->sizeQuadrature() == 1);
@@ -176,11 +182,13 @@ namespace AnalysisManager
       status     = integrator_->runSimulationQuadrature(t_final_, dt_monitor_);
       if (status)
       {
-        ::GridKit::Utilities::Logger::error() << "Integration failed when using Pm = " << x[0] << "\n";
+        ::GridKit::Utilities::Logger::error()
+          << "Integration failed when using Pm = " << x[0] << "\n";
         return false;
       }
 
-      // For now assumes only one forward integrand and multiple optimization parameters.
+      // For now assumes only one forward integrand and multiple optimization
+      // parameters.
       g[0] = (integrator_->getIntegral())[0] - x[model_->sizeParams()];
       return true;
     }
@@ -230,7 +238,10 @@ namespace AnalysisManager
         status     = integrator_->runForwardSimulation(t_final_, dt_monitor_);
         if (status)
         {
-          ::GridKit::Utilities::Logger::error() << "Forward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
+          ::GridKit::Utilities::Logger::error()
+            << "Forward integration for adjoint solution failed when using Pm "
+               "= "
+            << x[0] << "\n";
           return false;
         }
 
@@ -239,11 +250,15 @@ namespace AnalysisManager
         status = integrator_->runBackwardSimulation(t_init_);
         if (status)
         {
-          ::GridKit::Utilities::Logger::error() << "Backward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
+          ::GridKit::Utilities::Logger::error()
+            << "Backward integration for adjoint solution failed when using Pm "
+               "= "
+            << x[0] << "\n";
           return false;
         }
 
-        // For now assumes only one forward integrand and multiple optimization parameters.
+        // For now assumes only one forward integrand and multiple optimization
+        // parameters.
         for (IdxT i = 0; i < model_->sizeParams(); ++i)
         {
           values[i] = -((integrator_->getAdjointIntegral())[i]);

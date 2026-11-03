@@ -14,7 +14,9 @@ namespace GridKit
      * Calls default ModelEvaluatorImpl constructor.
      */
     template <class ScalarT, typename IdxT>
-    Inductor<ScalarT, IdxT>::Inductor(IdxT id, RealT L, NodeT* node1, NodeT* node2)
+    Inductor<ScalarT, IdxT>::Inductor(
+      IdxT id, RealT L, NodeT* node1, NodeT* node2
+    )
       : L_(L), node1_(node1), node2_(node2)
     {
       assert(node1_->size() == 1);

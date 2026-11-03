@@ -78,8 +78,8 @@ namespace GridKit
            << indent << indent << "max     : "
            << std::format("{:.6e} (at time {:.3e})", max_value, max_value_time)
            << '\n'
-           << indent << indent << "L2-norm : "
-           << std::format("{:.6e}", L2) << '\n';
+           << indent << indent << "L2-norm : " << std::format("{:.6e}", L2)
+           << '\n';
         return os;
       }
     };
@@ -102,8 +102,7 @@ namespace GridKit
        * @brief Construct with variable labels
        */
       template <typename C>
-      explicit ErrorSet(const C& labels)
-        : var_errors(std::size(labels))
+      explicit ErrorSet(const C& labels) : var_errors(std::size(labels))
       {
         for (std::size_t i = 0; i < std::size(labels); ++i)
         {
@@ -230,7 +229,9 @@ namespace GridKit
       switch (type)
       {
       case ErrorType::RELATIVE:
-        return std::make_unique<ErrorSetImpl<RelativeError>>(labels, abs_threshold);
+        return std::make_unique<ErrorSetImpl<RelativeError>>(
+          labels, abs_threshold
+        );
       case ErrorType::ABSOLUTE:
         return std::make_unique<ErrorSetImpl<AbsoluteError>>(labels);
       default:

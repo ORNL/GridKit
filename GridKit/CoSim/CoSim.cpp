@@ -245,8 +245,7 @@ namespace GridKit
 
       if (can_send_)
       {
-        throw std::logic_error(
-          "Co-simulation socket must send before receiving"
+        throw std::logic_error("Co-simulation socket must send before receiving"
         );
       }
 
@@ -380,8 +379,7 @@ namespace GridKit
     }
 
     template <typename scalar_type>
-    void detail::Channel<scalar_type>::closePeer(
-      const MessageMetadata& last
+    void detail::Channel<scalar_type>::closePeer(const MessageMetadata& last
     ) noexcept
     {
       Teardown teardown(*this);

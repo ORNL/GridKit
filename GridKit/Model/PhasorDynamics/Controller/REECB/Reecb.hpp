@@ -29,38 +29,64 @@ namespace GridKit
       /// Internal variables and residual rows of a `Reecb`.
       enum class ReecbInternalVariables : size_t
       {
-        VMEAS,  ///< \f$V^\mathrm{meas}\f$ Differential filtered terminal voltage [p.u.]
-        PMEAS,  ///< \f$P^\mathrm{meas}\f$ Differential filtered electrical power on component base [p.u.]
-        XPIQ,   ///< \f$x_Q^\mathrm{PI}\f$ Differential reactive-power PI state [p.u.]
-        XPIV,   ///< \f$x_V^\mathrm{PI}\f$ Differential voltage-control PI state on component base [p.u.]
-        QV,     ///< \f$Q_V\f$ Differential reactive-current command lag state on component base [p.u.]
-        PORD,   ///< \f$P^\mathrm{ord}\f$ Differential filtered active-power order on component base [p.u.]
-        VT,     ///< \f$V_T\f$ Algebraic terminal-voltage magnitude [p.u.]
-        VSAFE,  ///< \f$V_\mathrm{safe}^\mathrm{meas}\f$ Algebraic safe measured voltage [p.u.]
-        SDIP,   ///< \f$s_\mathrm{dip}\f$ Algebraic voltage-band gate [-]
-        IQV,    ///< \f$I_q^\mathrm{inj}\f$ Algebraic reactive-current injection on component base [p.u.]
-        QREF,   ///< \f$Q^\mathrm{ref}\f$ Algebraic reactive-power reference on component base [p.u.]
-        EQ,     ///< \f$e_Q\f$ Algebraic reactive-power error on component base [p.u.]
-        VPIQ,   ///< \f$V_Q^\mathrm{PI}\f$ Algebraic reactive-power PI output [p.u.]
-        EPIV,   ///< \f$e_V^\mathrm{PI}\f$ Algebraic voltage-control error [p.u.]
-        RPORD,  ///< \f$r_P^\mathrm{ord}\f$ Algebraic limited active-power order rate [p.u./s]
-        ILCAP,  ///< \f$I_L^\mathrm{cap}\f$ Algebraic off-axis current capacity on component base [p.u.]
-        IQMAX,  ///< \f$I_q^\max\f$ Algebraic reactive-current limit on component base [p.u.]
-        IPMAX,  ///< \f$I_p^\max\f$ Algebraic active-current limit on component base [p.u.]
-        IQBASE, ///< \f$I_q^\mathrm{base}\f$ Algebraic voltage-controller current on component base [p.u.]
-        IQRAW,  ///< \f$I_q^\mathrm{raw}\f$ Algebraic pre-limit reactive-current command on component base [p.u.]
-        IQCMD,  ///< \f$I_q^\mathrm{cmd}\f$ Algebraic reactive-current command output on system base [p.u.]
-        IPCMD,  ///< \f$I_p^\mathrm{cmd}\f$ Algebraic active-current command output on system base [p.u.]
+        VMEAS, ///< \f$V^\mathrm{meas}\f$ Differential filtered terminal voltage
+               ///< [p.u.]
+        PMEAS, ///< \f$P^\mathrm{meas}\f$ Differential filtered electrical power
+               ///< on component base [p.u.]
+        XPIQ,  ///< \f$x_Q^\mathrm{PI}\f$ Differential reactive-power PI state
+               ///< [p.u.]
+        XPIV,  ///< \f$x_V^\mathrm{PI}\f$ Differential voltage-control PI state
+               ///< on component base [p.u.]
+        QV,    ///< \f$Q_V\f$ Differential reactive-current command lag state on
+               ///< component base [p.u.]
+        PORD, ///< \f$P^\mathrm{ord}\f$ Differential filtered active-power order
+              ///< on component base [p.u.]
+        VT,   ///< \f$V_T\f$ Algebraic terminal-voltage magnitude [p.u.]
+        VSAFE, ///< \f$V_\mathrm{safe}^\mathrm{meas}\f$ Algebraic safe measured
+               ///< voltage [p.u.]
+        SDIP,  ///< \f$s_\mathrm{dip}\f$ Algebraic voltage-band gate [-]
+        IQV, ///< \f$I_q^\mathrm{inj}\f$ Algebraic reactive-current injection on
+             ///< component base [p.u.]
+        QREF,  ///< \f$Q^\mathrm{ref}\f$ Algebraic reactive-power reference on
+               ///< component base [p.u.]
+        EQ,    ///< \f$e_Q\f$ Algebraic reactive-power error on component base
+               ///< [p.u.]
+        VPIQ,  ///< \f$V_Q^\mathrm{PI}\f$ Algebraic reactive-power PI output
+               ///< [p.u.]
+        EPIV,  ///< \f$e_V^\mathrm{PI}\f$ Algebraic voltage-control error [p.u.]
+        RPORD, ///< \f$r_P^\mathrm{ord}\f$ Algebraic limited active-power order
+               ///< rate [p.u./s]
+        ILCAP, ///< \f$I_L^\mathrm{cap}\f$ Algebraic off-axis current capacity
+               ///< on component base [p.u.]
+        IQMAX, ///< \f$I_q^\max\f$ Algebraic reactive-current limit on component
+               ///< base [p.u.]
+        IPMAX, ///< \f$I_p^\max\f$ Algebraic active-current limit on component
+               ///< base [p.u.]
+        IQBASE, ///< \f$I_q^\mathrm{base}\f$ Algebraic voltage-controller
+                ///< current on component base [p.u.]
+        IQRAW,  ///< \f$I_q^\mathrm{raw}\f$ Algebraic pre-limit reactive-current
+                ///< command on component base [p.u.]
+        IQCMD,  ///< \f$I_q^\mathrm{cmd}\f$ Algebraic reactive-current command
+                ///< output on system base [p.u.]
+        IPCMD,  ///< \f$I_p^\mathrm{cmd}\f$ Algebraic active-current command
+                ///< output on system base [p.u.]
       };
 
       /// External signal variables read or initialized by a `Reecb`.
       enum class ReecbExternalVariables : size_t
       {
-        PE,     ///< \f$P_e\f$ Optional Known active-power feedback input on system base [p.u.]
-        QGEN,   ///< \f$Q^\mathrm{gen}\f$ Optional Known reactive-power feedback input on system base [p.u.]
-        QEXT,   ///< \f$Q^\mathrm{ext}\f$ Optional Unknown Volt/VAr reference input: system-base reactive power [p.u.], or the terminal-voltage reference [p.u.] when \f$s_Q=1\f$ and \f$s_V=0\f$
-        PFAREF, ///< \f$\phi^\mathrm{ref}\f$ Optional Unknown power-factor angle-reference input [rad]
-        PREF,   ///< \f$P^\mathrm{ref}\f$ Optional Unknown active-power reference input on system base [p.u.]
+        PE, ///< \f$P_e\f$ Optional Known active-power feedback input on system
+            ///< base [p.u.]
+        QGEN,   ///< \f$Q^\mathrm{gen}\f$ Optional Known reactive-power feedback
+                ///< input on system base [p.u.]
+        QEXT,   ///< \f$Q^\mathrm{ext}\f$ Optional Unknown Volt/VAr reference
+                ///< input: system-base reactive power [p.u.], or the
+                ///< terminal-voltage reference [p.u.] when \f$s_Q=1\f$ and
+                ///< \f$s_V=0\f$
+        PFAREF, ///< \f$\phi^\mathrm{ref}\f$ Optional Unknown power-factor
+                ///< angle-reference input [rad]
+        PREF, ///< \f$P^\mathrm{ref}\f$ Optional Unknown active-power reference
+              ///< input on system base [p.u.]
       };
 
       /**
@@ -155,10 +181,14 @@ namespace GridKit
         };
 
         /// Smooth asymmetric slew-rate limiter.
-        [[gnu::always_inline]] static inline ScalarT aslew(ScalarT rate, RealT lower, RealT upper);
+        [[gnu::always_inline]] static inline ScalarT aslew(
+          ScalarT rate, RealT lower, RealT upper
+        );
 
         /// Smooth anti-windup derivative within a moving symmetric band.
-        [[gnu::always_inline]] static inline ScalarT awband(ScalarT state, ScalarT rate, ScalarT band);
+        [[gnu::always_inline]] static inline ScalarT awband(
+          ScalarT state, ScalarT rate, ScalarT band
+        );
 
         /// Smooth nonnegative root of a current-circle squared radius.
         template <typename ValueT>
@@ -169,10 +199,14 @@ namespace GridKit
 
         /// Overflow-resistant difference of squares.
         template <typename ValueT>
-        [[gnu::always_inline]] static inline ValueT circleSquare(RealT limit, ValueT high);
+        [[gnu::always_inline]] static inline ValueT circleSquare(
+          RealT limit, ValueT high
+        );
 
         /// Solve a feasible initial limit at or above `lower`.
-        static std::optional<InitialCurrentLimit> solveInitialLimit(RealT lower, RealT high, RealT low);
+        static std::optional<InitialCurrentLimit> solveInitialLimit(
+          RealT lower, RealT high, RealT low
+        );
 
         bool buildInitialPoint(InitialPoint& point);
         void commitInitialPoint(const InitialPoint& point);
@@ -183,13 +217,14 @@ namespace GridKit
         void setDerivedParameters();
 
         static RealT logOneMinusExp(RealT x);
-        bool         iclamp(RealT output, RealT lower, RealT upper, RealT& input) const;
+        bool iclamp(RealT output, RealT lower, RealT upper, RealT& input) const;
 
         ScalarT& Vr();
         ScalarT& Vi();
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
+        static constexpr RealT TIME_CONSTANT_MINIMUM =
+          static_cast<RealT>(1.0e-3);
+        static void logTimeConstantWarning();
 
         static constexpr RealT VMEAS_MINIMUM = static_cast<RealT>(0.01);
 

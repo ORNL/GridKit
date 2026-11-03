@@ -189,7 +189,9 @@ namespace AnalysisManager
       static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
-      static inline void checkAllocation(SUNContext ctx, void* v, const char* functionName);
+      static inline void checkAllocation(
+        SUNContext ctx, void* v, const char* functionName
+      );
       static inline void checkOutput(int retval, const char* functionName);
     };
 

@@ -26,9 +26,10 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function>
       struct DhDy
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
-        using IdxT    = typename GridKit::Model::EvaluatorTraits<ModelT>::IdxT;
-        using RealT   = typename GridKit::Model::EvaluatorTraits<ModelT>::RealT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using IdxT  = typename GridKit::Model::EvaluatorTraits<ModelT>::IdxT;
+        using RealT = typename GridKit::Model::EvaluatorTraits<ModelT>::RealT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -82,8 +83,9 @@ namespace GridKit
                 &nnz
               );
 
-              // Core automatic differentiation intrinsic that will be replaced by a derivative
-              // The dummy primal pointer is safe only while residuals never read back their output
+              // Core automatic differentiation intrinsic that will be replaced
+              // by a derivative The dummy primal pointer is safe only while
+              // residuals never read back their output
               __enzyme_fwddiff<void>(
                 (void*) ModelWrapper<ModelT, function>::eval,
                 enzyme_const,

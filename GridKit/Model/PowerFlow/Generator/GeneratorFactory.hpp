@@ -19,7 +19,9 @@ namespace GridKit
 
     GeneratorFactory() = delete;
 
-    static GeneratorBase<ScalarT, IdxT>* create(BaseBus<ScalarT, IdxT>* bus, GenData& data)
+    static GeneratorBase<ScalarT, IdxT>* create(
+      BaseBus<ScalarT, IdxT>* bus, GenData& data
+    )
     {
       GeneratorBase<ScalarT, IdxT>* gen = nullptr;
       switch (bus->BusType())
@@ -35,7 +37,8 @@ namespace GridKit
         break;
       default:
         // Throw exception
-        ::GridKit::Utilities::Logger::error() << "Generator type " << bus->BusType() << " unrecognized.\n";
+        ::GridKit::Utilities::Logger::error()
+          << "Generator type " << bus->BusType() << " unrecognized.\n";
       }
       return gen;
     }

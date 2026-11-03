@@ -25,15 +25,17 @@ namespace GridKit
         if (J_rows_buffer_ == nullptr)
         {
           // Reserve space for the dense blocks.
-          // The size of the buffer is the sum of maximum capacities of the blocks.
-          // Enzyme will compute the appropriate nnz from sparsification.
+          // The size of the buffer is the sum of maximum capacities of the
+          // blocks. Enzyme will compute the appropriate nnz from
+          // sparsification.
           auto size        = static_cast<size_t>(size_);
           auto bus_size    = static_cast<size_t>(bus_->size());
           auto signal_size = static_cast<size_t>(ws_.getSize());
-          auto buffer_size = 2 * size * size + size * bus_size + size * signal_size;
-          J_rows_buffer_   = new IdxT[buffer_size];
-          J_cols_buffer_   = new IdxT[buffer_size];
-          J_vals_buffer_   = new RealT[buffer_size];
+          auto buffer_size =
+            2 * size * size + size * bus_size + size * signal_size;
+          J_rows_buffer_ = new IdxT[buffer_size];
+          J_cols_buffer_ = new IdxT[buffer_size];
+          J_vals_buffer_ = new RealT[buffer_size];
         }
 
         nnz_ = 0;

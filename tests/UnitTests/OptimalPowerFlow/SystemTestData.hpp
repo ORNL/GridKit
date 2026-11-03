@@ -33,7 +33,9 @@ namespace GridKit
       static constexpr std::array<IdxT, 4> UNRATED_ROWS{11, 12, 13, 14};
 
       /// A point away from the flat start
-      static constexpr std::array<RealT, 10> POINT{1.02, 0.0, 0.97, -0.07, 1.01, -0.03, 0.8, 0.2, 0.4, -0.1};
+      static constexpr std::array<RealT, 10> POINT{
+        1.02, 0.0, 0.97, -0.07, 1.01, -0.03, 0.8, 0.2, 0.4, -0.1
+      };
 
       static OPF::SystemModelData<RealT, IdxT> data()
       {
@@ -41,8 +43,8 @@ namespace GridKit
 
         for (IdxT number = 1; number <= 3; ++number)
         {
-          auto& bus                                     = data.bus.emplace_back();
-          bus.number                                    = number;
+          auto& bus  = data.bus.emplace_back();
+          bus.number = number;
           bus.parameters[OPF::BusParameters::reference] = number == 1;
           bus.parameters[OPF::BusParameters::Vmin]      = VMIN;
           bus.parameters[OPF::BusParameters::Vmax]      = VMAX;
@@ -76,19 +78,24 @@ namespace GridKit
         RealT                              b
       )
       {
-        auto& branch                                = data.branch.emplace_back();
-        branch.id                                   = id;
-        branch.ports[OPF::BranchPorts::bus1]        = bus1;
-        branch.ports[OPF::BranchPorts::bus2]        = bus2;
+        auto& branch                         = data.branch.emplace_back();
+        branch.id                            = id;
+        branch.ports[OPF::BranchPorts::bus1] = bus1;
+        branch.ports[OPF::BranchPorts::bus2] = bus2;
         branch.parameters[OPF::BranchParameters::R] = r;
         branch.parameters[OPF::BranchParameters::X] = x;
         branch.parameters[OPF::BranchParameters::B] = b;
       }
 
-      static void addGenerator(OPF::SystemModelData<RealT, IdxT>& data, const char* id, IdxT bus, RealT c1)
+      static void addGenerator(
+        OPF::SystemModelData<RealT, IdxT>& data,
+        const char*                        id,
+        IdxT                               bus,
+        RealT                              c1
+      )
       {
-        auto& generator                                      = data.generator.emplace_back();
-        generator.id                                         = id;
+        auto& generator = data.generator.emplace_back();
+        generator.id    = id;
         generator.ports[OPF::GeneratorPorts::bus]            = bus;
         generator.parameters[OPF::GeneratorParameters::Pmin] = 0.0;
         generator.parameters[OPF::GeneratorParameters::Pmax] = 2.0;

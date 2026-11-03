@@ -133,12 +133,10 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateInternalResidual(
-        const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
-      );
-      __attribute__((always_inline)) inline int evaluateBusResidual(
-        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
-      );
+      __attribute__((always_inline)) inline int
+      evaluateInternalResidual(const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int
+      evaluateBusResidual(const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
       /* Identification */
@@ -179,8 +177,10 @@ namespace GridKit
       RealT   G_;
       RealT   B_;
       /* Setpoints for control variables (determined at initialization) */
-      ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
-      ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set
+      ScalarT pmech_set_{0.0
+      }; // TODO remove default initialization and ensure this gets set
+      ScalarT efd_set_{0.0
+      }; // TODO remove default initialization and ensure this gets set
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

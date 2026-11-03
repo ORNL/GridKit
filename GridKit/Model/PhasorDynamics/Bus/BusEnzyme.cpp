@@ -13,9 +13,10 @@ namespace GridKit
     /**
      * @brief Jacobian evaluation experimental.
      *
-     * This sets values to the fault admittance, zero when cleared. It is needed to get
-     * the indices into the list of entries that will later be deduplicated.
-     * Contributions to bus Jacobians from other components are stored in those components.
+     * This sets values to the fault admittance, zero when cleared. It is needed
+     * to get the indices into the list of entries that will later be
+     * deduplicated. Contributions to bus Jacobians from other components are
+     * stored in those components.
      *
      * @return int - error code
      */

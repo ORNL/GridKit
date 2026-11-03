@@ -1,7 +1,8 @@
 /**
  * @file LowerSparseStorage.hpp
  *
- * @details This file contains functions used by Enzyme to store sparse Jacobians.
+ * @details This file contains functions used by Enzyme to store sparse
+ * Jacobians.
  *
  * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
@@ -22,8 +23,9 @@ namespace GridKit
       /**
        * @brief Enzyme todense template
        *
-       * @details This is used by Enzyme's auto sparsity analysis. It internally maps dense storage
-       * to sparse ones (where structural zeros are not kept).
+       * @details This is used by Enzyme's auto sparsity analysis. It internally
+       * maps dense storage to sparse ones (where structural zeros are not
+       * kept).
        *
        * @tparam T - return type
        */
@@ -33,7 +35,8 @@ namespace GridKit
       /**
        * @brief Enzyme sparse accumulation for float and size_t
        *
-       * @note __attribute__((enzyme_sparse_accumulate)) does not support templates yet
+       * @note __attribute__((enzyme_sparse_accumulate)) does not support
+       * templates yet
        *
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
@@ -74,7 +77,8 @@ namespace GridKit
       /**
        * @brief Enzyme sparse accumulation for float and long int
        *
-       * @note __attribute__((enzyme_sparse_accumulate)) does not support templates yet
+       * @note __attribute__((enzyme_sparse_accumulate)) does not support
+       * templates yet
        *
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
@@ -115,7 +119,8 @@ namespace GridKit
       /**
        * @brief Enzyme sparse accumulation for double and size_t
        *
-       * @note __attribute__((enzyme_sparse_accumulate)) does not support templates yet
+       * @note __attribute__((enzyme_sparse_accumulate)) does not support
+       * templates yet
        *
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
@@ -156,7 +161,8 @@ namespace GridKit
       /**
        * @brief Enzyme sparse accumulation for double and long int
        *
-       * @note __attribute__((enzyme_sparse_accumulate)) does not support templates yet
+       * @note __attribute__((enzyme_sparse_accumulate)) does not support
+       * templates yet
        *
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
@@ -197,7 +203,8 @@ namespace GridKit
       /**
        * @brief Enzyme sparse store
        *
-       * @details This takes in a row, column and value and stores them in buffers
+       * @details This takes in a row, column and value and stores them in
+       * buffers
        *
        * @tparam ScalarT - scalar data type
        * @tparam IdxT - matrix index data type
@@ -232,20 +239,66 @@ namespace GridKit
 
         row /= sizeof(ScalarT);
 
-        // this template nightmare is because __attribute__((enzyme_sparse_accumulate)) does not support templates yet
+        // this template nightmare is because
+        // __attribute__((enzyme_sparse_accumulate)) does not support templates
+        // yet
         if constexpr (std::is_same<IdxT, size_t>::value)
         {
           if constexpr (std::is_same<ScalarT, float>::value)
-            inner_store_float_size_t(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, *nnz);
+            inner_store_float_size_t(
+              row,
+              col,
+              val,
+              scaling,
+              row_indices,
+              col_indices,
+              rows,
+              cols,
+              vals,
+              *nnz
+            );
           else
-            inner_store_double_size_t(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, *nnz);
+            inner_store_double_size_t(
+              row,
+              col,
+              val,
+              scaling,
+              row_indices,
+              col_indices,
+              rows,
+              cols,
+              vals,
+              *nnz
+            );
         }
         else if constexpr (std::is_same<IdxT, long int>::value)
         {
           if constexpr (std::is_same<ScalarT, float>::value)
-            inner_store_float_long_int(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, *nnz);
+            inner_store_float_long_int(
+              row,
+              col,
+              val,
+              scaling,
+              row_indices,
+              col_indices,
+              rows,
+              cols,
+              vals,
+              *nnz
+            );
           else
-            inner_store_double_long_int(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, *nnz);
+            inner_store_double_long_int(
+              row,
+              col,
+              val,
+              scaling,
+              row_indices,
+              col_indices,
+              rows,
+              cols,
+              vals,
+              *nnz
+            );
         }
         else
         {
@@ -262,7 +315,8 @@ namespace GridKit
        * @tparam IdxT - matrix index data type
        */
       template <typename ScalarT, typename IdxT>
-      [[gnu::always_inline]] static ScalarT sparse_load(IdxT, IdxT, ScalarT, const IdxT*, const IdxT*, IdxT*, IdxT*, ScalarT*, IdxT*)
+      [[gnu::always_inline]] static ScalarT
+      sparse_load(IdxT, IdxT, ScalarT, const IdxT*, const IdxT*, IdxT*, IdxT*, ScalarT*, IdxT*)
       {
         return 0.0;
       }
@@ -274,7 +328,9 @@ namespace GridKit
        * @tparam IdxT - matrix index data type
        */
       template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static void ident_store(ScalarT, IdxT, IdxT)
+      __attribute__((always_inline)) static void ident_store(
+        ScalarT, IdxT, IdxT
+      )
       {
         assert(0 && "should never store");
       }
@@ -286,7 +342,9 @@ namespace GridKit
        * @tparam IdxT - matrix index data type
        */
       template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static ScalarT ident_load(IdxT row, IdxT col)
+      __attribute__((always_inline)) static ScalarT ident_load(
+        IdxT row, IdxT col
+      )
       {
         row /= sizeof(ScalarT);
         return (ScalarT) (row == col);

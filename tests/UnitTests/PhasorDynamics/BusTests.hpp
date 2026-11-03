@@ -120,7 +120,8 @@ namespace GridKit
         bus.initialize();
 
         // Fault current I = -V / (R + jX)
-        const std::complex<RealT> current = -std::complex<RealT>(Vr, Vi) / std::complex<RealT>(R, X);
+        const std::complex<RealT> current =
+          -std::complex<RealT>(Vr, Vi) / std::complex<RealT>(R, X);
 
         success *= bus.setFault(true, R, X) == 0;
         bus.evaluateResidual();
@@ -144,7 +145,8 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// Fault Jacobian matches DependencyTracking and keeps its pattern when cleared
+      /// Fault Jacobian matches DependencyTracking and keeps its pattern when
+      /// cleared
       TestOutcome jacobian()
       {
         TestStatus success = true;
@@ -156,7 +158,8 @@ namespace GridKit
         DependencyTracking::Variable Vr{1.0};
         DependencyTracking::Variable Vi{2.0};
 
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> dependency_tracking_bus(Vr, Vi);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>
+          dependency_tracking_bus(Vr, Vi);
         dependency_tracking_bus.allocate();
         dependency_tracking_bus.initialize();
         dependency_tracking_bus.setFault(true, R, X);
@@ -165,7 +168,8 @@ namespace GridKit
         const auto* f    = dependency_tracking_bus.getResidual().getData();
         const auto  size = static_cast<size_t>(dependency_tracking_bus.size());
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian(size);
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          dependency_tracking_jacobian(size);
         for (size_t row = 0; row < size; ++row)
         {
           for (const auto& [number, value] : f[row].getDependencies())
@@ -187,15 +191,19 @@ namespace GridKit
         const IdxT*  cols     = jacobian->getColData();
         const RealT* vals     = jacobian->getValues();
 
-        std::vector<DependencyTracking::Variable::DependencyMap> bus_jacobian(size);
+        std::vector<DependencyTracking::Variable::DependencyMap> bus_jacobian(
+          size
+        );
         for (IdxT i = 0; i < jacobian->getNnz(); ++i)
         {
-          bus_jacobian[static_cast<size_t>(rows[i])][static_cast<size_t>(cols[i])] = vals[i];
+          bus_jacobian[static_cast<size_t>(rows[i])]
+                      [static_cast<size_t>(cols[i])] = vals[i];
         }
 
         for (size_t row = 0; row < size; ++row)
         {
-          success *= isEqual(dependency_tracking_jacobian[row], bus_jacobian[row]);
+          success *=
+            isEqual(dependency_tracking_jacobian[row], bus_jacobian[row]);
         }
 
         // Clearing the fault keeps the same entries with zero values

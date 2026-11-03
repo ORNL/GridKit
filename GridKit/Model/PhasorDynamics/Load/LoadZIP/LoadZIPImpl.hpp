@@ -32,7 +32,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void LoadZIP<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Parameter = typename ModelDataT::Parameters;
 
@@ -50,7 +52,9 @@ namespace GridKit
      * @brief Set the component ID
      */
     template <typename scalar_type, typename index_type>
-    int LoadZIP<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+    int LoadZIP<scalar_type, index_type>::setGridKitComponentID(
+      IdxT component_id
+    )
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -230,7 +234,7 @@ namespace GridKit
       const RealT   Vnom2 = Vnom_ * Vnom_;
       const ScalarT V2    = Vr * Vr + Vi * Vi;
       const ScalarT V     = std::sqrt(V2);
-      const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
+      const ScalarT zip = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
 
       f[0] = Ir + (G_ * Vr + B_ * Vi) * zip;
       f[1] = Ii + (G_ * Vi - B_ * Vr) * zip;
@@ -253,7 +257,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    const Model::VariableMonitorBase* LoadZIP<scalar_type, index_type>::getMonitor() const
+    const Model::VariableMonitorBase* LoadZIP<scalar_type, index_type>::
+      getMonitor() const
     {
       return monitor_.get();
     }
@@ -263,16 +268,26 @@ namespace GridKit
     {
       using Variable = typename ModelDataT::MonitorableVariables;
 
-      monitor_->set(Variable::ir, [this]
-                    { return y_.getData()[0]; });
-      monitor_->set(Variable::ii, [this]
-                    { return y_.getData()[1]; });
-      monitor_->set(Variable::im, [this]
-                    { return std::sqrt(y_.getData()[0] * y_.getData()[0] + y_.getData()[1] * y_.getData()[1]); });
-      monitor_->set(Variable::p, [this]
-                    { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; });
-      monitor_->set(Variable::q, [this]
-                    { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; });
+      monitor_->set(Variable::ir, [this] { return y_.getData()[0]; });
+      monitor_->set(Variable::ii, [this] { return y_.getData()[1]; });
+      monitor_->set(
+        Variable::im,
+        [this]
+        {
+          return std::sqrt(
+            y_.getData()[0] * y_.getData()[0]
+            + y_.getData()[1] * y_.getData()[1]
+          );
+        }
+      );
+      monitor_->set(
+        Variable::p,
+        [this] { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; }
+      );
+      monitor_->set(
+        Variable::q,
+        [this] { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; }
+      );
     }
 
   } // namespace PhasorDynamics

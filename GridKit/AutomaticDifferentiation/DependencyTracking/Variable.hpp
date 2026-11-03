@@ -36,9 +36,7 @@ namespace GridKit
           @brief Default constructor.
       */
       Variable()
-        : value_(0.0),
-          variable_number_(INVALID_VAR_NUMBER),
-          is_fixed_(false)
+        : value_(0.0), variable_number_(INVALID_VAR_NUMBER), is_fixed_(false)
       {
       }
 
@@ -46,9 +44,7 @@ namespace GridKit
           @brief Constructor which initializes the value.
       */
       explicit Variable(double value)
-        : value_(value),
-          variable_number_(INVALID_VAR_NUMBER),
-          is_fixed_(false)
+        : value_(value), variable_number_(INVALID_VAR_NUMBER), is_fixed_(false)
       {
       }
 
@@ -58,9 +54,7 @@ namespace GridKit
 
       */
       Variable(double value, size_t variable_number)
-        : value_(value),
-          variable_number_(variable_number),
-          is_fixed_(false)
+        : value_(value), variable_number_(variable_number), is_fixed_(false)
       {
         dependencies_[variable_number_] = 1.0;
       }

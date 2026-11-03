@@ -199,8 +199,9 @@ namespace GridKit
       using OutputLayout = ::GridKit::Model::VariableMonitorLayout;
       if (j.contains("output_layout"))
       {
-        auto layout_str  = j.at("output_layout").get<std::string>();
-        auto layout_wrap = enum_cast<OutputLayout>(layout_str, case_insensitive);
+        auto layout_str = j.at("output_layout").get<std::string>();
+        auto layout_wrap =
+          enum_cast<OutputLayout>(layout_str, case_insensitive);
         if (!layout_wrap.has_value())
         {
           Log::error() << "Invalid output layout \"" << layout_str << "\"; "
@@ -295,9 +296,12 @@ namespace GridKit
       }
 
       // TODO: Support reference comparison for the long layout
-      if (data.output_layout == ::GridKit::Model::VariableMonitorLayout::LONG && !data.reference_file.empty())
+      if (data.output_layout == ::GridKit::Model::VariableMonitorLayout::LONG
+          && !data.reference_file.empty())
       {
-        throw std::invalid_argument("reference_file is not supported with the long output_layout");
+        throw std::invalid_argument(
+          "reference_file is not supported with the long output_layout"
+        );
       }
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
@@ -306,7 +310,8 @@ namespace GridKit
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
       {
-        if (sink.format == csv && sink.delim == "," && sink.layout == data.output_layout)
+        if (sink.format == csv && sink.delim == ","
+            && sink.layout == data.output_layout)
         {
           model_output_file = sink.file_name;
         }
@@ -317,7 +322,9 @@ namespace GridKit
         if (!data.output_file.empty())
         {
           // Add study output file to model if one did not already exist
-          data.model_data.monitor_sink.emplace_back(csv, data.output_file, ",", data.output_layout);
+          data.model_data.monitor_sink.emplace_back(
+            csv, data.output_file, ",", data.output_layout
+          );
         }
       }
       else

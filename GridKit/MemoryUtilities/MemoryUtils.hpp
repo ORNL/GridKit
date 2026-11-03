@@ -152,7 +152,8 @@ namespace GridKit
 
 #ifdef GridKit_ENABLE_GPU
 
-// Check if GPU support is enabled in GridKit and set appropriate device memory manager.
+// Check if GPU support is enabled in GridKit and set appropriate device memory
+// manager.
 #if defined GridKit_ENABLE_CUDA
 #include <GridKit/LinearAlgebra/cuda/CudaMemory.hpp>
 #elif defined GridKit_ENABLE_HIP

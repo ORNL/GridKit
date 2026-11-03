@@ -53,8 +53,7 @@ namespace GridKit
     /**
      * @brief Constructor for the system model
      */
-    SystemModel()
-      : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+    SystemModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
     }
 
@@ -322,7 +321,8 @@ namespace GridKit
         component->setAbsoluteTolerance(rel_tol);
         if (component->size() > 0)
         {
-          const auto* component_abs_tol = component->absoluteTolerance().getData();
+          const auto* component_abs_tol =
+            component->absoluteTolerance().getData();
           for (IdxT j = 0; j < component->size(); ++j)
           {
             abs_tol[offset + j] = component_abs_tol[j];
@@ -968,7 +968,8 @@ namespace GridKit
           component->evaluateAdjointIntegrand();
           if (component->sizeParams() > 0)
           {
-            const auto* component_gB = component->getAdjointIntegrand().getData();
+            const auto* component_gB =
+              component->getAdjointIntegrand().getData();
             for (IdxT j = 0; j < size_opt_; ++j)
             {
               gB[j] = component_gB[j];

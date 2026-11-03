@@ -9,8 +9,7 @@ namespace GridKit
   namespace Testing
   {
 
-    TestStatus::TestStatus()
-      : outcome_(TestOutcome::PASS)
+    TestStatus::TestStatus() : outcome_(TestOutcome::PASS)
     {
     }
 
@@ -20,8 +19,7 @@ namespace GridKit
     }
 
     TestStatus::TestStatus(const char* funcname)
-      : outcome_(TestOutcome::PASS),
-        funcname_(funcname)
+      : outcome_(TestOutcome::PASS), funcname_(funcname)
     {
     }
 
@@ -46,31 +44,29 @@ namespace GridKit
       switch (outcome_)
       {
       case PASS:
-        std::cout << "--- " << GREEN << "PASS" << CLEAR
-                  << ": Test " << funcname << "\n";
+        std::cout << "--- " << GREEN << "PASS" << CLEAR << ": Test " << funcname
+                  << "\n";
         break;
       case FAIL:
-        std::cout << "--- " << RED << "FAIL" << CLEAR
-                  << ": Test " << funcname << "\n";
+        std::cout << "--- " << RED << "FAIL" << CLEAR << ": Test " << funcname
+                  << "\n";
         break;
       case SKIP:
-        std::cout << "--- " << YELLOW << "SKIP" << CLEAR
-                  << ": Test " << funcname << CLEAR << "\n";
+        std::cout << "--- " << YELLOW << "SKIP" << CLEAR << ": Test "
+                  << funcname << CLEAR << "\n";
         break;
       case EXPECTED_FAIL:
-        std::cout << "--- " << ORANGE << "FAIL" << CLEAR
-                  << " (EXPECTED)"
+        std::cout << "--- " << ORANGE << "FAIL" << CLEAR << " (EXPECTED)"
                   << ": Test " << funcname << "\n";
         break;
       case UNEXPECTED_PASS:
-        std::cout << "--- " << BLUE << "PASS" << CLEAR
-                  << " (UNEXPECTED)"
+        std::cout << "--- " << BLUE << "PASS" << CLEAR << " (UNEXPECTED)"
                   << ": Test " << funcname << "\n";
         break;
       default:
         std::cout << "--- " << RED << "FAIL" << CLEAR
-                  << "Unrecognized test result " << outcome_
-                  << " for test " << funcname << "\n";
+                  << "Unrecognized test result " << outcome_ << " for test "
+                  << funcname << "\n";
       }
       return outcome_;
     }
@@ -132,8 +128,8 @@ namespace GridKit
         this->unexpected_success++;
         break;
       default:
-        std::cout << "Warning: Unrecognized test outcome code "
-                  << outcome << ". Assuming failure ...\n";
+        std::cout << "Warning: Unrecognized test outcome code " << outcome
+                  << ". Assuming failure ...\n";
         this->failure++;
       }
       return *this;

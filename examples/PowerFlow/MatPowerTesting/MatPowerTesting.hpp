@@ -185,13 +185,16 @@ namespace GridKit
     inline bool isEqual(std::vector<T> a, std::vector<T> b, double tol = tol_)
     {
       if (a.size() != b.size())
-        throw std::runtime_error([&]
-                                 {
-      std::stringstream errs;
-      errs << "Containers do not have the same size!\n"
-           << "\tGot a.size() == " << a.size() << "\n"
-           << "\tGot b.size() == " << b.size() << "\n";
-      return errs.str(); }());
+        throw std::runtime_error(
+          [&]
+          {
+            std::stringstream errs;
+            errs << "Containers do not have the same size!\n"
+                 << "\tGot a.size() == " << a.size() << "\n"
+                 << "\tGot b.size() == " << b.size() << "\n";
+            return errs.str();
+          }()
+        );
 
       int fail = 0;
       for (std::size_t i = 0; i < a.size(); i++)

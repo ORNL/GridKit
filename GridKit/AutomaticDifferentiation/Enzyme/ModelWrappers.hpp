@@ -27,16 +27,22 @@ namespace GridKit
         InternalResidual,
         InternalResidualWithSignal,
         BusResidual,
-        BusResidual11, //< Special case for branches that are connected to two buses
-        BusResidual12, //< Special case for branches that are connected to two buses
-        BusResidual21, //< Special case for branches that are connected to two buses
-        BusResidual22, //< Special case for branches that are connected to two buses
+        BusResidual11, //< Special case for branches that are connected to two
+                       //buses
+        BusResidual12, //< Special case for branches that are connected to two
+                       //buses
+        BusResidual21, //< Special case for branches that are connected to two
+                       //buses
+        BusResidual22, //< Special case for branches that are connected to two
+                       //buses
         Objective,     //< Optimization objective
-        Constraints    //< Optimization internal constraints and contributions at the ports
+        Constraints //< Optimization internal constraints and contributions at
+                    //the ports
       };
 
       /**
-       * @brief Template definition for wrapper around residual methods inside model classes
+       * @brief Template definition for wrapper around residual methods inside
+       * model classes
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
@@ -48,13 +54,15 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for InternalResidual
+       * @brief Residual wrapper partial template specialization for
+       * InternalResidual
        *
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::InternalResidual>
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -76,13 +84,15 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for InternalResidualWithSignal
+       * @brief Residual wrapper partial template specialization for
+       * InternalResidualWithSignal
        *
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::InternalResidualWithSignal>
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -112,7 +122,8 @@ namespace GridKit
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual>
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -134,13 +145,15 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for BusResidual11 (branch member function)
+       * @brief Residual wrapper partial template specialization for
+       * BusResidual11 (branch member function)
        *
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual11>
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -162,13 +175,15 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for BusResidual12 (branch member function)
+       * @brief Residual wrapper partial template specialization for
+       * BusResidual12 (branch member function)
        *
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual12>
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -190,17 +205,20 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for BusResidual21 (branch member function)
+       * @brief Residual wrapper partial template specialization for
+       * BusResidual21 (branch member function)
        *
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual21>
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
-              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
+              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT,
+         function>::eval,
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
@@ -219,13 +237,15 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for BusResidual22 (branch member function)
+       * @brief Residual wrapper partial template specialization for
+       * BusResidual22 (branch member function)
        *
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::BusResidual22>
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -247,16 +267,20 @@ namespace GridKit
       };
 
       /**
-       * @brief Wrapper partial template specialization for an optimization objective
+       * @brief Wrapper partial template specialization for an optimization
+       * objective
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::Objective>
       {
         /// Number of internal variables
-        static constexpr std::size_t NUM_INTERNAL_INPUTS = Utilities::enum_size<typename ModelT::InternalVariablesT>();
+        static constexpr std::size_t NUM_INTERNAL_INPUTS =
+          Utilities::enum_size<typename ModelT::InternalVariablesT>();
 
         /// Number of local variables
-        static constexpr std::size_t NUM_INPUTS = NUM_INTERNAL_INPUTS + Utilities::enum_size<typename ModelT::ExternalVariablesT>();
+        static constexpr std::size_t NUM_INPUTS =
+          NUM_INTERNAL_INPUTS
+          + Utilities::enum_size<typename ModelT::ExternalVariablesT>();
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -264,26 +288,33 @@ namespace GridKit
          * @return Objective contribution
          */
         template <typename ScalarT>
-        [[gnu::always_inline]] inline static ScalarT eval(const ModelT* model, const ScalarT* x)
+        [[gnu::always_inline]] inline static ScalarT eval(
+          const ModelT* model, const ScalarT* x
+        )
         {
           return model->objective(x, x + NUM_INTERNAL_INPUTS);
         }
       };
 
       /**
-       * @brief Wrapper partial template specialization for optimization constraints
+       * @brief Wrapper partial template specialization for optimization
+       * constraints
        */
       template <typename ModelT>
       struct ModelWrapper<ModelT, MemberFunctions::Constraints>
       {
         /// Number of internal variables
-        static constexpr std::size_t NUM_INTERNAL_INPUTS = Utilities::enum_size<typename ModelT::InternalVariablesT>();
+        static constexpr std::size_t NUM_INTERNAL_INPUTS =
+          Utilities::enum_size<typename ModelT::InternalVariablesT>();
 
         /// Number of internal constraints
-        static constexpr std::size_t NUM_INTERNAL_OUTPUTS = Utilities::enum_size<typename ModelT::InternalConstraintsT>();
+        static constexpr std::size_t NUM_INTERNAL_OUTPUTS =
+          Utilities::enum_size<typename ModelT::InternalConstraintsT>();
 
         /// Number of local constraint contributions
-        static constexpr std::size_t NUM_OUTPUTS = NUM_INTERNAL_OUTPUTS + Utilities::enum_size<typename ModelT::ExternalConstraintsT>();
+        static constexpr std::size_t NUM_OUTPUTS =
+          NUM_INTERNAL_OUTPUTS
+          + Utilities::enum_size<typename ModelT::ExternalConstraintsT>();
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -291,10 +322,14 @@ namespace GridKit
          * @param[out] g - Local constraint contributions
          */
         template <typename ScalarT>
-        [[gnu::always_inline]] inline static void eval(const ModelT* model, const ScalarT* x, ScalarT* g)
+        [[gnu::always_inline]] inline static void eval(
+          const ModelT* model, const ScalarT* x, ScalarT* g
+        )
         {
           model->internalConstraints(x, x + NUM_INTERNAL_INPUTS, g);
-          model->externalConstraints(x, x + NUM_INTERNAL_INPUTS, g + NUM_INTERNAL_OUTPUTS);
+          model->externalConstraints(
+            x, x + NUM_INTERNAL_INPUTS, g + NUM_INTERNAL_OUTPUTS
+          );
         }
       };
     } // namespace Sparse

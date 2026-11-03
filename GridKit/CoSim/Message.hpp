@@ -122,10 +122,8 @@ namespace GridKit
 
     /// Apply an incoming message and control simulation continuity.
     template <typename scalar_type>
-    using MessageStepFunction = std::function<bool(
-      const MessageData<scalar_type>&,
-      const MessageExchangeFunction<scalar_type>&
-    )>;
+    using MessageStepFunction = std::function<
+      bool(const MessageData<scalar_type>&, const MessageExchangeFunction<scalar_type>&)>;
 
     /// Produce the next outgoing message, optionally exchanging intermediate
     /// messages first.

@@ -64,8 +64,7 @@ namespace GridKit
       }
 
     private:
-      const FuncT f_default_ = [](auto)
-      { return static_cast<ScalarT>(0.0); };
+      const FuncT f_default_ = [](auto) { return static_cast<ScalarT>(0.0); };
 
       FuncT parseFunction(const std::string& expr);
 

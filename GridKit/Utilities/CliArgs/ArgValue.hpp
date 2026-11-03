@@ -44,7 +44,8 @@ namespace GridKit
        * @brief Check that T is not an ArgValue or list of ArgValues
        */
       template <typename T>
-      static constexpr bool notArgValue = notAnArgValue<T> && notAnArgValueList<T>;
+      static constexpr bool notArgValue =
+        notAnArgValue<T> && notAnArgValueList<T>;
 
     public:
       /**

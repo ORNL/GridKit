@@ -40,17 +40,23 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel.addNode(&bus_ir);
 
   // inductor
-  auto* induct = new GridKit::PowerElectronics::Inductor<double, size_t>(idoff, linit, &bus_ir, &bus_iv);
+  auto* induct = new GridKit::PowerElectronics::Inductor<double, size_t>(
+    idoff, linit, &bus_ir, &bus_iv
+  );
   sysmodel.addComponent(induct);
 
   // resistor
   idoff++;
-  auto* resis = new GridKit::PowerElectronics::Resistor<double, size_t>(idoff, rinit, &bus_vr, &bus_ir);
+  auto* resis = new GridKit::PowerElectronics::Resistor<double, size_t>(
+    idoff, rinit, &bus_vr, &bus_ir
+  );
   sysmodel.addComponent(resis);
 
   // voltage source
   idoff++;
-  auto* vsource = new GridKit::PowerElectronics::VoltageSource<double, size_t>(idoff, vinit, &bus_iv, &bus_vr);
+  auto* vsource = new GridKit::PowerElectronics::VoltageSource<double, size_t>(
+    idoff, vinit, &bus_iv, &bus_vr
+  );
   sysmodel.addComponent(vsource);
 
   sysmodel.allocate();

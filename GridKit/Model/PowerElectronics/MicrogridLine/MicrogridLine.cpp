@@ -15,19 +15,18 @@ namespace GridKit
      * Calls default ModelEvaluatorImpl constructor.
      *
      *
-     * Model is from paper: "Modeling, Analysis and Testing of Autonomous Operation
-     * of an Inverter-Based Microgrid", Nagaraju Pogaku, Milan Prodanovic, and
-     * Timothy C. Green, Section C
+     * Model is from paper: "Modeling, Analysis and Testing of Autonomous
+     * Operation of an Inverter-Based Microgrid", Nagaraju Pogaku, Milan
+     * Prodanovic, and Timothy C. Green, Section C
      *
-     * @todo Consider having \omegaref as a global constant, not a node variable.
+     * @todo Consider having \omegaref as a global constant, not a node
+     * variable.
      */
     template <class ScalarT, typename IdxT>
-    MicrogridLine<ScalarT, IdxT>::MicrogridLine(IdxT id, RealT R, RealT L, NodeT* node_ref, NodeT* bus1, NodeT* bus2)
-      : R_(R),
-        L_(L),
-        node_ref_(node_ref),
-        bus1_(bus1),
-        bus2_(bus2)
+    MicrogridLine<ScalarT, IdxT>::MicrogridLine(
+      IdxT id, RealT R, RealT L, NodeT* node_ref, NodeT* bus1, NodeT* bus2
+    )
+      : R_(R), L_(L), node_ref_(node_ref), bus1_(bus1), bus2_(bus2)
     {
       assert(node_ref_->size() == 1);
       assert(bus1_->size() == 2);
@@ -93,8 +92,10 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int MicrogridLine<ScalarT, IdxT>::evaluateInternalResidual()
     {
-      f_int_[0] = -yp_int_[0] - (R_ / L_) * y_int_[0] + *y_ext_[0] * y_int_[1] + (*y_ext_[1] - *y_ext_[3]) / L_;
-      f_int_[1] = -yp_int_[1] - (R_ / L_) * y_int_[1] - *y_ext_[0] * y_int_[0] + (*y_ext_[2] - *y_ext_[4]) / L_;
+      f_int_[0] = -yp_int_[0] - (R_ / L_) * y_int_[0] + *y_ext_[0] * y_int_[1]
+                  + (*y_ext_[1] - *y_ext_[3]) / L_;
+      f_int_[1] = -yp_int_[1] - (R_ / L_) * y_int_[1] - *y_ext_[0] * y_int_[0]
+                  + (*y_ext_[2] - *y_ext_[4]) / L_;
 
       return 0;
     }
@@ -135,12 +136,24 @@ namespace GridKit
 
       std::vector<IdxT>  rcord(ccord.size(), 5);
       std::vector<RealT> vals{};
-      vals = {static_cast<RealT>(y_int_[1]), (1.0 / L_), -(1.0 / L_), -(R_ / L_) - alpha_, static_cast<RealT>(*y_ext_[0])};
+      vals = {
+        static_cast<RealT>(y_int_[1]),
+        (1.0 / L_),
+        -(1.0 / L_),
+        -(R_ / L_) - alpha_,
+        static_cast<RealT>(*y_ext_[0])
+      };
       this->setJacValues(rcord, ccord, vals);
 
       std::vector<IdxT> ccor2{0, 2, 4, 5, 6};
       std::fill(rcord.begin(), rcord.end(), 6);
-      vals = {-static_cast<RealT>(y_int_[0]), (1.0 / L_), -(1.0 / L_), -static_cast<RealT>(*y_ext_[0]), -(R_ / L_) - alpha_};
+      vals = {
+        -static_cast<RealT>(y_int_[0]),
+        (1.0 / L_),
+        -(1.0 / L_),
+        -static_cast<RealT>(*y_ext_[0]),
+        -(R_ / L_) - alpha_
+      };
       this->setJacValues(rcord, ccor2, vals);
 
       return 0;

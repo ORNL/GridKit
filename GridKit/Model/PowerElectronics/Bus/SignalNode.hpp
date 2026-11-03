@@ -10,8 +10,7 @@ namespace GridKit
     class SignalNode : public NodeBase<ScalarT, IdxT>
     {
     public:
-      SignalNode()
-        : NodeBase<ScalarT, IdxT>(1, 0)
+      SignalNode() : NodeBase<ScalarT, IdxT>(1, 0)
       {
       }
     };

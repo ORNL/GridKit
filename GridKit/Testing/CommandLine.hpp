@@ -16,8 +16,7 @@ namespace GridKit
     {
       CommandLine() = default;
 
-      CommandLine(const std::array<std::string, NArgs>& args)
-        : args_(args)
+      CommandLine(const std::array<std::string, NArgs>& args) : args_(args)
       {
         for (std::size_t i = 0; i < static_cast<std::size_t>(argc); ++i)
         {

@@ -13,7 +13,8 @@ namespace GridKit
     BusBase<scalar_type, index_type>::~BusBase() = default;
 
     template <typename scalar_type, typename index_type>
-    const Model::VariableMonitorBase* BusBase<scalar_type, index_type>::getMonitor() const
+    const Model::VariableMonitorBase* BusBase<scalar_type, index_type>::
+      getMonitor() const
     {
       return monitor_.get();
     }
@@ -60,21 +61,19 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusInfinite<scalar_type, index_type>::BusInfinite(const ModelDataT& data)
-      : Vr_(data.Vr0),
-        Vi_(data.Vi0)
+      : Vr_(data.Vr0), Vi_(data.Vi0)
     {
-      bus_id_        = data.bus_id;
-      size_          = 0;
-      monitor_       = std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);
+      bus_id_ = data.bus_id;
+      size_   = 0;
+      monitor_ =
+        std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);
       using Variable = typename ModelDataT::MonitorableVariables;
-      monitor_->set(Variable::Vr, [this]
-                    { return Vr(); });
-      monitor_->set(Variable::Vi, [this]
-                    { return Vi(); });
-      monitor_->set(Variable::Vm, [this]
-                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
-      monitor_->set(Variable::Va, [this]
-                    { return std::atan2(Vi(), Vr()); });
+      monitor_->set(Variable::Vr, [this] { return Vr(); });
+      monitor_->set(Variable::Vi, [this] { return Vi(); });
+      monitor_->set(
+        Variable::Vm, [this] { return std::sqrt(Vr() * Vr() + Vi() * Vi()); }
+      );
+      monitor_->set(Variable::Va, [this] { return std::atan2(Vi(), Vr()); });
     }
 
     template <typename scalar_type, typename index_type>

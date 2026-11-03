@@ -37,7 +37,8 @@ namespace GridKit
     __attribute__((always_inline)) inline ScalarT sigmoid(const ScalarT x)
     {
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      return HALF<RealT> * (ONE<RealT> + std::tanh(HALF<RealT> * MU<RealT> * x));
+      return HALF<RealT>
+             * (ONE<RealT> + std::tanh(HALF<RealT> * MU<RealT> * x));
     }
 
     /**
@@ -167,7 +168,8 @@ namespace GridKit
      * passes the input through unchanged outside the band.
      *
      * @tparam ScalarT - scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - Input signal
      * @param[in] lower - Lower breakpoint
@@ -190,7 +192,8 @@ namespace GridKit
      * smooth ramp function.
      *
      * @tparam ScalarT - scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - Input signal
      * @param[in] lower - Lower breakpoint
@@ -212,7 +215,8 @@ namespace GridKit
      * Smooth approximation to min(max(f, -rate), rate).
      *
      * @tparam ScalarT - scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] f - Pre-limit derivative or rate signal
      * @param[in] rate - Symmetric positive rate limit
@@ -235,7 +239,8 @@ namespace GridKit
      * Callers should supply lower < upper; height may be positive or negative.
      *
      * @tparam ScalarT - scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - Input signal
      * @param[in] lower - Lower breakpoint
@@ -256,7 +261,8 @@ namespace GridKit
      * @brief Smooth above-limit indicator
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] limit_min - Minimum limit
@@ -274,7 +280,8 @@ namespace GridKit
      * @brief Smooth below-limit indicator
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] limit_max - Maximum limit
@@ -292,7 +299,8 @@ namespace GridKit
      * @brief Smooth inside-limits indicator
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] limit_min - Minimum limit
@@ -312,7 +320,8 @@ namespace GridKit
      * @brief Smooth outside-limits indicator
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] limit_min - Minimum limit
@@ -332,7 +341,8 @@ namespace GridKit
      * @brief Smooth anti-windup indicator for a limited state variable
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] f - Pre-limit derivative of the state variable
@@ -368,7 +378,8 @@ namespace GridKit
      * and blocks motion that would push further into saturation.
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam RealT - Real data type (see
+     * GridKit::ScalarTraits<ScalarT>::RealT)
      *
      * @param[in] x - Limited state or limited output signal
      * @param[in] f - Pre-limit derivative

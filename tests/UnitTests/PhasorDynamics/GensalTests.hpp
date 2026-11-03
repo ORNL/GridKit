@@ -22,9 +22,10 @@ namespace GridKit
     class GensalTests
     {
     private:
-      using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-      using GensalDataT             = PhasorDynamics::GensalData<RealT, IdxT>;
-      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using GensalDataT = PhasorDynamics::GensalData<RealT, IdxT>;
+      static constexpr ScalarT tol_ =
+        10 * std::numeric_limits<ScalarT>::epsilon();
 
       static GensalDataT makeGensalData()
       {
@@ -113,7 +114,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Checks initialized steady state with nonzero armature resistance.
+       * @brief Checks initialized steady state with nonzero armature
+       * resistance.
        */
       TestOutcome residual_nonzero_ra()
       {
@@ -344,25 +346,32 @@ namespace GridKit
 
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian();
-        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian              = EnzymeJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          dependency_tracking_jacobian = DependencyTrackingJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          enzyme_jacobian = EnzymeJacobian();
 
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+          success *= (GridKit::Testing::isEqual(
+            dependency_tracking_jacobian[i], enzyme_jacobian[i], tol
+          ));
         }
 
         return success.report(__func__);
       }
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian()
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      DependencyTrackingJacobian()
       {
-        DependencyTracking::Variable                               Vr1{1.0};
-        DependencyTracking::Variable                               Vi1{0.0};
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>    bus(Vr1, Vi1);
-        auto                                                       data = makeGensalData();
-        PhasorDynamics::Gensal<DependencyTracking::Variable, IdxT> gen(&bus, data);
+        DependencyTracking::Variable                            Vr1{1.0};
+        DependencyTracking::Variable                            Vi1{0.0};
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus(Vr1, Vi1);
+        auto data = makeGensalData();
+        PhasorDynamics::Gensal<DependencyTracking::Variable, IdxT> gen(
+          &bus, data
+        );
 
         bus.allocate();
         gen.allocate();
@@ -385,7 +394,8 @@ namespace GridKit
         gen.evaluateJacobian();
         auto* model_jacobian = gen.getCsrJacobian();
         auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: Gensal DependencyTracking Jacobian\n";
+        output_stream
+          << "Sparse Csr Matrix: Gensal DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);

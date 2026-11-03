@@ -22,7 +22,8 @@
 int main(int /* argc */, char const** /* argv */)
 {
 
-  GridKit::PowerElectronics::DistributedGeneratorParameters<double, size_t> parms;
+  GridKit::PowerElectronics::DistributedGeneratorParameters<double, size_t>
+    parms;
   // Parameters from MATLAB Microgrid code for first DG
   parms.wb_  = 2.0 * std::numbers::pi_v<double> * 50.0;
   parms.wc_  = 31.41;
@@ -46,7 +47,9 @@ int main(int /* argc */, char const** /* argv */)
   using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
   Bus bus;
 
-  GridKit::PowerElectronics::DistributedGenerator<double, size_t> dg(0, parms, false, &dg_signal, &bus);
+  GridKit::PowerElectronics::DistributedGenerator<double, size_t> dg(
+    0, parms, false, &dg_signal, &bus
+  );
 
   std::vector<double> t1(16, 0.0);
   std::vector<double> t2{

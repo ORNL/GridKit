@@ -42,15 +42,18 @@ namespace GridKit
       const auto DP = static_cast<size_t>(LoadExternalConstraints::DP);
       const auto DQ = static_cast<size_t>(LoadExternalConstraints::DQ);
 
-      const ScalarT v2 = external[VR] * external[VR] + external[VI] * external[VI];
-      const ScalarT v  = std::sqrt(v2);
+      const ScalarT v2 =
+        external[VR] * external[VR] + external[VI] * external[VI];
+      const ScalarT v = std::sqrt(v2);
 
       g[DP] = -u_ * (P_ + Pi_ * v + Pz_ * v2);
       g[DQ] = -u_ * (Q_ + Qi_ * v + Qz_ * v2);
     }
 
     template <typename scalar_type, typename index_type>
-    void Load<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void Load<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Params = LoadParameters;
 

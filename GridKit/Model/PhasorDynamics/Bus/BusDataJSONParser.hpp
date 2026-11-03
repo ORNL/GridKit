@@ -20,7 +20,8 @@ namespace GridKit
 
     /// JSON parser function implementation for the `BusData` type
     ///
-    /// See the `README.md` in `GridKit/Model/PhasorDynamics` for more information
+    /// See the `README.md` in `GridKit/Model/PhasorDynamics` for more
+    /// information
     template <typename RealT, typename IdxT>
     void from_json(const json& j, BusData<RealT, IdxT>& bd)
     {
@@ -28,8 +29,8 @@ namespace GridKit
       j.at("number").get_to(bd.bus_id);
 
       std::stringstream error_context;
-      error_context << "\n\tSee bus number " << bd.bus_id
-                    << " (\"name\": \"" << bd.name << "\") "
+      error_context << "\n\tSee bus number " << bd.bus_id << " (\"name\": \""
+                    << bd.name << "\") "
                     << "in the \"buses\" list of your JSON file.";
 
       if (!Utilities::isValidIdentifier(bd.name))
@@ -95,23 +96,26 @@ namespace GridKit
           //       handles std::variant out of the box
           if (raw_parameter.value().is_boolean())
           {
-            bd.parameters[key.value()] = raw_parameter.value().template get<bool>();
+            bd.parameters[key.value()] =
+              raw_parameter.value().template get<bool>();
           }
           else if (raw_parameter.value().is_number_float())
           {
-            bd.parameters[key.value()] = raw_parameter.value().template get<RealT>();
+            bd.parameters[key.value()] =
+              raw_parameter.value().template get<RealT>();
           }
           else if (raw_parameter.value().is_number_integer())
           {
-            bd.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
+            bd.parameters[key.value()] =
+              raw_parameter.value().template get<IdxT>();
           }
           else
           {
             Log::error() << "\n\tInvalid bus parameter value type: "
-                         << "\"" << raw_parameter.key() << "\": "
-                         << raw_parameter.value()
-                         << " (typed as \"" << raw_parameter.value().type_name()
-                         << "\")." << error_context.str() << std::endl;
+                         << "\"" << raw_parameter.key()
+                         << "\": " << raw_parameter.value() << " (typed as \""
+                         << raw_parameter.value().type_name() << "\")."
+                         << error_context.str() << std::endl;
             throw std::runtime_error("JSON parser failed");
           }
         }
@@ -155,11 +159,14 @@ namespace GridKit
 
       if (j.contains("mon"))
       {
-        using MonitorableVariables = typename BusData<RealT, IdxT>::MonitorableVariables;
+        using MonitorableVariables =
+          typename BusData<RealT, IdxT>::MonitorableVariables;
         for (auto& raw_monitored_variable : j.at("mon"))
         {
           auto var_name  = raw_monitored_variable.get<std::string>();
-          auto monitored = Utilities::enum_cast<MonitorableVariables>(var_name, magic_enum::case_insensitive);
+          auto monitored = Utilities::enum_cast<MonitorableVariables>(
+            var_name, magic_enum::case_insensitive
+          );
           if (monitored.has_value())
           {
             bd.monitored_variables.insert(monitored.value());

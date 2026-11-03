@@ -231,7 +231,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    const Model::VariableMonitorBase* LoadZ<scalar_type, index_type>::getMonitor() const
+    const Model::VariableMonitorBase* LoadZ<scalar_type, index_type>::
+      getMonitor() const
     {
       return monitor_.get();
     }
@@ -241,10 +242,14 @@ namespace GridKit
     {
       using Variable = typename ModelDataT::MonitorableVariables;
 
-      monitor_->set(Variable::p, [this]
-                    { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; });
-      monitor_->set(Variable::q, [this]
-                    { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; });
+      monitor_->set(
+        Variable::p,
+        [this] { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; }
+      );
+      monitor_->set(
+        Variable::q,
+        [this] { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; }
+      );
     }
 
   } // namespace PhasorDynamics

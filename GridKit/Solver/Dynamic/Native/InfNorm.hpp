@@ -11,8 +11,8 @@ namespace AnalysisManager
   {
 
     /**
-     * @brief The infinity error norm, which requires the error in every component in the system
-     *        to meet tolerance.
+     * @brief The infinity error norm, which requires the error in every
+     * component in the system to meet tolerance.
      *
      */
     template <class ScalarT, typename IdxT>
@@ -22,7 +22,8 @@ namespace AnalysisManager
       using RealT = ErrorNorm<ScalarT, IdxT>::RealT;
 
       /**
-       * @brief A workspace for the linear algebra operations required to calculate the norm.
+       * @brief A workspace for the linear algebra operations required to
+       * calculate the norm.
        *
        */
       mutable struct
@@ -33,7 +34,8 @@ namespace AnalysisManager
          */
         std::unique_ptr<State> out_;
         /**
-         * @brief The vector which will be used to scale the error in accordance with the tolerances.
+         * @brief The vector which will be used to scale the error in accordance
+         * with the tolerances.
          *
          */
         std::unique_ptr<State> scale_;
@@ -53,26 +55,32 @@ namespace AnalysisManager
       struct Parameters
       {
         /**
-         * @brief A vector of absolute tolerances for each component. The norm will attempt to reject errors
-         *        in each component above this tolerance.
+         * @brief A vector of absolute tolerances for each component. The norm
+         * will attempt to reject errors in each component above this tolerance.
          *
          */
         std::unique_ptr<State> abs_tol_;
 
         /**
-         * @brief The relative tolerance. The norm will attempt to reject any error larger in percentage of
-         *        the solution's maximum element than this.
+         * @brief The relative tolerance. The norm will attempt to reject any
+         * error larger in percentage of the solution's maximum element than
+         * this.
          *
          */
         RealT rel_tol_;
       } params_;
 
-      InfNorm(Parameters&& params)
-        : params_(std::move(params))
+      InfNorm(Parameters&& params) : params_(std::move(params))
       {
       }
 
-      RealT errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const final;
+      RealT errorNorm(
+        State&                                                err,
+        State&                                                y,
+        State&                                                yprev,
+        GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler,
+        GridKit::memory::MemorySpace                          memspace
+      ) const final;
     };
 
   } // namespace NativeDynamicSolver

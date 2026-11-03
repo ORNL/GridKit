@@ -92,12 +92,15 @@ namespace GridKit
           h_val_data[i] = static_cast<ScalarT>(i + 1);
         }
 
-        if (A.setDataPointers(h_row_data, h_col_data, h_val_data, memory::HOST) != 0)
+        if (A.setDataPointers(h_row_data, h_col_data, h_val_data, memory::HOST)
+            != 0)
         {
           std::cout << "Failed to set data pointers.\n";
           success = false;
         }
-        else if (A.getRowData(memory::HOST) != h_row_data || A.getColData(memory::HOST) != h_col_data || A.getValues(memory::HOST) != h_val_data)
+        else if (A.getRowData(memory::HOST) != h_row_data
+                 || A.getColData(memory::HOST) != h_col_data
+                 || A.getValues(memory::HOST) != h_val_data)
         {
           std::cout << "Data pointers do not point to expected values.\n";
           success = false;

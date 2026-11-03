@@ -110,7 +110,8 @@ namespace GridKit
   }
 
   /*!
-   * @brief PV bus does not compute residuals, so here we just reset residual values.
+   * @brief PV bus does not compute residuals, so here we just reset residual
+   * values.
    *
    * @warning This implementation assumes bus residuals are always evaluated
    * _before_ component model residuals.

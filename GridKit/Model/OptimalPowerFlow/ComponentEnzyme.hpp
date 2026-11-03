@@ -22,7 +22,8 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateGradient(const ModelT& model)
+    int Component<scalar_type, index_type>::evaluateGradient(const ModelT& model
+    )
     {
       std::array<ScalarT, localSize<ModelT>().variables> x;
       std::array<RealT, localSize<ModelT>().variables>   gradient;
@@ -35,7 +36,8 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateJacobian(const ModelT& model)
+    int Component<scalar_type, index_type>::evaluateJacobian(const ModelT& model
+    )
     {
       if constexpr (localSize<ModelT>().constraints == 0)
       {
@@ -66,7 +68,9 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateHessian(const ModelT& model, RealT sigma)
+    int Component<scalar_type, index_type>::evaluateHessian(
+      const ModelT& model, RealT sigma
+    )
     {
       std::array<ScalarT, localSize<ModelT>().variables> x;
       std::array<RealT, localSize<ModelT>().constraints> lambda;
@@ -94,7 +98,9 @@ namespace GridKit
 
     /// Keep the entries on or below the diagonal, which the others mirror
     template <typename scalar_type, typename index_type>
-    void Component<scalar_type, index_type>::keepLowerTriangle(CooBuffer& entries)
+    void Component<scalar_type, index_type>::keepLowerTriangle(
+      CooBuffer& entries
+    )
     {
       IdxT*  rows   = entries.rows.getData();
       IdxT*  cols   = entries.cols.getData();

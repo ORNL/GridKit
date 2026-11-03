@@ -37,13 +37,26 @@ namespace GridKit
       );
 
       // Dot product of two vectors
-      ScalarT dot(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, memory::MemorySpace memspace);
+      ScalarT dot(
+        Vector<ScalarT, IdxT>* x,
+        Vector<ScalarT, IdxT>* y,
+        memory::MemorySpace    memspace
+      );
 
       // Scale vector by scalar
-      void scal(const ScalarT alpha, Vector<ScalarT, IdxT>* x, memory::MemorySpace memspace);
+      void scal(
+        const ScalarT          alpha,
+        Vector<ScalarT, IdxT>* x,
+        memory::MemorySpace    memspace
+      );
 
-      // Scale vector by diagonal matrix represented as a vector (i.e., vec = diag*vec)
-      void scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, memory::MemorySpace memspace);
+      // Scale vector by diagonal matrix represented as a vector (i.e., vec =
+      // diag*vec)
+      void scal(
+        Vector<ScalarT, IdxT>* diag,
+        Vector<ScalarT, IdxT>* vec,
+        memory::MemorySpace    memspace
+      );
       void scal(
         Vector<ScalarT, IdxT>* diag,
         Vector<ScalarT, IdxT>* vec,
@@ -72,18 +85,33 @@ namespace GridKit
       );
 
       // Dense matrix-vector product.
-      void gemv(char                   transpose,
-                IdxT                   k, // number of vectors from multivector V to use
-                const ScalarT          alpha,
-                const ScalarT          beta,
-                Vector<ScalarT, IdxT>* V,
-                Vector<ScalarT, IdxT>* y,
-                Vector<ScalarT, IdxT>* x,
-                memory::MemorySpace    memspace);
+      void gemv(
+        char                   transpose,
+        IdxT                   k, // number of vectors from multivector V to use
+        const ScalarT          alpha,
+        const ScalarT          beta,
+        Vector<ScalarT, IdxT>* V,
+        Vector<ScalarT, IdxT>* y,
+        Vector<ScalarT, IdxT>* x,
+        memory::MemorySpace    memspace
+      );
 
-      int diagSolve(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, memory::MemorySpace memspace);
-      int max(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, Vector<ScalarT, IdxT>* out, memory::MemorySpace memspace);
-      int abs(Vector<ScalarT, IdxT>* in, Vector<ScalarT, IdxT>* out, memory::MemorySpace memspace);
+      int diagSolve(
+        Vector<ScalarT, IdxT>* diag,
+        Vector<ScalarT, IdxT>* vec,
+        memory::MemorySpace    memspace
+      );
+      int max(
+        Vector<ScalarT, IdxT>* x,
+        Vector<ScalarT, IdxT>* y,
+        Vector<ScalarT, IdxT>* out,
+        memory::MemorySpace    memspace
+      );
+      int abs(
+        Vector<ScalarT, IdxT>* in,
+        Vector<ScalarT, IdxT>* out,
+        memory::MemorySpace    memspace
+      );
 
       // Vector infinity norm
       ScalarT amax(Vector<ScalarT, IdxT>* x, memory::MemorySpace memspace);

@@ -60,7 +60,8 @@ namespace GridKit
         success *= !bus->verify().passed();
         delete bus;
 
-        // Initial voltage arguments are accepted for interface uniformity but not used
+        // Initial voltage arguments are accepted for interface uniformity but
+        // not used
         bus = new BusT(Vr, Vi);
         bus->allocate();
         bus->initialize();
@@ -115,7 +116,8 @@ namespace GridKit
         success *= isEqual(bus.Vr(), 1.17);
         success *= isEqual(bus.Vi(), 0.41);
 
-        // Reading an unconnected voltage inlet is an error, never a default value
+        // Reading an unconnected voltage inlet is an error, never a default
+        // value
         BusT plain;
         plain.allocate();
         plain.initialize();
@@ -191,7 +193,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// verify() reports errors for voltage inlets that are unconnected or unlinked
+      /// verify() reports errors for voltage inlets that are unconnected or
+      /// unlinked
       TestOutcome verifyUnlinked()
       {
         TestStatus success = true;

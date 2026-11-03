@@ -69,7 +69,7 @@ namespace GridKit
       using BusT         = BusBase<ScalarT, IdxT>;
       using ModelDataT   = GenClassicalData<RealT, IdxT>;
       using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
-      using MonitorT     = Model::VariableMonitor<GenClassical, GenClassicalData>;
+      using MonitorT = Model::VariableMonitor<GenClassical, GenClassicalData>;
 
     public:
       GenClassical(BusT* bus, const ModelDataT& data);
@@ -122,12 +122,10 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateInternalResidual(
-        const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
-      );
-      __attribute__((always_inline)) inline int evaluateBusResidual(
-        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
-      );
+      __attribute__((always_inline)) inline int
+      evaluateInternalResidual(const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int
+      evaluateBusResidual(const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
       /* Identification */

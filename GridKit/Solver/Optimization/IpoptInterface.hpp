@@ -43,10 +43,23 @@ namespace AnalysisManager
       explicit IpoptInterface(ModelT* model);
 
       /// Sizes and nonzero counts, with C-style indices
-      bool get_nlp_info(ipindex& n, ipindex& m, ipindex& nnz_jac_g, ipindex& nnz_h_lag, IndexStyleEnum& index_style) override;
+      bool get_nlp_info(
+        ipindex&        n,
+        ipindex&        m,
+        ipindex&        nnz_jac_g,
+        ipindex&        nnz_h_lag,
+        IndexStyleEnum& index_style
+      ) override;
 
       /// Variable and constraint bounds
-      bool get_bounds_info(ipindex n, ipnumber* x_l, ipnumber* x_u, ipindex m, ipnumber* g_l, ipnumber* g_u) override;
+      bool get_bounds_info(
+        ipindex   n,
+        ipnumber* x_l,
+        ipnumber* x_u,
+        ipindex   m,
+        ipnumber* g_l,
+        ipnumber* g_u
+      ) override;
 
       /// Variables from `x()`, without initial multipliers
       bool get_starting_point(
@@ -62,13 +75,18 @@ namespace AnalysisManager
       ) override;
 
       /// Objective \f$f(x)\f$
-      bool eval_f(ipindex n, const ipnumber* x, bool new_x, ipnumber& obj_value) override;
+      bool eval_f(ipindex n, const ipnumber* x, bool new_x, ipnumber& obj_value)
+        override;
 
       /// Objective gradient \f$\nabla f(x)\f$
-      bool eval_grad_f(ipindex n, const ipnumber* x, bool new_x, ipnumber* grad_f) override;
+      bool eval_grad_f(
+        ipindex n, const ipnumber* x, bool new_x, ipnumber* grad_f
+      ) override;
 
       /// Constraints \f$g(x)\f$
-      bool eval_g(ipindex n, const ipnumber* x, bool new_x, ipindex m, ipnumber* g) override;
+      bool eval_g(
+        ipindex n, const ipnumber* x, bool new_x, ipindex m, ipnumber* g
+      ) override;
 
       /// Constraint Jacobian, or its structure when `values` is null
       bool eval_jac_g(
@@ -97,7 +115,8 @@ namespace AnalysisManager
         ipnumber*       values
       ) override;
 
-      /// Leave the final point, its multipliers, its objective, and its constraints in the model
+      /// Leave the final point, its multipliers, its objective, and its
+      /// constraints in the model
       void finalize_solution(
         SolverReturn               status,
         ipindex                    n,

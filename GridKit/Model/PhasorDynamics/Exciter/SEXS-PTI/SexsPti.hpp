@@ -90,13 +90,8 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
-          const ScalarT*,
-          const ScalarT*,
-          const ScalarT*,
-          const ScalarT*,
-          ScalarT*
-        );
+        __attribute__((always_inline)) inline int
+        evaluateInternalResidual(const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         BusT* bus_{nullptr};
@@ -108,7 +103,8 @@ namespace GridKit
         RealT Efdmax_{0};
         RealT Efdmin_{0};
 
-        // Runtime connection masks keep the summing junction Enzyme sparse-solvable
+        // Runtime connection masks keep the summing junction Enzyme
+        // sparse-solvable
         RealT uel_on_{0};
         RealT oel_on_{0};
 

@@ -37,12 +37,12 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+        : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(Utilities::enum_size<Esdc1aInternalVariables>());
+        size_ =
+          static_cast<IdxT>(Utilities::enum_size<Esdc1aInternalVariables>());
       }
 
       /**
@@ -60,7 +60,9 @@ namespace GridKit
        * @return Zero on success.
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      int Esdc1a<scalar_type, index_type>::setGridKitComponentID(
+        IdxT component_id
+      )
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -95,7 +97,8 @@ namespace GridKit
         wb_.resize(2);
         wb_.setToZero();
 
-        const auto signal_size = Utilities::enum_size<Esdc1aExternalVariables>();
+        const auto signal_size =
+          Utilities::enum_size<Esdc1aExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
@@ -138,7 +141,9 @@ namespace GridKit
         }
 
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
+        checks.check(
+          Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax"
+        );
         checks.check(
           UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
           "UEL must be 0, 1, 2, or 3"
@@ -151,13 +156,26 @@ namespace GridKit
 
         if (!saturation_disabled)
         {
-          checks.check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
-          checks.check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          checks.check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
-          checks.check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+          checks.check(
+            E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled"
+          );
+          checks.check(
+            E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled"
+          );
+          checks.check(
+            Se1_ >= ZERO<RealT>,
+            "Se1 must be non-negative when saturation is enabled"
+          );
+          checks.check(
+            Se2_ >= ZERO<RealT>,
+            "Se2 must be non-negative when saturation is enabled"
+          );
 
-          const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
-          checks.check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
+          const bool sat_ordered =
+            (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+          checks.check(
+            sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently"
+          );
         }
 
         if (!ports_.out.template port<Esdc1aSignalOutputs::efd>().connected())
@@ -165,7 +183,9 @@ namespace GridKit
           checks.fail("required efd output signal is not assigned");
         }
 
-        if (Spdmlt_ && !ports_.in.template port<Esdc1aSignalInputs::speed>().connected())
+        if (Spdmlt_
+            && !ports_.in.template port<Esdc1aSignalInputs::speed>().connected(
+            ))
         {
           checks.fail("speed signal is required when Spdmlt is enabled");
         }
@@ -178,14 +198,19 @@ namespace GridKit
           if (ports_.in.template port<variable>().connected()
               && !ports_.in.template port<variable>().linked())
           {
-            checks.fail(std::format("{} signal attached with no linked source", name));
+            checks.fail(
+              std::format("{} signal attached with no linked source", name)
+            );
           }
         };
 
-        check_attached_signal.template operator()<Esdc1aSignalInputs::speed>("speed");
-        check_attached_signal.template operator()<Esdc1aSignalInputs::vref>("vref");
+        check_attached_signal.template operator(
+        )<Esdc1aSignalInputs::speed>("speed");
+        check_attached_signal.template operator(
+        )<Esdc1aSignalInputs::vref>("vref");
         check_attached_signal.template operator()<Esdc1aSignalInputs::vs>("vs");
-        check_attached_signal.template operator()<Esdc1aSignalInputs::vuel>("vuel");
+        check_attached_signal.template operator(
+        )<Esdc1aSignalInputs::vuel>("vuel");
 
         return checks;
       }
@@ -200,14 +225,15 @@ namespace GridKit
        * @warning IEEE Std 421.5-2016 states: “In some programs, if
        *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
        *          calculated by the program to represent a self-excited shunt
-       *          field and a trimmed rheostat as its initial condition.” GridKit
-       *          preserves the configured \f$K_{E}\f$ and resolves
+       *          field and a trimmed rheostat as its initial condition.”
+       * GridKit preserves the configured \f$K_{E}\f$ and resolves
        *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
        *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
        *          10 is unitless and represents 10% of the maximum regulator
        *          output.
        *
-       * @return Zero on success; nonzero when the configuration or operating point is rejected.
+       * @return Zero on success; nonzero when the configuration or operating
+       * point is rejected.
        */
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::initialize()
@@ -227,7 +253,8 @@ namespace GridKit
         bool ret = this->verifyAndLog();
         if (!ret)
         {
-          Log::error() << "Esdc1a: cannot initialize with invalid configuration\n";
+          Log::error(
+          ) << "Esdc1a: cannot initialize with invalid configuration\n";
           return 1;
         }
 
@@ -238,7 +265,8 @@ namespace GridKit
         const ScalarT efd0 = y[EFD];
 
         ScalarT omega0{ZERO<RealT>};
-        if (auto omega_port = ports_.in.template port<Esdc1aSignalInputs::speed>())
+        if (auto omega_port =
+              ports_.in.template port<Esdc1aSignalInputs::speed>())
         {
           omega0 = omega_port.readSignal();
         }
@@ -250,7 +278,8 @@ namespace GridKit
         }
 
         ScalarT vuel0{ZERO<RealT>};
-        if (auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>())
+        if (auto vuel_port =
+              ports_.in.template port<Esdc1aSignalInputs::vuel>())
         {
           vuel0 = vuel_port.readSignal();
         }
@@ -258,11 +287,11 @@ namespace GridKit
         const ScalarT vc0 = std::sqrt(Vr() * Vr() + Vi() * Vi());
 
         ret = std::isfinite(static_cast<RealT>(efd0))
-              && std::isfinite(static_cast<RealT>(vc0))
-              && vc0 > ZERO<RealT>;
+              && std::isfinite(static_cast<RealT>(vc0)) && vc0 > ZERO<RealT>;
         if (!ret)
         {
-          Log::error() << "Esdc1a: initial bus-voltage magnitude must be finite and positive, "
+          Log::error() << "Esdc1a: initial bus-voltage magnitude must be "
+                          "finite and positive, "
                           "and the field-voltage seed must be finite\n";
           return 1;
         }
@@ -272,7 +301,8 @@ namespace GridKit
               && std::isfinite(static_cast<RealT>(vuel0));
         if (!ret)
         {
-          Log::error() << "Esdc1a: initial speed, stabilizer, and UEL inputs must be finite\n";
+          Log::error() << "Esdc1a: initial speed, stabilizer, and UEL inputs "
+                          "must be finite\n";
           return 1;
         }
 
@@ -282,7 +312,8 @@ namespace GridKit
               && speed_multiplier > ZERO<RealT>;
         if (!ret)
         {
-          Log::error() << "Esdc1a: speed multiplier must be finite and positive at initialization\n";
+          Log::error() << "Esdc1a: speed multiplier must be finite and "
+                          "positive at initialization\n";
           return 1;
         }
 
@@ -291,7 +322,8 @@ namespace GridKit
         ret = !exclim_ || efdp0 >= ZERO<RealT>;
         if (!ret)
         {
-          Log::error() << "Esdc1a: initial Efd' is below its enabled zero limit\n";
+          Log::error(
+          ) << "Esdc1a: initial Efd' is below its enabled zero limit\n";
           return 1;
         }
 
@@ -330,7 +362,8 @@ namespace GridKit
           ret = gate_margin0 > ZERO<RealT>;
           if (!ret)
           {
-            Log::error() << "Esdc1a: smooth high-value gate is active at initialization\n";
+            Log::error(
+            ) << "Esdc1a: smooth high-value gate is active at initialization\n";
             return 1;
           }
           vll0 = vuel0 + inverseRamp(gate_margin0);
@@ -357,7 +390,8 @@ namespace GridKit
         vs_set_    = static_cast<RealT>(vs0);
         vuel_set_  = static_cast<RealT>(vuel0);
 
-        if (auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<Esdc1aSignalInputs::vref>())
         {
           vref_port.writeValue(vref_set_);
         }
@@ -430,11 +464,13 @@ namespace GridKit
         const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
-        if (auto speed_port = ports_.in.template port<Esdc1aSignalInputs::speed>())
+        if (auto speed_port =
+              ports_.in.template port<Esdc1aSignalInputs::speed>())
         {
           ws_indices_[OMEGA] = speed_port.signalVariableIndex();
         }
-        if (auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<Esdc1aSignalInputs::vref>())
         {
           ws_indices_[VREF] = vref_port.signalVariableIndex();
         }
@@ -442,7 +478,8 @@ namespace GridKit
         {
           ws_indices_[VS] = vs_port.signalVariableIndex();
         }
-        if (auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>())
+        if (auto vuel_port =
+              ports_.in.template port<Esdc1aSignalInputs::vuel>())
         {
           ws_indices_[VUEL] = vuel_port.signalVariableIndex();
         }
@@ -475,11 +512,13 @@ namespace GridKit
         ws[VS]    = vs_set_;
         ws[VUEL]  = vuel_set_;
 
-        if (auto omega_port = ports_.in.template port<Esdc1aSignalInputs::speed>())
+        if (auto omega_port =
+              ports_.in.template port<Esdc1aSignalInputs::speed>())
         {
           ws[OMEGA] = omega_port.readSignal();
         }
-        if (auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<Esdc1aSignalInputs::vref>())
         {
           ws[VREF] = vref_port.readSignal();
         }
@@ -487,7 +526,8 @@ namespace GridKit
         {
           ws[VS] = vs_port.readSignal();
         }
-        if (auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>())
+        if (auto vuel_port =
+              ports_.in.template port<Esdc1aSignalInputs::vuel>())
         {
           ws[VUEL] = vuel_port.readSignal();
         }
@@ -512,7 +552,8 @@ namespace GridKit
        *         constructed without data.
        */
       template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Esdc1a<scalar_type, index_type>::getMonitor() const
+      const Model::VariableMonitorBase* Esdc1a<scalar_type, index_type>::
+        getMonitor() const
       {
         return monitor_.get();
       }
@@ -584,22 +625,24 @@ namespace GridKit
         const ScalarT vs    = ws[VS];
         const ScalarT vuel  = ws[VUEL];
 
-        const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
-        const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
-        const ScalarT vfe_target        = Ke_eff_ * efdp + se;
-        const ScalarT efdp_rate         = (vr - vfe) / Te_;
-        const ScalarT limited_efdp_rate = (ONE<RealT> - lim_on_) * efdp_rate
-                                          + lim_on_ * awmin(efdp, efdp_rate, ZERO<RealT>);
+        const ScalarT ec         = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
+        const ScalarT ev_target  = vref + vs + uel_on_ * vuel - vc - vf;
+        const ScalarT vfe_target = Ke_eff_ * efdp + se;
+        const ScalarT efdp_rate  = (vr - vfe) / Te_;
+        const ScalarT limited_efdp_rate =
+          (ONE<RealT> - lim_on_) * efdp_rate
+          + lim_on_ * awmin(efdp, efdp_rate, ZERO<RealT>);
 
         f[EFDP] = -efdp_dot + limited_efdp_rate;
         f[VC]   = -vc_dot + (ec - vc) / Tr_;
-        f[VR]   = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
-        f[VF]   = -vf_dot + (-vf + Kf_ * limited_efdp_rate) / Tf1_;
-        f[XLL]  = -xll_dot + (ev - xll) / Tb_;
-        f[EV]   = -ev + ev_target;
-        f[VLL]  = -vll + xll + (Tc_ / Tb_) * (ev - xll);
-        f[VHV]  = -vhv + uel_on_ * vll
-                 + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
+        f[VR] =
+          -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
+        f[VF]  = -vf_dot + (-vf + Kf_ * limited_efdp_rate) / Tf1_;
+        f[XLL] = -xll_dot + (ev - xll) / Tb_;
+        f[EV]  = -ev + ev_target;
+        f[VLL] = -vll + xll + (Tc_ / Tb_) * (ev - xll);
+        f[VHV] =
+          -vhv + uel_on_ * vll + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
         f[SE]  = -se + SB_ * Math::qramp(efdp - SA_);
         f[VFE] = -vfe + vfe_target;
         f[EFD] = -efd + (ONE<RealT> + spd_on_ * omega) * efdp;
@@ -644,7 +687,9 @@ namespace GridKit
        * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      void Esdc1a<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      void Esdc1a<scalar_type, index_type>::initializeParameters(
+        const ModelDataT& data
+      )
       {
         using Params = typename ModelDataT::Parameters;
 
@@ -682,18 +727,54 @@ namespace GridKit
       {
         using Variable = typename ModelDataT::MonitorableVariables;
 
-        monitor_->set(Variable::efd, [this]
-                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::EFD)]; });
-        monitor_->set(Variable::vc, [this]
-                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VC)]; });
-        monitor_->set(Variable::vr, [this]
-                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VR)]; });
-        monitor_->set(Variable::vf, [this]
-                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VF)]; });
-        monitor_->set(Variable::se, [this]
-                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::SE)]; });
-        monitor_->set(Variable::vfe, [this]
-                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VFE)]; });
+        monitor_->set(
+          Variable::efd,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(Esdc1aInternalVariables::EFD)];
+          }
+        );
+        monitor_->set(
+          Variable::vc,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(Esdc1aInternalVariables::VC)];
+          }
+        );
+        monitor_->set(
+          Variable::vr,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(Esdc1aInternalVariables::VR)];
+          }
+        );
+        monitor_->set(
+          Variable::vf,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(Esdc1aInternalVariables::VF)];
+          }
+        );
+        monitor_->set(
+          Variable::se,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(Esdc1aInternalVariables::SE)];
+          }
+        );
+        monitor_->set(
+          Variable::vfe,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(Esdc1aInternalVariables::VFE)];
+          }
+        );
       }
 
       /**
@@ -707,7 +788,8 @@ namespace GridKit
       {
         Log::warning() << "Esdc1a: Tr, Ta, Tb, Te, and Tf1 below "
                        << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor to keep the exciter lags well posed\n";
+                       << " s are raised to that floor to keep the exciter "
+                          "lags well posed\n";
       }
 
       /**
@@ -763,7 +845,8 @@ namespace GridKit
         // The disabled test matches the verify() predicate exactly.
         const bool saturation_disabled =
           Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
-        const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+        const bool sat_ordered =
+          (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
         const bool saturation_consistent =
           E1_ > ZERO<RealT> && E2_ > ZERO<RealT> && Se1_ >= ZERO<RealT>
           && Se2_ >= ZERO<RealT> && sat_ordered;
@@ -808,8 +891,9 @@ namespace GridKit
        * @pre @p ramp_output is finite and strictly positive.
        */
       template <typename scalar_type, typename index_type>
-      typename Esdc1a<scalar_type, index_type>::RealT
-      Esdc1a<scalar_type, index_type>::inverseRamp(RealT ramp_output) const
+      typename Esdc1a<scalar_type, index_type>::RealT Esdc1a<
+        scalar_type,
+        index_type>::inverseRamp(RealT ramp_output) const
       {
         const RealT mu = Math::MU<RealT>;
         return ramp_output + std::log(-std::expm1(-mu * ramp_output)) / mu;

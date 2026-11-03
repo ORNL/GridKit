@@ -66,7 +66,8 @@ namespace GridKit
      * system vectors and reads and adds to those of the components at its ports
      */
     template <typename scalar_type, typename index_type>
-    class Component : public Model::OptimizationEvaluator<scalar_type, index_type>
+    class Component
+      : public Model::OptimizationEvaluator<scalar_type, index_type>
     {
       friend class SystemModel<scalar_type, index_type>;
 
@@ -103,13 +104,13 @@ namespace GridKit
         Block      offset{};
       };
 
-      /// Derivative entries in global indices, with room for the dense local block
+      /// Derivative entries in global indices, with room for the dense local
+      /// block
       struct CooBuffer
       {
         int resize(IdxT capacity)
         {
-          if (rows.resize(capacity) != 0
-              || cols.resize(capacity) != 0
+          if (rows.resize(capacity) != 0 || cols.resize(capacity) != 0
               || values.resize(capacity) != 0)
           {
             return 1;
@@ -296,10 +297,11 @@ namespace GridKit
       Block             offset_; ///< Global index of each internal block
       bool              bound_{false};
 
-      VectorT      local_x_;            ///< Internal, then external variables
-      VectorT      local_g_;            ///< Internal, then external contributions
-      IndexVectorT variable_indices_;   ///< Global column of each local variable
-      IndexVectorT constraint_indices_; ///< Global row of each local constraint contribution
+      VectorT      local_x_;          ///< Internal, then external variables
+      VectorT      local_g_;          ///< Internal, then external contributions
+      IndexVectorT variable_indices_; ///< Global column of each local variable
+      IndexVectorT constraint_indices_; ///< Global row of each local constraint
+                                        ///< contribution
       CooBuffer    jacobian_entries_;
       CooBuffer    hessian_entries_;
     };

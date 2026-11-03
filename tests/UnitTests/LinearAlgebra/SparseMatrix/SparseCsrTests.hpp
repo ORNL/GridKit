@@ -36,7 +36,8 @@ namespace GridKit
        * @param[in] n - number of rows
        * @param[in] m - number of columns
        * @param[in] row_density - number of non-zeros per row
-       * @param[in] is_symmetric - true if the matrix is symmetric, false otherwise
+       * @param[in] is_symmetric - true if the matrix is symmetric, false
+       otherwise
        * @param[in] is_expanded - true if the matrix is expanded (all non-zeros
        are stored explicitly, not assumed based on symmetry), false otherwise
        *
@@ -95,12 +96,15 @@ namespace GridKit
           h_val_data[i] = static_cast<ScalarT>(i + 1);
         }
 
-        if (A.setDataPointers(h_row_data, h_col_data, h_val_data, memory::HOST) != 0)
+        if (A.setDataPointers(h_row_data, h_col_data, h_val_data, memory::HOST)
+            != 0)
         {
           std::cout << "Failed to set data pointers.\n";
           success = false;
         }
-        else if (A.getRowData(memory::HOST) != h_row_data || A.getColData(memory::HOST) != h_col_data || A.getValues(memory::HOST) != h_val_data)
+        else if (A.getRowData(memory::HOST) != h_row_data
+                 || A.getColData(memory::HOST) != h_col_data
+                 || A.getValues(memory::HOST) != h_val_data)
         {
           std::cout << "Data pointers do not point to expected values.\n";
           success = false;
@@ -246,10 +250,11 @@ namespace GridKit
       }
 
       /**
-       * @brief Verify that matrix will not reset data pointers when it currently owns data.
+       * @brief Verify that matrix will not reset data pointers when it
+       * currently owns data.
        *
-       * Copies values into the sparse matrix and then attempts to set the values
-       * pointer, which should fail since the matrix owns the data.
+       * Copies values into the sparse matrix and then attempts to set the
+       * values pointer, which should fail since the matrix owns the data.
        *
        * @param[in] n - number of rows
        * @param[in] m - number of columns
@@ -290,7 +295,8 @@ namespace GridKit
 
         if (A.setDataPointers(row_data, col_data, val_data, memspace_) == 0)
         {
-          std::cout << "Should not have set data pointers after copying values.\n";
+          std::cout
+            << "Should not have set data pointers after copying values.\n";
           success = false;
         }
 
@@ -303,10 +309,11 @@ namespace GridKit
       }
 
       /**
-       * @brief Verify that matrix will not reset values pointer when it currently owns data.
+       * @brief Verify that matrix will not reset values pointer when it
+       * currently owns data.
        *
-       * Copies a data array using `copyValues`, then attempts to set the values pointer,
-       * and verifies that this results in an error.
+       * Copies a data array using `copyValues`, then attempts to set the values
+       * pointer, and verifies that this results in an error.
        *
        * @param[in] n - number of rows
        * @param[in] m - number of columns
@@ -336,7 +343,8 @@ namespace GridKit
 
         if (A.setValuesPointer(val_data, memspace_) == 0)
         {
-          std::cout << "Should not have set values pointer when matrix owns data.\n";
+          std::cout
+            << "Should not have set values pointer when matrix owns data.\n";
           success = false;
         }
 
@@ -372,7 +380,9 @@ namespace GridKit
           std::cout << "Failed to allocate matrix data.\n";
           success = false;
         }
-        else if (A.getRowData(memspace_) == nullptr || A.getColData(memspace_) == nullptr || A.getValues(memspace_) == nullptr)
+        else if (A.getRowData(memspace_) == nullptr
+                 || A.getColData(memspace_) == nullptr
+                 || A.getValues(memspace_) == nullptr)
         {
           std::cout << "Matrix data pointers are null after allocation.\n";
           success = false;
@@ -383,7 +393,9 @@ namespace GridKit
           std::cout << "Failed to destroy matrix data.\n";
           success = false;
         }
-        else if (A.getRowData(memspace_) != nullptr || A.getColData(memspace_) != nullptr || A.getValues(memspace_) != nullptr)
+        else if (A.getRowData(memspace_) != nullptr
+                 || A.getColData(memspace_) != nullptr
+                 || A.getValues(memspace_) != nullptr)
         {
           std::cout << "Matrix data pointers are not null after destruction.\n";
           success = false;

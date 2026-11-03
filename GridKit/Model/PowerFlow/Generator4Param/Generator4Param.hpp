@@ -40,7 +40,9 @@ namespace GridKit
     using bus_type = BaseBus<ScalarT, IdxT>;
 
   public:
-    Generator4Param(BaseBus<ScalarT, IdxT>* bus, ScalarT P0 = 1.0, ScalarT Q0 = 0.0);
+    Generator4Param(
+      BaseBus<ScalarT, IdxT>* bus, ScalarT P0 = 1.0, ScalarT Q0 = 0.0
+    );
     virtual ~Generator4Param();
 
     int allocate();

@@ -34,7 +34,8 @@ namespace GridKit
         TestStatus success = true;
 
         auto  data = makeTestData();
-        auto* stab = new PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>(data);
+        auto* stab =
+          new PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>(data);
 
         success *= (stab != nullptr);
         success *= (stab->getMonitor() != nullptr);
@@ -56,9 +57,9 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
         ScalarT                                   u_value{0.0};
-        IdxT                                      u_index = 12; // beyond internal variables
-        ScalarT                                   vss_value{0.0};
-        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
+        IdxT    u_index = 12; // beyond internal variables
+        ScalarT vss_value{0.0};
+        IdxT    vss_index = INVALID_INDEX<IdxT>;
 
         // Link signal nodes to backing storage
         u_node.link(&u_value, &u_index);
@@ -70,8 +71,12 @@ namespace GridKit
         auto stab = Ieeest<ScalarT, IdxT>(data);
 
         // Wire: stabilizer reads u_node as input, writes vss_node as output
-        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
-        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(
+          &u_node
+        );
+        stab.getPorts()
+          .out.template port<IeeestSignalOutputs::output>()
+          .connect(&vss_node);
 
         stab.allocate();
         success *= (stab.verify().passed());
@@ -85,7 +90,8 @@ namespace GridKit
         {
           if (!isEqual(f_data[i], 0.0, tol))
           {
-            std::cout << "Non-zero residual at index " << i << ": " << f_data[i] << "\n";
+            std::cout << "Non-zero residual at index " << i << ": " << f_data[i]
+                      << "\n";
             success = false;
           }
         }
@@ -113,7 +119,7 @@ namespace GridKit
         ScalarT                                   u_value{0.5};
         IdxT                                      u_index = 12;
         ScalarT                                   vss_value{0.0};
-        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
+        IdxT vss_index = INVALID_INDEX<IdxT>;
 
         u_node.link(&u_value, &u_index);
         vss_node.link(&vss_value, &vss_index);
@@ -123,8 +129,12 @@ namespace GridKit
         auto data = makeTestData();
         auto stab = Ieeest<ScalarT, IdxT>(data);
 
-        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
-        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(
+          &u_node
+        );
+        stab.getPorts()
+          .out.template port<IeeestSignalOutputs::output>()
+          .connect(&vss_node);
 
         stab.allocate();
         stab.initialize();
@@ -147,14 +157,19 @@ namespace GridKit
           0.0,    // f[11]: limiter (v7=0.05 within [-0.1, 0.1])
         };
 
-        // Looser tolerance for f[11] — Math::clamp is a smooth ramp approximation.
+        // Looser tolerance for f[11] — Math::clamp is a smooth ramp
+        // approximation.
         const auto  loose_tol     = static_cast<RealT>(1.0e-4);
         auto&       residual      = stab.getResidual();
         const auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
-          auto test_tol = (i == 11) ? loose_tol : static_cast<RealT>(10 * std::numeric_limits<ScalarT>::epsilon());
+          auto test_tol = (i == 11)
+                            ? loose_tol
+                            : static_cast<RealT>(
+                                10 * std::numeric_limits<ScalarT>::epsilon()
+                              );
           if (!isEqual(residual_data[i], res_answer[i], test_tol))
           {
             std::cout << "Incorrect result for residual " << i << ": "
@@ -165,7 +180,8 @@ namespace GridKit
         }
 
         // Verify output signal reads the stabilizer output
-        success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.05), loose_tol);
+        success *=
+          isEqual(vss_node.read(), static_cast<ScalarT>(0.05), loose_tol);
 
         return success.report(__func__);
       }
@@ -190,7 +206,9 @@ namespace GridKit
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+          success *= (GridKit::Testing::isEqual(
+            dependency_tracking_jacobian[i], enzyme_jacobian[i], tol
+          ));
         }
 
         return success.report(__func__);
@@ -210,7 +228,7 @@ namespace GridKit
         DepVar                                   u_value{0.5};
         IdxT                                     u_index = 12;
         DepVar                                   vss_value{0.0};
-        IdxT                                     vss_index = INVALID_INDEX<IdxT>;
+        IdxT vss_index = INVALID_INDEX<IdxT>;
 
         u_node.link(&u_value, &u_index);
         vss_node.link(&vss_value, &vss_index);
@@ -218,14 +236,20 @@ namespace GridKit
         using namespace GridKit::PhasorDynamics::Stabilizer;
 
         auto stab = Ieeest<DepVar, IdxT>(ieeestdata);
-        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
-        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(
+          &u_node
+        );
+        stab.getPorts()
+          .out.template port<IeeestSignalOutputs::output>()
+          .connect(&vss_node);
 
         stab.allocate();
         stab.initialize();
 
         // Tag external signal u as an additional independent variable
-        u_value.setVariableNumber(2 * stab.size()); // @todo avoid requiring knowledge of the numbering
+        u_value.setVariableNumber(
+          2 * stab.size()
+        ); // @todo avoid requiring knowledge of the numbering
         setStatePointDep(stab);
 
         stab.updateTime(0.0, 1.0); // alpha = 1.0 to verify d/dy' term
@@ -234,7 +258,8 @@ namespace GridKit
         stab.evaluateJacobian();
         auto  model_jacobian = stab.getCsrJacobian();
         auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: Ieeest DependencyTracking Jacobian\n";
+        output_stream
+          << "Sparse Csr Matrix: Ieeest DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
@@ -249,7 +274,7 @@ namespace GridKit
         ScalarT                                   u_value{0.5};
         IdxT                                      u_index = 12;
         ScalarT                                   vss_value{0.0};
-        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
+        IdxT vss_index = INVALID_INDEX<IdxT>;
 
         u_node.link(&u_value, &u_index);
         vss_node.link(&vss_value, &vss_index);
@@ -257,8 +282,12 @@ namespace GridKit
         using namespace GridKit::PhasorDynamics::Stabilizer;
 
         auto stab = Ieeest<ScalarT, IdxT>(ieeestdata);
-        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
-        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(
+          &u_node
+        );
+        stab.getPorts()
+          .out.template port<IeeestSignalOutputs::output>()
+          .connect(&vss_node);
 
         stab.allocate();
         stab.initialize();
@@ -280,7 +309,8 @@ namespace GridKit
 #endif
 
     private:
-      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+      static constexpr ScalarT tol_ =
+        10 * std::numeric_limits<ScalarT>::epsilon();
 
       /**
        * @brief Standard IEEEST parameter set for all tests.
@@ -293,7 +323,9 @@ namespace GridKit
         PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> data;
         data.device_class          = "stabilizer";
         data.disambiguation_string = "ieeest_test";
-        data.monitored_variables.insert(PhasorDynamics::Stabilizer::IeeestMonitorableVariables::vss);
+        data.monitored_variables.insert(
+          PhasorDynamics::Stabilizer::IeeestMonitorableVariables::vss
+        );
 
         data.parameters[Params::A1]     = 0.1;
         data.parameters[Params::A2]     = 0.2;
@@ -321,7 +353,8 @@ namespace GridKit
        * @brief Set a non-trivial operating point for residual/Jacobian tests.
        * Avoids zeros and ones to catch coefficient errors.
        */
-      void setStatePoint(PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>& stab)
+      void setStatePoint(PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>& stab
+      )
       {
         auto* y  = stab.y().getData();
         auto* yp = stab.yp().getData();
@@ -353,9 +386,13 @@ namespace GridKit
 
       /**
        * @brief Set the same operating point for DependencyTracking variables.
-       * Uses setValue() to set the numeric value while preserving dependency info.
+       * Uses setValue() to set the numeric value while preserving dependency
+       * info.
        */
-      void setStatePointDep(PhasorDynamics::Stabilizer::Ieeest<DependencyTracking::Variable, IdxT>& stab)
+      void setStatePointDep(
+        PhasorDynamics::Stabilizer::Ieeest<DependencyTracking::Variable, IdxT>&
+          stab
+      )
       {
         auto* y  = stab.y().getData();
         auto* yp = stab.yp().getData();

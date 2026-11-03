@@ -16,7 +16,9 @@ namespace GridKit
      * @brief Construct with values from input data
      */
     template <typename scalar_type, typename index_type>
-    ConstantSignalSource<scalar_type, index_type>::ConstantSignalSource(const ModelDataT& data)
+    ConstantSignalSource<scalar_type, index_type>::ConstantSignalSource(
+      const ModelDataT& data
+    )
     {
       initializeParameters(data);
       size_ = 0;
@@ -31,7 +33,9 @@ namespace GridKit
      * @brief Set value from input data
      */
     template <typename scalar_type, typename index_type>
-    void ConstantSignalSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void ConstantSignalSource<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Parameters = ModelDataT::Parameters;
 
@@ -51,7 +55,9 @@ namespace GridKit
      * @brief Set the component ID
      */
     template <typename scalar_type, typename index_type>
-    int ConstantSignalSource<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+    int ConstantSignalSource<scalar_type, index_type>::setGridKitComponentID(
+      IdxT component_id
+    )
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -79,7 +85,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks ConstantSignalSource<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks ConstantSignalSource<scalar_type, index_type>::
+      verify() const
     {
       return {};
     }
@@ -97,7 +104,9 @@ namespace GridKit
     }
 
     template <class scalar_type, typename index_type>
-    int ConstantSignalSource<scalar_type, index_type>::setAbsoluteTolerance(RealT)
+    int ConstantSignalSource<scalar_type, index_type>::setAbsoluteTolerance(
+      RealT
+    )
     {
       return 0;
     }

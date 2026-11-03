@@ -32,7 +32,8 @@ namespace GridKit
       S2, ///< \f$P_2^2 + Q_2^2\f$ Squared apparent power at bus 2 [p.u.]
     };
 
-    /// External constraint contributions of a `Branch`, the power into the buses at its ports
+    /// External constraint contributions of a `Branch`, the power into the
+    /// buses at its ports
     enum class BranchExternalConstraints : size_t
     {
       DP1, ///< \f$\Delta P_1^\mathrm{bus}\f$ Active power into bus 1 [p.u.]
@@ -41,7 +42,8 @@ namespace GridKit
       DQ2, ///< \f$\Delta Q_2^\mathrm{bus}\f$ Reactive power into bus 2 [p.u.]
     };
 
-    /// Line or off-nominal transformer between two buses, with power positive into the buses
+    /// Line or off-nominal transformer between two buses, with power positive
+    /// into the buses
     template <typename scalar_type, typename index_type>
     class Branch final : public Component<scalar_type, index_type>
     {
@@ -80,14 +82,19 @@ namespace GridKit
       int evaluateJacobian() override;
       int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] void internalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
-      [[gnu::always_inline]] void externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
+      [[gnu::always_inline]] void internalConstraints(
+        const ScalarT* x, const ScalarT* external, ScalarT* g
+      ) const override;
+      [[gnu::always_inline]] void externalConstraints(
+        const ScalarT* x, const ScalarT* external, ScalarT* g
+      ) const override;
 
     private:
       void initializeParameters(const ModelDataT& data);
       void setDerivedParameters();
 
-      [[gnu::always_inline]] void power(const ScalarT* external, ScalarT* s) const;
+      [[gnu::always_inline]] void power(const ScalarT* external, ScalarT* s)
+        const;
 
       RealT R_{ZERO<RealT>};
       RealT X_{ZERO<RealT>};

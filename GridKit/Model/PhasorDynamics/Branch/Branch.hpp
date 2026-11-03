@@ -18,7 +18,8 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Implementation of a line or off-nominal transformer branch between two buses.
+     * @brief Implementation of a line or off-nominal transformer branch between
+     * two buses.
      *
      * The model is implemented in Cartesian coordinates. Positive current
      * direction is into the buses.
@@ -169,18 +170,14 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateBusResidual11(
-        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
-      );
-      __attribute__((always_inline)) inline int evaluateBusResidual12(
-        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
-      );
-      __attribute__((always_inline)) inline int evaluateBusResidual21(
-        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
-      );
-      __attribute__((always_inline)) inline int evaluateBusResidual22(
-        const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*
-      );
+      __attribute__((always_inline)) inline int
+      evaluateBusResidual11(const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int
+      evaluateBusResidual12(const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int
+      evaluateBusResidual21(const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int
+      evaluateBusResidual22(const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
       BusT* bus1_;

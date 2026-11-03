@@ -40,7 +40,9 @@ int runApplication(int argc, const char* argv[])
   };
   args.parseArgs(argc, argv);
 
-  OPF::SystemModel<double, size_t> model(OPF::parseSystemModelData(args["case-file"]()));
+  OPF::SystemModel<double, size_t> model(
+    OPF::parseSystemModelData(args["case-file"]())
+  );
   if (model.allocate() != 0 || model.initialize() != 0)
   {
     return 1;
@@ -48,7 +50,9 @@ int runApplication(int argc, const char* argv[])
 
   // Exact sparse Jacobians and Hessians come from the model
   Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
-  if (!app->Options()->SetNumericValue("tol", args["solver-tolerance"].as<double>()))
+  if (!app->Options()->SetNumericValue(
+        "tol", args["solver-tolerance"].as<double>()
+      ))
   {
     return 1;
   }
@@ -57,7 +61,8 @@ int runApplication(int argc, const char* argv[])
     return 1;
   }
 
-  Ipopt::SmartPtr<Ipopt::TNLP> problem = new AnalysisManager::SteadyState::IpoptInterface<double, size_t>(&model);
+  Ipopt::SmartPtr<Ipopt::TNLP> problem =
+    new AnalysisManager::SteadyState::IpoptInterface<double, size_t>(&model);
   if (app->OptimizeTNLP(problem) != Ipopt::Solve_Succeeded)
   {
     Log::error() << "Ipopt did not find an optimal solution\n";
@@ -74,7 +79,11 @@ int runApplication(int argc, const char* argv[])
     const double error     = std::abs(cost - reference) / std::abs(reference);
     if (error > args["tolerance"].as<double>())
     {
-      Log::error() << std::format("Optimal cost differs from the reference {} $/h by {:.1e}\n", reference, error);
+      Log::error() << std::format(
+        "Optimal cost differs from the reference {} $/h by {:.1e}\n",
+        reference,
+        error
+      );
       return 1;
     }
   }

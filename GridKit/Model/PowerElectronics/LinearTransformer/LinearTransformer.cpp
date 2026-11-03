@@ -27,12 +27,10 @@ namespace GridKit
      * @param[in] M - mutual inductance
      */
     template <class ScalarT, typename IdxT>
-    LinearTransformer<ScalarT, IdxT>::LinearTransformer(IdxT id, RealT L0, RealT L1, RealT R0, RealT R1, RealT M)
-      : L0_(L0),
-        L1_(L1),
-        R0_(R0),
-        R1_(R1),
-        M_(M)
+    LinearTransformer<ScalarT, IdxT>::LinearTransformer(
+      IdxT id, RealT L0, RealT L1, RealT R0, RealT R1, RealT M
+    )
+      : L0_(L0), L1_(L1), R0_(R0), R1_(R1), M_(M)
     {
       size_           = 4;
       n_intern_       = 2;
@@ -91,8 +89,10 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int LinearTransformer<ScalarT, IdxT>::evaluateInternalResidual()
     {
-      f_int_[0] = *y_ext_[0] - R0_ * y_int_[0] - L0_ * yp_int_[0] - M_ * yp_int_[1];
-      f_int_[1] = *y_ext_[1] - R1_ * y_int_[1] - M_ * yp_int_[0] - L1_ * yp_int_[1];
+      f_int_[0] =
+        *y_ext_[0] - R0_ * y_int_[0] - L0_ * yp_int_[0] - M_ * yp_int_[1];
+      f_int_[1] =
+        *y_ext_[1] - R1_ * y_int_[1] - M_ * yp_int_[0] - L1_ * yp_int_[1];
       return 0;
     }
 

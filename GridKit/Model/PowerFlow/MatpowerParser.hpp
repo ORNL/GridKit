@@ -49,19 +49,19 @@ namespace GridKit
   inline void ltrim(std::string& s)
   {
     const std::string nothing = "";
-    s                         = std::regex_replace(s, std::regex("^\\s+"), nothing);
+    s = std::regex_replace(s, std::regex("^\\s+"), nothing);
   }
 
   inline void rtrim(std::string& s)
   {
     const std::string nothing = "";
-    s                         = std::regex_replace(s, std::regex("\\s+$"), nothing);
+    s = std::regex_replace(s, std::regex("\\s+$"), nothing);
   }
 
   inline void trim_matlab_comments(std::string& s)
   {
     const std::string nothing = "";
-    s                         = std::regex_replace(s, std::regex("%.+"), nothing);
+    s = std::regex_replace(s, std::regex("%.+"), nothing);
   }
 
   // Retrieve MATPOWER component from assignment line.
@@ -100,7 +100,9 @@ namespace GridKit
   }
 
   template <typename RealT = double, typename IdxT = int>
-  void readMatPowerBusRow(const std::string& row, BusData<RealT, IdxT>& br, LoadData<RealT, IdxT>& lr)
+  void readMatPowerBusRow(
+    const std::string& row, BusData<RealT, IdxT>& br, LoadData<RealT, IdxT>& lr
+  )
   {
     logs() << "Parsing MATPOWER bus row\n";
     std::stringstream is(row);
@@ -174,7 +176,9 @@ namespace GridKit
     }
     else
     {
-      throw std::runtime_error(matlab_syntax_error + "\nGot line '" + line + "'");
+      throw std::runtime_error(
+        matlab_syntax_error + "\nGot line '" + line + "'"
+      );
     }
   }
 
@@ -190,7 +194,9 @@ namespace GridKit
     }
     else
     {
-      throw std::runtime_error(matlab_syntax_error + "\nGot line '" + line + "'");
+      throw std::runtime_error(
+        matlab_syntax_error + "\nGot line '" + line + "'"
+      );
     }
   }
 
