@@ -736,7 +736,7 @@ namespace GridKit
           success *= allResidualsWithinInitTolerance(disabled_frequency.repca);
 
           setState(disabled_frequency.repca,
-                   {{Vars::PPI, 0.65}, {Vars::EPLIM, 0.1}});
+                   {{Vars::XPPI, 0.6}, {Vars::PPI, 0.77}});
           setDerivative(disabled_frequency.repca, {{Vars::XPPI, 0.0}});
           success *= (disabled_frequency.repca.evaluateResidual() == 0);
           success *= residualsMatch(disabled_frequency.repca,
@@ -752,10 +752,10 @@ namespace GridKit
 
           setState(adjusted.repca,
                    {{Vars::QPI, 1.75},
-                    {Vars::ERQLIM, 0.1},
+                    {Vars::XQPI, 1.55},
                     {Vars::SFRZ, 1.0},
                     {Vars::PPI, 2.25},
-                    {Vars::EPLIM, 0.1}});
+                    {Vars::XPPI, 2.08}});
           setDerivative(adjusted.repca, {{Vars::XQPI, 0.0}, {Vars::XPPI, 0.0}});
           success *= (adjusted.repca.evaluateResidual() == 0);
           success *= residualsMatch(adjusted.repca,
@@ -795,10 +795,10 @@ namespace GridKit
         const std::array<VariableValue, Utilities::enum_size<Vars>()> expected_residuals{{
             {Vars::VMEAS, 0.4},
             {Vars::QMEAS, 0.45},
-            {Vars::XQPI, 0.3},
+            {Vars::XQPI, -0.225},
             {Vars::XQLAG, 0.46},
             {Vars::PMEAS, 0.5},
-            {Vars::XPPI, -0.3},
+            {Vars::XPPI, -69.0 / 170.0},
             {Vars::PREF, 0.4},
             {Vars::V, -1.28},
             {Vars::VLDC, 0.028},
@@ -807,7 +807,7 @@ namespace GridKit
             {Vars::SFRZ, 0.5},
             {Vars::ERQ, -0.63},
             {Vars::ERQDB, 0.75},
-            {Vars::ERQLIM, -0.35},
+            {Vars::ERQLIM, 0.025},
             {Vars::QPI, -0.05},
             {Vars::QEXT, -1.345},
             {Vars::EF, -0.015},
@@ -965,26 +965,27 @@ namespace GridKit
                                     "reactive-power command limit");
         }
 
-        // Saturated probes sit beyond their limit by a margin, so a blocked
-        // gate contributes nothing and an admitted gate passes the full rate.
+        // The limited command feeds back to the PI state; a state beyond a
+        // limit holds under outward error and returns under restoring error.
         const std::array<AntiWindupCase, 6> antiwindup_cases{{
-            {-1.6, -0.4, 0.0},
-            {-1.6, 0.4, 1.2},
-            {0.05, -0.4, -1.2},
-            {0.05, 0.4, 1.2},
-            {1.7, -0.4, -1.2},
-            {1.7, 0.4, 0.0},
+            {0.35, 0.3, -0.25, 0.9},
+            {-0.25, -0.3, 0.35, -0.9},
+            {0.9, 0.4, 0.4, 0.75},
+            {0.9, 0.4, 1.4, 0.0},
+            {0.2, -0.6, 1.4, -1.05},
+            {-0.8, -0.4, -1.3, 0.0},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
           setState(fixture.repca,
                    {{Vars::QPI, test_case.output},
                     {Vars::ERQLIM, test_case.error},
+                    {Vars::XQPI, test_case.state},
                     {Vars::SFRZ, 1.0}});
           setDerivative(fixture.repca, {{Vars::XQPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
-                                    {{Vars::XQPI, test_case.expected}},
+                                    {{Vars::XQPI, test_case.expected}, {Vars::QPI, 0.0}},
                                     "reactive-power antiwindup");
         }
 
@@ -1002,16 +1003,15 @@ namespace GridKit
                                   lead_lag_residuals,
                                   "reactive-command lead-lag");
 
-        // The command sits beyond Qmax with the error driving further out,
-        // so the blocked gate leaves the PI state with no sensitivity to the
-        // gate, the error, or the command.
+        // A state beyond the upper limit holds under outward error, so the
+        // row depends on the limited command but not on the state.
         {
           Fixture<DependencyTracking::Variable> blocked(makeResidualData());
           blocked.attachAllInputs();
           setAnswerKeyInputs(blocked);
           success *= blocked.prepare(0.0, 0.0);
           setState(blocked.repca,
-                   {{Vars::QPI, 1.7}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
+                   {{Vars::QPI, 0.9}, {Vars::XQPI, 1.4}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
           setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
           numberVariables(blocked);
           blocked.repca.updateTime(0.0, 1.0);
@@ -1021,7 +1021,8 @@ namespace GridKit
               {2 * index(Vars::XQPI) + 1, -1.0}, // @todo Remove these
               {2 * index(Vars::SFRZ), 0.0},      // @todo Remove these
               {2 * index(Vars::ERQLIM), 0.0},    // @todo Remove these
-              {2 * index(Vars::QPI), 0.0},       // @todo Remove these
+              {2 * index(Vars::QPI), 1.5},       // @todo Remove these
+              {2 * index(Vars::XQPI), 0.0},      // @todo Remove these
           };
 
           success *= jacobianRowMatches(
@@ -1138,25 +1139,26 @@ namespace GridKit
                                     "active-power command limit");
         }
 
-        // Saturated probes sit beyond their limit by a margin, so a blocked
-        // gate contributes nothing and an admitted gate passes the full rate.
+        // The limited command feeds back to the PI state; a state beyond a
+        // limit holds under outward error and returns under restoring error.
         const std::array<AntiWindupCase, 6> antiwindup_cases{{
-            {-0.8, -0.5, 0.0},
-            {-0.8, 0.5, 0.9},
-            {1.0, -0.5, -0.9},
-            {1.0, 0.5, 0.9},
-            {2.8, -0.5, -0.9},
-            {2.8, 0.5, 0.0},
+            {1.45, 0.5, 0.6, 0.9},
+            {0.6, -0.5, 1.45, -0.9},
+            {2.0, 1.0, 1.15, 0.9},
+            {2.0, 0.5, 2.5, 0.0},
+            {1.15, -1.0, 2.85, -0.9},
+            {0.0, -0.5, -0.5, 0.0},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
           setState(fixture.repca,
                    {{Vars::PPI, test_case.output},
+                    {Vars::XPPI, test_case.state},
                     {Vars::EPLIM, test_case.error}});
           setDerivative(fixture.repca, {{Vars::XPPI, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
-                                    {{Vars::XPPI, test_case.expected}},
+                                    {{Vars::XPPI, test_case.expected}, {Vars::PPI, 0.0}},
                                     "active-power antiwindup");
         }
 
@@ -1192,10 +1194,10 @@ namespace GridKit
         const std::array<VariableValue, 7> expected_residuals{{
             {Vars::VMEAS, 0.3},
             {Vars::QMEAS, 0.35},
-            {Vars::XQPI, 0.2},
+            {Vars::XQPI, -0.325},
             {Vars::XQLAG, 0.36},
             {Vars::PMEAS, 0.4},
-            {Vars::XPPI, -0.4},
+            {Vars::XPPI, -43.0 / 85.0},
             {Vars::PREF, 0.3},
         }};
         success *= residualsMatch(fixture.repca,
@@ -1309,6 +1311,7 @@ namespace GridKit
       {
         RealT output;
         RealT error;
+        RealT state;
         RealT expected;
       };
 
@@ -1596,11 +1599,11 @@ namespace GridKit
       {
         // Every smooth-transition argument keeps a saturation margin, and
         // every clamp that must pass its input through sits at the midpoint
-        // of its limits, so each row carries its ideal value.
+        // of its limits or well inside them, so each row carries its ideal value.
         setState(repca,
                  {{Vars::VMEAS, 0.85},
                   {Vars::QMEAS, 0.45},
-                  {Vars::XQPI, -0.75},
+                  {Vars::XQPI, 0.0},
                   {Vars::XQLAG, -0.05},
                   {Vars::PMEAS, 0.3},
                   {Vars::XPPI, 1.85},
@@ -1612,7 +1615,7 @@ namespace GridKit
                   {Vars::SFRZ, 0.5},
                   {Vars::ERQ, 0.83},
                   {Vars::ERQDB, 0.05},
-                  {Vars::ERQLIM, 0.4},
+                  {Vars::ERQLIM, 0.025},
                   {Vars::QPI, 0.1},
                   {Vars::QEXT, 0.25},
                   {Vars::EF, 0.8},
@@ -2169,15 +2172,15 @@ namespace GridKit
         return {
             {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
             {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::q)), 10.0}},
-            {{index(Vars::XQPI), -1.0},
-             {index(Vars::SFRZ), 1.2},
-             {index(Vars::ERQLIM), 1.5},
-             {index(Vars::QPI), 0.0}},
+            {{index(Vars::XQPI), -1.75},
+             {index(Vars::SFRZ), 0.15},
+             {index(Vars::ERQLIM), 0.0},
+             {index(Vars::QPI), 0.75}},
             {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
             {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::p)), 5.0}},
-            {{index(Vars::XPPI), -1.0},
-             {index(Vars::EPLIM), 1.8},
-             {index(Vars::PPI), 0.0}},
+            {{index(Vars::XPPI), -35.0 / 17.0},
+             {index(Vars::EPLIM), 0.0},
+             {index(Vars::PPI), 18.0 / 17.0}},
             {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
             {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
             {{index(Vars::VLDC), -2.0},
@@ -2239,10 +2242,10 @@ namespace GridKit
         auto expected                                    = expectedJacobian();
         expected[index(Vars::VMEAS)][index(Vars::VMEAS)] = -7.5;
         expected[index(Vars::QMEAS)][index(Vars::QMEAS)] = -7.5;
-        expected[index(Vars::XQPI)][index(Vars::XQPI)]   = -2.5;
+        expected[index(Vars::XQPI)][index(Vars::XQPI)]   = -3.25;
         expected[index(Vars::XQLAG)][index(Vars::XQLAG)] = -2.9;
         expected[index(Vars::PMEAS)][index(Vars::PMEAS)] = -5.0;
-        expected[index(Vars::XPPI)][index(Vars::XPPI)]   = -2.5;
+        expected[index(Vars::XPPI)][index(Vars::XPPI)]   = -121.0 / 34.0;
         expected[index(Vars::PREF)][index(Vars::PREF)]   = -4.5;
         return expected;
       }

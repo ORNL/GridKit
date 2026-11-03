@@ -335,15 +335,7 @@ namespace GridKit
           Log::error() << "Repca: reactive-power PI limiter has no finite steady input\n";
           return 1;
         }
-        const ScalarT xqpi0      = qpi_input0 - Kp_ * erqlim0;
-        const ScalarT q_aw_rate0 = Math::antiwindup(qpi0, Ki_ * erqlim0, qmin, qmax);
-        const ScalarT xqpi_rate0 = sfrz0 * q_aw_rate0;
-        if (!is_finite(q_aw_rate0) || !is_finite(xqpi_rate0)
-            || std::abs(static_cast<RealT>(xqpi_rate0)) > INITIALIZATION_TOLERANCE)
-        {
-          Log::error() << "Repca: reactive-power PI state rate is nonzero at initialization\n";
-          return 1;
-        }
+        const ScalarT xqpi0 = qpi_input0 - Kp_ * erqlim0;
 
         ScalarT frequency_error0{};
         ScalarT ep0{};
@@ -368,14 +360,7 @@ namespace GridKit
           Log::error() << "Repca: active-power PI limiter has no finite steady input\n";
           return 1;
         }
-        const ScalarT xppi0      = ppi_input0 - Kpg_ * eplim0;
-        const ScalarT p_aw_rate0 = Math::antiwindup(ppi0, Kig_ * eplim0, pmin, pmax);
-        if (!is_finite(p_aw_rate0)
-            || std::abs(static_cast<RealT>(p_aw_rate0)) > INITIALIZATION_TOLERANCE)
-        {
-          Log::error() << "Repca: active-power PI antiwindup rate is nonzero at initialization\n";
-          return 1;
-        }
+        const ScalarT xppi0 = ppi_input0 - Kpg_ * eplim0;
 
         const ScalarT pext_output0 = Freqflag_ ? pext0_system : zero;
         const ScalarT freqref0     = freq + frequency_error0;
@@ -415,8 +400,6 @@ namespace GridKit
             && is_finite(xqlag0)
             && is_finite(qpi_input0)
             && is_finite(xqpi0)
-            && is_finite(q_aw_rate0)
-            && is_finite(xqpi_rate0)
             && is_finite(ef0)
             && is_finite(pfreq0)
             && is_finite(ep0)
@@ -425,7 +408,6 @@ namespace GridKit
             && is_finite(ppi0)
             && is_finite(ppi_input0)
             && is_finite(xppi0)
-            && is_finite(p_aw_rate0)
             && is_finite(pext_output0)
             && is_finite(freqref0)
             && is_finite(vref0)
@@ -793,12 +775,17 @@ namespace GridKit
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
         const ScalarT pfreq  = droop(ef, Ddn_, Dup_);
 
+        const ScalarT q_pi_rate = q_feedback_gain_ * (qpi - Math::clamp(xqpi, Qmin_, Qmax_))
+                                  + Math::antiwindup(xqpi, q_integral_gain_ * erqlim, Qmin_, Qmax_);
+        const ScalarT p_pi_rate = p_feedback_gain_ * (ppi - Math::clamp(xppi, Pmin_, Pmax_))
+                                  + Math::antiwindup(xppi, p_integral_gain_ * eplim, Pmin_, Pmax_);
+
         f[VMEAS]      = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
         f[QMEAS]      = -qmeas_dot + (q - qmeas) / Tfltr_;
-        f[XQPI]       = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
+        f[XQPI]       = -xqpi_dot + sfrz * q_pi_rate;
         f[XQLAG]      = -xqlag_dot + (qpi - xqlag) / Tfv_;
         f[PMEAS]      = -pmeas_dot + (p - pmeas) / Tp_;
-        f[XPPI]       = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
+        f[XPPI]       = -xppi_dot + p_pi_rate;
         f[PREF_STATE] = -pref_dot + (ppi - pref) / Tlag_;
 
         f[V]      = -v * v + vr * vr + vi * vi;
@@ -929,7 +916,7 @@ namespace GridKit
        * @brief Resolve parameter-derived constants
        *
        * Raises the explicit controller lags in place, computes the component
-       * power base, and resolves selector masks.
+       * power base, and resolves selector masks and PI rate gains.
        */
       template <typename scalar_type, typename index_type>
       void Repca<scalar_type, index_type>::setDerivedParameters()
@@ -956,6 +943,22 @@ namespace GridKit
         ref_on_    = RefFlag_ ? ONE<RealT> : ZERO<RealT>;
         ref_off_   = ONE<RealT> - ref_on_;
         freq_on_   = Freqflag_ ? ONE<RealT> : ZERO<RealT>;
+
+        q_feedback_gain_ = ZERO<RealT>;
+        q_integral_gain_ = Ki_;
+        if (Kp_ != ZERO<RealT>)
+        {
+          q_feedback_gain_ = Ki_ / Kp_;
+          q_integral_gain_ = ZERO<RealT>;
+        }
+
+        p_feedback_gain_ = ZERO<RealT>;
+        p_integral_gain_ = Kig_;
+        if (Kpg_ != ZERO<RealT>)
+        {
+          p_feedback_gain_ = Kig_ / Kpg_;
+          p_integral_gain_ = ZERO<RealT>;
+        }
       }
 
       /**

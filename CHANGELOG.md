@@ -19,6 +19,7 @@
 - Migrated PhasorDynamics models with real and Boolean parameters to `Model::ParameterReader`.
 - Added component labels and lookups that search subsystems.
 - Added ACTIVSg25k and ACTIVSg70k PhasorDynamics cases.
+- Fixed REPCA PI windup while saturated; the PI states now track the limited outputs.
 
 ## v0.2
 
