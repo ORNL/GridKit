@@ -5,6 +5,7 @@
    Name                | Value
  ----------------------|-------------------------------------------------------
   `system_model_file`  | Path to the system model file[^1]
+  `state_file`         | Path to the state file applied after the case is parsed (optional)
   `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
   `tmax`               | A floating-point value for max time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)

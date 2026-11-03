@@ -32,5 +32,18 @@ namespace GridKit
       }
       return parseSystemModelData(stream);
     }
+
+    void applyState(SystemModelData<double, size_t>& data, const std::filesystem::path& filePath)
+    {
+      auto stream = std::ifstream(filePath);
+      if (!stream)
+      {
+        std::stringstream ss;
+        ss << "Could not open file: " << filePath;
+        Log::error() << ss.str() << std::endl;
+        throw std::runtime_error(ss.str());
+      }
+      applyState(data, json::parse(stream));
+    }
   } // namespace PhasorDynamics
 } // namespace GridKit

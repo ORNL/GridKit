@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 #include <nlohmann/json.hpp>
@@ -257,6 +258,26 @@ namespace GridKit
           parseSystemContents(raw_subsystem, subsystem);
           sm.subsystems.push_back(std::move(subsystem));
         }
+      }
+    }
+
+    /// Apply a state file to system model data: set the initial bus voltages by case bus number
+    template <typename RealT, typename IdxT>
+    void applyState(SystemModelData<RealT, IdxT>& sm, const json& state)
+    {
+      const auto& buses = state.at("buses");
+      for (auto& bus : sm.bus)
+      {
+        const auto number = std::to_string(bus.bus_id);
+        if (buses.contains(number))
+        {
+          buses.at(number).at("Vr").get_to(bus.Vr0);
+          buses.at(number).at("Vi").get_to(bus.Vi0);
+        }
+      }
+      for (auto& subsystem : sm.subsystems)
+      {
+        applyState(subsystem, state);
       }
     }
   } // namespace PhasorDynamics

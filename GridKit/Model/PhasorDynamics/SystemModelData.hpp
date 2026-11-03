@@ -142,5 +142,10 @@ namespace GridKit
     SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);
     SystemModelData<double, size_t> parseSystemModelData(std::istream&& stream);
     SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& filePath);
+
+    /**
+     * @brief Apply a JSON state file to system model data
+     */
+    void applyState(SystemModelData<double, size_t>& data, const std::filesystem::path& filePath);
   } // namespace PhasorDynamics
 } // namespace GridKit
