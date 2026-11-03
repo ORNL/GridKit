@@ -2,7 +2,7 @@
 
 A state file separates the model definition from its initial state.
 
-This also separates the case from the dispatch. One canonical `texas.case.json` can have multiple operating points in `examples/`:
+This also separates the case from the dispatch. One canonical `texas.case.json` can have multiple operating points:
 
 - `texas-summer2025.state.json`
 - `texas-winter2025.state.json`
@@ -24,9 +24,11 @@ For example `texas-summer2025.state.json` might be structured as:
 }
 ```
 
+Bus entries are keyed by the case bus `number`. Device entries are keyed by the case device `id`.
+
 Each entry gives initial outputs and operating settings. Models use these values and connected inputs to initialize their own state.
 
-Buses own their voltage and shunt outputs. Devices own their terminal current outputs. These values support initialization across PowerFlow, OPF, PhasorDynamics, and EMT.
+Buses own their voltage outputs. Devices own their terminal current outputs. These values support initialization across PowerFlow, OPF, PhasorDynamics, and EMT.
 
 ## Bus
 
@@ -35,7 +37,7 @@ Buses own their voltage and shunt outputs. Devices own their terminal current ou
 RMS voltages use real and imaginary parts:
 
 ```json
-"bus_id_2533":{
+"2533":{
     "Vr": 0.9289638822595822,
     "Vi": -0.39534548980249884
 }
@@ -46,7 +48,7 @@ RMS voltages use real and imaginary parts:
 EMT bus entries give instantaneous phase voltages. Device entries give currents. Each model defines any other initial states or history it needs.
 
 ```json
-"bus_id_2533":{
+"2533":{
     "va": 0.9289638822595822,
     "vb": -0.39534548980249884,
     "vc": -0.39534548980249884
@@ -66,13 +68,12 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 > At nonzero voltage, convert terminal power to initial current with `I = conj((P + jQ) / V)`.
 
 ```json
-"gen_id_2":{
+"2_1_genrou":{
     "in_service": false,
     "ir": 0.0,
     "ii": 0.0
 },
-"br_id_2":{
-    "in_service": true,
+"branch_1_2_1":{
     "tap": 1,
     "phase": 0
 }
