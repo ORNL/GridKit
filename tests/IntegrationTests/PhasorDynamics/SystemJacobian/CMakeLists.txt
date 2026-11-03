@@ -8,7 +8,8 @@ target_link_libraries(
 
 # All cases in cases/PhasorDynamics, one sub-test each. One evaluation because
 # this checks the Jacobians, meaningful timings need the driver's default.
-add_test(NAME PhasorDynamicsIntegrationSystemJacobian
-         COMMAND test_pd_system_jacobian --cases ${CMAKE_SOURCE_DIR}/cases/PhasorDynamics --evaluations 1)
+add_test(
+  NAME PhasorDynamicsIntegrationSystemJacobian
+  COMMAND test_pd_system_jacobian --cases ${CMAKE_SOURCE_DIR}/cases/PhasorDynamics --evaluations 1)
 
 install(TARGETS test_pd_system_jacobian)
