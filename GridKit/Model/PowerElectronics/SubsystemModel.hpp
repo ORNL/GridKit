@@ -54,10 +54,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class SubsystemModel : public SystemModel<ScalarT, IdxT>
     {
-    public:
-      using TimeFunction = std::function<void(ScalarT)>;
 
-    protected:
+    private:
       using System         = SystemModel<ScalarT, IdxT>;
       using VectorT        = typename System::VectorT;
       using RealT          = typename Component<ScalarT, IdxT>::RealT;
@@ -89,6 +87,8 @@ namespace GridKit
       using System::use_jac_;
 
     public:
+      using TimeFunction = std::function<void(RealT)>;
+
       /**
        * @brief Default constructor for the system model
        *
@@ -456,7 +456,7 @@ namespace GridKit
        *
        * Rejected while connections are in the local-indexed state, since the
        * component's stored connection indices would otherwise be interpreted
-       * inconsistently with the rest of the subsystem. Call release() first.
+       * inconsistently with the rest of the subsystem. Call restoreGlobalConnection() first.
        *
        * @param[in] component Component to add.
        */
@@ -480,7 +480,7 @@ namespace GridKit
        *
        * Rejected while connections are in the local-indexed state, since the
        * node's stored connection indices would otherwise be interpreted
-       * inconsistently with the rest of the subsystem. Call release() first.
+       * inconsistently with the rest of the subsystem. Call restoreGlobalConnection() first.
        *
        * @param[in] node Node to add.
        */
@@ -488,13 +488,13 @@ namespace GridKit
       {
         if (this->isAllocated())
         {
-          throw std::logic_error("SubsystemModel::addNode: cannot add a node to an allocated subsystem.");
+          throw std::logic_error("SubsystemModel::addNode: Cannot add a node to an allocated Subsystem.");
         }
 
         if (!node->isAllocated())
         {
           throw std::logic_error(
-              "SubsystemModel::addNode: cannot add an unallocated node.");
+              "SubsystemModel::addNode: Cannot add an unallocated node.");
         }
 
         System::addNode(node);
@@ -615,7 +615,7 @@ namespace GridKit
 
         for (node_type* node : nodes_)
         {
-          for (IdxT i = 0; i < node->size(); i++)
+          for (IdxT i = 0; i < node->getInternalSize(); i++)
           {
             local_connection = node->getNodeConnection(i).idx_;
 
@@ -677,7 +677,7 @@ namespace GridKit
         // the set of subsystem-internal variables.
         for (node_type* node : nodes_)
         {
-          for (IdxT i = 0; i < node->size(); i++)
+          for (IdxT i = 0; i < node->getInternalSize(); i++)
           {
             const IdxT global_connection = node->getNodeConnection(i).idx_;
 
@@ -694,7 +694,7 @@ namespace GridKit
         // Finally assign local indices to variables owned outside the subsystem.
         for (component_type* comp : components_)
         {
-          auto extern_indices = comp->getExternIndices();
+          const auto& extern_indices = comp->getExternIndices();
 
           for (IdxT j = 0; j < comp->size(); j++)
           {
