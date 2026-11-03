@@ -80,23 +80,8 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 
 # Migration
 
-- Initialize components from output values and connected inputs.
-- Derive missing values and check the initialization equations.
-- Each model's `<Model>InitialValues` enum lists the initial outputs and operating settings it accepts.
+Each model's `<Model>InitialValues` enum lists the state entries it accepts. A model initializes from these values and its terminal voltage, derives anything missing, and checks its initialization equations.
 
-`Bus`:
-
-- Treat buses as components with `vr` and `vi` output ports.
-- Move voltage initialization from the case to the state file.
-
-`Branch`:
-
-- Expose `ir1`, `ii1`, `ir2`, and `ii2` as output ports.
-- Make `tap`, `phase`, and `in_service` input ports.
-
-`REGCA`, `LoadZ`, `LoadZIP`, `GENROU`, `GENSAL`, `GenClassical`:
-
-- Expose `ir` and `ii` as output ports.
-- Initialize from terminal voltage and current.
-- Remove generator and converter `p0`/`q0` parameters.
-- Make `in_service` an input port.
+- `Bus`: the case `init` voltages `Vr`/`Vi` move to the state file.
+- `Branch`: the state `tap`/`phase` replace the case parameters.
+- `REGCA`, `GENROU`, `GENSAL`, `GenClassical`: the state `ir`/`ii` replace the `p0`/`q0` parameters.
