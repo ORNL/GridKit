@@ -36,7 +36,7 @@ namespace GridKit
       using ModelDataT = PhasorDynamics::SystemModelData<RealT, IdxT>;
 
       /// Number of timed evaluations after setup and warm-up
-      static constexpr int num_evaluations_ = 100;
+      int num_evaluations_;
 
       // Timing table, one entry per case (times in microseconds per call, setup once)
       std::vector<std::string> case_names_;
@@ -51,6 +51,11 @@ namespace GridKit
       std::vector<double>      dependency_tracking_jacobian_;
 
     public:
+      explicit SystemJacobianTests(int num_evaluations)
+        : num_evaluations_(num_evaluations)
+      {
+      }
+
       /**
        * @brief Checks the system Jacobian of the case in `case_file`.
        */
