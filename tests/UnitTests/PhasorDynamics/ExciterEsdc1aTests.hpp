@@ -557,6 +557,15 @@ namespace GridKit
                                   {{Internal::EFDP, 0.7}, {Internal::VF, -19.0 / 140.0}},
                                   "field-voltage and feedback drive");
 
+        // Feedback decays when the field voltage is held at its lower limit.
+        setState(fixture.esdc1a,
+                 {{Internal::EFDP, -0.2}, {Internal::VR, -0.1}, {Internal::VFE, 0.0}, {Internal::VF, -0.14}});
+        setDerivative(fixture.esdc1a, {{Internal::EFDP, 0.0}, {Internal::VF, 0.2}});
+        success *= (fixture.evaluate() == 0);
+        success *= residualsMatch(fixture.esdc1a,
+                                  {{Internal::EFDP, 0.0}, {Internal::VF, 0.0}},
+                                  "feedback at the field-voltage limit");
+
         // Summing junction: UEL < 2 excludes the UEL input from the error.
         Fixture<ScalarT> summing(makeData());
         summing.attachAllInputs();

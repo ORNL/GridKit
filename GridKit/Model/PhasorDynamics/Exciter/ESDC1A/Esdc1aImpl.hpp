@@ -585,17 +585,17 @@ namespace GridKit
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
         const ScalarT vfe_target        = Ke_eff_ * efdp + se;
         const ScalarT efdp_rate         = (vr - vfe) / Te_;
-        const ScalarT limited_efdp_rate = awmin(efdp, efdp_rate, ZERO<RealT>);
+        const ScalarT limited_efdp_rate = (ONE<RealT> - lim_on_) * efdp_rate
+                                          + lim_on_ * awmin(efdp, efdp_rate, ZERO<RealT>);
 
-        f[EFDP] = -efdp_dot + (ONE<RealT> - lim_on_) * efdp_rate
-                  + lim_on_ * limited_efdp_rate;
-        f[VC]  = -vc_dot + (ec - vc) / Tr_;
-        f[VR]  = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
-        f[VF]  = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
-        f[XLL] = -xll_dot + (ev - xll) / Tb_;
-        f[EV]  = -ev + ev_target;
-        f[VLL] = -vll + xll + (Tc_ / Tb_) * (ev - xll);
-        f[VHV] = -vhv + uel_on_ * vll
+        f[EFDP] = -efdp_dot + limited_efdp_rate;
+        f[VC]   = -vc_dot + (ec - vc) / Tr_;
+        f[VR]   = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
+        f[VF]   = -vf_dot + (-vf + Kf_ * limited_efdp_rate) / Tf1_;
+        f[XLL]  = -xll_dot + (ev - xll) / Tb_;
+        f[EV]   = -ev + ev_target;
+        f[VLL]  = -vll + xll + (Tc_ / Tb_) * (ev - xll);
+        f[VHV]  = -vhv + uel_on_ * vll
                  + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
         f[SE]  = -se + SB_ * Math::qramp(efdp - SA_);
         f[VFE] = -vfe + vfe_target;

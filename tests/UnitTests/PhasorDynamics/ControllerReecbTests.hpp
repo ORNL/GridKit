@@ -507,13 +507,17 @@ namespace GridKit
         collapsed_voltage.parameters[Params::Kqi]  = 0.0;
         collapsed_voltage.parameters[Params::Vmin] = 1.4;
         collapsed_voltage.parameters[Params::Vmax] = 1.4;
-        Fixture<ScalarT> expanded_voltage(collapsed_voltage);
-        expanded_voltage.attachAllInputs();
-        expanded_voltage.input(Ext::pe)    = 0.75;
-        expanded_voltage.input(Ext::qgen)  = 0.75;
-        success                           *= expanded_voltage.initialize(0.75, 0.75);
-        success                           *= (expanded_voltage.evaluate() == 0);
-        success                           *= allResidualsWithinInitTolerance(expanded_voltage.reecb);
+        for (const bool voltage_flag : {false, true})
+        {
+          collapsed_voltage.parameters[Params::VFlag] = voltage_flag;
+          Fixture<ScalarT> expanded_voltage(collapsed_voltage);
+          expanded_voltage.attachAllInputs();
+          expanded_voltage.input(Ext::pe)    = 0.75;
+          expanded_voltage.input(Ext::qgen)  = 0.75;
+          success                           *= expanded_voltage.initialize(0.75, 0.75);
+          success                           *= (expanded_voltage.evaluate() == 0);
+          success                           *= allResidualsWithinInitTolerance(expanded_voltage.reecb);
+        }
 
         // Zero integral gains leave both controllers unconstrained, so any
         // reactive feedback initializes.
@@ -962,6 +966,13 @@ namespace GridKit
           success                  *= residualsMatch(fixture.reecb,
                                                      {{Vars::EPIV, 0.2}},
                                     "unconverted voltage reference");
+
+          // A reference beyond Vmax is limited.
+          fixture.input(Ext::qext)  = 2.0;
+          success                  *= (fixture.evaluate() == 0);
+          success                  *= residualsMatch(fixture.reecb,
+                                                     {{Vars::EPIV, 0.5}},
+                                    "limited voltage reference");
 
           setState(fixture.reecb, {{Vars::EPIV, 0.2}});
           success *= (fixture.evaluate() == 0);

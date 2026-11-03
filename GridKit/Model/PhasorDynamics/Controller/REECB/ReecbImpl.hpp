@@ -443,14 +443,13 @@ namespace GridKit
         RealT       qmax   = Qmax_;
         RealT       vmin   = Vmin_;
         RealT       vmax   = Vmax_;
+
+        const RealT infinity = std::numeric_limits<RealT>::infinity();
         if (QFlag_ && VFlag_)
         {
           qmin = std::min(Qmin_, qgen0);
           qmax = std::max(Qmax_, qgen0);
-          vmin = std::min(Vmin_, vmeas0);
-          vmax = std::max(Vmax_, vmeas0);
 
-          const RealT infinity = std::numeric_limits<RealT>::infinity();
           if (qmin == qgen0 && qmin < qmax)
           {
             qmin = std::nextafter(qmin, -infinity);
@@ -459,6 +458,12 @@ namespace GridKit
           {
             qmax = std::nextafter(qmax, infinity);
           }
+        }
+        if (QFlag_)
+        {
+          vmin = std::min(Vmin_, vmeas0);
+          vmax = std::max(Vmax_, vmeas0);
+
           if (vmin == vmeas0 && vmin < vmax)
           {
             vmin = std::nextafter(vmin, -infinity);
@@ -489,7 +494,11 @@ namespace GridKit
 
         if (QFlag_ && !VFlag_)
         {
-          qext0_port = vmeas0;
+          if (!iclamp(vmeas0, vmin, vmax, qext0_port))
+          {
+            Log::error() << "Reecb: voltage limiter has no finite steady input\n";
+            return false;
+          }
         }
         else if (PfFlag_)
         {
@@ -541,7 +550,7 @@ namespace GridKit
           }
           else
           {
-            epiv0 = qext0_port - vmeas0;
+            epiv0 = Math::clamp(qext0_port, vmin, vmax) - vmeas0;
           }
 
           if (iqmax0 <= INITIALIZATION_TOLERANCE)
@@ -991,7 +1000,7 @@ namespace GridKit
         f[QREF]   = -qref + qref_target;
         f[EQ]     = -eq + Math::clamp(qref, Qmin_, Qmax_) - qgen;
         f[VPIQ]   = -vpiq + Math::clamp(q_pi_state, Vmin_, Vmax_);
-        f[EPIV]   = -epiv + q_pi_on_ * vpiq + v_ref_on_ * extref - q_on_ * vmeas;
+        f[EPIV]   = -epiv + q_pi_on_ * vpiq + v_ref_on_ * Math::clamp(extref, Vmin_, Vmax_) - q_on_ * vmeas;
         f[RPORD]  = -rpord + aslew(fpord, dPmin_, dPmax_);
         f[ILCAP]  = -ilcap + sqrtramp(circleSquare(Imax_, high));
         f[IQMAX]  = -iqmax + pq_on_ * ilcap + pq_off_ * Imax_;
