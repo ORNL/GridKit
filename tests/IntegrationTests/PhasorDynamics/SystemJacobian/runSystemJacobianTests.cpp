@@ -15,7 +15,11 @@ int main(int argc, const char* argv[])
 
   GridKit::Utilities::CliArgs args{{.name     = {"--cases", "-c"},
                                     .help     = "Case file, or directory searched recursively for *.case.json",
-                                    .required = true}};
+                                    .required = true},
+                                   {.name     = {"--evaluations", "-n"},
+                                    .help     = "Number of timed evaluations per case",
+                                    .type     = GridKit::Utilities::ArgType::Integer,
+                                    .defaults = 100}};
   args.parseArgs(argc, argv);
 
   const std::filesystem::path path = args["cases"]();
@@ -43,7 +47,7 @@ int main(int argc, const char* argv[])
   }
 
   GridKit::Testing::TestingResults                      result;
-  GridKit::Testing::SystemJacobianTests<double, size_t> test;
+  GridKit::Testing::SystemJacobianTests<double, size_t> test(args["evaluations"].as<int>());
 
   for (const auto& case_file : case_files)
   {
