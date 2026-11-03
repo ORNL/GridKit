@@ -35,7 +35,7 @@ namespace GridKit
         Vhvmax, ///< Terminal-voltage activation threshold for HV reactive management
 
         Qmin, ///< Optional PowerWorld compatibility field, accepted and unused
-        Khv,  ///< Optional HV reactive management gain, defaults to 0.7
+        Khv,  ///< Optional PowerWorld compatibility field, accepted and unused
         Xe,   ///< Optional PowerWorld compatibility field, accepted and unused
       };
 
