@@ -12,8 +12,7 @@ voltages. Together, the two events drive these limits:
 - REGCA holds the plant voltage at `Vhvmax` after the opening.
 - ESDC1A holds the field voltage at zero after the opening.
 
-The monitored variables are compared against `reference/FourBusLimits.ref.csv`,
-from PowerWorld 24. To reproduce it, load `reference/FourBusLimits.aux` into an
-empty case and run its `FourBusLimits` contingency.
+The monitored variables are compared against
+`reference/FourBusLimits.ref.csv`, generated with PowerWorld 24.
 
 ![Monitored variables](figures/FourBusLimits.png)

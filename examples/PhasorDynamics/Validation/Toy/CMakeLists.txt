@@ -6,6 +6,4 @@ add_subdirectory(ThreeBusBasic)
 add_subdirectory(ThreeBusClassical)
 add_subdirectory(ThreeBusZipLoad)
 
-if(GRIDKIT_ENABLE_ENZYME)
-  add_subdirectory(FourBusLimits)
-endif()
+add_subdirectory(FourBusLimits)

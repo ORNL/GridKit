@@ -32,12 +32,15 @@ $V_{L0}$               | [p.u.]   | `VL0`    | LVPL zero-crossing voltage       
 $V_{L1}$               | [p.u.]   | `VL1`    | LVPL upper breakpoint voltage                 | 0.9           | Source label: `brkpt`
 $V_{A0}$               | [p.u.]   | `VA0`    | LVACM lower breakpoint voltage                | 0.4           | Source label: `LVPnt0`
 $V_{A1}$               | [p.u.]   | `VA1`    | LVACM upper breakpoint voltage                | 0.9           | Source label: `LVPnt1`
-$V_\mathrm{hv}^{\max}$ | [p.u.]   | `Vhvmax` | HV reactive management activation threshold   | 1.2           | Source label: `VLim`
-$Q^{\min}$             | [p.u.]   | `Qmin`   | PowerWorld compatibility field                |               | Optional; accepted but unused
-$K_\mathrm{hv}$        | [p.u.]   | `Khv`    | PowerWorld compatibility field                |               | Optional; accepted but unused
-$X_\mathrm{e}$         | [p.u.]   | `Xe`     | PowerWorld compatibility field                |               | Optional; accepted but unused
+$V_\mathrm{hv}^{\max}$ | [p.u.]   | `Vhvmax` | Terminal-voltage ceiling                      | 1.2           | Source label: `VLim`
+$Q^{\min}$             | [p.u.]   | `Qmin`   | Case-file compatibility field                 |               | Optional; accepted but unused
+$K_\mathrm{hv}$        | [p.u.]   | `Khv`    | Case-file compatibility field                 |               | Optional; accepted but unused
+$X_\mathrm{e}$         | [p.u.]   | `Xe`     | Case-file compatibility field                 |               | Optional; accepted but unused
 
 Omitted parameters default to 0 unless noted.
+
+`Qmin`, `Khv`, and `Xe` are retained for compatibility with existing case
+files and do not affect this model's equations.
 
 ### Parameter Validation
 
@@ -333,8 +336,7 @@ CommonMath restricted to its upper limit, which admits an algebraic bound $u$.
 
 ## Appendix C: `iramp`
 
-For a positive smooth-ramp output $v>0$ and CommonMath smoothing parameter
-$\mu$,
+For a positive smooth-ramp output $v>0$ and smoothing parameter $\mu$,
 
 ```math
 \text{iramp}(v) = v+\dfrac{1}{\mu}\log(1-\exp(-\mu v))

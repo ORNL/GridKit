@@ -155,6 +155,8 @@ namespace GridKit
                        "system/component power-base conversion ratios must be finite and positive");
         }
 
+        checks.check(Kp_ >= ZERO<RealT>, "Kp must be non-negative");
+        checks.check(Kpg_ >= ZERO<RealT>, "Kpg must be non-negative");
         checks.check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
                      "dbdlow <= 0 <= dbdupper is required");
         checks.check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,

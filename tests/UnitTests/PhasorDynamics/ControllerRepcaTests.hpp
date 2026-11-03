@@ -69,6 +69,13 @@ namespace GridKit
         success *= (documented_defaults.repca.verify().passed());
         success *= defaultsMatchDocumentedValues();
 
+        auto zero_gains_data                    = makeData();
+        zero_gains_data.parameters[Params::Kp]  = 0.0;
+        zero_gains_data.parameters[Params::Kpg] = 0.0;
+        Fixture<ScalarT> zero_gains(zero_gains_data);
+        zero_gains.attachAllInputs();
+        success *= (zero_gains.repca.verify().passed());
+
         auto integer_numeric                    = makeData();
         integer_numeric.parameters[Params::mva] = static_cast<IdxT>(100);
         Fixture<ScalarT> integer_parameter(integer_numeric);
@@ -80,6 +87,8 @@ namespace GridKit
 
         success *= invalidParameterCase(Params::mva, 0.0);
         success *= invalidParameterCase(Params::Tfv, -0.1);
+        success *= invalidParameterCase(Params::Kp, -0.1);
+        success *= invalidParameterCase(Params::Kpg, -0.1);
         success *= invalidParameterCase(Params::dbdlow, 0.1);
         success *= invalidParameterCase(Params::dbdupper, -0.1);
         success *= invalidParameterCase(Params::emin, 0.1);

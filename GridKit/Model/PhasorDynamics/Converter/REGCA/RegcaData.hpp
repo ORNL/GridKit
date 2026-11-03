@@ -32,11 +32,11 @@ namespace GridKit
         VL1,    ///< LVPL upper breakpoint voltage
         VA0,    ///< LVACM lower breakpoint voltage
         VA1,    ///< LVACM upper breakpoint voltage
-        Vhvmax, ///< Terminal-voltage activation threshold for HV reactive management
+        Vhvmax, ///< Terminal-voltage ceiling for HV reactive management
 
-        Qmin, ///< Optional PowerWorld compatibility field, accepted and unused
-        Khv,  ///< Optional PowerWorld compatibility field, accepted and unused
-        Xe,   ///< Optional PowerWorld compatibility field, accepted and unused
+        Qmin, ///< Optional case-file compatibility field, accepted and unused
+        Khv,  ///< Optional case-file compatibility field, accepted and unused
+        Xe,   ///< Optional case-file compatibility field, accepted and unused
       };
 
       /// Buses for the REGCA converter model.
