@@ -946,7 +946,7 @@ namespace GridKit
 
         q_feedback_gain_ = ZERO<RealT>;
         q_integral_gain_ = Ki_;
-        if (Kp_ != ZERO<RealT>)
+        if (Kp_ > ZERO<RealT>)
         {
           q_feedback_gain_ = Ki_ / Kp_;
           q_integral_gain_ = ZERO<RealT>;
@@ -954,7 +954,7 @@ namespace GridKit
 
         p_feedback_gain_ = ZERO<RealT>;
         p_integral_gain_ = Kig_;
-        if (Kpg_ != ZERO<RealT>)
+        if (Kpg_ > ZERO<RealT>)
         {
           p_feedback_gain_ = Kig_ / Kpg_;
           p_integral_gain_ = ZERO<RealT>;

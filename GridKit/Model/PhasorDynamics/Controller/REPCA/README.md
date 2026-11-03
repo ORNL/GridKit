@@ -200,13 +200,13 @@ state as well keeps it constant at zero error.
   0 &= -\dot{V}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (V^\mathrm{ctrl} - V^\mathrm{meas}) \\
   0 &= -\dot{Q}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (k_\mathrm{base}Q - Q^\mathrm{meas}) \\
   0 &= -\dot{x}_Q^\mathrm{PI} + s_\mathrm{frz}\, \begin{cases}
-    \dfrac{K_\mathrm{i}}{K_\mathrm{p}}\left(Q^\mathrm{PI}-\text{clamp}(x_Q^\mathrm{PI};\,Q^{\min},Q^{\max})\right) & K_\mathrm{p}\ne0 \\
+    \dfrac{K_\mathrm{i}}{K_\mathrm{p}}\left(Q^\mathrm{PI}-\text{clamp}(x_Q^\mathrm{PI};\,Q^{\min},Q^{\max})\right) & K_\mathrm{p}>0 \\
     \text{antiwindup}(x_Q^\mathrm{PI}, K_\mathrm{i}e_\mathrm{RQ}^\mathrm{lim};\,Q^{\min},Q^{\max}) & K_\mathrm{p}=0
   \end{cases} \\
   0 &= -\dot{x}_Q^\mathrm{lag} + \dfrac{1}{T_\mathrm{fv}} (Q^\mathrm{PI} - x_Q^\mathrm{lag}) \\
   0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}} (k_\mathrm{base}P - P^\mathrm{meas}) \\
   0 &= -\dot{x}_P^\mathrm{PI} + \begin{cases}
-    \dfrac{K_\mathrm{ig}}{K_\mathrm{pg}}\left(P^\mathrm{PI}-\text{clamp}(x_P^\mathrm{PI};\,P^{\min},P^{\max})\right) & K_\mathrm{pg}\ne0 \\
+    \dfrac{K_\mathrm{ig}}{K_\mathrm{pg}}\left(P^\mathrm{PI}-\text{clamp}(x_P^\mathrm{PI};\,P^{\min},P^{\max})\right) & K_\mathrm{pg}>0 \\
     \text{antiwindup}(x_P^\mathrm{PI}, K_\mathrm{ig}e_P^\mathrm{lim};\,P^{\min},P^{\max}) & K_\mathrm{pg}=0
   \end{cases} \\
   0 &= -\dot{P}^\mathrm{ref} + \dfrac{1}{T_\mathrm{lag}} (P^\mathrm{PI} - P^\mathrm{ref})
