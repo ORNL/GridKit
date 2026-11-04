@@ -170,7 +170,7 @@ Each subsystem also requires:
 
 Key | Description
 -- | --
-`id` | Subsystem ID (string), unique across the whole hierarchy
+`id` | Subsystem ID (non-empty string), unique across the whole hierarchy
 `level` | Hierarchy level (integer): the root system is level 0 (implied, not given in the file), its subsystems level 1, their subsystems level 2, and so on
 
 The `level` must match the depth of the subsystem. It is redundant in this
@@ -187,10 +187,6 @@ The input must already be partitioned:
     of sibling subsystems.
 -   Devices may only use signals of their own system.
 -   Bus numbers and signal IDs must be unique across the whole hierarchy.
-
-Not all of these are checked yet: duplicate subsystem IDs, duplicate signal
-IDs across systems, and bus numbers repeated in sibling subsystems are not
-detected.
 
 ## Example File for a 2-Bus System
 
