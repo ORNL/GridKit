@@ -56,7 +56,7 @@ Each partition has the following properties:
   omitting it implies there are no internal buses.
 - `partitions` of type `array of Partition` 
   containing zero or more Partitions which are child partitions of this
-  partition. his property is optional:
+  partition. This property is optional:
   omitting it implies there are no child partitions.
 
 The root-level object of the JSON file is a partition.
