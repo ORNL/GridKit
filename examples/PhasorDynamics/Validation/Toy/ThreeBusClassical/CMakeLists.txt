@@ -4,6 +4,8 @@
 #]]
 
 gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/ThreeBusClassical.case.json)
+
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/ThreeBusClassical.state.json)
 gridkit_example_add_file(ThreeBusClassical.solver.json)
 add_subdirectory(reference)
 

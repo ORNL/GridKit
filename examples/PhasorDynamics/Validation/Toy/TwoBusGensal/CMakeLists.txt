@@ -1,4 +1,5 @@
 gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/TwoBusGensal.case.json)
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/TwoBusGensal.state.json)
 gridkit_example_add_file(TwoBusGensal.solver.json)
 add_subdirectory(reference)
 

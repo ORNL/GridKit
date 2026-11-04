@@ -1,0 +1,23 @@
+{
+    "header": {
+        "format_version": 0.2,
+        "format_revision": 0,
+        "description": "Initial operating point of the TwoBusTgov1 case"
+    },
+    "buses": {
+        "0": {
+            "Vr": 0.9949877346411762,
+            "Vi": 0.09999703952427966
+        },
+        "1": {
+            "Vr": 1.0,
+            "Vi": 0.0
+        }
+    },
+    "devices": {
+        "DV1": {
+            "ir": 1.0000005862325285,
+            "ii": 0.0501183043867175
+        }
+    }
+}
