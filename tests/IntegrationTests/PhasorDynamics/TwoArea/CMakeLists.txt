@@ -11,5 +11,4 @@ add_test(NAME PhasorDynamicsIntegrationTwoAreaHierarchical COMMAND test_pd_two_a
 
 install(TARGETS test_pd_two_area_hierarchical)
 install(FILES ${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/TwoArea/TwoArea.case.json
-              TwoAreaHierarchical.case.json
-        DESTINATION share/gridkit/tests/PhasorDynamics/TwoArea)
+              TwoAreaHierarchical.case.json DESTINATION share/gridkit/tests/PhasorDynamics/TwoArea)
