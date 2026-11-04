@@ -25,7 +25,7 @@
 - Fixed REGCA to hold the terminal voltage at `Vhvmax`, as PowerWorld does; `Khv` is accepted but unused.
 - Added the FourBusLimits validation case, which drives the REPCA, REECB, REGCA, and ESDC1A limits.
 - Added a `TwoArea` integration test comparing flat and hierarchical PhasorDynamics systems.
-- Fixed the `Vrmax` of generator 3's exciter in the `TwoArea` case, which made the case unstable.
+- Set the `Vrmax` of generator 3's exciter in the `TwoArea` case to match the other exciters, which delays the loss of synchronism without a fault.
 
 ## v0.2
 
