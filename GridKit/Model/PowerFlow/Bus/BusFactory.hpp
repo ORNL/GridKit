@@ -34,7 +34,8 @@ namespace GridKit
         break;
       default:
         // Throw exception
-        ::GridKit::Utilities::Logger::error() << "Bus type " << data.type << " unrecognized.\n";
+        ::GridKit::Utilities::Logger::error()
+          << "Bus type " << data.type << " unrecognized.\n";
       }
       return bus;
     }

@@ -27,7 +27,8 @@ namespace GridKit
     {
       P,   ///< Active power balance [p.u.]
       Q,   ///< Reactive power balance [p.u.]
-      VM2, ///< \f$V_\mathrm{r}^2 + V_\mathrm{i}^2\f$ Squared voltage magnitude [p.u.]
+      VM2, ///< \f$V_\mathrm{r}^2 + V_\mathrm{i}^2\f$ Squared voltage magnitude
+           ///< [p.u.]
     };
 
     /**
@@ -59,9 +60,12 @@ namespace GridKit
       static constexpr std::array<IdxT, 0> NUM_PORT_VARIABLES{};
       static constexpr std::array<IdxT, 0> NUM_PORT_CONSTRAINTS{};
 
-      /// A port to the bus reads its voltage and contributes to its power balance, the constraints before `VM2`
-      static constexpr IdxT NUM_SHARED_VARIABLES   = Utilities::enum_size<BusInternalVariables>();
-      static constexpr IdxT NUM_SHARED_CONSTRAINTS = static_cast<IdxT>(BusInternalConstraints::VM2);
+      /// A port to the bus reads its voltage and contributes to its power
+      /// balance, the constraints before `VM2`
+      static constexpr IdxT NUM_SHARED_VARIABLES =
+        Utilities::enum_size<BusInternalVariables>();
+      static constexpr IdxT NUM_SHARED_CONSTRAINTS =
+        static_cast<IdxT>(BusInternalConstraints::VM2);
 
       explicit Bus(const ModelDataT& data);
 
@@ -73,7 +77,9 @@ namespace GridKit
       int evaluateJacobian() override;
       int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] void internalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
+      [[gnu::always_inline]] void internalConstraints(
+        const ScalarT* x, const ScalarT* external, ScalarT* g
+      ) const override;
 
       /// Real voltage [p.u.]
       const ScalarT& Vr() const

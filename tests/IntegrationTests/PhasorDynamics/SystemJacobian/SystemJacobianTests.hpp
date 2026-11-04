@@ -36,7 +36,7 @@ namespace GridKit
       using ClockT    = std::chrono::steady_clock;
       using DurationT = std::chrono::duration<double, std::micro>;
       using JacobianT =
-          std::vector<DependencyTracking::Variable::DependencyMap>;
+        std::vector<DependencyTracking::Variable::DependencyMap>;
       using ModelDataT = PhasorDynamics::SystemModelData<RealT, IdxT>;
 
       /// Number of timed evaluations after setup and warm-up
@@ -99,17 +99,18 @@ namespace GridKit
 
           // Jacobian via DependencyTracking
           JacobianT dependency_tracking_jacobian =
-              DependencyTrackingJacobian(data);
+            DependencyTrackingJacobian(data);
 
           // Compare DependencyTracking dependencies to Enzyme's
           success *=
-              (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
+            (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
           for (IdxT i = 0; i < dependency_tracking_jacobian.size()
                            && i < enzyme_jacobian.size();
                ++i)
           {
             success *= (GridKit::Testing::isEqual(
-                dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+              dependency_tracking_jacobian[i], enzyme_jacobian[i], tol
+            ));
           }
         }
         catch (const std::exception& error)
@@ -180,16 +181,16 @@ namespace GridKit
                         << "" << std::setw(10) << enzyme_jacobian_[i] << '\n';
 
           output_stream
-              << std::left << std::setw(static_cast<int>(case_width))
-              << case_names_[i] << std::setw(20) << "DependencyTracking"
-              << std::right << std::setw(7) << sizes_[i] << std::setw(8)
-              << dependency_tracking_nnz_[i] << std::setw(11)
-              << dependency_tracking_setup_[i] << std::setw(8)
-              << dependency_tracking_setup_[i] / enzyme_setup_[i] << std::setw(10)
-              << dependency_tracking_residual_[i] << std::setw(8)
-              << dependency_tracking_residual_[i] / enzyme_residual_[i]
-              << std::setw(10) << dependency_tracking_jacobian_[i] << std::setw(8)
-              << dependency_tracking_jacobian_[i] / enzyme_jacobian_[i] << '\n';
+            << std::left << std::setw(static_cast<int>(case_width))
+            << case_names_[i] << std::setw(20) << "DependencyTracking"
+            << std::right << std::setw(7) << sizes_[i] << std::setw(8)
+            << dependency_tracking_nnz_[i] << std::setw(11)
+            << dependency_tracking_setup_[i] << std::setw(8)
+            << dependency_tracking_setup_[i] / enzyme_setup_[i] << std::setw(10)
+            << dependency_tracking_residual_[i] << std::setw(8)
+            << dependency_tracking_residual_[i] / enzyme_residual_[i]
+            << std::setw(10) << dependency_tracking_jacobian_[i] << std::setw(8)
+            << dependency_tracking_jacobian_[i] / enzyme_jacobian_[i] << '\n';
         }
 
         output_stream.flags(flags);
@@ -207,8 +208,9 @@ namespace GridKit
         IdxT                         index{INVALID_INDEX<IdxT>};
 
         void bind(
-            PhasorDynamics::SystemModel<SystemScalar, IdxT>& system,
-            const ModelDataT&                                data)
+          PhasorDynamics::SystemModel<SystemScalar, IdxT>& system,
+          const ModelDataT&                                data
+        )
         {
           for (const auto& bus : data.bus)
           {
@@ -242,7 +244,8 @@ namespace GridKit
       {
         ExternalInputs<DependencyTracking::Variable>                    inputs;
         PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(
-            data);
+          data
+        );
         inputs.bind(system, data);
         system.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' terms
 
@@ -289,7 +292,7 @@ namespace GridKit
 
         auto& output_stream = Log::misc();
         output_stream
-            << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
+          << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
         system_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(system_jacobian);

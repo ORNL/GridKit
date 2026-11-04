@@ -32,15 +32,17 @@ namespace GridKit
 
       // Init and saturated-limiter checks are exact algebraic identities
       // (no iteration, sigmoid underflowed to 0/1 at the depths tested here).
-      static constexpr ScalarT kTol = 100 * std::numeric_limits<RealT>::epsilon();
+      static constexpr ScalarT kTol =
+        100 * std::numeric_limits<RealT>::epsilon();
 
       TestOutcome constructor()
       {
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(3.0, 4.0);
-        auto                               data    = makeTestData();
-        auto*                              exciter = new PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT>(&bus, data);
+        auto                               data = makeTestData();
+        auto*                              exciter =
+          new PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT>(&bus, data);
 
         success *= (exciter != nullptr);
         success *= (exciter->size() == 3);
@@ -61,14 +63,16 @@ namespace GridKit
 
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd_node;
         ScalarT                                   efd_value{0.0};
-        IdxT                                      efd_index = INVALID_INDEX<IdxT>;
+        IdxT efd_index = INVALID_INDEX<IdxT>;
         efd_node.link(&efd_value, &efd_index);
 
         using namespace GridKit::PhasorDynamics::Exciter;
 
         auto data    = makeTestData();
         auto exciter = SexsPti<ScalarT, IdxT>(&bus, data);
-        exciter.getPorts().out.template port<SexsPtiSignalOutputs::efd>().connect(&efd_node);
+        exciter.getPorts()
+          .out.template port<SexsPtiSignalOutputs::efd>()
+          .connect(&efd_node);
 
         exciter.allocate();
         efd_node.init(1.2);
@@ -76,9 +80,9 @@ namespace GridKit
         exciter.initialize();
         exciter.evaluateResidual();
 
-        success       *= efd_node.linked();
-        success       *= (efd_node.getVariableIndex() == 1);
-        success       *= isEqual(efd_node.read(), static_cast<ScalarT>(1.2), kTol);
+        success *= efd_node.linked();
+        success *= (efd_node.getVariableIndex() == 1);
+        success *= isEqual(efd_node.read(), static_cast<ScalarT>(1.2), kTol);
         const auto* y  = exciter.y().getData();
         success       *= isEqual(y[0], static_cast<ScalarT>(-0.048), kTol);
         success       *= isEqual(y[1], static_cast<ScalarT>(1.2), kTol);
@@ -90,7 +94,8 @@ namespace GridKit
         {
           if (!isEqual(f_data[i], static_cast<ScalarT>(0.0), kTol))
           {
-            std::cout << "Non-zero SEXS-PTI residual at index " << i << ": " << f_data[i] << "\n";
+            std::cout << "Non-zero SEXS-PTI residual at index " << i << ": "
+                      << f_data[i] << "\n";
             success = false;
           }
         }
@@ -110,8 +115,8 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> vs_node;
         ScalarT                                   efd_value{0.0};
         ScalarT                                   vs_value{0.25};
-        IdxT                                      efd_index = INVALID_INDEX<IdxT>;
-        IdxT                                      vs_index  = 4;
+        IdxT efd_index = INVALID_INDEX<IdxT>;
+        IdxT vs_index  = 4;
         efd_node.link(&efd_value, &efd_index);
         vs_node.link(&vs_value, &vs_index);
 
@@ -119,8 +124,12 @@ namespace GridKit
 
         auto data    = makeTestData();
         auto exciter = SexsPti<ScalarT, IdxT>(&bus, data);
-        exciter.getPorts().out.template port<SexsPtiSignalOutputs::efd>().connect(&efd_node);
-        exciter.getPorts().in.template port<SexsPtiSignalInputs::vs>().connect(&vs_node);
+        exciter.getPorts()
+          .out.template port<SexsPtiSignalOutputs::efd>()
+          .connect(&efd_node);
+        exciter.getPorts().in.template port<SexsPtiSignalInputs::vs>().connect(
+          &vs_node
+        );
 
         exciter.allocate();
         efd_node.init(1.2);
@@ -128,7 +137,8 @@ namespace GridKit
         exciter.initialize();
         exciter.evaluateResidual();
 
-        // vref absorbs the attached vs at initialization; later changes pass through
+        // vref absorbs the attached vs at initialization; later changes pass
+        // through
         const auto* f  = exciter.getResidual().getData();
         success       *= isEqual(f[2], static_cast<ScalarT>(0.0), kTol);
 
@@ -155,10 +165,10 @@ namespace GridKit
         ScalarT                                   vref_value{0.0};
         ScalarT                                   vuel_value{-0.4};
         ScalarT                                   voel_value{0.2};
-        IdxT                                      efd_index  = INVALID_INDEX<IdxT>;
-        IdxT                                      vref_index = 5;
-        IdxT                                      vuel_index = 6;
-        IdxT                                      voel_index = 7;
+        IdxT efd_index  = INVALID_INDEX<IdxT>;
+        IdxT vref_index = 5;
+        IdxT vuel_index = 6;
+        IdxT voel_index = 7;
         efd_node.link(&efd_value, &efd_index);
         vref_node.link(&vref_value, &vref_index);
         vuel_node.link(&vuel_value, &vuel_index);
@@ -166,10 +176,22 @@ namespace GridKit
 
         auto                                            data = makeTestData();
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
-        exciter.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&efd_node);
-        exciter.getPorts().in.template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::vref>().connect(&vref_node);
-        exciter.getPorts().in.template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::vuel>().connect(&vuel_node);
-        exciter.getPorts().in.template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::voel>().connect(&voel_node);
+        exciter.getPorts()
+          .out
+          .template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>()
+          .connect(&efd_node);
+        exciter.getPorts()
+          .in
+          .template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::vref>()
+          .connect(&vref_node);
+        exciter.getPorts()
+          .in
+          .template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::vuel>()
+          .connect(&vuel_node);
+        exciter.getPorts()
+          .in
+          .template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::voel>()
+          .connect(&voel_node);
 
         exciter.allocate();
         efd_node.init(1.2);
@@ -177,9 +199,9 @@ namespace GridKit
         exciter.evaluateResidual();
 
         // vref absorbs both limiter inputs; later changes enter with unit gain.
-        const auto* f  = exciter.getResidual().getData();
-        success       *= isEqual(vref_node.read(), static_cast<ScalarT>(5.32), kTol);
-        success       *= isEqual(f[2], static_cast<ScalarT>(0.0), kTol);
+        const auto* f = exciter.getResidual().getData();
+        success *= isEqual(vref_node.read(), static_cast<ScalarT>(5.32), kTol);
+        success *= isEqual(f[2], static_cast<ScalarT>(0.0), kTol);
 
         vuel_value = -0.3;
         exciter.evaluateResidual();
@@ -280,12 +302,16 @@ namespace GridKit
 
         auto missing = makeTestData();
         missing.parameters.erase(Parameter::K);
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> missing_model(&bus, missing);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> missing_model(
+          &bus, missing
+        );
         success *= (!missing_model.verify().passed());
 
         auto invalid                      = makeTestData();
         invalid.parameters[Parameter::Tb] = 0.0;
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> invalid_model(&bus, invalid);
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> invalid_model(
+          &bus, invalid
+        );
         success *= (!invalid_model.verify().passed());
 
         Log::setVerbosity(previous_verbosity);
@@ -385,9 +411,8 @@ namespace GridKit
         system.y().setDataUpdated();
         success       *= (system.evaluateResidual() == 0);
         const auto* f  = system.getResidual().getData();
-        success       *= isEqual(f[consumer_vtr_residual],
-                           static_cast<ScalarT>(0.75),
-                           kTol);
+        success *=
+          isEqual(f[consumer_vtr_residual], static_cast<ScalarT>(0.75), kTol);
 
         return success.report(__func__);
       }
@@ -403,37 +428,47 @@ namespace GridKit
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
         // Jacobian via DependencyTracking
-        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          dependency_tracking_jacobian = DependencyTrackingJacobian();
 
         // Jacobian via Enzyme
-        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap>
+          enzyme_jacobian = EnzymeJacobian();
 
         /// Compare DependencyTracking dependencies to Enzyme's
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
+          success *= (GridKit::Testing::isEqual(
+            dependency_tracking_jacobian[i], enzyme_jacobian[i], tol
+          ));
         }
 
         return success.report(__func__);
       }
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian()
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      DependencyTrackingJacobian()
       {
         auto data = makeTestData();
 
-        DependencyTracking::Variable                                         Vr1{3.0};
-        DependencyTracking::Variable                                         Vi1{4.0};
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>              bus(Vr1, Vi1);
-        PhasorDynamics::Exciter::SexsPti<DependencyTracking::Variable, IdxT> exciter(&bus, data);
+        DependencyTracking::Variable                            Vr1{3.0};
+        DependencyTracking::Variable                            Vi1{4.0};
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus(Vr1, Vi1);
+        PhasorDynamics::Exciter::SexsPti<DependencyTracking::Variable, IdxT>
+          exciter(&bus, data);
 
         bus.allocate();
         exciter.allocate();
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + exciter.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + exciter.size()); // Reset bus residual indices
+          bus.setVariableIndex(
+            i, i + exciter.size()
+          ); // Reset bus variable indices
+          bus.setResidualIndex(
+            i, i + exciter.size()
+          ); // Reset bus residual indices
         }
 
         bus.initialize();
@@ -448,7 +483,8 @@ namespace GridKit
         exciter.evaluateJacobian();
         auto* model_jacobian = exciter.getCsrJacobian();
         auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: SexsPti DependencyTracking Jacobian\n";
+        output_stream
+          << "Sparse Csr Matrix: SexsPti DependencyTracking Jacobian\n";
         model_jacobian->print(output_stream);
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
@@ -466,8 +502,12 @@ namespace GridKit
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + exciter.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + exciter.size()); // Reset bus residual indices
+          bus.setVariableIndex(
+            i, i + exciter.size()
+          ); // Reset bus variable indices
+          bus.setResidualIndex(
+            i, i + exciter.size()
+          ); // Reset bus residual indices
         }
 
         bus.initialize();
@@ -498,7 +538,9 @@ namespace GridKit
         PhasorDynamics::Exciter::SexsPtiData<RealT, IdxT> data;
         data.device_class          = "exciter";
         data.disambiguation_string = "sexspti_test";
-        data.monitored_variables.insert(PhasorDynamics::Exciter::SexsPtiMonitorableVariables::efd);
+        data.monitored_variables.insert(
+          PhasorDynamics::Exciter::SexsPtiMonitorableVariables::efd
+        );
 
         data.parameters[Params::Ta]     = 0.1;
         data.parameters[Params::Tb]     = 0.5;

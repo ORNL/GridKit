@@ -31,9 +31,10 @@ namespace GridKit
 
       if (!has_jacobian && !is_subsystem_)
       {
-        Log::warning() << "GridKit was built with Enzyme, but some models "
-                          "don't have Jacobians available. "
-                          "Falling back to dense Jacobians in PhasorDynamics.\n";
+        Log::warning(
+        ) << "GridKit was built with Enzyme, but some models "
+             "don't have Jacobians available. "
+             "Falling back to dense Jacobians in PhasorDynamics.\n";
       }
 
       return has_jacobian;
@@ -52,7 +53,8 @@ namespace GridKit
         bus->evaluateJacobian();
       }
 
-      // Evaluate component Jacobians, including contribution to the bus Jacobians
+      // Evaluate component Jacobians, including contribution to the bus
+      // Jacobians
       for (const auto& component : components_)
       {
         component->evaluateJacobian();
@@ -67,10 +69,13 @@ namespace GridKit
     /**
      * @brief Evaluate system Jacobian using component-level Jacobians.
      *
-     * - Evaluate component-level Jacobians (stored as CooMatrixT), including subsystems'.
+     * - Evaluate component-level Jacobians (stored as CooMatrixT), including
+     * subsystems'.
      * - If not already constructed, construct system-level Jacobian.
-     *   This used a system-level CooMatrix to deduplicate and sort the sparsity pattern.
-     * - If already constructed, reset Jacobian values to zero and accumulate contributions.
+     *   This used a system-level CooMatrix to deduplicate and sort the sparsity
+     * pattern.
+     * - If already constructed, reset Jacobian values to zero and accumulate
+     * contributions.
      *
      * A subsystem assembles its Jacobian in global indices. Its external buses
      * precede its own variables, so the Jacobian size is offset() + size().
@@ -97,7 +102,11 @@ namespace GridKit
         for (size_t k = 0; k < systems.size(); ++k)
         {
           SystemModel* system = systems[k];
-          systems.insert(systems.end(), system->subsystems_.begin(), system->subsystems_.end());
+          systems.insert(
+            systems.end(),
+            system->subsystems_.begin(),
+            system->subsystems_.end()
+          );
 
           for (const auto& component : system->components_)
           {
@@ -109,7 +118,8 @@ namespace GridKit
             }
             else
             {
-              Log::warning() << "A component has returned a nullptr Jacobian.\n";
+              Log::warning()
+                << "A component has returned a nullptr Jacobian.\n";
             }
           }
 
@@ -128,7 +138,8 @@ namespace GridKit
           }
         }
 
-        // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
+        // Allocate COO triplet arrays (we own these until we hand off to
+        // CsrMatrix)
         IdxT*  rows_dup = new IdxT[static_cast<size_t>(nnz_dup)];
         IdxT*  cols_dup = new IdxT[static_cast<size_t>(nnz_dup)];
         RealT* vals_dup = new RealT[static_cast<size_t>(nnz_dup)];
@@ -139,7 +150,11 @@ namespace GridKit
         for (size_t k = 0; k < systems.size(); ++k)
         {
           SystemModel* system = systems[k];
-          systems.insert(systems.end(), system->subsystems_.begin(), system->subsystems_.end());
+          systems.insert(
+            systems.end(),
+            system->subsystems_.begin(),
+            system->subsystems_.end()
+          );
 
           for (const auto& component : system->components_)
           {
@@ -160,7 +175,8 @@ namespace GridKit
             }
             else
             {
-              Log::warning() << "A component has returned a nullptr Jacobian.\n";
+              Log::warning()
+                << "A component has returned a nullptr Jacobian.\n";
             }
           }
 
@@ -234,7 +250,11 @@ namespace GridKit
         for (size_t k = 0; k < systems.size(); ++k)
         {
           SystemModel* system = systems[k];
-          systems.insert(systems.end(), system->subsystems_.begin(), system->subsystems_.end());
+          systems.insert(
+            systems.end(),
+            system->subsystems_.begin(),
+            system->subsystems_.end()
+          );
 
           for (const auto& component : system->components_)
           {

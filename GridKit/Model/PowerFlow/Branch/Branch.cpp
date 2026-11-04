@@ -36,7 +36,9 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  Branch<ScalarT, IdxT>::Branch(RealT R, RealT X, RealT G, RealT B, bus_type* bus1, bus_type* bus2)
+  Branch<ScalarT, IdxT>::Branch(
+    RealT R, RealT X, RealT G, RealT B, bus_type* bus1, bus_type* bus2
+  )
     : R_(R),
       X_(X),
       G_(G),
@@ -49,7 +51,9 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, BranchData& data)
+  Branch<ScalarT, IdxT>::Branch(
+    bus_type* bus1, bus_type* bus2, BranchData& data
+  )
     : R_(data.r),
       X_(data.x),
       G_(0.0),
@@ -126,10 +130,14 @@ namespace GridKit
     RealT   g      = R_ / (R_ * R_ + X_ * X_);
     ScalarT dtheta = theta1() - theta2();
 
-    P1() -= (g + 0.5 * G_) * V1() * V1() + V1() * V2() * (-g * std::cos(dtheta) - b * std::sin(dtheta));
-    Q1() -= (-b - 0.5 * B_) * V1() * V1() + V1() * V2() * (-g * std::sin(dtheta) + b * std::cos(dtheta));
-    P2() -= (g + 0.5 * G_) * V2() * V2() + V1() * V2() * (-g * std::cos(dtheta) + b * std::sin(dtheta));
-    Q2() -= (-b - 0.5 * B_) * V2() * V2() + V1() * V2() * (g * std::sin(dtheta) + b * std::cos(dtheta));
+    P1() -= (g + 0.5 * G_) * V1() * V1()
+            + V1() * V2() * (-g * std::cos(dtheta) - b * std::sin(dtheta));
+    Q1() -= (-b - 0.5 * B_) * V1() * V1()
+            + V1() * V2() * (-g * std::sin(dtheta) + b * std::cos(dtheta));
+    P2() -= (g + 0.5 * G_) * V2() * V2()
+            + V1() * V2() * (-g * std::cos(dtheta) + b * std::sin(dtheta));
+    Q2() -= (-b - 0.5 * B_) * V2() * V2()
+            + V1() * V2() * (g * std::sin(dtheta) + b * std::cos(dtheta));
 
     if (bus1_->size() > 0)
     {
@@ -146,7 +154,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Branch<ScalarT, IdxT>::evaluateJacobian()
   {
-    ::GridKit::Utilities::Logger::warning() << "Branch: Jacobian evaluation not implemented!\n";
+    ::GridKit::Utilities::Logger::warning()
+      << "Branch: Jacobian evaluation not implemented!\n";
     return 0;
   }
 

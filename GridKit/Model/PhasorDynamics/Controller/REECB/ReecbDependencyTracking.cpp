@@ -1,7 +1,8 @@
 /**
  * @file ReecbDependencyTracking.cpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Dependency-tracking instantiations for the REECB electrical-control model.
+ * @brief Dependency-tracking instantiations for the REECB electrical-control
+ * model.
  */
 
 #include "ReecbImpl.hpp"

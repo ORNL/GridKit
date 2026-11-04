@@ -15,13 +15,14 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     class ComponentCloneTests
     {
-      using SignalNode          = PowerElectronics::SignalNode<ScalarT, IdxT>;
-      using Bus                 = PowerElectronics::MicrogridBus<ScalarT, IdxT>;
-      using BusDQ               = PowerElectronics::MicrogridBusDQ<ScalarT, IdxT>;
-      using Generator           = PowerElectronics::DistributedGenerator<ScalarT, IdxT>;
-      using GeneratorParameters = PowerElectronics::DistributedGeneratorParameters<ScalarT, IdxT>;
-      using Line                = PowerElectronics::MicrogridLine<ScalarT, IdxT>;
-      using Load                = PowerElectronics::MicrogridLoad<ScalarT, IdxT>;
+      using SignalNode = PowerElectronics::SignalNode<ScalarT, IdxT>;
+      using Bus        = PowerElectronics::MicrogridBus<ScalarT, IdxT>;
+      using BusDQ      = PowerElectronics::MicrogridBusDQ<ScalarT, IdxT>;
+      using Generator  = PowerElectronics::DistributedGenerator<ScalarT, IdxT>;
+      using GeneratorParameters =
+        PowerElectronics::DistributedGeneratorParameters<ScalarT, IdxT>;
+      using Line = PowerElectronics::MicrogridLine<ScalarT, IdxT>;
+      using Load = PowerElectronics::MicrogridLoad<ScalarT, IdxT>;
 
     public:
       ComponentCloneTests()
@@ -59,9 +60,12 @@ namespace GridKit
          * Construct Components
          **************************************************************************/
 
-        generator_ = new Generator(1, generator_parameters_, true, &signal_, &bus1_);
+        generator_ =
+          new Generator(1, generator_parameters_, true, &signal_, &bus1_);
 
-        line_ = new Line(2, 0.23, 0.1 / (2.0 * M_PI * 50.0), &signal_, &bus1_, &bus2_);
+        line_ = new Line(
+          2, 0.23, 0.1 / (2.0 * M_PI * 50.0), &signal_, &bus1_, &bus2_
+        );
 
         load_ = new Load(3, 3.0, 2.0 / (2.0 * M_PI * 50.0), &signal_, &bus1_);
 
@@ -125,7 +129,8 @@ namespace GridKit
       template <typename ComponentT>
       bool verifyComponentClone(ComponentT& component)
       {
-        using RealT = typename PowerElectronics::Component<ScalarT, IdxT>::RealT;
+        using RealT =
+          typename PowerElectronics::Component<ScalarT, IdxT>::RealT;
 
         bool success = true;
 
@@ -197,7 +202,9 @@ namespace GridKit
         checkVectorIndependence(component.y(), clone->y());
         checkVectorIndependence(component.yp(), clone->yp());
         checkVectorIndependence(component.getResidual(), clone->getResidual());
-        checkVectorIndependence(component.absoluteTolerance(), clone->absoluteTolerance());
+        checkVectorIndependence(
+          component.absoluteTolerance(), clone->absoluteTolerance()
+        );
         checkVectorIndependence(component.param(), clone->param());
 
         /**************************************************************************

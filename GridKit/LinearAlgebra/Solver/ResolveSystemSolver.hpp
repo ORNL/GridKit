@@ -18,15 +18,23 @@ namespace GridKit
     public:
       using RealT = LinearSolver<ScalarT, IdxT>::RealT;
 
-      ResolveSystemSolver(ReSolve::SystemSolver& lin_solver, GridKit::memory::MemorySpace memspace = GridKit::memory::HOST);
+      ResolveSystemSolver(
+        ReSolve::SystemSolver&       lin_solver,
+        GridKit::memory::MemorySpace memspace = GridKit::memory::HOST
+      );
 
-      int configureSolver(GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix) final;
+      int configureSolver(GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix
+      ) final;
       int setupSolver(bool reuse_factors = false) final;
-      int solve(GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& rhs, GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& lhs) final;
+      int solve(
+        GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& rhs,
+        GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& lhs
+      ) final;
 
     private:
       /**
-       * @brief The ReSolve matrix used for the linear solve. Its data pointers should just point to a \ref GridKit::LinearAlgebra::CsrMatrix.
+       * @brief The ReSolve matrix used for the linear solve. Its data pointers
+       * should just point to a \ref GridKit::LinearAlgebra::CsrMatrix.
        *
        */
       std::unique_ptr<ReSolve::matrix::Csr> matrix_;

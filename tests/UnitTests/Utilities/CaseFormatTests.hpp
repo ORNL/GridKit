@@ -36,7 +36,8 @@ namespace GridKit
       CaseFormatTests()  = default;
       ~CaseFormatTests() = default;
 
-      /// Identifier restrictions apply during parsing, independently of monitoring.
+      /// Identifier restrictions apply during parsing, independently of
+      /// monitoring.
       TestOutcome identifierParse()
       {
         using DataT = PhasorDynamics::SystemModelData<RealT, IdxT>;
@@ -58,12 +59,14 @@ namespace GridKit
           json input = case_input;
           if (hierarchical)
           {
-            input["subsystems"] = json::array({{{"id", "area"},
-                                                {"level", 1},
-                                                {"buses", input["buses"]},
-                                                {"devices", input["devices"]}}});
-            input["buses"]      = json::array();
-            input["devices"]    = json::array();
+            input["subsystems"] = json::array(
+              {{{"id", "area"},
+                {"level", 1},
+                {"buses", input["buses"]},
+                {"devices", input["devices"]}}}
+            );
+            input["buses"]   = json::array();
+            input["devices"] = json::array();
           }
           auto& contents = hierarchical ? input["subsystems"][0] : input;
           auto& bus      = contents["buses"][0];
@@ -86,27 +89,39 @@ namespace GridKit
               device["mon"] = device_mon;
             }
 
-            for (const auto* name : {"", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _.-"})
+            for (const auto* name :
+                 {"",
+                  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567"
+                  "89 _.-"})
             {
               bus["name"]         = name;
               device["id"]        = name;
               const auto  data    = input.template get<DataT>();
               const auto& parsed  = hierarchical ? data.subsystems[0] : data;
               success            *= parsed.bus[0].name == name;
-              success            *= parsed.branch[0].disambiguation_string == name;
+              success *= parsed.branch[0].disambiguation_string == name;
             }
 
-            for (const auto* name : {"bad\"id", "bad\\id", "bad,id", "bad\nid", "bad\tid", "bad\rid", "caf\xc3\xa9"})
+            for (const auto* name :
+                 {"bad\"id",
+                  "bad\\id",
+                  "bad,id",
+                  "bad\nid",
+                  "bad\tid",
+                  "bad\rid",
+                  "caf\xc3\xa9"})
             {
               bus["name"]   = name;
               device["id"]  = "Branch 1";
-              success      *= throws<std::runtime_error>([&]()
-                                                    { (void) input.template get<DataT>(); });
+              success      *= throws<std::runtime_error>(
+                [&]() { (void) input.template get<DataT>(); }
+              );
 
               bus["name"]   = "Bus 1";
               device["id"]  = name;
-              success      *= throws<std::runtime_error>([&]()
-                                                    { (void) input.template get<DataT>(); });
+              success      *= throws<std::runtime_error>(
+                [&]() { (void) input.template get<DataT>(); }
+              );
             }
           }
         }
@@ -125,7 +140,7 @@ namespace GridKit
         using ReecbData = Controller::ReecbData<RealT, IdxT>;
 
         const char data[] =
-            R"({
+          R"({
                "header": {
                    "format_version": 0.2,
                    "format_revision": 0,
@@ -169,8 +184,12 @@ namespace GridKit
         success *= result.format_revision == 0;
         success *= result.case_name == "Two-bus test case 1";
         success *= result.case_date_time == std::nullopt;
-        success *= result.case_description == "A two-bus test case for demonstrating the dynamics format";
-        success *= result.case_comments == "This case is set up to monitor the voltage at both buses and the machine angle and speed";
+        success *=
+          result.case_description
+          == "A two-bus test case for demonstrating the dynamics format";
+        success *= result.case_comments
+                   == "This case is set up to monitor the voltage at both "
+                      "buses and the machine angle and speed";
         success *= result.freq_base == 50.0;
         success *= result.va_base == 50.0e6;
 
@@ -192,86 +211,186 @@ namespace GridKit
         success *= result.bus[0].name == "Bus 1";
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
-        success *= std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv]) == 115.0;
-        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
-        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
+        success *=
+          std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv])
+          == 115.0;
+        success *= result.bus[0].monitored_variables.contains(
+          BusData::MonitorableVariables::Vr
+        );
+        success *= result.bus[0].monitored_variables.contains(
+          BusData::MonitorableVariables::Vi
+        );
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
-        success *= std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv]) == 115.0;
+        success *=
+          std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv])
+          == 115.0;
         success *= result.bus[1].monitored_variables.empty();
 
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::G]) == 0.0;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::Gmag]) == 0.01;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::Bmag]) == 0.02;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::tap]) == 1.05;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::phase]) == 0.1;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::R])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::X])
+          == 0.1;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::G])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::B])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::Gmag])
+          == 0.01;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::Bmag])
+          == 0.02;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::tap])
+          == 1.05;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::phase])
+          == 0.1;
         success *= result.branch[0].buses[BranchBuses::bus1] == 1;
         success *= result.branch[0].buses[BranchBuses::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "1";
         success *= result.branch[0].monitored_variables.empty();
 
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::p0]) == 1.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::q0]) == 0.05013;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::H]) == 3.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::D]) == 0.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Ra]) == 0.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdop]) == 7.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdopp]) == 0.04;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqop]) == 0.75;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqopp]) == 0.05;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xd]) == 2.1;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdp]) == 0.2;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdpp]) == 0.18;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xq]) == 0.5;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqp]) == 0.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqpp]) == 0.18;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xl]) == 0.15;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S10]) == 0.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12]) == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::p0])
+          == 1.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::q0])
+          == 0.05013;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::H])
+          == 3.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::D])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Ra])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdop])
+          == 7.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdopp])
+          == 0.04;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqop])
+          == 0.75;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqopp])
+          == 0.05;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xd])
+          == 2.1;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdp])
+          == 0.2;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdpp])
+          == 0.18;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xq])
+          == 0.5;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqp])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqpp])
+          == 0.18;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xl])
+          == 0.15;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S10])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12])
+          == 0.0;
         success *= result.genrou[0].buses[GenrouBuses::bus] == 1;
         success *= result.genrou[0].disambiguation_string == "1";
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
+        success *= result.genrou[0].monitored_variables.contains(
+          GenrouMonitorableVariables::delta
+        );
+        success *= result.genrou[0].monitored_variables.contains(
+          GenrouMonitorableVariables::omega
+        );
 
-        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::p0]) == 1.0;
-        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::q0]) == 0.05013;
-        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xd]) == 2.1;
-        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xq]) == 0.5;
+        success *=
+          std::get<RealT>(result.gensal[0].parameters[GensalParameters::p0])
+          == 1.0;
+        success *=
+          std::get<RealT>(result.gensal[0].parameters[GensalParameters::q0])
+          == 0.05013;
+        success *=
+          std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xd])
+          == 2.1;
+        success *=
+          std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xq])
+          == 0.5;
         success *= result.gensal[0].buses[GensalBuses::bus] == 1;
         success *= result.gensal[0].disambiguation_string == "2";
-        success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::delta);
-        success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::omega);
+        success *= result.gensal[0].monitored_variables.contains(
+          GensalMonitorableVariables::delta
+        );
+        success *= result.gensal[0].monitored_variables.contains(
+          GensalMonitorableVariables::omega
+        );
 
-        success *= std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::p0]) == 0.0;
-        success *= std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::q0]) == 0.0;
-        success *= std::get<IdxT>(result.regca[0].parameters[RegcaData::Parameters::mva]) == 100;
-        success *= std::get<bool>(result.regca[0].parameters[RegcaData::Parameters::sL]);
+        success *=
+          std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::p0])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::q0])
+          == 0.0;
+        success *=
+          std::get<IdxT>(result.regca[0].parameters[RegcaData::Parameters::mva])
+          == 100;
+        success *=
+          std::get<bool>(result.regca[0].parameters[RegcaData::Parameters::sL]);
         success *= result.regca[0].buses[RegcaData::Buses::bus] == 1;
         success *= result.regca[0].disambiguation_string == "CV1";
         success *= result.regca[0].signal_inputs.empty();
         success *= result.regca[0].signal_outputs.empty();
-        success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::ir);
-        success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::ii);
-        success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::p);
-        success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::q);
-        success *= std::get<RealT>(result.reecb[0].parameters[ReecbData::Parameters::mva]) == 50.0;
-        success *= std::get<bool>(result.reecb[0].parameters[ReecbData::Parameters::Pqflag]);
+        success *= result.regca[0].monitored_variables.contains(
+          RegcaData::MonitorableVariables::ir
+        );
+        success *= result.regca[0].monitored_variables.contains(
+          RegcaData::MonitorableVariables::ii
+        );
+        success *= result.regca[0].monitored_variables.contains(
+          RegcaData::MonitorableVariables::p
+        );
+        success *= result.regca[0].monitored_variables.contains(
+          RegcaData::MonitorableVariables::q
+        );
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbData::Parameters::mva]
+          )
+          == 50.0;
+        success *= std::get<bool>(
+          result.reecb[0].parameters[ReecbData::Parameters::Pqflag]
+        );
         success *= result.reecb[0].buses[ReecbData::Buses::bus] == 1;
         success *= result.reecb[0].disambiguation_string == "REE1";
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::iqcmd);
+          ReecbData::MonitorableVariables::iqcmd
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::ipcmd);
+          ReecbData::MonitorableVariables::ipcmd
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::vmeas);
+          ReecbData::MonitorableVariables::vmeas
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::pmeas);
+          ReecbData::MonitorableVariables::pmeas
+        );
 
         return success.report(__func__);
       }
@@ -287,7 +406,7 @@ namespace GridKit
         using RepcaData   = Controller::RepcaData<RealT, IdxT>;
 
         const char data[] =
-            R"({
+          R"({
                "header": {
                    "format_version": 0.2,
                    "format_revision": 0,
@@ -357,8 +476,12 @@ namespace GridKit
         success *= result.format_revision == 0;
         success *= result.case_name == "Two-bus test case 2";
         success *= result.case_date_time == std::nullopt;
-        success *= result.case_description == "A two-bus test case for demonstrating the dynamics format";
-        success *= result.case_comments == "This case is set up to monitor the voltage at both buses and the machine angle and speed";
+        success *=
+          result.case_description
+          == "A two-bus test case for demonstrating the dynamics format";
+        success *= result.case_comments
+                   == "This case is set up to monitor the voltage at both "
+                      "buses and the machine angle and speed";
         success *= result.freq_base == 60.0;
         success *= result.va_base == 100.0e6;
 
@@ -381,15 +504,23 @@ namespace GridKit
         success *= result.bus[0].name == "Bus 1";
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
-        success *= std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv]) == 115.0;
-        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
-        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
+        success *=
+          std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv])
+          == 115.0;
+        success *= result.bus[0].monitored_variables.contains(
+          BusData::MonitorableVariables::Vr
+        );
+        success *= result.bus[0].monitored_variables.contains(
+          BusData::MonitorableVariables::Vi
+        );
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
-        success *= std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv]) == 115.0;
+        success *=
+          std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv])
+          == 115.0;
         success *= result.bus[1].monitored_variables.empty();
 
         success *= result.signal[0].signal_id == 1;
@@ -415,279 +546,807 @@ namespace GridKit
         success *= result.signal[27].signal_id == 28;
         success *= result.signal[27].name == "Active Current Command";
 
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::G]) == 0.0;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::tap]) == 1.05;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::phase]) == 0.1;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::R])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::X])
+          == 0.1;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::G])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::B])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::tap])
+          == 1.05;
+        success *=
+          std::get<RealT>(result.branch[0].parameters[BranchParameters::phase])
+          == 0.1;
         success *= result.branch[0].buses[BranchBuses::bus1] == 1;
         success *= result.branch[0].buses[BranchBuses::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "BR1";
         success *= result.branch[0].monitored_variables.empty();
 
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::p0]) == 1.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::q0]) == 0.05013;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::H]) == 3.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::D]) == 0.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Ra]) == 0.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdop]) == 7.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdopp]) == 0.04;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqop]) == 0.75;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqopp]) == 0.05;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xd]) == 2.1;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdp]) == 0.2;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdpp]) == 0.18;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xq]) == 0.5;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqp]) == 0.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqpp]) == 0.18;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xl]) == 0.15;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S10]) == 0.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12]) == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::p0])
+          == 1.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::q0])
+          == 0.05013;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::H])
+          == 3.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::D])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Ra])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdop])
+          == 7.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdopp])
+          == 0.04;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqop])
+          == 0.75;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqopp])
+          == 0.05;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xd])
+          == 2.1;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdp])
+          == 0.2;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdpp])
+          == 0.18;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xq])
+          == 0.5;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqp])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqpp])
+          == 0.18;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xl])
+          == 0.15;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S10])
+          == 0.0;
+        success *=
+          std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12])
+          == 0.0;
         success *= result.genrou[0].buses[GenrouBuses::bus] == 1;
-        success *= result.genrou[0].signal_outputs[GenrouSignalOutputs::speed] == 1;
-        success *= result.genrou[0].signal_inputs[GenrouSignalInputs::pmech] == 2;
+        success *=
+          result.genrou[0].signal_outputs[GenrouSignalOutputs::speed] == 1;
+        success *=
+          result.genrou[0].signal_inputs[GenrouSignalInputs::pmech] == 2;
         success *= result.genrou[0].signal_inputs[GenrouSignalInputs::efd] == 3;
         success *= result.genrou[0].disambiguation_string == "DV1";
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
+        success *= result.genrou[0].monitored_variables.contains(
+          GenrouMonitorableVariables::delta
+        );
+        success *= result.genrou[0].monitored_variables.contains(
+          GenrouMonitorableVariables::omega
+        );
 
-        success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::R]) == 0.05;
-        success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::T1]) == 0.5;
-        success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::T2]) == 2.5;
-        success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::T3]) == 7.5;
-        success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Pvmax]) == 1;
-        success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Pvmin]) == 0;
-        success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Dt]) == 0;
-        success *= result.gov[0].signal_inputs[Governor::Tgov1SignalInputs::speed] == 1;
-        success *= result.gov[0].signal_inputs[Governor::Tgov1SignalInputs::pref] == 10;
-        success *= result.gov[0].signal_outputs[Governor::Tgov1SignalOutputs::pmech] == 2;
+        success *=
+          std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::R]
+          )
+          == 0.05;
+        success *= std::get<RealT>(
+                     result.gov[0].parameters[Governor::Tgov1Parameters::T1]
+                   )
+                   == 0.5;
+        success *= std::get<RealT>(
+                     result.gov[0].parameters[Governor::Tgov1Parameters::T2]
+                   )
+                   == 2.5;
+        success *= std::get<RealT>(
+                     result.gov[0].parameters[Governor::Tgov1Parameters::T3]
+                   )
+                   == 7.5;
+        success *= std::get<RealT>(
+                     result.gov[0].parameters[Governor::Tgov1Parameters::Pvmax]
+                   )
+                   == 1;
+        success *= std::get<RealT>(
+                     result.gov[0].parameters[Governor::Tgov1Parameters::Pvmin]
+                   )
+                   == 0;
+        success *= std::get<RealT>(
+                     result.gov[0].parameters[Governor::Tgov1Parameters::Dt]
+                   )
+                   == 0;
+        success *=
+          result.gov[0].signal_inputs[Governor::Tgov1SignalInputs::speed] == 1;
+        success *=
+          result.gov[0].signal_inputs[Governor::Tgov1SignalInputs::pref] == 10;
+        success *=
+          result.gov[0].signal_outputs[Governor::Tgov1SignalOutputs::pmech]
+          == 2;
         success *= result.gov[0].disambiguation_string == "DV2";
 
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Tr]) == 0.0;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Ka]) == 40.0;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Ta]) == 0.1;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Tb]) == 0.0;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Tc]) == 0.0;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Vrmax]) == 1.0;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Vrmin]) == -1.0;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Ke]) == 0.1;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Te]) == 0.5;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Kf]) == 0.05;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Tf1]) == 0.7;
-        success *= !std::get<bool>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Spdmlt]);
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::E1]) == 2.8;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Se1]) == 0.08;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::E2]) == 3.7;
-        success *= std::get<RealT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::Se2]) == 0.33;
-        success *= std::get<IdxT>(result.esdc1a[0].parameters[Esdc1aData::Parameters::UEL]) == 0;
-        success *= std::get<bool>(result.esdc1a[0].parameters[Esdc1aData::Parameters::exclim]);
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Tr]
+                   )
+                   == 0.0;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Ka]
+                   )
+                   == 40.0;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Ta]
+                   )
+                   == 0.1;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Tb]
+                   )
+                   == 0.0;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Tc]
+                   )
+                   == 0.0;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Vrmax]
+                   )
+                   == 1.0;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Vrmin]
+                   )
+                   == -1.0;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Ke]
+                   )
+                   == 0.1;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Te]
+                   )
+                   == 0.5;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Kf]
+                   )
+                   == 0.05;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Tf1]
+                   )
+                   == 0.7;
+        success *= !std::get<bool>(
+          result.esdc1a[0].parameters[Esdc1aData::Parameters::Spdmlt]
+        );
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::E1]
+                   )
+                   == 2.8;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Se1]
+                   )
+                   == 0.08;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::E2]
+                   )
+                   == 3.7;
+        success *= std::get<RealT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::Se2]
+                   )
+                   == 0.33;
+        success *= std::get<IdxT>(
+                     result.esdc1a[0].parameters[Esdc1aData::Parameters::UEL]
+                   )
+                   == 0;
+        success *= std::get<bool>(
+          result.esdc1a[0].parameters[Esdc1aData::Parameters::exclim]
+        );
         success *= result.esdc1a[0].buses[Esdc1aData::Buses::bus] == 1;
-        success *= result.esdc1a[0].signal_inputs[Esdc1aData::SignalInputs::speed] == 1;
-        success *= result.esdc1a[0].signal_inputs[Esdc1aData::SignalInputs::vref] == 4;
-        success *= result.esdc1a[0].signal_inputs[Esdc1aData::SignalInputs::vs] == 5;
-        success *= result.esdc1a[0].signal_inputs[Esdc1aData::SignalInputs::vuel] == 6;
-        success *= result.esdc1a[0].signal_outputs[Esdc1aData::SignalOutputs::efd] == 3;
+        success *=
+          result.esdc1a[0].signal_inputs[Esdc1aData::SignalInputs::speed] == 1;
+        success *=
+          result.esdc1a[0].signal_inputs[Esdc1aData::SignalInputs::vref] == 4;
+        success *=
+          result.esdc1a[0].signal_inputs[Esdc1aData::SignalInputs::vs] == 5;
+        success *=
+          result.esdc1a[0].signal_inputs[Esdc1aData::SignalInputs::vuel] == 6;
+        success *=
+          result.esdc1a[0].signal_outputs[Esdc1aData::SignalOutputs::efd] == 3;
         success *= result.esdc1a[0].disambiguation_string == "DV5";
-        success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::efd);
-        success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::vc);
-        success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::vr);
-        success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::vf);
-        success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::se);
-        success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::vfe);
+        success *= result.esdc1a[0].monitored_variables.contains(
+          Esdc1aData::MonitorableVariables::efd
+        );
+        success *= result.esdc1a[0].monitored_variables.contains(
+          Esdc1aData::MonitorableVariables::vc
+        );
+        success *= result.esdc1a[0].monitored_variables.contains(
+          Esdc1aData::MonitorableVariables::vr
+        );
+        success *= result.esdc1a[0].monitored_variables.contains(
+          Esdc1aData::MonitorableVariables::vf
+        );
+        success *= result.esdc1a[0].monitored_variables.contains(
+          Esdc1aData::MonitorableVariables::se
+        );
+        success *= result.esdc1a[0].monitored_variables.contains(
+          Esdc1aData::MonitorableVariables::vfe
+        );
 
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::R]) == 0.045;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::T1]) == 0.42;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::T2]) == 0.12;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::T3]) == 3.2;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::At]) == 0.95;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Kt]) == 2.2;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Vmax]) == 1.05;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Vmin]) == 0.15;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Dturb]) == 0.02;
-        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Trate]) == 120.0;
-        success *= result.gastpti[0].signal_inputs[GastPtiData::SignalInputs::speed] == 1;
-        success *= result.gastpti[0].signal_inputs[GastPtiData::SignalInputs::pref] == 10;
-        success *= result.gastpti[0].signal_outputs[GastPtiData::SignalOutputs::pmech] == 2;
+        success *= std::get<RealT>(
+                     result.gastpti[0].parameters[GastPtiData::Parameters::R]
+                   )
+                   == 0.045;
+        success *= std::get<RealT>(
+                     result.gastpti[0].parameters[GastPtiData::Parameters::T1]
+                   )
+                   == 0.42;
+        success *= std::get<RealT>(
+                     result.gastpti[0].parameters[GastPtiData::Parameters::T2]
+                   )
+                   == 0.12;
+        success *= std::get<RealT>(
+                     result.gastpti[0].parameters[GastPtiData::Parameters::T3]
+                   )
+                   == 3.2;
+        success *= std::get<RealT>(
+                     result.gastpti[0].parameters[GastPtiData::Parameters::At]
+                   )
+                   == 0.95;
+        success *= std::get<RealT>(
+                     result.gastpti[0].parameters[GastPtiData::Parameters::Kt]
+                   )
+                   == 2.2;
+        success *= std::get<RealT>(
+                     result.gastpti[0].parameters[GastPtiData::Parameters::Vmax]
+                   )
+                   == 1.05;
+        success *= std::get<RealT>(
+                     result.gastpti[0].parameters[GastPtiData::Parameters::Vmin]
+                   )
+                   == 0.15;
+        success *=
+          std::get<RealT>(
+            result.gastpti[0].parameters[GastPtiData::Parameters::Dturb]
+          )
+          == 0.02;
+        success *=
+          std::get<RealT>(
+            result.gastpti[0].parameters[GastPtiData::Parameters::Trate]
+          )
+          == 120.0;
+        success *=
+          result.gastpti[0].signal_inputs[GastPtiData::SignalInputs::speed]
+          == 1;
+        success *=
+          result.gastpti[0].signal_inputs[GastPtiData::SignalInputs::pref]
+          == 10;
+        success *=
+          result.gastpti[0].signal_outputs[GastPtiData::SignalOutputs::pmech]
+          == 2;
         success *= result.gastpti[0].disambiguation_string == "DV7";
-        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::pmech);
-        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::xvalve);
-        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::xflow);
-        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::xtemp);
-        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::vload);
-        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::vtemp);
+        success *= result.gastpti[0].monitored_variables.contains(
+          GastPtiData::MonitorableVariables::pmech
+        );
+        success *= result.gastpti[0].monitored_variables.contains(
+          GastPtiData::MonitorableVariables::xvalve
+        );
+        success *= result.gastpti[0].monitored_variables.contains(
+          GastPtiData::MonitorableVariables::xflow
+        );
+        success *= result.gastpti[0].monitored_variables.contains(
+          GastPtiData::MonitorableVariables::xtemp
+        );
+        success *= result.gastpti[0].monitored_variables.contains(
+          GastPtiData::MonitorableVariables::vload
+        );
+        success *= result.gastpti[0].monitored_variables.contains(
+          GastPtiData::MonitorableVariables::vtemp
+        );
 
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Trate]) == 80.0;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Rperm]) == 0.05;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Rtemp]) == 0.35;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tr]) == 5.0;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tf]) == 0.05;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tg]) == 0.5;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Velm]) == 0.2;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gmax]) == 0.98;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gmin]) == 0.02;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tw]) == 1.2;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::At]) == 1.1;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Dturb]) == 0.4;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Qnl]) == 0.08;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tn]) == 0.7;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tnp]) == 1.4;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::db1]) == 0.01;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::db2]) == 0.02;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Hdam]) == 1.05;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv0]) == 0.0;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv1]) == 0.2;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv2]) == 0.4;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv3]) == 0.6;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv4]) == 0.8;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv5]) == 1.0;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Pgv0]) == 0.0;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Pgv1]) == 0.15;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Pgv2]) == 0.42;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Pgv3]) == 0.66;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Pgv4]) == 0.85;
-        success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Pgv5]) == 1.0;
-        success *= result.hygov[0].signal_inputs[HygovData::SignalInputs::speed] == 1;
-        success *= result.hygov[0].signal_inputs[HygovData::SignalInputs::pref] == 8;
-        success *= result.hygov[0].signal_inputs[HygovData::SignalInputs::paux] == 9;
-        success *= result.hygov[0].signal_outputs[HygovData::SignalOutputs::pmech] == 7;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Trate]
+                   )
+                   == 80.0;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Rperm]
+                   )
+                   == 0.05;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Rtemp]
+                   )
+                   == 0.35;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tr])
+          == 5.0;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tf])
+          == 0.05;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tg])
+          == 0.5;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Velm]
+                   )
+                   == 0.2;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Gmax]
+                   )
+                   == 0.98;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Gmin]
+                   )
+                   == 0.02;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tw])
+          == 1.2;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::At])
+          == 1.1;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Dturb]
+                   )
+                   == 0.4;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Qnl]
+          )
+          == 0.08;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tn])
+          == 0.7;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Tnp]
+          )
+          == 1.4;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::db1]
+          )
+          == 0.01;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::db2]
+          )
+          == 0.02;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Hdam]
+                   )
+                   == 1.05;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv0]
+          )
+          == 0.0;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv1]
+          )
+          == 0.2;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv2]
+          )
+          == 0.4;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv3]
+          )
+          == 0.6;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv4]
+          )
+          == 0.8;
+        success *=
+          std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Gv5]
+          )
+          == 1.0;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Pgv0]
+                   )
+                   == 0.0;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Pgv1]
+                   )
+                   == 0.15;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Pgv2]
+                   )
+                   == 0.42;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Pgv3]
+                   )
+                   == 0.66;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Pgv4]
+                   )
+                   == 0.85;
+        success *= std::get<RealT>(
+                     result.hygov[0].parameters[HygovData::Parameters::Pgv5]
+                   )
+                   == 1.0;
+        success *=
+          result.hygov[0].signal_inputs[HygovData::SignalInputs::speed] == 1;
+        success *=
+          result.hygov[0].signal_inputs[HygovData::SignalInputs::pref] == 8;
+        success *=
+          result.hygov[0].signal_inputs[HygovData::SignalInputs::paux] == 9;
+        success *=
+          result.hygov[0].signal_outputs[HygovData::SignalOutputs::pmech] == 7;
         success *= result.hygov[0].disambiguation_string == "DV6";
-        success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::pmech);
-        success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::filter);
         success *= result.hygov[0].monitored_variables.contains(
-            HygovData::MonitorableVariables::desiredgate);
-        success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::gate);
-        success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::flow);
-        success *= result.hygov[0].monitored_variables.contains(HygovData::MonitorableVariables::head);
+          HygovData::MonitorableVariables::pmech
+        );
+        success *= result.hygov[0].monitored_variables.contains(
+          HygovData::MonitorableVariables::filter
+        );
+        success *= result.hygov[0].monitored_variables.contains(
+          HygovData::MonitorableVariables::desiredgate
+        );
+        success *= result.hygov[0].monitored_variables.contains(
+          HygovData::MonitorableVariables::gate
+        );
+        success *= result.hygov[0].monitored_variables.contains(
+          HygovData::MonitorableVariables::flow
+        );
+        success *= result.hygov[0].monitored_variables.contains(
+          HygovData::MonitorableVariables::head
+        );
 
-        success *= std::get<IdxT>(result.repca[0].parameters[RepcaData::Parameters::mva]) == 50;
-        success *= !std::get<bool>(result.repca[0].parameters[RepcaData::Parameters::VcompFlag]);
-        success *= std::get<bool>(result.repca[0].parameters[RepcaData::Parameters::RefFlag]);
-        success *= std::get<bool>(result.repca[0].parameters[RepcaData::Parameters::Freqflag]);
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tfltr]) == 0.2;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Vfrz]) == 0.65;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Rc]) == 0.02;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Xc]) == 0.03;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Kc]) == 0.4;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::dbdlow]) == -0.02;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::dbdupper]) == 0.03;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::emax]) == 0.8;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::emin]) == -0.7;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Kp]) == 2.0;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Ki]) == 3.0;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Qmax]) == 0.9;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Qmin]) == -0.8;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tft]) == 0.2;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tfv]) == 1.5;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tp]) == 0.4;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::fdbd1]) == -0.01;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::fdbd2]) == 0.015;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Ddn]) == 2.0;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Dup]) == 1.0;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::femax]) == 0.6;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::femin]) == -0.5;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Kpg]) == 1.7;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Kig]) == 1.8;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Pmax]) == 1.2;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Pmin]) == 0.1;
-        success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tlag]) == 0.5;
+        success *=
+          std::get<IdxT>(result.repca[0].parameters[RepcaData::Parameters::mva])
+          == 50;
+        success *= !std::get<bool>(
+          result.repca[0].parameters[RepcaData::Parameters::VcompFlag]
+        );
+        success *= std::get<bool>(
+          result.repca[0].parameters[RepcaData::Parameters::RefFlag]
+        );
+        success *= std::get<bool>(
+          result.repca[0].parameters[RepcaData::Parameters::Freqflag]
+        );
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::Tfltr]
+                   )
+                   == 0.2;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::Vfrz]
+                   )
+                   == 0.65;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Rc])
+          == 0.02;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Xc])
+          == 0.03;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Kc])
+          == 0.4;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::dbdlow]
+                   )
+                   == -0.02;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::dbdupper]
+                   )
+                   == 0.03;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::emax]
+                   )
+                   == 0.8;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::emin]
+                   )
+                   == -0.7;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Kp])
+          == 2.0;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Ki])
+          == 3.0;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::Qmax]
+                   )
+                   == 0.9;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::Qmin]
+                   )
+                   == -0.8;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tft]
+          )
+          == 0.2;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tfv]
+          )
+          == 1.5;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tp])
+          == 0.4;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::fdbd1]
+                   )
+                   == -0.01;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::fdbd2]
+                   )
+                   == 0.015;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Ddn]
+          )
+          == 2.0;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Dup]
+          )
+          == 1.0;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::femax]
+                   )
+                   == 0.6;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::femin]
+                   )
+                   == -0.5;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Kpg]
+          )
+          == 1.7;
+        success *=
+          std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Kig]
+          )
+          == 1.8;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::Pmax]
+                   )
+                   == 1.2;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::Pmin]
+                   )
+                   == 0.1;
+        success *= std::get<RealT>(
+                     result.repca[0].parameters[RepcaData::Parameters::Tlag]
+                   )
+                   == 0.5;
         success *= result.repca[0].buses[RepcaData::Buses::bus] == 1;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::ir] == 11;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::ii] == 12;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::p] == 13;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::q] == 14;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::freq] == 15;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::vref] == 16;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::pref] == 17;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::qref] == 18;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::freqref] == 19;
-        success *= result.repca[0].signal_outputs[RepcaData::SignalOutputs::qext] == 20;
-        success *= result.repca[0].signal_outputs[RepcaData::SignalOutputs::pext] == 21;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::ir] == 11;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::ii] == 12;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::p] == 13;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::q] == 14;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::freq] == 15;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::vref] == 16;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::pref] == 17;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::qref] == 18;
+        success *=
+          result.repca[0].signal_inputs[RepcaData::SignalInputs::freqref] == 19;
+        success *=
+          result.repca[0].signal_outputs[RepcaData::SignalOutputs::qext] == 20;
+        success *=
+          result.repca[0].signal_outputs[RepcaData::SignalOutputs::pext] == 21;
         success *= result.repca[0].disambiguation_string == "PC1";
-        success *= result.repca[0].monitored_variables.contains(RepcaData::MonitorableVariables::qext);
-        success *= result.repca[0].monitored_variables.contains(RepcaData::MonitorableVariables::pext);
-        success *= result.repca[0].monitored_variables.contains(RepcaData::MonitorableVariables::vmeas);
-        success *= result.repca[0].monitored_variables.contains(RepcaData::MonitorableVariables::qmeas);
-        success *= result.repca[0].monitored_variables.contains(RepcaData::MonitorableVariables::pmeas);
+        success *= result.repca[0].monitored_variables.contains(
+          RepcaData::MonitorableVariables::qext
+        );
+        success *= result.repca[0].monitored_variables.contains(
+          RepcaData::MonitorableVariables::pext
+        );
+        success *= result.repca[0].monitored_variables.contains(
+          RepcaData::MonitorableVariables::vmeas
+        );
+        success *= result.repca[0].monitored_variables.contains(
+          RepcaData::MonitorableVariables::qmeas
+        );
+        success *= result.repca[0].monitored_variables.contains(
+          RepcaData::MonitorableVariables::pmeas
+        );
 
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]) == 0.0;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]) == 50.0;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]) == 0.04;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ke]) == -0.06;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Te]) == 0.6;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Kf]) == 0.09;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tf]) == 1.46;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmin]) == -1.0;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmax]) == 1.0;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::E1]) == 2.8;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::E2]) == 3.373;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Se1]) == 0.04;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]) == 0.33;
-        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim]) == 0.0;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]
+                   )
+                   == 0.0;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]
+                   )
+                   == 50.0;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]
+                   )
+                   == 0.04;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ke]
+                   )
+                   == -0.06;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::Te]
+                   )
+                   == 0.6;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::Kf]
+                   )
+                   == 0.09;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tf]
+                   )
+                   == 1.46;
+        success *=
+          std::get<RealT>(
+            result.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmin]
+          )
+          == -1.0;
+        success *=
+          std::get<RealT>(
+            result.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmax]
+          )
+          == 1.0;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::E1]
+                   )
+                   == 2.8;
+        success *= std::get<RealT>(
+                     result.exciter[0].parameters[Exciter::Ieeet1Parameters::E2]
+                   )
+                   == 3.373;
+        success *=
+          std::get<RealT>(
+            result.exciter[0].parameters[Exciter::Ieeet1Parameters::Se1]
+          )
+          == 0.04;
+        success *=
+          std::get<RealT>(
+            result.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]
+          )
+          == 0.33;
+        success *=
+          std::get<RealT>(
+            result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim]
+          )
+          == 0.0;
         success *= result.exciter[0].buses[Exciter::Ieeet1Buses::bus] == 1;
-        success *= result.exciter[0].signal_inputs[Exciter::Ieeet1SignalInputs::speed] == 1;
-        success *= result.exciter[0].signal_outputs[Exciter::Ieeet1SignalOutputs::efd] == 3;
+        success *=
+          result.exciter[0].signal_inputs[Exciter::Ieeet1SignalInputs::speed]
+          == 1;
+        success *=
+          result.exciter[0].signal_outputs[Exciter::Ieeet1SignalOutputs::efd]
+          == 3;
         success *= result.exciter[0].disambiguation_string == "DV3";
 
-        success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::Ta]) == 0.1;
-        success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::Tb]) == 0.5;
-        success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::Te]) == 0.8;
-        success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::K]) == 10.0;
-        success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::Efdmax]) == 5.0;
-        success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::Efdmin]) == -5.0;
+        success *=
+          std::get<RealT>(
+            result.sexspti[0].parameters[Exciter::SexsPtiParameters::Ta]
+          )
+          == 0.1;
+        success *=
+          std::get<RealT>(
+            result.sexspti[0].parameters[Exciter::SexsPtiParameters::Tb]
+          )
+          == 0.5;
+        success *=
+          std::get<RealT>(
+            result.sexspti[0].parameters[Exciter::SexsPtiParameters::Te]
+          )
+          == 0.8;
+        success *= std::get<RealT>(
+                     result.sexspti[0].parameters[Exciter::SexsPtiParameters::K]
+                   )
+                   == 10.0;
+        success *=
+          std::get<RealT>(
+            result.sexspti[0].parameters[Exciter::SexsPtiParameters::Efdmax]
+          )
+          == 5.0;
+        success *=
+          std::get<RealT>(
+            result.sexspti[0].parameters[Exciter::SexsPtiParameters::Efdmin]
+          )
+          == -5.0;
         success *= result.sexspti[0].buses[Exciter::SexsPtiBuses::bus] == 1;
-        success *= result.sexspti[0].signal_outputs[Exciter::SexsPtiSignalOutputs::efd] == 3;
+        success *=
+          result.sexspti[0].signal_outputs[Exciter::SexsPtiSignalOutputs::efd]
+          == 3;
         success *= result.sexspti[0].disambiguation_string == "DV4";
 
-        using ReecbData    = Controller::ReecbData<RealT, IdxT>;
-        using ReecbParams  = ReecbData::Parameters;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::mva]) == 100.0;
-        success           *= !std::get<bool>(result.reecb[0].parameters[ReecbParams::PfFlag]);
-        success           *= std::get<bool>(result.reecb[0].parameters[ReecbParams::VFlag]);
-        success           *= std::get<bool>(result.reecb[0].parameters[ReecbParams::QFlag]);
-        success           *= std::get<bool>(result.reecb[0].parameters[ReecbParams::Pqflag]);
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Trv]) == 0.02;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tp]) == 0.05;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vref0]) == 1.0;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vdip]) == 0.85;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vup]) == 1.15;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::dbd1]) == -0.01;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::dbd2]) == 0.01;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::kqv]) == 5.0;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Iql1]) == -1.1;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Iqh1]) == 1.1;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Qmax]) == 0.436;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Qmin]) == -0.436;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kqp]) == 0.1;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kqi]) == 0.2;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vmax]) == 1.1;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vmin]) == 0.9;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kvp]) == 18.0;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kvi]) == 5.0;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tiq]) == 0.02;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tpord]) == 0.02;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::dPmax]) == 99.0;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::dPmin]) == -99.0;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Pmax]) == 1.0;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Pmin]) == 0.0;
-        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Imax]) == 1.3;
-        success           *= result.reecb[0].buses[ReecbData::Buses::bus] == 1;
-        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::pe] == 22;
-        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::qgen] == 23;
-        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::qext] == 24;
-        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::pfaref] == 25;
-        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::pref] == 26;
-        success           *= result.reecb[0].signal_outputs[ReecbData::SignalOutputs::iqcmd] == 27;
-        success           *= result.reecb[0].signal_outputs[ReecbData::SignalOutputs::ipcmd] == 28;
-        success           *= result.reecb[0].disambiguation_string == "EC1";
-        success           *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::iqcmd);
+        using ReecbData   = Controller::ReecbData<RealT, IdxT>;
+        using ReecbParams = ReecbData::Parameters;
+        success *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::mva])
+                   == 100.0;
+        success *=
+          !std::get<bool>(result.reecb[0].parameters[ReecbParams::PfFlag]);
+        success *=
+          std::get<bool>(result.reecb[0].parameters[ReecbParams::VFlag]);
+        success *=
+          std::get<bool>(result.reecb[0].parameters[ReecbParams::QFlag]);
+        success *=
+          std::get<bool>(result.reecb[0].parameters[ReecbParams::Pqflag]);
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Trv]) == 0.02;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tp]) == 0.05;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vref0])
+          == 1.0;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vdip])
+          == 0.85;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vup]) == 1.15;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::dbd1])
+          == -0.01;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::dbd2])
+          == 0.01;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::kqv]) == 5.0;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Iql1])
+          == -1.1;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Iqh1]) == 1.1;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Qmax])
+          == 0.436;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Qmin])
+          == -0.436;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kqp]) == 0.1;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kqi]) == 0.2;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vmax]) == 1.1;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vmin]) == 0.9;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kvp]) == 18.0;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kvi]) == 5.0;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tiq]) == 0.02;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tpord])
+          == 0.02;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::dPmax])
+          == 99.0;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::dPmin])
+          == -99.0;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Pmax]) == 1.0;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Pmin]) == 0.0;
+        success *=
+          std::get<RealT>(result.reecb[0].parameters[ReecbParams::Imax]) == 1.3;
+        success *= result.reecb[0].buses[ReecbData::Buses::bus] == 1;
+        success *=
+          result.reecb[0].signal_inputs[ReecbData::SignalInputs::pe] == 22;
+        success *=
+          result.reecb[0].signal_inputs[ReecbData::SignalInputs::qgen] == 23;
+        success *=
+          result.reecb[0].signal_inputs[ReecbData::SignalInputs::qext] == 24;
+        success *=
+          result.reecb[0].signal_inputs[ReecbData::SignalInputs::pfaref] == 25;
+        success *=
+          result.reecb[0].signal_inputs[ReecbData::SignalInputs::pref] == 26;
+        success *=
+          result.reecb[0].signal_outputs[ReecbData::SignalOutputs::iqcmd] == 27;
+        success *=
+          result.reecb[0].signal_outputs[ReecbData::SignalOutputs::ipcmd] == 28;
+        success *= result.reecb[0].disambiguation_string == "EC1";
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::ipcmd);
+          ReecbData::MonitorableVariables::iqcmd
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::vmeas);
+          ReecbData::MonitorableVariables::ipcmd
+        );
         success *= result.reecb[0].monitored_variables.contains(
-            ReecbData::MonitorableVariables::pmeas);
+          ReecbData::MonitorableVariables::vmeas
+        );
+        success *= result.reecb[0].monitored_variables.contains(
+          ReecbData::MonitorableVariables::pmeas
+        );
 
         return success.report(__func__);
       }

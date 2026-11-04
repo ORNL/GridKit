@@ -123,7 +123,9 @@ namespace GridKit
         buffer_.clear();
         appendHeader(buffer_, sink);
         buffer_ += '\n';
-        sink.os->write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
+        sink.os->write(
+          buffer_.data(), static_cast<std::streamsize>(buffer_.size())
+        );
       }
 
       /**
@@ -133,9 +135,9 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
-          std::visit([this](auto&& sink)
-                     { this->printFullHeader(sink); },
-                     sink);
+          std::visit(
+            [this](auto&& sink) { this->printFullHeader(sink); }, sink
+          );
         }
       }
 
@@ -161,7 +163,9 @@ namespace GridKit
           append(buffer_, sink);
           buffer_ += '\n';
         }
-        sink.os->write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
+        sink.os->write(
+          buffer_.data(), static_cast<std::streamsize>(buffer_.size())
+        );
       }
 
       /**
@@ -171,9 +175,7 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
-          std::visit([this](auto&& sink)
-                     { this->printFull(sink); },
-                     sink);
+          std::visit([this](auto&& sink) { this->printFull(sink); }, sink);
         }
         ++sample_;
       }
@@ -186,7 +188,9 @@ namespace GridKit
       {
         buffer_.clear();
         appendFooter(buffer_, sink);
-        sink.os->write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
+        sink.os->write(
+          buffer_.data(), static_cast<std::streamsize>(buffer_.size())
+        );
       }
 
       /**
@@ -196,9 +200,9 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
-          std::visit([this](auto&& sink)
-                     { this->printFullFooter(sink); },
-                     sink);
+          std::visit(
+            [this](auto&& sink) { this->printFullFooter(sink); }, sink
+          );
         }
       }
 
@@ -209,7 +213,8 @@ namespace GridKit
       template <typename SinkT>
       void appendHeader(std::string& out, const SinkT& sink) const
       {
-        if constexpr (SinkT::format == Format::CSV && SinkT::layout == Layout::WIDE)
+        if constexpr (SinkT::format == Format::CSV
+                      && SinkT::layout == Layout::WIDE)
         {
           out += "t";
           for (auto&& entry : entries_)
@@ -264,7 +269,8 @@ namespace GridKit
           const Entry* previous = nullptr;
           for (auto&& entry : entries_)
           {
-            if (previous && previous->device_class == entry.device_class && previous->id == entry.id)
+            if (previous && previous->device_class == entry.device_class
+                && previous->id == entry.id)
             {
               out += ",\n      \"";
             }
@@ -301,7 +307,8 @@ namespace GridKit
           const Entry* previous = nullptr;
           for (auto&& entry : entries_)
           {
-            if (!previous || previous->device_class != entry.device_class || previous->id != entry.id)
+            if (!previous || previous->device_class != entry.device_class
+                || previous->id != entry.id)
             {
               out += "    ";
               out += entry.device_class;
@@ -324,7 +331,13 @@ namespace GridKit
        * @brief Append one record of the long layout
        */
       template <typename SinkT>
-      void appendRecord(std::string& out, const SinkT& sink, const std::string& sample, const std::string& t, const Entry& entry) const
+      void appendRecord(
+        std::string&       out,
+        const SinkT&       sink,
+        const std::string& sample,
+        const std::string& t,
+        const Entry&       entry
+      ) const
       {
         if constexpr (SinkT::format == Format::CSV)
         {
@@ -426,8 +439,7 @@ namespace GridKit
          * @brief Version for opening an output stream for the given file
          */
         Sink(const std::string& fileName, const std::string& delimiter)
-          : file_name(fileName),
-            delim(delimiter)
+          : file_name(fileName), delim(delimiter)
         {
         }
 
@@ -471,12 +483,13 @@ namespace GridKit
       };
 
       /// Variant type for all possible sink types
-      using SinkVariant = std::variant<Sink<Format::CSV, Layout::WIDE>,
-                                       Sink<Format::JSON, Layout::WIDE>,
-                                       Sink<Format::YAML, Layout::WIDE>,
-                                       Sink<Format::CSV, Layout::LONG>,
-                                       Sink<Format::JSON, Layout::LONG>,
-                                       Sink<Format::YAML, Layout::LONG>>;
+      using SinkVariant = std::variant<
+        Sink<Format::CSV, Layout::WIDE>,
+        Sink<Format::JSON, Layout::WIDE>,
+        Sink<Format::YAML, Layout::WIDE>,
+        Sink<Format::CSV, Layout::LONG>,
+        Sink<Format::JSON, Layout::LONG>,
+        Sink<Format::YAML, Layout::LONG>>;
 
       /**
        * @brief Construct the sink type whose format and layout match the spec
@@ -503,9 +516,14 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
-          std::visit([this](auto&& sink)
-                     { (void) this; sink.start(); },
-                     sink);
+          std::visit(
+            [this](auto&& sink)
+            {
+              (void) this;
+              sink.start();
+            },
+            sink
+          );
         }
       }
 
@@ -516,9 +534,14 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
-          std::visit([this](auto&& sink)
-                     { (void) this; sink.stop(); },
-                     sink);
+          std::visit(
+            [this](auto&& sink)
+            {
+              (void) this;
+              sink.stop();
+            },
+            sink
+          );
         }
       }
 

@@ -27,9 +27,10 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       template <typename scalar_type, typename index_type>
-      SexsPti<scalar_type, index_type>::SexsPti(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      SexsPti<scalar_type, index_type>::SexsPti(
+        BusT* bus, const ModelDataT& data
+      )
+        : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
       {
         initModelParams(data);
         initializeMonitor();
@@ -42,7 +43,9 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      int SexsPti<scalar_type, index_type>::setGridKitComponentID(
+        IdxT component_id
+      )
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -71,12 +74,14 @@ namespace GridKit
 
         wb_.resize(2);
 
-        const auto signal_size = Utilities::enum_size<SexsPtiExternalVariables>();
+        const auto signal_size =
+          Utilities::enum_size<SexsPtiExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
-        if (auto efd_port = ports_.out.template port<SexsPtiSignalOutputs::efd>())
+        if (auto efd_port =
+              ports_.out.template port<SexsPtiSignalOutputs::efd>())
         {
           efd_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
         }
@@ -86,7 +91,8 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      Model::ConfigurationChecks SexsPti<scalar_type, index_type>::verify() const
+      Model::ConfigurationChecks SexsPti<scalar_type, index_type>::verify(
+      ) const
       {
         Model::ConfigurationChecks checks("SexsPti");
 
@@ -122,19 +128,25 @@ namespace GridKit
         }
 
         auto check_attached_signal =
-            [&]<SexsPtiSignalInputs input>(const char* name)
+          [&]<SexsPtiSignalInputs input>(const char* name)
         {
           auto port = ports_.in.template port<input>();
           if (port.connected() && !port.linked())
           {
-            checks.fail(std::format("{} signal attached with no linked source", name));
+            checks.fail(
+              std::format("{} signal attached with no linked source", name)
+            );
           }
         };
 
-        check_attached_signal.template operator()<SexsPtiSignalInputs::vref>("vref");
-        check_attached_signal.template operator()<SexsPtiSignalInputs::vs>("vs");
-        check_attached_signal.template operator()<SexsPtiSignalInputs::vuel>("vuel");
-        check_attached_signal.template operator()<SexsPtiSignalInputs::voel>("voel");
+        check_attached_signal.template operator(
+        )<SexsPtiSignalInputs::vref>("vref");
+        check_attached_signal.template operator()<SexsPtiSignalInputs::vs>("vs"
+        );
+        check_attached_signal.template operator(
+        )<SexsPtiSignalInputs::vuel>("vuel");
+        check_attached_signal.template operator(
+        )<SexsPtiSignalInputs::voel>("voel");
 
         return checks;
       }
@@ -152,7 +164,9 @@ namespace GridKit
         }
 
         // Setpoint members provide the defaults for unattached signals.
-        auto read_signal = [&]<SexsPtiSignalInputs input>(const ScalarT& default_value) -> ScalarT
+        auto read_signal = [&]<SexsPtiSignalInputs input>(
+                             const ScalarT& default_value
+                           ) -> ScalarT
         {
           if (auto port = ports_.in.template port<input>())
           {
@@ -161,9 +175,12 @@ namespace GridKit
           return default_value;
         };
 
-        const ScalarT vs   = read_signal.template operator()<SexsPtiSignalInputs::vs>(vs_set_);
-        const ScalarT vuel = read_signal.template operator()<SexsPtiSignalInputs::vuel>(vuel_set_);
-        const ScalarT voel = read_signal.template operator()<SexsPtiSignalInputs::voel>(voel_set_);
+        const ScalarT          vs =
+          read_signal.template operator()<SexsPtiSignalInputs::vs>(vs_set_);
+        const ScalarT          vuel =
+          read_signal.template operator()<SexsPtiSignalInputs::vuel>(vuel_set_);
+        const ScalarT          voel =
+          read_signal.template operator()<SexsPtiSignalInputs::voel>(voel_set_);
 
         uel_on_ = ZERO<RealT>;
         if (ports_.in.template port<SexsPtiSignalInputs::vuel>())
@@ -198,7 +215,8 @@ namespace GridKit
         vuel_set_ = static_cast<RealT>(vuel);
         voel_set_ = static_cast<RealT>(voel);
 
-        if (auto vref_port = ports_.in.template port<SexsPtiSignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<SexsPtiSignalInputs::vref>())
         {
           vref_port.writeValue(vref_set_);
         }
@@ -245,12 +263,14 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int SexsPti<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT* y,
-          const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
-          ScalarT*       f)
+      __attribute__((always_inline)) inline int
+      SexsPti<scalar_type, index_type>::evaluateInternalResidual(
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        const ScalarT* ws,
+        ScalarT*       f
+      )
       {
         const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
         const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);
@@ -291,7 +311,8 @@ namespace GridKit
         const auto VOEL = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
 
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
-        if (auto vref_port = ports_.in.template port<SexsPtiSignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<SexsPtiSignalInputs::vref>())
         {
           ws_indices_[VREF] = vref_port.signalVariableIndex();
         }
@@ -299,11 +320,13 @@ namespace GridKit
         {
           ws_indices_[VS] = vs_port.signalVariableIndex();
         }
-        if (auto vuel_port = ports_.in.template port<SexsPtiSignalInputs::vuel>())
+        if (auto vuel_port =
+              ports_.in.template port<SexsPtiSignalInputs::vuel>())
         {
           ws_indices_[VUEL] = vuel_port.signalVariableIndex();
         }
-        if (auto voel_port = ports_.in.template port<SexsPtiSignalInputs::voel>())
+        if (auto voel_port =
+              ports_.in.template port<SexsPtiSignalInputs::voel>())
         {
           ws_indices_[VOEL] = voel_port.signalVariableIndex();
         }
@@ -321,13 +344,15 @@ namespace GridKit
 
         auto* ws = ws_.getData();
 
-        // Attached signals are read live; unattached ones keep the latched value.
+        // Attached signals are read live; unattached ones keep the latched
+        // value.
         ws[VREF] = vref_set_;
         ws[VS]   = vs_set_;
         ws[VUEL] = vuel_set_;
         ws[VOEL] = voel_set_;
 
-        if (auto vref_port = ports_.in.template port<SexsPtiSignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<SexsPtiSignalInputs::vref>())
         {
           ws[VREF] = vref_port.readSignal();
         }
@@ -335,11 +360,13 @@ namespace GridKit
         {
           ws[VS] = vs_port.readSignal();
         }
-        if (auto vuel_port = ports_.in.template port<SexsPtiSignalInputs::vuel>())
+        if (auto vuel_port =
+              ports_.in.template port<SexsPtiSignalInputs::vuel>())
         {
           ws[VUEL] = vuel_port.readSignal();
         }
-        if (auto voel_port = ports_.in.template port<SexsPtiSignalInputs::voel>())
+        if (auto voel_port =
+              ports_.in.template port<SexsPtiSignalInputs::voel>())
         {
           ws[VOEL] = voel_port.readSignal();
         }
@@ -359,7 +386,9 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      void SexsPti<scalar_type, index_type>::initModelParams(const ModelDataT& data)
+      void SexsPti<scalar_type, index_type>::initModelParams(
+        const ModelDataT& data
+      )
       {
         using Params = typename ModelDataT::Parameters;
 
@@ -374,7 +403,8 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* SexsPti<scalar_type, index_type>::getMonitor() const
+      const Model::VariableMonitorBase* SexsPti<scalar_type, index_type>::
+        getMonitor() const
       {
         return monitor_.get();
       }
@@ -383,8 +413,7 @@ namespace GridKit
       void SexsPti<scalar_type, index_type>::initializeMonitor()
       {
         using Variable = typename ModelDataT::MonitorableVariables;
-        monitor_->set(Variable::efd, [this]
-                      { return y_.getData()[1]; });
+        monitor_->set(Variable::efd, [this] { return y_.getData()[1]; });
       }
 
     } // namespace Exciter

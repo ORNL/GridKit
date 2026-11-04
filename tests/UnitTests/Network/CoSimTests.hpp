@@ -33,12 +33,13 @@ namespace GridKit
         static unsigned serial = 0;
 
         const auto timestamp =
-            std::chrono::steady_clock::now().time_since_epoch().count();
+          std::chrono::steady_clock::now().time_since_epoch().count();
         const auto name =
-            std::format("gridkit-unit-{}-{}", timestamp, ++serial);
+          std::format("gridkit-unit-{}-{}", timestamp, ++serial);
 
         return std::format(
-            "ipc://{}", (std::filesystem::temp_directory_path() / name).string());
+          "ipc://{}", (std::filesystem::temp_directory_path() / name).string()
+        );
       }
 
     public:
@@ -48,46 +49,47 @@ namespace GridKit
 
         const auto address = endpoint();
         auto       server  = std::async(
-            std::launch::async,
-            [&]() -> auto
+          std::launch::async,
+          [&]() -> auto
+          {
+            bool    outcome = true;
+            Channel channel(Disposition::SERVER, address, 5000);
+
+            for (std::uint64_t session = 1; session <= 2; session++)
             {
-              bool    outcome = true;
-              Channel channel(Disposition::SERVER, address, 5000);
+              auto init = channel.receive();
 
-              for (std::uint64_t session = 1; session <= 2; session++)
-              {
-                auto init = channel.receive();
+              outcome &= init.type == MessageType::INIT;
+              outcome &= init.session == session;
+              outcome &= init.signals.at("voltage real") == 1.03;
 
-                outcome &= init.type == MessageType::INIT;
-                outcome &= init.session == session;
-                outcome &= init.signals.at("voltage real") == 1.03;
+              init.signals     = {{"current from generator", 2.5}};
+              init.event_times = {0.025, 0.035};
+              channel.send(init);
 
-                init.signals     = {{"current from generator", 2.5}};
-                init.event_times = {0.025, 0.035};
-                channel.send(init);
+              auto step = channel.receive();
 
-                auto step = channel.receive();
+              outcome &= step.time == 0.05;
+              outcome &= step.type == MessageType::STEP;
 
-                outcome &= step.time == 0.05;
-                outcome &= step.type == MessageType::STEP;
+              channel.send(step);
 
-                channel.send(step);
+              auto end = channel.receive();
 
-                auto end = channel.receive();
+              outcome &= end.type == MessageType::END;
 
-                outcome &= end.type == MessageType::END;
+              channel.send(end);
+            }
 
-                channel.send(end);
-              }
+            const auto stop = channel.receive();
 
-              const auto stop = channel.receive();
+            outcome &= stop.type == MessageType::SHUTDOWN;
 
-              outcome &= stop.type == MessageType::SHUTDOWN;
+            channel.finish(stop);
 
-              channel.finish(stop);
-
-              return outcome;
-            });
+            return outcome;
+          }
+        );
 
         Channel client(Disposition::CLIENT, address, 5000);
 
@@ -131,46 +133,43 @@ namespace GridKit
         {
           const auto address = endpoint();
           auto       server  = std::async(
-              std::launch::async,
-              [&]
+            std::launch::async,
+            [&]
+            {
+              Channel channel(Disposition::SERVER, address, 5000);
+              auto    message = channel.receive();
+
+              switch (kind)
               {
-                Channel channel(Disposition::SERVER, address, 5000);
-                auto    message = channel.receive();
+              case 0:
+                message.type  = MessageType::FAIL;
+                message.error = "solver failure";
+                break;
+              case 1:
+                message.session++;
+                break;
+              case 2:
+                message.time = 0.1;
+                break;
+              case 3:
+                message.type = MessageType::END;
+                break;
+              }
 
-                switch (kind)
-                {
-                case 0:
-                  message.type  = MessageType::FAIL;
-                  message.error = "solver failure";
-                  break;
-                case 1:
-                  message.session++;
-                  break;
-                case 2:
-                  message.time = 0.1;
-                  break;
-                case 3:
-                  message.type = MessageType::END;
-                  break;
-                }
-
-                channel.finish(message);
-              });
+              channel.finish(message);
+            }
+          );
 
           Channel client(Disposition::CLIENT, address, 5000);
 
           if (kind == 0)
           {
-            outcome *= throws<PeerFailure>(
-                [&]
-                { client.exchange(Message()); });
+            outcome *= throws<PeerFailure>([&] { client.exchange(Message()); });
           }
           else
           {
             outcome *=
-                throws<std::runtime_error>(
-                    [&]
-                    { client.exchange(Message()); });
+              throws<std::runtime_error>([&] { client.exchange(Message()); });
             client.closePeer(Message());
           }
 
@@ -193,34 +192,35 @@ namespace GridKit
         {
           const auto address = endpoint();
           auto       server  = std::async(
-              std::launch::async,
-              [&]() -> auto
+            std::launch::async,
+            [&]() -> auto
+            {
+              bool    outcome = true;
+              Channel channel(Disposition::SERVER, address, 5000);
+
+              try
               {
-                bool    outcome = true;
-                Channel channel(Disposition::SERVER, address, 5000);
+                channel.receive();
+              }
+              catch (const json::exception& _)
+              {
+              }
+              catch (const std::runtime_error& _)
+              {
+              }
+              catch (...)
+              {
+                throw;
+              }
 
-                try
-                {
-                  channel.receive();
-                }
-                catch (const json::exception& _)
-                {
-                }
-                catch (const std::runtime_error& _)
-                {
-                }
-                catch (...)
-                {
-                  throw;
-                }
+              Message failure(MessageType::FAIL, 0);
+              failure.error = "malformed request";
 
-                Message failure(MessageType::FAIL, 0);
-                failure.error = "malformed request";
+              channel.finish(failure);
 
-                channel.finish(failure);
-
-                return outcome;
-              });
+              return outcome;
+            }
+          );
 
           zmq::context_t context;
           zmq::socket_t  socket(context, zmq::socket_type::req);
@@ -229,7 +229,7 @@ namespace GridKit
           socket.connect(address);
 
           outcome *=
-              socket.send(zmq::buffer(wire), zmq::send_flags::none).has_value();
+            socket.send(zmq::buffer(wire), zmq::send_flags::none).has_value();
 
           zmq::message_t reply;
 
@@ -241,13 +241,13 @@ namespace GridKit
           else
           {
             outcome *=
-                reply.to_string().find("malformed request") != std::string::npos;
+              reply.to_string().find("malformed request") != std::string::npos;
 
             const std::string close =
-                R"({"type":"close","session":0,"time":0,"signals":{}})";
+              R"({"type":"close","session":0,"time":0,"signals":{}})";
 
             outcome *= socket.send(zmq::buffer(close), zmq::send_flags::none)
-                           .has_value();
+                         .has_value();
 
             socket.set(zmq::sockopt::rcvtimeo, 100);
 
@@ -266,22 +266,19 @@ namespace GridKit
 
         Channel client(Disposition::CLIENT, endpoint(), 100);
 
-        outcome *= throws<std::runtime_error>(
-            [&]
-            { client.exchange(Message()); });
+        outcome *=
+          throws<std::runtime_error>([&] { client.exchange(Message()); });
 
         Message invalid;
         invalid.signals = {{"bad", std::numeric_limits<double>::infinity()}};
 
         Channel other(Disposition::CLIENT, endpoint(), 100);
 
-        outcome *= throws<std::runtime_error>(
-            [&]
-            { other.send(invalid); });
+        outcome *= throws<std::runtime_error>([&] { other.send(invalid); });
 
         outcome *= throws<std::invalid_argument>(
-            [&]
-            { Channel invalid_channel(Disposition::CLIENT, endpoint(), 0); });
+          [&] { Channel invalid_channel(Disposition::CLIENT, endpoint(), 0); }
+        );
 
         return outcome.report(__func__);
       }

@@ -17,20 +17,24 @@ namespace GridKit
       [[gnu::cold, gnu::noinline]]
       void logHostUnsyncFailure()
       {
-        Log::error() << "Vector::getData - host data is stale. Perhaps you need to call syncData?\n";
+        Log::error() << "Vector::getData - host data is stale. Perhaps you "
+                        "need to call syncData?\n";
       }
 
       [[gnu::cold, gnu::noinline]]
       void logDeviceUnsyncFailure()
       {
-        Log::error() << "Vector::getData - host device is stale. Perhaps you need to call syncData?\n";
+        Log::error() << "Vector::getData - host device is stale. Perhaps you "
+                        "need to call syncData?\n";
       }
 
       template <typename IdxT>
       [[gnu::cold, gnu::noinline]]
       void logBoundsCheckFailure(IdxT j, IdxT k)
       {
-        Log::error() << "Vector::getData - vector index " << j << " out of range, multivector has only " << k << " vectors\n";
+        Log::error() << "Vector::getData - vector index " << j
+                     << " out of range, multivector has only " << k
+                     << " vectors\n";
       }
 
       template void logBoundsCheckFailure(long int, long int);
@@ -74,9 +78,7 @@ namespace GridKit
      */
     template <typename ScalarT, typename IdxT>
     Vector<ScalarT, IdxT>::Vector(IdxT n, IdxT k)
-      : n_capacity_(n),
-        k_(k),
-        n_size_(n)
+      : n_capacity_(n), k_(k), n_size_(n)
     {
       if (k <= 1)
       {
@@ -169,7 +171,9 @@ namespace GridKit
      * you are doing.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setData(ScalarT* data, memory::MemorySpace memspace)
+    int Vector<ScalarT, IdxT>::setData(
+      ScalarT* data, memory::MemorySpace memspace
+    )
     {
       using namespace memory;
 
@@ -178,7 +182,8 @@ namespace GridKit
       case HOST:
         if (h_data_)
         {
-          Log::error() << "Vector::setData - host data already exists, ignoring call\n";
+          Log::error(
+          ) << "Vector::setData - host data already exists, ignoring call\n";
           return 1;
         }
         h_data_ = data;
@@ -189,7 +194,8 @@ namespace GridKit
       case DEVICE:
         if (d_data_)
         {
-          Log::error() << "Vector::setData - device data already exists, ignoring call\n";
+          Log::error(
+          ) << "Vector::setData - device data already exists, ignoring call\n";
           return 1;
         }
         d_data_ = data;
@@ -215,13 +221,14 @@ namespace GridKit
      * @return 0 if successful, 1 otherwise.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setData(ScalarT*            data,
-                                       IdxT                size,
-                                       memory::MemorySpace memspace)
+    int Vector<ScalarT, IdxT>::setData(
+      ScalarT* data, IdxT size, memory::MemorySpace memspace
+    )
     {
       if (data == nullptr && size != IdxT{})
       {
-        Log::error() << "Vector::setData - nonzero vector cannot use null data\n";
+        Log::error(
+        ) << "Vector::setData - nonzero vector cannot use null data\n";
         return 1;
       }
 
@@ -236,7 +243,8 @@ namespace GridKit
         }
         if (d_data_ != nullptr && size != n_size_)
         {
-          Log::error() << "Vector::setData - size conflicts with existing device data\n";
+          Log::error(
+          ) << "Vector::setData - size conflicts with existing device data\n";
           return 1;
         }
         h_data_        = data;
@@ -247,12 +255,14 @@ namespace GridKit
       case DEVICE:
         if (d_data_ != nullptr && owns_gpu_data_)
         {
-          Log::error() << "Vector::setData - cannot replace owned device data\n";
+          Log::error(
+          ) << "Vector::setData - cannot replace owned device data\n";
           return 1;
         }
         if (h_data_ != nullptr && size != n_size_)
         {
-          Log::error() << "Vector::setData - size conflicts with existing host data\n";
+          Log::error(
+          ) << "Vector::setData - size conflicts with existing host data\n";
           return 1;
         }
         d_data_        = data;
@@ -274,10 +284,15 @@ namespace GridKit
      * @param[in] memspaceSrc - Memory space of the data source (HOST or DEVICE)
      * @param[in] memspaceDst - Memory space to copy data to (HOST or DEVICE)
      *
-     * @pre Size of _source_ is greater than or equal to the current vector size.
+     * @pre Size of _source_ is greater than or equal to the current vector
+     * size.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyFromExternal(const Vector& source, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
+    int Vector<ScalarT, IdxT>::copyFromExternal(
+      const Vector&       source,
+      memory::MemorySpace memspaceSrc,
+      memory::MemorySpace memspaceDst
+    )
     {
       const ScalarT* source_data = source.getData(memspaceSrc);
       return copyFromExternal(source_data, memspaceSrc, memspaceDst);
@@ -290,19 +305,23 @@ namespace GridKit
      * this function.
      *
      * @param[in] source      - Array to copy from
-     * @param[in] memspaceSrc - Memory space of the source array (HOST or DEVICE)
+     * @param[in] memspaceSrc - Memory space of the source array (HOST or
+     * DEVICE)
      * @param[in] memspaceDst - Memory space to copy data to (HOST or DEVICE)
      *
      * @return 0 if successful, 1 otherwise.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyFromExternal(const ScalarT*      source,
-                                                memory::MemorySpace memspaceSrc,
-                                                memory::MemorySpace memspaceDst)
+    int Vector<ScalarT, IdxT>::copyFromExternal(
+      const ScalarT*      source,
+      memory::MemorySpace memspaceSrc,
+      memory::MemorySpace memspaceDst
+    )
     {
       if (source == nullptr)
       {
-        Log::error() << "Vector::copyFromExternal - source data is null or stale\n";
+        Log::error(
+        ) << "Vector::copyFromExternal - source data is null or stale\n";
         return 1;
       }
 
@@ -311,14 +330,16 @@ namespace GridKit
       case memory::HOST:
         if (h_data_ == nullptr)
         {
-          Log::error() << "Vector::copyFromExternal - host destination not allocated\n";
+          Log::error(
+          ) << "Vector::copyFromExternal - host destination not allocated\n";
           return 1;
         }
         break;
       case memory::DEVICE:
         if (d_data_ == nullptr)
         {
-          Log::error() << "Vector::copyFromExternal - device destination not allocated\n";
+          Log::error(
+          ) << "Vector::copyFromExternal - device destination not allocated\n";
           return 1;
         }
         break;
@@ -394,13 +415,15 @@ namespace GridKit
       {
         if (getDeviceUpdated(i) != all_gpu_updated)
         {
-          Log::error() << "Vector::syncData - inconsistent update state across device columns.\n"
+          Log::error() << "Vector::syncData - inconsistent update state across "
+                          "device columns.\n"
                        << "Use syncData(j, memspace) for individual vectors\n";
           return 1;
         }
         if (getHostUpdated(i) != all_cpu_updated)
         {
-          Log::error() << "Vector::syncData - inconsistent update state across host columns.\n"
+          Log::error() << "Vector::syncData - inconsistent update state across "
+                          "host columns.\n"
                        << "Use syncData(j, memspace) for individual vectors\n";
           return 1;
         }
@@ -416,7 +439,8 @@ namespace GridKit
         }
         if (!all_cpu_updated)
         {
-          Log::error() << "Vector::syncData - host data is stale, cannot sync to device\n";
+          Log::error(
+          ) << "Vector::syncData - host data is stale, cannot sync to device\n";
           return 1;
         }
         if (d_data_ == nullptr)
@@ -435,7 +459,8 @@ namespace GridKit
         }
         if (!all_gpu_updated)
         {
-          Log::error() << "Vector::syncData - device data is stale, cannot sync to host\n";
+          Log::error(
+          ) << "Vector::syncData - device data is stale, cannot sync to host\n";
           return 1;
         }
         if (h_data_ == nullptr)
@@ -490,7 +515,8 @@ namespace GridKit
         }
         if (!getHostUpdated(j))
         {
-          Log::error() << "Vector::syncData - host data is stale, cannot sync to device\n";
+          Log::error(
+          ) << "Vector::syncData - host data is stale, cannot sync to device\n";
           return 1;
         }
         if (d_data_ == nullptr)
@@ -498,7 +524,9 @@ namespace GridKit
           Log::error() << "Vector::syncData - device data not allocated\n";
           return 1;
         }
-        mem_.copyArrayHostToDevice(&d_data_[j * n_size_], &h_data_[j * n_size_], n_size_);
+        mem_.copyArrayHostToDevice(
+          &d_data_[j * n_size_], &h_data_[j * n_size_], n_size_
+        );
         setDeviceUpdated(j, true);
         break;
       case HOST: // gpu -> cpu
@@ -509,7 +537,8 @@ namespace GridKit
         }
         if (!getDeviceUpdated(j))
         {
-          Log::error() << "Vector::syncData - device data is stale, cannot sync to host\n";
+          Log::error(
+          ) << "Vector::syncData - device data is stale, cannot sync to host\n";
           return 1;
         }
         if (h_data_ == nullptr)
@@ -517,7 +546,9 @@ namespace GridKit
           Log::error() << "Vector::syncData - host data not allocated\n";
           return 1;
         }
-        mem_.copyArrayDeviceToHost(&h_data_[j * n_size_], &d_data_[j * n_size_], n_size_);
+        mem_.copyArrayDeviceToHost(
+          &h_data_[j * n_size_], &d_data_[j * n_size_], n_size_
+        );
         setHostUpdated(j, true);
         break;
       default:
@@ -585,7 +616,8 @@ namespace GridKit
      *
      * In case of multivectors, the entire multivector is set to zero.
      *
-     * @param[in] memspace - Memory space of the data to be zeroed (HOST or DEVICE)
+     * @param[in] memspace - Memory space of the data to be zeroed (HOST or
+     * DEVICE)
      *
      */
     template <typename ScalarT, typename IdxT>
@@ -622,7 +654,8 @@ namespace GridKit
      * @brief set the data of a single vector in a multivector to zero.
      *
      * @param[in] j        - Index of a vector in the multivector
-     * @param[in] memspace - Memory space of the data to be zeroed (HOST or DEVICE)
+     * @param[in] memspace - Memory space of the data to be zeroed (HOST or
+     * DEVICE)
      *
      * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      */
@@ -676,7 +709,9 @@ namespace GridKit
      *
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setToConst(ScalarT C, memory::MemorySpace memspace)
+    int Vector<ScalarT, IdxT>::setToConst(
+      ScalarT C, memory::MemorySpace memspace
+    )
     {
       using namespace memory;
       switch (memspace)
@@ -706,7 +741,8 @@ namespace GridKit
     }
 
     /**
-     * @brief set the data of a single vector in a multivector to a given constant.
+     * @brief set the data of a single vector in a multivector to a given
+     * constant.
      *
      * @param[in] j        - Index of a vector in the multivector
      * @param[in] C        - Constant value to set
@@ -715,7 +751,9 @@ namespace GridKit
      * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setToConst(IdxT j, ScalarT C, memory::MemorySpace memspace)
+    int Vector<ScalarT, IdxT>::setToConst(
+      IdxT j, ScalarT C, memory::MemorySpace memspace
+    )
     {
       using namespace memory;
 
@@ -776,8 +814,10 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::resize(IdxT new_n_size)
     {
-      assert(owns_cpu_data_ && owns_gpu_data_
-             && "Cannot resize if vector is not owning the data.");
+      assert(
+        owns_cpu_data_ && owns_gpu_data_
+        && "Cannot resize if vector is not owning the data."
+      );
 
       if (h_data_ == nullptr && d_data_ == nullptr)
       {
@@ -806,7 +846,9 @@ namespace GridKit
         ScalarT* new_data = nullptr;
         mem_.allocateArrayOnHost(&new_data, new_n_size * k_);
         for (IdxT j = 0; j < k_; ++j)
-          mem_.copyArrayHostToHost(&new_data[j * new_n_size], &h_data_[j * old_n_size], old_n_size);
+          mem_.copyArrayHostToHost(
+            &new_data[j * new_n_size], &h_data_[j * old_n_size], old_n_size
+          );
         mem_.deleteOnHost(h_data_);
         h_data_ = new_data;
       }
@@ -816,7 +858,9 @@ namespace GridKit
         ScalarT* new_data = nullptr;
         mem_.allocateArrayOnDevice(&new_data, new_n_size * k_);
         for (IdxT j = 0; j < k_; ++j)
-          mem_.copyArrayDeviceToDevice(&new_data[j * new_n_size], &d_data_[j * old_n_size], old_n_size);
+          mem_.copyArrayDeviceToDevice(
+            &new_data[j * new_n_size], &d_data_[j * old_n_size], old_n_size
+          );
         mem_.deleteOnDevice(d_data_);
         d_data_ = new_data;
       }
@@ -827,14 +871,17 @@ namespace GridKit
     }
 
     /**
-     * @brief Copy HOST or DEVICE data of a single vector in a multivector to _dest_.
+     * @brief Copy HOST or DEVICE data of a single vector in a multivector to
+     * _dest_.
      *
      * Supports cross-space copies, e.g. vector _i_ from HOST to DEVICE.
      *
      * @param[out] dest        - Destination array
      * @param[in]  i           - Index of a vector in the multivector
-     * @param[in]  memspaceSrc - Memory space of the source data (HOST or DEVICE)
-     * @param[in]  memspaceDst - Memory space of the destination (HOST or DEVICE)
+     * @param[in]  memspaceSrc - Memory space of the source data (HOST or
+     * DEVICE)
+     * @param[in]  memspaceDst - Memory space of the destination (HOST or
+     * DEVICE)
      *
      * @return 0 if successful, 1 otherwise.
      *
@@ -843,24 +890,33 @@ namespace GridKit
      * @post All elements of vector _i_ are copied to _dest_.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyToExternal(ScalarT* dest, IdxT i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
+    int Vector<ScalarT, IdxT>::copyToExternal(
+      ScalarT*            dest,
+      IdxT                i,
+      memory::MemorySpace memspaceSrc,
+      memory::MemorySpace memspaceDst
+    )
     {
       using namespace memory;
       if (i >= k_)
       {
         Log::error() << "Vector::copyToExternal - vector index " << i
-                     << " out of range, multivector has only " << k_ << " vectors\n";
+                     << " out of range, multivector has only " << k_
+                     << " vectors\n";
         return 1;
       }
       if (dest == nullptr)
       {
-        Log::error() << "Vector::copyToExternal - destination pointer for vector " << i << " is null\n";
+        Log::error(
+        ) << "Vector::copyToExternal - destination pointer for vector "
+          << i << " is null\n";
         return 1;
       }
       ScalarT* data = getData(i, memspaceSrc);
       if (data == nullptr)
       {
-        Log::error() << "Vector::copyToExternal - source data for vector " << i << " is null or stale\n";
+        Log::error() << "Vector::copyToExternal - source data for vector " << i
+                     << " is null or stale\n";
         return 1;
       }
       switch (memspaceSrc)
@@ -894,34 +950,45 @@ namespace GridKit
     /**
      * @brief copy HOST or DEVICE data of multivector to _dest_.
      *
-     * This function allows to copy data between different memory spaces in one call.
-     * For example, you can copy data of multivector from HOST to DEVICE, or from DEVICE to HOST.
+     * This function allows to copy data between different memory spaces in one
+     * call. For example, you can copy data of multivector from HOST to DEVICE,
+     * or from DEVICE to HOST.
      *
      * @param[out] dest      - Pointer to the memory to which data is copied
-     * @param[in] memspaceSrc   - Memory space (HOST or DEVICE) of the data to be copied
-     * @param[in] memspaceDst  - Memory space (HOST or DEVICE) to which data is copied
+     * @param[in] memspaceSrc   - Memory space (HOST or DEVICE) of the data to
+     * be copied
+     * @param[in] memspaceDst  - Memory space (HOST or DEVICE) to which data is
+     * copied
      *
      * @return 0 if successful, 1 otherwise.
      *
-     * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ * _k_ (total length of all vectors in the multivector).
+     * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ * _k_
+     * (total length of all vectors in the multivector).
      * @pre _dest_ is allocated in memspaceOutDst memory space.
-     * @post All elements of all vectors in multivector are copied to the array _dest_.
+     * @post All elements of all vectors in multivector are copied to the array
+     * _dest_.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyToExternal(ScalarT* dest, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
+    int Vector<ScalarT, IdxT>::copyToExternal(
+      ScalarT*            dest,
+      memory::MemorySpace memspaceSrc,
+      memory::MemorySpace memspaceDst
+    )
     {
       using namespace memory;
       ScalarT* data = this->getData(memspaceSrc);
       // Check that the source data is not null and up to date
       if (data == nullptr)
       {
-        Log::error() << "Vector::copyToExternal - source data is null or stale\n";
+        Log::error(
+        ) << "Vector::copyToExternal - source data is null or stale\n";
         return 1;
       }
       // Check that the destination memory space is allocated
       if (dest == nullptr)
       {
-        Log::error() << "Vector::copyToExternal - destination pointer is null\n";
+        Log::error(
+        ) << "Vector::copyToExternal - destination pointer is null\n";
         return 1;
       }
       switch (memspaceSrc)

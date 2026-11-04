@@ -16,11 +16,13 @@ namespace GridKit
      * Calls default ModelEvaluatorImpl constructor.
      */
     template <class ScalarT, typename IdxT>
-    DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT                                        id,
-                                                              DistributedGeneratorParameters<RealT, IdxT> parm,
-                                                              bool                                        reference_frame,
-                                                              NodeT*                                      node_ref,
-                                                              NodeT*                                      node_bus)
+    DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(
+      IdxT                                        id,
+      DistributedGeneratorParameters<RealT, IdxT> parm,
+      bool                                        reference_frame,
+      NodeT*                                      node_ref,
+      NodeT*                                      node_bus
+    )
       : wb_(parm.wb_),
         wc_(parm.wc_),
         mp_(parm.mp_),
@@ -42,8 +44,9 @@ namespace GridKit
     {
       assert(refframe_ || node_ref_->size() == 1);
       assert(node_bus_->size() == 2);
-      // internals [Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi, \delta_i]
-      // externals [\omega_ref, vba_out, vbb_out]
+      // internals [Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi,
+      // vo_di, vo_qi, io_di, io_qi, \delta_i] externals [\omega_ref, vba_out,
+      // vbb_out]
       size_     = refframe_ ? 15 : 16;
       n_intern_ = refframe_ ? 12 : 13;
       n_extern_ = 3;
@@ -108,13 +111,19 @@ namespace GridKit
       ScalarT delta = refframe_ ? ScalarT(0.0) : y_int_[12];
 
       // Take incoming voltages to current rotator reference frame
-      ScalarT vbd_in = std::cos(delta) * *y_ext_[1] + std::sin(delta) * *y_ext_[2];
-      ScalarT vbq_in = -std::sin(delta) * *y_ext_[1] + std::cos(delta) * *y_ext_[2];
+      ScalarT vbd_in =
+        std::cos(delta) * *y_ext_[1] + std::sin(delta) * *y_ext_[2];
+      ScalarT vbq_in =
+        -std::sin(delta) * *y_ext_[1] + std::cos(delta) * *y_ext_[2];
 
       // ### Internal Components ##
       // P and Q equations
-      f_int_[0] = -yp_int_[0] + wc_ * (y_int_[8] * y_int_[10] + y_int_[9] * y_int_[11] - y_int_[0]);
-      f_int_[1] = -yp_int_[1] + wc_ * (-y_int_[8] * y_int_[11] + y_int_[9] * y_int_[10] - y_int_[1]);
+      f_int_[0] =
+        -yp_int_[0]
+        + wc_ * (y_int_[8] * y_int_[10] + y_int_[9] * y_int_[11] - y_int_[0]);
+      f_int_[1] =
+        -yp_int_[1]
+        + wc_ * (-y_int_[8] * y_int_[11] + y_int_[9] * y_int_[10] - y_int_[1]);
 
       // Voltage control
       ScalarT vod_star = Vn_ - nq_ * y_int_[1];
@@ -123,26 +132,36 @@ namespace GridKit
       f_int_[2] = -yp_int_[2] + vod_star - y_int_[8];
       f_int_[3] = -yp_int_[3] + voq_star - y_int_[9];
 
-      ScalarT ild_star = F_ * y_int_[10] - wb_ * Cf_ * y_int_[9] + Kpv_ * (vod_star - y_int_[8]) + Kiv_ * y_int_[2];
-      ScalarT ilq_star = F_ * y_int_[11] + wb_ * Cf_ * y_int_[8] + Kpv_ * (voq_star - y_int_[9]) + Kiv_ * y_int_[3];
+      ScalarT ild_star = F_ * y_int_[10] - wb_ * Cf_ * y_int_[9]
+                         + Kpv_ * (vod_star - y_int_[8]) + Kiv_ * y_int_[2];
+      ScalarT ilq_star = F_ * y_int_[11] + wb_ * Cf_ * y_int_[8]
+                         + Kpv_ * (voq_star - y_int_[9]) + Kiv_ * y_int_[3];
 
       // Current control
       f_int_[4] = -yp_int_[4] + ild_star - y_int_[6];
       f_int_[5] = -yp_int_[5] + ilq_star - y_int_[7];
 
-      ScalarT vid_star = -wb_ * Lf_ * y_int_[7] + Kpc_ * (ild_star - y_int_[6]) + Kic_ * y_int_[4];
-      ScalarT viq_star = wb_ * Lf_ * y_int_[6] + Kpc_ * (ilq_star - y_int_[7]) + Kic_ * y_int_[5];
+      ScalarT vid_star = -wb_ * Lf_ * y_int_[7] + Kpc_ * (ild_star - y_int_[6])
+                         + Kic_ * y_int_[4];
+      ScalarT viq_star = wb_ * Lf_ * y_int_[6] + Kpc_ * (ilq_star - y_int_[7])
+                         + Kic_ * y_int_[5];
 
       // Output LC Filter
-      f_int_[6] = -yp_int_[6] - (rLf_ / Lf_) * y_int_[6] + omega * y_int_[7] + (vid_star - y_int_[8]) / Lf_;
-      f_int_[7] = -yp_int_[7] - (rLf_ / Lf_) * y_int_[7] - omega * y_int_[6] + (viq_star - y_int_[9]) / Lf_;
+      f_int_[6] = -yp_int_[6] - (rLf_ / Lf_) * y_int_[6] + omega * y_int_[7]
+                  + (vid_star - y_int_[8]) / Lf_;
+      f_int_[7] = -yp_int_[7] - (rLf_ / Lf_) * y_int_[7] - omega * y_int_[6]
+                  + (viq_star - y_int_[9]) / Lf_;
 
-      f_int_[8] = -yp_int_[8] + omega * y_int_[9] + (y_int_[6] - y_int_[10]) / Cf_;
-      f_int_[9] = -yp_int_[9] - omega * y_int_[8] + (y_int_[7] - y_int_[11]) / Cf_;
+      f_int_[8] =
+        -yp_int_[8] + omega * y_int_[9] + (y_int_[6] - y_int_[10]) / Cf_;
+      f_int_[9] =
+        -yp_int_[9] - omega * y_int_[8] + (y_int_[7] - y_int_[11]) / Cf_;
 
       // Output Connector
-      f_int_[10] = -yp_int_[10] - (rLc_ / Lc_) * y_int_[10] + omega * y_int_[11] + (y_int_[8] - vbd_in) / Lc_;
-      f_int_[11] = -yp_int_[11] - (rLc_ / Lc_) * y_int_[11] - omega * y_int_[10] + (y_int_[9] - vbq_in) / Lc_;
+      f_int_[10] = -yp_int_[10] - (rLc_ / Lc_) * y_int_[10] + omega * y_int_[11]
+                   + (y_int_[8] - vbd_in) / Lc_;
+      f_int_[11] = -yp_int_[11] - (rLc_ / Lc_) * y_int_[11] - omega * y_int_[10]
+                   + (y_int_[9] - vbq_in) / Lc_;
 
       // Rotor difference angle
       if (!refframe_)
@@ -173,26 +192,49 @@ namespace GridKit
     }
 
     /**
-     * @brief Compute the jacobian of the DistributedGenerator for iteration. dF/dy - \alpha dF/dy'
+     * @brief Compute the jacobian of the DistributedGenerator for iteration.
+    dF/dy - \alpha dF/dy'
      *
      * The matrix dF/dy should be
      *
-    [ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
-    [ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
-    [ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
-    [-1,           0,           0,                             0,     -mp,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
-    [ 0,           0,           0,                             0,     -wc,                0,            0,            0,      0,      0,                 0,                 0,            wc*x15,            wc*x16,     wc*x13,     wc*x14]
-    [ 0,           0,           0,                             0,       0,              -wc,            0,            0,      0,      0,                 0,                 0,           -wc*x16,            wc*x15,     wc*x14,    -wc*x13]
-    [ 0,           0,           0,                             0,       0,              -nq,            0,            0,      0,      0,                 0,                 0,                -1,                 0,          0,          0]
-    [ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                -1,          0,          0]
-    [ 0,           0,           0,                             0,       0,          -Kpv*nq,          Kiv,            0,      0,      0,                -1,                 0,              -Kpv,            -Cf*wb,          F,          0]
-    [ 0,           0,           0,                             0,       0,                0,            0,          Kiv,      0,      0,                 0,                -1,             Cf*wb,              -Kpv,          0,          F]
-    [ 0,           0,           0,                             0, -mp*x12, -(Kpc*Kpv*nq)/Lf, (Kiv*Kpc)/Lf,            0, Kic/Lf,      0, - Kpc/Lf - rLf/Lf,            -mp*x5, -(Kpc*Kpv + 1)/Lf,   -(Cf*Kpc*wb)/Lf, (F*Kpc)/Lf,          0]
-    [ 0,           0,           0,                             0,  mp*x11,                0,            0, (Kiv*Kpc)/Lf,      0, Kic/Lf,             mp*x5, - Kpc/Lf - rLf/Lf,    (Cf*Kpc*wb)/Lf, -(Kpc*Kpv + 1)/Lf,          0, (F*Kpc)/Lf]
-    [ 0,           0,           0,                             0, -mp*x14,                0,            0,            0,      0,      0,              1/Cf,                 0,                 0,        wb - mp*x5,      -1/Cf,          0]
-    [ 0,           0,           0,                             0,  mp*x13,                0,            0,            0,      0,      0,                 0,              1/Cf,        mp*x5 - wb,                 0,          0,      -1/Cf]
-    [ 0, -cos(x4)/Lc, -sin(x4)/Lc, -(x3*cos(x4) - x2*sin(x4))/Lc, -mp*x16,                0,            0,            0,      0,      0,                 0,                 0,              1/Lc,                 0,    -rLc/Lc, wb - mp*x5]
-    [ 0,  sin(x4)/Lc, -cos(x4)/Lc,  (x2*cos(x4) + x3*sin(x4))/Lc,  mp*x15,                0,            0,            0,      0,      0,                 0,                 0,                 0,              1/Lc, mp*x5 - wb,    -rLc/Lc]
+    [ 0,           0,           0,                             0,       0, 0, 0,
+    0,      0,      0,                 0,                 0,                 0,
+    0,          0,          0] [ 0,           0,           0, 0,       0, 0, 0,
+    0,      0,      0,                 0,                 0,                 0,
+    0,          0,          0] [ 0,           0,           0, 0,       0, 0, 0,
+    0,      0,      0,                 0,                 0,                 0,
+    0,          0,          0]
+    [-1,           0,           0,                             0,     -mp, 0, 0,
+    0,      0,      0,                 0,                 0,                 0,
+    0,          0,          0] [ 0,           0,           0, 0,     -wc, 0, 0,
+    0,      0,      0,                 0,                 0,            wc*x15,
+    wc*x16,     wc*x13,     wc*x14] [ 0,           0,           0, 0,       0,
+    -wc,            0,            0,      0,      0,                 0, 0,
+    -wc*x16,            wc*x15,     wc*x14,    -wc*x13] [ 0,           0, 0, 0,
+    0,              -nq,            0,            0,      0,      0, 0, 0, -1,
+    0,          0,          0] [ 0,           0,           0, 0,       0, 0, 0,
+    0,      0,      0,                 0,                 0,                 0,
+    -1,          0,          0] [ 0,           0,           0, 0,       0,
+    -Kpv*nq,          Kiv,            0,      0,      0,                -1, 0,
+    -Kpv,            -Cf*wb,          F,          0] [ 0,           0, 0, 0, 0,
+    0,            0,          Kiv,      0,      0,                 0, -1, Cf*wb,
+    -Kpv,          0,          F] [ 0,           0,           0, 0, -mp*x12,
+    -(Kpc*Kpv*nq)/Lf, (Kiv*Kpc)/Lf,            0, Kic/Lf,      0, - Kpc/Lf -
+    rLf/Lf,            -mp*x5, -(Kpc*Kpv + 1)/Lf,   -(Cf*Kpc*wb)/Lf, (F*Kpc)/Lf,
+    0] [ 0,           0,           0,                             0,  mp*x11, 0,
+    0, (Kiv*Kpc)/Lf,      0, Kic/Lf,             mp*x5, - Kpc/Lf - rLf/Lf,
+    (Cf*Kpc*wb)/Lf, -(Kpc*Kpv + 1)/Lf,          0, (F*Kpc)/Lf] [ 0,           0,
+    0,                             0, -mp*x14,                0,            0,
+    0,      0,      0,              1/Cf,                 0,                 0,
+    wb - mp*x5,      -1/Cf,          0] [ 0,           0,           0, 0,
+    mp*x13,                0,            0,            0,      0,      0, 0,
+    1/Cf,        mp*x5 - wb,                 0,          0,      -1/Cf] [ 0,
+    -cos(x4)/Lc, -sin(x4)/Lc, -(x3*cos(x4) - x2*sin(x4))/Lc, -mp*x16, 0, 0, 0,
+    0,      0,                 0,                 0,              1/Lc, 0,
+    -rLc/Lc, wb - mp*x5] [ 0,  sin(x4)/Lc, -cos(x4)/Lc,  (x2*cos(x4) +
+    x3*sin(x4))/Lc,  mp*x15,                0,            0,            0, 0, 0,
+    0,                 0,                 0,              1/Lc, mp*x5 - wb,
+    -rLc/Lc]
      * 'Generated from MATLAB symbolic'
      *
      * @tparam ScalarT
@@ -227,8 +269,10 @@ namespace GridKit
       {
         rtemp.push_back(1);
         ctemp.push_back(15);
-        valtemp.push_back(-std::sin(delta) * static_cast<RealT>(y_int_[10])
-                          - std::cos(delta) * static_cast<RealT>(y_int_[11]));
+        valtemp.push_back(
+          -std::sin(delta) * static_cast<RealT>(y_int_[10])
+          - std::cos(delta) * static_cast<RealT>(y_int_[11])
+        );
       }
       this->setJacValues(rtemp, ctemp, valtemp);
 
@@ -240,29 +284,35 @@ namespace GridKit
       {
         rtemp.push_back(2);
         ctemp.push_back(15);
-        valtemp.push_back(std::cos(delta) * static_cast<RealT>(y_int_[10])
-                          - std::sin(delta) * static_cast<RealT>(y_int_[11]));
+        valtemp.push_back(
+          std::cos(delta) * static_cast<RealT>(y_int_[10])
+          - std::sin(delta) * static_cast<RealT>(y_int_[11])
+        );
       }
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 3
       rtemp.assign(5, 3);
       ctemp   = {3, 11, 12, 13, 14};
-      valtemp = {-wc_ - alpha_,
-                 wc_ * static_cast<RealT>(y_int_[10]),
-                 wc_ * static_cast<RealT>(y_int_[11]),
-                 wc_ * static_cast<RealT>(y_int_[8]),
-                 wc_ * static_cast<RealT>(y_int_[9])};
+      valtemp = {
+        -wc_ - alpha_,
+        wc_ * static_cast<RealT>(y_int_[10]),
+        wc_ * static_cast<RealT>(y_int_[11]),
+        wc_ * static_cast<RealT>(y_int_[8]),
+        wc_ * static_cast<RealT>(y_int_[9])
+      };
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 4
       rtemp.assign(5, 4);
       ctemp   = {4, 11, 12, 13, 14};
-      valtemp = {-wc_ - alpha_,
-                 -wc_ * static_cast<RealT>(y_int_[11]),
-                 wc_ * static_cast<RealT>(y_int_[10]),
-                 wc_ * static_cast<RealT>(y_int_[9]),
-                 -wc_ * static_cast<RealT>(y_int_[8])};
+      valtemp = {
+        -wc_ - alpha_,
+        -wc_ * static_cast<RealT>(y_int_[11]),
+        wc_ * static_cast<RealT>(y_int_[10]),
+        wc_ * static_cast<RealT>(y_int_[9]),
+        -wc_ * static_cast<RealT>(y_int_[8])
+      };
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 5
@@ -292,66 +342,77 @@ namespace GridKit
       // r = 9
       rtemp.assign(9, 9);
       ctemp   = {3, 4, 5, 7, 9, 10, 11, 12, 13};
-      valtemp = {-mp_ * static_cast<RealT>(y_int_[7]),
-                 -(Kpc_ * Kpv_ * nq_) / Lf_,
-                 (Kpc_ * Kiv_) / Lf_,
-                 Kic_ / Lf_,
-                 -(Kpc_ + rLf_) / Lf_ - alpha_,
-                 -mp_ * static_cast<RealT>(y_int_[0]),
-                 -(Kpc_ * Kpv_ + 1.0) / Lf_,
-                 -(Cf_ * Kpc_ * wb_) / Lf_,
-                 (F_ * Kpc_) / Lf_};
+      valtemp = {
+        -mp_ * static_cast<RealT>(y_int_[7]),
+        -(Kpc_ * Kpv_ * nq_) / Lf_,
+        (Kpc_ * Kiv_) / Lf_,
+        Kic_ / Lf_,
+        -(Kpc_ + rLf_) / Lf_ - alpha_,
+        -mp_ * static_cast<RealT>(y_int_[0]),
+        -(Kpc_ * Kpv_ + 1.0) / Lf_,
+        -(Cf_ * Kpc_ * wb_) / Lf_,
+        (F_ * Kpc_) / Lf_
+      };
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 10
       rtemp.assign(8, 10);
       ctemp   = {3, 6, 8, 9, 10, 11, 12, 14};
-      valtemp = {mp_ * static_cast<RealT>(y_int_[6]),
-                 (Kiv_ * Kpc_) / Lf_,
-                 Kic_ / Lf_,
-                 mp_ * static_cast<RealT>(y_int_[0]),
-                 -(Kpc_ + rLf_) / Lf_ - alpha_,
-                 (Cf_ * Kpc_ * wb_) / Lf_,
-                 -(Kpc_ * Kpv_ + 1.0) / Lf_,
-                 (F_ * Kpc_) / Lf_};
+      valtemp = {
+        mp_ * static_cast<RealT>(y_int_[6]),
+        (Kiv_ * Kpc_) / Lf_,
+        Kic_ / Lf_,
+        mp_ * static_cast<RealT>(y_int_[0]),
+        -(Kpc_ + rLf_) / Lf_ - alpha_,
+        (Cf_ * Kpc_ * wb_) / Lf_,
+        -(Kpc_ * Kpv_ + 1.0) / Lf_,
+        (F_ * Kpc_) / Lf_
+      };
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 11
       rtemp.assign(5, 11);
       ctemp   = {3, 9, 11, 12, 13};
-      valtemp = {-mp_ * static_cast<RealT>(y_int_[9]),
-                 1.0 / Cf_,
-                 -alpha_,
-                 wb_ - mp_ * static_cast<RealT>(y_int_[0]),
-                 -1.0 / Cf_};
+      valtemp = {
+        -mp_ * static_cast<RealT>(y_int_[9]),
+        1.0 / Cf_,
+        -alpha_,
+        wb_ - mp_ * static_cast<RealT>(y_int_[0]),
+        -1.0 / Cf_
+      };
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 12
       rtemp.assign(5, 12);
       ctemp   = {3, 10, 11, 12, 14};
-      valtemp = {mp_ * static_cast<RealT>(y_int_[8]),
-                 1.0 / Cf_,
-                 -wb_ + mp_ * static_cast<RealT>(y_int_[0]),
-                 -alpha_,
-                 -1.0 / Cf_};
+      valtemp = {
+        mp_ * static_cast<RealT>(y_int_[8]),
+        1.0 / Cf_,
+        -wb_ + mp_ * static_cast<RealT>(y_int_[0]),
+        -alpha_,
+        -1.0 / Cf_
+      };
       this->setJacValues(rtemp, ctemp, valtemp);
 
       // r = 13
       rtemp.assign(6, 13);
       ctemp   = {1, 2, 3, 11, 13, 14};
       valtemp = {
-          (1.0 / Lc_) * -std::cos(delta),
-          (1.0 / Lc_) * -std::sin(delta),
-          -mp_ * static_cast<RealT>(y_int_[11]),
-          1.0 / Lc_,
-          -rLc_ / Lc_ - alpha_,
-          wb_ - mp_ * static_cast<RealT>(y_int_[0]),
+        (1.0 / Lc_) * -std::cos(delta),
+        (1.0 / Lc_) * -std::sin(delta),
+        -mp_ * static_cast<RealT>(y_int_[11]),
+        1.0 / Lc_,
+        -rLc_ / Lc_ - alpha_,
+        wb_ - mp_ * static_cast<RealT>(y_int_[0]),
       };
       if (!refframe_)
       {
         rtemp.push_back(13);
         ctemp.push_back(15);
-        valtemp.push_back((1.0 / Lc_) * (std::sin(delta) * static_cast<RealT>(*y_ext_[1]) - std::cos(delta) * static_cast<RealT>(*y_ext_[2])));
+        valtemp.push_back(
+          (1.0 / Lc_)
+          * (std::sin(delta) * static_cast<RealT>(*y_ext_[1]) - std::cos(delta) * static_cast<RealT>(*y_ext_[2]))
+        );
       }
       this->setJacValues(rtemp, ctemp, valtemp);
 
@@ -359,18 +420,21 @@ namespace GridKit
       rtemp.assign(6, 14);
       ctemp   = {1, 2, 3, 12, 13, 14};
       valtemp = {
-          (1.0 / Lc_) * std::sin(delta),
-          (1.0 / Lc_) * -std::cos(delta),
-          mp_ * static_cast<RealT>(y_int_[10]),
-          1.0 / Lc_,
-          -wb_ + mp_ * static_cast<RealT>(y_int_[0]),
-          -rLc_ / Lc_ - alpha_,
+        (1.0 / Lc_) * std::sin(delta),
+        (1.0 / Lc_) * -std::cos(delta),
+        mp_ * static_cast<RealT>(y_int_[10]),
+        1.0 / Lc_,
+        -wb_ + mp_ * static_cast<RealT>(y_int_[0]),
+        -rLc_ / Lc_ - alpha_,
       };
       if (!refframe_)
       {
         rtemp.push_back(14);
         ctemp.push_back(15);
-        valtemp.push_back((1.0 / Lc_) * (std::cos(delta) * static_cast<RealT>(*y_ext_[1]) + std::sin(delta) * static_cast<RealT>(*y_ext_[2])));
+        valtemp.push_back(
+          (1.0 / Lc_)
+          * (std::cos(delta) * static_cast<RealT>(*y_ext_[1]) + std::sin(delta) * static_cast<RealT>(*y_ext_[2]))
+        );
       }
       this->setJacValues(rtemp, ctemp, valtemp);
 

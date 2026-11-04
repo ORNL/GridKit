@@ -50,10 +50,10 @@ namespace GridKit
       using InternalConstraintsT = Utilities::EmptyEnum;
       using ExternalConstraintsT = LoadExternalConstraints;
 
-      static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()> NUM_PORT_VARIABLES{
-          BusT::NUM_SHARED_VARIABLES};
-      static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()> NUM_PORT_CONSTRAINTS{
-          BusT::NUM_SHARED_CONSTRAINTS};
+      static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()>
+        NUM_PORT_VARIABLES{BusT::NUM_SHARED_VARIABLES};
+      static constexpr std::array<IdxT, Utilities::enum_size<LoadPorts>()>
+        NUM_PORT_CONSTRAINTS{BusT::NUM_SHARED_CONSTRAINTS};
 
       explicit Load(const ModelDataT& data);
 
@@ -63,7 +63,9 @@ namespace GridKit
       int evaluateJacobian() override;
       int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] void externalConstraints(const ScalarT* x, const ScalarT* external, ScalarT* g) const override;
+      [[gnu::always_inline]] void externalConstraints(
+        const ScalarT* x, const ScalarT* external, ScalarT* g
+      ) const override;
 
     private:
       void initializeParameters(const ModelDataT& data);

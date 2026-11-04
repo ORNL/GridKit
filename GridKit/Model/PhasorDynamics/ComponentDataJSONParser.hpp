@@ -21,26 +21,28 @@ namespace GridKit
     using Log  = ::GridKit::Utilities::Logger;
 
     /// JSON parser function for the `ComponentData` class and descendants
-    template <typename RealT,
-              typename IdxT,
-              typename Parameters,
-              typename Buses,
-              typename SignalInputs,
-              typename SignalOutputs,
-              typename MonitorableVariables>
-      requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Buses>
-               && std::is_enum_v<SignalInputs>
-               && std::is_enum_v<SignalOutputs>
+    template <
+      typename RealT,
+      typename IdxT,
+      typename Parameters,
+      typename Buses,
+      typename SignalInputs,
+      typename SignalOutputs,
+      typename MonitorableVariables>
+      requires std::is_enum_v<Parameters> && std::is_enum_v<Buses>
+               && std::is_enum_v<SignalInputs> && std::is_enum_v<SignalOutputs>
                && std::is_enum_v<MonitorableVariables>
-    void from_json(const json&                          j,
-                   ComponentData<RealT,
-                                 IdxT,
-                                 Parameters,
-                                 Buses,
-                                 SignalInputs,
-                                 SignalOutputs,
-                                 MonitorableVariables>& c)
+    void from_json(
+      const json& j,
+      ComponentData<
+        RealT,
+        IdxT,
+        Parameters,
+        Buses,
+        SignalInputs,
+        SignalOutputs,
+        MonitorableVariables>& c
+    )
     {
       j.at("class").get_to(c.device_class);
 
@@ -53,10 +55,9 @@ namespace GridKit
 
       if (!Utilities::isValidIdentifier(c.disambiguation_string))
       {
-        Log::error()
-            << "\n\tDevice id may contain only ASCII letters, digits, "
-               "spaces, '_', '.' and '-'."
-            << error_context.str() << std::endl;
+        Log::error() << "\n\tDevice id may contain only ASCII letters, digits, "
+                        "spaces, '_', '.' and '-'."
+                     << error_context.str() << std::endl;
         throw std::runtime_error("JSON parser failed");
       }
 
@@ -69,28 +70,32 @@ namespace GridKit
           //       handles std::variant out of the box
           if (raw_parameter.value().is_string())
           {
-            auto str                  = raw_parameter.value().template get<std::string>();
-            c.parameters[key.value()] = raw_parameter.value().template get<std::string>();
+            auto str = raw_parameter.value().template get<std::string>();
+            c.parameters[key.value()] =
+              raw_parameter.value().template get<std::string>();
           }
           else if (raw_parameter.value().is_boolean())
           {
-            c.parameters[key.value()] = raw_parameter.value().template get<bool>();
+            c.parameters[key.value()] =
+              raw_parameter.value().template get<bool>();
           }
           else if (raw_parameter.value().is_number_float())
           {
-            c.parameters[key.value()] = raw_parameter.value().template get<RealT>();
+            c.parameters[key.value()] =
+              raw_parameter.value().template get<RealT>();
           }
           else if (raw_parameter.value().is_number_integer())
           {
-            c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
+            c.parameters[key.value()] =
+              raw_parameter.value().template get<IdxT>();
           }
           else
           {
             Log::error() << "\n\tInvalid initial parameter value type: "
-                         << "\"" << raw_parameter.key() << "\": "
-                         << raw_parameter.value()
-                         << " (typed as \"" << raw_parameter.value().type_name()
-                         << "\")." << error_context.str() << std::endl;
+                         << "\"" << raw_parameter.key()
+                         << "\": " << raw_parameter.value() << " (typed as \""
+                         << raw_parameter.value().type_name() << "\")."
+                         << error_context.str() << std::endl;
           }
         }
         else
@@ -105,13 +110,13 @@ namespace GridKit
       // intentionally split into buses, signal inputs, and signal outputs.
       // This backward-compatible flat JSON "ports" parsing SHOULD NOT become
       // the supported design; it only avoids changing every tracked case in
-      // this PR. The JSON schema should be split once the ingress changes are merged
+      // this PR. The JSON schema should be split once the ingress changes are
+      // merged
       for (auto& raw_port : j.at("ports").items())
       {
         auto bus = Utilities::enum_cast<Buses>(raw_port.key());
         if (bus.has_value()
-            && static_cast<size_t>(bus.value())
-                   < Utilities::enum_size<Buses>())
+            && static_cast<size_t>(bus.value()) < Utilities::enum_size<Buses>())
         {
           raw_port.value().get_to(c.buses[bus.value()]);
           continue;
@@ -120,25 +125,24 @@ namespace GridKit
         auto signal_input = Utilities::enum_cast<SignalInputs>(raw_port.key());
         if (signal_input.has_value()
             && static_cast<size_t>(signal_input.value())
-                   < Utilities::enum_size<SignalInputs>())
+                 < Utilities::enum_size<SignalInputs>())
         {
           raw_port.value().get_to(c.signal_inputs[signal_input.value()]);
           continue;
         }
 
         auto signal_output =
-            Utilities::enum_cast<SignalOutputs>(raw_port.key());
+          Utilities::enum_cast<SignalOutputs>(raw_port.key());
         if (signal_output.has_value()
             && static_cast<size_t>(signal_output.value())
-                   < Utilities::enum_size<SignalOutputs>())
+                 < Utilities::enum_size<SignalOutputs>())
         {
           raw_port.value().get_to(c.signal_outputs[signal_output.value()]);
           continue;
         }
 
         Log::error() << "\n\tInvalid port mapping: \"" << raw_port.key()
-                     << "\" has no value." << error_context.str()
-                     << std::endl;
+                     << "\" has no value." << error_context.str() << std::endl;
         throw std::runtime_error("JSON parser failed");
       }
 

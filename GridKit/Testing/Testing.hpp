@@ -112,32 +112,41 @@ namespace GridKit
       int summary();
     };
 
-    inline TestingResults operator+(const TestingResults& lhs, const TestingResults& rhs)
+    inline TestingResults operator+(
+      const TestingResults& lhs, const TestingResults& rhs
+    )
     {
       return TestingResults(lhs) += rhs;
     }
 
-    inline TestingResults operator+(const TestingResults& lhs, const TestOutcome outcome)
+    inline TestingResults operator+(
+      const TestingResults& lhs, const TestOutcome outcome
+    )
     {
       return TestingResults(lhs) += outcome;
     }
 
-    inline TestingResults operator+(const TestOutcome outcome, const TestingResults& rhs)
+    inline TestingResults operator+(
+      const TestOutcome outcome, const TestingResults& rhs
+    )
     {
       return TestingResults(rhs) += outcome;
     }
 
     template <typename T>
-    bool isEqual(const T value,
-                 const T ref,
-                 const T tol = std::numeric_limits<T>::epsilon())
+    bool isEqual(
+      const T value,
+      const T ref,
+      const T tol = std::numeric_limits<T>::epsilon()
+    )
     {
       T error = std::abs(value - ref) / (1.0 + std::abs(ref));
       return (error < tol);
     }
 
     /**
-     * @brief Equality comparison between maps with a tolerance for the scalar value
+     * @brief Equality comparison between maps with a tolerance for the scalar
+     * value
      *
      * @tparam IdxT - Integer data type
      * @tparam RealT - Real type
@@ -148,9 +157,11 @@ namespace GridKit
      * @return bool - true if the maps are equal; false otherwise
      */
     template <typename IdxT = size_t, typename RealT = double>
-    inline bool isEqual(std::map<IdxT, RealT> a,
-                        std::map<IdxT, RealT> b,
-                        const RealT           tol = std::numeric_limits<RealT>::epsilon())
+    inline bool isEqual(
+      std::map<IdxT, RealT> a,
+      std::map<IdxT, RealT> b,
+      const RealT           tol = std::numeric_limits<RealT>::epsilon()
+    )
     {
       int fail = 0;
 
@@ -172,8 +183,10 @@ namespace GridKit
             fail++;
             std::cerr << "Mismatching map values! "
                       << "a.first = " << pair_a.first << ", "
-                      << "a.second = " << std::setprecision(16) << pair_a.second << ", and "
-                      << "b.second = " << std::setprecision(16) << it->second << "\n";
+                      << "a.second = " << std::setprecision(16) << pair_a.second
+                      << ", and "
+                      << "b.second = " << std::setprecision(16) << it->second
+                      << "\n";
           }
         }
         else
@@ -227,12 +240,10 @@ namespace GridKit
     } // namespace Detail
 
     template <typename TErr = void, typename TFunc, typename... TArgs>
-    inline bool
-    throws(TFunc func, TArgs&&... args)
+    inline bool throws(TFunc func, TArgs&&... args)
     {
-      return Detail::ThrowsHelper<TErr>{}(
-          [&]()
-          { func(std::forward<TArgs>(args)...); });
+      return Detail::ThrowsHelper<TErr>{
+      }([&]() { func(std::forward<TArgs>(args)...); });
     }
 
     /// True when building a model throws `std::invalid_argument` or the
@@ -241,8 +252,8 @@ namespace GridKit
     inline bool configurationRejected(BuildT build)
     {
       bool       passed = false;
-      const bool threw  = throws<std::invalid_argument>([&]()
-                                                       { passed = build().passed(); });
+      const bool threw =
+        throws<std::invalid_argument>([&]() { passed = build().passed(); });
       return threw || !passed;
     }
 

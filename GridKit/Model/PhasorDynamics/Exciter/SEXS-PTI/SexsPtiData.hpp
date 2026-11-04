@@ -58,14 +58,14 @@ namespace GridKit
       };
 
       template <typename real_type, typename index_type>
-      using SexsPtiData =
-          ComponentData<real_type,
-                        index_type,
-                        SexsPtiParameters,
-                        SexsPtiBuses,
-                        SexsPtiSignalInputs,
-                        SexsPtiSignalOutputs,
-                        SexsPtiMonitorableVariables>;
+      using SexsPtiData = ComponentData<
+        real_type,
+        index_type,
+        SexsPtiParameters,
+        SexsPtiBuses,
+        SexsPtiSignalInputs,
+        SexsPtiSignalOutputs,
+        SexsPtiMonitorableVariables>;
 
     } // namespace Exciter
   } // namespace PhasorDynamics

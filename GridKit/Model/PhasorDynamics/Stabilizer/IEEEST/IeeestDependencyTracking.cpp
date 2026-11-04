@@ -1,7 +1,8 @@
 /**
  * @file IeeestDependencyTracking.cpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief DependencyTracking Jacobian stub and template instantiations for IEEEST Stabilizer.
+ * @brief DependencyTracking Jacobian stub and template instantiations for
+ * IEEEST Stabilizer.
  */
 
 #include "IeeestImpl.hpp"

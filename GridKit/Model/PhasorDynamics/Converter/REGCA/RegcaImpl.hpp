@@ -38,12 +38,12 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Regca<scalar_type, index_type>::Regca(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+        : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(Utilities::enum_size<RegcaInternalVariables>());
+        size_ =
+          static_cast<IdxT>(Utilities::enum_size<RegcaInternalVariables>());
       }
 
       template <typename scalar_type, typename index_type>
@@ -60,17 +60,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::logTimeConstantWarning()
       {
-        Log::warning() << "Regca: Tg and TM below " << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor to keep the current-control "
-                       << "and voltage-sensor lags well posed\n";
+        Log::warning(
+        ) << "Regca: Tg and TM below "
+          << TIME_CONSTANT_MINIMUM
+          << " s are raised to that floor to keep the current-control "
+          << "and voltage-sensor lags well posed\n";
       }
 
       /**
        * @brief Resolve parameter-derived constants and limiter selections.
        *
-       * The time constants are raised to the well-posedness floor. Complementary
-       * LVPL masks keep the residual branchless, while the sign of the initial
-       * reactive-power injection selects the applicable recovery-rate limit.
+       * The time constants are raised to the well-posedness floor.
+       * Complementary LVPL masks keep the residual branchless, while the sign
+       * of the initial reactive-power injection selects the applicable
+       * recovery-rate limit.
        */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setDerivedParameters()
@@ -174,7 +177,9 @@ namespace GridKit
        * @param[in] data REGCA parameter data.
        */
       template <typename scalar_type, typename index_type>
-      void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      void Regca<scalar_type, index_type>::initializeParameters(
+        const ModelDataT& data
+      )
       {
         using Params = typename ModelDataT::Parameters;
 
@@ -202,10 +207,12 @@ namespace GridKit
       /**
        * @brief Access the model monitor.
        *
-       * @return Monitor for this model, or nullptr when constructed without data.
+       * @return Monitor for this model, or nullptr when constructed without
+       * data.
        */
       template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Regca<scalar_type, index_type>::getMonitor() const
+      const Model::VariableMonitorBase* Regca<scalar_type, index_type>::
+        getMonitor() const
       {
         return monitor_.get();
       }
@@ -221,18 +228,28 @@ namespace GridKit
       {
         using Variable = typename ModelDataT::MonitorableVariables;
         auto index     = [](RegcaInternalVariables variable)
-        {
-          return static_cast<size_t>(variable);
-        };
+        { return static_cast<size_t>(variable); };
 
-        monitor_->set(Variable::ir, [this, index]
-                      { return y_.getData()[index(RegcaInternalVariables::IR)]; });
-        monitor_->set(Variable::ii, [this, index]
-                      { return y_.getData()[index(RegcaInternalVariables::II)]; });
-        monitor_->set(Variable::p, [this, index]
-                      { return y_.getData()[index(RegcaInternalVariables::PBR)]; });
-        monitor_->set(Variable::q, [this, index]
-                      { return y_.getData()[index(RegcaInternalVariables::QBR)]; });
+        monitor_->set(
+          Variable::ir,
+          [this, index]
+          { return y_.getData()[index(RegcaInternalVariables::IR)]; }
+        );
+        monitor_->set(
+          Variable::ii,
+          [this, index]
+          { return y_.getData()[index(RegcaInternalVariables::II)]; }
+        );
+        monitor_->set(
+          Variable::p,
+          [this, index]
+          { return y_.getData()[index(RegcaInternalVariables::PBR)]; }
+        );
+        monitor_->set(
+          Variable::q,
+          [this, index]
+          { return y_.getData()[index(RegcaInternalVariables::QBR)]; }
+        );
       }
 
       /**
@@ -241,7 +258,9 @@ namespace GridKit
        * @param[in] component_id Component identifier.
        */
       template <typename scalar_type, typename index_type>
-      int Regca<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      int Regca<scalar_type, index_type>::setGridKitComponentID(
+        IdxT component_id
+      )
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -250,9 +269,10 @@ namespace GridKit
       /**
        * @brief Allocate model storage and connect assigned output signals.
        *
-       * State, residual, tolerance, and interface buffers are sized; local index
-       * maps are initialized; and assigned output signals are connected to the
-       * states they publish. Repeated calls reuse the allocated model vectors.
+       * State, residual, tolerance, and interface buffers are sized; local
+       * index maps are initialized; and assigned output signals are connected
+       * to the states they publish. Repeated calls reuse the allocated model
+       * vectors.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::allocate()
@@ -287,26 +307,42 @@ namespace GridKit
 
         if (auto port = ports_.out.template port<RegcaSignalOutputs::ir>())
         {
-          port.link(&y[static_cast<size_t>(RegcaInternalVariables::IR)],
-                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::IR))));
+          port.link(
+            &y[static_cast<size_t>(RegcaInternalVariables::IR)],
+            &(this->getVariableIndex(
+              static_cast<IdxT>(RegcaInternalVariables::IR)
+            ))
+          );
         }
 
         if (auto port = ports_.out.template port<RegcaSignalOutputs::ii>())
         {
-          port.link(&y[static_cast<size_t>(RegcaInternalVariables::II)],
-                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::II))));
+          port.link(
+            &y[static_cast<size_t>(RegcaInternalVariables::II)],
+            &(this->getVariableIndex(
+              static_cast<IdxT>(RegcaInternalVariables::II)
+            ))
+          );
         }
 
         if (auto port = ports_.out.template port<RegcaSignalOutputs::pbranch>())
         {
-          port.link(&y[static_cast<size_t>(RegcaInternalVariables::PBR)],
-                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::PBR))));
+          port.link(
+            &y[static_cast<size_t>(RegcaInternalVariables::PBR)],
+            &(this->getVariableIndex(
+              static_cast<IdxT>(RegcaInternalVariables::PBR)
+            ))
+          );
         }
 
         if (auto port = ports_.out.template port<RegcaSignalOutputs::qbranch>())
         {
-          port.link(&y[static_cast<size_t>(RegcaInternalVariables::QBR)],
-                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::QBR))));
+          port.link(
+            &y[static_cast<size_t>(RegcaInternalVariables::QBR)],
+            &(this->getVariableIndex(
+              static_cast<IdxT>(RegcaInternalVariables::QBR)
+            ))
+          );
         }
 
         allocated_ = true;
@@ -317,8 +353,8 @@ namespace GridKit
        * @brief Validate the REGCA configuration.
        *
        * Applies the parameter conditions documented in the README, requires a
-       * terminal bus, and checks that attached command ports have linked sources.
-       * Operating-point admissibility is checked by initialize().
+       * terminal bus, and checks that attached command ports have linked
+       * sources. Operating-point admissibility is checked by initialize().
        *
        * @return The configuration checks; passed() when valid.
        */
@@ -335,9 +371,14 @@ namespace GridKit
         checks.check(mva_base_ > ZERO<RealT>, "mva must be positive");
         checks.check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
         checks.check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
-        checks.check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
-        checks.check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
-                     "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
+        checks.check(
+          ZERO<RealT> <= VL0_ && VL0_ < VL1_,
+          "VL0/VL1 must satisfy 0 <= VL0 < VL1"
+        );
+        checks.check(
+          ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
+          "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax"
+        );
 
         if (ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
@@ -367,26 +408,28 @@ namespace GridKit
        *
        * @pre allocate() has completed, verify() reports no errors, and the
        *      terminal bus has been initialized.
-       * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with LVPL enabled
+       * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with LVPL
+       * enabled
        *      \f$I_{p,0} \le I_{L,0}\f$.
-       * @post All internal derivatives are zero. Unattached command ports retain
-       *       the resolved setpoints as constant commands.
+       * @post All internal derivatives are zero. Unattached command ports
+       * retain the resolved setpoints as constant commands.
        * @return Zero on success; nonzero when the operating point is rejected.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::initialize()
       {
-        const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
-        const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
-        const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
-        const auto VT      = static_cast<size_t>(RegcaInternalVariables::VT);
-        const auto IR      = static_cast<size_t>(RegcaInternalVariables::IR);
-        const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
-        const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
-        const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
-        const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
-        const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
-        auto*      y       = y_.getData();
+        const auto VM = static_cast<size_t>(RegcaInternalVariables::VM);
+        const auto IQ = static_cast<size_t>(RegcaInternalVariables::IQ);
+        const auto IP = static_cast<size_t>(RegcaInternalVariables::IP);
+        const auto VT = static_cast<size_t>(RegcaInternalVariables::VT);
+        const auto IR = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto II = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto IQEXTRA =
+          static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
+        const auto IL  = static_cast<size_t>(RegcaInternalVariables::IL);
+        const auto PBR = static_cast<size_t>(RegcaInternalVariables::PBR);
+        const auto QBR = static_cast<size_t>(RegcaInternalVariables::QBR);
+        auto*      y   = y_.getData();
 
         const ScalarT vr = Vr();
         const ScalarT vi = Vi();
@@ -394,32 +437,35 @@ namespace GridKit
 
         if (vt <= ZERO<RealT>)
         {
-          Log::error() << "Regca: terminal voltage magnitude must be positive at initialization\n";
+          Log::error() << "Regca: terminal voltage magnitude must be positive "
+                          "at initialization\n";
           return 1;
         }
         if (vt < VA1_)
         {
-          Log::error()
-              << "Regca: terminal voltage magnitude must be at least VA1 at initialization\n";
+          Log::error() << "Regca: terminal voltage magnitude must be at least "
+                          "VA1 at initialization\n";
           return 1;
         }
         if (vt >= Vhvmax_)
         {
-          Log::error()
-              << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
+          Log::error() << "Regca: terminal voltage magnitude must be below "
+                          "Vhvmax at initialization\n";
           return 1;
         }
 
         // P0 is a system-base power-flow injection. Resolve the component-base
         // active current through the LVACM network-interface gain.
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT ip0   = this->toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
-        const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_)
-                            + KL_ * Math::ramp(vt - VL1_);
+        const ScalarT ip0 =
+          this->toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
+        const ScalarT il0 =
+          Math::linseg(vt, VL0_, VL1_, IL1_) + KL_ * Math::ramp(vt - VL1_);
 
         if (sL_ && ip0 > il0)
         {
-          Log::error() << "Regca: initial active current exceeds the LVPL ceiling\n";
+          Log::error(
+          ) << "Regca: initial active current exceeds the LVPL ceiling\n";
           return 1;
         }
         const ScalarT ipcmd0 = ip0;
@@ -427,10 +473,11 @@ namespace GridKit
         // Invert the HVRCM ceiling and preserve the requested Q0.
         const RealT   margin   = Vhvmax_ - static_cast<RealT>(vt);
         const ScalarT iqextra0 = static_cast<ScalarT>(margin - iramp(margin));
-        const ScalarT qnet0    = this->toComponentBase(static_cast<ScalarT>(q0_) / vt);
-        const ScalarT iqcmd0   = qnet0 + iqextra0;
-        const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
-        const ScalarT ii0      = (-vr * qnet0 + vi * ip0 * lvacm) / vt;
+        const ScalarT qnet0 =
+          this->toComponentBase(static_cast<ScalarT>(q0_) / vt);
+        const ScalarT iqcmd0 = qnet0 + iqextra0;
+        const ScalarT ir0    = (vi * qnet0 + vr * ip0 * lvacm) / vt;
+        const ScalarT ii0    = (-vr * qnet0 + vi * ip0 * lvacm) / vt;
 
         y[VM]      = vt;
         y[VT]      = vt;
@@ -449,11 +496,13 @@ namespace GridKit
         // Publish the resolved system-base commands for downstream controller
         // initialization. Unattached ports retain these values as constant
         // commands.
-        if (auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>())
+        if (auto ipcmd_port =
+              ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
           ipcmd_port.writeValue(ipcmd_set_);
         }
-        if (auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>())
+        if (auto iqcmd_port =
+              ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
           iqcmd_port.writeValue(iqcmd_set_);
         }
@@ -484,7 +533,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Set every REGCA absolute tolerance to the solver relative tolerance.
+       * @brief Set every REGCA absolute tolerance to the solver relative
+       * tolerance.
        *
        * @param[in] rel_tol Solver relative tolerance.
        */
@@ -509,24 +559,26 @@ namespace GridKit
        * @param[out] f Internal residuals.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int
-      Regca<scalar_type, index_type>::evaluateInternalResidual(
+      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::
+        evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
           const ScalarT* wb,
           const ScalarT* ws,
-          ScalarT*       f)
+          ScalarT*       f
+        )
       {
-        const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
-        const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
-        const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
-        const auto VT      = static_cast<size_t>(RegcaInternalVariables::VT);
-        const auto IR      = static_cast<size_t>(RegcaInternalVariables::IR);
-        const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
-        const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
-        const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
-        const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
-        const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
+        const auto VM = static_cast<size_t>(RegcaInternalVariables::VM);
+        const auto IQ = static_cast<size_t>(RegcaInternalVariables::IQ);
+        const auto IP = static_cast<size_t>(RegcaInternalVariables::IP);
+        const auto VT = static_cast<size_t>(RegcaInternalVariables::VT);
+        const auto IR = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto II = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto IQEXTRA =
+          static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
+        const auto IL  = static_cast<size_t>(RegcaInternalVariables::IL);
+        const auto PBR = static_cast<size_t>(RegcaInternalVariables::PBR);
+        const auto QBR = static_cast<size_t>(RegcaInternalVariables::QBR);
 
         const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
         const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
@@ -566,9 +618,10 @@ namespace GridKit
         // chain rule (inside() is the linseg slope mask and ramp' = sigmoid);
         // a pinned Ip tracks the moving ceiling.
         const ScalarT vm_rate = (vt - vm) / TM_;
-        const ScalarT il_rate = (IL1_ / (VL1_ - VL0_) * Math::inside(vm, VL0_, VL1_)
-                                 + KL_ * Math::sigmoid(vm - VL1_))
-                                * vm_rate;
+        const ScalarT il_rate =
+          (IL1_ / (VL1_ - VL0_) * Math::inside(vm, VL0_, VL1_)
+           + KL_ * Math::sigmoid(vm - VL1_))
+          * vm_rate;
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT qnet  = iq - iqextra;
 
@@ -576,9 +629,9 @@ namespace GridKit
         f[IQ] = -iq_dot + iq_rate;
         f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
                 + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
-        f[VT]      = -vt * vt + vr * vr + vi * vi;
-        f[IR]      = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
-        f[II]      = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
+        f[VT] = -vt * vt + vr * vr + vi * vi;
+        f[IR] = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
+        f[II] = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
         f[IQEXTRA] = -Math::min(iqextra, Vhvmax_ - vt);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
                 + KL_ * Math::ramp(vm - VL1_);
@@ -599,11 +652,13 @@ namespace GridKit
        * @param[out] h Current injected into the terminal bus.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::evaluateBusResidual(
+      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::
+        evaluateBusResidual(
           const ScalarT*                  y,
           [[maybe_unused]] const ScalarT* yp,
           [[maybe_unused]] const ScalarT* wb,
-          ScalarT*                        h)
+          ScalarT*                        h
+        )
       {
         const auto IR = static_cast<size_t>(RegcaInternalVariables::IR);
         const auto II = static_cast<size_t>(RegcaInternalVariables::II);
@@ -624,11 +679,13 @@ namespace GridKit
         const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
 
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
-        if (auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>())
+        if (auto ipcmd_port =
+              ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
           ws_indices_[IPCMD] = ipcmd_port.signalVariableIndex();
         }
-        if (auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>())
+        if (auto iqcmd_port =
+              ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
           ws_indices_[IQCMD] = iqcmd_port.signalVariableIndex();
         }
@@ -640,8 +697,9 @@ namespace GridKit
        * @brief Evaluate model residuals and accumulate the branch current.
        *
        * Refreshes the bus and signal interface buffers, evaluates the internal
-       * and bus residuals, and accumulates the converter current into the terminal
-       * bus. Unattached command ports use the setpoints latched by initialize().
+       * and bus residuals, and accumulates the converter current into the
+       * terminal bus. Unattached command ports use the setpoints latched by
+       * initialize().
        *
        * @pre The terminal-bus residual has been zeroed for this evaluation.
        */
@@ -656,12 +714,14 @@ namespace GridKit
         ws[IPCMD] = ipcmd_set_;
         ws[IQCMD] = iqcmd_set_;
 
-        if (auto ipcmd_port = ports_.in.template port<RegcaSignalInputs::ipcmd>())
+        if (auto ipcmd_port =
+              ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
           ws[IPCMD] = ipcmd_port.readSignal();
         }
 
-        if (auto iqcmd_port = ports_.in.template port<RegcaSignalInputs::iqcmd>())
+        if (auto iqcmd_port =
+              ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
           ws[IQCMD] = iqcmd_port.readSignal();
         }

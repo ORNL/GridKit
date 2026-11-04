@@ -25,12 +25,13 @@ namespace GridKit
 
   /// @cond DOXYGEN_INTERNAL
   static const std::string matlab_syntax_error{
-      "Only a subset of Matlab syntax is supported."
-      "\n\t'=' for assignment must be on the same line as the field, eg "
-      "`mpc.version = '2'`."
-      "\n\tOpen brace ('[') must be on the same line as the field for matrix "
-      "initialization."
-      "\n\tEach row of a matrix must be terminated by a semicolon."};
+    "Only a subset of Matlab syntax is supported."
+    "\n\t'=' for assignment must be on the same line as the field, eg "
+    "`mpc.version = '2'`."
+    "\n\tOpen brace ('[') must be on the same line as the field for matrix "
+    "initialization."
+    "\n\tEach row of a matrix must be terminated by a semicolon."
+  };
 
   /// @endcond
 
@@ -48,19 +49,19 @@ namespace GridKit
   inline void ltrim(std::string& s)
   {
     const std::string nothing = "";
-    s                         = std::regex_replace(s, std::regex("^\\s+"), nothing);
+    s = std::regex_replace(s, std::regex("^\\s+"), nothing);
   }
 
   inline void rtrim(std::string& s)
   {
     const std::string nothing = "";
-    s                         = std::regex_replace(s, std::regex("\\s+$"), nothing);
+    s = std::regex_replace(s, std::regex("\\s+$"), nothing);
   }
 
   inline void trim_matlab_comments(std::string& s)
   {
     const std::string nothing = "";
-    s                         = std::regex_replace(s, std::regex("%.+"), nothing);
+    s = std::regex_replace(s, std::regex("%.+"), nothing);
   }
 
   // Retrieve MATPOWER component from assignment line.
@@ -99,23 +100,25 @@ namespace GridKit
   }
 
   template <typename RealT = double, typename IdxT = int>
-  void readMatPowerBusRow(const std::string& row, BusData<RealT, IdxT>& br, LoadData<RealT, IdxT>& lr)
+  void readMatPowerBusRow(
+    const std::string& row, BusData<RealT, IdxT>& br, LoadData<RealT, IdxT>& lr
+  )
   {
     logs() << "Parsing MATPOWER bus row\n";
     std::stringstream is(row);
-    is >> br.bus_i   // Bus ID
-        >> br.type   // Bus type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
-        >> lr.Pd     // Active power demand [MW]
-        >> lr.Qd     // Reactive power demand [MVAr]
-        >> br.Gs     // Shunt conductance (MW demanded at V = 1.0 p.u.)
-        >> br.Bs     // Shunt susceptance (MVAr injected at V = 1.0 p.u.)
-        >> br.area   // Area number (>0)
-        >> br.Vm     // Voltage magnitude (p.u.)
-        >> br.Va     // Voltage phase (deg)
-        >> br.baseKV // Base voltage [kV]
-        >> br.zone   // Loss zone number (>0)
-        >> br.Vmax   // Maximum voltage magnitude (p.u.)
-        >> br.Vmin;  // Minimum voltage magnitude (p.u.)
+    is >> br.bus_i // Bus ID
+      >> br.type   // Bus type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
+      >> lr.Pd     // Active power demand [MW]
+      >> lr.Qd     // Reactive power demand [MVAr]
+      >> br.Gs     // Shunt conductance (MW demanded at V = 1.0 p.u.)
+      >> br.Bs     // Shunt susceptance (MVAr injected at V = 1.0 p.u.)
+      >> br.area   // Area number (>0)
+      >> br.Vm     // Voltage magnitude (p.u.)
+      >> br.Va     // Voltage phase (deg)
+      >> br.baseKV // Base voltage [kV]
+      >> br.zone   // Loss zone number (>0)
+      >> br.Vmax   // Maximum voltage magnitude (p.u.)
+      >> br.Vmin;  // Minimum voltage magnitude (p.u.)
 
     lr.bus_i = br.bus_i;
   }
@@ -126,9 +129,9 @@ namespace GridKit
     logs() << "Parsing MATPOWER gen row\n";
     std::stringstream is(row);
     is >> gr.bus >> gr.Pg >> gr.Qg >> gr.Qmax >> gr.Qmin >> gr.Vg >> gr.mBase
-        >> gr.status >> gr.Pmax >> gr.Pmin >> gr.Pc1 >> gr.Pc2 >> gr.Qc1min
-        >> gr.Qc1max >> gr.Qc2min >> gr.Qc2max >> gr.ramp_agc >> gr.ramp_10
-        >> gr.ramp_30 >> gr.ramp_q >> gr.apf;
+      >> gr.status >> gr.Pmax >> gr.Pmin >> gr.Pc1 >> gr.Pc2 >> gr.Qc1min
+      >> gr.Qc1max >> gr.Qc2min >> gr.Qc2max >> gr.ramp_agc >> gr.ramp_10
+      >> gr.ramp_30 >> gr.ramp_q >> gr.apf;
     checkEndOfMatrixRow(is);
   }
 
@@ -138,8 +141,8 @@ namespace GridKit
     logs() << "Parsing MATPOWER branch row\n";
     std::stringstream is(row);
     is >> br.fbus >> br.tbus >> br.r >> br.x >> br.b >> br.rateA >> br.rateB
-        >> br.rateC >> br.ratio >> br.angle >> br.status >> br.angmin
-        >> br.angmax;
+      >> br.rateC >> br.ratio >> br.angle >> br.status >> br.angmin
+      >> br.angmax;
     checkEndOfMatrixRow(is);
   }
 
@@ -173,7 +176,9 @@ namespace GridKit
     }
     else
     {
-      throw std::runtime_error(matlab_syntax_error + "\nGot line '" + line + "'");
+      throw std::runtime_error(
+        matlab_syntax_error + "\nGot line '" + line + "'"
+      );
     }
   }
 
@@ -189,7 +194,9 @@ namespace GridKit
     }
     else
     {
-      throw std::runtime_error(matlab_syntax_error + "\nGot line '" + line + "'");
+      throw std::runtime_error(
+        matlab_syntax_error + "\nGot line '" + line + "'"
+      );
     }
   }
 
@@ -200,9 +207,10 @@ namespace GridKit
     readMatPower(mp, ifs);
   }
 
-  template <typename IdxT           = int,
-            typename RealT          = double,
-            std::size_t MaxLineSize = 1028>
+  template <
+    typename IdxT           = int,
+    typename RealT          = double,
+    std::size_t MaxLineSize = 1028>
   void readMatPower(SystemModelData<RealT, IdxT>& mp, std::istream& is)
   {
     using BusDataT     = BusData<RealT, IdxT>;

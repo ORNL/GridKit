@@ -35,14 +35,14 @@ namespace GridKit
     };
 
     template <typename real_type, typename index_type>
-    using FunctionSignalSourceData =
-        ComponentData<real_type,
-                      index_type,
-                      FunctionSignalSourceParameters,
-                      FunctionSignalSourceBuses,
-                      FunctionSignalSourceSignalInputs,
-                      FunctionSignalSourceSignalOutputs,
-                      FunctionSignalSourceMonitorableVariables>;
+    using FunctionSignalSourceData = ComponentData<
+      real_type,
+      index_type,
+      FunctionSignalSourceParameters,
+      FunctionSignalSourceBuses,
+      FunctionSignalSourceSignalInputs,
+      FunctionSignalSourceSignalOutputs,
+      FunctionSignalSourceMonitorableVariables>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

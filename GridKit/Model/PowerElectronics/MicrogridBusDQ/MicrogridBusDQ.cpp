@@ -16,12 +16,14 @@ namespace GridKit
      *
      * In DQ space
      * Each microgrid line has a virtual resistance RN
-     * Model is from paper: "Modeling, Analysis and Testing of Autonomous Operation
-     * of an Inverter-Based Microgrid", Nagaraju Pogaku, Milan Prodanovic, and
-     * Timothy C. Green, Section E
+     * Model is from paper: "Modeling, Analysis and Testing of Autonomous
+     * Operation of an Inverter-Based Microgrid", Nagaraju Pogaku, Milan
+     * Prodanovic, and Timothy C. Green, Section E
      */
     template <class ScalarT, typename IdxT>
-    MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, RealT RN, NodeT* node1)
+    MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(
+      IdxT id, RealT RN, NodeT* node1
+    )
       : RN_(RN), node1_(node1)
     {
       assert(node1_->size() == 2);
@@ -48,7 +50,8 @@ namespace GridKit
       return 0;
     }
 
-    /// There are no internal variables in this component, so \ref tag_ can be set arbitrarily.
+    /// There are no internal variables in this component, so \ref tag_ can be
+    /// set arbitrarily.
     template <class ScalarT, typename IdxT>
     int MicrogridBusDQ<ScalarT, IdxT>::tagDifferentiable()
     {
@@ -81,8 +84,9 @@ namespace GridKit
 
     /**
      * @brief Evaluate residual
-     * This model has "Virtual resistors". The voltage of the bus divided by its virtual resistance.
-     * The components are external to allow for outside components to add inductances to the terms.
+     * This model has "Virtual resistors". The voltage of the bus divided by its
+     * virtual resistance. The components are external to allow for outside
+     * components to add inductances to the terms.
      *
      * reference to equations in class header
      *

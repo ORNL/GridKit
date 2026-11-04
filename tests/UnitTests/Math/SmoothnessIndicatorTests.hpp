@@ -17,18 +17,19 @@ namespace GridKit
     private:
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
-      static constexpr RealT kSmoothTolerance   = 1.0e-2;
-      static constexpr RealT kNearOne           = 1.0 - kSmoothTolerance;
-      static constexpr RealT kRoundoffTolerance = 100.0 * std::numeric_limits<RealT>::epsilon();
+      static constexpr RealT kSmoothTolerance = 1.0e-2;
+      static constexpr RealT kNearOne         = 1.0 - kSmoothTolerance;
+      static constexpr RealT kRoundoffTolerance =
+        100.0 * std::numeric_limits<RealT>::epsilon();
 
       static ScalarT scalar(const RealT value)
       {
         return static_cast<ScalarT>(value);
       }
 
-      static bool within(const ScalarT value,
-                         const ScalarT expected,
-                         const ScalarT tolerance)
+      static bool within(
+        const ScalarT value, const ScalarT expected, const ScalarT tolerance
+      )
       {
         return std::abs(value - expected) < tolerance;
       }
@@ -62,17 +63,25 @@ namespace GridKit
         const ScalarT tol   = scalar(kSmoothTolerance);
 
         // Type 1 (no-offset) deadband returns ~0 inside the band ...
-        const ScalarT inside_input  = scalar(0.02);
-        success                    *= (std::abs(Math::deadband1(inside_input, lower, upper)) < tol * tol);
+        const ScalarT inside_input = scalar(0.02);
+        success *=
+          (std::abs(Math::deadband1(inside_input, lower, upper)) < tol * tol);
 
-        // ... and passes the input through unchanged (no offset) outside the band.
+        // ... and passes the input through unchanged (no offset) outside the
+        // band.
         const ScalarT far_above_input = scalar(4.0);
         const ScalarT far_below_input = scalar(-4.0);
 
-        success *= std::isfinite(Math::deadband1(far_above_input, lower, upper));
-        success *= within(Math::deadband1(far_above_input, lower, upper), far_above_input, tol);
-        success *= std::isfinite(Math::deadband1(far_below_input, lower, upper));
-        success *= within(Math::deadband1(far_below_input, lower, upper), far_below_input, tol);
+        success *=
+          std::isfinite(Math::deadband1(far_above_input, lower, upper));
+        success *= within(
+          Math::deadband1(far_above_input, lower, upper), far_above_input, tol
+        );
+        success *=
+          std::isfinite(Math::deadband1(far_below_input, lower, upper));
+        success *= within(
+          Math::deadband1(far_below_input, lower, upper), far_below_input, tol
+        );
 
         return success.report(__func__);
       }
@@ -91,9 +100,14 @@ namespace GridKit
         const ScalarT expected_below = below_input - lower;
         const ScalarT expected_above = above_input - upper;
 
-        success *= within(Math::deadband2(below_input, lower, upper), expected_below, tol);
-        success *= (std::abs(Math::deadband2(inside_input, lower, upper)) < tol * tol);
-        success *= within(Math::deadband2(above_input, lower, upper), expected_above, tol);
+        success *= within(
+          Math::deadband2(below_input, lower, upper), expected_below, tol
+        );
+        success *=
+          (std::abs(Math::deadband2(inside_input, lower, upper)) < tol * tol);
+        success *= within(
+          Math::deadband2(above_input, lower, upper), expected_above, tol
+        );
 
         const ScalarT lower_breakpoint = Math::deadband2(lower, lower, upper);
         const ScalarT upper_breakpoint = Math::deadband2(upper, lower, upper);
@@ -103,28 +117,47 @@ namespace GridKit
         success *= (std::abs(lower_breakpoint) < tol);
         success *= (std::abs(upper_breakpoint) < tol);
 
-        const ScalarT x  = scalar(-0.4);
-        success         *= (std::abs(Math::deadband2(x, lower, upper)
-                             - (x - Math::clamp(x, lower, upper)))
-                    < scalar(kRoundoffTolerance));
+        const ScalarT x = scalar(-0.4);
+        success *=
+          (std::abs(
+             Math::deadband2(x, lower, upper)
+             - (x - Math::clamp(x, lower, upper))
+           )
+           < scalar(kRoundoffTolerance));
 
         const ScalarT far_above_input    = scalar(4.0);
         const ScalarT far_below_input    = scalar(-4.0);
         const ScalarT expected_far_above = far_above_input - upper;
         const ScalarT expected_far_below = far_below_input - lower;
 
-        success *= std::isfinite(Math::deadband2(far_above_input, lower, upper));
-        success *= within(Math::deadband2(far_above_input, lower, upper), expected_far_above, tol);
-        success *= std::isfinite(Math::deadband2(far_below_input, lower, upper));
-        success *= within(Math::deadband2(far_below_input, lower, upper), expected_far_below, tol);
+        success *=
+          std::isfinite(Math::deadband2(far_above_input, lower, upper));
+        success *= within(
+          Math::deadband2(far_above_input, lower, upper),
+          expected_far_above,
+          tol
+        );
+        success *=
+          std::isfinite(Math::deadband2(far_below_input, lower, upper));
+        success *= within(
+          Math::deadband2(far_below_input, lower, upper),
+          expected_far_below,
+          tol
+        );
 
-        const ScalarT point        = scalar(0.25);
-        const ScalarT above_point  = scalar(0.75);
-        const ScalarT below_point  = scalar(-0.25);
-        success                   *= (std::abs(Math::deadband2(above_point, point, point) - (above_point - point))
-                    < scalar(kRoundoffTolerance));
-        success                   *= (std::abs(Math::deadband2(below_point, point, point) - (below_point - point))
-                    < scalar(kRoundoffTolerance));
+        const ScalarT point       = scalar(0.25);
+        const ScalarT above_point = scalar(0.75);
+        const ScalarT below_point = scalar(-0.25);
+        success *=
+          (std::abs(
+             Math::deadband2(above_point, point, point) - (above_point - point)
+           )
+           < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(
+             Math::deadband2(below_point, point, point) - (below_point - point)
+           )
+           < scalar(kRoundoffTolerance));
 
         return success.report(__func__);
       }
@@ -144,18 +177,25 @@ namespace GridKit
         success *= (Math::below(scalar(3.2), limit_max) < near_zero);
 
         success *= (Math::inside(scalar(1.5), limit_min, limit_max) > near_one);
-        success *= (Math::inside(scalar(-0.2), limit_min, limit_max) < near_zero);
-        success *= (Math::inside(scalar(3.2), limit_min, limit_max) < near_zero);
+        success *=
+          (Math::inside(scalar(-0.2), limit_min, limit_max) < near_zero);
+        success *=
+          (Math::inside(scalar(3.2), limit_min, limit_max) < near_zero);
 
-        success *= (Math::outside(scalar(1.5), limit_min, limit_max) < near_zero);
-        success *= (Math::outside(scalar(-0.2), limit_min, limit_max) > near_one);
-        success *= (Math::outside(scalar(3.2), limit_min, limit_max) > near_one);
+        success *=
+          (Math::outside(scalar(1.5), limit_min, limit_max) < near_zero);
+        success *=
+          (Math::outside(scalar(-0.2), limit_min, limit_max) > near_one);
+        success *=
+          (Math::outside(scalar(3.2), limit_min, limit_max) > near_one);
 
-        const ScalarT x  = scalar(1.5);
-        success         *= (std::abs(Math::inside(x, limit_min, limit_max)
-                             + Math::outside(x, limit_min, limit_max)
-                             - scalar(1.0))
-                    < scalar(kRoundoffTolerance));
+        const ScalarT x = scalar(1.5);
+        success *=
+          (std::abs(
+             Math::inside(x, limit_min, limit_max)
+             + Math::outside(x, limit_min, limit_max) - scalar(1.0)
+           )
+           < scalar(kRoundoffTolerance));
 
         return success.report(__func__);
       }
@@ -184,17 +224,26 @@ namespace GridKit
         const ScalarT height = scalar(4.0);
         const ScalarT tol    = scalar(kSmoothTolerance);
 
-        const ScalarT below_input      = scalar(-1.0);
-        const ScalarT midpoint_input   = scalar(1.0);
-        const ScalarT above_input      = scalar(3.0);
-        const ScalarT expected_mid     = height * (midpoint_input - lower) / (upper - lower);
-        const ScalarT negative_height  = -height;
-        const ScalarT expected_mid_neg = negative_height * (midpoint_input - lower) / (upper - lower);
+        const ScalarT below_input    = scalar(-1.0);
+        const ScalarT midpoint_input = scalar(1.0);
+        const ScalarT above_input    = scalar(3.0);
+        const ScalarT expected_mid =
+          height * (midpoint_input - lower) / (upper - lower);
+        const ScalarT negative_height = -height;
+        const ScalarT expected_mid_neg =
+          negative_height * (midpoint_input - lower) / (upper - lower);
 
         success *= (Math::linseg(below_input, lower, upper, height) < tol);
-        success *= within(Math::linseg(midpoint_input, lower, upper, height), expected_mid, tol);
-        success *= within(Math::linseg(above_input, lower, upper, height), height, tol);
-        success *= within(Math::linseg(midpoint_input, lower, upper, negative_height), expected_mid_neg, tol);
+        success *= within(
+          Math::linseg(midpoint_input, lower, upper, height), expected_mid, tol
+        );
+        success *=
+          within(Math::linseg(above_input, lower, upper, height), height, tol);
+        success *= within(
+          Math::linseg(midpoint_input, lower, upper, negative_height),
+          expected_mid_neg,
+          tol
+        );
 
         return success.report(__func__);
       }
@@ -203,17 +252,17 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const ScalarT tol         = scalar(kSmoothTolerance);
-        const ScalarT roundoff    = scalar(kRoundoffTolerance);
-        const ScalarT tau         = scalar(1.0 / Math::MU<RealT>);
-        const ScalarT at_zero     = tau * std::log(scalar(2.0));
-        const ScalarT far_above   = scalar(4.0);
-        const ScalarT far_below   = scalar(-4.0);
-        const ScalarT lower       = scalar(-0.25);
-        const ScalarT upper       = scalar(0.75);
-        const ScalarT x           = scalar(0.4);
-        const ScalarT smooth_clip = lower + Math::ramp(x - lower)
-                                    - Math::ramp(x - upper);
+        const ScalarT tol       = scalar(kSmoothTolerance);
+        const ScalarT roundoff  = scalar(kRoundoffTolerance);
+        const ScalarT tau       = scalar(1.0 / Math::MU<RealT>);
+        const ScalarT at_zero   = tau * std::log(scalar(2.0));
+        const ScalarT far_above = scalar(4.0);
+        const ScalarT far_below = scalar(-4.0);
+        const ScalarT lower     = scalar(-0.25);
+        const ScalarT upper     = scalar(0.75);
+        const ScalarT x         = scalar(0.4);
+        const ScalarT smooth_clip =
+          lower + Math::ramp(x - lower) - Math::ramp(x - upper);
 
         success *= (Math::ramp(scalar(1.0)) > scalar(kNearOne));
         success *= (Math::ramp(scalar(-1.0)) < tol);
@@ -256,29 +305,46 @@ namespace GridKit
         const RealT    parameter_bound = kSmoothTolerance;
         const Variable state_below_bound{-1.0, 0};
         const Variable state_above_bound{1.0, 1};
-        const auto     lower_bounded_state = Math::max(state_below_bound, parameter_bound);
-        const auto     upper_bounded_state = Math::min(state_above_bound, parameter_bound);
+        const auto     lower_bounded_state =
+          Math::max(state_below_bound, parameter_bound);
+        const auto upper_bounded_state =
+          Math::min(state_above_bound, parameter_bound);
 
-        static_assert(std::is_same<typename std::decay<decltype(lower_bounded_state)>::type, Variable>::value,
-                      "Mixed-type max should keep the differentiable scalar type.");
-        static_assert(std::is_same<typename std::decay<decltype(upper_bounded_state)>::type, Variable>::value,
-                      "Mixed-type min should keep the differentiable scalar type.");
+        static_assert(
+          std::is_same<
+            typename std::decay<decltype(lower_bounded_state)>::type,
+            Variable>::value,
+          "Mixed-type max should keep the differentiable scalar type."
+        );
+        static_assert(
+          std::is_same<
+            typename std::decay<decltype(upper_bounded_state)>::type,
+            Variable>::value,
+          "Mixed-type min should keep the differentiable scalar type."
+        );
 
-        success *= (std::abs(lower_bounded_state.getValue() - parameter_bound) < kSmoothTolerance);
-        success *= (std::abs(upper_bounded_state.getValue() - parameter_bound) < kSmoothTolerance);
+        success *=
+          (std::abs(lower_bounded_state.getValue() - parameter_bound)
+           < kSmoothTolerance);
+        success *=
+          (std::abs(upper_bounded_state.getValue() - parameter_bound)
+           < kSmoothTolerance);
 
-        const ScalarT x  = scalar(0.4);
-        const ScalarT y  = scalar(-0.7);
-        success         *= (std::abs(Math::min(x, y) + Math::max(x, y) - (x + y))
-                    < scalar(kRoundoffTolerance));
+        const ScalarT x = scalar(0.4);
+        const ScalarT y = scalar(-0.7);
+        success *=
+          (std::abs(Math::min(x, y) + Math::max(x, y) - (x + y))
+           < scalar(kRoundoffTolerance));
 
         const ScalarT point = scalar(0.25);
         const ScalarT bias  = std::log(scalar(2.0)) / scalar(Math::MU<RealT>);
 
-        success *= (std::abs(Math::max(point, point) - (point + bias))
-                    < scalar(kRoundoffTolerance));
-        success *= (std::abs(Math::min(point, point) - (point - bias))
-                    < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(Math::max(point, point) - (point + bias))
+           < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(Math::min(point, point) - (point - bias))
+           < scalar(kRoundoffTolerance));
 
         return success.report(__func__);
       }
@@ -298,20 +364,32 @@ namespace GridKit
         const ScalarT near_one    = scalar(kNearOne);
 
         // Inside the limits, both increasing and decreasing dynamics pass.
-        success *= (Math::indicator(inside, f_positive, limit_min, limit_max) > near_one);
-        success *= (Math::indicator(inside, f_negative, limit_min, limit_max) > near_one);
+        success *=
+          (Math::indicator(inside, f_positive, limit_min, limit_max) > near_one
+          );
+        success *=
+          (Math::indicator(inside, f_negative, limit_min, limit_max) > near_one
+          );
 
         // Above the upper limit, increasing dynamics are blocked.
-        success *= (Math::indicator(above_limit, f_positive, limit_min, limit_max) < near_zero);
+        success *=
+          (Math::indicator(above_limit, f_positive, limit_min, limit_max)
+           < near_zero);
 
         // Above the upper limit, decreasing dynamics restore the state.
-        success *= (Math::indicator(above_limit, f_negative, limit_min, limit_max) > near_one);
+        success *=
+          (Math::indicator(above_limit, f_negative, limit_min, limit_max)
+           > near_one);
 
         // Below the lower limit, decreasing dynamics are blocked.
-        success *= (Math::indicator(below_limit, f_negative, limit_min, limit_max) < near_zero);
+        success *=
+          (Math::indicator(below_limit, f_negative, limit_min, limit_max)
+           < near_zero);
 
         // Below the lower limit, increasing dynamics restore the state.
-        success *= (Math::indicator(below_limit, f_positive, limit_min, limit_max) > near_one);
+        success *=
+          (Math::indicator(below_limit, f_positive, limit_min, limit_max)
+           > near_one);
 
         return success.report(__func__);
       }
@@ -330,18 +408,34 @@ namespace GridKit
         const ScalarT f_negative        = -f_positive;
         const ScalarT blocked_tolerance = f_positive * scalar(kSmoothTolerance);
 
-        success *= (std::abs(Math::antiwindup(inside, f_positive, limit_min, limit_max)
-                             - Math::indicator(inside, f_positive, limit_min, limit_max) * f_positive)
-                    < scalar(kRoundoffTolerance));
+        success *=
+          (std::abs(
+             Math::antiwindup(inside, f_positive, limit_min, limit_max)
+             - Math::indicator(inside, f_positive, limit_min, limit_max)
+                 * f_positive
+           )
+           < scalar(kRoundoffTolerance));
 
-        success *= (std::abs(Math::antiwindup(above_limit, f_positive, limit_min, limit_max)) < blocked_tolerance);
-        success *= within(Math::antiwindup(above_limit, f_negative, limit_min, limit_max),
-                          f_negative,
-                          blocked_tolerance);
-        success *= (std::abs(Math::antiwindup(below_limit, f_negative, limit_min, limit_max)) < blocked_tolerance);
-        success *= within(Math::antiwindup(below_limit, f_positive, limit_min, limit_max),
-                          f_positive,
-                          blocked_tolerance);
+        success *=
+          (std::abs(
+             Math::antiwindup(above_limit, f_positive, limit_min, limit_max)
+           )
+           < blocked_tolerance);
+        success *= within(
+          Math::antiwindup(above_limit, f_negative, limit_min, limit_max),
+          f_negative,
+          blocked_tolerance
+        );
+        success *=
+          (std::abs(
+             Math::antiwindup(below_limit, f_negative, limit_min, limit_max)
+           )
+           < blocked_tolerance);
+        success *= within(
+          Math::antiwindup(below_limit, f_positive, limit_min, limit_max),
+          f_positive,
+          blocked_tolerance
+        );
 
         return success.report(__func__);
       }

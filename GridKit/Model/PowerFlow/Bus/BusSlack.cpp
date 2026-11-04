@@ -18,7 +18,13 @@ namespace GridKit
    */
   template <class ScalarT, typename IdxT>
   BusSlack<ScalarT, IdxT>::BusSlack()
-    : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta_(0.0), P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
+    : BaseBus<ScalarT, IdxT>(0),
+      V_(0.0),
+      theta_(0.0),
+      P_(0.0),
+      Q_(0.0),
+      PB_(0.0),
+      QB_(0.0)
   {
     size_ = 0;
   }
@@ -34,7 +40,13 @@ namespace GridKit
    */
   template <class ScalarT, typename IdxT>
   BusSlack<ScalarT, IdxT>::BusSlack(ScalarT V, ScalarT theta)
-    : BaseBus<ScalarT, IdxT>(0), V_(V), theta_(theta), P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
+    : BaseBus<ScalarT, IdxT>(0),
+      V_(V),
+      theta_(theta),
+      P_(0.0),
+      Q_(0.0),
+      PB_(0.0),
+      QB_(0.0)
   {
     P()   = 0.0;
     Q()   = 0.0;

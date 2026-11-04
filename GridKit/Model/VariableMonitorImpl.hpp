@@ -19,10 +19,11 @@ namespace GridKit
      * @brief Manage printing variables associated with a specific component or
      * bus
      */
-    template <typename scalar_type,
-              typename index_type,
-              template <typename, typename> typename eval_type,
-              template <typename, typename> typename model_data_type>
+    template <
+      typename scalar_type,
+      typename index_type,
+      template <typename, typename> typename eval_type,
+      template <typename, typename> typename model_data_type>
     class VariableMonitor<eval_type<scalar_type, index_type>, model_data_type>
       : public VariableMonitorBase
     {
@@ -53,11 +54,12 @@ namespace GridKit
        *
        * @pre id contains only ASCII letters, digits, spaces, '_', '.' and '-'.
        */
-      VariableMonitor(const std::string&            device_class,
-                      const std::string&            id,
-                      const std::set<VariableEnum>& variables)
-        : device_class_(device_class),
-          id_(id)
+      VariableMonitor(
+        const std::string&            device_class,
+        const std::string&            id,
+        const std::set<VariableEnum>& variables
+      )
+        : device_class_(device_class), id_(id)
       {
         std::ranges::copy(variables, std::back_inserter(variables_));
       }
@@ -68,9 +70,11 @@ namespace GridKit
        * @param data Expected to be derived from ComponentData
        */
       VariableMonitor(const ObjData& data)
-        : VariableMonitor(data.device_class,
-                          data.disambiguation_string,
-                          data.monitored_variables)
+        : VariableMonitor(
+            data.device_class,
+            data.disambiguation_string,
+            data.monitored_variables
+          )
       {
       }
 
@@ -93,8 +97,10 @@ namespace GridKit
       void set(VariableEnum v, FuncT f)
       {
         using RetT = std::remove_cvref_t<std::invoke_result_t<FuncT>>;
-        static_assert(std::is_floating_point_v<RetT> || std::is_same_v<RetT, ScalarT>,
-                      "Monitored variables must be real valued");
+        static_assert(
+          std::is_floating_point_v<RetT> || std::is_same_v<RetT, ScalarT>,
+          "Monitored variables must be real valued"
+        );
         f_[static_cast<size_t>(enum_integer(v))] = [f]
         { return static_cast<RealT>(f()); };
       }
@@ -104,7 +110,12 @@ namespace GridKit
       {
         for (auto v : variables_)
         {
-          entries.emplace_back(device_class_, id_, enum_name(v), f_[static_cast<size_t>(enum_integer(v))]);
+          entries.emplace_back(
+            device_class_,
+            id_,
+            enum_name(v),
+            f_[static_cast<size_t>(enum_integer(v))]
+          );
         }
       }
 

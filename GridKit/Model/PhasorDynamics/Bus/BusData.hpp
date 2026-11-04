@@ -66,13 +66,14 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct BusData : public ComponentData<real_type,
-                                          index_type,
-                                          BusParameters,
-                                          Utilities::EmptyEnum,
-                                          BusSignalInputs,
-                                          BusSignalOutputs,
-                                          BusMonitorableVariables>
+    struct BusData : public ComponentData<
+                       real_type,
+                       index_type,
+                       BusParameters,
+                       Utilities::EmptyEnum,
+                       BusSignalInputs,
+                       BusSignalOutputs,
+                       BusMonitorableVariables>
     {
       using RealT = real_type;
       using IdxT  = index_type;
@@ -91,8 +92,10 @@ namespace GridKit
         INVALID,
         DEFAULT,
         SLACK,
-        SIGNAL_VOLTAGE_OUT, ///< Bus with voltage signal outputs and current signal inputs
-        SIGNAL_VOLTAGE_IN,  ///< Bus with voltage signal inputs and current signal outputs
+        SIGNAL_VOLTAGE_OUT, ///< Bus with voltage signal outputs and current
+                            ///< signal inputs
+        SIGNAL_VOLTAGE_IN,  ///< Bus with voltage signal inputs and current
+                            ///< signal outputs
       };
 
       BusType bus_type{BusType::INVALID}; ///< The kind of bus this data is for

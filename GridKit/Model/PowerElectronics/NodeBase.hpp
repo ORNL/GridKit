@@ -103,17 +103,21 @@ namespace GridKit
       }
 
       /**
-       * @brief Create the mappings from local to global indices for a node variable (either internal or external),
-       * to be used from an attached component. \see Component::setExternalConnectionNodes()
+       * @brief Create the mappings from local to global indices for a node
+       * variable (either internal or external), to be used from an attached
+       * component. \see Component::setExternalConnectionNodes()
        *
        * @param local_index The index of the local variable
        * @param connection The necessary connection information for the variable
        *
-       * @pre `local_index` *must* be the index of an external variable. As of now, using this method
-       * to set information for a local variable will silently discard the unnecessary information, but
-       * this may change in the future.
+       * @pre `local_index` *must* be the index of an external variable. As of
+       * now, using this method to set information for a local variable will
+       * silently discard the unnecessary information, but this may change in
+       * the future.
        */
-      int setExternalConnectionNodes(IdxT local_index, ExternalConnection<ScalarT, IdxT> connection)
+      int setExternalConnectionNodes(
+        IdxT local_index, ExternalConnection<ScalarT, IdxT> connection
+      )
       {
         y_ext_[local_index]            = connection.y_;
         yp_ext_[local_index]           = connection.yp_;
@@ -123,16 +127,18 @@ namespace GridKit
       }
 
       /**
-       * @brief Get connection information for a particular variable, to be consumed by an attached
-       * component so they can properly access their externals.
+       * @brief Get connection information for a particular variable, to be
+       * consumed by an attached component so they can properly access their
+       * externals.
        */
-      ExternalConnection<ScalarT, IdxT> getNodeConnection(size_t local_index) const
+      ExternalConnection<ScalarT, IdxT> getNodeConnection(size_t local_index
+      ) const
       {
         return ExternalConnection<ScalarT, IdxT>{
-            .y_   = y_ext_[local_index],
-            .yp_  = yp_ext_[local_index],
-            .f_   = f_ext_[local_index],
-            .idx_ = connection_nodes_[local_index],
+          .y_   = y_ext_[local_index],
+          .yp_  = yp_ext_[local_index],
+          .f_   = f_ext_[local_index],
+          .idx_ = connection_nodes_[local_index],
         };
       }
 
@@ -220,9 +226,11 @@ namespace GridKit
       size_t n_intern_;
       size_t n_extern_;
 
-      IdxT              nnz_{0};
-      std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
-      std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
+      IdxT nnz_{0};
+      std::vector<IdxT>
+        variable_indices_; ///< Global (system-level) variable indices
+      std::vector<IdxT>
+        residual_indices_; ///< Global (system-level) residual indices
 
       std::vector<bool> tag_;
       VectorT           abs_tol_;
@@ -266,8 +274,7 @@ namespace GridKit
       VectorT f_;
 
     public:
-      virtual IdxT
-      sizeQuadrature() final
+      virtual IdxT sizeQuadrature() final
       {
         throw "ERROR: Method not implemented!\n";
         return 0;

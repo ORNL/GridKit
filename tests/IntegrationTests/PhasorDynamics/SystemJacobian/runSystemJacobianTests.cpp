@@ -13,13 +13,15 @@ int main(int argc, const char* argv[])
   // Print timings
   Log::raiseVerbosity(Log::SUMMARY);
 
-  GridKit::Utilities::CliArgs args{{.name     = {"--cases", "-c"},
-                                    .help     = "Case file, or directory searched recursively for *.case.json",
-                                    .required = true},
-                                   {.name     = {"--evaluations", "-n"},
-                                    .help     = "Number of timed evaluations per case",
-                                    .type     = GridKit::Utilities::ArgType::Integer,
-                                    .defaults = 100}};
+  GridKit::Utilities::CliArgs args{
+    {.name     = {"--cases", "-c"},
+     .help     = "Case file, or directory searched recursively for *.case.json",
+     .required = true},
+    {.name     = {"--evaluations", "-n"},
+     .help     = "Number of timed evaluations per case",
+     .type     = GridKit::Utilities::ArgType::Integer,
+     .defaults = 100}
+  };
   args.parseArgs(argc, argv);
 
   const std::filesystem::path path = args["cases"]();
@@ -27,9 +29,11 @@ int main(int argc, const char* argv[])
   std::vector<std::filesystem::path> case_files;
   if (std::filesystem::is_directory(path))
   {
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(path))
+    for (const auto& entry :
+         std::filesystem::recursive_directory_iterator(path))
     {
-      if (entry.is_regular_file() && entry.path().filename().string().ends_with(".case.json"))
+      if (entry.is_regular_file()
+          && entry.path().filename().string().ends_with(".case.json"))
       {
         case_files.push_back(entry.path());
       }
@@ -47,7 +51,9 @@ int main(int argc, const char* argv[])
   }
 
   GridKit::Testing::TestingResults                      result;
-  GridKit::Testing::SystemJacobianTests<double, size_t> test(args["evaluations"].as<int>());
+  GridKit::Testing::SystemJacobianTests<double, size_t> test(
+    args["evaluations"].as<int>()
+  );
 
   for (const auto& case_file : case_files)
   {

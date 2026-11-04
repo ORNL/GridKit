@@ -33,13 +33,15 @@ namespace GridKit
       void formatReal(std::string& out, RealT value)
       {
         std::array<char, 128> buffer{};
-        constexpr auto        precision = std::numeric_limits<RealT>::digits10 + 1;
+        constexpr auto precision = std::numeric_limits<RealT>::digits10 + 1;
 
-        auto [ptr, ec] = std::to_chars(buffer.data(),
-                                       buffer.data() + buffer.size(),
-                                       value,
-                                       std::chars_format::scientific,
-                                       precision);
+        auto [ptr, ec] = std::to_chars(
+          buffer.data(),
+          buffer.data() + buffer.size(),
+          value,
+          std::chars_format::scientific,
+          precision
+        );
 
         if (ec == std::errc{})
         {
@@ -139,7 +141,9 @@ namespace GridKit
       virtual void appendEntries(std::vector<Entry>&) const = 0;
     };
 
-    template <typename eval_type, template <typename, typename> typename model_data_type>
+    template <
+      typename eval_type,
+      template <typename, typename> typename model_data_type>
     class VariableMonitor;
 
   } // namespace Model

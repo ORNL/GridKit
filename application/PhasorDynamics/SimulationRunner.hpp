@@ -21,7 +21,7 @@ namespace GridKit
 
     using SimulationSystem = SystemModel<double, std::size_t>;
     using SimulationSolver =
-        AnalysisManager::Sundials::Ida<double, std::size_t>;
+      AnalysisManager::Sundials::Ida<double, std::size_t>;
     using Signals        = std::map<std::string, double>;
     using SignalBindings = std::map<std::string, std::size_t>;
 
@@ -41,7 +41,8 @@ namespace GridKit
           || !std::isfinite(data.dt_monitor) || data.dt_monitor < 0.0)
       {
         throw std::invalid_argument(
-            "Study requires a positive tmax and a nonnegative monitor interval");
+          "Study requires a positive tmax and a nonnegative monitor interval"
+        );
       }
 
       double previous = 0.0;
@@ -51,7 +52,8 @@ namespace GridKit
             || event.time > data.tmax)
         {
           throw std::invalid_argument(
-              "Events must be ordered and within the simulation interval");
+            "Events must be ordered and within the simulation interval"
+          );
         }
 
         previous = event.time;
@@ -86,15 +88,17 @@ namespace GridKit
       if (ret != 0)
       {
         throw std::runtime_error(
-            "Event failed at time " + std::to_string(event.time));
+          "Event failed at time " + std::to_string(event.time)
+        );
       }
     }
 
     /// Run a standalone study with event handling and monitoring.
     inline Testing::TestStatus runStandaloneStudy(
-        const StudyData& data,
-        bool             consistent_initial = true,
-        bool             print_results      = true)
+      const StudyData& data,
+      bool             consistent_initial = true,
+      bool             print_results      = true
+    )
     {
       validateStudy(data);
       SimulationSystem sys(data.model_data);
@@ -116,7 +120,7 @@ namespace GridKit
     inline bool sameTime(double a, double b)
     {
       return std::abs(a - b) <= 32.0 * std::numeric_limits<double>::epsilon()
-                                    * std::max({1.0, std::abs(a), std::abs(b)});
+                                  * std::max({1.0, std::abs(a), std::abs(b)});
     }
 
     inline void suffixOutputs(StudyData& data, const std::string& suffix)
@@ -177,10 +181,11 @@ namespace GridKit
 
     public:
       CoupledSimulation(
-          const StudyData&      data,
-          const SignalBindings& inputs,
-          const SignalBindings& outputs,
-          const Signals*        initial_inputs = nullptr)
+        const StudyData&      data,
+        const SignalBindings& inputs,
+        const SignalBindings& outputs,
+        const Signals*        initial_inputs = nullptr
+      )
         : data_(data), outputs_(outputs), sys_(data.model_data)
       {
         validateStudy(data);
@@ -188,8 +193,9 @@ namespace GridKit
             != AnalysisManager::Sundials::IdaConsistentICType::YA_YDP)
         {
           throw std::invalid_argument(
-              "co-simulation requires consistent_ic_type=ya_ydp to preserve "
-              "differential states during interface solves");
+            "co-simulation requires consistent_ic_type=ya_ydp to preserve "
+            "differential states during interface solves"
+          );
         }
 
         for (const auto& [name, id] : inputs)
@@ -198,7 +204,8 @@ namespace GridKit
           if (signal->assigned() || signal->linked())
           {
             throw std::invalid_argument(
-                "co-simulation input has a model-owned source: " + name);
+              "co-simulation input has a model-owned source: " + name
+            );
           }
 
           auto& input = inputs_[name];
@@ -212,7 +219,7 @@ namespace GridKit
               if (found != bus.signal_inputs.end() && found->second == id)
               {
                 input.value =
-                    component == BusSignalInputs::vr ? bus.Vr0 : bus.Vi0;
+                  component == BusSignalInputs::vr ? bus.Vr0 : bus.Vi0;
               }
             }
           }
@@ -229,7 +236,8 @@ namespace GridKit
           if (!sys_.getSignalNode(id)->linked())
           {
             throw std::invalid_argument(
-                "co-simulation output has no source: " + name);
+              "co-simulation output has no source: " + name
+            );
           }
         }
         ida_ = std::make_unique<SimulationSolver>(&sys_);
@@ -241,7 +249,8 @@ namespace GridKit
         if (signals.size() != inputs_.size())
         {
           throw std::invalid_argument(
-              "peer signal names do not match the configured inputs");
+            "peer signal names do not match the configured inputs"
+          );
         }
 
         for (auto& [name, input] : inputs_)
@@ -251,7 +260,8 @@ namespace GridKit
           if (found == signals.end() || !std::isfinite(found->second))
           {
             throw std::invalid_argument(
-                "missing or non-finite input signal: " + name);
+              "missing or non-finite input signal: " + name
+            );
           }
 
           input.value = found->second;
@@ -317,12 +327,12 @@ namespace GridKit
           }
 
           const double monitor_time =
-              data_.dt_monitor > 0.0
-                  ? static_cast<double>(monitor_) * data_.dt_monitor
-                  : data_.tmax;
+            data_.dt_monitor > 0.0
+              ? static_cast<double>(monitor_) * data_.dt_monitor
+              : data_.tmax;
           next = std::min(next, monitor_time);
           const bool print =
-              sameTime(next, monitor_time) || sameTime(next, data_.tmax);
+            sameTime(next, monitor_time) || sameTime(next, data_.tmax);
           const bool at_target = sameTime(next, target);
           ida_->runSimulationStep(next, 0.0, 1, 1, {}, print && !at_target);
           pending_monitor_ = print && at_target;

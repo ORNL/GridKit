@@ -43,66 +43,93 @@ namespace AnalysisManager
       explicit IpoptInterface(ModelT* model);
 
       /// Sizes and nonzero counts, with C-style indices
-      bool get_nlp_info(ipindex& n, ipindex& m, ipindex& nnz_jac_g, ipindex& nnz_h_lag, IndexStyleEnum& index_style) override;
+      bool get_nlp_info(
+        ipindex&        n,
+        ipindex&        m,
+        ipindex&        nnz_jac_g,
+        ipindex&        nnz_h_lag,
+        IndexStyleEnum& index_style
+      ) override;
 
       /// Variable and constraint bounds
-      bool get_bounds_info(ipindex n, ipnumber* x_l, ipnumber* x_u, ipindex m, ipnumber* g_l, ipnumber* g_u) override;
+      bool get_bounds_info(
+        ipindex   n,
+        ipnumber* x_l,
+        ipnumber* x_u,
+        ipindex   m,
+        ipnumber* g_l,
+        ipnumber* g_u
+      ) override;
 
       /// Variables from `x()`, without initial multipliers
-      bool get_starting_point(ipindex   n,
-                              bool      init_x,
-                              ipnumber* x,
-                              bool      init_z,
-                              ipnumber* z_L,
-                              ipnumber* z_U,
-                              ipindex   m,
-                              bool      init_lambda,
-                              ipnumber* lambda) override;
+      bool get_starting_point(
+        ipindex   n,
+        bool      init_x,
+        ipnumber* x,
+        bool      init_z,
+        ipnumber* z_L,
+        ipnumber* z_U,
+        ipindex   m,
+        bool      init_lambda,
+        ipnumber* lambda
+      ) override;
 
       /// Objective \f$f(x)\f$
-      bool eval_f(ipindex n, const ipnumber* x, bool new_x, ipnumber& obj_value) override;
+      bool eval_f(ipindex n, const ipnumber* x, bool new_x, ipnumber& obj_value)
+        override;
 
       /// Objective gradient \f$\nabla f(x)\f$
-      bool eval_grad_f(ipindex n, const ipnumber* x, bool new_x, ipnumber* grad_f) override;
+      bool eval_grad_f(
+        ipindex n, const ipnumber* x, bool new_x, ipnumber* grad_f
+      ) override;
 
       /// Constraints \f$g(x)\f$
-      bool eval_g(ipindex n, const ipnumber* x, bool new_x, ipindex m, ipnumber* g) override;
+      bool eval_g(
+        ipindex n, const ipnumber* x, bool new_x, ipindex m, ipnumber* g
+      ) override;
 
       /// Constraint Jacobian, or its structure when `values` is null
-      bool eval_jac_g(ipindex         n,
-                      const ipnumber* x,
-                      bool            new_x,
-                      ipindex         m,
-                      ipindex         nele_jac,
-                      ipindex*        iRow,
-                      ipindex*        jCol,
-                      ipnumber*       values) override;
+      bool eval_jac_g(
+        ipindex         n,
+        const ipnumber* x,
+        bool            new_x,
+        ipindex         m,
+        ipindex         nele_jac,
+        ipindex*        iRow,
+        ipindex*        jCol,
+        ipnumber*       values
+      ) override;
 
       /// Lower Lagrangian Hessian, or its structure when `values` is null
-      bool eval_h(ipindex         n,
-                  const ipnumber* x,
-                  bool            new_x,
-                  ipnumber        obj_factor,
-                  ipindex         m,
-                  const ipnumber* lambda,
-                  bool            new_lambda,
-                  ipindex         nele_hess,
-                  ipindex*        iRow,
-                  ipindex*        jCol,
-                  ipnumber*       values) override;
+      bool eval_h(
+        ipindex         n,
+        const ipnumber* x,
+        bool            new_x,
+        ipnumber        obj_factor,
+        ipindex         m,
+        const ipnumber* lambda,
+        bool            new_lambda,
+        ipindex         nele_hess,
+        ipindex*        iRow,
+        ipindex*        jCol,
+        ipnumber*       values
+      ) override;
 
-      /// Leave the final point, its multipliers, its objective, and its constraints in the model
-      void finalize_solution(SolverReturn               status,
-                             ipindex                    n,
-                             const ipnumber*            x,
-                             const ipnumber*            z_L,
-                             const ipnumber*            z_U,
-                             ipindex                    m,
-                             const ipnumber*            g,
-                             const ipnumber*            lambda,
-                             ipnumber                   obj_value,
-                             const IpoptData*           ip_data,
-                             IpoptCalculatedQuantities* ip_cq) override;
+      /// Leave the final point, its multipliers, its objective, and its
+      /// constraints in the model
+      void finalize_solution(
+        SolverReturn               status,
+        ipindex                    n,
+        const ipnumber*            x,
+        const ipnumber*            z_L,
+        const ipnumber*            z_U,
+        ipindex                    m,
+        const ipnumber*            g,
+        const ipnumber*            lambda,
+        ipnumber                   obj_value,
+        const IpoptData*           ip_data,
+        IpoptCalculatedQuantities* ip_cq
+      ) override;
 
     private:
       /// Copy `values` from Ipopt into a model vector

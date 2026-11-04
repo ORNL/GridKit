@@ -18,9 +18,7 @@ namespace GridKit
 
   template <class ScalarT, typename IdxT>
   GeneratorPQ<ScalarT, IdxT>::GeneratorPQ(bus_type* bus, GenData& data)
-    : P_(data.Pg),
-      Q_(data.Qg),
-      bus_(bus)
+    : P_(data.Pg), Q_(data.Qg), bus_(bus)
   {
     size_ = 0;
   }

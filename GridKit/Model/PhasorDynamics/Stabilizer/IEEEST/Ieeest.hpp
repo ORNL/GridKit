@@ -32,7 +32,8 @@ namespace GridKit
         V5,  ///< \f$v_5\f$ Lead-lag 1 output
         V6,  ///< \f$v_6\f$ Lead-lag 2 output
         V7,  ///< \f$v_7\f$ Unlimited stabilizer signal
-        VSS, ///< \f$V_{\mathrm{ss}}\f$ Limited stabilizer signal and model output
+        VSS, ///< \f$V_{\mathrm{ss}}\f$ Limited stabilizer signal and model
+             ///< output
       };
 
       /// External variables of an `Ieeest`.
@@ -96,12 +97,8 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*,
-            const ScalarT*,
-            const ScalarT*,
-            const ScalarT*,
-            ScalarT*);
+        __attribute__((always_inline)) inline int
+        evaluateInternalResidual(const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         RealT A1_{0};
@@ -129,7 +126,8 @@ namespace GridKit
         RealT a3_{0};
         RealT a4_{0};
 
-        // Precomputed masks and safe inverse coefficients for branch-free degenerate paths.
+        // Precomputed masks and safe inverse coefficients for branch-free
+        // degenerate paths.
         RealT use_notch_{0};
         RealT bypass_notch_{1};
         RealT use_4th_order_{0};

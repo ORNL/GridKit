@@ -22,7 +22,8 @@
 int main(int /* argc */, char const** /* argv */)
 {
 
-  GridKit::PowerElectronics::DistributedGeneratorParameters<double, size_t> parms;
+  GridKit::PowerElectronics::DistributedGeneratorParameters<double, size_t>
+    parms;
   // Parameters from MATLAB Microgrid code for first DG
   parms.wb_  = 2.0 * std::numbers::pi_v<double> * 50.0;
   parms.wc_  = 31.41;
@@ -46,26 +47,28 @@ int main(int /* argc */, char const** /* argv */)
   using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
   Bus bus;
 
-  GridKit::PowerElectronics::DistributedGenerator<double, size_t> dg(0, parms, false, &dg_signal, &bus);
+  GridKit::PowerElectronics::DistributedGenerator<double, size_t> dg(
+    0, parms, false, &dg_signal, &bus
+  );
 
   std::vector<double> t1(16, 0.0);
   std::vector<double> t2{
-      0.0,
-      0.1,
-      0.2,
-      0.4,
-      0.5,
-      0.6,
-      0.7,
-      0.8,
-      0.9,
-      1.0,
-      1.1,
-      1.2,
-      1.3,
-      1.4,
-      1.5,
-      0.3,
+    0.0,
+    0.1,
+    0.2,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0,
+    1.1,
+    1.2,
+    1.3,
+    1.4,
+    1.5,
+    0.3,
   };
   std::vector<double> res(16, 0.0);
 
@@ -80,31 +83,31 @@ int main(int /* argc */, char const** /* argv */)
   for (size_t idx : dg.getExternIndices())
   {
     GridKit::PowerElectronics::ExternalConnection<double, size_t> connection{
-        .y_   = &t2[idx],
-        .yp_  = &t1[idx],
-        .f_   = &res[idx],
-        .idx_ = idx};
+      .y_ = &t2[idx], .yp_ = &t1[idx], .f_ = &res[idx], .idx_ = idx
+    };
     dg.setExternalConnectionNodes(idx, connection);
   }
 
   dg.evaluateResidual();
 
   // Generated from matlab code with same parameters and inputs
-  std::vector<double> true_vec{0,
-                               8.941907747838389e-01,
-                               1.846733023014284e+00,
-                               1.014543000000000e+02,
-                               -1.507680000000000e+01,
-                               3.787993500000000e+02,
-                               -1.300000000000000e+00,
-                               2.899095146477517e+02,
-                               2.939138495559215e+02,
-                               1.507210571826699e+07,
-                               1.659799832843673e+07,
-                               -7.591593003913325e+03,
-                               -8.376991073310774e+03,
-                               3.337988298081817e+03,
-                               2.684419146397466e+03};
+  std::vector<double> true_vec{
+    0,
+    8.941907747838389e-01,
+    1.846733023014284e+00,
+    1.014543000000000e+02,
+    -1.507680000000000e+01,
+    3.787993500000000e+02,
+    -1.300000000000000e+00,
+    2.899095146477517e+02,
+    2.939138495559215e+02,
+    1.507210571826699e+07,
+    1.659799832843673e+07,
+    -7.591593003913325e+03,
+    -8.376991073310774e+03,
+    3.337988298081817e+03,
+    2.684419146397466e+03
+  };
 
   std::cout << "Testing the DistributedGenerator model ...\n";
   double error_allowed = 10 * std::numeric_limits<double>::epsilon();

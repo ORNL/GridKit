@@ -22,7 +22,8 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateGradient(const ModelT& model)
+    int Component<scalar_type, index_type>::evaluateGradient(const ModelT& model
+    )
     {
       std::array<ScalarT, localSize<ModelT>().variables> x;
       std::array<RealT, localSize<ModelT>().variables>   gradient;
@@ -35,7 +36,8 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateJacobian(const ModelT& model)
+    int Component<scalar_type, index_type>::evaluateJacobian(const ModelT& model
+    )
     {
       if constexpr (localSize<ModelT>().constraints == 0)
       {
@@ -48,15 +50,17 @@ namespace GridKit
         gather(x.data());
 
         jacobian_entries_.nnz = 0;
-        Enzyme::Sparse::DgDx<ModelT>::eval(&model,
-                                           local_x_.getSize(),
-                                           constraint_indices_.getData(),
-                                           variable_indices_.getData(),
-                                           x.data(),
-                                           jacobian_entries_.rows.getData(),
-                                           jacobian_entries_.cols.getData(),
-                                           jacobian_entries_.values.getData(),
-                                           jacobian_entries_.nnz);
+        Enzyme::Sparse::DgDx<ModelT>::eval(
+          &model,
+          local_x_.getSize(),
+          constraint_indices_.getData(),
+          variable_indices_.getData(),
+          x.data(),
+          jacobian_entries_.rows.getData(),
+          jacobian_entries_.cols.getData(),
+          jacobian_entries_.values.getData(),
+          jacobian_entries_.nnz
+        );
         assert(jacobian_entries_.nnz <= jacobian_entries_.values.getSize());
         return 0;
       }
@@ -64,7 +68,9 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     template <ComponentKernels<scalar_type, index_type> ModelT>
-    int Component<scalar_type, index_type>::evaluateHessian(const ModelT& model, RealT sigma)
+    int Component<scalar_type, index_type>::evaluateHessian(
+      const ModelT& model, RealT sigma
+    )
     {
       std::array<ScalarT, localSize<ModelT>().variables> x;
       std::array<RealT, localSize<ModelT>().constraints> lambda;
@@ -72,16 +78,18 @@ namespace GridKit
       gatherMultipliers(lambda.data());
 
       hessian_entries_.nnz = 0;
-      Enzyme::Sparse::D2LDx2<ModelT>::eval(&model,
-                                           local_x_.getSize(),
-                                           variable_indices_.getData(),
-                                           x.data(),
-                                           sigma,
-                                           lambda.data(),
-                                           hessian_entries_.rows.getData(),
-                                           hessian_entries_.cols.getData(),
-                                           hessian_entries_.values.getData(),
-                                           hessian_entries_.nnz);
+      Enzyme::Sparse::D2LDx2<ModelT>::eval(
+        &model,
+        local_x_.getSize(),
+        variable_indices_.getData(),
+        x.data(),
+        sigma,
+        lambda.data(),
+        hessian_entries_.rows.getData(),
+        hessian_entries_.cols.getData(),
+        hessian_entries_.values.getData(),
+        hessian_entries_.nnz
+      );
       assert(hessian_entries_.nnz <= hessian_entries_.values.getSize());
 
       keepLowerTriangle(hessian_entries_);
@@ -90,7 +98,9 @@ namespace GridKit
 
     /// Keep the entries on or below the diagonal, which the others mirror
     template <typename scalar_type, typename index_type>
-    void Component<scalar_type, index_type>::keepLowerTriangle(CooBuffer& entries)
+    void Component<scalar_type, index_type>::keepLowerTriangle(
+      CooBuffer& entries
+    )
     {
       IdxT*  rows   = entries.rows.getData();
       IdxT*  cols   = entries.cols.getData();

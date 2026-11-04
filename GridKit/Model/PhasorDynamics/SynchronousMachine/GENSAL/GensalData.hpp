@@ -43,7 +43,8 @@ namespace GridKit
     enum class GensalSignalInputs : size_t
     {
       pmech, ///< \f$P_m\f$ Unique ID of the signal providing mechanical power
-      efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field voltage
+      efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field
+             ///< voltage
     };
 
     /// Signal outputs for a Gensal generator model
@@ -76,8 +77,10 @@ namespace GridKit
     /// Initial values for a Gensal generator model
     enum class GensalInitialValues : size_t
     {
-      ir,         ///< \f$I_r\f$ Initial real terminal current into the bus on system base
-      ii,         ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
+      ir, ///< \f$I_r\f$ Initial real terminal current into the bus on system
+          ///< base
+      ii, ///< \f$I_i\f$ Initial imaginary terminal current into the bus on
+          ///< system base
       in_service, ///< Initial service status; defaults to true
     };
 
@@ -90,13 +93,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    using GensalData =
-        ComponentData<real_type,
-                      index_type,
-                      GensalParameters,
-                      GensalBuses,
-                      GensalSignalInputs,
-                      GensalSignalOutputs,
-                      GensalMonitorableVariables>;
+    using GensalData = ComponentData<
+      real_type,
+      index_type,
+      GensalParameters,
+      GensalBuses,
+      GensalSignalInputs,
+      GensalSignalOutputs,
+      GensalMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

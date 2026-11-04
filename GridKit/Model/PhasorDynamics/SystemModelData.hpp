@@ -100,27 +100,34 @@ namespace GridKit
       /// consolidate components in a single container.
       /// - Convert string to enum
       /// - Associate component type to its corresponding enum
-      /// - Consolidate components to allow writing to them using the enum as the argument
-      std::vector<BusDataT>          bus;             ///< Buses within the model
-      std::vector<BranchDataT>       branch;          ///< Branches within the model
-      std::vector<RegcaDataT>        regca;           ///< REGCA converter instances within the model
-      std::vector<ReecbDataT>        reecb;           ///< REECB electrical controllers within the model
-      std::vector<RepcaDataT>        repca;           ///< REPCA plant controllers within the model
-      std::vector<GenrouDataT>       genrou;          ///< GENROU instances within the model
-      std::vector<GensalDataT>       gensal;          ///< GENSAL instances within the model
-      std::vector<GenClassicalDataT> genclassical;    ///< Classical generator instances within the model
-      std::vector<LoadZDataT>        loadz;           ///< LoadZ instances within the model
-      std::vector<LoadZIPDataT>      loadzip;         ///< LoadZIP instances within the model
-      std::vector<Tgov1DataT>        gov;             ///< Governors within the model
-      std::vector<Esdc1aDataT>       esdc1a;          ///< ESDC1A exciters within the model
-      std::vector<GastPtiDataT>      gastpti;         ///< GASTPTI governors within the model
-      std::vector<HygovDataT>        hygov;           ///< HYGOV governors within the model
-      std::vector<Ieeet1DataT>       exciter;         ///< Exciters within the model
-      std::vector<SexsPtiDataT>      sexspti;         ///< SEXS-PTI exciters within the model
-      std::vector<IeeestDataT>       stabilizer;      ///< Stabilizers within the model
-      std::vector<ConstantSourceT>   constant_source; ///< Constant signal sources within the model
-      std::vector<FunctionSourceT>   function_source; ///< Function signal sources within the model
-      std::vector<SignalDataT>       signal;          ///< Signal nodes
+      /// - Consolidate components to allow writing to them using the enum as
+      /// the argument
+      std::vector<BusDataT>    bus;    ///< Buses within the model
+      std::vector<BranchDataT> branch; ///< Branches within the model
+      std::vector<RegcaDataT>
+        regca; ///< REGCA converter instances within the model
+      std::vector<ReecbDataT>
+        reecb; ///< REECB electrical controllers within the model
+      std::vector<RepcaDataT>
+        repca; ///< REPCA plant controllers within the model
+      std::vector<GenrouDataT> genrou; ///< GENROU instances within the model
+      std::vector<GensalDataT> gensal; ///< GENSAL instances within the model
+      std::vector<GenClassicalDataT>
+        genclassical; ///< Classical generator instances within the model
+      std::vector<LoadZDataT>   loadz;   ///< LoadZ instances within the model
+      std::vector<LoadZIPDataT> loadzip; ///< LoadZIP instances within the model
+      std::vector<Tgov1DataT>   gov;     ///< Governors within the model
+      std::vector<Esdc1aDataT>  esdc1a;  ///< ESDC1A exciters within the model
+      std::vector<GastPtiDataT> gastpti; ///< GASTPTI governors within the model
+      std::vector<HygovDataT>   hygov;   ///< HYGOV governors within the model
+      std::vector<Ieeet1DataT>  exciter; ///< Exciters within the model
+      std::vector<SexsPtiDataT> sexspti; ///< SEXS-PTI exciters within the model
+      std::vector<IeeestDataT>  stabilizer; ///< Stabilizers within the model
+      std::vector<ConstantSourceT>
+        constant_source; ///< Constant signal sources within the model
+      std::vector<FunctionSourceT>
+        function_source; ///< Function signal sources within the model
+      std::vector<SignalDataT> signal; ///< Signal nodes
 
       /// Monitor sink specs
       std::vector<MonitorSinkSpec> monitor_sink;
@@ -128,7 +135,8 @@ namespace GridKit
       /// Subsystem ID, unique in the hierarchy; empty for the top system
       std::string id;
 
-      /// Hierarchy level: 0 for the top system, parent level + 1 for a subsystem
+      /// Hierarchy level: 0 for the top system, parent level + 1 for a
+      /// subsystem
       IdxT level{0};
 
       /// Hierarchical subsystems; devices may use buses of this system and
@@ -141,6 +149,8 @@ namespace GridKit
      */
     SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);
     SystemModelData<double, size_t> parseSystemModelData(std::istream&& stream);
-    SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& filePath);
+    SystemModelData<double, size_t> parseSystemModelData(
+      const std::filesystem::path& filePath
+    );
   } // namespace PhasorDynamics
 } // namespace GridKit

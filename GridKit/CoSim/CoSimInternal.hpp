@@ -37,10 +37,11 @@ namespace GridKit
       {
       public:
         Channel(
-            Disposition                  disposition,
-            const std::string&           endpoint,
-            int                          timeout_ms = 30000,
-            const std::atomic<RunState>* state      = nullptr);
+          Disposition                  disposition,
+          const std::string&           endpoint,
+          int                          timeout_ms = 30000,
+          const std::atomic<RunState>* state      = nullptr
+        );
         Channel(const Channel&)            = delete;
         Channel& operator=(const Channel&) = delete;
 
@@ -52,7 +53,8 @@ namespace GridKit
 
         /// Exchange co-simulation messages with the peer.
         MessageData<scalar_type> exchange(
-            const MessageData<scalar_type>& request);
+          const MessageData<scalar_type>& request
+        );
 
         /// Notify the peer of failure.
         void fail(const MessageData<scalar_type>& message) noexcept;
@@ -73,9 +75,10 @@ namespace GridKit
 
         /// Wait for a ZeroMQ event.
         void wait(
-            short                                 events,
-            const char*                           operation,
-            std::chrono::steady_clock::time_point deadline);
+          short                                 events,
+          const char*                           operation,
+          std::chrono::steady_clock::time_point deadline
+        );
 
         /// Check if the simulation has been stopped.
         void checkStop() const;

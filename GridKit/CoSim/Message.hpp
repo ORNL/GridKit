@@ -81,7 +81,8 @@ namespace GridKit
       MessageMetadata() = default;
 
       MessageMetadata(
-          MessageType type, std::uint64_t session, double time = 0.0)
+        MessageType type, std::uint64_t session, double time = 0.0
+      )
         : type(type), session(session), time(time)
       {
       }
@@ -117,19 +118,18 @@ namespace GridKit
     /// server, this is a reply to the current request and the next request.
     template <typename scalar_type>
     using MessageExchangeFunction =
-        std::function<MessageData<scalar_type>(const MessageData<scalar_type>&)>;
+      std::function<MessageData<scalar_type>(const MessageData<scalar_type>&)>;
 
     /// Apply an incoming message and control simulation continuity.
     template <typename scalar_type>
-    using MessageStepFunction = std::function<bool(
-        const MessageData<scalar_type>&,
-        const MessageExchangeFunction<scalar_type>&)>;
+    using MessageStepFunction = std::function<
+      bool(const MessageData<scalar_type>&, const MessageExchangeFunction<scalar_type>&)>;
 
     /// Produce the next outgoing message, optionally exchanging intermediate
     /// messages first.
     template <typename scalar_type>
     using MessageExtractFunction = std::function<
-        MessageData<scalar_type>(const MessageExchangeFunction<scalar_type>&)>;
+      MessageData<scalar_type>(const MessageExchangeFunction<scalar_type>&)>;
 
     /// Result of a run.
     enum class RunResult

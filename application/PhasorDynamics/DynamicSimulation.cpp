@@ -24,7 +24,7 @@ int runApplication(int argc, const char* argv[])
   }
 
   const auto elapsed =
-      std::chrono::duration<double>(std::chrono::steady_clock::now() - start);
+    std::chrono::duration<double>(std::chrono::steady_clock::now() - start);
   Log::summary() << "Complete in " << elapsed.count() << " seconds\n";
   return status.get();
 }

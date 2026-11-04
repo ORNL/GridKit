@@ -26,8 +26,7 @@ namespace GridKit
         size_ = 1;
       }
 
-      Node(ScalarT v0)
-        : V0_(v0)
+      Node(ScalarT v0) : V0_(v0)
       {
         size_ = 1;
       }
@@ -132,10 +131,11 @@ namespace GridKit
       }
 
       /**
-       * @brief Node does not compute residuals, so here we just reset residual values.
+       * @brief Node does not compute residuals, so here we just reset residual
+       * values.
        *
-       * @warning This implementation assumes node residuals are always evaluated
-       * _before_ component model residuals.
+       * @warning This implementation assumes node residuals are always
+       * evaluated _before_ component model residuals.
        *
        */
       int evaluateResidual()

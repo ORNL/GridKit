@@ -17,15 +17,15 @@ namespace GridKit
      * @tparam real_type  Real parameter data type
      * @tparam index_type Integer parameter data type
      */
-    template <typename real_type,
-              typename index_type,
-              typename parameters_enum,
-              typename buses_enum,
-              typename signal_inputs_enum,
-              typename signal_outputs_enum,
-              typename monitorable_variables_enum>
-      requires std::is_enum_v<parameters_enum>
-               && std::is_enum_v<buses_enum>
+    template <
+      typename real_type,
+      typename index_type,
+      typename parameters_enum,
+      typename buses_enum,
+      typename signal_inputs_enum,
+      typename signal_outputs_enum,
+      typename monitorable_variables_enum>
+      requires std::is_enum_v<parameters_enum> && std::is_enum_v<buses_enum>
                && std::is_enum_v<signal_inputs_enum>
                && std::is_enum_v<signal_outputs_enum>
                && std::is_enum_v<monitorable_variables_enum>
@@ -56,7 +56,8 @@ namespace GridKit
       std::string device_class;
 
       /// Mapping of parameters to parameter values
-      std::map<Parameters, std::variant<std::string, bool, RealT, IdxT>> parameters;
+      std::map<Parameters, std::variant<std::string, bool, RealT, IdxT>>
+        parameters;
 
       /// Mapping of terminal attachments to bus identifiers
       std::map<Buses, IdxT> buses;
@@ -73,7 +74,8 @@ namespace GridKit
       /// Disambiguation string for this device
       std::string disambiguation_string;
 
-      /// Device class and disambiguation string (e.g. "Genrou_1"), for component lookups
+      /// Device class and disambiguation string (e.g. "Genrou_1"), for
+      /// component lookups
       std::string label() const
       {
         return device_class + "_" + disambiguation_string;

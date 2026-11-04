@@ -41,7 +41,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::n_intern_;
 
     public:
-      LinearTransformer(IdxT id, RealT L0, RealT L1, RealT R0, RealT R1, RealT M);
+      LinearTransformer(
+        IdxT id, RealT L0, RealT L1, RealT R0, RealT R1, RealT M
+      );
       virtual ~LinearTransformer();
 
       int initialize();

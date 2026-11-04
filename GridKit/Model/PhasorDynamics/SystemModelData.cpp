@@ -20,7 +20,9 @@ namespace GridKit
       return data;
     }
 
-    SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& filePath)
+    SystemModelData<double, size_t> parseSystemModelData(
+      const std::filesystem::path& filePath
+    )
     {
       auto stream = std::ifstream(filePath);
       if (!stream)

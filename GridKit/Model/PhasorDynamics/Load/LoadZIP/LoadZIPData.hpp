@@ -45,8 +45,8 @@ namespace GridKit
     /// Initial values supported for a loadZIP
     enum class LoadZIPInitialValues : size_t
     {
-      ir,         ///< Initial real terminal current into the bus on system base
-      ii,         ///< Initial imaginary terminal current into the bus on system base
+      ir, ///< Initial real terminal current into the bus on system base
+      ii, ///< Initial imaginary terminal current into the bus on system base
       in_service, ///< Initial service status; defaults to true
     };
 
@@ -59,13 +59,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    using LoadZIPData =
-        ComponentData<real_type,
-                      index_type,
-                      LoadZIPParameters,
-                      LoadZIPBuses,
-                      LoadZIPSignalInputs,
-                      LoadZIPSignalOutputs,
-                      LoadZIPMonitorableVariables>;
+    using LoadZIPData = ComponentData<
+      real_type,
+      index_type,
+      LoadZIPParameters,
+      LoadZIPBuses,
+      LoadZIPSignalInputs,
+      LoadZIPSignalOutputs,
+      LoadZIPMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

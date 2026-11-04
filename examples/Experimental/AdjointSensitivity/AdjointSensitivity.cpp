@@ -29,7 +29,8 @@ int main()
   BaseBus<double, size_t>* bus = new BusSlack<double, size_t>(1.0, 0.0);
 
   // Attach a generator to that bus
-  Generator4<double, size_t>* gen = new Generator4<double, size_t>(bus, 0.8, 0.3);
+  Generator4<double, size_t>* gen =
+    new Generator4<double, size_t>(bus, 0.8, 0.3);
 
   // Create a system model
   SystemModel<double, size_t>* model = new SystemModel<double, size_t>();

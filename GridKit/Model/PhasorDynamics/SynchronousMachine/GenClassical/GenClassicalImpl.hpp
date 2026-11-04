@@ -27,9 +27,10 @@ namespace GridKit
      * @brief Constructor for a classical generator model
      */
     template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    GenClassical<scalar_type, index_type>::GenClassical(
+      BusT* bus, const ModelDataT& data
+    )
+      : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -45,7 +46,9 @@ namespace GridKit
 
     /// Read model parameters from the data structure
     template <typename scalar_type, typename index_type>
-    void GenClassical<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void GenClassical<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Parameter = typename ModelDataT::Parameters;
 
@@ -61,7 +64,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    const Model::VariableMonitorBase* GenClassical<scalar_type, index_type>::getMonitor() const
+    const Model::VariableMonitorBase* GenClassical<scalar_type, index_type>::
+      getMonitor() const
     {
       return monitor_.get();
     }
@@ -71,27 +75,42 @@ namespace GridKit
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
-      monitor_->set(Variable::ir, [this]
-                    { return this->toSystemBase(y_.getData()[3]); });
-      monitor_->set(Variable::ii, [this]
-                    { return this->toSystemBase(y_.getData()[4]); });
-      monitor_->set(Variable::p, [this]
-                    { return this->toSystemBase(Vr() * y_.getData()[3] + Vi() * y_.getData()[4]); });
-      monitor_->set(Variable::q, [this]
-                    { return this->toSystemBase(Vi() * y_.getData()[3] - Vr() * y_.getData()[4]); });
-      monitor_->set(Variable::delta, [this]
-                    { return y_.getData()[0]; });
-      monitor_->set(Variable::omega, [this]
-                    { return y_.getData()[1]; });
-      monitor_->set(Variable::speed, [this]
-                    { return 1.0 + y_.getData()[1]; });
+      monitor_->set(
+        Variable::ir, [this] { return this->toSystemBase(y_.getData()[3]); }
+      );
+      monitor_->set(
+        Variable::ii, [this] { return this->toSystemBase(y_.getData()[4]); }
+      );
+      monitor_->set(
+        Variable::p,
+        [this]
+        {
+          return this->toSystemBase(
+            Vr() * y_.getData()[3] + Vi() * y_.getData()[4]
+          );
+        }
+      );
+      monitor_->set(
+        Variable::q,
+        [this]
+        {
+          return this->toSystemBase(
+            Vi() * y_.getData()[3] - Vr() * y_.getData()[4]
+          );
+        }
+      );
+      monitor_->set(Variable::delta, [this] { return y_.getData()[0]; });
+      monitor_->set(Variable::omega, [this] { return y_.getData()[1]; });
+      monitor_->set(Variable::speed, [this] { return 1.0 + y_.getData()[1]; });
     }
 
     /**
      * @brief Set the component ID
      */
     template <typename scalar_type, typename index_type>
-    int GenClassical<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+    int GenClassical<scalar_type, index_type>::setGridKitComponentID(
+      IdxT component_id
+    )
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -130,7 +149,8 @@ namespace GridKit
       ws_indices_[1] = INVALID_INDEX<IdxT>;
 
       // Set output signals
-      if (auto speed_port = ports_.out.template port<GenClassicalSignalOutputs::speed>())
+      if (auto speed_port =
+            ports_.out.template port<GenClassicalSignalOutputs::speed>())
       {
         speed_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
       }
@@ -143,11 +163,13 @@ namespace GridKit
      * @brief verify method checks that attached signals are also linked
      */
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks GenClassical<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks GenClassical<scalar_type, index_type>::verify(
+    ) const
     {
       Model::ConfigurationChecks checks("GenClassical");
 
-      auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
+      auto pmech_port =
+        ports_.in.template port<GenClassicalSignalInputs::pmech>();
       if (pmech_port.connected() && !pmech_port.linked())
       {
         checks.fail("pmech signal attached with no linked governor");
@@ -183,7 +205,10 @@ namespace GridKit
       ScalarT omega = static_cast<ScalarT>(0.0);
 
       ScalarT efd = std::sqrt(Er * Er + Ei * Ei);
-      ScalarT Te  = G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
+      ScalarT Te =
+        G_ * efd * efd
+        - efd
+            * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
@@ -196,13 +221,15 @@ namespace GridKit
 
       // Convert Te to system base for governor PM signal.
       pmech_set_ = static_cast<RealT>(this->toSystemBase(Te));
-      if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
+      if (auto pmech_port =
+            ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
         pmech_port.writeValue(pmech_set_);
       }
 
       efd_set_ = static_cast<RealT>(efd);
-      if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
+      if (auto efd_port =
+            ports_.in.template port<GenClassicalSignalInputs::efd>())
       {
         efd_port.writeValue(efd_set_);
       }
@@ -250,7 +277,9 @@ namespace GridKit
      * error cannot be used.
      */
     template <typename scalar_type, typename index_type>
-    int GenClassical<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    int GenClassical<scalar_type, index_type>::setAbsoluteTolerance(
+      RealT rel_tol
+    )
     {
       abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
@@ -261,12 +290,14 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
-        const ScalarT* y,
-        const ScalarT* yp,
-        const ScalarT* wb,
-        const ScalarT* ws,
-        ScalarT*       f)
+    __attribute__((always_inline)) inline int
+    GenClassical<scalar_type, index_type>::evaluateInternalResidual(
+      const ScalarT* y,
+      const ScalarT* yp,
+      const ScalarT* wb,
+      const ScalarT* ws,
+      ScalarT*       f
+    )
     {
       // Set variable aliases for better readability.
       const ScalarT delta = y[0];
@@ -291,12 +322,20 @@ namespace GridKit
 
       // GenClassical differential equations
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
-      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
+      f[1] = omega_dot
+             - (ONE<RealT> / (TWO<RealT> * H_))
+                 * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
       // GenClassical algebraic equations
-      f[2] = telec - (G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
-      f[3] = ir - (efd * (G_ * std::cos(delta) - B_ * std::sin(delta)) - G_ * vr + B_ * vi);
-      f[4] = ii - (efd * (B_ * std::cos(delta) + G_ * std::sin(delta)) - B_ * vr - G_ * vi);
+      f[2] =
+        telec
+        - (G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
+      f[3] =
+        ir
+        - (efd * (G_ * std::cos(delta) - B_ * std::sin(delta)) - G_ * vr + B_ * vi);
+      f[4] =
+        ii
+        - (efd * (B_ * std::cos(delta) + G_ * std::sin(delta)) - B_ * vr - G_ * vi);
 
       return 0;
     }
@@ -306,11 +345,13 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int GenClassical<scalar_type, index_type>::evaluateBusResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+    __attribute__((always_inline)) inline int
+    GenClassical<scalar_type, index_type>::evaluateBusResidual(
+      const ScalarT*                  y,
+      [[maybe_unused]] const ScalarT* yp,
+      [[maybe_unused]] const ScalarT* wb,
+      ScalarT*                        h
+    )
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
@@ -328,13 +369,15 @@ namespace GridKit
     int GenClassical<scalar_type, index_type>::setSignalIndices()
     {
       ws_indices_[0] = INVALID_INDEX<IdxT>;
-      if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
+      if (auto pmech_port =
+            ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
         ws_indices_[0] = pmech_port.signalVariableIndex();
       }
 
       ws_indices_[1] = INVALID_INDEX<IdxT>;
-      if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
+      if (auto efd_port =
+            ports_.in.template port<GenClassicalSignalInputs::efd>())
       {
         ws_indices_[1] = efd_port.signalVariableIndex();
       }
@@ -352,13 +395,15 @@ namespace GridKit
       auto* ws = ws_.getData();
 
       ws[0] = pmech_set_;
-      if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
+      if (auto pmech_port =
+            ports_.in.template port<GenClassicalSignalInputs::pmech>())
       {
         ws[0] = pmech_port.readSignal();
       }
 
       ws[1] = efd_set_;
-      if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
+      if (auto efd_port =
+            ports_.in.template port<GenClassicalSignalInputs::efd>())
       {
         ws[1] = efd_port.readSignal();
       }

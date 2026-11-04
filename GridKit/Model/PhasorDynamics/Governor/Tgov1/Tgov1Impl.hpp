@@ -32,8 +32,7 @@ namespace GridKit
        * @param data Data to initialize the model from.
        */
       template <typename scalar_type, typename index_type>
-      Tgov1<scalar_type, index_type>::Tgov1(
-          const ModelDataT& data)
+      Tgov1<scalar_type, index_type>::Tgov1(const ModelDataT& data)
       {
         initializeParameters(data);
 
@@ -50,7 +49,9 @@ namespace GridKit
        * @param data Structure containing model parameters.
        */
       template <typename scalar_type, typename index_type>
-      void Tgov1<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      void Tgov1<scalar_type, index_type>::initializeParameters(
+        const ModelDataT& data
+      )
       {
         using Parameter = typename ModelDataT::Parameters;
 
@@ -101,7 +102,9 @@ namespace GridKit
        * @brief Set the component ID
        */
       template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      int Tgov1<scalar_type, index_type>::setGridKitComponentID(
+        IdxT component_id
+      )
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -139,12 +142,14 @@ namespace GridKit
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         // Set output signals
-        if (auto pmech_port = ports_.out.template port<Tgov1SignalOutputs::pmech>())
+        if (auto pmech_port =
+              ports_.out.template port<Tgov1SignalOutputs::pmech>())
         {
           auto*      y  = y_.getData();
           const auto PM = static_cast<IdxT>(Tgov1InternalVariables::PM);
           pmech_port.link(
-              &y[static_cast<size_t>(PM)], &(this->getVariableIndex(PM)));
+            &y[static_cast<size_t>(PM)], &(this->getVariableIndex(PM))
+          );
         }
 
         allocated_ = true;
@@ -160,11 +165,17 @@ namespace GridKit
         Model::ConfigurationChecks checks("Tgov1");
 
         checks.check(Trate_ > ZERO<RealT>, "Trate must be positive");
-        checks.check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
+        checks.check(
+          va_system_base_ > ZERO<RealT>, "system power base must be positive"
+        );
         checks.check(R_ != ZERO<RealT>, "R must be nonzero");
-        checks.check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
-        checks.check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
-                     "pmech output signal must be assigned");
+        checks.check(
+          Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax"
+        );
+        checks.check(
+          ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
+          "pmech output signal must be assigned"
+        );
 
         auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>();
         if (speed_port.connected() && !speed_port.linked())
@@ -190,7 +201,8 @@ namespace GridKit
       {
         if (!this->verifyAndLog())
         {
-          Log::error() << "Tgov1: cannot initialize with invalid configuration\n";
+          Log::error(
+          ) << "Tgov1: cannot initialize with invalid configuration\n";
           return 1;
         }
 
@@ -201,7 +213,8 @@ namespace GridKit
         auto* y = y_.getData();
 
         ScalarT omega0{ZERO<RealT>};
-        if (auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>())
+        if (auto speed_port =
+              ports_.in.template port<Tgov1SignalInputs::speed>())
         {
           omega0 = speed_port.readSignal();
         }
@@ -212,12 +225,15 @@ namespace GridKit
         const ScalarT pturb0 = pv0;
         const ScalarT pref0  = omega0 + R_ * pv0;
 
-        const RealT pv0_value       = static_cast<RealT>(pv0);
-        const RealT limit_tolerance = static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
-        if (pv0_value < Pvmin_ - limit_tolerance || pv0_value > Pvmax_ + limit_tolerance)
+        const RealT pv0_value = static_cast<RealT>(pv0);
+        const RealT limit_tolerance =
+          static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
+        if (pv0_value < Pvmin_ - limit_tolerance
+            || pv0_value > Pvmax_ + limit_tolerance)
         {
-          Log::error() << "Tgov1: initial valve position is outside [Pvmin, Pvmax]. "
-                          "Check initial dispatch and valve limits\n";
+          Log::error(
+          ) << "Tgov1: initial valve position is outside [Pvmin, Pvmax]. "
+               "Check initial dispatch and valve limits\n";
           return 1;
         }
 
@@ -279,19 +295,22 @@ namespace GridKit
        *
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Tgov1<scalar_type, index_type>::evaluateInternalResidual(
+      __attribute__((always_inline)) inline int Tgov1<scalar_type, index_type>::
+        evaluateInternalResidual(
           const ScalarT*                  y,
           const ScalarT*                  yp,
           [[maybe_unused]] const ScalarT* wb,
           const ScalarT*                  ws,
-          ScalarT*                        f)
+          ScalarT*                        f
+        )
       {
         const auto PTX = static_cast<size_t>(Tgov1InternalVariables::PTX);
         const auto PV  = static_cast<size_t>(Tgov1InternalVariables::PV);
         const auto PM  = static_cast<size_t>(Tgov1InternalVariables::PM);
 
-        const auto DELTAOMEGA = static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
-        const auto PREF       = static_cast<size_t>(Tgov1ExternalVariables::PREF);
+        const auto DELTAOMEGA =
+          static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
+        const auto PREF = static_cast<size_t>(Tgov1ExternalVariables::PREF);
 
         const ScalarT pturb = y[PTX];
         const ScalarT pv    = y[PV];
@@ -304,8 +323,11 @@ namespace GridKit
         const ScalarT pref  = ws[PREF];
 
         f[PTX] = -pturb_dot - (pturb - pv - T2_ * pv_dot) / T3_;
-        f[PV]  = -pv_dot + Math::antiwindup(pv, -pv + (pref - omega) / R_, Pvmin_, Pvmax_) / T1_;
-        f[PM]  = -this->toComponentBase(pmech) + pturb - Dt_ * omega;
+        f[PV] =
+          -pv_dot
+          + Math::antiwindup(pv, -pv + (pref - omega) / R_, Pvmin_, Pvmax_)
+              / T1_;
+        f[PM] = -this->toComponentBase(pmech) + pturb - Dt_ * omega;
 
         return 0;
       }
@@ -317,12 +339,14 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::setSignalIndices()
       {
-        const auto DELTAOMEGA = static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
-        const auto PREF       = static_cast<size_t>(Tgov1ExternalVariables::PREF);
+        const auto DELTAOMEGA =
+          static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
+        const auto PREF = static_cast<size_t>(Tgov1ExternalVariables::PREF);
 
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>())
+        if (auto speed_port =
+              ports_.in.template port<Tgov1SignalInputs::speed>())
         {
           ws_indices_[DELTAOMEGA] = speed_port.signalVariableIndex();
         }
@@ -342,15 +366,17 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::evaluateResidual()
       {
-        const auto DELTAOMEGA = static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
-        const auto PREF       = static_cast<size_t>(Tgov1ExternalVariables::PREF);
+        const auto DELTAOMEGA =
+          static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
+        const auto PREF = static_cast<size_t>(Tgov1ExternalVariables::PREF);
 
         auto* ws = ws_.getData();
 
         ws[DELTAOMEGA] = ScalarT{ZERO<RealT>};
         ws[PREF]       = pref_set_;
 
-        if (auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>())
+        if (auto speed_port =
+              ports_.in.template port<Tgov1SignalInputs::speed>())
         {
           ws[DELTAOMEGA] = speed_port.readSignal();
         }

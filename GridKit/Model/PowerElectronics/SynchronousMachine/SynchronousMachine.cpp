@@ -35,7 +35,22 @@ namespace GridKit
      * @param[in] mub - rated frequency
      */
     template <class ScalarT, typename IdxT>
-    SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub)
+    SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(
+      IdxT                     id,
+      RealT                    Lls,
+      std::tuple<RealT, RealT> Llkq,
+      RealT                    Llfd,
+      RealT                    Llkd,
+      RealT                    Lmq,
+      RealT                    Lmd,
+      RealT                    Rs,
+      std::tuple<RealT, RealT> Rkq,
+      RealT                    Rfd,
+      RealT                    Rkd,
+      RealT                    RJ,
+      RealT                    P,
+      RealT                    mub
+    )
       : Lls_(Lls),
         Llkq_(Llkq),
         Llfd_(Llfd),
@@ -123,11 +138,26 @@ namespace GridKit
       ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
       ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
 
-      f_int_[0] = (-2.0 / 3.0) * (*y_ext_[0] * cos1 + *y_ext_[1] * cos23m + *y_ext_[2] * cos23p) + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4] + Lmq_ * yp_int_[5] + *y_ext_[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
-      f_int_[1] = (-2.0 / 3.0) * (*y_ext_[0] * sin1 - *y_ext_[1] * sin23m - *y_ext_[2] * sin23p) + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6] + Lmd_ * yp_int_[7] - *y_ext_[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
-      f_int_[2] = (-1.0 / 3.0) * (*y_ext_[0] + *y_ext_[1] + *y_ext_[2]) + Rs_ * y_int_[3] + Lls_ * yp_int_[3];
-      f_int_[3] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
-      f_int_[4] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
+      f_int_[0] =
+        (-2.0 / 3.0)
+          * (*y_ext_[0] * cos1 + *y_ext_[1] * cos23m + *y_ext_[2] * cos23p)
+        + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4]
+        + Lmq_ * yp_int_[5]
+        + *y_ext_[4] * (P_ / 2.0)
+            * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
+      f_int_[1] =
+        (-2.0 / 3.0)
+          * (*y_ext_[0] * sin1 - *y_ext_[1] * sin23m - *y_ext_[2] * sin23p)
+        + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6]
+        + Lmd_ * yp_int_[7]
+        - *y_ext_[4] * (P_ / 2.0)
+            * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
+      f_int_[2] = (-1.0 / 3.0) * (*y_ext_[0] + *y_ext_[1] + *y_ext_[2])
+                  + Rs_ * y_int_[3] + Lls_ * yp_int_[3];
+      f_int_[3] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4]
+                  + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
+      f_int_[4] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4]
+                  + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
       return 0;
     }
 
@@ -149,7 +179,10 @@ namespace GridKit
       *f_ext_[0] += y_int_[1] * cos1 + y_int_[2] * sin1 + y_int_[3];
       *f_ext_[1] += y_int_[1] * cos23m + y_int_[2] * sin23m + y_int_[3];
       *f_ext_[2] += y_int_[1] * cos23p + y_int_[2] * sin23p + y_int_[3];
-      *f_ext_[3] += RJ_ * *yp_ext_[4] - (3.0 / 4.0) * P_ * (Lmd_ * y_int_[1] * (y_int_[2] + y_int_[6] + y_int_[7]) - Lmq_ * y_int_[2] * (y_int_[1] + y_int_[4] + *y_ext_[0]));
+      *f_ext_[3] +=
+        RJ_ * *yp_ext_[4]
+        - (3.0 / 4.0) * P_
+            * (Lmd_ * y_int_[1] * (y_int_[2] + y_int_[6] + y_int_[7]) - Lmq_ * y_int_[2] * (y_int_[1] + y_int_[4] + *y_ext_[0]));
       *f_ext_[4] += yp_int_[0] - *y_ext_[4];
       return 0;
     }

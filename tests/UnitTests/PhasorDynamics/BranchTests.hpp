@@ -38,7 +38,9 @@ namespace GridKit
         auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
 
         PhasorDynamics::Component<ScalarT, IdxT>* branch =
-            new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
+          new PhasorDynamics::Branch<ScalarT, IdxT>(
+            bus1, bus2, PhasorDynamics::BranchData<RealT, IdxT>{}
+          );
 
         success *= (branch != nullptr);
 
@@ -67,10 +69,12 @@ namespace GridKit
         ScalarT Vr2{30.0}; ///< Bus-2 real voltage
         ScalarT Vi2{40.0}; ///< Bus-2 imaginary voltage
 
-        const ScalarT Ir1{17.0};  ///< Solution: real current entering bus-1
-        const ScalarT Ii1{-10.0}; ///< Solution: imaginary current entering bus-1
-        const ScalarT Ir2{15.0};  ///< Solution: real current entering bus-2
-        const ScalarT Ii2{-20.0}; ///< Solution: imaginary current entering bus-2
+        const ScalarT Ir1{17.0}; ///< Solution: real current entering bus-1
+        const ScalarT Ii1{-10.0
+        };                       ///< Solution: imaginary current entering bus-1
+        const ScalarT Ir2{15.0}; ///< Solution: real current entering bus-2
+        const ScalarT Ii2{-20.0
+        }; ///< Solution: imaginary current entering bus-2
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
@@ -81,7 +85,9 @@ namespace GridKit
         bus2.initialize();
         bus2.evaluateResidual();
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B));
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(
+          &bus1, &bus2, branchData(R, X, G, B)
+        );
         branch.allocate();
         branch.evaluateResidual();
 
@@ -95,7 +101,8 @@ namespace GridKit
 
       TestOutcome offNominalResidual()
       {
-        // Verifies tap, phase-shift, line-shunt, and bus-1 magnetizing-shunt contributions.
+        // Verifies tap, phase-shift, line-shunt, and bus-1 magnetizing-shunt
+        // contributions.
         TestStatus success = true;
 
         RealT R{2.0};
@@ -179,20 +186,27 @@ namespace GridKit
         bus2.Vr().setVariableNumber(2);
         bus2.Vi().setVariableNumber(3);
 
-        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B));
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(
+          &bus1, &bus2, branchData(R, X, G, B)
+        );
         branch.allocate();
-        branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                   ///< the dependencies
+        branch.evaluateResidual(); ///< Computes the residual and the Jacobian
+                                   ///< values by tracking the dependencies
 
-        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
-        std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B);
+        std::vector<DependencyTracking::Variable> residuals{
+          bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()
+        };
+        std::vector<DependencyTracking::Variable::DependencyMap> ref =
+          analyticalJacobian(R, X, G, B);
 
-        /// Compare dependencies computed automatically to the ones computed analytically
+        /// Compare dependencies computed automatically to the ones computed
+        /// analytically
         for (size_t i = 0; i < residuals.size(); ++i)
         {
-          DependencyTracking::Variable                       res           = residuals[i];
-          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i]));
+          DependencyTracking::Variable                       res = residuals[i];
+          const DependencyTracking::Variable::DependencyMap& dependencies =
+            res.getDependencies();
+          success *= (GridKit::Testing::isEqual(dependencies, ref[i]));
         }
 
         return success.report(__func__);
@@ -219,21 +233,31 @@ namespace GridKit
         Vr2.setVariableNumber(2);
         Vi2.setVariableNumber(3);
 
-        PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
-        PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
+        PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus1(
+          Vr1, Vi1
+        );
+        PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus2(
+          Vr2, Vi2
+        );
 
-        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, branchData(R, X, G, B, tap, phase));
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(
+          &bus1, &bus2, branchData(R, X, G, B, tap, phase)
+        );
         branch.allocate();
         branch.evaluateResidual();
 
-        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
-        std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B, tap, phase);
+        std::vector<DependencyTracking::Variable> residuals{
+          bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()
+        };
+        std::vector<DependencyTracking::Variable::DependencyMap> ref =
+          analyticalJacobian(R, X, G, B, tap, phase);
 
         for (size_t i = 0; i < residuals.size(); ++i)
         {
-          DependencyTracking::Variable                       res           = residuals[i];
-          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i]));
+          DependencyTracking::Variable                       res = residuals[i];
+          const DependencyTracking::Variable::DependencyMap& dependencies =
+            res.getDependencies();
+          success *= (GridKit::Testing::isEqual(dependencies, ref[i]));
         }
 
         return success.report(__func__);
@@ -242,7 +266,8 @@ namespace GridKit
 #ifdef GRIDKIT_ENABLE_ENZYME
       TestOutcome outOfServiceJacobian()
       {
-        // Verify zero currents, fixed sparsity, and restoration after switching.
+        // Verify zero currents, fixed sparsity, and restoration after
+        // switching.
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(10.0, 20.0);
@@ -259,15 +284,23 @@ namespace GridKit
           bus2.setResidualIndex(i, i + 2);
         }
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, branchData(2.0, 4.0, 0.2, 1.2));
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(
+          &bus1, &bus2, branchData(2.0, 4.0, 0.2, 1.2)
+        );
         branch.allocate();
         branch.evaluateJacobian();
-        const IdxT nnz                     = branch.nnz();
-        success                           *= nnz > 0;
-        auto*                    jacobian  = branch.getCooJacobian();
-        const std::vector<IdxT>  rows(jacobian->getRowData(), jacobian->getRowData() + nnz);
-        const std::vector<IdxT>  cols(jacobian->getColData(), jacobian->getColData() + nnz);
-        const std::vector<RealT> values(jacobian->getValues(), jacobian->getValues() + nnz);
+        const IdxT nnz                    = branch.nnz();
+        success                          *= nnz > 0;
+        auto*                   jacobian  = branch.getCooJacobian();
+        const std::vector<IdxT> rows(
+          jacobian->getRowData(), jacobian->getRowData() + nnz
+        );
+        const std::vector<IdxT> cols(
+          jacobian->getColData(), jacobian->getColData() + nnz
+        );
+        const std::vector<RealT> values(
+          jacobian->getValues(), jacobian->getValues() + nnz
+        );
 
         success *= branch.setInService(false) == 0;
         bus1.evaluateResidual();
@@ -328,7 +361,9 @@ namespace GridKit
         ref_bus2.allocate();
         ref_bus2.initialize();
         ref_bus2.evaluateResidual();
-        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, branchData(R, X, G, B, tap, phase));
+        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(
+          &ref_bus1, &ref_bus2, branchData(R, X, G, B, tap, phase)
+        );
 
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus2(Vr2, Vi2);
@@ -338,7 +373,9 @@ namespace GridKit
         test_bus2.allocate();
         test_bus2.initialize();
         test_bus2.evaluateResidual();
-        PhasorDynamics::Branch<ScalarT, IdxT> test_branch(&test_bus1, &test_bus2, branchData(1.0, 1.0, 0.0, 0.0));
+        PhasorDynamics::Branch<ScalarT, IdxT> test_branch(
+          &test_bus1, &test_bus2, branchData(1.0, 1.0, 0.0, 0.0)
+        );
 
         test_branch.setR(R);
         test_branch.setX(X);
@@ -366,31 +403,42 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(1.0, 0.0);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(&bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0));
+        PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(
+          &bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0)
+        );
         success *= (valid_branch.verify().passed());
 
         const auto previous_verbosity = Log::verbosity();
-        // Suppress expected errors from the invalid branch configurations below.
-        // Use EVERYTHING to inspect those diagnostics.
+        // Suppress expected errors from the invalid branch configurations
+        // below. Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, branchData(0.0, 0.0, 0.0, 0.0));
+        PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(
+          &bus1, &bus2, branchData(0.0, 0.0, 0.0, 0.0)
+        );
         success *= (!zero_impedance_branch.verify().passed());
 
-        PhasorDynamics::Branch<ScalarT, IdxT> zero_tap_branch(&bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0, 0.0, 0.0));
+        PhasorDynamics::Branch<ScalarT, IdxT> zero_tap_branch(
+          &bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0, 0.0, 0.0)
+        );
         success *= (!zero_tap_branch.verify().passed());
 
-        PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(&bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0, -1.0, 0.0));
+        PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(
+          &bus1, &bus2, branchData(0.0, 0.1, 0.0, 0.0, -1.0, 0.0)
+        );
         success *= (!negative_tap_branch.verify().passed());
 
         const RealT nan = std::numeric_limits<RealT>::quiet_NaN();
 
         success *= configurationRejected(
-            [&]()
-            {
-              PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, branchData(nan, 0.1, 0.0, 0.0));
-              return nonfinite_branch.verify();
-            });
+          [&]()
+          {
+            PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(
+              &bus1, &bus2, branchData(nan, 0.1, 0.0, 0.0)
+            );
+            return nonfinite_branch.verify();
+          }
+        );
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -441,8 +489,12 @@ namespace GridKit
         ref_bus2.initialize();
         ref_bus2.evaluateResidual();
 
-        PhasorDynamics::Branch<ScalarT, IdxT> data_branch(&data_bus1, &data_bus2, data);
-        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, branchData(R, X, G, B, 1.0, 0.0));
+        PhasorDynamics::Branch<ScalarT, IdxT> data_branch(
+          &data_bus1, &data_bus2, data
+        );
+        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(
+          &ref_bus1, &ref_bus2, branchData(R, X, G, B, 1.0, 0.0)
+        );
 
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();
@@ -456,12 +508,14 @@ namespace GridKit
       }
 
     private:
-      static PhasorDynamics::BranchData<RealT, IdxT> branchData(const RealT R,
-                                                                const RealT X,
-                                                                const RealT G,
-                                                                const RealT B,
-                                                                const RealT tap   = 1.0,
-                                                                const RealT phase = 0.0)
+      static PhasorDynamics::BranchData<RealT, IdxT> branchData(
+        const RealT R,
+        const RealT X,
+        const RealT G,
+        const RealT B,
+        const RealT tap   = 1.0,
+        const RealT phase = 0.0
+      )
       {
         using Parameter = PhasorDynamics::BranchParameters;
 
@@ -475,12 +529,15 @@ namespace GridKit
         return data;
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
-                                                                                  const RealT X,
-                                                                                  const RealT G,
-                                                                                  const RealT B,
-                                                                                  const RealT tap   = 1.0,
-                                                                                  const RealT phase = 0.0)
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      analyticalJacobian(
+        const RealT R,
+        const RealT X,
+        const RealT G,
+        const RealT B,
+        const RealT tap   = 1.0,
+        const RealT phase = 0.0
+      )
       {
         const RealT denom   = R * R + X * X;
         const RealT g       = R / denom;
@@ -492,16 +549,26 @@ namespace GridKit
         const std::complex<RealT> rotation{std::cos(phase), std::sin(phase)};
         const std::complex<RealT> ydiag = -ybr;
 
-        const std::complex<RealT> y11 = ydiag * inv_tap * inv_tap - RealT{0.5} * ysh;
+        const std::complex<RealT> y11 =
+          ydiag * inv_tap * inv_tap - RealT{0.5} * ysh;
         const std::complex<RealT> y12 = ybr * rotation * inv_tap;
         const std::complex<RealT> y21 = ybr * std::conj(rotation) * inv_tap;
         const std::complex<RealT> y22 = ydiag - RealT{0.5} * ysh;
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(4);
-        dependencies[0] = {{0, y11.real()}, {1, -y11.imag()}, {2, y12.real()}, {3, -y12.imag()}};
-        dependencies[1] = {{0, y11.imag()}, {1, y11.real()}, {2, y12.imag()}, {3, y12.real()}};
-        dependencies[2] = {{0, y21.real()}, {1, -y21.imag()}, {2, y22.real()}, {3, -y22.imag()}};
-        dependencies[3] = {{0, y21.imag()}, {1, y21.real()}, {2, y22.imag()}, {3, y22.real()}};
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(4
+        );
+        dependencies[0] = {
+          {0, y11.real()}, {1, -y11.imag()}, {2, y12.real()}, {3, -y12.imag()}
+        };
+        dependencies[1] = {
+          {0, y11.imag()}, {1, y11.real()}, {2, y12.imag()}, {3, y12.real()}
+        };
+        dependencies[2] = {
+          {0, y21.real()}, {1, -y21.imag()}, {2, y22.real()}, {3, -y22.imag()}
+        };
+        dependencies[3] = {
+          {0, y21.imag()}, {1, y21.real()}, {2, y22.imag()}, {3, y22.real()}
+        };
 
         return dependencies;
       }

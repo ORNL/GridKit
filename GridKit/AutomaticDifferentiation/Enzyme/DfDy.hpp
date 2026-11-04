@@ -18,7 +18,8 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal Jacobian, df/dy
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal
+       * Jacobian, df/dy
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
@@ -26,9 +27,10 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function>
       struct DfDy
       {
-        using ScalarT = typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
-        using IdxT    = typename GridKit::Model::EvaluatorTraits<ModelT>::IdxT;
-        using RealT   = typename GridKit::Model::EvaluatorTraits<ModelT>::RealT;
+        using ScalarT =
+          typename GridKit::Model::EvaluatorTraits<ModelT>::ScalarT;
+        using IdxT  = typename GridKit::Model::EvaluatorTraits<ModelT>::IdxT;
+        using RealT = typename GridKit::Model::EvaluatorTraits<ModelT>::RealT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -44,53 +46,62 @@ namespace GridKit
          * @param[out] vals - Values
          * @param[out] nnz - Number of nonzeros
          */
-        static void eval(ModelT*        model,
-                         const size_t   n_res,
-                         const size_t   n_var,
-                         const IdxT*    res_indices,
-                         const IdxT*    var_indices,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         IdxT*          rows,
-                         IdxT*          cols,
-                         RealT*         vals,
-                         IdxT&          nnz)
+        static void eval(
+          ModelT*        model,
+          const size_t   n_res,
+          const size_t   n_var,
+          const IdxT*    res_indices,
+          const IdxT*    var_indices,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          IdxT*          rows,
+          IdxT*          cols,
+          RealT*         vals,
+          IdxT&          nnz
+        )
         {
           if (n_res > 0 && n_var > 0)
           {
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
-                                                           (void*) ident_store<ScalarT, IdxT>,
-                                                           var_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
-                                                             (void*) sparse_store<ScalarT, IdxT>,
-                                                             var_i,
-                                                             1.0, // value scaling
-                                                             res_indices,
-                                                             var_indices,
-                                                             rows,
-                                                             cols,
-                                                             vals,
-                                                             &nnz);
+              ScalarT* output = __enzyme_todense<ScalarT*>(
+                (void*) ident_load<ScalarT, IdxT>,
+                (void*) ident_store<ScalarT, IdxT>,
+                var_i
+              );
+              ScalarT* d_output = __enzyme_todense<ScalarT*>(
+                (void*) sparse_load<ScalarT, IdxT>,
+                (void*) sparse_store<ScalarT, IdxT>,
+                var_i,
+                1.0, // value scaling
+                res_indices,
+                var_indices,
+                rows,
+                cols,
+                vals,
+                &nnz
+              );
 
-              // Core automatic differentiation intrinsic that will be replaced by a derivative
-              // The dummy primal pointer is safe only while residuals never read back their output
-              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
-                                     enzyme_const,
-                                     model,
-                                     enzyme_dup,
-                                     y,
-                                     output, // Seed: column var_i of the identity
-                                     enzyme_const,
-                                     yp,
-                                     enzyme_const,
-                                     wb,
-                                     enzyme_dupnoneed,
-                                     (ScalarT*) 0x1, // Unneeded primal residual (dummy pointer)
-                                     d_output);      // Column var_i of the Jacobian
+              // Core automatic differentiation intrinsic that will be replaced
+              // by a derivative The dummy primal pointer is safe only while
+              // residuals never read back their output
+              __enzyme_fwddiff<void>(
+                (void*) ModelWrapper<ModelT, function>::eval,
+                enzyme_const,
+                model,
+                enzyme_dup,
+                y,
+                output, // Seed: column var_i of the identity
+                enzyme_const,
+                yp,
+                enzyme_const,
+                wb,
+                enzyme_dupnoneed,
+                (ScalarT*) 0x1, // Unneeded primal residual (dummy pointer)
+                d_output
+              ); // Column var_i of the Jacobian
             }
           }
         }
@@ -99,8 +110,10 @@ namespace GridKit
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_res - Number of residual functions
          * @param[in] n_var - Number of independent variables
-         * @param[in] res_indices - Map from local residual indices to global indices
-         * @param[in] var_indices - Map from local variable indices to global indices
+         * @param[in] res_indices - Map from local residual indices to global
+         * indices
+         * @param[in] var_indices - Map from local variable indices to global
+         * indices
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
@@ -110,56 +123,65 @@ namespace GridKit
          * @param[out] vals - Values
          * @param[out] nnz - Number of nonzeros
          */
-        static void eval(ModelT*        model,
-                         const size_t   n_res,
-                         const size_t   n_var,
-                         const IdxT*    res_indices,
-                         const IdxT*    var_indices,
-                         const ScalarT* y,
-                         const ScalarT* yp,
-                         const ScalarT* wb,
-                         const ScalarT* ws,
-                         IdxT*          rows,
-                         IdxT*          cols,
-                         RealT*         vals,
-                         IdxT&          nnz)
+        static void eval(
+          ModelT*        model,
+          const size_t   n_res,
+          const size_t   n_var,
+          const IdxT*    res_indices,
+          const IdxT*    var_indices,
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          IdxT*          rows,
+          IdxT*          cols,
+          RealT*         vals,
+          IdxT&          nnz
+        )
         {
           if (n_res > 0 && n_var > 0)
           {
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
-                                                           (void*) ident_store<ScalarT, IdxT>,
-                                                           var_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
-                                                             (void*) sparse_store<ScalarT, IdxT>,
-                                                             var_i,
-                                                             1.0, // value scaling
-                                                             res_indices,
-                                                             var_indices,
-                                                             rows,
-                                                             cols,
-                                                             vals,
-                                                             &nnz);
+              ScalarT* output = __enzyme_todense<ScalarT*>(
+                (void*) ident_load<ScalarT, IdxT>,
+                (void*) ident_store<ScalarT, IdxT>,
+                var_i
+              );
+              ScalarT* d_output = __enzyme_todense<ScalarT*>(
+                (void*) sparse_load<ScalarT, IdxT>,
+                (void*) sparse_store<ScalarT, IdxT>,
+                var_i,
+                1.0, // value scaling
+                res_indices,
+                var_indices,
+                rows,
+                cols,
+                vals,
+                &nnz
+              );
 
-              // Core automatic differentiation intrinsic that will be replaced by a derivative
-              // The dummy primal pointer is safe only while residuals never read back their output
-              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
-                                     enzyme_const,
-                                     model,
-                                     enzyme_dup,
-                                     y,
-                                     output, // Seed: column var_i of the identity
-                                     enzyme_const,
-                                     yp,
-                                     enzyme_const,
-                                     wb,
-                                     enzyme_const,
-                                     ws,
-                                     enzyme_dupnoneed,
-                                     (ScalarT*) 0x1, // Unneeded primal residual (dummy pointer)
-                                     d_output);      // Column var_i of the Jacobian
+              // Core automatic differentiation intrinsic that will be replaced
+              // by a derivative The dummy primal pointer is safe only while
+              // residuals never read back their output
+              __enzyme_fwddiff<void>(
+                (void*) ModelWrapper<ModelT, function>::eval,
+                enzyme_const,
+                model,
+                enzyme_dup,
+                y,
+                output, // Seed: column var_i of the identity
+                enzyme_const,
+                yp,
+                enzyme_const,
+                wb,
+                enzyme_const,
+                ws,
+                enzyme_dupnoneed,
+                (ScalarT*) 0x1, // Unneeded primal residual (dummy pointer)
+                d_output
+              ); // Column var_i of the Jacobian
             }
           }
         }

@@ -37,8 +37,7 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+        : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
       {
         // Parse data struct into model
         this->initModelParams(data);
@@ -65,7 +64,9 @@ namespace GridKit
        * @brief Set the component ID
        */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      int Ieeet1<scalar_type, index_type>::setGridKitComponentID(
+        IdxT component_id
+      )
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -100,13 +101,15 @@ namespace GridKit
         wb_.resize(2);
 
         // Resize signal variable data
-        const auto signal_size = Utilities::enum_size<Ieeet1ExternalVariables>();
+        const auto signal_size =
+          Utilities::enum_size<Ieeet1ExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         // Set output signals
-        if (auto efd_port = ports_.out.template port<Ieeet1SignalOutputs::efd>())
+        if (auto efd_port =
+              ports_.out.template port<Ieeet1SignalOutputs::efd>())
         {
           efd_port.link(&y_.getData()[7], &(this->getVariableIndex(7)));
         }
@@ -124,39 +127,62 @@ namespace GridKit
         Model::ConfigurationChecks checks("Ieeet1");
 
         checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        checks.check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
-                     "Ispdlim must be 0 or 1");
+        checks.check(
+          Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax"
+        );
+        checks.check(
+          Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
+          "Ispdlim must be 0 or 1"
+        );
 
         const bool saturation_disabled =
-            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+          Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
         if (!saturation_disabled)
         {
-          checks.check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
-          checks.check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          checks.check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
-          checks.check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+          checks.check(
+            E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled"
+          );
+          checks.check(
+            E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled"
+          );
+          checks.check(
+            Se1_ >= ZERO<RealT>,
+            "Se1 must be non-negative when saturation is enabled"
+          );
+          checks.check(
+            Se2_ >= ZERO<RealT>,
+            "Se2 must be non-negative when saturation is enabled"
+          );
 
-          const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
-          checks.check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
+          const bool sat_ordered =
+            (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+          checks.check(
+            sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently"
+          );
         }
 
         auto check_attached_signal =
-            [&]<Ieeet1SignalInputs input>(const char* name)
+          [&]<Ieeet1SignalInputs input>(const char* name)
         {
           auto port = ports_.in.template port<input>();
           if (port.connected() && !port.linked())
           {
-            checks.fail(std::format("{} signal attached with no linked source", name));
+            checks.fail(
+              std::format("{} signal attached with no linked source", name)
+            );
           }
         };
 
-        check_attached_signal.template operator()<Ieeet1SignalInputs::speed>("speed");
-        check_attached_signal.template operator()<Ieeet1SignalInputs::vref>("vref");
+        check_attached_signal.template operator(
+        )<Ieeet1SignalInputs::speed>("speed");
+        check_attached_signal.template operator(
+        )<Ieeet1SignalInputs::vref>("vref");
         check_attached_signal.template operator()<Ieeet1SignalInputs::vs>("vs");
-        check_attached_signal.template operator()<Ieeet1SignalInputs::vuel>("vuel");
-        check_attached_signal.template operator()<Ieeet1SignalInputs::voel>("voel");
+        check_attached_signal.template operator(
+        )<Ieeet1SignalInputs::vuel>("vuel");
+        check_attached_signal.template operator(
+        )<Ieeet1SignalInputs::voel>("voel");
 
         return checks;
       }
@@ -178,8 +204,8 @@ namespace GridKit
        * @warning IEEE Std 421.5-2016 states: “In some programs, if
        *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
        *          calculated by the program to represent a self-excited shunt
-       *          field and a trimmed rheostat as its initial condition.” GridKit
-       *          preserves the configured \f$K_{E}\f$ and resolves
+       *          field and a trimmed rheostat as its initial condition.”
+       * GridKit preserves the configured \f$K_{E}\f$ and resolves
        *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
        *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
        *          10 is unitless and represents 10% of the maximum regulator
@@ -190,7 +216,8 @@ namespace GridKit
       {
         if (!this->verifyAndLog())
         {
-          Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
+          Log::error(
+          ) << "Ieeet1: cannot initialize with invalid configuration\n";
           return 1;
         }
 
@@ -211,7 +238,8 @@ namespace GridKit
         }
 
         // Setpoint members provide the defaults for unattached signals.
-        auto read_signal = [&]<Ieeet1SignalInputs input>(const ScalarT& default_value) -> ScalarT
+        auto read_signal =
+          [&]<Ieeet1SignalInputs input>(const ScalarT& default_value) -> ScalarT
         {
           if (auto port = ports_.in.template port<input>())
           {
@@ -220,10 +248,14 @@ namespace GridKit
           return default_value;
         };
 
-        const ScalarT omega = read_signal.template operator()<Ieeet1SignalInputs::speed>(omega_set_);
-        const ScalarT vs    = read_signal.template operator()<Ieeet1SignalInputs::vs>(vs_set_);
-        const ScalarT vuel  = read_signal.template operator()<Ieeet1SignalInputs::vuel>(vuel_set_);
-        const ScalarT voel  = read_signal.template operator()<Ieeet1SignalInputs::voel>(voel_set_);
+        const ScalarT omega = read_signal.template operator(
+        )<Ieeet1SignalInputs::speed>(omega_set_);
+        const ScalarT          vs =
+          read_signal.template operator()<Ieeet1SignalInputs::vs>(vs_set_);
+        const ScalarT          vuel =
+          read_signal.template operator()<Ieeet1SignalInputs::vuel>(vuel_set_);
+        const ScalarT          voel =
+          read_signal.template operator()<Ieeet1SignalInputs::voel>(voel_set_);
 
         uel_on_ = ZERO<RealT>;
         if (ports_.in.template port<Ieeet1SignalInputs::vuel>())
@@ -253,7 +285,8 @@ namespace GridKit
             Log::error() << "Ieeet1: derived effective Ke must be finite\n";
             return 1;
           }
-          Log::misc() << "Ieeet1: Ke is zero so effective Ke is derived during initialization\n";
+          Log::misc() << "Ieeet1: Ke is zero so effective Ke is derived during "
+                         "initialization\n";
         }
         else
         {
@@ -266,7 +299,8 @@ namespace GridKit
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
-        const ScalarT vref = Ec + vtr + vf - vs - uel_on_ * vuel - oel_on_ * voel;
+        const ScalarT vref =
+          Ec + vtr + vf - vs - uel_on_ * vuel - oel_on_ * voel;
 
         y[0] = Ec;   // y0 - vts  - Sensed term volt
         y[1] = vr;   // y1 - vr   - Voltage reg
@@ -289,7 +323,8 @@ namespace GridKit
         vuel_set_  = static_cast<RealT>(vuel);
         voel_set_  = static_cast<RealT>(voel);
 
-        if (auto vref_port = ports_.in.template port<Ieeet1SignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<Ieeet1SignalInputs::vref>())
         {
           vref_port.writeValue(vref_set_);
         }
@@ -351,12 +386,14 @@ namespace GridKit
        *
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT* y,
-          const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
-          ScalarT*       f)
+      __attribute__((always_inline)) inline int
+      Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        const ScalarT* ws,
+        ScalarT*       f
+      )
       {
         const auto OMEGA = static_cast<size_t>(Ieeet1ExternalVariables::OMEGA);
         const auto VREF  = static_cast<size_t>(Ieeet1ExternalVariables::VREF);
@@ -426,11 +463,13 @@ namespace GridKit
         const auto VOEL  = static_cast<size_t>(Ieeet1ExternalVariables::VOEL);
 
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
-        if (auto speed_port = ports_.in.template port<Ieeet1SignalInputs::speed>())
+        if (auto speed_port =
+              ports_.in.template port<Ieeet1SignalInputs::speed>())
         {
           ws_indices_[OMEGA] = speed_port.signalVariableIndex();
         }
-        if (auto vref_port = ports_.in.template port<Ieeet1SignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<Ieeet1SignalInputs::vref>())
         {
           ws_indices_[VREF] = vref_port.signalVariableIndex();
         }
@@ -438,11 +477,13 @@ namespace GridKit
         {
           ws_indices_[VS] = vs_port.signalVariableIndex();
         }
-        if (auto vuel_port = ports_.in.template port<Ieeet1SignalInputs::vuel>())
+        if (auto vuel_port =
+              ports_.in.template port<Ieeet1SignalInputs::vuel>())
         {
           ws_indices_[VUEL] = vuel_port.signalVariableIndex();
         }
-        if (auto voel_port = ports_.in.template port<Ieeet1SignalInputs::voel>())
+        if (auto voel_port =
+              ports_.in.template port<Ieeet1SignalInputs::voel>())
         {
           ws_indices_[VOEL] = voel_port.signalVariableIndex();
         }
@@ -465,18 +506,21 @@ namespace GridKit
 
         auto* ws = ws_.getData();
 
-        // Attached signals are read live; unattached ones keep the latched value.
+        // Attached signals are read live; unattached ones keep the latched
+        // value.
         ws[OMEGA] = omega_set_;
         ws[VREF]  = vref_set_;
         ws[VS]    = vs_set_;
         ws[VUEL]  = vuel_set_;
         ws[VOEL]  = voel_set_;
 
-        if (auto speed_port = ports_.in.template port<Ieeet1SignalInputs::speed>())
+        if (auto speed_port =
+              ports_.in.template port<Ieeet1SignalInputs::speed>())
         {
           ws[OMEGA] = speed_port.readSignal();
         }
-        if (auto vref_port = ports_.in.template port<Ieeet1SignalInputs::vref>())
+        if (auto vref_port =
+              ports_.in.template port<Ieeet1SignalInputs::vref>())
         {
           ws[VREF] = vref_port.readSignal();
         }
@@ -484,11 +528,13 @@ namespace GridKit
         {
           ws[VS] = vs_port.readSignal();
         }
-        if (auto vuel_port = ports_.in.template port<Ieeet1SignalInputs::vuel>())
+        if (auto vuel_port =
+              ports_.in.template port<Ieeet1SignalInputs::vuel>())
         {
           ws[VUEL] = vuel_port.readSignal();
         }
-        if (auto voel_port = ports_.in.template port<Ieeet1SignalInputs::voel>())
+        if (auto voel_port =
+              ports_.in.template port<Ieeet1SignalInputs::voel>())
         {
           ws[VOEL] = voel_port.readSignal();
         }
@@ -513,7 +559,9 @@ namespace GridKit
        * @brief Initialization Exciter Parameters from data structure
        */
       template <typename scalar_type, typename index_type>
-      void Ieeet1<scalar_type, index_type>::initModelParams(const ModelDataT& data)
+      void Ieeet1<scalar_type, index_type>::initModelParams(
+        const ModelDataT& data
+      )
       {
         using Parameter = typename ModelDataT::Parameters;
 
@@ -576,17 +624,17 @@ namespace GridKit
         SB_ = ZERO<RealT>;
 
         const bool saturation_disabled =
-            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+          Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
         if (saturation_disabled)
         {
           return;
         }
 
-        const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
-        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT>
-            || Se1_ < ZERO<RealT> || Se2_ < ZERO<RealT>
-            || !sat_ordered)
+        const bool sat_ordered =
+          (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT> || Se1_ < ZERO<RealT>
+            || Se2_ < ZERO<RealT> || !sat_ordered)
         {
           return;
         }
@@ -615,7 +663,8 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Ieeet1<scalar_type, index_type>::getMonitor() const
+      const Model::VariableMonitorBase* Ieeet1<scalar_type, index_type>::
+        getMonitor() const
       {
         return monitor_.get();
       }
@@ -624,10 +673,11 @@ namespace GridKit
       void Ieeet1<scalar_type, index_type>::initializeMonitor()
       {
         using Variable = ModelDataT::MonitorableVariables;
-        monitor_->set(Variable::efd, [this]
-                      { return y_.getData()[7]; });
-        monitor_->set(Variable::ksat, [this]
-                      { return SB_ * Math::qramp(y_.getData()[2] - SA_); });
+        monitor_->set(Variable::efd, [this] { return y_.getData()[7]; });
+        monitor_->set(
+          Variable::ksat,
+          [this] { return SB_ * Math::qramp(y_.getData()[2] - SA_); }
+        );
       }
     } // namespace Exciter
   } // namespace PhasorDynamics

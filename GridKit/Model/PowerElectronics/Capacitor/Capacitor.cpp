@@ -17,8 +17,7 @@ namespace GridKit
      * Calls default ModelEvaluatorImpl constructor.
      */
     template <class ScalarT, typename IdxT>
-    Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, RealT C)
-      : C_(C)
+    Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, RealT C) : C_(C)
     {
       size_           = 3;
       n_intern_       = 1;
@@ -107,7 +106,9 @@ namespace GridKit
       // Create dF/dy
       std::vector<IdxT>  rcord{0, 1, 2, 2, 2};
       std::vector<IdxT>  ccord{2, 2, 0, 1, 2};
-      std::vector<RealT> vals{C_ * alpha_, -C_ * alpha_, 1.0, -1.0, -1.0 - C_ * alpha_};
+      std::vector<RealT> vals{
+        C_ * alpha_, -C_ * alpha_, 1.0, -1.0, -1.0 - C_ * alpha_
+      };
       this->setJacValues(rcord, ccord, vals);
 
       return 0;

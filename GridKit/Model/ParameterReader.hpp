@@ -24,14 +24,12 @@ namespace GridKit
   {
     /// Model data container with a map from each parameter to its value
     template <typename T>
-    concept ParameterData =
-        requires(const T& data) {
-          typename T::RealT;
-          typename T::IdxT;
-          typename T::Parameters;
-          data.parameters;
-        }
-        && Utilities::SizedEnum<typename T::Parameters>;
+    concept ParameterData = requires(const T& data) {
+      typename T::RealT;
+      typename T::IdxT;
+      typename T::Parameters;
+      data.parameters;
+    } && Utilities::SizedEnum<typename T::Parameters>;
 
     /**
      * @brief Reads typed parameters out of a model data container.
@@ -57,8 +55,7 @@ namespace GridKit
        * @param[in] model Model name used in rejection messages.
        */
       ParameterReader(const ModelDataT& data, const char* model)
-        : parameters_(data.parameters),
-          model_(model)
+        : parameters_(data.parameters), model_(model)
       {
       }
 
@@ -133,7 +130,9 @@ namespace GridKit
 
       /// Read an optional parameter that must hold exactly a T.
       template <typename T>
-      [[nodiscard]] std::optional<T> readExact(ParametersT key, std::string_view reason) const
+      [[nodiscard]] std::optional<T> readExact(
+        ParametersT key, std::string_view reason
+      ) const
       {
         const auto* value = find(key);
         if (value == nullptr)
@@ -153,8 +152,9 @@ namespace GridKit
       /// Reject the model data with a message naming the model and parameter.
       [[noreturn]] void reject(ParametersT key, std::string_view reason) const
       {
-        throw std::invalid_argument(
-            std::format("{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason));
+        throw std::invalid_argument(std::format(
+          "{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason
+        ));
       }
 
       const ParameterMapT& parameters_;

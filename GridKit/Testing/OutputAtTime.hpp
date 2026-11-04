@@ -21,20 +21,20 @@ namespace GridKit
       double              t;
       std::vector<double> data;
 
-      OutputAtTime(const std::vector<double>& v)
-        : t{v[0]}
+      OutputAtTime(const std::vector<double>& v) : t{v[0]}
       {
         std::copy(next(begin(v)), end(v), std::back_inserter(data));
       }
 
       template <typename... TArgs>
-      OutputAtTime(double t, TArgs&&... args)
-        : t{t}, data{args...}
+      OutputAtTime(double t, TArgs&&... args) : t{t}, data{args...}
       {
       }
 
     private:
-      friend OutputAtTime operator-(const OutputAtTime& a, const OutputAtTime& b)
+      friend OutputAtTime operator-(
+        const OutputAtTime& a, const OutputAtTime& b
+      )
       {
         assert(GridKit::Testing::isEqual(a.t, b.t, 1.0e-6));
         assert(a.data.size() == b.data.size());

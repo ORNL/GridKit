@@ -133,32 +133,33 @@ namespace GridKit
         if (!std::isfinite(value) || value <= 0.0)
         {
           throw std::invalid_argument(
-              std::string(name) + " must be positive and finite");
+            std::string(name) + " must be positive and finite"
+          );
         }
         return value;
       };
       c.cosim_rel_tol  = tolerance("cosim_rel_tol", DEFAULT_COSIM_REL_TOL);
       c.cosim_step_tol = tolerance("cosim_step_tol", DEFAULT_COSIM_STEP_TOL);
       c.cosim_function_error =
-          tolerance("cosim_function_error", DEFAULT_COSIM_FUNCTION_ERROR);
+        tolerance("cosim_function_error", DEFAULT_COSIM_FUNCTION_ERROR);
       c.dt_fixed  = j.value("dt_fixed", 0.0);
       c.max_steps = j.value("max_steps", std::size_t{0});
       c.max_order = j.value("max_order", 5);
       c.consistent_ic_type =
-          AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
+        AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
       if (j.contains("consistent_ic_type"))
       {
         const auto consistent_ic_type_str =
-            j.at("consistent_ic_type").get<std::string>();
+          j.at("consistent_ic_type").get<std::string>();
         if (consistent_ic_type_str == "y")
         {
           c.consistent_ic_type =
-              AnalysisManager::Sundials::IdaConsistentICType::Y;
+            AnalysisManager::Sundials::IdaConsistentICType::Y;
         }
         else if (consistent_ic_type_str == "ya_ydp")
         {
           c.consistent_ic_type =
-              AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
+            AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
         }
         else
         {
@@ -198,8 +199,9 @@ namespace GridKit
       using OutputLayout = ::GridKit::Model::VariableMonitorLayout;
       if (j.contains("output_layout"))
       {
-        auto layout_str  = j.at("output_layout").get<std::string>();
-        auto layout_wrap = enum_cast<OutputLayout>(layout_str, case_insensitive);
+        auto layout_str = j.at("output_layout").get<std::string>();
+        auto layout_wrap =
+          enum_cast<OutputLayout>(layout_str, case_insensitive);
         if (!layout_wrap.has_value())
         {
           Log::error() << "Invalid output layout \"" << layout_str << "\"; "
@@ -252,7 +254,7 @@ namespace GridKit
       }
 
       c.abs_err_threshold =
-          j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
+        j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
     }
 
     /**
@@ -294,9 +296,12 @@ namespace GridKit
       }
 
       // TODO: Support reference comparison for the long layout
-      if (data.output_layout == ::GridKit::Model::VariableMonitorLayout::LONG && !data.reference_file.empty())
+      if (data.output_layout == ::GridKit::Model::VariableMonitorLayout::LONG
+          && !data.reference_file.empty())
       {
-        throw std::invalid_argument("reference_file is not supported with the long output_layout");
+        throw std::invalid_argument(
+          "reference_file is not supported with the long output_layout"
+        );
       }
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
@@ -305,7 +310,8 @@ namespace GridKit
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
       {
-        if (sink.format == csv && sink.delim == "," && sink.layout == data.output_layout)
+        if (sink.format == csv && sink.delim == ","
+            && sink.layout == data.output_layout)
         {
           model_output_file = sink.file_name;
         }
@@ -316,7 +322,9 @@ namespace GridKit
         if (!data.output_file.empty())
         {
           // Add study output file to model if one did not already exist
-          data.model_data.monitor_sink.emplace_back(csv, data.output_file, ",", data.output_layout);
+          data.model_data.monitor_sink.emplace_back(
+            csv, data.output_file, ",", data.output_layout
+          );
         }
       }
       else
@@ -348,7 +356,8 @@ namespace GridKit
     }
 
     Testing::TestStatus checkErrors(
-        const StudyData& study_data, bool print_results = true)
+      const StudyData& study_data, bool print_results = true
+    )
     {
       // Generate aggregate errors comparing variable output to reference
       // solution
@@ -360,10 +369,11 @@ namespace GridKit
       if (!out_file.empty() && !ref_file.empty())
       {
         auto errorSet = Testing::compareCSV(
-            out_file,
-            ref_file,
-            study_data.error_type,
-            study_data.abs_err_threshold);
+          out_file,
+          ref_file,
+          study_data.error_type,
+          study_data.abs_err_threshold
+        );
 
         // Print the errors
         if (print_results)
@@ -378,7 +388,7 @@ namespace GridKit
           for (std::size_t i = 0; i < study_data.error_tol.size(); ++i)
           {
             status *=
-                errorSet->var_errors[i].max_value < study_data.error_tol[i];
+              errorSet->var_errors[i].max_value < study_data.error_tol[i];
           }
         }
         else

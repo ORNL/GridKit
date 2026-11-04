@@ -12,10 +12,12 @@ namespace AnalysisManager
   {
 
     template <class ScalarT, typename IdxT>
-    DynamicConstraint<ScalarT, IdxT>::DynamicConstraint(Sundials::Ida<ScalarT, IdxT>* integrator,
-                                                        RealT                         t_init,
-                                                        RealT                         t_final,
-                                                        RealT                         dt_monitor)
+    DynamicConstraint<ScalarT, IdxT>::DynamicConstraint(
+      Sundials::Ida<ScalarT, IdxT>* integrator,
+      RealT                         t_init,
+      RealT                         t_final,
+      RealT                         dt_monitor
+    )
       : OptimizationSolver<ScalarT, IdxT>(integrator),
         t_init_(t_init),
         t_final_(t_final),
@@ -30,7 +32,13 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style)
+    bool DynamicConstraint<ScalarT, IdxT>::get_nlp_info(
+      Index&          n,
+      Index&          m,
+      Index&          nnz_jac_g,
+      Index&          nnz_h_lag,
+      IndexStyleEnum& index_style
+    )
     {
       // This code handles one objective function
       assert(model_->sizeQuadrature() == 1);
@@ -55,12 +63,14 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::get_bounds_info([[maybe_unused]] Index n,
-                                                           Number*                x_l,
-                                                           Number*                x_u,
-                                                           [[maybe_unused]] Index m,
-                                                           Number*                g_l,
-                                                           Number*                g_u)
+    bool DynamicConstraint<ScalarT, IdxT>::get_bounds_info(
+      [[maybe_unused]] Index n,
+      Number*                x_l,
+      Number*                x_u,
+      [[maybe_unused]] Index m,
+      Number*                g_l,
+      Number*                g_u
+    )
     {
       // Check if sizes are set correctly
       assert(n == (Index) (model_->sizeParams() + 1));
@@ -87,15 +97,17 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::get_starting_point([[maybe_unused]] Index   n,
-                                                              [[maybe_unused]] bool    init_x,
-                                                              Number*                  x,
-                                                              [[maybe_unused]] bool    init_z,
-                                                              [[maybe_unused]] Number* z_L,
-                                                              [[maybe_unused]] Number* z_U,
-                                                              [[maybe_unused]] Index   m,
-                                                              [[maybe_unused]] bool    init_lambda,
-                                                              [[maybe_unused]] Number* lambda)
+    bool DynamicConstraint<ScalarT, IdxT>::get_starting_point(
+      [[maybe_unused]] Index   n,
+      [[maybe_unused]] bool    init_x,
+      Number*                  x,
+      [[maybe_unused]] bool    init_z,
+      [[maybe_unused]] Number* z_L,
+      [[maybe_unused]] Number* z_U,
+      [[maybe_unused]] Index   m,
+      [[maybe_unused]] bool    init_lambda,
+      [[maybe_unused]] Number* lambda
+    )
     {
       // Only initial values for x provided.
       assert(init_x == true);
@@ -114,10 +126,12 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::eval_f([[maybe_unused]] Index n,
-                                                  const Number*          x,
-                                                  [[maybe_unused]] bool  new_x,
-                                                  Number&                obj_value)
+    bool DynamicConstraint<ScalarT, IdxT>::eval_f(
+      [[maybe_unused]] Index n,
+      const Number*          x,
+      [[maybe_unused]] bool  new_x,
+      Number&                obj_value
+    )
     {
       // Set objective to fictitious optimization parameter x[n-1]
       obj_value = x[model_->sizeParams()];
@@ -126,10 +140,12 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::eval_grad_f([[maybe_unused]] Index         n,
-                                                       [[maybe_unused]] const Number* x,
-                                                       [[maybe_unused]] bool          new_x,
-                                                       Number*                        grad_f)
+    bool DynamicConstraint<ScalarT, IdxT>::eval_grad_f(
+      [[maybe_unused]] Index         n,
+      [[maybe_unused]] const Number* x,
+      [[maybe_unused]] bool          new_x,
+      Number*                        grad_f
+    )
     {
       // Objective function equals to the fictitious parameter x[n-1].
       // Gradient, then assumes the simple form:
@@ -141,11 +157,13 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::eval_g([[maybe_unused]] Index n,
-                                                  const Number*          x,
-                                                  [[maybe_unused]] bool  new_x,
-                                                  [[maybe_unused]] Index m,
-                                                  Number*                g)
+    bool DynamicConstraint<ScalarT, IdxT>::eval_g(
+      [[maybe_unused]] Index n,
+      const Number*          x,
+      [[maybe_unused]] bool  new_x,
+      [[maybe_unused]] Index m,
+      Number*                g
+    )
     {
       // Update optimization parameters
       auto* param = model_->param().getData();
@@ -164,24 +182,28 @@ namespace AnalysisManager
       status     = integrator_->runSimulationQuadrature(t_final_, dt_monitor_);
       if (status)
       {
-        ::GridKit::Utilities::Logger::error() << "Integration failed when using Pm = " << x[0] << "\n";
+        ::GridKit::Utilities::Logger::error()
+          << "Integration failed when using Pm = " << x[0] << "\n";
         return false;
       }
 
-      // For now assumes only one forward integrand and multiple optimization parameters.
+      // For now assumes only one forward integrand and multiple optimization
+      // parameters.
       g[0] = (integrator_->getIntegral())[0] - x[model_->sizeParams()];
       return true;
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::eval_jac_g([[maybe_unused]] Index n,
-                                                      const Number*          x,
-                                                      [[maybe_unused]] bool  new_x,
-                                                      [[maybe_unused]] Index m,
-                                                      [[maybe_unused]] Index nele_jac,
-                                                      Index*                 iRow,
-                                                      Index*                 jCol,
-                                                      Number*                values)
+    bool DynamicConstraint<ScalarT, IdxT>::eval_jac_g(
+      [[maybe_unused]] Index n,
+      const Number*          x,
+      [[maybe_unused]] bool  new_x,
+      [[maybe_unused]] Index m,
+      [[maybe_unused]] Index nele_jac,
+      Index*                 iRow,
+      Index*                 jCol,
+      Number*                values
+    )
     {
       // Set Jacobian sparsity pattern ...
       if (!values)
@@ -216,7 +238,10 @@ namespace AnalysisManager
         status     = integrator_->runForwardSimulation(t_final_, dt_monitor_);
         if (status)
         {
-          ::GridKit::Utilities::Logger::error() << "Forward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
+          ::GridKit::Utilities::Logger::error()
+            << "Forward integration for adjoint solution failed when using Pm "
+               "= "
+            << x[0] << "\n";
           return false;
         }
 
@@ -225,11 +250,15 @@ namespace AnalysisManager
         status = integrator_->runBackwardSimulation(t_init_);
         if (status)
         {
-          ::GridKit::Utilities::Logger::error() << "Backward integration for adjoint solution failed when using Pm = " << x[0] << "\n";
+          ::GridKit::Utilities::Logger::error()
+            << "Backward integration for adjoint solution failed when using Pm "
+               "= "
+            << x[0] << "\n";
           return false;
         }
 
-        // For now assumes only one forward integrand and multiple optimization parameters.
+        // For now assumes only one forward integrand and multiple optimization
+        // parameters.
         for (IdxT i = 0; i < model_->sizeParams(); ++i)
         {
           values[i] = -((integrator_->getAdjointIntegral())[i]);
@@ -242,33 +271,37 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicConstraint<ScalarT, IdxT>::eval_h([[maybe_unused]] Index         n,
-                                                  [[maybe_unused]] const Number* x,
-                                                  [[maybe_unused]] bool          new_x,
-                                                  [[maybe_unused]] Number        obj_factor,
-                                                  [[maybe_unused]] Index         m,
-                                                  [[maybe_unused]] const Number* lambda,
-                                                  [[maybe_unused]] bool          new_lambda,
-                                                  [[maybe_unused]] Index         nele_hess,
-                                                  [[maybe_unused]] Index*        iRow,
-                                                  [[maybe_unused]] Index*        jCol,
-                                                  [[maybe_unused]] Number*       values)
+    bool DynamicConstraint<ScalarT, IdxT>::eval_h(
+      [[maybe_unused]] Index         n,
+      [[maybe_unused]] const Number* x,
+      [[maybe_unused]] bool          new_x,
+      [[maybe_unused]] Number        obj_factor,
+      [[maybe_unused]] Index         m,
+      [[maybe_unused]] const Number* lambda,
+      [[maybe_unused]] bool          new_lambda,
+      [[maybe_unused]] Index         nele_hess,
+      [[maybe_unused]] Index*        iRow,
+      [[maybe_unused]] Index*        jCol,
+      [[maybe_unused]] Number*       values
+    )
     {
       return true;
     }
 
     template <class ScalarT, typename IdxT>
-    void DynamicConstraint<ScalarT, IdxT>::finalize_solution([[maybe_unused]] SolverReturn               status,
-                                                             [[maybe_unused]] Index                      n,
-                                                             [[maybe_unused]] const Number*              x,
-                                                             [[maybe_unused]] const Number*              z_L,
-                                                             [[maybe_unused]] const Number*              z_U,
-                                                             [[maybe_unused]] Index                      m,
-                                                             [[maybe_unused]] const Number*              g,
-                                                             [[maybe_unused]] const Number*              lambda,
-                                                             [[maybe_unused]] Number                     obj_value,
-                                                             [[maybe_unused]] const IpoptData*           ip_data,
-                                                             [[maybe_unused]] IpoptCalculatedQuantities* ip_cq)
+    void DynamicConstraint<ScalarT, IdxT>::finalize_solution(
+      [[maybe_unused]] SolverReturn               status,
+      [[maybe_unused]] Index                      n,
+      [[maybe_unused]] const Number*              x,
+      [[maybe_unused]] const Number*              z_L,
+      [[maybe_unused]] const Number*              z_U,
+      [[maybe_unused]] Index                      m,
+      [[maybe_unused]] const Number*              g,
+      [[maybe_unused]] const Number*              lambda,
+      [[maybe_unused]] Number                     obj_value,
+      [[maybe_unused]] const IpoptData*           ip_data,
+      [[maybe_unused]] IpoptCalculatedQuantities* ip_cq
+    )
     {
     }
 

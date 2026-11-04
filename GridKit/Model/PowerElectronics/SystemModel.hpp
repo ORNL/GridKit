@@ -84,7 +84,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Will check if each component has jacobian available. If one doesn't have it, return false.
+       * @brief Will check if each component has jacobian available. If one
+       * doesn't have it, return false.
        *
        *
        * @return true if all components have jacobian
@@ -108,14 +109,17 @@ namespace GridKit
       /**
        * @brief Allocate system vectors and construct the system CSR Jacobian
        *
-       * @post System model vectors allocated with the computed total number of unknowns
+       * @post System model vectors allocated with the computed total number of
+       * unknowns
        * @post CSR Jacobian sparsity pattern is computed
        * @post COO->CSR mapping is computed
-       * @post Every component's \ref Component::y_int_, \ref Component::yp_int_, and \ref Component::f_int_ pointers
-       * are set to their appropriate offsets in the system vector, allowing them to directly access their internal variables, derivatives,
-       * and residuals.
+       * @post Every component's \ref Component::y_int_, \ref
+       * Component::yp_int_, and \ref Component::f_int_ pointers are set to
+       * their appropriate offsets in the system vector, allowing them to
+       * directly access their internal variables, derivatives, and residuals.
        *
-       * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+       * @return int 0 if successful, positive if there's a recoverable error,
+       * negative if unrecoverable
        */
       int allocate() final
       {
@@ -135,7 +139,8 @@ namespace GridKit
         n_extern_ = 0;
         size_     = n_intern_ + n_extern_;
 
-        // Allocation always rebuilds the system Jacobian and its COO-to-CSR map.
+        // Allocation always rebuilds the system Jacobian and its COO-to-CSR
+        // map.
         delete csr_jac_;
         csr_jac_ = nullptr;
 
@@ -151,7 +156,8 @@ namespace GridKit
 
         tag_.resize(size_);
 
-        { // Start node internal indexing after all component internals for proper KLU ordering
+        { // Start node internal indexing after all component internals for
+          // proper KLU ordering
           size_t node_internal_idx = component_internal_size;
           for (node_type* node : nodes_)
           {
@@ -160,10 +166,11 @@ namespace GridKit
             for (size_t i = 0; i < node->getInternalSize(); i++)
             {
               ExternalConnection<ScalarT, IdxT> node_connection{
-                  .y_   = y_int_ + node_internal_idx,
-                  .yp_  = yp_int_ + node_internal_idx,
-                  .f_   = f_int_ + node_internal_idx,
-                  .idx_ = static_cast<IdxT>(node_internal_idx)};
+                .y_   = y_int_ + node_internal_idx,
+                .yp_  = yp_int_ + node_internal_idx,
+                .f_   = f_int_ + node_internal_idx,
+                .idx_ = static_cast<IdxT>(node_internal_idx)
+              };
 
               node->setExternalConnectionNodes(i, node_connection);
               node_internal_idx++;
@@ -172,8 +179,8 @@ namespace GridKit
         }
 
         {
-          // The offset for each component's internal variables in the system vector.
-          // They start at 0, and are stacked on top of each other.
+          // The offset for each component's internal variables in the system
+          // vector. They start at 0, and are stacked on top of each other.
           size_t component_internal_idx = 0;
           for (component_type* comp : components_)
           {
@@ -181,7 +188,8 @@ namespace GridKit
 
             // Update component internal pointers to their correct offsets
             comp->setInternalPointer(&y_int_[component_internal_idx]);
-            comp->setInternalDerivativePointer(&yp_int_[component_internal_idx]);
+            comp->setInternalDerivativePointer(&yp_int_[component_internal_idx]
+            );
             comp->setInternalResidualPointer(&f_int_[component_internal_idx]);
 
             const auto& external_indices = comp->getExternIndices();
@@ -212,14 +220,16 @@ namespace GridKit
 
           for (IdxT i = 0; i < nnz; ++i)
           {
-            if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+            if (component->getNodeConnection(r[i]) != neg1_
+                && component->getNodeConnection(c[i]) != neg1_)
             {
               ++nnz_dup;
             }
           }
         }
 
-        // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
+        // Allocate COO triplet arrays (we own these until we hand off to
+        // CsrMatrix)
         IdxT*  rows_dup = new IdxT[nnz_dup];
         IdxT*  cols_dup = new IdxT[nnz_dup];
         RealT* vals_dup = new RealT[nnz_dup];
@@ -234,7 +244,8 @@ namespace GridKit
 
           for (IdxT i = 0; i < nnz; ++i)
           {
-            if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+            if (component->getNodeConnection(r[i]) != neg1_
+                && component->getNodeConnection(c[i]) != neg1_)
             {
               rows_dup[counter] = component->getNodeConnection(r[i]);
               cols_dup[counter] = component->getNodeConnection(c[i]);
@@ -245,7 +256,9 @@ namespace GridKit
         }
 
         // Build the system COO Jacobian
-        LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+        LinearAlgebra::CooMatrix<RealT, IdxT> jac(
+          size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup
+        );
 
         // Populate CSR data with sort and deduplicate
         IdxT* row_ptrs = jac.getCsrRowData();
@@ -280,7 +293,8 @@ namespace GridKit
       /**
        * @brief Set initial y and y' of each component
        *
-       * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+       * @return int 0 if successful, positive if there's a recoverable error,
+       * negative if unrecoverable
        */
       int initialize() final
       {
@@ -297,13 +311,16 @@ namespace GridKit
        * @brief Tags all system variables as differentiable, based on what the
        * components that own those variables tag them as.
        *
-       * Starts by asking all components to tag their differentiables. This implementation
-       * assumes all node variables are algebraic, and will not ask nodes to tag their differentiables.
-       * Sets all variables to algebraic (`false`) to start, then loops over all component internal variables.
-       * Re-creates the same internal variable to system variables mapping as in \ref allocate() - all
-       * internal variables from the same component are stored contiguously in a block, and blocks are
-       * stored contiguously in the same order as \ref components_, with node variables at the end.
-       * Each internal variable's tag in the system is set to its tag in the component.
+       * Starts by asking all components to tag their differentiables. This
+       * implementation assumes all node variables are algebraic, and will not
+       * ask nodes to tag their differentiables. Sets all variables to algebraic
+       * (`false`) to start, then loops over all component internal variables.
+       * Re-creates the same internal variable to system variables mapping as in
+       * \ref allocate() - all internal variables from the same component are
+       * stored contiguously in a block, and blocks are stored contiguously in
+       * the same order as \ref components_, with node variables at the end.
+       * Each internal variable's tag in the system is set to its tag in the
+       * component.
        */
       int tagDifferentiable() final
       {
@@ -319,10 +336,12 @@ namespace GridKit
           }
         }
 
-        // Fill tags with a default value (false) for node variables. Assumed to be algebraic here.
+        // Fill tags with a default value (false) for node variables. Assumed to
+        // be algebraic here.
         std::fill(tag_.begin(), tag_.end(), false);
 
-        // Copy tags for internal variables from their components - going in the order as described above
+        // Copy tags for internal variables from their components - going in the
+        // order as described above
         size_t idx = 0;
         for (component_type* comp : components_)
         {
@@ -336,7 +355,8 @@ namespace GridKit
             {
               tag_[idx] = comp->tag()[i];
 
-              // Ensures internal variables are contiguous, and in the same order as the component
+              // Ensures internal variables are contiguous, and in the same
+              // order as the component
               idx++;
             }
           }
@@ -366,7 +386,8 @@ namespace GridKit
       /**
        * @brief Evaluate Residuals at each component then collect them
        *
-       * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+       * @return int 0 if successful, positive if there's a recoverable error,
+       * negative if unrecoverable
        */
       int evaluateInternalResidual() final
       {
@@ -377,7 +398,8 @@ namespace GridKit
 
         // Update system residual vector
 
-        // Evaluate component internal residuals - this is embarrassingly parallel
+        // Evaluate component internal residuals - this is embarrassingly
+        // parallel
         for (component_type* component : components_)
         {
           if (int err_code = component->evaluateInternalResidual())
@@ -402,12 +424,14 @@ namespace GridKit
       }
 
       /**
-       * @brief Creates the system Jacobian representing \f$\alpha dF/dy' + dF/dy\f$
+       * @brief Creates the system Jacobian representing \f$\alpha dF/dy' +
+       * dF/dy\f$
        *
        * Updates the CSR Jacobian values using the per-component mappings
        * computed during allocate().
        *
-       * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+       * @return int 0 if successful, positive if there's a recoverable error,
+       * negative if unrecoverable
        */
       int evaluateJacobian() final
       {
@@ -431,7 +455,8 @@ namespace GridKit
 
           for (IdxT i = 0; i < nnz; ++i)
           {
-            if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+            if (component->getNodeConnection(r[i]) != neg1_
+                && component->getNodeConnection(c[i]) != neg1_)
             {
               vals[map_to_csr_[counter]] += v[i];
               ++counter;

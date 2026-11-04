@@ -17,7 +17,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusSignalVoltageOut<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "BusSignalVoltageOut: Jacobian evaluation is not implemented\n";
+      Log::misc(
+      ) << "BusSignalVoltageOut: Jacobian evaluation is not implemented\n";
 
       return 0;
     }

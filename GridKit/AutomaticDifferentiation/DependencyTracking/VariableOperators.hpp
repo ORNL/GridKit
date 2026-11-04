@@ -367,33 +367,41 @@ namespace GridKit
 namespace std
 {
 
-#define IMPL_FUN_1(FUN, DER)                                                                       \
-  inline GridKit::DependencyTracking::Variable FUN(const GridKit::DependencyTracking::Variable& x) \
-  {                                                                                                \
-    double                                val = FUN(x());                                          \
-    double                                der = DER(x());                                          \
-    GridKit::DependencyTracking::Variable res(x); /* copy derivatives of x*/                       \
-    res.setValue(val);                            /* set function value f(x) */                    \
-    res.scaleDependencies(der);                   /* compute derivatives of f(x) */                \
-    return res;                                                                                    \
+#define IMPL_FUN_1(FUN, DER)                                                   \
+  inline GridKit::DependencyTracking::Variable FUN(                            \
+    const GridKit::DependencyTracking::Variable& x                             \
+  )                                                                            \
+  {                                                                            \
+    double                                val = FUN(x());                      \
+    double                                der = DER(x());                      \
+    GridKit::DependencyTracking::Variable res(x); /* copy derivatives of x*/   \
+    res.setValue(val);          /* set function value f(x) */                  \
+    res.scaleDependencies(der); /* compute derivatives of f(x) */              \
+    return res;                                                                \
   }
 
-#define IMPL_FUN_2(FUN, DER1, DER2)                                                                                    \
-  inline GridKit::DependencyTracking::Variable FUN(const GridKit::DependencyTracking::Variable& x,                     \
-                                                   const GridKit::DependencyTracking::Variable& y)                     \
-  {                                                                                                                    \
-    double                                val  = FUN(x(), y());                                                        \
-    double                                der1 = DER1(x(), y());                                                       \
-    double                                der2 = DER2(x(), y());                                                       \
-    GridKit::DependencyTracking::Variable res1(x);              /* copy derivatives of x*/                             \
-    GridKit::DependencyTracking::Variable res2(y);              /* copy derivatives of y*/                             \
-    res1.setValue(val);                                         /* set function value f(x, y) */                       \
-    res2.setValue(val);                                         /* set function value f(x, y) */                       \
-    res1.scaleDependencies(der1);                               /* compute derivatives of f(x, y) with respect to x */ \
-    res2.scaleDependencies(der2);                               /* compute derivatives of f(x, y) with respect to y */ \
-    GridKit::DependencyTracking::Variable res(std::move(res1)); /* relocate derivatives w.r.t. x into return */        \
-    res.addDependencies(res2);                                  /* add derivatives with respect to y to return */      \
-    return res;                                                                                                        \
+#define IMPL_FUN_2(FUN, DER1, DER2)                                            \
+  inline GridKit::DependencyTracking::Variable FUN(                            \
+    const GridKit::DependencyTracking::Variable& x,                            \
+    const GridKit::DependencyTracking::Variable& y                             \
+  )                                                                            \
+  {                                                                            \
+    double                                val  = FUN(x(), y());                \
+    double                                der1 = DER1(x(), y());               \
+    double                                der2 = DER2(x(), y());               \
+    GridKit::DependencyTracking::Variable res1(x); /* copy derivatives of x*/  \
+    GridKit::DependencyTracking::Variable res2(y); /* copy derivatives of y*/  \
+    res1.setValue(val); /* set function value f(x, y) */                       \
+    res2.setValue(val); /* set function value f(x, y) */                       \
+    res1.scaleDependencies(der1                                                \
+    ); /* compute derivatives of f(x, y) with respect to x */                  \
+    res2.scaleDependencies(der2                                                \
+    ); /* compute derivatives of f(x, y) with respect to y */                  \
+    GridKit::DependencyTracking::Variable res(std::move(res1)                  \
+    ); /* relocate derivatives w.r.t. x into return */                         \
+    res.addDependencies(res2                                                   \
+    ); /* add derivatives with respect to y to return */                       \
+    return res;                                                                \
   }
 
   IMPL_FUN_1(sin, GridKit::DependencyTracking::sin_derivative)
@@ -412,7 +420,11 @@ namespace std
   IMPL_FUN_1(sqrt, GridKit::DependencyTracking::sqrt_derivative)
   IMPL_FUN_1(abs, GridKit::DependencyTracking::abs_derivative)
 
-  IMPL_FUN_2(atan2, GridKit::DependencyTracking::atan2_derivative1, GridKit::DependencyTracking::atan2_derivative2)
+  IMPL_FUN_2(
+    atan2,
+    GridKit::DependencyTracking::atan2_derivative1,
+    GridKit::DependencyTracking::atan2_derivative2
+  )
 
 #undef IMPL_FUN_1
 #undef IMPL_FUN_2

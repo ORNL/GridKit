@@ -12,7 +12,8 @@ namespace GridKit
   {
     namespace OPF = GridKit::OptimalPowerFlow;
 
-    /// Two variables and two equality constraints for other components to read and add to
+    /// Two variables and two equality constraints for other components to read
+    /// and add to
     class EqualityOwner final : public OPF::Component<double, size_t>
     {
       using RealT = double;
@@ -39,8 +40,7 @@ namespace GridKit
       static constexpr std::array<IdxT, 0> NUM_PORT_VARIABLES{};
       static constexpr std::array<IdxT, 0> NUM_PORT_CONSTRAINTS{};
 
-      EqualityOwner()
-        : Component(std::type_identity<EqualityOwner>{}, "owner")
+      EqualityOwner() : Component(std::type_identity<EqualityOwner>{}, "owner")
       {
       }
 
@@ -49,14 +49,16 @@ namespace GridKit
         return {};
       }
 
-      void internalConstraints(const RealT*, const RealT*, RealT* g) const override
+      void internalConstraints(const RealT*, const RealT*, RealT* g)
+        const override
       {
         g[0] = 10.0;
         g[1] = -10.0;
       }
     };
 
-    /// One internal variable, equality, and inequality, coupled to an owner at three ports
+    /// One internal variable, equality, and inequality, coupled to an owner at
+    /// three ports
     class CoupledComponent final : public OPF::Component<double, size_t>
     {
       using RealT = double;
@@ -115,18 +117,24 @@ namespace GridKit
       int evaluateJacobian() override;
       int evaluateHessian(RealT sigma) override;
 
-      [[gnu::always_inline]] RealT objective(const RealT* x, const RealT* external) const override
+      [[gnu::always_inline]] RealT objective(
+        const RealT* x, const RealT* external
+      ) const override
       {
         return 0.5 * x[0] * x[0] + external[0] * external[1];
       }
 
-      [[gnu::always_inline]] void internalConstraints(const RealT* x, const RealT* external, RealT* g) const override
+      [[gnu::always_inline]] void internalConstraints(
+        const RealT* x, const RealT* external, RealT* g
+      ) const override
       {
         g[0] = x[0] * external[0];
         g[1] = x[0] * x[0] + external[0] * external[1];
       }
 
-      [[gnu::always_inline]] void externalConstraints(const RealT* x, const RealT* external, RealT* g) const override
+      [[gnu::always_inline]] void externalConstraints(
+        const RealT* x, const RealT* external, RealT* g
+      ) const override
       {
         g[0] = external[0] * external[1];
         g[1] = x[0] * external[1];

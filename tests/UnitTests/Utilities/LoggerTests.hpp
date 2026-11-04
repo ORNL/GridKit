@@ -130,8 +130,8 @@ namespace GridKit
        *
        * This method tests streaming messages to `Logger::error()` data
        * stream. The method streams messages to all available output streams,
-       * however only messages streamed to the error, warning, and result summary
-       * streams should be logged.
+       * however only messages streamed to the error, warning, and result
+       * summary streams should be logged.
        */
       TestOutcome summaryOutput()
       {
@@ -139,7 +139,8 @@ namespace GridKit
         std::string s1("Test error output ...\n");
         std::string s2("Test warning output ...\n");
         std::string s3("Test summary output ...\n");
-        std::string answer = error_text() + s1 + warning_text() + s2 + summary_ + s3;
+        std::string answer =
+          error_text() + s1 + warning_text() + s2 + summary_ + s3;
 
         TestStatus status;
 
@@ -172,7 +173,8 @@ namespace GridKit
         std::string s2("Test warning output ...\n");
         std::string s3("Test summary output ...\n");
         std::string s4("Test any other output ...\n");
-        std::string answer = error_text() + s1 + warning_text() + s2 + summary_ + s3 + message_ + s4;
+        std::string answer = error_text() + s1 + warning_text() + s2 + summary_
+                             + s3 + message_ + s4;
 
         TestStatus status;
 

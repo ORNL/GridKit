@@ -45,7 +45,7 @@ namespace GridKit
     public:
       // The Jacobian entries reach 13.4 eps against dependency tracking.
       static constexpr RealT kTol =
-          static_cast<RealT>(32.0) * std::numeric_limits<RealT>::epsilon();
+        static_cast<RealT>(32.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Balance equalities and magnitude inequalities at every bus, and flow
       /// inequalities at every branch, unlimited at the unrated ones
@@ -62,22 +62,32 @@ namespace GridKit
 
         // Three buses and two generators with two variables each
         success *= system.size() == 10;
-        success *= system.sizeConstraints() == SystemTestData::BALANCE_ROWS.size() + SystemTestData::MAGNITUDE_ROWS.size() + SystemTestData::FLOW_ROWS.size() + SystemTestData::UNRATED_ROWS.size();
+        success *= system.sizeConstraints()
+                   == SystemTestData::BALANCE_ROWS.size()
+                        + SystemTestData::MAGNITUDE_ROWS.size()
+                        + SystemTestData::FLOW_ROWS.size()
+                        + SystemTestData::UNRATED_ROWS.size();
 
         const auto&  tag     = system.tag();
         const RealT* g_lower = system.gLower().getData();
         const RealT* g_upper = system.gUpper().getData();
         for (const IdxT i : SystemTestData::BALANCE_ROWS)
         {
-          success *= !tag[i] && isEqual(g_lower[i], ZERO<RealT>) && isEqual(g_upper[i], ZERO<RealT>);
+          success *= !tag[i] && isEqual(g_lower[i], ZERO<RealT>)
+                     && isEqual(g_upper[i], ZERO<RealT>);
         }
         for (const IdxT i : SystemTestData::MAGNITUDE_ROWS)
         {
-          success *= tag[i] && isEqual(g_lower[i], SystemTestData::VMIN * SystemTestData::VMIN) && isEqual(g_upper[i], SystemTestData::VMAX * SystemTestData::VMAX);
+          success *=
+            tag[i]
+            && isEqual(g_lower[i], SystemTestData::VMIN * SystemTestData::VMIN)
+            && isEqual(g_upper[i], SystemTestData::VMAX * SystemTestData::VMAX);
         }
         for (const IdxT i : SystemTestData::FLOW_ROWS)
         {
-          success *= tag[i] && std::isinf(g_lower[i]) && isEqual(g_upper[i], SystemTestData::SMAX * SystemTestData::SMAX);
+          success *=
+            tag[i] && std::isinf(g_lower[i])
+            && isEqual(g_upper[i], SystemTestData::SMAX * SystemTestData::SMAX);
         }
         for (const IdxT i : SystemTestData::UNRATED_ROWS)
         {
@@ -85,7 +95,8 @@ namespace GridKit
         }
 
         // The imaginary voltage of reference bus 1 is fixed at zero
-        success *= isEqual(system.xLower().getData()[1], ZERO<RealT>) && isEqual(system.xUpper().getData()[1], ZERO<RealT>);
+        success *= isEqual(system.xLower().getData()[1], ZERO<RealT>)
+                   && isEqual(system.xUpper().getData()[1], ZERO<RealT>);
 
         return success.report(__func__);
       }
@@ -191,8 +202,8 @@ namespace GridKit
         }
         setVariables(system, SystemTestData::POINT);
 
-        const auto               expected_pattern = pattern(*system.getCsrHessian());
-        const IdxT               nnz              = system.getCsrHessian()->getNnz();
+        const auto expected_pattern = pattern(*system.getCsrHessian());
+        const IdxT nnz              = system.getCsrHessian()->getNnz();
         const std::vector<RealT> zeros(system.sizeConstraints(), ZERO<RealT>);
         std::vector<RealT>       lambda(system.sizeConstraints());
         for (IdxT i = 0; i < lambda.size(); ++i)
@@ -200,22 +211,27 @@ namespace GridKit
           lambda[i] = LAMBDA_SCALE * static_cast<RealT>(i + 1);
         }
 
-        const std::vector<RealT> objective    = hessianValues(system, SIGMA, zeros);
-        success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
-        const std::vector<RealT> constraints  = hessianValues(system, ZERO<RealT>, lambda);
-        success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
-        const std::vector<RealT> lagrangian   = hessianValues(system, SIGMA, lambda);
-        success                              *= pattern(*system.getCsrHessian()) == expected_pattern;
+        const std::vector<RealT> objective =
+          hessianValues(system, SIGMA, zeros);
+        success *= pattern(*system.getCsrHessian()) == expected_pattern;
+        const std::vector<RealT> constraints =
+          hessianValues(system, ZERO<RealT>, lambda);
+        success *= pattern(*system.getCsrHessian()) == expected_pattern;
+        const std::vector<RealT> lagrangian =
+          hessianValues(system, SIGMA, lambda);
+        success *= pattern(*system.getCsrHessian()) == expected_pattern;
 
         success *= system.getCsrHessian()->getNnz() == nnz;
-        success *= objective.size() == nnz && constraints.size() == nnz && lagrangian.size() == nnz;
+        success *= objective.size() == nnz && constraints.size() == nnz
+                   && lagrangian.size() == nnz;
         if (!success)
         {
           return success.report(__func__);
         }
         for (IdxT k = 0; k < nnz; ++k)
         {
-          success *= isEqual(lagrangian[k], objective[k] + constraints[k], kTol);
+          success *=
+            isEqual(lagrangian[k], objective[k] + constraints[k], kTol);
         }
 
         return success.report(__func__);
@@ -244,14 +260,19 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success *= system.sizeConstraints() == SystemTestData::BALANCE_ROWS.size() + SystemTestData::MAGNITUDE_ROWS.size() + SystemTestData::FLOW_ROWS.size() + SystemTestData::UNRATED_ROWS.size();
+        success *= system.sizeConstraints()
+                   == SystemTestData::BALANCE_ROWS.size()
+                        + SystemTestData::MAGNITUDE_ROWS.size()
+                        + SystemTestData::FLOW_ROWS.size()
+                        + SystemTestData::UNRATED_ROWS.size();
 
         const auto&  tag     = system.tag();
         const RealT* g_lower = system.gLower().getData();
         const RealT* g_upper = system.gUpper().getData();
         for (IdxT i = 0; i < system.sizeConstraints(); ++i)
         {
-          success *= !tag[i] || (std::isinf(g_lower[i]) && std::isinf(g_upper[i]));
+          success *=
+            !tag[i] || (std::isinf(g_lower[i]) && std::isinf(g_upper[i]));
         }
         success *= system.evaluateConstraints() == 0;
         success *= system.evaluateJacobian() == 0;
@@ -259,7 +280,8 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success *= system.getCsrJacobian()->getNumRows() == system.sizeConstraints();
+        success *=
+          system.getCsrJacobian()->getNumRows() == system.sizeConstraints();
 
         TrackedT tracked(unbounded);
         success *= tracked.allocate() == 0 && tracked.initialize() == 0;
@@ -268,7 +290,8 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success *= tracked.getCsrJacobian()->getNumRows() == tracked.sizeConstraints();
+        success *=
+          tracked.getCsrJacobian()->getNumRows() == tracked.sizeConstraints();
 
         return success.report(__func__);
       }
@@ -281,28 +304,28 @@ namespace GridKit
         auto repeated          = SystemTestData::data();
         repeated.bus[1].number = 1;
 
-        success *= throws<std::invalid_argument>([&]()
-                                                 { SystemT system(repeated); });
+        success *=
+          throws<std::invalid_argument>([&]() { SystemT system(repeated); });
 
-        auto invalid           = SystemTestData::data();
-        invalid.bus[0].number  = INVALID_INDEX<IdxT>;
-        success               *= configurationRejected([&]()
-                                         { return SystemT(invalid).verify(); });
+        auto invalid          = SystemTestData::data();
+        invalid.bus[0].number = INVALID_INDEX<IdxT>;
+        success *=
+          configurationRejected([&]() { return SystemT(invalid).verify(); });
 
         auto missing = SystemTestData::data();
         missing.generator[0].ports.clear();
-        success *= configurationRejected([&]()
-                                         { return SystemT(missing).verify(); });
+        success *=
+          configurationRejected([&]() { return SystemT(missing).verify(); });
 
-        auto duplicate          = SystemTestData::data();
-        duplicate.branch[1].id  = duplicate.branch[0].id;
-        success                *= configurationRejected([&]()
-                                         { return SystemT(duplicate).verify(); });
+        auto duplicate         = SystemTestData::data();
+        duplicate.branch[1].id = duplicate.branch[0].id;
+        success *=
+          configurationRejected([&]() { return SystemT(duplicate).verify(); });
 
-        auto unknown                                = SystemTestData::data();
-        unknown.load[0].ports[OPF::LoadPorts::bus]  = 99;
-        success                                    *= configurationRejected([&]()
-                                         { return SystemT(unknown).verify(); });
+        auto unknown                               = SystemTestData::data();
+        unknown.load[0].ports[OPF::LoadPorts::bus] = 99;
+        success *=
+          configurationRejected([&]() { return SystemT(unknown).verify(); });
 
         return success.report(__func__);
       }
@@ -315,28 +338,75 @@ namespace GridKit
         const auto data = parse(jsonCase());
 
         success *= isEqual(data.va_base, 100.0e6);
-        success *= data.bus.size() == 2 && std::get<bool>(data.bus[0].parameters.at(OPF::BusParameters::reference));
-        success *= !data.bus[1].parameters.contains(OPF::BusParameters::reference);
-        success *= isEqual(std::get<RealT>(data.bus[1].parameters.at(OPF::BusParameters::Vmin)), 0.95);
-        success *= isEqual(std::get<RealT>(data.bus[1].parameters.at(OPF::BusParameters::B)), 0.1);
+        success *= data.bus.size() == 2
+                   && std::get<bool>(
+                     data.bus[0].parameters.at(OPF::BusParameters::reference)
+                   );
+        success *=
+          !data.bus[1].parameters.contains(OPF::BusParameters::reference);
+        success *= isEqual(
+          std::get<RealT>(data.bus[1].parameters.at(OPF::BusParameters::Vmin)),
+          0.95
+        );
+        success *= isEqual(
+          std::get<RealT>(data.bus[1].parameters.at(OPF::BusParameters::B)), 0.1
+        );
 
-        success *= data.branch.size() == 1 && data.branch[0].ports.at(OPF::BranchPorts::bus2) == 2;
-        success *= isEqual(std::get<RealT>(data.branch[0].parameters.at(OPF::BranchParameters::Smax)), 0.6);
-        success *= !data.branch[0].parameters.contains(OPF::BranchParameters::tap);
+        success *= data.branch.size() == 1
+                   && data.branch[0].ports.at(OPF::BranchPorts::bus2) == 2;
+        success *= isEqual(
+          std::get<RealT>(
+            data.branch[0].parameters.at(OPF::BranchParameters::Smax)
+          ),
+          0.6
+        );
+        success *=
+          !data.branch[0].parameters.contains(OPF::BranchParameters::tap);
 
-        success *= data.generator.size() == 1 && !std::get<bool>(data.generator[0].parameters.at(OPF::GeneratorParameters::in_service));
+        success *= data.generator.size() == 1
+                   && !std::get<bool>(data.generator[0].parameters.at(
+                     OPF::GeneratorParameters::in_service
+                   ));
         success *= data.load.size() == 1;
 
         // An unknown device class, parameter, and port
-        success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Transformer", "id": "t", "ports": {}, "params": {}})"));
-        success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"Pd": 1.0}})"));
-        success *= throws<std::invalid_argument>(parse, jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"node": 2}, "params": {}})"));
+        success *= throws<std::invalid_argument>(
+          parse,
+          jsonCase(
+            R"(, {"class": "Transformer", "id": "t", "ports": {}, "params": {}})"
+          )
+        );
+        success *= throws<std::invalid_argument>(
+          parse,
+          jsonCase(
+            R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"Pd": 1.0}})"
+          )
+        );
+        success *= throws<std::invalid_argument>(
+          parse,
+          jsonCase(
+            R"(, {"class": "Load", "id": "l", "ports": {"node": 2}, "params": {}})"
+          )
+        );
 
-        // A boolean real and a numeric service status are read, and rejected by the model
-        success *= throws<std::invalid_argument>([&]()
-                                                 { SystemT system(parse(jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"P": true}})"))); });
-        success *= throws<std::invalid_argument>([&]()
-                                                 { SystemT system(parse(jsonCase(R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"in_service": 1}})"))); });
+        // A boolean real and a numeric service status are read, and rejected by
+        // the model
+        success *= throws<std::invalid_argument>(
+          [&]()
+          {
+            SystemT system(parse(jsonCase(
+              R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"P": true}})"
+            )));
+          }
+        );
+        success *= throws<std::invalid_argument>(
+          [&]()
+          {
+            SystemT system(parse(jsonCase(
+              R"(, {"class": "Load", "id": "l", "ports": {"bus": 2}, "params": {"in_service": 1}})"
+            )));
+          }
+        );
 
         return success.report(__func__);
       }
@@ -355,14 +425,15 @@ namespace GridKit
         {
           return success.report(__func__);
         }
-        success     *= component.connect(3, owner) != 0;
-        success     *= component.connect(0, owner, {2, 0}) != 0;
-        success     *= component.connect(0, owner, {0, 2}) != 0;
-        success     *= component.connect(0, owner, {INVALID_INDEX<IdxT>, 0}) != 0;
-        success     *= component.ports()[0].offset.variables == 1;
-        success     *= component.ports()[0].offset.constraints == 1;
-        auto system  = makeSystem<RealT>(std::move(owner_ptr), std::move(component_ptr));
-        success     *= system.allocate() == 0 && system.initialize() == 0;
+        success *= component.connect(3, owner) != 0;
+        success *= component.connect(0, owner, {2, 0}) != 0;
+        success *= component.connect(0, owner, {0, 2}) != 0;
+        success *= component.connect(0, owner, {INVALID_INDEX<IdxT>, 0}) != 0;
+        success *= component.ports()[0].offset.variables == 1;
+        success *= component.ports()[0].offset.constraints == 1;
+        auto system =
+          makeSystem<RealT>(std::move(owner_ptr), std::move(component_ptr));
+        success *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -373,9 +444,9 @@ namespace GridKit
 
       TestOutcome objectiveAssembly()
       {
-        TestStatus success  = true;
-        auto       system   = coupledSystem();
-        success            *= system.allocate() == 0 && system.initialize() == 0;
+        TestStatus success = true;
+        auto       system  = coupledSystem();
+        success *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -399,9 +470,9 @@ namespace GridKit
       /// tagged inequality starts unbounded
       TestOutcome constraintAssembly()
       {
-        TestStatus success  = true;
-        auto       system   = coupledSystem();
-        success            *= system.allocate() == 0 && system.initialize() == 0;
+        TestStatus success = true;
+        auto       system  = coupledSystem();
+        success *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -409,9 +480,11 @@ namespace GridKit
         success *= system.tag() == std::vector<bool>{false, false, false, true};
         for (IdxT i = 0; i < 3; ++i)
         {
-          success *= isEqual(system.gLower().getData()[i], ZERO<RealT>) && isEqual(system.gUpper().getData()[i], ZERO<RealT>);
+          success *= isEqual(system.gLower().getData()[i], ZERO<RealT>)
+                     && isEqual(system.gUpper().getData()[i], ZERO<RealT>);
         }
-        success *= std::isinf(system.gLower().getData()[3]) && std::isinf(system.gUpper().getData()[3]);
+        success *= std::isinf(system.gLower().getData()[3])
+                   && std::isinf(system.gUpper().getData()[3]);
 
         setVariables(system, COUPLED_X);
         success *= system.evaluateConstraints() == 0;
@@ -426,18 +499,23 @@ namespace GridKit
         success           *= isEqual(g[2], 15.0);
         success           *= isEqual(g[3], 31.0);
         const auto actual  = MapFromCsr(system.getCsrJacobian());
-        success           *= isEqual(actual.at(0), DependencyMap{{0, 5.0}, {2, 2.0}}, kTol);
-        success           *= isEqual(actual.at(1), DependencyMap{{0, 3.0}, {1, 2.0}}, kTol);
-        success           *= isEqual(actual.at(2), DependencyMap{{1, 5.0}, {2, 3.0}}, kTol);
-        success           *= isEqual(actual.at(3), DependencyMap{{0, 3.0}, {1, 2.0}, {2, 10.0}}, kTol);
+        success *=
+          isEqual(actual.at(0), DependencyMap{{0, 5.0}, {2, 2.0}}, kTol);
+        success *=
+          isEqual(actual.at(1), DependencyMap{{0, 3.0}, {1, 2.0}}, kTol);
+        success *=
+          isEqual(actual.at(2), DependencyMap{{1, 5.0}, {2, 3.0}}, kTol);
+        success *= isEqual(
+          actual.at(3), DependencyMap{{0, 3.0}, {1, 2.0}, {2, 10.0}}, kTol
+        );
         return success.report(__func__);
       }
 
       TestOutcome hessianAssembly()
       {
-        TestStatus success  = true;
-        auto       system   = coupledSystem();
-        success            *= system.allocate() == 0 && system.initialize() == 0;
+        TestStatus success = true;
+        auto       system  = coupledSystem();
+        success *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -451,16 +529,18 @@ namespace GridKit
         }
         const auto actual  = MapFromCsr(system.getCsrHessian());
         success           *= actual.at(0).empty();
-        success           *= isEqual(actual.at(1), DependencyMap{{0, 18.0}}, kTol);
-        success           *= isEqual(actual.at(2), DependencyMap{{0, 3.0}, {1, 7.0}, {2, 24.0}}, kTol);
+        success *= isEqual(actual.at(1), DependencyMap{{0, 18.0}}, kTol);
+        success *= isEqual(
+          actual.at(2), DependencyMap{{0, 3.0}, {1, 7.0}, {2, 24.0}}, kTol
+        );
         return success.report(__func__);
       }
 
       TestOutcome repeatedVariables()
       {
-        TestStatus success  = true;
-        auto       system   = coupledSystem(true);
-        success            *= system.allocate() == 0 && system.initialize() == 0;
+        TestStatus success = true;
+        auto       system  = coupledSystem(true);
+        success *= system.allocate() == 0 && system.initialize() == 0;
         if (!success)
         {
           return success.report(__func__);
@@ -479,8 +559,9 @@ namespace GridKit
         success               *= isEqual(gradient[2], 5.0);
         const auto actual      = MapFromCsr(system.getCsrHessian());
         success               *= actual.at(0).empty();
-        success               *= isEqual(actual.at(1), DependencyMap{{1, 36.0}}, kTol);
-        success               *= isEqual(actual.at(2), DependencyMap{{1, 10.0}, {2, 24.0}}, kTol);
+        success *= isEqual(actual.at(1), DependencyMap{{1, 36.0}}, kTol);
+        success *=
+          isEqual(actual.at(2), DependencyMap{{1, 10.0}, {2, 24.0}}, kTol);
         return success.report(__func__);
       }
 
@@ -489,7 +570,8 @@ namespace GridKit
         TestStatus    success = true;
         EqualityOwner owner;
         auto          component = std::make_unique<CoupledComponent>();
-        for (IdxT port = 0; port < CoupledComponent::NUM_PORT_VARIABLES.size(); ++port)
+        for (IdxT port = 0; port < CoupledComponent::NUM_PORT_VARIABLES.size();
+             ++port)
         {
           success *= component->connect(port, owner) == 0;
           if (!success)
@@ -550,8 +632,11 @@ namespace GridKit
                + extra + "]}";
       }
 
-      /// Hessian values at `sigma` and `lambda`, or none if the evaluation fails
-      static std::vector<RealT> hessianValues(SystemT& system, RealT sigma, const std::vector<RealT>& lambda)
+      /// Hessian values at `sigma` and `lambda`, or none if the evaluation
+      /// fails
+      static std::vector<RealT> hessianValues(
+        SystemT& system, RealT sigma, const std::vector<RealT>& lambda
+      )
       {
         setMultipliers(system, lambda);
         if (system.evaluateHessian(sigma) != 0)
@@ -559,7 +644,9 @@ namespace GridKit
           return {};
         }
         auto* hessian = system.getCsrHessian();
-        return std::vector<RealT>(hessian->getValues(), hessian->getValues() + hessian->getNnz());
+        return std::vector<RealT>(
+          hessian->getValues(), hessian->getValues() + hessian->getNnz()
+        );
       }
     };
   } // namespace Testing

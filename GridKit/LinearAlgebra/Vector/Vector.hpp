@@ -50,9 +50,9 @@ namespace GridKit
      *  - Multivectors are stored in one array, organized column-wise. A vector
      *    is a multivector of size 1.
      *  - There is a mirroring memory approach: the class has DEVICE and HOST
-     *    data pointers. If needed,  only one (or none) can be used or allocated.
-     *    Unless triggered directly or by other function, the data is NOT
-     *    automatically updated between HOST and DEVICE.
+     *    data pointers. If needed,  only one (or none) can be used or
+     * allocated. Unless triggered directly or by other function, the data is
+     * NOT automatically updated between HOST and DEVICE.
      *  - Constructor DOES NOT allocate memory. This has to be done separately.
      *  - You can get (and set) "raw" data easily, if needed.
      *  - There is memory ownership utility - vector can own memory (separate
@@ -65,8 +65,7 @@ namespace GridKit
     class Vector
     {
     public:
-      Vector()
-        : Vector(0)
+      Vector() : Vector(0)
       {
       }
 
@@ -79,12 +78,16 @@ namespace GridKit
       Vector& operator=(const Vector&) = delete;
       Vector& operator=(Vector&&)      = delete;
 
-      int copyFromExternal(const ScalarT*      source,
-                           memory::MemorySpace memspaceIn  = memory::HOST,
-                           memory::MemorySpace memspaceOut = memory::HOST);
-      int copyFromExternal(const Vector&       source,
-                           memory::MemorySpace memspaceIn  = memory::HOST,
-                           memory::MemorySpace memspaceOut = memory::HOST);
+      int copyFromExternal(
+        const ScalarT*      source,
+        memory::MemorySpace memspaceIn  = memory::HOST,
+        memory::MemorySpace memspaceOut = memory::HOST
+      );
+      int copyFromExternal(
+        const Vector&       source,
+        memory::MemorySpace memspaceIn  = memory::HOST,
+        memory::MemorySpace memspaceOut = memory::HOST
+      );
 
       // TODO: in the future, we should consider making the `getData` family of
       //       methods accept the memory space through a template parameter
@@ -96,8 +99,8 @@ namespace GridKit
        *
        * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
        *
-       * @return pointer to the vector data (HOST or DEVICE). In case of multivectors,
-       * vectors are stored column-wise.
+       * @return pointer to the vector data (HOST or DEVICE). In case of
+       * multivectors, vectors are stored column-wise.
        *
        * @note This function gives you access to the pointer, not to a copy.
        * If you change the values using the pointer, the vector values will
@@ -132,7 +135,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Get a pointer to HOST or DEVICE data of a vector in a multivector.
+       * @brief Get a pointer to HOST or DEVICE data of a vector in a
+       * multivector.
        *
        * @param[in] j         - Index of a vector in multivector
        * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
@@ -183,8 +187,8 @@ namespace GridKit
        *
        * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
        *
-       * @return pointer to the vector data (HOST or DEVICE). In case of multivectors,
-       * vectors are stored column-wise.
+       * @return pointer to the vector data (HOST or DEVICE). In case of
+       * multivectors, vectors are stored column-wise.
        */
       [[gnu::always_inline]]
       const ScalarT* getData(memory::MemorySpace memspace = memory::HOST) const
@@ -214,7 +218,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Get a const pointer to HOST or DEVICE data of a vector in a multivector.
+       * @brief Get a const pointer to HOST or DEVICE data of a vector in a
+       * multivector.
        *
        * @param[in] j         - Index of a vector in multivector
        * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
@@ -224,7 +229,9 @@ namespace GridKit
        * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
        */
       [[gnu::always_inline]]
-      const ScalarT* getData(IdxT j, memory::MemorySpace memspace = memory::HOST) const
+      const ScalarT* getData(
+        IdxT j, memory::MemorySpace memspace = memory::HOST
+      ) const
       {
         using memory::DEVICE;
         using memory::HOST;
@@ -264,8 +271,8 @@ namespace GridKit
        * @brief Set the flag to indicate that the data (HOST or DEVICE) has been
        * updated.
        *
-       * Use this function if you update vector elements by accessing the raw data
-       * pointer.
+       * Use this function if you update vector elements by accessing the raw
+       * data pointer.
        *
        * @param[in] memspace - Memory space (HOST or DEVICE)
        *
@@ -294,8 +301,8 @@ namespace GridKit
        * @brief Set the flag to indicate that the data (HOST or DEVICE) for
        * vector `j` in the multivector has been updated.
        *
-       * Use this function if you update vector elements by accessing the raw data
-       * pointer.
+       * Use this function if you update vector elements by accessing the raw
+       * data pointer.
        *
        * @param[in] j        - Index of a vector in multivector
        * @param[in] memspace - Memory space (HOST or DEVICE)
@@ -329,22 +336,30 @@ namespace GridKit
       }
 
       int setData(ScalarT* data, memory::MemorySpace memspace = memory::HOST);
-      int setData(ScalarT* data, IdxT size, memory::MemorySpace memspace = memory::HOST);
+      int setData(
+        ScalarT* data, IdxT size, memory::MemorySpace memspace = memory::HOST
+      );
       int allocate(memory::MemorySpace memspace = memory::HOST);
       int setToZero(memory::MemorySpace memspace = memory::HOST);
       int setToZero(IdxT i, memory::MemorySpace memspace = memory::HOST);
       int setToConst(ScalarT C, memory::MemorySpace memspace = memory::HOST);
-      int setToConst(IdxT i, ScalarT C, memory::MemorySpace memspace = memory::HOST);
+      int setToConst(
+        IdxT i, ScalarT C, memory::MemorySpace memspace = memory::HOST
+      );
       int syncData(memory::MemorySpace memspaceOut = memory::HOST);
       int syncData(IdxT j, memory::MemorySpace memspaceOut = memory::HOST);
       int resize(IdxT new_n_current);
-      int copyToExternal(ScalarT*            dest,
-                         IdxT                i,
-                         memory::MemorySpace memspaceSrc = memory::HOST,
-                         memory::MemorySpace memspaceDst = memory::HOST);
-      int copyToExternal(ScalarT*            dest,
-                         memory::MemorySpace memspaceSrc = memory::HOST,
-                         memory::MemorySpace memspaceDst = memory::HOST);
+      int copyToExternal(
+        ScalarT*            dest,
+        IdxT                i,
+        memory::MemorySpace memspaceSrc = memory::HOST,
+        memory::MemorySpace memspaceDst = memory::HOST
+      );
+      int copyToExternal(
+        ScalarT*            dest,
+        memory::MemorySpace memspaceSrc = memory::HOST,
+        memory::MemorySpace memspaceDst = memory::HOST
+      );
 
     private:
       [[gnu::always_inline]]

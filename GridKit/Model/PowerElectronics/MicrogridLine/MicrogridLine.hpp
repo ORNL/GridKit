@@ -43,7 +43,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::n_intern_;
 
     public:
-      MicrogridLine(IdxT id, RealT R, RealT L, NodeT* node_ref, NodeT* bus1, NodeT* bus2);
+      MicrogridLine(
+        IdxT id, RealT R, RealT L, NodeT* node_ref, NodeT* bus1, NodeT* bus2
+      );
       virtual ~MicrogridLine();
 
       int initialize();

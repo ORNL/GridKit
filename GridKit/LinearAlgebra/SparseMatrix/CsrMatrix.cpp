@@ -25,12 +25,8 @@ namespace GridKit
      * @param[in] nnz - number of non-zeros
      */
     template <typename RealT, typename IdxT>
-    CsrMatrix<RealT, IdxT>::CsrMatrix(IdxT n,
-                                      IdxT m,
-                                      IdxT nnz)
-      : n_{n},
-        m_{m},
-        nnz_{nnz}
+    CsrMatrix<RealT, IdxT>::CsrMatrix(IdxT n, IdxT m, IdxT nnz)
+      : n_{n}, m_{m}, nnz_{nnz}
     {
       setNotUpdated();
 
@@ -63,14 +59,16 @@ namespace GridKit
      * @param[in] memspace_dst
      */
     template <typename RealT, typename IdxT>
-    CsrMatrix<RealT, IdxT>::CsrMatrix(IdxT                n,
-                                      IdxT                m,
-                                      IdxT                nnz,
-                                      IdxT**              rows,
-                                      IdxT**              cols,
-                                      RealT**             vals,
-                                      memory::MemorySpace memspace_src,
-                                      memory::MemorySpace memspace_dst)
+    CsrMatrix<RealT, IdxT>::CsrMatrix(
+      IdxT                n,
+      IdxT                m,
+      IdxT                nnz,
+      IdxT**              rows,
+      IdxT**              cols,
+      RealT**             vals,
+      memory::MemorySpace memspace_src,
+      memory::MemorySpace memspace_dst
+    )
       : CsrMatrix(n, m, nnz)
     {
       int control = -1;
@@ -247,14 +245,14 @@ namespace GridKit
      *
      * @return 0 if successful, -1 if not.
      *
-     * The method sets the boolean flag indicating that the `memspace` is updated.
-     * It automatically sets the other data mirror to non-updated. You would
-     * use this function if you update matrix data by accessing its raw pointers.
-     * In such case, the matrix has no way of knowing which data is most recent, so
-     * you have to tell it.
+     * The method sets the boolean flag indicating that the `memspace` is
+     * updated. It automatically sets the other data mirror to non-updated. You
+     * would use this function if you update matrix data by accessing its raw
+     * pointers. In such case, the matrix has no way of knowing which data is
+     * most recent, so you have to tell it.
      *
-     * @warning This is an expert-level function. Use only if you know what you are
-     * doing.
+     * @warning This is an expert-level function. Use only if you know what you
+     * are doing.
      *
      * @note If you want to set both DEVICE and HOST memory to the same value
      * use syncData function.
@@ -292,10 +290,12 @@ namespace GridKit
      * @return 0 if successful, 1 if not.
      */
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::setDataPointers(IdxT*               row_data,
-                                                IdxT*               col_data,
-                                                RealT*              val_data,
-                                                memory::MemorySpace memspace)
+    int CsrMatrix<RealT, IdxT>::setDataPointers(
+      IdxT*               row_data,
+      IdxT*               col_data,
+      RealT*              val_data,
+      memory::MemorySpace memspace
+    )
     {
       using namespace memory;
 
@@ -306,14 +306,16 @@ namespace GridKit
       case HOST:
         if (owns_cpu_sparsity_pattern_ && (h_row_data_ || h_col_data_))
         {
-          Log::warning() << "Trying to set matrix host data, but the data already set! "
-                         << "Ignoring setDataPointers function call.\n";
+          Log::warning(
+          ) << "Trying to set matrix host data, but the data already set! "
+            << "Ignoring setDataPointers function call.\n";
           return 1;
         }
         if (owns_cpu_values_ && h_val_data_)
         {
-          Log::warning() << "Trying to set matrix host values, but the values already set! "
-                         << "Ignoring setValuesPointer function call.\n";
+          Log::warning(
+          ) << "Trying to set matrix host values, but the values already set! "
+            << "Ignoring setValuesPointer function call.\n";
           return 1;
         }
         h_row_data_                = row_data;
@@ -326,13 +328,15 @@ namespace GridKit
       case DEVICE:
         if (owns_gpu_sparsity_pattern_ && (d_row_data_ || d_col_data_))
         {
-          Log::warning() << "Trying to set matrix host data, but the data already set! "
-                         << "Ignoring setDataPointers function call.\n";
+          Log::warning(
+          ) << "Trying to set matrix host data, but the data already set! "
+            << "Ignoring setDataPointers function call.\n";
           return 1;
         }
         if (owns_gpu_values_ && d_val_data_)
         {
-          Log::warning() << "Trying to set matrix device values, but the values already set! "
+          Log::warning() << "Trying to set matrix device values, but the "
+                            "values already set! "
                          << "Ignoring setValuesPointer function call.\n";
           return 1;
         }
@@ -396,21 +400,26 @@ namespace GridKit
     }
 
     /**
-     * @brief update matrix values using the _new_values_ provided either as HOST or as DEVICE array.
+     * @brief update matrix values using the _new_values_ provided either as
+     * HOST or as DEVICE array.
      *
-     * This function will copy the data (not just assign a pointer) and allocate if needed.
-     * It also sets ownership and update flags.
+     * This function will copy the data (not just assign a pointer) and allocate
+     * if needed. It also sets ownership and update flags.
      *
-     * @param[in] new_vals    - pointer to new values data (array of real numbers)
+     * @param[in] new_vals    - pointer to new values data (array of real
+     * numbers)
      * @param[in] memspace_in  - memory space (HOST or DEVICE) of _new_vals_
-     * @param[in] memspace_out - memory space (HOST or DEVICE) of matrix values to be updated.
+     * @param[in] memspace_out - memory space (HOST or DEVICE) of matrix values
+     * to be updated.
      *
      * @return 0 if successful, -1 if not.
      */
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyValues(const RealT*        new_vals,
-                                           memory::MemorySpace memspace_in,
-                                           memory::MemorySpace memspace_out)
+    int CsrMatrix<RealT, IdxT>::copyValues(
+      const RealT*        new_vals,
+      memory::MemorySpace memspace_in,
+      memory::MemorySpace memspace_out
+    )
     {
 
       IdxT nnz_current = nnz_;
@@ -491,8 +500,9 @@ namespace GridKit
      * @return 0 if successful, -1 if not.
      */
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::setValuesPointer(RealT*              new_vals,
-                                                 memory::MemorySpace memspace)
+    int CsrMatrix<RealT, IdxT>::setValuesPointer(
+      RealT* new_vals, memory::MemorySpace memspace
+    )
     {
       using namespace memory;
       setNotUpdated();
@@ -502,8 +512,9 @@ namespace GridKit
       case HOST:
         if (owns_cpu_values_ && h_val_data_)
         {
-          Log::warning() << "Trying to set matrix host values, but the values already set! "
-                         << "Ignoring setValuesPointer function call.\n";
+          Log::warning(
+          ) << "Trying to set matrix host values, but the values already set! "
+            << "Ignoring setValuesPointer function call.\n";
           return 1;
         }
         h_val_data_      = new_vals;
@@ -513,7 +524,8 @@ namespace GridKit
       case DEVICE:
         if (owns_gpu_values_ && d_val_data_)
         {
-          Log::warning() << "Trying to set matrix device values, but the values already set! "
+          Log::warning() << "Trying to set matrix device values, but the "
+                            "values already set! "
                          << "Ignoring setValuesPointer function call.\n";
           return 1;
         }
@@ -576,11 +588,13 @@ namespace GridKit
     }
 
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyDataFrom(const IdxT*         row_data,
-                                             const IdxT*         col_data,
-                                             const RealT*        val_data,
-                                             memory::MemorySpace memspace_in,
-                                             memory::MemorySpace memspace_out)
+    int CsrMatrix<RealT, IdxT>::copyDataFrom(
+      const IdxT*         row_data,
+      const IdxT*         col_data,
+      const RealT*        val_data,
+      memory::MemorySpace memspace_in,
+      memory::MemorySpace memspace_out
+    )
     {
       // four cases (for now)
       IdxT nnz_current = nnz_;
@@ -598,7 +612,8 @@ namespace GridKit
       {
         control = 2;
       }
-      if (((memspace_in == memory::DEVICE)) && ((memspace_out == memory::DEVICE)))
+      if (((memspace_in == memory::DEVICE))
+          && ((memspace_out == memory::DEVICE)))
       {
         control = 3;
       }
@@ -606,12 +621,16 @@ namespace GridKit
       if (memspace_out == memory::HOST)
       {
         // check if cpu data allocated
-        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In CsrMatrix::copyDataFrom one of host row or column data is null!\n");
+        assert(
+          ((h_row_data_ == nullptr) == (h_col_data_ == nullptr))
+          && "In CsrMatrix::copyDataFrom one of host row or column data is "
+             "null!\n"
+        );
 
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
         {
-          h_row_data_                = new IdxT[static_cast<size_t>(n_ + 1)];
-          h_col_data_                = new IdxT[static_cast<size_t>(nnz_current)];
+          h_row_data_ = new IdxT[static_cast<size_t>(n_ + 1)];
+          h_col_data_ = new IdxT[static_cast<size_t>(nnz_current)];
           owns_cpu_sparsity_pattern_ = true;
         }
         if (h_val_data_ == nullptr)
@@ -624,7 +643,11 @@ namespace GridKit
       if (memspace_out == memory::DEVICE)
       {
         // check if cuda data allocated
-        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In CsrMatrix::copyDataFrom one of device row or column data is null!\n");
+        assert(
+          ((d_row_data_ == nullptr) == (d_col_data_ == nullptr))
+          && "In CsrMatrix::copyDataFrom one of device row or column data is "
+             "null!\n"
+        );
 
         if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr))
         {
@@ -673,16 +696,20 @@ namespace GridKit
     }
 
     template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyDataFrom(const IdxT*         row_data,
-                                             const IdxT*         col_data,
-                                             const RealT*        val_data,
-                                             IdxT                new_nnz,
-                                             memory::MemorySpace memspace_in,
-                                             memory::MemorySpace memspace_out)
+    int CsrMatrix<RealT, IdxT>::copyDataFrom(
+      const IdxT*         row_data,
+      const IdxT*         col_data,
+      const RealT*        val_data,
+      IdxT                new_nnz,
+      memory::MemorySpace memspace_in,
+      memory::MemorySpace memspace_out
+    )
     {
       destroyMatrixData(memspace_out);
       nnz_ = new_nnz;
-      return copyDataFrom(row_data, col_data, val_data, memspace_in, memspace_out);
+      return copyDataFrom(
+        row_data, col_data, val_data, memspace_in, memspace_out
+      );
     }
 
     template <typename RealT, typename IdxT>
@@ -722,8 +749,8 @@ namespace GridKit
      * @param memspace - memory space to be synced up (HOST or DEVICE)
      * @return int - 0 if successful, error code otherwise
      *
-     * @pre The memory space other than `memspace` must be up-to-date. Otherwise,
-     * this function will return an error.
+     * @pre The memory space other than `memspace` must be up-to-date.
+     * Otherwise, this function will return an error.
      *
      * @see CsrMatrix::setUpdated
      */
@@ -736,17 +763,22 @@ namespace GridKit
       {
       case HOST:
         // check if we need to copy or not
-        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In CsrMatrix::syncData one of host row or column data is null!\n");
+        assert(
+          ((h_row_data_ == nullptr) == (h_col_data_ == nullptr))
+          && "In CsrMatrix::syncData one of host row or column data is null!\n"
+        );
 
         if (h_data_updated_)
         {
-          Log::warning() << "CsrMatrix::syncData is trying to sync host, but host already up to date!\n";
+          Log::warning() << "CsrMatrix::syncData is trying to sync host, but "
+                            "host already up to date!\n";
           assert(!h_data_updated_);
           return 1;
         }
         if (!d_data_updated_)
         {
-          Log::error() << "CsrMatrix::syncData is trying to sync host with device, but device is out of date! "
+          Log::error() << "CsrMatrix::syncData is trying to sync host with "
+                          "device, but device is out of date! "
                        << "See CsrMatrix::syncData documentation.\n";
           assert(d_data_updated_);
         }
@@ -767,17 +799,23 @@ namespace GridKit
         h_data_updated_ = true;
         return 0;
       case DEVICE:
-        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In CsrMatrix::syncData one of device row or column data is null!\n");
+        assert(
+          ((d_row_data_ == nullptr) == (d_col_data_ == nullptr))
+          && "In CsrMatrix::syncData one of device row or column data is "
+             "null!\n"
+        );
 
         if (d_data_updated_)
         {
-          Log::warning() << "CsrMatrix::syncData is trying to sync device, but device already up to date!\n";
+          Log::warning() << "CsrMatrix::syncData is trying to sync device, but "
+                            "device already up to date!\n";
           assert(!d_data_updated_);
           return 1;
         }
         if (!h_data_updated_)
         {
-          Log::error() << "CsrMatrix::syncData is trying to sync device with host, but host is out of date! "
+          Log::error() << "CsrMatrix::syncData is trying to sync device with "
+                          "host, but host is out of date! "
                        << "See CsrMatrix::syncData documentation.\n";
           assert(h_data_updated_);
         }
@@ -810,14 +848,14 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     void CsrMatrix<RealT, IdxT>::print(std::ostream& out, IdxT indexing_base)
     {
-      out << std::scientific << std::setprecision(std::numeric_limits<RealT>::digits10);
+      out << std::scientific
+          << std::setprecision(std::numeric_limits<RealT>::digits10);
       for (IdxT i = 0; i < n_; ++i)
       {
         for (IdxT j = h_row_data_[i]; j < h_row_data_[i + 1]; ++j)
         {
-          out << i + indexing_base << " "
-              << h_col_data_[j] + indexing_base << " "
-              << h_val_data_[j] << "\n";
+          out << i + indexing_base << " " << h_col_data_[j] + indexing_base
+              << " " << h_val_data_[j] << "\n";
         }
       }
     }

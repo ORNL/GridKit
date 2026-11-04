@@ -15,7 +15,9 @@ namespace GridKit
      * Calls default ModelEvaluatorImpl constructor.
      */
     template <class ScalarT, typename IdxT>
-    Resistor<ScalarT, IdxT>::Resistor(IdxT id, RealT R, NodeT* node1, NodeT* node2)
+    Resistor<ScalarT, IdxT>::Resistor(
+      IdxT id, RealT R, NodeT* node1, NodeT* node2
+    )
       : R_(R), node1_(node1), node2_(node2)
     {
       assert(node1_->size() == 1);
@@ -42,7 +44,8 @@ namespace GridKit
       return 0;
     }
 
-    /// There are no internal variables in this component, so \ref tag_ can be set arbitrarily.
+    /// There are no internal variables in this component, so \ref tag_ can be
+    /// set arbitrarily.
     template <class ScalarT, typename IdxT>
     int Resistor<ScalarT, IdxT>::tagDifferentiable()
     {

@@ -5,24 +5,25 @@ namespace AnalysisManager
   namespace NativeDynamicSolver
   {
     template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::linImplicitEuler()
+    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::
+      linImplicitEuler()
     {
       constexpr size_t num_stages = 1;
 
       Tableau re = {
-          .num_stages_ = num_stages,
-          .gamma_      = 1.0,
-          .alpha_sum_  = std::make_unique_for_overwrite<RealT[]>(num_stages),
-          .gamma_sum_  = std::make_unique_for_overwrite<RealT[]>(num_stages),
-          .m_          = std::make_unique_for_overwrite<RealT[]>(num_stages),
-          .e_          = {},
-          .A_          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
-          .C_          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
-          .H_          = {},
-          .order_      = 1,
-          .is_krylov_  = true,
-          .is_w_       = false,
-          .is_dae_     = true,
+        .num_stages_ = num_stages,
+        .gamma_      = 1.0,
+        .alpha_sum_  = std::make_unique_for_overwrite<RealT[]>(num_stages),
+        .gamma_sum_  = std::make_unique_for_overwrite<RealT[]>(num_stages),
+        .m_          = std::make_unique_for_overwrite<RealT[]>(num_stages),
+        .e_          = {},
+        .A_ = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
+        .C_ = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
+        .H_ = {},
+        .order_     = 1,
+        .is_krylov_ = true,
+        .is_w_      = false,
+        .is_dae_    = true,
       };
 
       re.alpha_sum_[0] = 0.0;
@@ -39,29 +40,31 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief A 5th order Rosenbrock method suitable for solving parabolic PDEs. Created in \cite steinebach2023construction.
+     * @brief A 5th order Rosenbrock method suitable for solving parabolic PDEs.
+     * Created in \cite steinebach2023construction.
      *
      *
      */
     template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::rodas5p()
+    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::
+      rodas5p()
     {
       constexpr size_t num_stages = 8;
 
       Tableau re = {
-          .num_stages_ = num_stages,
-          .gamma_      = 0.21193756319429014,
-          .alpha_sum_  = std::make_unique_for_overwrite<RealT[]>(num_stages),
-          .gamma_sum_  = std::make_unique_for_overwrite<RealT[]>(num_stages),
-          .m_          = std::make_unique_for_overwrite<RealT[]>(num_stages),
-          .e_          = std::make_unique_for_overwrite<RealT[]>(num_stages),
-          .A_          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
-          .C_          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
-          .H_          = std::make_unique_for_overwrite<RealT[]>(num_stages * 3),
-          .order_      = 5,
-          .is_krylov_  = false,
-          .is_w_       = false,
-          .is_dae_     = true,
+        .num_stages_ = num_stages,
+        .gamma_      = 0.21193756319429014,
+        .alpha_sum_  = std::make_unique_for_overwrite<RealT[]>(num_stages),
+        .gamma_sum_  = std::make_unique_for_overwrite<RealT[]>(num_stages),
+        .m_          = std::make_unique_for_overwrite<RealT[]>(num_stages),
+        .e_          = std::make_unique_for_overwrite<RealT[]>(num_stages),
+        .A_ = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
+        .C_ = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
+        .H_ = std::make_unique_for_overwrite<RealT[]>(num_stages * 3),
+        .order_     = 5,
+        .is_krylov_ = false,
+        .is_w_      = false,
+        .is_dae_    = true,
       };
 
       re.alpha_sum_[0] = 0.0;

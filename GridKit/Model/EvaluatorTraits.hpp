@@ -28,7 +28,9 @@ namespace GridKit
     {
     private:
       template <typename scalar_type, typename index_type>
-      static Evaluator<scalar_type, index_type> probe(const Evaluator<scalar_type, index_type>&);
+      static Evaluator<scalar_type, index_type> probe(const Evaluator<
+                                                      scalar_type,
+                                                      index_type>&);
 
     public:
       using EvaluatorT = decltype(probe(std::declval<const model_type&>()));

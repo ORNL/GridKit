@@ -42,24 +42,32 @@ namespace GridKit
      */
     template <typename ModelT, typename ScalarT, typename IdxT>
     concept ComponentKernels =
-        std::derived_from<ModelT, Component<ScalarT, IdxT>>
-        && std::is_final_v<ModelT>
-        && Utilities::SizedEnum<typename ModelT::InternalVariablesT>
-        && Utilities::SizedEnum<typename ModelT::ExternalVariablesT>
-        && Utilities::SizedEnum<typename ModelT::InternalConstraintsT>
-        && Utilities::SizedEnum<typename ModelT::ExternalConstraintsT>
-        && ModelT::NUM_PORT_VARIABLES.size() == ModelT::NUM_PORT_CONSTRAINTS.size()
-        && std::accumulate(ModelT::NUM_PORT_VARIABLES.begin(), ModelT::NUM_PORT_VARIABLES.end(), std::size_t{0})
-               == Utilities::enum_size<typename ModelT::ExternalVariablesT>()
-        && std::accumulate(ModelT::NUM_PORT_CONSTRAINTS.begin(), ModelT::NUM_PORT_CONSTRAINTS.end(), std::size_t{0})
-               == Utilities::enum_size<typename ModelT::ExternalConstraintsT>();
+      std::derived_from<ModelT, Component<ScalarT, IdxT>>
+      && std::is_final_v<ModelT>
+      && Utilities::SizedEnum<typename ModelT::InternalVariablesT>
+      && Utilities::SizedEnum<typename ModelT::ExternalVariablesT>
+      && Utilities::SizedEnum<typename ModelT::InternalConstraintsT>
+      && Utilities::SizedEnum<typename ModelT::ExternalConstraintsT>
+      && ModelT::NUM_PORT_VARIABLES.size()
+           == ModelT::NUM_PORT_CONSTRAINTS.size()
+      && std::accumulate(
+           ModelT::NUM_PORT_VARIABLES.begin(),
+           ModelT::NUM_PORT_VARIABLES.end(),
+           std::size_t{0}
+         ) == Utilities::enum_size<typename ModelT::ExternalVariablesT>()
+      && std::accumulate(
+           ModelT::NUM_PORT_CONSTRAINTS.begin(),
+           ModelT::NUM_PORT_CONSTRAINTS.end(),
+           std::size_t{0}
+         ) == Utilities::enum_size<typename ModelT::ExternalConstraintsT>();
 
     /**
      * @brief Optimal power flow component, which views its blocks of the
      * system vectors and reads and adds to those of the components at its ports
      */
     template <typename scalar_type, typename index_type>
-    class Component : public Model::OptimizationEvaluator<scalar_type, index_type>
+    class Component
+      : public Model::OptimizationEvaluator<scalar_type, index_type>
     {
       friend class SystemModel<scalar_type, index_type>;
 
@@ -96,13 +104,13 @@ namespace GridKit
         Block      offset{};
       };
 
-      /// Derivative entries in global indices, with room for the dense local block
+      /// Derivative entries in global indices, with room for the dense local
+      /// block
       struct CooBuffer
       {
         int resize(IdxT capacity)
         {
-          if (rows.resize(capacity) != 0
-              || cols.resize(capacity) != 0
+          if (rows.resize(capacity) != 0 || cols.resize(capacity) != 0
               || values.resize(capacity) != 0)
           {
             return 1;
@@ -167,23 +175,29 @@ namespace GridKit
       }
 
       /// Objective contribution
-      virtual ScalarT objective([[maybe_unused]] const ScalarT* x,
-                                [[maybe_unused]] const ScalarT* external) const
+      virtual ScalarT objective(
+        [[maybe_unused]] const ScalarT* x,
+        [[maybe_unused]] const ScalarT* external
+      ) const
       {
         return ScalarT{ZERO<RealT>};
       }
 
       /// Contributions `g` to the internal constraints
-      virtual void internalConstraints([[maybe_unused]] const ScalarT* x,
-                                       [[maybe_unused]] const ScalarT* external,
-                                       [[maybe_unused]] ScalarT*       g) const
+      virtual void internalConstraints(
+        [[maybe_unused]] const ScalarT* x,
+        [[maybe_unused]] const ScalarT* external,
+        [[maybe_unused]] ScalarT*       g
+      ) const
       {
       }
 
       /// Contributions `g` to the constraints at each port, in port order
-      virtual void externalConstraints([[maybe_unused]] const ScalarT* x,
-                                       [[maybe_unused]] const ScalarT* external,
-                                       [[maybe_unused]] ScalarT*       g) const
+      virtual void externalConstraints(
+        [[maybe_unused]] const ScalarT* x,
+        [[maybe_unused]] const ScalarT* external,
+        [[maybe_unused]] ScalarT*       g
+      ) const
       {
       }
 
@@ -243,18 +257,30 @@ namespace GridKit
       template <typename ModelT>
       static constexpr Block internalSize()
       {
-        return {static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalVariablesT>()),
-                static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalConstraintsT>())};
+        return {
+          static_cast<IdxT>(
+            Utilities::enum_size<typename ModelT::InternalVariablesT>()
+          ),
+          static_cast<IdxT>(
+            Utilities::enum_size<typename ModelT::InternalConstraintsT>()
+          )
+        };
       }
 
       /// Internal plus external sizes of `ModelT`
       template <typename ModelT>
       static constexpr Block localSize()
       {
-        return {static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalVariablesT>()
-                                  + Utilities::enum_size<typename ModelT::ExternalVariablesT>()),
-                static_cast<IdxT>(Utilities::enum_size<typename ModelT::InternalConstraintsT>()
-                                  + Utilities::enum_size<typename ModelT::ExternalConstraintsT>())};
+        return {
+          static_cast<IdxT>(
+            Utilities::enum_size<typename ModelT::InternalVariablesT>()
+            + Utilities::enum_size<typename ModelT::ExternalVariablesT>()
+          ),
+          static_cast<IdxT>(
+            Utilities::enum_size<typename ModelT::InternalConstraintsT>()
+            + Utilities::enum_size<typename ModelT::ExternalConstraintsT>()
+          )
+        };
       }
 
       void gather(ScalarT* x) const;
@@ -271,10 +297,11 @@ namespace GridKit
       Block             offset_; ///< Global index of each internal block
       bool              bound_{false};
 
-      VectorT      local_x_;            ///< Internal, then external variables
-      VectorT      local_g_;            ///< Internal, then external contributions
-      IndexVectorT variable_indices_;   ///< Global column of each local variable
-      IndexVectorT constraint_indices_; ///< Global row of each local constraint contribution
+      VectorT      local_x_;          ///< Internal, then external variables
+      VectorT      local_g_;          ///< Internal, then external contributions
+      IndexVectorT variable_indices_; ///< Global column of each local variable
+      IndexVectorT constraint_indices_; ///< Global row of each local constraint
+                                        ///< contribution
       CooBuffer    jacobian_entries_;
       CooBuffer    hessian_entries_;
     };

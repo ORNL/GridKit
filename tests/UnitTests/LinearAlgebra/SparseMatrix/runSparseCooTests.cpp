@@ -16,7 +16,11 @@ using namespace Testing;
  * @param[out] result  - test results
  */
 template <class ScalarT, typename IdxT>
-void runTests(const std::string& backend, memory::MemorySpace memspace, TestingResults& result)
+void runTests(
+  const std::string&  backend,
+  memory::MemorySpace memspace,
+  TestingResults&     result
+)
 {
   Log::misc() << "Running tests on " << backend << ":\n";
 

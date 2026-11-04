@@ -10,13 +10,13 @@ namespace GridKit
 {
   namespace Utilities
   {
-    /// Whether an identifier contains only ASCII letters, digits, spaces, '_', '.' and '-'.
+    /// Whether an identifier contains only ASCII letters, digits, spaces, '_',
+    /// '.' and '-'.
     inline bool isValidIdentifier(std::string_view id)
     {
-      return id.find_first_not_of(
-                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                 "abcdefghijklmnopqrstuvwxyz"
-                 "0123456789 _.-")
+      return id.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                  "abcdefghijklmnopqrstuvwxyz"
+                                  "0123456789 _.-")
              == std::string_view::npos;
     }
 
@@ -25,17 +25,22 @@ namespace GridKit
      */
     inline std::string toUpper(std::string str)
     {
-      std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c)
-                     { return std::toupper(c); });
+      std::transform(
+        str.begin(),
+        str.end(),
+        str.begin(),
+        [](unsigned char c) { return std::toupper(c); }
+      );
       return str;
     }
 
     inline std::string strip(std::string str)
     {
-      auto notspace = [](char c)
-      { return !std::isspace(c); };
+      auto notspace = [](char c) { return !std::isspace(c); };
       str.erase(begin(str), std::find_if(begin(str), end(str), notspace));
-      str.erase(std::find_if(rbegin(str), rend(str), notspace).base(), end(str));
+      str.erase(
+        std::find_if(rbegin(str), rend(str), notspace).base(), end(str)
+      );
       return str;
     }
 
@@ -57,7 +62,9 @@ namespace GridKit
       if (ss.fail() || !ss.eof())
       {
         throw std::runtime_error(
-            "Failed to parse \""s + str + "\" as value of type \'" + typeid(T).name() + "\'");
+          "Failed to parse \""s + str + "\" as value of type \'"
+          + typeid(T).name() + "\'"
+        );
       }
       return ret;
     }

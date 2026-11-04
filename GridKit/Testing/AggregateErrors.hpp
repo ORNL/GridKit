@@ -14,7 +14,7 @@ namespace GridKit
   {
 
     inline constexpr double DEFAULT_ABS_ERROR_THRESHOLD =
-        std::numeric_limits<double>::epsilon();
+      std::numeric_limits<double>::epsilon();
 
     /**
      * @brief Aggregate norm data for a single variable over time
@@ -71,14 +71,15 @@ namespace GridKit
        * @brief Pretty-print label and values to output stream
        */
       std::ostream& display(
-          std::ostream& os = std::cout, const std::string& indent = "  ") const
+        std::ostream& os = std::cout, const std::string& indent = "  "
+      ) const
       {
         os << indent << label << ":\n"
            << indent << indent << "max     : "
            << std::format("{:.6e} (at time {:.3e})", max_value, max_value_time)
            << '\n'
-           << indent << indent << "L2-norm : "
-           << std::format("{:.6e}", L2) << '\n';
+           << indent << indent << "L2-norm : " << std::format("{:.6e}", L2)
+           << '\n';
         return os;
       }
     };
@@ -101,8 +102,7 @@ namespace GridKit
        * @brief Construct with variable labels
        */
       template <typename C>
-      explicit ErrorSet(const C& labels)
-        : var_errors(std::size(labels))
+      explicit ErrorSet(const C& labels) : var_errors(std::size(labels))
       {
         for (std::size_t i = 0; i < std::size(labels); ++i)
         {
@@ -165,8 +165,8 @@ namespace GridKit
     {
       template <typename C>
       explicit ErrorSetImpl(
-          const C& labels,
-          double   abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD)
+        const C& labels, double abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD
+      )
         : ErrorSet(labels),
           abs_threshold_(abs_threshold),
           ref_norms_(std::size(labels))
@@ -221,14 +221,17 @@ namespace GridKit
 
     template <typename C>
     std::unique_ptr<ErrorSet> makeErrorSet(
-        ErrorType type,
-        const C&  labels,
-        double    abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD)
+      ErrorType type,
+      const C&  labels,
+      double    abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD
+    )
     {
       switch (type)
       {
       case ErrorType::RELATIVE:
-        return std::make_unique<ErrorSetImpl<RelativeError>>(labels, abs_threshold);
+        return std::make_unique<ErrorSetImpl<RelativeError>>(
+          labels, abs_threshold
+        );
       case ErrorType::ABSOLUTE:
         return std::make_unique<ErrorSetImpl<AbsoluteError>>(labels);
       default:

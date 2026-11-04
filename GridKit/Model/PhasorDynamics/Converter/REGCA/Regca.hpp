@@ -37,13 +37,15 @@ namespace GridKit
       /// Internal variables of a `Regca`
       enum class RegcaInternalVariables : size_t
       {
-        VM,      ///< \f$V_M\f$ Filtered terminal voltage
-        IQ,      ///< \f$I_q\f$ Reactive-current state on component base
-        IP,      ///< \f$I_p\f$ Active-current state on component base
-        VT,      ///< \f$V_T\f$ Terminal voltage magnitude
-        IR,      ///< \f$I_\mathrm{r}\f$ Branch-current real component on system base
-        II,      ///< \f$I_\mathrm{i}\f$ Branch-current imaginary component on system base
-        IQEXTRA, ///< \f$I_q^\mathrm{extra}\f$ Extra inductive current from HVRCM on component base
+        VM, ///< \f$V_M\f$ Filtered terminal voltage
+        IQ, ///< \f$I_q\f$ Reactive-current state on component base
+        IP, ///< \f$I_p\f$ Active-current state on component base
+        VT, ///< \f$V_T\f$ Terminal voltage magnitude
+        IR, ///< \f$I_\mathrm{r}\f$ Branch-current real component on system base
+        II, ///< \f$I_\mathrm{i}\f$ Branch-current imaginary component on system
+            ///< base
+        IQEXTRA, ///< \f$I_q^\mathrm{extra}\f$ Extra inductive current from
+                 ///< HVRCM on component base
         IL,      ///< \f$I_L\f$ LVPL upper-limit current curve on component base
         PBR,     ///< \f$P^\mathrm{br}\f$ Branch active power on system base
         QBR,     ///< \f$Q^\mathrm{br}\f$ Branch reactive power on system base
@@ -53,11 +55,13 @@ namespace GridKit
       enum class RegcaExternalVariables : size_t
       {
         IPCMD, ///< \f$I_p^\mathrm{cmd}\f$ Active-current command on system base
-        IQCMD, ///< \f$I_q^\mathrm{cmd}\f$ Reactive-current command on system base
+        IQCMD, ///< \f$I_q^\mathrm{cmd}\f$ Reactive-current command on system
+               ///< base
       };
 
       /**
-       * @brief First-generation WECC renewable generator/converter model (REGCA).
+       * @brief First-generation WECC renewable generator/converter model
+       * (REGCA).
        *
        * @tparam scalar_type Plain real or differentiable scalar type.
        * @tparam index_type Integer index type.
@@ -121,10 +125,16 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT* y, const ScalarT* yp, const ScalarT* wb, const ScalarT* ws, ScalarT* f);
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f
+        );
 
         __attribute__((always_inline)) inline int evaluateBusResidual(
-            const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* h);
+          const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* h
+        );
 
       private:
         void initializeParameters(const ModelDataT& data);
@@ -146,9 +156,8 @@ namespace GridKit
          * @todo Move this reusable limiter to CommonMath.
          */
         static __attribute__((always_inline)) inline ScalarT rrpwr(
-            const ScalarT x,
-            const ScalarT f,
-            const RealT   rate)
+          const ScalarT x, const ScalarT f, const RealT rate
+        )
         {
           assert(rate >= ZERO<RealT>);
 
@@ -178,17 +187,18 @@ namespace GridKit
          * @todo Move this one-sided anti-windup helper to CommonMath.
          */
         static __attribute__((always_inline)) inline ScalarT awmax(
-            const ScalarT x,
-            const ScalarT f,
-            const ScalarT xmax,
-            const ScalarT fmax)
+          const ScalarT x,
+          const ScalarT f,
+          const ScalarT xmax,
+          const ScalarT fmax
+        )
         {
           const ScalarT gap_rate = f - fmax;
           const ScalarT below    = Math::sigmoid(xmax - x);
 
           return fmax
                  + (below + (ONE<RealT> - below) * Math::sigmoid(-gap_rate))
-                       * gap_rate;
+                     * gap_rate;
         }
 
         ScalarT& Vr();
@@ -198,8 +208,9 @@ namespace GridKit
 
         static RealT iramp(RealT value);
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static constexpr RealT KL_                   = static_cast<RealT>(100.0);
+        static constexpr RealT TIME_CONSTANT_MINIMUM =
+          static_cast<RealT>(1.0e-3);
+        static constexpr RealT KL_ = static_cast<RealT>(100.0);
         static void            logTimeConstantWarning();
 
         BusT* bus_{nullptr};

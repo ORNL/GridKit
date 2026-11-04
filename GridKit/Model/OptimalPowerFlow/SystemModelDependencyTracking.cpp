@@ -1,6 +1,7 @@
 /**
  * @file SystemModelDependencyTracking.cpp
- * @brief Optimal power flow system derivatives from `DependencyTracking::Variable`.
+ * @brief Optimal power flow system derivatives from
+ * `DependencyTracking::Variable`.
  *
  * @note Used for testing the Enzyme derivatives.
  */
@@ -14,8 +15,14 @@ namespace GridKit
     namespace
     {
       /// CSR Jacobian of `functions` from their dependencies
-      template <typename CsrMatrixT, typename RealT, typename VectorT, typename IdxT>
-      std::unique_ptr<CsrMatrixT> dependencyJacobian(const VectorT& functions, IdxT cols)
+      template <
+        typename CsrMatrixT,
+        typename RealT,
+        typename VectorT,
+        typename IdxT>
+      std::unique_ptr<CsrMatrixT> dependencyJacobian(
+        const VectorT& functions, IdxT cols
+      )
       {
         const IdxT  rows = functions.getSize();
         const auto* g    = functions.getData();
@@ -41,7 +48,9 @@ namespace GridKit
           }
         }
 
-        return std::make_unique<CsrMatrixT>(rows, cols, row_ptrs[rows], &row_ptrs, &col_data, &vals);
+        return std::make_unique<CsrMatrixT>(
+          rows, cols, row_ptrs[rows], &row_ptrs, &col_data, &vals
+        );
       }
     } // namespace
 
@@ -81,9 +90,12 @@ namespace GridKit
 
     /// Not available, because dependencies hold first derivatives only
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateHessian([[maybe_unused]] RealT sigma)
+    int SystemModel<scalar_type, index_type>::evaluateHessian(
+      [[maybe_unused]] RealT sigma
+    )
     {
-      Log::error() << "OptimalPowerFlow::SystemModel: no Hessian for DependencyTracking::Variable\n";
+      Log::error() << "OptimalPowerFlow::SystemModel: no Hessian for "
+                      "DependencyTracking::Variable\n";
       return 1;
     }
 

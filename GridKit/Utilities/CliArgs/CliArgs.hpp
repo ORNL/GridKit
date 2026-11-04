@@ -43,7 +43,7 @@ namespace GridKit
      *       and the application will exit.
      *
      * @note The usage syntax is intended to be similar to
-     * [ArgParse.jl](https://carlobaldassi.github.io/ArgParse.jl/stable/).
+     *       [ArgParse.jl](https://carlobaldassi.github.io/ArgParse.jl/stable/).
      *
      * @note `repeatable = true` allows a named option to occur multiple times.
      *

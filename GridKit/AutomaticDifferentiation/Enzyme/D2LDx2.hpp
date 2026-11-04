@@ -19,8 +19,9 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme sparse Hessian of \f$L = \sigma f + \lambda^T g\f$, by one
-       * forward sweep per local variable over the reverse gradient of \f$L\f$
+       * @brief Enzyme sparse Hessian of \f$L = \sigma f + \lambda^T g\f$, by
+       * one forward sweep per local variable over the reverse gradient of
+       * \f$L\f$
        *
        * @tparam ModelT - optimization component model
        */
@@ -40,48 +41,56 @@ namespace GridKit
          * @param[out] nnz - Number of nonzeros
          */
         template <typename ScalarT, typename IdxT, typename RealT>
-        static void eval(const ModelT*  model,
-                         const size_t   n_var,
-                         const IdxT*    variable_indices,
-                         const ScalarT* x,
-                         const RealT    sigma,
-                         const RealT*   lambda,
-                         IdxT*          rows,
-                         IdxT*          cols,
-                         ScalarT*       vals,
-                         IdxT&          nnz)
+        static void eval(
+          const ModelT*  model,
+          const size_t   n_var,
+          const IdxT*    variable_indices,
+          const ScalarT* x,
+          const RealT    sigma,
+          const RealT*   lambda,
+          IdxT*          rows,
+          IdxT*          cols,
+          ScalarT*       vals,
+          IdxT&          nnz
+        )
         {
           std::array<ScalarT, ObjectiveT::NUM_INPUTS> gradient{};
           for (size_t var_i = 0; var_i < n_var; ++var_i)
           {
             // Sparse storage. @see LowerSparseStorage.hpp
-            ScalarT* seed      = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
-                                                       (void*) ident_store<ScalarT, IdxT>,
-                                                       var_i);
-            ScalarT* dgradient = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
-                                                            (void*) sparse_store<ScalarT, IdxT>,
-                                                            var_i,
-                                                            1.0, // value scaling
-                                                            variable_indices,
-                                                            variable_indices,
-                                                            rows,
-                                                            cols,
-                                                            vals,
-                                                            &nnz);
+            ScalarT* seed = __enzyme_todense<ScalarT*>(
+              (void*) ident_load<ScalarT, IdxT>,
+              (void*) ident_store<ScalarT, IdxT>,
+              var_i
+            );
+            ScalarT* dgradient = __enzyme_todense<ScalarT*>(
+              (void*) sparse_load<ScalarT, IdxT>,
+              (void*) sparse_store<ScalarT, IdxT>,
+              var_i,
+              1.0, // value scaling
+              variable_indices,
+              variable_indices,
+              rows,
+              cols,
+              vals,
+              &nnz
+            );
 
-            __enzyme_fwddiff<void>((void*) lagrangianGradient<ScalarT, RealT>,
-                                   enzyme_const,
-                                   model,
-                                   enzyme_dup,
-                                   x,
-                                   seed,
-                                   enzyme_dupnoneed,
-                                   gradient.data(),
-                                   dgradient,
-                                   enzyme_const,
-                                   sigma,
-                                   enzyme_const,
-                                   lambda);
+            __enzyme_fwddiff<void>(
+              (void*) lagrangianGradient<ScalarT, RealT>,
+              enzyme_const,
+              model,
+              enzyme_dup,
+              x,
+              seed,
+              enzyme_dupnoneed,
+              gradient.data(),
+              dgradient,
+              enzyme_const,
+              sigma,
+              enzyme_const,
+              lambda
+            );
           }
         }
 
@@ -90,10 +99,12 @@ namespace GridKit
         using ConstraintsT = ModelWrapper<ModelT, MemberFunctions::Constraints>;
 
         template <typename ScalarT, typename RealT>
-        [[gnu::always_inline]] inline static ScalarT lagrangian(const ModelT*  model,
-                                                                const ScalarT* x,
-                                                                const RealT    sigma,
-                                                                const RealT*   lambda)
+        [[gnu::always_inline]] inline static ScalarT lagrangian(
+          const ModelT*  model,
+          const ScalarT* x,
+          const RealT    sigma,
+          const RealT*   lambda
+        )
         {
           std::array<ScalarT, ConstraintsT::NUM_OUTPUTS> g{};
           ConstraintsT::eval(model, x, g.data());
@@ -106,24 +117,29 @@ namespace GridKit
           return value;
         }
 
-        /// Add the Lagrangian gradient to `gradient`, whose tangent alone is used
+        /// Add the Lagrangian gradient to `gradient`, whose tangent alone is
+        /// used
         template <typename ScalarT, typename RealT>
-        [[gnu::always_inline]] inline static void lagrangianGradient(const ModelT*  model,
-                                                                     const ScalarT* x,
-                                                                     ScalarT*       gradient,
-                                                                     const RealT    sigma,
-                                                                     const RealT*   lambda)
+        [[gnu::always_inline]] inline static void lagrangianGradient(
+          const ModelT*  model,
+          const ScalarT* x,
+          ScalarT*       gradient,
+          const RealT    sigma,
+          const RealT*   lambda
+        )
         {
-          __enzyme_autodiff<void>((void*) lagrangian<ScalarT, RealT>,
-                                  enzyme_const,
-                                  model,
-                                  enzyme_dup,
-                                  x,
-                                  gradient,
-                                  enzyme_const,
-                                  sigma,
-                                  enzyme_const,
-                                  lambda);
+          __enzyme_autodiff<void>(
+            (void*) lagrangian<ScalarT, RealT>,
+            enzyme_const,
+            model,
+            enzyme_dup,
+            x,
+            gradient,
+            enzyme_const,
+            sigma,
+            enzyme_const,
+            lambda
+          );
         }
       };
     } // namespace Sparse

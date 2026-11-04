@@ -11,7 +11,8 @@
 using index_type = size_t;
 using real_type  = double;
 
-// Include solution keys for the three test cases N = (2, 4, 8) plus tolerances here:
+// Include solution keys for the three test cases N = (2, 4, 8) plus tolerances
+// here:
 #include "SolutionKeys.hpp"
 
 int printMicrogridSystems(index_type N_size);
@@ -39,7 +40,8 @@ int main(int argc, char const* argv[])
     }
     catch (const std::exception& e)
     {
-      std::cerr << "Error parsing grid size argument: " << e.what() << std::endl;
+      std::cerr << "Error parsing grid size argument: " << e.what()
+                << std::endl;
       std::cerr << "Using default grid size = " << N_size << std::endl;
     }
   }
@@ -50,7 +52,8 @@ int main(int argc, char const* argv[])
 /**
  * @brief Tests network of distributed generators.
  *
- * @param[in] N_size - The number of DG line load combinations to generate for scale
+ * @param[in] N_size - The number of DG line load combinations to generate for
+ * scale
  * @return int returns 0 if successful, >0 otherwise
  */
 int printMicrogridSystems(index_type N_size)

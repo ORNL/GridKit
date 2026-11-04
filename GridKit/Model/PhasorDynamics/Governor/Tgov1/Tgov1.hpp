@@ -94,8 +94,8 @@ namespace GridKit
         }
 
       public:
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        __attribute__((always_inline)) inline int
+        evaluateInternalResidual(const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         // Input parameters
@@ -118,8 +118,9 @@ namespace GridKit
         void initializeParameters(const ModelDataT& data);
         void setDerivedParams();
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
+        static constexpr RealT TIME_CONSTANT_MINIMUM =
+          static_cast<RealT>(1.0e-3);
+        static void logTimeConstantWarning();
       };
 
     } // namespace Governor

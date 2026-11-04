@@ -35,7 +35,7 @@ namespace GridKit
         // TODO: this should be fixed. sizing this array based on ordering of
         //       variables seems fragile
         std::array<RealT, static_cast<size_t>(ReecbInternalVariables::IQCMD)>
-            variables{};
+          variables{};
         std::array<RealT, Utilities::enum_size<ReecbExternalVariables>()>
               signals{};
         RealT qmin{};
@@ -56,16 +56,17 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Reecb<scalar_type, index_type>::Reecb(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+        : bus_(bus), monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(Utilities::enum_size<ReecbInternalVariables>());
+        size_ =
+          static_cast<IdxT>(Utilities::enum_size<ReecbInternalVariables>());
       }
 
       /**
-       * @brief Destroy the electrical controller and its optional variable monitor.
+       * @brief Destroy the electrical controller and its optional variable
+       * monitor.
        */
       template <typename scalar_type, typename index_type>
       Reecb<scalar_type, index_type>::~Reecb()
@@ -78,7 +79,9 @@ namespace GridKit
        * @param[in] component_id Identifier assigned by the system model.
        */
       template <typename scalar_type, typename index_type>
-      int Reecb<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      int Reecb<scalar_type, index_type>::setGridKitComponentID(
+        IdxT component_id
+      )
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -87,10 +90,10 @@ namespace GridKit
       /**
        * @brief Allocate model vectors and wire assigned current-command outputs
        *
-       * Sizes the state, residual, bus, and signal-interface buffers, initializes
-       * identity index maps, and points assigned command nodes at the internal
-       * system-base states that REECB publishes. Repeated allocation reuses the
-       * existing model vectors and signal links.
+       * Sizes the state, residual, bus, and signal-interface buffers,
+       * initializes identity index maps, and points assigned command nodes at
+       * the internal system-base states that REECB publishes. Repeated
+       * allocation reuses the existing model vectors and signal links.
        */
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::allocate()
@@ -126,12 +129,16 @@ namespace GridKit
 
         if (auto port = ports_.out.template port<ReecbSignalOutputs::iqcmd>())
         {
-          port.link(&y[IQCMD], &(this->getVariableIndex(static_cast<IdxT>(IQCMD))));
+          port.link(
+            &y[IQCMD], &(this->getVariableIndex(static_cast<IdxT>(IQCMD)))
+          );
         }
 
         if (auto port = ports_.out.template port<ReecbSignalOutputs::ipcmd>())
         {
-          port.link(&y[IPCMD], &(this->getVariableIndex(static_cast<IdxT>(IPCMD))));
+          port.link(
+            &y[IPCMD], &(this->getVariableIndex(static_cast<IdxT>(IPCMD)))
+          );
         }
 
         allocated_ = true;
@@ -154,102 +161,158 @@ namespace GridKit
 
         checks.check(bus_ != nullptr, "terminal bus is required");
 
-        const bool valid_component_base = std::isfinite(va_component_base_)
-                                          && va_component_base_ > ZERO<RealT>;
-        const bool valid_system_base = std::isfinite(va_system_base_)
-                                       && va_system_base_ > ZERO<RealT>;
-        checks.check(valid_component_base, "component power base must be finite and positive");
-        checks.check(valid_system_base, "system power base must be finite and positive");
+        const bool valid_component_base =
+          std::isfinite(va_component_base_) && va_component_base_ > ZERO<RealT>;
+        const bool valid_system_base =
+          std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
+        checks.check(
+          valid_component_base,
+          "component power base must be finite and positive"
+        );
+        checks.check(
+          valid_system_base, "system power base must be finite and positive"
+        );
         if (valid_component_base && valid_system_base)
         {
-          const RealT system_to_component = va_system_base_ / va_component_base_;
-          const RealT component_to_system = va_component_base_ / va_system_base_;
-          checks.check(std::isfinite(system_to_component)
-                           && system_to_component > ZERO<RealT>
-                           && std::isfinite(component_to_system)
-                           && component_to_system > ZERO<RealT>,
-                       "system/component power-base conversion ratios must be finite and positive");
+          const RealT system_to_component =
+            va_system_base_ / va_component_base_;
+          const RealT component_to_system =
+            va_component_base_ / va_system_base_;
+          checks.check(
+            std::isfinite(system_to_component)
+              && system_to_component > ZERO<RealT>
+              && std::isfinite(component_to_system)
+              && component_to_system > ZERO<RealT>,
+            "system/component power-base conversion ratios must be finite and "
+            "positive"
+          );
         }
 
         checks.check(std::isfinite(Trv_), "Trv must be finite");
         checks.check(std::isfinite(Tp_), "Tp must be finite");
         checks.check(std::isfinite(Vref0_), "Vref0 must be finite");
 
-        const bool finite_voltage_thresholds = std::isfinite(Vdip_) && std::isfinite(Vup_);
+        const bool finite_voltage_thresholds =
+          std::isfinite(Vdip_) && std::isfinite(Vup_);
         checks.check(finite_voltage_thresholds, "Vdip and Vup must be finite");
         if (finite_voltage_thresholds)
         {
           checks.check(Vdip_ < Vup_, "Vdip must be less than Vup");
         }
 
-        const bool finite_voltage_deadband = std::isfinite(dbd1_) && std::isfinite(dbd2_);
+        const bool finite_voltage_deadband =
+          std::isfinite(dbd1_) && std::isfinite(dbd2_);
         checks.check(finite_voltage_deadband, "dbd1 and dbd2 must be finite");
         if (finite_voltage_deadband)
         {
-          checks.check(dbd1_ <= ZERO<RealT> && ZERO<RealT> <= dbd2_, "dbd1 <= 0 <= dbd2 is required");
+          checks.check(
+            dbd1_ <= ZERO<RealT> && ZERO<RealT> <= dbd2_,
+            "dbd1 <= 0 <= dbd2 is required"
+          );
         }
 
-        checks.check(std::isfinite(kqv_) && kqv_ >= ZERO<RealT>, "kqv must be finite and non-negative");
+        checks.check(
+          std::isfinite(kqv_) && kqv_ >= ZERO<RealT>,
+          "kqv must be finite and non-negative"
+        );
 
-        const bool finite_injection_limits = std::isfinite(Iql1_) && std::isfinite(Iqh1_);
+        const bool finite_injection_limits =
+          std::isfinite(Iql1_) && std::isfinite(Iqh1_);
         checks.check(finite_injection_limits, "Iql1 and Iqh1 must be finite");
         if (finite_injection_limits)
         {
-          checks.check(Iql1_ <= Iqh1_, "Iql1 must be less than or equal to Iqh1");
+          checks.check(
+            Iql1_ <= Iqh1_, "Iql1 must be less than or equal to Iqh1"
+          );
         }
 
-        const bool finite_reactive_limits = std::isfinite(Qmin_) && std::isfinite(Qmax_);
+        const bool finite_reactive_limits =
+          std::isfinite(Qmin_) && std::isfinite(Qmax_);
         checks.check(finite_reactive_limits, "Qmin and Qmax must be finite");
         if (finite_reactive_limits)
         {
-          checks.check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
+          checks.check(
+            Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax"
+          );
         }
 
-        checks.check(std::isfinite(Kqp_) && Kqp_ >= ZERO<RealT>, "Kqp must be finite and non-negative");
-        checks.check(std::isfinite(Kqi_) && Kqi_ >= ZERO<RealT>, "Kqi must be finite and non-negative");
+        checks.check(
+          std::isfinite(Kqp_) && Kqp_ >= ZERO<RealT>,
+          "Kqp must be finite and non-negative"
+        );
+        checks.check(
+          std::isfinite(Kqi_) && Kqi_ >= ZERO<RealT>,
+          "Kqi must be finite and non-negative"
+        );
 
-        const bool finite_voltage_limits = std::isfinite(Vmin_) && std::isfinite(Vmax_);
+        const bool finite_voltage_limits =
+          std::isfinite(Vmin_) && std::isfinite(Vmax_);
         checks.check(finite_voltage_limits, "Vmin and Vmax must be finite");
         if (finite_voltage_limits)
         {
-          checks.check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
+          checks.check(
+            Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax"
+          );
         }
 
-        checks.check(std::isfinite(Kvp_) && Kvp_ >= ZERO<RealT>, "Kvp must be finite and non-negative");
-        checks.check(std::isfinite(Kvi_) && Kvi_ >= ZERO<RealT>, "Kvi must be finite and non-negative");
+        checks.check(
+          std::isfinite(Kvp_) && Kvp_ >= ZERO<RealT>,
+          "Kvp must be finite and non-negative"
+        );
+        checks.check(
+          std::isfinite(Kvi_) && Kvi_ >= ZERO<RealT>,
+          "Kvi must be finite and non-negative"
+        );
         checks.check(std::isfinite(Tiq_), "Tiq must be finite");
         checks.check(std::isfinite(Tpord_), "Tpord must be finite");
 
-        const bool finite_ramp_limits = std::isfinite(dPmin_) && std::isfinite(dPmax_);
+        const bool finite_ramp_limits =
+          std::isfinite(dPmin_) && std::isfinite(dPmax_);
         checks.check(finite_ramp_limits, "dPmin and dPmax must be finite");
         if (finite_ramp_limits)
         {
-          checks.check(dPmin_ < ZERO<RealT> && ZERO<RealT> < dPmax_, "dPmin < 0 < dPmax is required");
+          checks.check(
+            dPmin_ < ZERO<RealT> && ZERO<RealT> < dPmax_,
+            "dPmin < 0 < dPmax is required"
+          );
         }
 
-        const bool finite_active_limits = std::isfinite(Pmin_) && std::isfinite(Pmax_);
+        const bool finite_active_limits =
+          std::isfinite(Pmin_) && std::isfinite(Pmax_);
         checks.check(finite_active_limits, "Pmin and Pmax must be finite");
         if (finite_active_limits)
         {
-          checks.check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
+          checks.check(
+            Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax"
+          );
         }
 
-        checks.check(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive");
+        checks.check(
+          std::isfinite(Imax_) && Imax_ > ZERO<RealT>,
+          "Imax must be finite and positive"
+        );
 
-        auto check_optional_signal = [&]<ReecbSignalInputs variable>(const char* name)
+        auto check_optional_signal =
+          [&]<ReecbSignalInputs variable>(const char* name)
         {
           if (ports_.in.template port<variable>().connected()
               && !ports_.in.template port<variable>().linked())
           {
-            checks.fail(std::format("{} signal attached with no linked source", name));
+            checks.fail(
+              std::format("{} signal attached with no linked source", name)
+            );
           }
         };
 
         check_optional_signal.template operator()<ReecbSignalInputs::pe>("pe");
-        check_optional_signal.template operator()<ReecbSignalInputs::qgen>("qgen");
-        check_optional_signal.template operator()<ReecbSignalInputs::qext>("qext");
-        check_optional_signal.template operator()<ReecbSignalInputs::pfaref>("pfaref");
-        check_optional_signal.template operator()<ReecbSignalInputs::pref>("pref");
+        check_optional_signal.template operator(
+        )<ReecbSignalInputs::qgen>("qgen");
+        check_optional_signal.template operator(
+        )<ReecbSignalInputs::qext>("qext");
+        check_optional_signal.template operator(
+        )<ReecbSignalInputs::pfaref>("pfaref");
+        check_optional_signal.template operator(
+        )<ReecbSignalInputs::pref>("pref");
 
         return checks;
       }
@@ -282,7 +345,8 @@ namespace GridKit
 
         if (!this->verifyAndLog())
         {
-          Log::error() << "Reecb: cannot initialize with invalid configuration\n";
+          Log::error(
+          ) << "Reecb: cannot initialize with invalid configuration\n";
           return 1;
         }
 
@@ -310,7 +374,8 @@ namespace GridKit
        * @return true on success.
        */
       template <typename scalar_type, typename index_type>
-      bool Reecb<scalar_type, index_type>::buildInitialPoint(InitialPoint& point)
+      bool Reecb<scalar_type, index_type>::buildInitialPoint(InitialPoint& point
+      )
       {
         const auto VMEAS  = static_cast<size_t>(ReecbInternalVariables::VMEAS);
         const auto PMEAS  = static_cast<size_t>(ReecbInternalVariables::PMEAS);
@@ -373,22 +438,26 @@ namespace GridKit
           vref0 = Vref0_;
         }
 
-        if (!std::isfinite(vr0) || !std::isfinite(vi0) || !std::isfinite(vt0) || !std::isfinite(vmeas_safe0)
-            || !std::isfinite(ipcmd0) || !std::isfinite(iqcmd0) || !std::isfinite(pmeas0)
+        if (!std::isfinite(vr0) || !std::isfinite(vi0) || !std::isfinite(vt0)
+            || !std::isfinite(vmeas_safe0) || !std::isfinite(ipcmd0)
+            || !std::isfinite(iqcmd0) || !std::isfinite(pmeas0)
             || !std::isfinite(qgen0) || !std::isfinite(vref0))
         {
-          Log::error() << "Reecb: initial bus, command, and feedback values must be finite\n";
+          Log::error() << "Reecb: initial bus, command, and feedback values "
+                          "must be finite\n";
           return false;
         }
         if (vt0 <= ZERO<RealT>)
         {
-          Log::error() << "Reecb: initial terminal-voltage magnitude must be positive\n";
+          Log::error(
+          ) << "Reecb: initial terminal-voltage magnitude must be positive\n";
           return false;
         }
 
         if (ipcmd0 < ZERO<RealT>)
         {
-          Log::error() << "Reecb: initial active-current command must be non-negative\n";
+          Log::error(
+          ) << "Reecb: initial active-current command must be non-negative\n";
           return false;
         }
 
@@ -398,7 +467,8 @@ namespace GridKit
         RealT       iqneed0 = iqabs0;
         if (QFlag_ && iqabs0 > ZERO<RealT>)
         {
-          iqneed0 += std::numbers::ln2_v<RealT> / Math::MU<RealT> + INITIALIZATION_TOLERANCE;
+          iqneed0 += std::numbers::ln2_v<RealT> / Math::MU<RealT>
+                     + INITIALIZATION_TOLERANCE;
         }
 
         RealT high0 = iqabs0;
@@ -411,10 +481,12 @@ namespace GridKit
         // Q priority uses Imax directly for reactive current, so include the
         // smooth-clamp recovery margin carried by iqneed0.
         const auto current_limit = solveInitialLimit(
-            std::max({Imax_, high0, low0, iqneed0}), high0, low0);
+          std::max({Imax_, high0, low0, iqneed0}), high0, low0
+        );
         if (!current_limit)
         {
-          Log::error() << "Reecb: adjusted Imax cannot include the initial current commands\n";
+          Log::error() << "Reecb: adjusted Imax cannot include the initial "
+                          "current commands\n";
           return false;
         }
         const RealT imax   = current_limit->total_limit;
@@ -433,7 +505,8 @@ namespace GridKit
         if (!iclamp(ipcmd0, ZERO<RealT>, ipmax0, ipraw0)
             || !iclamp(iqcmd0, -iqmax0, iqmax0, iqraw0))
         {
-          Log::error() << "Reecb: initial current commands cannot be reproduced by their limiters\n";
+          Log::error() << "Reecb: initial current commands cannot be "
+                          "reproduced by their limiters\n";
           return false;
         }
 
@@ -484,7 +557,8 @@ namespace GridKit
         }
         else if (VFlag_ && !iclamp(qgen0, qmin, qmax, qtarget0))
         {
-          Log::error() << "Reecb: reactive-power limiter has no finite steady input\n";
+          Log::error(
+          ) << "Reecb: reactive-power limiter has no finite steady input\n";
           return false;
         }
 
@@ -496,7 +570,8 @@ namespace GridKit
         {
           if (!iclamp(vmeas0, vmin, vmax, qext0_port))
           {
-            Log::error() << "Reecb: voltage limiter has no finite steady input\n";
+            Log::error(
+            ) << "Reecb: voltage limiter has no finite steady input\n";
             return false;
           }
         }
@@ -504,7 +579,8 @@ namespace GridKit
         {
           if (pmeas0 == ZERO<RealT> && qtarget0 != ZERO<RealT>)
           {
-            Log::error() << "Reecb: power-factor mode cannot reproduce the reactive target at zero active power\n";
+            Log::error() << "Reecb: power-factor mode cannot reproduce the "
+                            "reactive target at zero active power\n";
             return false;
           }
           if (pmeas0 != ZERO<RealT>)
@@ -512,9 +588,11 @@ namespace GridKit
             pfaref0 = std::atan(qtarget0 / pmeas0);
           }
           qref0 = pmeas0 * std::tan(pfaref0);
-          if (std::abs(qref0 - qtarget0) > std::abs(qtarget0) * INITIALIZATION_TOLERANCE)
+          if (std::abs(qref0 - qtarget0)
+              > std::abs(qtarget0) * INITIALIZATION_TOLERANCE)
           {
-            Log::error() << "Reecb: power-factor angle cannot reproduce the reactive target\n";
+            Log::error() << "Reecb: power-factor angle cannot reproduce the "
+                            "reactive target\n";
             return false;
           }
         }
@@ -531,7 +609,8 @@ namespace GridKit
           RealT vpiq_input0 = ZERO<RealT>;
           if (!iclamp(vmeas0, vmin, vmax, vpiq_input0))
           {
-            Log::error() << "Reecb: voltage limiter has no finite steady input\n";
+            Log::error(
+            ) << "Reecb: voltage limiter has no finite steady input\n";
             return false;
           }
           xpiq0 = vpiq_input0 - Kqp_ * eq0;
@@ -562,7 +641,8 @@ namespace GridKit
             RealT iqctl_input0 = ZERO<RealT>;
             if (!iclamp(iqctl0, -iqmax0, iqmax0, iqctl_input0))
             {
-              Log::error() << "Reecb: voltage-controller current cannot be reproduced by its limiter\n";
+              Log::error() << "Reecb: voltage-controller current cannot be "
+                              "reproduced by its limiter\n";
               return false;
             }
             xpiv0 = iqctl_input0 - Kvp_ * epiv0;
@@ -577,7 +657,9 @@ namespace GridKit
         RealT       qrate0 = ZERO<RealT>;
         if (QFlag_ && VFlag_)
         {
-          qrate0 = sdip0 * Math::antiwindup(Kqp_ * eq0 + xpiq0, Kqi_ * eq0, vmin, vmax);
+          qrate0 =
+            sdip0
+            * Math::antiwindup(Kqp_ * eq0 + xpiq0, Kqi_ * eq0, vmin, vmax);
         }
 
         const ScalarT vstate0{Kvp_ * epiv0 + xpiv0};
@@ -585,41 +667,51 @@ namespace GridKit
         RealT         vrate0 = ZERO<RealT>;
         if (QFlag_)
         {
-          vrate0 = sdip0 * static_cast<RealT>(awband(vstate0, vderiv0, ScalarT{iqmax0}));
+          vrate0 =
+            sdip0
+            * static_cast<RealT>(awband(vstate0, vderiv0, ScalarT{iqmax0}));
         }
 
-        const RealT iqbase0     = Math::clamp(Kvp_ * epiv0 + xpiv0, -iqmax0, iqmax0);
-        RealT       iqraw_check = qv0 + iqv0;
+        const RealT iqbase0 =
+          Math::clamp(Kvp_ * epiv0 + xpiv0, -iqmax0, iqmax0);
+        RealT iqraw_check = qv0 + iqv0;
         if (QFlag_)
         {
           iqraw_check = iqbase0 + iqv0;
         }
 
         const RealT iqcmd_check = Math::clamp(iqraw_check, -iqmax0, iqmax0);
-        const RealT ipcmd_check = Math::clamp(pord0 / vmeas_safe0, ZERO<RealT>, ipmax0);
+        const RealT ipcmd_check =
+          Math::clamp(pord0 / vmeas_safe0, ZERO<RealT>, ipmax0);
 
         if (!std::isfinite(imax) || !std::isfinite(ilcap0)
             || !std::isfinite(iqmax0) || !std::isfinite(ipmax0)
-            || !std::isfinite(ipraw0) || !std::isfinite(iqraw0) || !std::isfinite(pord0)
-            || !std::isfinite(pref0_system) || !std::isfinite(qtarget0) || !std::isfinite(qref0)
-            || !std::isfinite(qext0_port) || !std::isfinite(pfaref0) || !std::isfinite(eq0)
-            || !std::isfinite(xpiq0) || !std::isfinite(epiv0) || !std::isfinite(xpiv0)
-            || !std::isfinite(qv0) || !std::isfinite(qrate0) || !std::isfinite(vrate0)
-            || !std::isfinite(iqbase0) || !std::isfinite(iqraw_check)
-            || !std::isfinite(iqcmd_check) || !std::isfinite(ipcmd_check))
+            || !std::isfinite(ipraw0) || !std::isfinite(iqraw0)
+            || !std::isfinite(pord0) || !std::isfinite(pref0_system)
+            || !std::isfinite(qtarget0) || !std::isfinite(qref0)
+            || !std::isfinite(qext0_port) || !std::isfinite(pfaref0)
+            || !std::isfinite(eq0) || !std::isfinite(xpiq0)
+            || !std::isfinite(epiv0) || !std::isfinite(xpiv0)
+            || !std::isfinite(qv0) || !std::isfinite(qrate0)
+            || !std::isfinite(vrate0) || !std::isfinite(iqbase0)
+            || !std::isfinite(iqraw_check) || !std::isfinite(iqcmd_check)
+            || !std::isfinite(ipcmd_check))
         {
           Log::error() << "Reecb: initialization produced a nonfinite value\n";
           return false;
         }
-        if (std::abs(qrate0) > INITIALIZATION_TOLERANCE || std::abs(vrate0) > INITIALIZATION_TOLERANCE)
+        if (std::abs(qrate0) > INITIALIZATION_TOLERANCE
+            || std::abs(vrate0) > INITIALIZATION_TOLERANCE)
         {
-          Log::error() << "Reecb: controller state rate is nonzero at initialization\n";
+          Log::error(
+          ) << "Reecb: controller state rate is nonzero at initialization\n";
           return false;
         }
         if (std::abs(iqcmd_check - iqcmd0) > INITIALIZATION_TOLERANCE
             || std::abs(ipcmd_check - ipcmd0) > INITIALIZATION_TOLERANCE)
         {
-          Log::error() << "Reecb: current-command limiter reconstruction is inexact\n";
+          Log::error(
+          ) << "Reecb: current-command limiter reconstruction is inexact\n";
           return false;
         }
 
@@ -666,7 +758,9 @@ namespace GridKit
        * @param[in] point Initial point.
        */
       template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::commitInitialPoint(const InitialPoint& point)
+      void Reecb<scalar_type, index_type>::commitInitialPoint(
+        const InitialPoint& point
+      )
       {
         const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
         const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
@@ -707,32 +801,42 @@ namespace GridKit
 
         if (ports_.in.template port<ReecbSignalInputs::qext>())
         {
-          ports_.in.template port<ReecbSignalInputs::qext>().writeValue(qext_set_);
+          ports_.in.template port<ReecbSignalInputs::qext>().writeValue(
+            qext_set_
+          );
         }
         if (ports_.in.template port<ReecbSignalInputs::pfaref>())
         {
-          ports_.in.template port<ReecbSignalInputs::pfaref>().writeValue(pfaref_set_);
+          ports_.in.template port<ReecbSignalInputs::pfaref>().writeValue(
+            pfaref_set_
+          );
         }
         if (ports_.in.template port<ReecbSignalInputs::pref>())
         {
-          ports_.in.template port<ReecbSignalInputs::pref>().writeValue(pref_set_);
+          ports_.in.template port<ReecbSignalInputs::pref>().writeValue(
+            pref_set_
+          );
         }
 
         if (q_adjusted)
         {
-          Log::warning() << "Reecb: Qmin/Qmax adjusted to include the initial reactive power\n";
+          Log::warning() << "Reecb: Qmin/Qmax adjusted to include the initial "
+                            "reactive power\n";
         }
         if (v_adjusted)
         {
-          Log::warning() << "Reecb: Vmin/Vmax adjusted to include the initial terminal voltage\n";
+          Log::warning() << "Reecb: Vmin/Vmax adjusted to include the initial "
+                            "terminal voltage\n";
         }
         if (p_adjusted)
         {
-          Log::warning() << "Reecb: Pmin/Pmax adjusted to include the initial active-power order\n";
+          Log::warning() << "Reecb: Pmin/Pmax adjusted to include the initial "
+                            "active-power order\n";
         }
         if (imax_adjusted)
         {
-          Log::warning() << "Reecb: Imax adjusted to include the initial current commands\n";
+          Log::warning(
+          ) << "Reecb: Imax adjusted to include the initial current commands\n";
         }
 
         y_.setDataUpdated();
@@ -768,7 +872,8 @@ namespace GridKit
       /**
        * @brief Set one absolute tolerance for every REECB variable
        *
-       * @param[in] rel_tol Solver relative tolerance used as the absolute floor.
+       * @param[in] rel_tol Solver relative tolerance used as the absolute
+       * floor.
        */
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
@@ -803,7 +908,8 @@ namespace GridKit
         {
           ws_indices_[QEXT] = qext_port.signalVariableIndex();
         }
-        if (auto pfaref_port = ports_.in.template port<ReecbSignalInputs::pfaref>())
+        if (auto pfaref_port =
+              ports_.in.template port<ReecbSignalInputs::pfaref>())
         {
           ws_indices_[PFAREF] = pfaref_port.signalVariableIndex();
         }
@@ -851,7 +957,8 @@ namespace GridKit
         {
           ws[QEXT] = qext_port.readSignal();
         }
-        if (auto pfaref_port = ports_.in.template port<ReecbSignalInputs::pfaref>())
+        if (auto pfaref_port =
+              ports_.in.template port<ReecbSignalInputs::pfaref>())
         {
           ws[PFAREF] = pfaref_port.readSignal();
         }
@@ -864,7 +971,9 @@ namespace GridKit
         wb[0]    = Vr();
         wb[1]    = Vi();
 
-        evaluateInternalResidual(y_.getData(), yp_.getData(), wb, ws, f_.getData());
+        evaluateInternalResidual(
+          y_.getData(), yp_.getData(), wb, ws, f_.getData()
+        );
         f_.setDataUpdated();
         return 0;
       }
@@ -875,7 +984,8 @@ namespace GridKit
        * @return Monitor, or nullptr when constructed without model data.
        */
       template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Reecb<scalar_type, index_type>::getMonitor() const
+      const Model::VariableMonitorBase* Reecb<scalar_type, index_type>::
+        getMonitor() const
       {
         return monitor_.get();
       }
@@ -889,17 +999,19 @@ namespace GridKit
        * @param[in] y Internal variables.
        * @param[in] yp Internal variable derivatives.
        * @param[in] wb Terminal-bus voltage components.
-       * @param[in] ws External signal values in their documented port units and bases.
+       * @param[in] ws External signal values in their documented port units and
+       * bases.
        * @param[out] f Internal residuals.
        */
       template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline int
-      Reecb<scalar_type, index_type>::evaluateInternalResidual(
+      [[gnu::always_inline]] inline int Reecb<scalar_type, index_type>::
+        evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
           const ScalarT* wb,
           const ScalarT* ws,
-          ScalarT*       f)
+          ScalarT*       f
+        )
       {
         const auto VMEAS  = static_cast<size_t>(ReecbInternalVariables::VMEAS);
         const auto PMEAS  = static_cast<size_t>(ReecbInternalVariables::PMEAS);
@@ -971,36 +1083,45 @@ namespace GridKit
         const ScalarT iqcmd  = this->toComponentBase(iqcmd_system);
         const ScalarT ipcmd  = this->toComponentBase(ipcmd_system);
 
-        const ScalarT verr        = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
-        const ScalarT q_pi_state  = Kqp_ * eq + xpiq;
-        const ScalarT v_pi_state  = Kvp_ * epiv + xpiv;
-        const ScalarT fpord       = (pref - pord) / Tpord_;
-        // Select before the factored square to avoid 0 * inf on the inactive path.
-        const ScalarT high        = pq_on_ * ipcmd + pq_off_ * iqcmd;
-        const ScalarT q_pi_rate   = q_pi_on_ * sdip * Math::antiwindup(q_pi_state, Kqi_ * eq, Vmin_, Vmax_);
-        const ScalarT v_pi_rate   = q_on_ * sdip * awband(v_pi_state, Kvi_ * epiv, iqmax);
-        const ScalarT qv_rate     = q_off_ * sdip * (qref / vsafe - qv) / Tiq_;
-        const ScalarT pord_rate   = sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
-        const ScalarT iqv_target  = Math::clamp(kqv_ * verr, Iql1_, Iqh1_);
+        const ScalarT verr = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
+        const ScalarT q_pi_state = Kqp_ * eq + xpiq;
+        const ScalarT v_pi_state = Kvp_ * epiv + xpiv;
+        const ScalarT fpord      = (pref - pord) / Tpord_;
+        // Select before the factored square to avoid 0 * inf on the inactive
+        // path.
+        const ScalarT high       = pq_on_ * ipcmd + pq_off_ * iqcmd;
+        const ScalarT q_pi_rate =
+          q_pi_on_ * sdip
+          * Math::antiwindup(q_pi_state, Kqi_ * eq, Vmin_, Vmax_);
+        const ScalarT v_pi_rate =
+          q_on_ * sdip * awband(v_pi_state, Kvi_ * epiv, iqmax);
+        const ScalarT qv_rate = q_off_ * sdip * (qref / vsafe - qv) / Tiq_;
+        const ScalarT pord_rate =
+          sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
+        const ScalarT iqv_target = Math::clamp(kqv_ * verr, Iql1_, Iqh1_);
         // The Volt/VAr channel is a system-base reactive power unless
         // direct-voltage mode selects it as a terminal-voltage reference,
         // which takes no power-base conversion.
-        const ScalarT qref_target = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * this->toComponentBase(extref));
+        const ScalarT qref_target =
+          q_ref_on_
+          * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * this->toComponentBase(extref));
 
-        f[VMEAS]  = -vmeas_dot + (vt - vmeas) / Trv_;
-        f[PMEAS]  = -pmeas_dot + (pe - pmeas) / Tp_;
-        f[XPIQ]   = -xpiq_dot + q_pi_rate;
-        f[XPIV]   = -xpiv_dot + v_pi_rate;
-        f[QV]     = -qv_dot + qv_rate;
-        f[PORD]   = -pord_dot + pord_rate;
-        f[VT]     = -vt * vt + vr * vr + vi * vi;
-        f[VSAFE]  = -vsafe + Math::max(vmeas, VMEAS_MINIMUM);
-        f[SDIP]   = -sdip + Math::inside(vt, Vdip_, Vup_);
-        f[IQV]    = -iqv + iqv_target;
-        f[QREF]   = -qref + qref_target;
-        f[EQ]     = -eq + Math::clamp(qref, Qmin_, Qmax_) - qgen;
-        f[VPIQ]   = -vpiq + Math::clamp(q_pi_state, Vmin_, Vmax_);
-        f[EPIV]   = -epiv + q_pi_on_ * vpiq + v_ref_on_ * Math::clamp(extref, Vmin_, Vmax_) - q_on_ * vmeas;
+        f[VMEAS] = -vmeas_dot + (vt - vmeas) / Trv_;
+        f[PMEAS] = -pmeas_dot + (pe - pmeas) / Tp_;
+        f[XPIQ]  = -xpiq_dot + q_pi_rate;
+        f[XPIV]  = -xpiv_dot + v_pi_rate;
+        f[QV]    = -qv_dot + qv_rate;
+        f[PORD]  = -pord_dot + pord_rate;
+        f[VT]    = -vt * vt + vr * vr + vi * vi;
+        f[VSAFE] = -vsafe + Math::max(vmeas, VMEAS_MINIMUM);
+        f[SDIP]  = -sdip + Math::inside(vt, Vdip_, Vup_);
+        f[IQV]   = -iqv + iqv_target;
+        f[QREF]  = -qref + qref_target;
+        f[EQ]    = -eq + Math::clamp(qref, Qmin_, Qmax_) - qgen;
+        f[VPIQ]  = -vpiq + Math::clamp(q_pi_state, Vmin_, Vmax_);
+        f[EPIV]  = -epiv + q_pi_on_ * vpiq
+                  + v_ref_on_ * Math::clamp(extref, Vmin_, Vmax_)
+                  - q_on_ * vmeas;
         f[RPORD]  = -rpord + aslew(fpord, dPmin_, dPmax_);
         f[ILCAP]  = -ilcap + sqrtramp(circleSquare(Imax_, high));
         f[IQMAX]  = -iqmax + pq_on_ * ilcap + pq_off_ * Imax_;
@@ -1026,8 +1147,8 @@ namespace GridKit
        * @return Limited rate.
        */
       template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline scalar_type
-      Reecb<scalar_type, index_type>::aslew(ScalarT rate, RealT lower, RealT upper)
+      [[gnu::always_inline]] inline scalar_type Reecb<scalar_type, index_type>::
+        aslew(ScalarT rate, RealT lower, RealT upper)
       {
         assert(lower < ZERO<RealT> && ZERO<RealT> < upper);
         return rate
@@ -1049,12 +1170,13 @@ namespace GridKit
        * @todo Fold moving-limit support into Math::antiwindup in CommonMath.
        */
       template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline scalar_type
-      Reecb<scalar_type, index_type>::awband(ScalarT state, ScalarT rate, ScalarT band)
+      [[gnu::always_inline]] inline scalar_type Reecb<scalar_type, index_type>::
+        awband(ScalarT state, ScalarT rate, ScalarT band)
       {
         const ScalarT above_min = Math::above(state, -band);
         const ScalarT below_max = Math::below(state, band);
-        return (above_min * below_max + (ONE<RealT> - below_max) * Math::sigmoid(-rate)
+        return (above_min * below_max
+                + (ONE<RealT> - below_max) * Math::sigmoid(-rate)
                 + (ONE<RealT> - above_min) * Math::sigmoid(rate))
                * rate;
       }
@@ -1074,8 +1196,8 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       template <typename ValueT>
-      [[gnu::always_inline]] inline ValueT
-      Reecb<scalar_type, index_type>::sqrtramp(ValueT x)
+      [[gnu::always_inline]] inline ValueT Reecb<scalar_type, index_type>::
+        sqrtramp(ValueT x)
       {
         const RealT root_width = ONE<RealT> / Math::MU<RealT>;
         const RealT knee       = CURRENT_CIRCLE_KNEE;
@@ -1084,15 +1206,14 @@ namespace GridKit
         const ValueT normalizer  = absolute + knee;
         const ValueT scaled_x    = absolute / normalizer;
         const ValueT scaled_knee = knee / normalizer;
-        const ValueT magnitude   = normalizer
-                                 * std::sqrt(scaled_x * scaled_x
-                                             + scaled_knee * scaled_knee);
-        const ValueT half_sum = HALF<RealT> * magnitude
-                                + HALF<RealT> * absolute;
+        const ValueT magnitude =
+          normalizer
+          * std::sqrt(scaled_x * scaled_x + scaled_knee * scaled_knee);
+        const ValueT half_sum =
+          HALF<RealT> * magnitude + HALF<RealT> * absolute;
         const ValueT conjugate = QUARTER<RealT> * knee * (knee / half_sum);
-        const ValueT hinged    = HALF<RealT> * x
-                              + HALF<RealT> * absolute
-                              + conjugate;
+        const ValueT hinged =
+          HALF<RealT> * x + HALF<RealT> * absolute + conjugate;
         // Divide through by MU to avoid overflow for large finite circles.
         return hinged / std::sqrt(hinged + root_width * root_width);
       }
@@ -1105,8 +1226,9 @@ namespace GridKit
        * @pre `y` is finite and nonnegative.
        */
       template <typename scalar_type, typename index_type>
-      typename Reecb<scalar_type, index_type>::RealT
-      Reecb<scalar_type, index_type>::isqrtramp(RealT y)
+      typename Reecb<scalar_type, index_type>::RealT Reecb<
+        scalar_type,
+        index_type>::isqrtramp(RealT y)
       {
         if (y <= sqrtramp(ZERO<RealT>))
         {
@@ -1115,11 +1237,11 @@ namespace GridKit
 
         const RealT mu       = Math::MU<RealT>;
         const RealT scaled_y = HALF<RealT> * mu * y;
-        const RealT hinged   = y / mu
-                             * (scaled_y + std::hypot(scaled_y, ONE<RealT>));
+        const RealT hinged =
+          y / mu * (scaled_y + std::hypot(scaled_y, ONE<RealT>));
         const RealT square = hinged
                              - QUARTER<RealT> * CURRENT_CIRCLE_KNEE
-                                   * (CURRENT_CIRCLE_KNEE / hinged);
+                                 * (CURRENT_CIRCLE_KNEE / hinged);
         return std::max(ZERO<RealT>, square);
       }
 
@@ -1132,8 +1254,8 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       template <typename ValueT>
-      [[gnu::always_inline]] inline ValueT
-      Reecb<scalar_type, index_type>::circleSquare(RealT limit, ValueT high)
+      [[gnu::always_inline]] inline ValueT Reecb<scalar_type, index_type>::
+        circleSquare(RealT limit, ValueT high)
       {
         return ((HALF<RealT> * limit - HALF<RealT> * high)
                 * (HALF<RealT> * limit + HALF<RealT> * high))
@@ -1143,7 +1265,8 @@ namespace GridKit
       /**
        * @brief Solve a feasible initial total-current limit
        *
-       * @param[in] lower Lower bound for the component-base total-current limit.
+       * @param[in] lower Lower bound for the component-base total-current
+       * limit.
        * @param[in] high Priority-axis current command on the component base.
        * @param[in] low Required off-axis capacity on the component base.
        * @return The mutually consistent total limit and off-axis capacity, or
@@ -1155,7 +1278,8 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       auto Reecb<scalar_type, index_type>::solveInitialLimit(
-          RealT lower, RealT high, RealT low) -> std::optional<InitialCurrentLimit>
+        RealT lower, RealT high, RealT low
+      ) -> std::optional<InitialCurrentLimit>
       {
         RealT imax = lower;
         RealT cap  = sqrtramp(circleSquare(imax, high));
@@ -1181,7 +1305,8 @@ namespace GridKit
              step < std::numeric_limits<RealT>::digits && cap < low;
              ++step)
         {
-          const RealT next = std::nextafter(imax, std::numeric_limits<RealT>::max());
+          const RealT next =
+            std::nextafter(imax, std::numeric_limits<RealT>::max());
           if (!std::isfinite(next) || next <= imax)
           {
             return std::nullopt;
@@ -1228,7 +1353,9 @@ namespace GridKit
        * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      void Reecb<scalar_type, index_type>::initializeParameters(
+        const ModelDataT& data
+      )
       {
         using Params = typename ModelDataT::Parameters;
 
@@ -1286,14 +1413,38 @@ namespace GridKit
       {
         using Variable = typename ModelDataT::MonitorableVariables;
 
-        monitor_->set(Variable::iqcmd, [this]
-                      { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::IQCMD)]; });
-        monitor_->set(Variable::ipcmd, [this]
-                      { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::IPCMD)]; });
-        monitor_->set(Variable::vmeas, [this]
-                      { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::VMEAS)]; });
-        monitor_->set(Variable::pmeas, [this]
-                      { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::PMEAS)]; });
+        monitor_->set(
+          Variable::iqcmd,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(ReecbInternalVariables::IQCMD)];
+          }
+        );
+        monitor_->set(
+          Variable::ipcmd,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(ReecbInternalVariables::IPCMD)];
+          }
+        );
+        monitor_->set(
+          Variable::vmeas,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(ReecbInternalVariables::VMEAS)];
+          }
+        );
+        monitor_->set(
+          Variable::pmeas,
+          [this]
+          {
+            return y_.getData(
+            )[static_cast<size_t>(ReecbInternalVariables::PMEAS)];
+          }
+        );
       }
 
       /**
@@ -1307,7 +1458,8 @@ namespace GridKit
       {
         Log::warning() << "Reecb: any of Trv, Tp, Tiq, or Tpord below "
                        << TIME_CONSTANT_MINIMUM
-                       << " s is raised to that floor to keep the controller lags well posed\n";
+                       << " s is raised to that floor to keep the controller "
+                          "lags well posed\n";
       }
 
       /**
@@ -1389,14 +1541,16 @@ namespace GridKit
        * be used in initialization methods but not in residual evaluation.
        */
       template <typename scalar_type, typename index_type>
-      typename Reecb<scalar_type, index_type>::RealT
-      Reecb<scalar_type, index_type>::logOneMinusExp(RealT x)
+      typename Reecb<scalar_type, index_type>::RealT Reecb<
+        scalar_type,
+        index_type>::logOneMinusExp(RealT x)
       {
         static constexpr auto log_two = std::numbers::ln2_v<RealT>;
 
         if (x < log_two)
         {
-          return log_two - HALF<RealT> * x + std::log(std::sinh(HALF<RealT> * x));
+          return log_two - HALF<RealT> * x
+                 + std::log(std::sinh(HALF<RealT> * x));
         }
         return std::log1p(-std::exp(-x));
       }
@@ -1416,10 +1570,14 @@ namespace GridKit
        * be used in initialization methods but not in residual evaluation.
        */
       template <typename scalar_type, typename index_type>
-      bool Reecb<scalar_type, index_type>::iclamp(RealT output, RealT lower, RealT upper, RealT& input) const
+      bool Reecb<scalar_type, index_type>::iclamp(
+        RealT output, RealT lower, RealT upper, RealT& input
+      ) const
       {
-        if (!std::isfinite(output) || !std::isfinite(lower) || !std::isfinite(upper) || lower > upper
-            || output < lower - INITIALIZATION_TOLERANCE || output > upper + INITIALIZATION_TOLERANCE)
+        if (!std::isfinite(output) || !std::isfinite(lower)
+            || !std::isfinite(upper) || lower > upper
+            || output < lower - INITIALIZATION_TOLERANCE
+            || output > upper + INITIALIZATION_TOLERANCE)
         {
           return false;
         }
@@ -1431,8 +1589,10 @@ namespace GridKit
           return true;
         }
 
-        const RealT mu     = Math::MU<RealT>;
-        const RealT offset = -std::log(std::expm1(mu * HALF<RealT> * INITIALIZATION_TOLERANCE)) / mu;
+        const RealT mu = Math::MU<RealT>;
+        const RealT offset =
+          -std::log(std::expm1(mu * HALF<RealT> * INITIALIZATION_TOLERANCE))
+          / mu;
         if (output == lower)
         {
           input = lower - offset;
@@ -1446,7 +1606,7 @@ namespace GridKit
 
         const RealT a = mu * (output - lower);
         const RealT b = mu * (upper - output);
-        input         = lower + (a + logOneMinusExp(a) - logOneMinusExp(b)) / mu;
+        input = lower + (a + logOneMinusExp(a) - logOneMinusExp(b)) / mu;
         return std::isfinite(input);
       }
 

@@ -34,6 +34,7 @@ namespace GridKit
 
     /// Data of a `Generator`
     template <typename real_type, typename index_type>
-    using GeneratorData = ComponentData<real_type, index_type, GeneratorParameters, GeneratorPorts>;
+    using GeneratorData =
+      ComponentData<real_type, index_type, GeneratorParameters, GeneratorPorts>;
   } // namespace OptimalPowerFlow
 } // namespace GridKit

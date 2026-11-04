@@ -28,7 +28,8 @@ namespace GridKit
       ~EnzymeTests() = default;
 
       /**
-       * @brief Standalone Enzyme test that computes the derivative of a scalar function (square)
+       * @brief Standalone Enzyme test that computes the derivative of a scalar
+       * function (square)
        *
        * The function to differentiate is f(x) = x^2
        * The expected derivative if f'(x) = 2*x
@@ -59,10 +60,12 @@ namespace GridKit
       }
 
       /**
-       * @brief Standalone Enzyme test that computes the derivative of a vector function
+       * @brief Standalone Enzyme test that computes the derivative of a vector
+       * function
        *
        * The function to differentiate is f_i(x) = sum(x_j^2) for j <= i
-       * The expected Jacobian is a lower triangular matrix of f_{i,j}'(x) = 2*x_j if j <= i
+       * The expected Jacobian is a lower triangular matrix of f_{i,j}'(x) =
+       * 2*x_j if j <= i
        *
        */
       TestOutcome vectorFunctionSparse()
@@ -118,7 +121,9 @@ namespace GridKit
         return 2.0 * x;
       }
 
-      __attribute__((always_inline)) static void vectorFunction(IdxT N, ScalarT* x, ScalarT* y)
+      __attribute__((always_inline)) static void vectorFunction(
+        IdxT N, ScalarT* x, ScalarT* y
+      )
       {
         for (IdxT idx = 0; idx < N; ++idx)
         {
@@ -130,7 +135,9 @@ namespace GridKit
         }
       }
 
-      SparseMatrix* vectorFunctionSparseEnzymeJacobian(const IdxT N, const ScalarT* x)
+      SparseMatrix* vectorFunctionSparseEnzymeJacobian(
+        const IdxT N, const ScalarT* x
+      )
       {
         using namespace GridKit::Enzyme::Sparse;
 
@@ -146,29 +153,35 @@ namespace GridKit
         size_t   current_nnz = 0;
         for (size_t i = 0; i < N; i++)
         {
-          ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, size_t>,
-                                                       (void*) ident_store<ScalarT, size_t>,
-                                                       i);
-          ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, size_t>,
-                                                         (void*) sparse_store<ScalarT, size_t>,
-                                                         i,
-                                                         1.0,
-                                                         index_maps,
-                                                         index_maps,
-                                                         rows_buffer,
-                                                         cols_buffer,
-                                                         vals_buffer,
-                                                         &current_nnz);
+          ScalarT* output = __enzyme_todense<ScalarT*>(
+            (void*) ident_load<ScalarT, size_t>,
+            (void*) ident_store<ScalarT, size_t>,
+            i
+          );
+          ScalarT* d_output = __enzyme_todense<ScalarT*>(
+            (void*) sparse_load<ScalarT, size_t>,
+            (void*) sparse_store<ScalarT, size_t>,
+            i,
+            1.0,
+            index_maps,
+            index_maps,
+            rows_buffer,
+            cols_buffer,
+            vals_buffer,
+            &current_nnz
+          );
 
-          __enzyme_fwddiff<void>((void*) vectorFunction,
-                                 enzyme_const,
-                                 N,
-                                 enzyme_dup,
-                                 x,
-                                 output,
-                                 enzyme_dupnoneed,
-                                 (ScalarT*) 0x1,
-                                 d_output);
+          __enzyme_fwddiff<void>(
+            (void*) vectorFunction,
+            enzyme_const,
+            N,
+            enzyme_dup,
+            x,
+            output,
+            enzyme_dupnoneed,
+            (ScalarT*) 0x1,
+            d_output
+          );
         }
 
         size_t*  rows = new size_t[current_nnz];
@@ -190,7 +203,9 @@ namespace GridKit
         return new SparseMatrix(N, N, current_nnz, &rows, &cols, &vals);
       }
 
-      SparseMatrix* vectorFunctionSparseReferenceJacobian(const IdxT N, const ScalarT* x)
+      SparseMatrix* vectorFunctionSparseReferenceJacobian(
+        const IdxT N, const ScalarT* x
+      )
       {
         IdxT     nnz         = N * (N + 1) / 2; // lower triangular matrix
         IdxT*    rows        = new IdxT[static_cast<size_t>(nnz)];
@@ -216,8 +231,9 @@ namespace GridKit
       }
 
       // @todo move to a common location if this needs to be reused
-      TestStatus checkVectorFunctionSparseJacobian(SparseMatrix* matrix_1,
-                                                   SparseMatrix* matrix_2)
+      TestStatus checkVectorFunctionSparseJacobian(
+        SparseMatrix* matrix_1, SparseMatrix* matrix_2
+      )
       {
         TestStatus success = true;
 

@@ -22,7 +22,9 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  Generator4Governor<ScalarT, IdxT>::Generator4Governor(bus_type* bus, ScalarT P0, ScalarT Q0)
+  Generator4Governor<ScalarT, IdxT>::Generator4Governor(
+    bus_type* bus, ScalarT P0, ScalarT Q0
+  )
     : ModelEvaluatorImpl<ScalarT, IdxT>(9, 1, 2),
       H_(5.0),
       D_(0.04),
@@ -77,8 +79,10 @@ namespace GridKit
    * Modeling and Scripting, Federico Milano, Chapter 9, p. 225:
    * \f{eqnarray*}{
    *  \omega_0 &=& 0, \\
-   *  \delta_0 &=& \tan^{-1} \left(\frac{X_q P_0 - R_s Q_0}{V_0^2 + R_s P_0 + X_q Q_0} \right) + \theta_0, \\
-   *  \phi_0   &=& \delta_0 - \theta_0 + \tan^{-1} \left( \frac{Q_0}{P_0} \right), \\
+   *  \delta_0 &=& \tan^{-1} \left(\frac{X_q P_0 - R_s Q_0}{V_0^2 + R_s P_0 +
+   * X_q Q_0} \right) + \theta_0, \\
+   *  \phi_0   &=& \delta_0 - \theta_0 + \tan^{-1} \left( \frac{Q_0}{P_0}
+   * \right), \\
    *  I_{d0}   &=& \frac{\sqrt{P_0^2 + Q_0^2}}{V_0} \sin(\phi_0), \\
    *  I_{q0}   &=& \frac{\sqrt{P_0^2 + Q_0^2}}{V_0} \cos(\phi_0), \\
    *  E_{d0}'  &=& V_0 \sin(\delta_0 - \theta_0) + R_s I_{d0} - X_q' I_{q0}, \\
@@ -96,7 +100,9 @@ namespace GridKit
   int Generator4Governor<ScalarT, IdxT>::initialize()
   {
     // Compute generator voltage phase
-    const ScalarT delta = std::atan((Xq_ * P0_ - Rs_ * Q0_) / (V() * V() + Rs_ * P0_ + Xq_ * Q0_)) + theta();
+    const ScalarT delta =
+      std::atan((Xq_ * P0_ - Rs_ * Q0_) / (V() * V() + Rs_ * P0_ + Xq_ * Q0_))
+      + theta();
 
     // Compute generator current phase
     const ScalarT phi = delta - theta() + std::atan(Q0_ / P0_);
@@ -111,8 +117,9 @@ namespace GridKit
     auto* yp = yp_.getData();
 
     // Initialize generator
-    y[static_cast<size_t>(offsetGen_ + 0)]  = delta;
-    y[static_cast<size_t>(offsetGen_ + 1)]  = omega_s_ + 0.2; // <~ this is hack to perturb omega
+    y[static_cast<size_t>(offsetGen_ + 0)] = delta;
+    y[static_cast<size_t>(offsetGen_ + 1)] =
+      omega_s_ + 0.2; // <~ this is hack to perturb omega
     y[static_cast<size_t>(offsetGen_ + 2)]  = Edp;
     y[static_cast<size_t>(offsetGen_ + 3)]  = Eqp;
     y[static_cast<size_t>(offsetGen_ + 4)]  = Id;
@@ -124,8 +131,9 @@ namespace GridKit
     yp[static_cast<size_t>(offsetGen_ + 4)] = 0.0;
     yp[static_cast<size_t>(offsetGen_ + 5)] = 0.0;
 
-    Pm0_ = Edp * Id + Eqp * Iq + (Xqp_ - Xdp_) * Id * Iq; // <~ set to steady state value
-    Ef0_ = Eqp + (Xd_ - Xdp_) * Id;                       // <~ set to steady state value
+    Pm0_ = Edp * Id + Eqp * Iq
+           + (Xqp_ - Xdp_) * Id * Iq; // <~ set to steady state value
+    Ef0_ = Eqp + (Xd_ - Xdp_) * Id;   // <~ set to steady state value
 
     // Initialize governor
     y[static_cast<size_t>(offsetGov_ + 0)]  = Pm0_;
@@ -189,30 +197,34 @@ namespace GridKit
    * Residual equations are given as:
    * \f{eqnarray*}{
    * f_0: &~& \dot{\delta} -\omega_b (\omega - \omega_s), \\
-   * f_1: &~& 2H/\omega_s \dot{\omega} - L_m(P_m) + E_q' I_q + E_d' I_d + (X_q' - X_d')I_d I_q  + D (\omega - \omega_s), \\
+   * f_1: &~& 2H/\omega_s \dot{\omega} - L_m(P_m) + E_q' I_q + E_d' I_d + (X_q'
+   * - X_d')I_d I_q  + D (\omega - \omega_s), \\
    * f_2: &~& T_{q0}' \dot{E}_d' + E_d' - (X_q - X_q')I_q, \\
    * f_3: &~& T_{d0}' \dot{E}_q' + E_q' + (X_d - X_d')I_d - E_f, \\
    * f_4: &~& R_s I_d - X_q' I_q + V \sin(\delta - \theta) - E_d', \\
    * f_5: &~& R_s I_q + X_d' I_d + V \cos(\delta - \theta) - E_q', \\
    * f_6: &~& \dot{P}_m - L_n(P_n), \\
    * f_7: &~& T_1 \dot{X} + X - (1 - T_2 / T_1) (\omega - \omega_s), \\
-   * f_8: &~& T_3 P_n - P_{m0} + L_m(P_m) + K X + K T_2 / T_1 (\omega - \omega_s)
+   * f_8: &~& T_3 P_n - P_{m0} + L_m(P_m) + K X + K T_2 / T_1 (\omega -
+   * \omega_s)
    * \f}
    * where \f$ \Omega_b \f$ is the synchronous frequency in [rad/s], and
    * overdot denotes time derivative.
    * \f$ \omega \f$ is machine frequency in [p.u.].
-   * \f$ L_m() \f$ and \f$ L_n() \f$ are limiter functions, their derivatives will be
-   * denoted as \f$ dL_m() \f$ and \f$ dL_n() \f$
+   * \f$ L_m() \f$ and \f$ L_n() \f$ are limiter functions, their derivatives
+   * will be denoted as \f$ dL_m() \f$ and \f$ dL_n() \f$
    *
    * Generator injection active and reactive power are
    * \f{eqnarray*}{
-   * P_g &=& E_d' I_d + E_q' I_q + (X_q' - X_d') I_d I_q - R_s (I_d^2 + I_q^2), \\
+   * P_g &=& E_d' I_d + E_q' I_q + (X_q' - X_d') I_d I_q - R_s (I_d^2 + I_q^2),
+   * \\
    * Q_g &=& E_q' I_d - E_d' I_q - X_q' I_q^2 - X_d' I_d^2, \\
    * \f}
    * respectively.
    *
    * State variables for the generator are:
-   * \f$ y_0 = \omega \f$, \f$ y_1 = \delta \f$, \f$ y_2 = E_d' \f$, \f$ y_3 = E_q' \f$,
+   * \f$ y_0 = \omega \f$, \f$ y_1 = \delta \f$, \f$ y_2 = E_d' \f$, \f$ y_3 =
+   * E_q' \f$,
    * \f$ y_4 = I_d \f$, \f$ y_5 = I_q \f$,
    * \f$ y_6 = P_m \f$, \f$ y_7 = X \f$, \f$ y_{8} = P_n \f$
    * Bus voltage \f$  V \f$ and bus phase \f$ \theta \f$ are bus state variable.
@@ -227,12 +239,20 @@ namespace GridKit
     auto*       f  = f_.getData();
 
     // Generator equations
-    f[static_cast<size_t>(offsetGen_ + 0)] = dotDelta() - omega_b_ * (omega() - omega_s_);
-    f[static_cast<size_t>(offsetGen_ + 1)] = (2.0 * H_) / omega_s_ * dotOmega() - Lm(y[static_cast<size_t>(offsetGov_ + 0)]) + Eqp() * Iq() + Edp() * Id() + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
-    f[static_cast<size_t>(offsetGen_ + 2)] = Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
-    f[static_cast<size_t>(offsetGen_ + 3)] = Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef0_;
-    f[static_cast<size_t>(offsetGen_ + 4)] = Rs_ * Id() - Xqp_ * Iq() + V() * std::sin(delta() - theta()) - Edp();
-    f[static_cast<size_t>(offsetGen_ + 5)] = Xdp_ * Id() + Rs_ * Iq() + V() * std::cos(delta() - theta()) - Eqp();
+    f[static_cast<size_t>(offsetGen_ + 0)] =
+      dotDelta() - omega_b_ * (omega() - omega_s_);
+    f[static_cast<size_t>(offsetGen_ + 1)] =
+      (2.0 * H_) / omega_s_ * dotOmega()
+      - Lm(y[static_cast<size_t>(offsetGov_ + 0)]) + Eqp() * Iq() + Edp() * Id()
+      + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
+    f[static_cast<size_t>(offsetGen_ + 2)] =
+      Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
+    f[static_cast<size_t>(offsetGen_ + 3)] =
+      Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef0_;
+    f[static_cast<size_t>(offsetGen_ + 4)] =
+      Rs_ * Id() - Xqp_ * Iq() + V() * std::sin(delta() - theta()) - Edp();
+    f[static_cast<size_t>(offsetGen_ + 5)] =
+      Xdp_ * Id() + Rs_ * Iq() + V() * std::cos(delta() - theta()) - Eqp();
 
     // Bus equations
     P() += Pg();
@@ -243,9 +263,18 @@ namespace GridKit
     }
 
     // Governor equations
-    f[static_cast<size_t>(offsetGov_ + 0)] = yp[static_cast<size_t>(offsetGov_ + 0)] - Ln(y[static_cast<size_t>(offsetGov_ + 2)]);
-    f[static_cast<size_t>(offsetGov_ + 1)] = T1() * yp[static_cast<size_t>(offsetGov_ + 1)] + y[static_cast<size_t>(offsetGov_ + 1)] - (1.0 - T2() / T1()) * (omega() - omega_s_);
-    f[static_cast<size_t>(offsetGov_ + 2)] = T3() * y[static_cast<size_t>(offsetGov_ + 2)] - Pm0_ + Lm(y[static_cast<size_t>(offsetGov_ + 0)]) + K() * y[static_cast<size_t>(offsetGov_ + 1)] + K() * T2() / T1() * (omega() - omega_s_);
+    f[static_cast<size_t>(offsetGov_ + 0)] =
+      yp[static_cast<size_t>(offsetGov_ + 0)]
+      - Ln(y[static_cast<size_t>(offsetGov_ + 2)]);
+    f[static_cast<size_t>(offsetGov_ + 1)] =
+      T1() * yp[static_cast<size_t>(offsetGov_ + 1)]
+      + y[static_cast<size_t>(offsetGov_ + 1)]
+      - (1.0 - T2() / T1()) * (omega() - omega_s_);
+    f[static_cast<size_t>(offsetGov_ + 2)] =
+      T3() * y[static_cast<size_t>(offsetGov_ + 2)] - Pm0_
+      + Lm(y[static_cast<size_t>(offsetGov_ + 0)])
+      + K() * y[static_cast<size_t>(offsetGov_ + 1)]
+      + K() * T2() / T1() * (omega() - omega_s_);
 
     f_.setDataUpdated();
 
@@ -260,7 +289,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::evaluateJacobian()
   {
-    ::GridKit::Utilities::Logger::warning() << "Generator4Governor: Jacobian evaluation not implemented!\n";
+    ::GridKit::Utilities::Logger::warning()
+      << "Generator4Governor: Jacobian evaluation not implemented!\n";
     return 0;
   }
 
@@ -298,14 +328,20 @@ namespace GridKit
    *
    * Adjoint residual equations are given as:
    * \f{eqnarray*}{
-   * f_{B0}: &~& \dot{y}_{B0} - y_{B4} V \cos(\delta - \theta) + y_{B5} V \sin(\delta - \theta), \\
-   * f_{B1}: &~& 2H/\omega_s \dot{y}_{B1} + y_{B0} \omega_b - y_{B1} D + y_{B7} (1 - T_2/T_1) - y_{B8} K T_2/T_1 + g_{\omega}(\omega), \\
-   * f_{B2}: &~& T_{q0}' \dot{y}_{B2} - y_{B1} I_d - y_{B2} + y_{B4} + \lambda_P I_d - \lambda_Q I_q, \\
-   * f_{B3}: &~& T_{d0}' \dot{y}_{B3} - y_{B1} I_q - y_{B3} + y_{B5} + \lambda_P I_q + \lambda_Q I_d, \\
-   * f_{B4}: &~& -y_{B1} (E_d' + (-X_d'+X_q') I_q) - y_{B3} (X_d - X_d') - y_{B4} R_s - y_{B5} X_d'
-   *             + \lambda_P (E_d' + (X_q' - X_d') I_q - 2 R_s I_d) + \lambda_Q (E_q' - 2 X_d' I_d), \\
-   * f_{B5}: &~& -y_{B1} (E_q' + (-X_d'+X_q') I_d) + y_{B2} (X_q - X_q') + y_{B4} X_q' - y_{B5} R_s
-   *             + \lambda_P (E_q' + (X_q' - X_d') I_d - 2 R_s I_q) - \lambda_Q (E_d' + 2 X_q' I_q), \\
+   * f_{B0}: &~& \dot{y}_{B0} - y_{B4} V \cos(\delta - \theta) + y_{B5} V
+   * \sin(\delta - \theta), \\
+   * f_{B1}: &~& 2H/\omega_s \dot{y}_{B1} + y_{B0} \omega_b - y_{B1} D + y_{B7}
+   * (1 - T_2/T_1) - y_{B8} K T_2/T_1 + g_{\omega}(\omega), \\
+   * f_{B2}: &~& T_{q0}' \dot{y}_{B2} - y_{B1} I_d - y_{B2} + y_{B4} + \lambda_P
+   * I_d - \lambda_Q I_q, \\
+   * f_{B3}: &~& T_{d0}' \dot{y}_{B3} - y_{B1} I_q - y_{B3} + y_{B5} + \lambda_P
+   * I_q + \lambda_Q I_d, \\ f_{B4}: &~& -y_{B1} (E_d' + (-X_d'+X_q') I_q) -
+   * y_{B3} (X_d - X_d') - y_{B4} R_s - y_{B5} X_d'
+   *             + \lambda_P (E_d' + (X_q' - X_d') I_q - 2 R_s I_d) + \lambda_Q
+   * (E_q' - 2 X_d' I_d), \\ f_{B5}: &~& -y_{B1} (E_q' + (-X_d'+X_q') I_d) +
+   * y_{B2} (X_q - X_q') + y_{B4} X_q' - y_{B5} R_s
+   *             + \lambda_P (E_q' + (X_q' - X_d') I_d - 2 R_s I_q) - \lambda_Q
+   * (E_d' + 2 X_q' I_q), \\
    * f_{B6}: &~& \dot{y}_{B6} + y_{B1} dL_m(P_m) - y_{B10} dL_m(P_m), \\
    * f_{B7}: &~& T_1 \dot{y}_{B7} - y_{B7} - y_{B8} K, \\
    * f_{B8}: &~& y_{B6} dL_n(P_n) - y_{B8} T_3
@@ -313,8 +349,10 @@ namespace GridKit
    *
    * Generator adjoint injections are
    * \f{eqnarray*}{
-   * P_g &=& -\lambda_P   \sin(\delta - \theta) - \lambda_Q   \cos(\delta - \theta), \\
-   * Q_g &=&  \lambda_P V \cos(\delta - \theta) - \lambda_Q V \sin(\delta - \theta), \\
+   * P_g &=& -\lambda_P   \sin(\delta - \theta) - \lambda_Q   \cos(\delta -
+   * \theta), \\
+   * Q_g &=&  \lambda_P V \cos(\delta - \theta) - \lambda_Q V \sin(\delta -
+   * \theta), \\
    * \f}
    * respectively.
    *
@@ -332,30 +370,71 @@ namespace GridKit
     auto*       fB  = fB_.getData();
 
     // Generator adjoint
-    fB[static_cast<size_t>(offsetGen_ + 0)] = ypB[static_cast<size_t>(offsetGen_ + 0)] - yB[static_cast<size_t>(offsetGen_ + 4)] * V() * cosPhi + yB[static_cast<size_t>(offsetGen_ + 5)] * V() * sinPhi;
-    fB[static_cast<size_t>(offsetGen_ + 1)] = 2.0 * H_ / omega_s_ * ypB[static_cast<size_t>(offsetGen_ + 1)] + yB[static_cast<size_t>(offsetGen_ + 0)] * omega_b_ - yB[static_cast<size_t>(offsetGen_ + 1)] * D_ + frequencyPenaltyDer(omega())
-                                              + yB[static_cast<size_t>(offsetGov_ + 1)] * (1.0 - T2() / T1()) - yB[static_cast<size_t>(offsetGov_ + 2)] * K() * T2() / T1();
-    fB[static_cast<size_t>(offsetGen_ + 2)] = Tq0p_ * ypB[static_cast<size_t>(offsetGen_ + 2)] - yB[static_cast<size_t>(offsetGen_ + 1)] * Id() - yB[static_cast<size_t>(offsetGen_ + 2)] + yB[static_cast<size_t>(offsetGen_ + 4)]
-                                              + lambdaP() * Id() - lambdaQ() * Iq();
-    fB[static_cast<size_t>(offsetGen_ + 3)] = Td0p_ * ypB[static_cast<size_t>(offsetGen_ + 3)] - yB[static_cast<size_t>(offsetGen_ + 1)] * Iq() - yB[static_cast<size_t>(offsetGen_ + 3)] + yB[static_cast<size_t>(offsetGen_ + 5)]
-                                              + lambdaP() * Iq() + lambdaQ() * Id();
-    fB[static_cast<size_t>(offsetGen_ + 4)] = -yB[static_cast<size_t>(offsetGen_ + 1)] * (Edp() + (Xqp_ - Xdp_) * Iq()) - yB[static_cast<size_t>(offsetGen_ + 3)] * (Xd_ - Xdp_) - yB[static_cast<size_t>(offsetGen_ + 4)] * Rs_ - yB[static_cast<size_t>(offsetGen_ + 5)] * Xdp_
-                                              + lambdaP() * (Edp() + (Xqp_ - Xdp_) * Iq() - 2.0 * Rs_ * Id()) + lambdaQ() * (Eqp() - 2.0 * Xdp_ * Id());
-    fB[static_cast<size_t>(offsetGen_ + 5)] = -yB[static_cast<size_t>(offsetGen_ + 1)] * (Eqp() + (Xqp_ - Xdp_) * Id()) + yB[static_cast<size_t>(offsetGen_ + 2)] * (Xq_ - Xqp_) + yB[static_cast<size_t>(offsetGen_ + 4)] * Xqp_ - yB[static_cast<size_t>(offsetGen_ + 5)] * Rs_
-                                              + lambdaP() * (Eqp() + (Xqp_ - Xdp_) * Id() - 2.0 * Rs_ * Iq()) - lambdaQ() * (Edp() + 2.0 * Xqp_ * Iq());
+    fB[static_cast<size_t>(offsetGen_ + 0)] =
+      ypB[static_cast<size_t>(offsetGen_ + 0)]
+      - yB[static_cast<size_t>(offsetGen_ + 4)] * V() * cosPhi
+      + yB[static_cast<size_t>(offsetGen_ + 5)] * V() * sinPhi;
+    fB[static_cast<size_t>(offsetGen_ + 1)] =
+      2.0 * H_ / omega_s_ * ypB[static_cast<size_t>(offsetGen_ + 1)]
+      + yB[static_cast<size_t>(offsetGen_ + 0)] * omega_b_
+      - yB[static_cast<size_t>(offsetGen_ + 1)] * D_
+      + frequencyPenaltyDer(omega())
+      + yB[static_cast<size_t>(offsetGov_ + 1)] * (1.0 - T2() / T1())
+      - yB[static_cast<size_t>(offsetGov_ + 2)] * K() * T2() / T1();
+    fB[static_cast<size_t>(offsetGen_ + 2)] =
+      Tq0p_ * ypB[static_cast<size_t>(offsetGen_ + 2)]
+      - yB[static_cast<size_t>(offsetGen_ + 1)] * Id()
+      - yB[static_cast<size_t>(offsetGen_ + 2)]
+      + yB[static_cast<size_t>(offsetGen_ + 4)] + lambdaP() * Id()
+      - lambdaQ() * Iq();
+    fB[static_cast<size_t>(offsetGen_ + 3)] =
+      Td0p_ * ypB[static_cast<size_t>(offsetGen_ + 3)]
+      - yB[static_cast<size_t>(offsetGen_ + 1)] * Iq()
+      - yB[static_cast<size_t>(offsetGen_ + 3)]
+      + yB[static_cast<size_t>(offsetGen_ + 5)] + lambdaP() * Iq()
+      + lambdaQ() * Id();
+    fB[static_cast<size_t>(offsetGen_ + 4)] =
+      -yB[static_cast<size_t>(offsetGen_ + 1)] * (Edp() + (Xqp_ - Xdp_) * Iq())
+      - yB[static_cast<size_t>(offsetGen_ + 3)] * (Xd_ - Xdp_)
+      - yB[static_cast<size_t>(offsetGen_ + 4)] * Rs_
+      - yB[static_cast<size_t>(offsetGen_ + 5)] * Xdp_
+      + lambdaP() * (Edp() + (Xqp_ - Xdp_) * Iq() - 2.0 * Rs_ * Id())
+      + lambdaQ() * (Eqp() - 2.0 * Xdp_ * Id());
+    fB[static_cast<size_t>(offsetGen_ + 5)] =
+      -yB[static_cast<size_t>(offsetGen_ + 1)] * (Eqp() + (Xqp_ - Xdp_) * Id())
+      + yB[static_cast<size_t>(offsetGen_ + 2)] * (Xq_ - Xqp_)
+      + yB[static_cast<size_t>(offsetGen_ + 4)] * Xqp_
+      - yB[static_cast<size_t>(offsetGen_ + 5)] * Rs_
+      + lambdaP() * (Eqp() + (Xqp_ - Xdp_) * Id() - 2.0 * Rs_ * Iq())
+      - lambdaQ() * (Edp() + 2.0 * Xqp_ * Iq());
 
     // Bus adjoint
-    PB() += (-yB[static_cast<size_t>(offsetGen_ + 4)] * sinPhi - yB[static_cast<size_t>(offsetGen_ + 5)] * cosPhi);
-    QB() += (yB[static_cast<size_t>(offsetGen_ + 4)] * V() * cosPhi - yB[static_cast<size_t>(offsetGen_ + 5)] * V() * sinPhi);
+    PB() +=
+      (-yB[static_cast<size_t>(offsetGen_ + 4)] * sinPhi
+       - yB[static_cast<size_t>(offsetGen_ + 5)] * cosPhi);
+    QB() +=
+      (yB[static_cast<size_t>(offsetGen_ + 4)] * V() * cosPhi
+       - yB[static_cast<size_t>(offsetGen_ + 5)] * V() * sinPhi);
     if (bus_->size() > 0)
     {
       bus_->getAdjointResidual().setDataUpdated();
     }
 
     // Governor adjoint
-    fB[static_cast<size_t>(offsetGov_ + 0)] = ypB[static_cast<size_t>(offsetGov_ + 0)] - yB[static_cast<size_t>(offsetGov_ + 2)] * dLm(y[static_cast<size_t>(offsetGov_ + 0)]) + yB[static_cast<size_t>(offsetGen_ + 1)] * dLm(y[static_cast<size_t>(offsetGov_ + 0)]);
-    fB[static_cast<size_t>(offsetGov_ + 1)] = ypB[static_cast<size_t>(offsetGov_ + 1)] * T1() - yB[static_cast<size_t>(offsetGov_ + 1)] - yB[static_cast<size_t>(offsetGov_ + 2)] * K();
-    fB[static_cast<size_t>(offsetGov_ + 2)] = yB[static_cast<size_t>(offsetGov_ + 0)] * dLn(y[static_cast<size_t>(offsetGov_ + 2)]) - yB[static_cast<size_t>(offsetGov_ + 2)] * T3();
+    fB[static_cast<size_t>(offsetGov_ + 0)] =
+      ypB[static_cast<size_t>(offsetGov_ + 0)]
+      - yB[static_cast<size_t>(offsetGov_ + 2)]
+          * dLm(y[static_cast<size_t>(offsetGov_ + 0)])
+      + yB[static_cast<size_t>(offsetGen_ + 1)]
+          * dLm(y[static_cast<size_t>(offsetGov_ + 0)]);
+    fB[static_cast<size_t>(offsetGov_ + 1)] =
+      ypB[static_cast<size_t>(offsetGov_ + 1)] * T1()
+      - yB[static_cast<size_t>(offsetGov_ + 1)]
+      - yB[static_cast<size_t>(offsetGov_ + 2)] * K();
+    fB[static_cast<size_t>(offsetGov_ + 2)] =
+      yB[static_cast<size_t>(offsetGov_ + 0)]
+        * dLn(y[static_cast<size_t>(offsetGov_ + 2)])
+      - yB[static_cast<size_t>(offsetGov_ + 2)] * T3();
 
     fB_.setDataUpdated();
 
@@ -370,10 +449,15 @@ namespace GridKit
     auto*       gB = gB_.getData();
 
     // K adjoint
-    gB[1] = -yB[static_cast<size_t>(offsetGov_ + 2)] * (y[static_cast<size_t>(offsetGov_ + 1)] + T2() / T1() * (omega() - omega_s_));
+    gB[1] =
+      -yB[static_cast<size_t>(offsetGov_ + 2)]
+      * (y[static_cast<size_t>(offsetGov_ + 1)] + T2() / T1() * (omega() - omega_s_));
 
     // T2 adjoint
-    gB[0] = -yB[static_cast<size_t>(offsetGov_ + 1)] * (omega() - omega_s_) / T1() - yB[static_cast<size_t>(offsetGov_ + 2)] * K() / T1() * (omega() - omega_s_);
+    gB[0] =
+      -yB[static_cast<size_t>(offsetGov_ + 1)] * (omega() - omega_s_) / T1()
+      - yB[static_cast<size_t>(offsetGov_ + 2)] * K() / T1()
+          * (omega() - omega_s_);
 
     gB_.setDataUpdated();
 
@@ -387,13 +471,15 @@ namespace GridKit
   /**
    * Generator active power Pg.
    *
-   * \f[ P_g = E_q' I_q + E_d' I_d + (X_q' - X_d') I_q I_d - R_a (I_d^2 + I_q^2) \f]
+   * \f[ P_g = E_q' I_q + E_d' I_d + (X_q' - X_d') I_q I_d - R_a (I_d^2 + I_q^2)
+   * \f]
    *
    */
   template <class ScalarT, typename IdxT>
   ScalarT Generator4Governor<ScalarT, IdxT>::Pg()
   {
-    return Iq() * Eqp() + Id() * Edp() + (Xqp_ - Xdp_) * Id() * Iq() - Rs_ * (Id() * Id() + Iq() * Iq());
+    return Iq() * Eqp() + Id() * Edp() + (Xqp_ - Xdp_) * Id() * Iq()
+           - Rs_ * (Id() * Id() + Iq() * Iq());
   }
 
   /**
@@ -404,11 +490,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4Governor<ScalarT, IdxT>::Qg()
   {
-    return -Iq() * Edp() + Id() * Eqp() - Xdp_ * Id() * Id() - Xqp_ * Iq() * Iq();
+    return -Iq() * Edp() + Id() * Eqp() - Xdp_ * Id() * Id()
+           - Xqp_ * Iq() * Iq();
   }
 
   /**
-   * Frequency penalty is used as the objective function for the generator model.
+   * Frequency penalty is used as the objective function for the generator
+   * model.
    *
    * @todo Use smooth penalty function!
    *
@@ -416,12 +504,16 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4Governor<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
   {
-    return c_ * std::pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
+    return c_
+           * std::pow(
+             std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)),
+             beta_
+           );
   }
 
   /**
-   * Derivative of frequency penalty cannot be written in terms of min/max functions.
-   * Need to expand conditional statements instead.
+   * Derivative of frequency penalty cannot be written in terms of min/max
+   * functions. Need to expand conditional statements instead.
    *
    * @todo Use smooth penalty function!
    *

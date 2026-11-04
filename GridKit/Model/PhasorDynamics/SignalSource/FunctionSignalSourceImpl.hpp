@@ -13,7 +13,9 @@ namespace GridKit
      * @brief Construct with values from input data
      */
     template <typename scalar_type, typename index_type>
-    FunctionSignalSource<scalar_type, index_type>::FunctionSignalSource(const ModelDataT& data)
+    FunctionSignalSource<scalar_type, index_type>::FunctionSignalSource(
+      const ModelDataT& data
+    )
     {
       initializeParameters(data);
       size_ = 0;
@@ -25,18 +27,17 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    FunctionSignalSource<scalar_type, index_type>::FuncT
-    FunctionSignalSource<scalar_type, index_type>::parseFunction(const std::string& expr)
+    FunctionSignalSource<scalar_type, index_type>::FuncT FunctionSignalSource<
+      scalar_type,
+      index_type>::parseFunction(const std::string& expr)
     {
       if (expr == "sin")
       {
-        return [](RealT t)
-        { return static_cast<ScalarT>(std::sin(t)); };
+        return [](RealT t) { return static_cast<ScalarT>(std::sin(t)); };
       }
       if (expr == "cos")
       {
-        return [](RealT t)
-        { return static_cast<ScalarT>(std::cos(t)); };
+        return [](RealT t) { return static_cast<ScalarT>(std::cos(t)); };
       }
 
       throw std::runtime_error("FunctionSignalSource: Unsupported function");
@@ -46,7 +47,9 @@ namespace GridKit
      * @brief Set value from input data
      */
     template <typename scalar_type, typename index_type>
-    void FunctionSignalSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void FunctionSignalSource<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Parameters = ModelDataT::Parameters;
       if (data.parameters.contains(Parameters::Fr))
@@ -62,7 +65,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void FunctionSignalSource<scalar_type, index_type>::updateTime(RealT t, RealT a)
+    void FunctionSignalSource<scalar_type, index_type>::updateTime(
+      RealT t, RealT a
+    )
     {
       Component<ScalarT, IdxT>::updateTime(t, a);
       s_real_ = f_real_(t);
@@ -73,7 +78,9 @@ namespace GridKit
      * @brief Set the component ID
      */
     template <typename scalar_type, typename index_type>
-    int FunctionSignalSource<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+    int FunctionSignalSource<scalar_type, index_type>::setGridKitComponentID(
+      IdxT component_id
+    )
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -101,7 +108,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks FunctionSignalSource<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks FunctionSignalSource<scalar_type, index_type>::
+      verify() const
     {
       return {};
     }
@@ -119,7 +127,9 @@ namespace GridKit
     }
 
     template <class scalar_type, typename index_type>
-    int FunctionSignalSource<scalar_type, index_type>::setAbsoluteTolerance(RealT)
+    int FunctionSignalSource<scalar_type, index_type>::setAbsoluteTolerance(
+      RealT
+    )
     {
       return 0;
     }

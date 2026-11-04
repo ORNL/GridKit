@@ -115,9 +115,12 @@ int monolithicCase()
   double V2  = model->V2();
   double th3 = model->th3() * 180.0 / std::numbers::pi_v<double>;
   std::cout << "Solution:\n";
-  std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
-  std::cout << "  V2     = " << V2 << " p.u., expected = " << V2_ref << " p.u.\n";
-  std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref << " deg\n\n";
+  std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref
+            << " deg\n";
+  std::cout << "  V2     = " << V2 << " p.u., expected = " << V2_ref
+            << " p.u.\n";
+  std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref
+            << " deg\n\n";
 
   // Print solver performance statistics
   kinsol->printFinalStats();
@@ -146,7 +149,8 @@ int monolithicCase()
  */
 int parserCase()
 {
-  std::cout << "Solving same problem, but assembled from components via a parser ...\n\n";
+  std::cout << "Solving same problem, but assembled from components via a "
+               "parser ...\n\n";
 
   // Data File Reading
   GridKit::PowerFlowData::SystemModelData<double, size_t> mp;
@@ -155,7 +159,8 @@ int parserCase()
   GridKit::readMatPower(mp, iss);
 
   // Create an empty system model and pass the system model data to it
-  SystemSteadyStateModel<double, size_t>* sysmodel = new SystemSteadyStateModel<double, size_t>(mp);
+  SystemSteadyStateModel<double, size_t>* sysmodel =
+    new SystemSteadyStateModel<double, size_t>(mp);
 
   // allocate model
   sysmodel->allocate();
@@ -173,14 +178,19 @@ int parserCase()
   // Compute solution
   kinsol->runSimulation();
   // Print solution
-  double th2 = sysmodel->getBus(2)->theta() * 180.0 / std::numbers::pi_v<double>;
-  double V2  = sysmodel->getBus(2)->V();
-  double th3 = sysmodel->getBus(3)->theta() * 180.0 / std::numbers::pi_v<double>;
+  double th2 =
+    sysmodel->getBus(2)->theta() * 180.0 / std::numbers::pi_v<double>;
+  double V2 = sysmodel->getBus(2)->V();
+  double th3 =
+    sysmodel->getBus(3)->theta() * 180.0 / std::numbers::pi_v<double>;
 
   std::cout << "Solution:\n";
-  std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
-  std::cout << "  V2     = " << V2 << " p.u., expected = " << V2_ref << " p.u.\n";
-  std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref << " deg\n\n";
+  std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref
+            << " deg\n";
+  std::cout << "  V2     = " << V2 << " p.u., expected = " << V2_ref
+            << " p.u.\n";
+  std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref
+            << " deg\n\n";
 
   // Print solver performance statistics
   kinsol->printFinalStats();
@@ -211,10 +221,12 @@ int parserCase()
  */
 int hardwiredCase()
 {
-  std::cout << "Solving same problem, but assembled from components manually ...\n\n";
+  std::cout
+    << "Solving same problem, but assembled from components manually ...\n\n";
 
   // First, create an empty system model
-  SystemSteadyStateModel<double, size_t>* sysmodel = new SystemSteadyStateModel<double, size_t>();
+  SystemSteadyStateModel<double, size_t>* sysmodel =
+    new SystemSteadyStateModel<double, size_t>();
 
   // Next create and add buses ...
   // Create a slack bus, fix V=1, theta=0, bus ID = 1
@@ -235,7 +247,8 @@ int hardwiredCase()
   auto* bus2 = BusFactory<double, size_t>::create(bd2);
   sysmodel->addBus(bus2);
 
-  // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2
+  // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection
+  // Pg=2
   BusData<double, size_t> bd3;
   bd3.bus_i  = 3;
   bd3.type   = 2;
@@ -247,15 +260,17 @@ int hardwiredCase()
   // Create and add generators ...
   // Create and add slack generator connected to bus1
   GenData<double, size_t> gd1;
-  gd1.bus    = 1;
-  auto* gen1 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd1.bus), gd1);
+  gd1.bus = 1;
+  auto* gen1 =
+    GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd1.bus), gd1);
   sysmodel->addComponent(gen1);
 
   // Create and add PV generator connected to bus3
   GenData<double, size_t> gd3;
-  gd3.Pg     = 2.0;
-  gd3.bus    = 3;
-  auto* gen3 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd3.bus), gd3);
+  gd3.Pg  = 2.0;
+  gd3.bus = 3;
+  auto* gen3 =
+    GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd3.bus), gd3);
   sysmodel->addComponent(gen3);
 
   // Create and add branches ...
@@ -266,7 +281,9 @@ int hardwiredCase()
   brd12.x                          = 1.0 / 10.0;
   brd12.r                          = 0.0;
   brd12.b                          = 0.0;
-  Branch<double, size_t>* branch12 = new Branch<double, size_t>(sysmodel->getBus(brd12.fbus), sysmodel->getBus(brd12.tbus), brd12);
+  Branch<double, size_t>* branch12 = new Branch<double, size_t>(
+    sysmodel->getBus(brd12.fbus), sysmodel->getBus(brd12.tbus), brd12
+  );
   sysmodel->addComponent(branch12);
 
   // Branch 1-3
@@ -276,7 +293,9 @@ int hardwiredCase()
   brd13.x                          = 1.0 / 15.0;
   brd13.r                          = 0.0;
   brd13.b                          = 0.0;
-  Branch<double, size_t>* branch13 = new Branch<double, size_t>(sysmodel->getBus(brd13.fbus), sysmodel->getBus(brd13.tbus), brd13);
+  Branch<double, size_t>* branch13 = new Branch<double, size_t>(
+    sysmodel->getBus(brd13.fbus), sysmodel->getBus(brd13.tbus), brd13
+  );
   sysmodel->addComponent(branch13);
 
   // Branch 2-3
@@ -286,24 +305,28 @@ int hardwiredCase()
   brd23.x                          = 1.0 / 12.0;
   brd23.r                          = 0.0;
   brd23.b                          = 0.0;
-  Branch<double, size_t>* branch23 = new Branch<double, size_t>(sysmodel->getBus(brd23.fbus), sysmodel->getBus(brd23.tbus), brd23);
+  Branch<double, size_t>* branch23 = new Branch<double, size_t>(
+    sysmodel->getBus(brd23.fbus), sysmodel->getBus(brd23.tbus), brd23
+  );
   sysmodel->addComponent(branch23);
 
   // Create and add loads ...
   // Load on bus1
   LoadData<double, size_t> ld1;
-  ld1.bus_i                   = 1;
-  ld1.Pd                      = 2.0;
-  ld1.Qd                      = 0.0;
-  Load<double, size_t>* load1 = new Load<double, size_t>(sysmodel->getBus(ld1.bus_i), ld1);
+  ld1.bus_i = 1;
+  ld1.Pd    = 2.0;
+  ld1.Qd    = 0.0;
+  Load<double, size_t>* load1 =
+    new Load<double, size_t>(sysmodel->getBus(ld1.bus_i), ld1);
   sysmodel->addComponent(load1);
 
   // Load on bus2
   LoadData<double, size_t> ld2;
-  ld2.bus_i                   = 2;
-  ld2.Pd                      = 2.5;
-  ld2.Qd                      = -0.8;
-  Load<double, size_t>* load2 = new Load<double, size_t>(sysmodel->getBus(ld2.bus_i), ld2);
+  ld2.bus_i = 2;
+  ld2.Pd    = 2.5;
+  ld2.Qd    = -0.8;
+  Load<double, size_t>* load2 =
+    new Load<double, size_t>(sysmodel->getBus(ld2.bus_i), ld2);
   sysmodel->addComponent(load2);
 
   // allocate model
@@ -327,9 +350,12 @@ int hardwiredCase()
   double th3 = bus3->theta() * 180.0 / std::numbers::pi_v<double>;
 
   std::cout << "Solution:\n";
-  std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
-  std::cout << "  V2     = " << V2 << " p.u., expected = " << V2_ref << " p.u.\n";
-  std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref << " deg\n\n";
+  std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref
+            << " deg\n";
+  std::cout << "  V2     = " << V2 << " p.u., expected = " << V2_ref
+            << " p.u.\n";
+  std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref
+            << " deg\n\n";
 
   // Print solver performance statistics
   kinsol->printFinalStats();

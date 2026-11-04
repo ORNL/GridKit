@@ -82,7 +82,9 @@ int main()
   const double tol = 1e-4;
 
   // Configure Ipopt application
-  ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
+  ipoptApp->Options()->SetStringValue(
+    "hessian_approximation", "limited-memory"
+  );
   ipoptApp->Options()->SetNumericValue("tol", tol);
   ipoptApp->Options()->SetIntegerValue("print_level", 0);
   ipoptApp->Options()->SetIntegerValue("mumps_print_level", 0);
@@ -98,7 +100,9 @@ int main()
 
   // Create dynamic objective interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
-      new IpoptInterface::DynamicObjective<double, size_t>(&idas, t_init, t_final, dt_monitor);
+    new IpoptInterface::DynamicObjective<double, size_t>(
+      &idas, t_init, t_final, dt_monitor
+    );
 
   auto* param = model.param().getData();
 
@@ -124,7 +128,9 @@ int main()
 
   // Create dynamic constraint interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicConstraintInterface =
-      new IpoptInterface::DynamicConstraint<double, size_t>(&idas, t_init, t_final, dt_monitor);
+    new IpoptInterface::DynamicConstraint<double, size_t>(
+      &idas, t_init, t_final, dt_monitor
+    );
 
   // Store dynamic objective optimization results
   double* results = new double[model.sizeParams()];
@@ -139,7 +145,8 @@ int main()
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);
-  std::cout << "\n\nProblem formulated as dynamic constraint optimization ...\n";
+  std::cout
+    << "\n\nProblem formulated as dynamic constraint optimization ...\n";
 
   if (status == Ipopt::Solve_Succeeded)
   {

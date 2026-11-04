@@ -15,7 +15,9 @@ namespace GridKit
      * Calls default ModelEvaluatorImpl constructor.
      */
     template <class ScalarT, typename IdxT>
-    VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, RealT V, NodeT* node1, NodeT* node2)
+    VoltageSource<ScalarT, IdxT>::VoltageSource(
+      IdxT id, RealT V, NodeT* node1, NodeT* node2
+    )
       : V_(V), node1_(node1), node2_(node2)
     {
       assert(node1_->size() == 1);

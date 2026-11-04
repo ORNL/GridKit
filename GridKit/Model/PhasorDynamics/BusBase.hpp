@@ -41,7 +41,8 @@ namespace GridKit
 
       virtual ~BusBase();
 
-      /// Report every configuration problem; passed() when the bus can initialize.
+      /// Report every configuration problem; passed() when the bus can
+      /// initialize.
       virtual Model::ConfigurationChecks verify() const
       {
         return {};
@@ -119,7 +120,8 @@ namespace GridKit
        * Only HOST data is bound because PhasorDynamics currently evaluates
        * models on the CPU. Supporting DEVICE data would also require sharing
        * the matching DEVICE pointer and keeping the HOST and DEVICE copies in
-       * sync. This bind operation does neither, so DEVICE access is unsupported.
+       * sync. This bind operation does neither, so DEVICE access is
+       * unsupported.
        *
        * @param[in] y       - System state vector
        * @param[in] yp      - System state derivative vector
@@ -129,14 +131,16 @@ namespace GridKit
        *
        * @pre System vectors hold current HOST data of at least offset + size()
        * elements. This bus's vectors are unallocated or already bound.
-       * @post allocated_ is true and y_, yp_, f_, abs_tol_ alias system storage.
+       * @post allocated_ is true and y_, yp_, f_, abs_tol_ alias system
+       * storage.
        *
        * @return 0 if successful, non-zero otherwise.
        */
-      int bind(VectorT& y, VectorT& yp, VectorT& f, VectorT& abs_tol, IdxT offset)
+      int bind(
+        VectorT& y, VectorT& yp, VectorT& f, VectorT& abs_tol, IdxT offset
+      )
       {
-        if (y.getSize() < offset + size_
-            || yp.getSize() < offset + size_
+        if (y.getSize() < offset + size_ || yp.getSize() < offset + size_
             || f.getSize() < offset + size_
             || abs_tol.getSize() < offset + size_)
         {
@@ -150,21 +154,26 @@ namespace GridKit
         auto* f_data       = f.getData(memory::HOST);
         auto* abs_tol_data = abs_tol.getData(memory::HOST);
 
-        if (y_data == nullptr || yp_data == nullptr
-            || f_data == nullptr || abs_tol_data == nullptr)
+        if (y_data == nullptr || yp_data == nullptr || f_data == nullptr
+            || abs_tol_data == nullptr)
         {
-          Log::error() << "BusBase::bind - system vector data is null or stale\n";
+          Log::error(
+          ) << "BusBase::bind - system vector data is null or stale\n";
           return 1;
         }
 
-        const int y_status       = y_.setData(y_data + offset, size_, memory::HOST);
-        const int yp_status      = yp_.setData(yp_data + offset, size_, memory::HOST);
-        const int f_status       = f_.setData(f_data + offset, size_, memory::HOST);
-        const int abs_tol_status = abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST);
+        const int y_status = y_.setData(y_data + offset, size_, memory::HOST);
+        const int yp_status =
+          yp_.setData(yp_data + offset, size_, memory::HOST);
+        const int f_status = f_.setData(f_data + offset, size_, memory::HOST);
+        const int abs_tol_status =
+          abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST);
 
-        if (y_status != 0 || yp_status != 0 || f_status != 0 || abs_tol_status != 0)
+        if (y_status != 0 || yp_status != 0 || f_status != 0
+            || abs_tol_status != 0)
         {
-          Log::error() << "BusBase::bind - failed to bind vectors to system storage\n";
+          Log::error(
+          ) << "BusBase::bind - failed to bind vectors to system storage\n";
           return 1;
         }
 

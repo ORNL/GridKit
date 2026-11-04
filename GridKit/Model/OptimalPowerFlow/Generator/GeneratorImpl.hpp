@@ -23,7 +23,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks Generator<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks Generator<scalar_type, index_type>::verify(
+    ) const
     {
       Model::ConfigurationChecks checks("Generator");
       checks.check(Pmin_ <= Pmax_, "Pmin must not exceed Pmax");
@@ -56,7 +57,9 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     [[gnu::always_inline]] typename Generator<scalar_type, index_type>::ScalarT
-    Generator<scalar_type, index_type>::objective(const ScalarT* x, [[maybe_unused]] const ScalarT* external) const
+    Generator<scalar_type, index_type>::objective(
+      const ScalarT* x, [[maybe_unused]] const ScalarT* external
+    ) const
     {
       const auto P = static_cast<size_t>(GeneratorInternalVariables::P);
 
@@ -64,10 +67,10 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    [[gnu::always_inline]] void
-    Generator<scalar_type, index_type>::externalConstraints(const ScalarT*                  x,
-                                                            [[maybe_unused]] const ScalarT* external,
-                                                            ScalarT*                        g) const
+    [[gnu::always_inline]] void Generator<scalar_type, index_type>::
+      externalConstraints(
+        const ScalarT* x, [[maybe_unused]] const ScalarT* external, ScalarT* g
+      ) const
     {
       const auto P  = static_cast<size_t>(GeneratorInternalVariables::P);
       const auto Q  = static_cast<size_t>(GeneratorInternalVariables::Q);
@@ -79,7 +82,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Generator<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void Generator<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Params = GeneratorParameters;
 

@@ -34,7 +34,8 @@ namespace GridKit
     enum class GenClassicalSignalInputs : size_t
     {
       pmech, ///< \f$P_m\f$ Unique ID of the signal providing mechanical power
-      efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field voltage
+      efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field
+             ///< voltage
     };
 
     /// Signal outputs for a classical generator model
@@ -58,8 +59,10 @@ namespace GridKit
     /// Initial values for a classical generator model
     enum class GenClassicalInitialValues : size_t
     {
-      ir,         ///< \f$I_r\f$ Initial real terminal current into the bus on system base
-      ii,         ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
+      ir, ///< \f$I_r\f$ Initial real terminal current into the bus on system
+          ///< base
+      ii, ///< \f$I_i\f$ Initial imaginary terminal current into the bus on
+          ///< system base
       in_service, ///< Initial service status; defaults to true
     };
 
@@ -72,13 +75,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    using GenClassicalData =
-        ComponentData<real_type,
-                      index_type,
-                      GenClassicalParameters,
-                      GenClassicalBuses,
-                      GenClassicalSignalInputs,
-                      GenClassicalSignalOutputs,
-                      GenClassicalMonitorableVariables>;
+    using GenClassicalData = ComponentData<
+      real_type,
+      index_type,
+      GenClassicalParameters,
+      GenClassicalBuses,
+      GenClassicalSignalInputs,
+      GenClassicalSignalOutputs,
+      GenClassicalMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

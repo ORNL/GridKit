@@ -19,10 +19,7 @@ namespace GridKit
     using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
     using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
-    ModelEvaluatorImpl()
-      : size_(0),
-        size_quad_(0),
-        size_opt_(0)
+    ModelEvaluatorImpl() : size_(0), size_quad_(0), size_opt_(0)
     {
     }
 

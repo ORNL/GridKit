@@ -34,15 +34,16 @@ namespace AnalysisManager
       using Logger = ::GridKit::Utilities::Logger;
       using RealT  = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using VectorT =
-          typename GridKit::Model::Evaluator<ScalarT, IdxT>::VectorT;
+        typename GridKit::Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       static_assert(
-          std::is_same_v<RealT, sunrealtype>,
-          "RealT must be the same type as sunrealtype");
+        std::is_same_v<RealT, sunrealtype>,
+        "RealT must be the same type as sunrealtype"
+      );
 
     public:
       using ResidualFunction =
-          std::function<int(std::span<const ScalarT>, std::span<ScalarT>)>;
+        std::function<int(std::span<const ScalarT>, std::span<ScalarT>)>;
 
       Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       explicit Kinsol(IdxT size);
@@ -65,9 +66,10 @@ namespace AnalysisManager
       /// @param line_search whether or not to use KINSOL's backtracking line
       ///                    search
       int runSimulation(
-          std::span<ScalarT> values,
-          ResidualFunction   residual,
-          bool               line_search = true);
+        std::span<ScalarT> values,
+        ResidualFunction   residual,
+        bool               line_search = true
+      );
 
       int deleteSimulation();
 
@@ -187,7 +189,9 @@ namespace AnalysisManager
       static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
-      static inline void checkAllocation(SUNContext ctx, void* v, const char* functionName);
+      static inline void checkAllocation(
+        SUNContext ctx, void* v, const char* functionName
+      );
       static inline void checkOutput(int retval, const char* functionName);
     };
 

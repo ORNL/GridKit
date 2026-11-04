@@ -8,10 +8,13 @@ namespace GridKit
   namespace LinearAlgebra
   {
     /**
-     * @brief Helper function to convert GridKit `MemorySpace` into ReSolve `MemorySpace`.
+     * @brief Helper function to convert GridKit `MemorySpace` into ReSolve
+     * `MemorySpace`.
      *
      */
-    ReSolve::memory::MemorySpace memorySpaceAsResolve(memory::MemorySpace memspace)
+    ReSolve::memory::MemorySpace memorySpaceAsResolve(
+      memory::MemorySpace memspace
+    )
     {
       switch (memspace)
       {
@@ -25,24 +28,37 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    ResolveSystemSolver<ScalarT, IdxT>::ResolveSystemSolver(ReSolve::SystemSolver& lin_solver, GridKit::memory::MemorySpace memspace)
+    ResolveSystemSolver<ScalarT, IdxT>::ResolveSystemSolver(
+      ReSolve::SystemSolver& lin_solver, GridKit::memory::MemorySpace memspace
+    )
       : lin_solver_(lin_solver), memspace_(memorySpaceAsResolve(memspace))
     {
     }
 
     /**
-     * @brief Creates a new ReSolve matrix with the dimensions of the given matrix, then sets its data pointers to those of the given matrix.
-     * Sets up the linear solver to use this new ReSolve matrix.
+     * @brief Creates a new ReSolve matrix with the dimensions of the given
+     * matrix, then sets its data pointers to those of the given matrix. Sets up
+     * the linear solver to use this new ReSolve matrix.
      *
-     * @todo Right now preconditioning doesn't work. There should be a ReSolve PR soon for this.
+     * @todo Right now preconditioning doesn't work. There should be a ReSolve
+     * PR soon for this.
      *
      */
     template <class ScalarT, typename IdxT>
-    int ResolveSystemSolver<ScalarT, IdxT>::configureSolver(GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix)
+    int ResolveSystemSolver<ScalarT, IdxT>::configureSolver(
+      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix
+    )
     {
-      matrix_ = std::make_unique<ReSolve::matrix::Csr>(matrix.getNumRows(), matrix.getNumColumns(), matrix.getNnz());
+      matrix_ = std::make_unique<ReSolve::matrix::Csr>(
+        matrix.getNumRows(), matrix.getNumColumns(), matrix.getNnz()
+      );
 
-      if (int err = matrix_->setDataPointers(matrix.getRowData(), matrix.getColData(), matrix.getValues(), memspace_))
+      if (int err = matrix_->setDataPointers(
+            matrix.getRowData(),
+            matrix.getColData(),
+            matrix.getValues(),
+            memspace_
+          ))
         return err;
 
       if (int err = lin_solver_.setMatrix(matrix_.get()))
@@ -51,9 +67,11 @@ namespace GridKit
       if (int err = lin_solver_.analyze())
         return err;
 
-      // TODO: This function needs to be called to properly use a preconditioner in ReSolve (if there is any), but currently will error
-      // if there is no preconditioner configured. Once we can detect if a preconditioner is configured, we can restore this functionality.
-      // Also, we will always want to use *right* preconditioning.
+      // TODO: This function needs to be called to properly use a preconditioner
+      // in ReSolve (if there is any), but currently will error if there is no
+      // preconditioner configured. Once we can detect if a preconditioner is
+      // configured, we can restore this functionality. Also, we will always
+      // want to use *right* preconditioning.
       // BUBBLE_FAIL(lin_solver_.preconditionerSetup("right"));
 
       return 0;
@@ -77,13 +95,18 @@ namespace GridKit
     }
 
     /**
-     * @brief Perform the solver by creating two new ReSolve vectors and setting their data to point to their GridKit counterparts.
-     * Then ask ReSolve to perform the solve. Since the matrix should be pointing at the correct GridKit buffers and the vectors
-     * as well, this solve should correctly fill `lhs`'s data buffer.
+     * @brief Perform the solver by creating two new ReSolve vectors and setting
+     * their data to point to their GridKit counterparts. Then ask ReSolve to
+     * perform the solve. Since the matrix should be pointing at the correct
+     * GridKit buffers and the vectors as well, this solve should correctly fill
+     * `lhs`'s data buffer.
      *
      */
     template <class ScalarT, typename IdxT>
-    int ResolveSystemSolver<ScalarT, IdxT>::solve(GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& rhs, GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& lhs)
+    int ResolveSystemSolver<ScalarT, IdxT>::solve(
+      GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& rhs,
+      GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& lhs
+    )
     {
       ReSolve::vector::Vector resolve_rhs(rhs.getSize());
       ReSolve::vector::Vector resolve_lhs(lhs.getSize());

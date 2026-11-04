@@ -120,7 +120,9 @@ namespace GridKit
             }
           }
           coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
-          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
+          coo_jac_->setDataPointers(
+            J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST
+          );
         }
 
         return 0;
@@ -130,7 +132,8 @@ namespace GridKit
        * @brief Initialize DependencyTracking variable numbers.
        *
        * @note Assigns even indices to y and odd indices to yp.
-       *       Should be called in initialize(), after variables have been set (and updated as needed).
+       *       Should be called in initialize(), after variables have been set
+       * (and updated as needed).
        */
       int initializeDependencyTrackingVariableNumbers()
         requires std::is_same_v<ScalarT, DependencyTracking::Variable>

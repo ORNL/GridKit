@@ -27,53 +27,63 @@ namespace GridKit
           J_vals_buffer_   = new RealT[buffer_size];
         }
 
-        using ModelT = GridKit::PhasorDynamics::Governor::Hygov<scalar_type, index_type>;
-        using Fn     = GridKit::Enzyme::Sparse::MemberFunctions;
+        using ModelT =
+          GridKit::PhasorDynamics::Governor::Hygov<scalar_type, index_type>;
+        using Fn = GridKit::Enzyme::Sparse::MemberFunctions;
 
         nnz_ = 0;
 
-        GridKit::Enzyme::Sparse::DfDy<ModelT, Fn::InternalResidualWithSignal>::eval(this,
-                                                                                    static_cast<size_t>(f_.getSize()),
-                                                                                    static_cast<size_t>(y_.getSize()),
-                                                                                    (this->getResidualIndices()).data(),
-                                                                                    (this->getVariableIndices()).data(),
-                                                                                    y_.getData(),
-                                                                                    yp_.getData(),
-                                                                                    nullptr,
-                                                                                    ws_.getData(),
-                                                                                    J_rows_buffer_,
-                                                                                    J_cols_buffer_,
-                                                                                    J_vals_buffer_,
-                                                                                    nnz_);
+        GridKit::Enzyme::Sparse::DfDy<ModelT, Fn::InternalResidualWithSignal>::
+          eval(
+            this,
+            static_cast<size_t>(f_.getSize()),
+            static_cast<size_t>(y_.getSize()),
+            (this->getResidualIndices()).data(),
+            (this->getVariableIndices()).data(),
+            y_.getData(),
+            yp_.getData(),
+            nullptr,
+            ws_.getData(),
+            J_rows_buffer_,
+            J_cols_buffer_,
+            J_vals_buffer_,
+            nnz_
+          );
 
-        GridKit::Enzyme::Sparse::DfDyp<ModelT, Fn::InternalResidualWithSignal>::eval(this,
-                                                                                     static_cast<size_t>(f_.getSize()),
-                                                                                     static_cast<size_t>(y_.getSize()),
-                                                                                     (this->getResidualIndices()).data(),
-                                                                                     (this->getVariableIndices()).data(),
-                                                                                     y_.getData(),
-                                                                                     yp_.getData(),
-                                                                                     nullptr,
-                                                                                     ws_.getData(),
-                                                                                     alpha_,
-                                                                                     J_rows_buffer_,
-                                                                                     J_cols_buffer_,
-                                                                                     J_vals_buffer_,
-                                                                                     nnz_);
+        GridKit::Enzyme::Sparse::DfDyp<ModelT, Fn::InternalResidualWithSignal>::
+          eval(
+            this,
+            static_cast<size_t>(f_.getSize()),
+            static_cast<size_t>(y_.getSize()),
+            (this->getResidualIndices()).data(),
+            (this->getVariableIndices()).data(),
+            y_.getData(),
+            yp_.getData(),
+            nullptr,
+            ws_.getData(),
+            alpha_,
+            J_rows_buffer_,
+            J_cols_buffer_,
+            J_vals_buffer_,
+            nnz_
+          );
 
-        GridKit::Enzyme::Sparse::DfDws<ModelT, Fn::InternalResidualWithSignal>::eval(this,
-                                                                                     static_cast<size_t>(f_.getSize()),
-                                                                                     static_cast<size_t>(ws_.getSize()),
-                                                                                     (this->getResidualIndices()).data(),
-                                                                                     ws_indices_.data(),
-                                                                                     y_.getData(),
-                                                                                     yp_.getData(),
-                                                                                     nullptr,
-                                                                                     ws_.getData(),
-                                                                                     J_rows_buffer_,
-                                                                                     J_cols_buffer_,
-                                                                                     J_vals_buffer_,
-                                                                                     nnz_);
+        GridKit::Enzyme::Sparse::DfDws<ModelT, Fn::InternalResidualWithSignal>::
+          eval(
+            this,
+            static_cast<size_t>(f_.getSize()),
+            static_cast<size_t>(ws_.getSize()),
+            (this->getResidualIndices()).data(),
+            ws_indices_.data(),
+            y_.getData(),
+            yp_.getData(),
+            nullptr,
+            ws_.getData(),
+            J_rows_buffer_,
+            J_cols_buffer_,
+            J_vals_buffer_,
+            nnz_
+          );
 
         this->constructCoo();
 

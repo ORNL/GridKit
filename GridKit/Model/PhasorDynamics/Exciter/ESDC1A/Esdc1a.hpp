@@ -30,11 +30,14 @@ namespace GridKit
       /// Internal variables of an `Esdc1a`.
       enum class Esdc1aInternalVariables : size_t
       {
-        EFDP, ///< \f$E_{\mathrm{fd}}'\f$ Differential exciter field-voltage state [p.u.]
-        VC,   ///< \f$V_C\f$ Differential filtered terminal-voltage magnitude [p.u.]
+        EFDP, ///< \f$E_{\mathrm{fd}}'\f$ Differential exciter field-voltage
+              ///< state [p.u.]
+        VC,   ///< \f$V_C\f$ Differential filtered terminal-voltage magnitude
+              ///< [p.u.]
         VR,   ///< \f$V_R\f$ Differential voltage-regulator output [p.u.]
         VF,   ///< \f$V_F\f$ Differential stabilizing feedback state [p.u.]
-        XLL,  ///< \f$x_{\mathrm{LL}}\f$ Differential input lead-lag denominator state [p.u.]
+        XLL,  ///< \f$x_{\mathrm{LL}}\f$ Differential input lead-lag denominator
+              ///< state [p.u.]
         EV,   ///< \f$e_V\f$ Algebraic voltage-error summing output [p.u.]
         VLL,  ///< \f$V_{\mathrm{LL}}\f$ Algebraic input lead-lag output [p.u.]
         VHV,  ///< \f$V_{\mathrm{HV}}\f$ Algebraic high-value gate output [p.u.]
@@ -47,9 +50,11 @@ namespace GridKit
       enum class Esdc1aExternalVariables : size_t
       {
         OMEGA, ///< \f$\omega\f$ Known machine speed deviation [p.u.]
-        VREF,  ///< \f$V_{\mathrm{ref}}\f$ Unknown voltage-control reference [p.u.]
+        VREF,  ///< \f$V_{\mathrm{ref}}\f$ Unknown voltage-control reference
+               ///< [p.u.]
         VS,    ///< \f$V_S\f$ Known stabilizer input signal [p.u.]
-        VUEL,  ///< \f$V_{\mathrm{UEL}}\f$ Known under-excitation limiter input [p.u.]
+        VUEL,  ///< \f$V_{\mathrm{UEL}}\f$ Known under-excitation limiter input
+               ///< [p.u.]
       };
 
       /**
@@ -116,11 +121,12 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT* y,
-            const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
-            ScalarT*       f);
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f
+        );
 
       private:
         void initializeParameters(const ModelDataT& data);
@@ -128,9 +134,8 @@ namespace GridKit
         void setDerivedParameters();
 
         static __attribute__((always_inline)) inline ScalarT awmin(
-            ScalarT x,
-            ScalarT f,
-            RealT   xmin);
+          ScalarT x, ScalarT f, RealT xmin
+        );
 
         /// Recover the input that the smooth CommonMath ramp maps to a
         /// requested strictly positive output.
@@ -139,8 +144,9 @@ namespace GridKit
         ScalarT& Vr();
         ScalarT& Vi();
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
+        static constexpr RealT TIME_CONSTANT_MINIMUM =
+          static_cast<RealT>(1.0e-3);
+        static void logTimeConstantWarning();
 
         BusT* bus_{nullptr};
 

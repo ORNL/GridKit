@@ -31,7 +31,9 @@ namespace GridKit
      * or a port without a bus of this system
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
+    SystemModel<scalar_type, index_type>::SystemModel(
+      const SystemModelData<RealT, IdxT>& data
+    )
     {
       for (const auto& bus : data.bus)
       {
@@ -55,21 +57,26 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SystemModel(std::vector<std::unique_ptr<ComponentT>> components)
+    SystemModel<scalar_type, index_type>::SystemModel(
+      std::vector<std::unique_ptr<ComponentT>> components
+    )
       : components_(std::move(components))
     {
       for (const auto& component : components_)
       {
         if (!component)
         {
-          throw std::invalid_argument("OptimalPowerFlow::SystemModel: null component");
+          throw std::invalid_argument(
+            "OptimalPowerFlow::SystemModel: null component"
+          );
         }
       }
     }
 
     /// Every problem with the data
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify(
+    ) const
     {
       Model::ConfigurationChecks checks;
 
@@ -81,14 +88,19 @@ namespace GridKit
 
       for (const auto& [number, bus] : buses_)
       {
-        checks.check(number != INVALID_INDEX<IdxT>,
-                     std::format("{}: invalid bus number", bus->id()));
+        checks.check(
+          number != INVALID_INDEX<IdxT>,
+          std::format("{}: invalid bus number", bus->id())
+        );
       }
 
       std::set<std::string> ids;
       for (const auto& component : components_)
       {
-        checks.check(ids.insert(component->id()).second, std::format("{}: duplicate id", component->id()));
+        checks.check(
+          ids.insert(component->id()).second,
+          std::format("{}: duplicate id", component->id())
+        );
 
         const auto component_checks = component->verify();
         for (const auto& error : component_checks.errors())
@@ -99,8 +111,14 @@ namespace GridKit
         const auto& ports = component->ports();
         for (IdxT port = 0; port < ports.size(); ++port)
         {
-          checks.check(components.contains(ports[port].component),
-                       std::format("{}: port {} must connect to a component in this system", component->id(), port));
+          checks.check(
+            components.contains(ports[port].component),
+            std::format(
+              "{}: port {} must connect to a component in this system",
+              component->id(),
+              port
+            )
+          );
         }
       }
 
@@ -149,17 +167,15 @@ namespace GridKit
       return 0;
     }
 
-    /// Equalities at zero and inequalities unbounded until the components set their limits
+    /// Equalities at zero and inequalities unbounded until the components set
+    /// their limits
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
-      if (x_.setToZero() != 0
-          || x_lower_.setToConst(-UNBOUNDED<RealT>) != 0
+      if (x_.setToZero() != 0 || x_lower_.setToConst(-UNBOUNDED<RealT>) != 0
           || x_upper_.setToConst(UNBOUNDED<RealT>) != 0
-          || g_lower_.setToZero() != 0
-          || g_upper_.setToZero() != 0
-          || lambda_.setToZero() != 0
-          || z_lower_.setToZero() != 0
+          || g_lower_.setToZero() != 0 || g_upper_.setToZero() != 0
+          || lambda_.setToZero() != 0 || z_lower_.setToZero() != 0
           || z_upper_.setToZero() != 0)
       {
         return 1;
@@ -236,26 +252,33 @@ namespace GridKit
 
     /// @throw std::out_of_range for an unknown bus
     template <typename scalar_type, typename index_type>
-    typename SystemModel<scalar_type, index_type>::BusT* SystemModel<scalar_type, index_type>::getBus(IdxT number)
+    typename SystemModel<scalar_type, index_type>::BusT* SystemModel<
+      scalar_type,
+      index_type>::getBus(IdxT number)
     {
       return buses_.at(number);
     }
 
     /// @throw std::out_of_range for an unknown generator
     template <typename scalar_type, typename index_type>
-    typename SystemModel<scalar_type, index_type>::GeneratorT*
-    SystemModel<scalar_type, index_type>::getGenerator(const std::string& id)
+    typename SystemModel<scalar_type, index_type>::GeneratorT* SystemModel<
+      scalar_type,
+      index_type>::getGenerator(const std::string& id)
     {
       return generators_.at(id);
     }
 
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addBus(const BusData<RealT, IdxT>& data)
+    void SystemModel<scalar_type, index_type>::addBus(
+      const BusData<RealT, IdxT>& data
+    )
     {
       auto bus = std::make_unique<BusT>(data);
       if (!buses_.emplace(data.number, bus.get()).second)
       {
-        throw std::invalid_argument(std::format("OptimalPowerFlow::SystemModel: duplicate bus {}", data.number));
+        throw std::invalid_argument(std::format(
+          "OptimalPowerFlow::SystemModel: duplicate bus {}", data.number
+        ));
       }
       components_.push_back(std::move(bus));
     }
@@ -266,7 +289,9 @@ namespace GridKit
     ModelT* SystemModel<scalar_type, index_type>::addDevice(const DataT& data)
     {
       using Ports = typename DataT::Ports;
-      static_assert(ModelT::NUM_PORT_VARIABLES.size() == Utilities::enum_size<Ports>());
+      static_assert(
+        ModelT::NUM_PORT_VARIABLES.size() == Utilities::enum_size<Ports>()
+      );
 
       auto device = std::make_unique<ModelT>(data);
       for (const Ports port : Utilities::enum_values<Ports>())
@@ -274,20 +299,30 @@ namespace GridKit
         const auto number = data.ports.find(port);
         if (number == data.ports.end())
         {
-          throw std::invalid_argument(std::format("{}: port '{}' has no bus", data.id, Utilities::enum_name(port)));
+          throw std::invalid_argument(std::format(
+            "{}: port '{}' has no bus", data.id, Utilities::enum_name(port)
+          ));
         }
 
         const auto bus = buses_.find(number->second);
         if (bus == buses_.end())
         {
-          throw std::invalid_argument(
-              std::format("{}: port '{}' names unknown bus {}", data.id, Utilities::enum_name(port), number->second));
+          throw std::invalid_argument(std::format(
+            "{}: port '{}' names unknown bus {}",
+            data.id,
+            Utilities::enum_name(port),
+            number->second
+          ));
         }
 
         if (device->connect(static_cast<IdxT>(port), *bus->second) != 0)
         {
-          throw std::invalid_argument(
-              std::format("{}: port '{}' does not fit bus {}", data.id, Utilities::enum_name(port), number->second));
+          throw std::invalid_argument(std::format(
+            "{}: port '{}' does not fit bus {}",
+            data.id,
+            Utilities::enum_name(port),
+            number->second
+          ));
         }
       }
 
@@ -306,8 +341,7 @@ namespace GridKit
         size += component->size_;
       }
 
-      if (x_.resize(size.variables) != 0
-          || x_lower_.resize(size.variables) != 0
+      if (x_.resize(size.variables) != 0 || x_lower_.resize(size.variables) != 0
           || x_upper_.resize(size.variables) != 0
           || gradient_.resize(size.variables) != 0
           || z_lower_.resize(size.variables) != 0
@@ -341,7 +375,9 @@ namespace GridKit
 
     /// View the internal blocks of the system vectors from `offset`
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::bind(ComponentT& component, const Block& offset)
+    int SystemModel<scalar_type, index_type>::bind(
+      ComponentT& component, const Block& offset
+    )
     {
       component.offset_ = offset;
       const Block& size = component.size_;
@@ -350,13 +386,25 @@ namespace GridKit
       { return local.setData(global.getData() + start, count) != 0; };
 
       if (view(component.x_, x_, offset.variables, size.variables)
-          || view(component.x_lower_, x_lower_, offset.variables, size.variables)
-          || view(component.x_upper_, x_upper_, offset.variables, size.variables)
-          || view(component.gradient_, gradient_, offset.variables, size.variables)
+          || view(
+            component.x_lower_, x_lower_, offset.variables, size.variables
+          )
+          || view(
+            component.x_upper_, x_upper_, offset.variables, size.variables
+          )
+          || view(
+            component.gradient_, gradient_, offset.variables, size.variables
+          )
           || view(component.g_, g_, offset.constraints, size.constraints)
-          || view(component.g_lower_, g_lower_, offset.constraints, size.constraints)
-          || view(component.g_upper_, g_upper_, offset.constraints, size.constraints)
-          || view(component.lambda_, lambda_, offset.constraints, size.constraints))
+          || view(
+            component.g_lower_, g_lower_, offset.constraints, size.constraints
+          )
+          || view(
+            component.g_upper_, g_upper_, offset.constraints, size.constraints
+          )
+          || view(
+            component.lambda_, lambda_, offset.constraints, size.constraints
+          ))
       {
         return 1;
       }

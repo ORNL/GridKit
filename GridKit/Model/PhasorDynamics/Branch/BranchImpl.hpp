@@ -29,10 +29,10 @@ namespace GridKit
      * @param data - branch parameters and monitored-variable selections
      */
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2, const ModelDataT& data)
-      : bus1_(bus1),
-        bus2_(bus2),
-        monitor_(std::make_unique<MonitorT>(data))
+    Branch<scalar_type, index_type>::Branch(
+      BusT* bus1, BusT* bus2, const ModelDataT& data
+    )
+      : bus1_(bus1), bus2_(bus2), monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -54,7 +54,8 @@ namespace GridKit
      * @brief Set the component ID
      */
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+    int Branch<scalar_type, index_type>::setGridKitComponentID(IdxT component_id
+    )
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -117,13 +118,16 @@ namespace GridKit
       checks.check(std::isfinite(Bmag_), "Bmag must be finite");
       checks.check(std::isfinite(tap_), "tap must be finite");
       checks.check(std::isfinite(phase_), "phase must be finite");
-      checks.check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
+      checks.check(
+        R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero"
+      );
       checks.check(tap_ > RealT{0.0}, "tap must be positive");
 
       return checks;
     }
 
-    /// Put the branch in or out of service; out of service, it injects no current.
+    /// Put the branch in or out of service; out of service, it injects no
+    /// current.
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::setInService(bool in_service)
     {
@@ -137,24 +141,25 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
+    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::
+      addAdmittanceContribution(
         const RealT   G,
         const RealT   B,
         const ScalarT Vr,
         const ScalarT Vi,
         ScalarT&      Ir,
-        ScalarT&      Ii)
+        ScalarT&      Ii
+      )
     {
       Ir += G * Vr - B * Vi;
       Ii += B * Vr + G * Vi;
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
-        const RealT    G,
-        const RealT    B,
-        const ScalarT* wb,
-        ScalarT*       h)
+    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::
+      evaluateAdmittanceBlock(
+        const RealT G, const RealT B, const ScalarT* wb, ScalarT* h
+      )
     {
       const ScalarT Vr = wb[0];
       const ScalarT Vi = wb[1];
@@ -186,11 +191,13 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual11(
+    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::
+      evaluateBusResidual11(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
-        ScalarT*                        h)
+        ScalarT*                        h
+      )
     {
       evaluateAdmittanceBlock(g11_, b11_, wb, h);
 
@@ -202,11 +209,13 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual12(
+    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::
+      evaluateBusResidual12(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
-        ScalarT*                        h)
+        ScalarT*                        h
+      )
     {
       evaluateAdmittanceBlock(g12_, b12_, wb, h);
 
@@ -218,11 +227,13 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual21(
+    __attribute__((always_inline)) int Branch<scalar_type, index_type>::
+      evaluateBusResidual21(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
-        ScalarT*                        h)
+        ScalarT*                        h
+      )
     {
       evaluateAdmittanceBlock(g21_, b21_, wb, h);
 
@@ -234,11 +245,13 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual22(
+    __attribute__((always_inline)) int Branch<scalar_type, index_type>::
+      evaluateBusResidual22(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
-        ScalarT*                        h)
+        ScalarT*                        h
+      )
     {
       evaluateAdmittanceBlock(g22_, b22_, wb, h);
 
@@ -246,7 +259,8 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
+     * @brief Residual contribution of the branch is computed and pushed to the
+     * terminal buses.
      *
      * Out-of-service branches retain bus voltages but contribute no current.
      * Empty isolated buses and floating series-only islands can make the
@@ -281,7 +295,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Branch<scalar_type, index_type>::terminalCurrent1(ScalarT& Ir, ScalarT& Ii)
+    void Branch<scalar_type, index_type>::terminalCurrent1(
+      ScalarT& Ir, ScalarT& Ii
+    )
     {
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
@@ -291,7 +307,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Branch<scalar_type, index_type>::terminalCurrent2(ScalarT& Ir, ScalarT& Ii)
+    void Branch<scalar_type, index_type>::terminalCurrent2(
+      ScalarT& Ir, ScalarT& Ii
+    )
     {
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
@@ -301,7 +319,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    void Branch<scalar_type, index_type>::initializeParameters(
+      const ModelDataT& data
+    )
     {
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
@@ -329,7 +349,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    const Model::VariableMonitorBase* Branch<scalar_type, index_type>::getMonitor() const
+    const Model::VariableMonitorBase* Branch<scalar_type, index_type>::
+      getMonitor() const
     {
       return monitor_.get();
     }
@@ -338,66 +359,106 @@ namespace GridKit
     void Branch<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
-      monitor_->set(Variable::ir1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Ir; });
-      monitor_->set(Variable::ii1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Ii; });
-      monitor_->set(Variable::im1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return std::sqrt(Ir * Ir + Ii * Ii); });
-      monitor_->set(Variable::p1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Vr1() * Ir + Vi1() * Ii; });
-      monitor_->set(Variable::q1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Vi1() * Ir - Vr1() * Ii; });
-      monitor_->set(Variable::ir2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Ir; });
-      monitor_->set(Variable::ii2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Ii; });
-      monitor_->set(Variable::im2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return std::sqrt(Ir * Ir + Ii * Ii); });
-      monitor_->set(Variable::p2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Vr2() * Ir + Vi2() * Ii; });
-      monitor_->set(Variable::q2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Vi2() * Ir - Vr2() * Ii; });
+      monitor_->set(
+        Variable::ir1,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent1(Ir, Ii);
+          return Ir;
+        }
+      );
+      monitor_->set(
+        Variable::ii1,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent1(Ir, Ii);
+          return Ii;
+        }
+      );
+      monitor_->set(
+        Variable::im1,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent1(Ir, Ii);
+          return std::sqrt(Ir * Ir + Ii * Ii);
+        }
+      );
+      monitor_->set(
+        Variable::p1,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent1(Ir, Ii);
+          return Vr1() * Ir + Vi1() * Ii;
+        }
+      );
+      monitor_->set(
+        Variable::q1,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent1(Ir, Ii);
+          return Vi1() * Ir - Vr1() * Ii;
+        }
+      );
+      monitor_->set(
+        Variable::ir2,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent2(Ir, Ii);
+          return Ir;
+        }
+      );
+      monitor_->set(
+        Variable::ii2,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent2(Ir, Ii);
+          return Ii;
+        }
+      );
+      monitor_->set(
+        Variable::im2,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent2(Ir, Ii);
+          return std::sqrt(Ir * Ir + Ii * Ii);
+        }
+      );
+      monitor_->set(
+        Variable::p2,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent2(Ir, Ii);
+          return Vr2() * Ir + Vi2() * Ii;
+        }
+      );
+      monitor_->set(
+        Variable::q2,
+        [this]
+        {
+          ScalarT Ir;
+          ScalarT Ii;
+          terminalCurrent2(Ir, Ii);
+          return Vi2() * Ir - Vr2() * Ii;
+        }
+      );
     }
 
     /**

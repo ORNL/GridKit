@@ -102,15 +102,17 @@ namespace GridKit
 
     template <typename scalar_type>
     detail::Channel<scalar_type>::Channel(
-        Disposition                  disposition,
-        const std::string&           endpoint,
-        int                          timeout_ms,
-        const std::atomic<RunState>* state)
+      Disposition                  disposition,
+      const std::string&           endpoint,
+      int                          timeout_ms,
+      const std::atomic<RunState>* state
+    )
       : context_(),
         socket_(
-            context_,
-            disposition == Disposition::SERVER ? zmq::socket_type::rep
-                                               : zmq::socket_type::req),
+          context_,
+          disposition == Disposition::SERVER ? zmq::socket_type::rep
+                                             : zmq::socket_type::req
+        ),
         timeout_ms_(timeout_ms),
         state_(state),
         can_send_(disposition == Disposition::CLIENT)
@@ -118,7 +120,8 @@ namespace GridKit
       if (timeout_ms <= 0 || endpoint.empty())
       {
         throw std::invalid_argument(
-            "co-simulation requires an endpoint and a positive timeout");
+          "co-simulation requires an endpoint and a positive timeout"
+        );
       }
 
       // bound socket cleanup
@@ -140,7 +143,7 @@ namespace GridKit
     {
       if (state_
           && state_->load(std::memory_order_relaxed)
-                 == RunState::STOP_REQUESTED)
+               == RunState::STOP_REQUESTED)
       {
         throw Stopped{};
       }
@@ -148,9 +151,10 @@ namespace GridKit
 
     template <typename scalar_type>
     void detail::Channel<scalar_type>::wait(
-        short                                 events,
-        const char*                           operation,
-        std::chrono::steady_clock::time_point deadline)
+      short                                 events,
+      const char*                           operation,
+      std::chrono::steady_clock::time_point deadline
+    )
     {
       using Clock = std::chrono::steady_clock;
 
@@ -158,19 +162,22 @@ namespace GridKit
       {
         checkStop();
         const auto remaining =
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                deadline - Clock::now());
+          std::chrono::duration_cast<std::chrono::milliseconds>(
+            deadline - Clock::now()
+          );
         if (remaining.count() <= 0)
         {
           throw std::runtime_error(
-              std::format("Co-simulation {} timed out", operation));
+            std::format("Co-simulation {} timed out", operation)
+          );
         }
 
         zmq::pollitem_t item{socket_.handle(), 0, events, 0};
         try
         {
           zmq::poll(
-              &item, 1, std::min(remaining, std::chrono::milliseconds(25)));
+            &item, 1, std::min(remaining, std::chrono::milliseconds(25))
+          );
         }
         catch (const zmq::error_t& error)
         {
@@ -190,7 +197,8 @@ namespace GridKit
 
     template <typename scalar_type>
     void detail::Channel<scalar_type>::send(
-        const MessageData<scalar_type>& message)
+      const MessageData<scalar_type>& message
+    )
     {
       checkStop();
       if (!can_send_)
@@ -200,10 +208,11 @@ namespace GridKit
 
       validate(message);
       json wire = {
-          {"type", typeName(message.type)},
-          {"session", message.session},
-          {"time", message.time},
-          {"signals", message.signals}};
+        {"type", typeName(message.type)},
+        {"session", message.session},
+        {"time", message.time},
+        {"signals", message.signals}
+      };
 
       if (message.type == MessageType::INIT)
       {
@@ -236,8 +245,8 @@ namespace GridKit
 
       if (can_send_)
       {
-        throw std::logic_error(
-            "Co-simulation socket must send before receiving");
+        throw std::logic_error("Co-simulation socket must send before receiving"
+        );
       }
 
       zmq::message_t raw;
@@ -280,7 +289,8 @@ namespace GridKit
 
     template <typename scalar_type>
     MessageData<scalar_type> detail::Channel<scalar_type>::exchange(
-        const MessageData<scalar_type>& request)
+      const MessageData<scalar_type>& request
+    )
     {
       send(request);
       auto reply = receive();
@@ -291,13 +301,14 @@ namespace GridKit
       }
 
       const bool final_signals =
-          request.type == MessageType::STEP && reply.type == MessageType::END;
+        request.type == MessageType::STEP && reply.type == MessageType::END;
 
       if ((!final_signals && reply.type != request.type)
           || reply.session != request.session || reply.time != request.time)
       {
         throw std::runtime_error(
-            "co-simulation acknowledgement has the wrong type, session or time");
+          "co-simulation acknowledgement has the wrong type, session or time"
+        );
       }
 
       return reply;
@@ -341,7 +352,8 @@ namespace GridKit
 
     template <typename scalar_type>
     void detail::Channel<scalar_type>::fail(
-        const MessageData<scalar_type>& message) noexcept
+      const MessageData<scalar_type>& message
+    ) noexcept
     {
       Teardown teardown(*this);
 
@@ -367,8 +379,8 @@ namespace GridKit
     }
 
     template <typename scalar_type>
-    void detail::Channel<scalar_type>::closePeer(
-        const MessageMetadata& last) noexcept
+    void detail::Channel<scalar_type>::closePeer(const MessageMetadata& last
+    ) noexcept
     {
       Teardown teardown(*this);
 
@@ -401,7 +413,8 @@ namespace GridKit
 
     template <typename scalar_type>
     void detail::Channel<scalar_type>::finish(
-        const MessageData<scalar_type>& reply)
+      const MessageData<scalar_type>& reply
+    )
     {
       send(reply);
       Teardown teardown(*this);
@@ -417,10 +430,11 @@ namespace GridKit
 
     template <typename scalar_type, Disposition disposition>
     CoSim<scalar_type, disposition>::CoSim(
-        const std::string&                  address,
-        MessageStepFunction<scalar_type>    step,
-        MessageExtractFunction<scalar_type> extract,
-        int                                 timeout_ms)
+      const std::string&                  address,
+      MessageStepFunction<scalar_type>    step,
+      MessageExtractFunction<scalar_type> extract,
+      int                                 timeout_ms
+    )
       : address_(address),
         step_(std::move(step)),
         extract_(std::move(extract)),
@@ -429,22 +443,25 @@ namespace GridKit
       if (address.empty() || timeout_ms <= 0 || !step_ || !extract_)
       {
         throw std::invalid_argument(
-            "co-simulation requires an endpoint, callbacks and a positive timeout");
+          "co-simulation requires an endpoint, callbacks and a positive timeout"
+        );
       }
     }
 
     template <typename scalar_type, Disposition disposition>
     CoSim<scalar_type, disposition>::CoSim(
-        const std::string&           address,
-        StepFunction<scalar_type>    step,
-        ExtractFunction<scalar_type> extract,
-        int                          timeout_ms)
+      const std::string&           address,
+      StepFunction<scalar_type>    step,
+      ExtractFunction<scalar_type> extract,
+      int                          timeout_ms
+    )
       : address_(address), timeout_ms_(timeout_ms)
     {
       if (address.empty() || timeout_ms <= 0 || !step || !extract)
       {
         throw std::invalid_argument(
-            "co-simulation requires an endpoint, callbacks and a positive timeout");
+          "co-simulation requires an endpoint, callbacks and a positive timeout"
+        );
       }
 
       step_ = [step = std::move(step)](const auto& message, const auto&)
@@ -463,13 +480,15 @@ namespace GridKit
     {
       auto expected = detail::RunState::IDLE;
       if (!state_.compare_exchange_strong(
-              expected,
-              detail::RunState::RUNNING,
-              std::memory_order_acquire,
-              std::memory_order_relaxed))
+            expected,
+            detail::RunState::RUNNING,
+            std::memory_order_acquire,
+            std::memory_order_relaxed
+          ))
       {
         throw std::logic_error(
-            "attempted to start a co-simulation while it was already running");
+          "attempted to start a co-simulation while it was already running"
+        );
       }
 
       // ensure the state is reset on scope exit
@@ -484,7 +503,8 @@ namespace GridKit
       } guard{state_};
 
       detail::Channel<scalar_type> channel(
-          disposition, address_, timeout_ms_, &state_);
+        disposition, address_, timeout_ms_, &state_
+      );
       MessageMetadata current;
 
       struct Completed
@@ -503,7 +523,8 @@ namespace GridKit
           if (message.type == MessageType::FAIL)
           {
             throw std::runtime_error(
-                "co-simulation client failed: " + message.error);
+              "co-simulation client failed: " + message.error
+            );
           }
 
           if (message.type == MessageType::CLOSE)
@@ -514,7 +535,7 @@ namespace GridKit
           return message;
         };
         const MessageExchangeFunction<scalar_type> exchange =
-            [&](const auto& message)
+          [&](const auto& message)
         {
           if constexpr (disposition == Disposition::SERVER)
           {
@@ -532,7 +553,8 @@ namespace GridKit
             if (peer_finished)
             {
               throw std::runtime_error(
-                  "co-simulation peer ended before the callback completed");
+                "co-simulation peer ended before the callback completed"
+              );
             }
             current       = message;
             auto reply    = channel.exchange(message);
@@ -591,9 +613,9 @@ namespace GridKit
             {
               channel.closePeer(last_reply);
               return state_.load(std::memory_order_relaxed)
-                             == detail::RunState::STOP_REQUESTED
-                         ? RunResult::STOPPED
-                         : RunResult::COMPLETED;
+                         == detail::RunState::STOP_REQUESTED
+                       ? RunResult::STOPPED
+                       : RunResult::COMPLETED;
             }
           }
         }

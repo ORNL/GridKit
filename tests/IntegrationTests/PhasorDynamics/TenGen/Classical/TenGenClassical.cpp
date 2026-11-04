@@ -28,7 +28,9 @@ using real_type   = double;
 using index_type  = size_t;
 
 /// Machine data shared by the example generators
-GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> genData(real_type p0, real_type q0)
+GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> genData(
+  real_type p0, real_type q0
+)
 {
   using Parameter = GridKit::PhasorDynamics::GenClassicalParameters;
 
@@ -44,12 +46,14 @@ GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> genData(real_ty
 }
 
 /// Branch data with the given line and transformer parameters
-GridKit::PhasorDynamics::BranchData<real_type, index_type> branchData(const real_type R,
-                                                                      const real_type X,
-                                                                      const real_type G,
-                                                                      const real_type B,
-                                                                      const real_type tap   = 1.0,
-                                                                      const real_type phase = 0.0)
+GridKit::PhasorDynamics::BranchData<real_type, index_type> branchData(
+  const real_type R,
+  const real_type X,
+  const real_type G,
+  const real_type B,
+  const real_type tap   = 1.0,
+  const real_type phase = 0.0
+)
 {
   using Parameter = GridKit::PhasorDynamics::BranchParameters;
 
@@ -89,15 +93,33 @@ int main()
   Bus<scalar_type, index_type> bus9(0.938638861502395, 0.344901620288291);
   Bus<scalar_type, index_type> bus10(0.937739191669114, 0.347340277548916);
 
-  Branch<scalar_type, index_type> branch12(&bus1, &bus2, branchData(0.001, 0.005, 0, 0));
-  Branch<scalar_type, index_type> branch23(&bus2, &bus3, branchData(0.001, 0.005, 0, 0));
-  Branch<scalar_type, index_type> branch34(&bus3, &bus4, branchData(0.001, 0.005, 0, 0));
-  Branch<scalar_type, index_type> branch45(&bus4, &bus5, branchData(0.001, 0.005, 0, 0));
-  Branch<scalar_type, index_type> branch56(&bus5, &bus6, branchData(0.001, 0.1, 0, 0));
-  Branch<scalar_type, index_type> branch67(&bus6, &bus7, branchData(0.001, 0.005, 0, 0));
-  Branch<scalar_type, index_type> branch78(&bus7, &bus8, branchData(0.001, 0.005, 0, 0));
-  Branch<scalar_type, index_type> branch89(&bus8, &bus9, branchData(0.001, 0.005, 0, 0));
-  Branch<scalar_type, index_type> branch910(&bus9, &bus10, branchData(0.001, 0.005, 0, 0));
+  Branch<scalar_type, index_type> branch12(
+    &bus1, &bus2, branchData(0.001, 0.005, 0, 0)
+  );
+  Branch<scalar_type, index_type> branch23(
+    &bus2, &bus3, branchData(0.001, 0.005, 0, 0)
+  );
+  Branch<scalar_type, index_type> branch34(
+    &bus3, &bus4, branchData(0.001, 0.005, 0, 0)
+  );
+  Branch<scalar_type, index_type> branch45(
+    &bus4, &bus5, branchData(0.001, 0.005, 0, 0)
+  );
+  Branch<scalar_type, index_type> branch56(
+    &bus5, &bus6, branchData(0.001, 0.1, 0, 0)
+  );
+  Branch<scalar_type, index_type> branch67(
+    &bus6, &bus7, branchData(0.001, 0.005, 0, 0)
+  );
+  Branch<scalar_type, index_type> branch78(
+    &bus7, &bus8, branchData(0.001, 0.005, 0, 0)
+  );
+  Branch<scalar_type, index_type> branch89(
+    &bus8, &bus9, branchData(0.001, 0.005, 0, 0)
+  );
+  Branch<scalar_type, index_type> branch910(
+    &bus9, &bus10, branchData(0.001, 0.005, 0, 0)
+  );
 
   GenClassical<scalar_type, index_type> gen2(&bus2, genData(0.5, -0.00442101));
   GenClassical<scalar_type, index_type> gen3(&bus3, genData(0.5, -0.02510812));
@@ -107,7 +129,9 @@ int main()
   GenClassical<scalar_type, index_type> gen7(&bus7, genData(0.5, -0.08318208));
   GenClassical<scalar_type, index_type> gen8(&bus8, genData(0.5, -0.09123614));
   GenClassical<scalar_type, index_type> gen9(&bus9, genData(0.5, -0.09662372));
-  GenClassical<scalar_type, index_type> gen10(&bus10, genData(0.5, -0.09932297));
+  GenClassical<scalar_type, index_type> gen10(
+    &bus10, genData(0.5, -0.09932297)
+  );
 
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;
@@ -175,9 +199,9 @@ int main()
     // Output voltage magnitudes on buses
     for (size_t i = 0; i < 9; ++i)
     {
-      out << std::sqrt(yval[2 * i] * yval[2 * i]
-                       + yval[2 * i + 1] * yval[2 * i + 1])
-          << ",";
+      out << std::sqrt(
+        yval[2 * i] * yval[2 * i] + yval[2 * i + 1] * yval[2 * i + 1]
+      ) << ",";
     }
 
     // Output generator frequencies
@@ -224,12 +248,13 @@ int main()
   ida.initializeSimulation(1.0);
   ida.runSimulation(1.1, dt, output_cb);
 
-  // Pm = 0.5 pu, H = 3 s; neglect electrical output and damping during the fault.
+  // Pm = 0.5 pu, H = 3 s; neglect electrical output and damping during the
+  // fault.
   using Variable               = GenClassicalInternalVariables;
   const auto      omega_index  = static_cast<index_type>(Variable::OMEGA);
   const real_type omega_ref    = std::sqrt(1.0 + 0.5 * 0.1 / 3.0) - 1.0;
   success                     *= std::hypot(bus10.Vr(), bus10.Vi()) < 1e-3;
-  success                     *= isEqual(gen10.y().getData()[omega_index], omega_ref, 5e-5);
+  success *= isEqual(gen10.y().getData()[omega_index], omega_ref, 5e-5);
 
   // Clear fault and run until t = 10s.
   bus10.clearFault();
@@ -243,12 +268,14 @@ int main()
 
   fileout.close();
 
-  Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+  Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC
+                 << " seconds\n";
 
   auto error_set = GridKit::Testing::compareCSV(
-      "TenGenClassical_results.csv",
-      "reference/TenGenClassical.ref.csv",
-      GridKit::Testing::ErrorType::ABSOLUTE);
+    "TenGenClassical_results.csv",
+    "reference/TenGenClassical.ref.csv",
+    GridKit::Testing::ErrorType::ABSOLUTE
+  );
   error_set->display();
   success *= error_set->total_error.max_value < 2.6e-4;
 
@@ -257,7 +284,8 @@ int main()
   success *= ida.initializeSimulation(10.0) == 0;
   success *= ida.runSimulation(10.1) == 0;
   success *= sys.evaluateResidual() == 0;
-  // Check algebraic consistency at the output time; IDA controls differential solution error.
+  // Check algebraic consistency at the output time; IDA controls differential
+  // solution error.
   for (index_type i = 0; i < sys.size(); ++i)
   {
     success *= std::isfinite(sys.getResidual().getData()[i]);

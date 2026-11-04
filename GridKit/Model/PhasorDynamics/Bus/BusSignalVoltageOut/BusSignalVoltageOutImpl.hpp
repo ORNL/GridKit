@@ -33,7 +33,9 @@ namespace GridKit
      * @brief Constructor setting initial values for the bus voltage.
      */
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageOut<scalar_type, index_type>::BusSignalVoltageOut(ScalarT Vr, ScalarT Vi)
+    BusSignalVoltageOut<scalar_type, index_type>::BusSignalVoltageOut(
+      ScalarT Vr, ScalarT Vi
+    )
       : Vr0_(Vr), Vi0_(Vi)
     {
       size_ = 2;
@@ -45,22 +47,22 @@ namespace GridKit
      * @param[in] data - structure with bus data
      */
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageOut<scalar_type, index_type>::BusSignalVoltageOut(const ModelDataT& data)
+    BusSignalVoltageOut<scalar_type, index_type>::BusSignalVoltageOut(
+      const ModelDataT& data
+    )
       : Vr0_(data.Vr0), Vi0_(data.Vi0)
     {
-      bus_id_        = data.bus_id;
-      size_          = 2;
-      monitor_       = std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);
+      bus_id_ = data.bus_id;
+      size_   = 2;
+      monitor_ =
+        std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);
       using Variable = typename ModelDataT::MonitorableVariables;
-      monitor_->set(Variable::Vr, [this]
-                    { return Vr(); });
-      monitor_->set(Variable::Vi, [this]
-                    { return Vi(); });
+      monitor_->set(Variable::Vr, [this] { return Vr(); });
+      monitor_->set(Variable::Vi, [this] { return Vi(); });
       monitor_->set(
-          Variable::Vm, [this]
-          { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
-      monitor_->set(Variable::Va, [this]
-                    { return std::atan2(Vi(), Vr()); });
+        Variable::Vm, [this] { return std::sqrt(Vr() * Vr() + Vi() * Vi()); }
+      );
+      monitor_->set(Variable::Va, [this] { return std::atan2(Vi(), Vr()); });
     }
 
     template <typename scalar_type, typename index_type>
@@ -135,7 +137,8 @@ namespace GridKit
      * @return The configuration checks; passed() when valid.
      */
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks BusSignalVoltageOut<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks BusSignalVoltageOut<scalar_type, index_type>::
+      verify() const
     {
       Model::ConfigurationChecks checks("BusSignalVoltageOut");
 
@@ -145,14 +148,16 @@ namespace GridKit
         if (!port.connected())
         {
           checks.fail(std::format(
-              "{} signal inlet is not connected; a default current is not "
-              "allowed",
-              name));
+            "{} signal inlet is not connected; a default current is not "
+            "allowed",
+            name
+          ));
         }
         else if (!port.linked())
         {
           checks.fail(
-              std::format("{} signal attached with no linked source", name));
+            std::format("{} signal attached with no linked source", name)
+          );
         }
       };
 
@@ -162,9 +167,10 @@ namespace GridKit
         if (port.connected() && !port.linked())
         {
           checks.fail(std::format(
-              "{} signal attached but not linked; connect signal ports before "
-              "allocate()",
-              name));
+            "{} signal attached but not linked; connect signal ports before "
+            "allocate()",
+            name
+          ));
         }
       };
 
@@ -187,12 +193,14 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageOut<scalar_type, index_type>::setFault(bool status, RealT R, RealT X)
+    int BusSignalVoltageOut<scalar_type, index_type>::setFault(
+      bool status, RealT R, RealT X
+    )
     {
       if (status && !(ZERO<RealT> < R * R + X * X))
       {
-        Log::error()
-            << "BusSignalVoltageOut: fault impedance R + jX must be nonzero\n";
+        Log::error(
+        ) << "BusSignalVoltageOut: fault impedance R + jX must be nonzero\n";
         return 1;
       }
 
@@ -227,7 +235,9 @@ namespace GridKit
      * @return int 0 if successful, non-zero otherwise.
      */
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageOut<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    int BusSignalVoltageOut<scalar_type, index_type>::setAbsoluteTolerance(
+      RealT rel_tol
+    )
     {
       abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;

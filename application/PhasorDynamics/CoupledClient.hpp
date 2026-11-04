@@ -31,7 +31,7 @@ namespace GridKit
     class CoupledClient
     {
       using InterfaceSolver =
-          AnalysisManager::Sundials::Kinsol<double, std::size_t>;
+        AnalysisManager::Sundials::Kinsol<double, std::size_t>;
 
       const SimulationOptions&           options_;
       NextCoupledStudy                   next_;
@@ -57,7 +57,8 @@ namespace GridKit
 
         session_++;
         simulation_ = std::make_unique<CoupledSimulation>(
-            *data_, options_.inputs, options_.outputs);
+          *data_, options_.inputs, options_.outputs
+        );
 
         outgoing_ = CoSimulationMessage(CoSim::MessageType::INIT, session_);
 
@@ -88,7 +89,8 @@ namespace GridKit
           if (time < 0.0 || time > data_->tmax)
           {
             throw std::runtime_error(
-                "peer event time is outside the study interval");
+              "peer event time is outside the study interval"
+            );
           }
         }
 
@@ -118,8 +120,9 @@ namespace GridKit
       /// Solve $F(inputs) - inputs = 0$ at the current time, holding
       /// differential states fixed in both partitions.
       void solveInterface(
-          const Signals&                                initial,
-          const CoSim::MessageExchangeFunction<double>& exchange)
+        const Signals&                                initial,
+        const CoSim::MessageExchangeFunction<double>& exchange
+      )
       {
         simulation_->setInputs(initial);
         Signals             trial = initial;
@@ -133,15 +136,16 @@ namespace GridKit
         }
 
         const auto evaluate =
-            [&](std::span<const double> guess, std::span<double> result)
+          [&](std::span<const double> guess, std::span<double> result)
         {
           if (evaluated
               && std::equal(
-                  guess.begin(),
-                  guess.end(),
-                  trial.begin(),
-                  [](double value, const auto& input)
-                  { return value == input.second; }))
+                guess.begin(),
+                guess.end(),
+                trial.begin(),
+                [](double value, const auto& input)
+                { return value == input.second; }
+              ))
           {
             if (result.data() != residual.data())
             {
@@ -160,14 +164,16 @@ namespace GridKit
           simulation_->refresh();
 
           auto message = CoSimulationMessage(
-              CoSim::MessageType::UPDATE, session_, simulation_->time());
+            CoSim::MessageType::UPDATE, session_, simulation_->time()
+          );
 
           message.signals  = simulation_->outputs();
           const auto reply = exchange(message);
           if (reply.signals.size() != trial.size())
           {
             throw std::runtime_error(
-                "Peer signal names do not match the configured inputs");
+              "Peer signal names do not match the configured inputs"
+            );
           }
 
           i = 0;
@@ -190,7 +196,7 @@ namespace GridKit
           for (std::size_t i = 0; i < values.size(); ++i)
           {
             if (std::abs(residual[i]) * scales[i]
-                    / std::max(1.0, std::abs(values[i]))
+                  / std::max(1.0, std::abs(values[i]))
                 >= data_->cosim_rel_tol)
             {
               return false;
@@ -208,14 +214,15 @@ namespace GridKit
           if (!interface_solver_)
           {
             interface_solver_ =
-                std::make_unique<InterfaceSolver>(values.size());
+              std::make_unique<InterfaceSolver>(values.size());
             interface_solver_->configureSimulation();
             interface_solver_->setJacobianUpdateInterval(1);
           }
 
           interface_solver_->setFunctionError(data_->cosim_function_error);
           interface_solver_->setTolerance(
-              data_->cosim_rel_tol, data_->cosim_step_tol);
+            data_->cosim_rel_tol, data_->cosim_step_tol
+          );
           interface_solver_->runSimulation(values, evaluate, false);
 
           evaluate(values, residual);
@@ -224,25 +231,28 @@ namespace GridKit
           if (!converged())
           {
             interface_solver_->setTolerance(
-                std::max(
-                    0.01 * data_->cosim_rel_tol,
-                    std::numeric_limits<double>::denorm_min()),
-                data_->cosim_step_tol);
+              std::max(
+                0.01 * data_->cosim_rel_tol,
+                std::numeric_limits<double>::denorm_min()
+              ),
+              data_->cosim_step_tol
+            );
             interface_solver_->runSimulation(values, evaluate, false);
 
             evaluate(values, residual);
             if (!converged())
             {
-              throw std::runtime_error(
-                  std::format(
-                      "co-simulation interface did not converge at t={}",
-                      simulation_->time()));
+              throw std::runtime_error(std::format(
+                "co-simulation interface did not converge at t={}",
+                simulation_->time()
+              ));
             }
           }
         }
 
         outgoing_ = CoSimulationMessage(
-            CoSim::MessageType::COMMIT, session_, simulation_->time());
+          CoSim::MessageType::COMMIT, session_, simulation_->time()
+        );
       }
 
       void advance()
@@ -259,12 +269,12 @@ namespace GridKit
         }
 
         const double exchange_time =
-            static_cast<double>(step_) * options_.interval;
+          static_cast<double>(step_) * options_.interval;
         const double target =
-            std::min(exchange_time, boundaries_.at(boundary_));
+          std::min(exchange_time, boundaries_.at(boundary_));
         simulation_->advance(target);
         outgoing_ =
-            CoSimulationMessage(CoSim::MessageType::STEP, session_, target);
+          CoSimulationMessage(CoSim::MessageType::STEP, session_, target);
 
         outgoing_.signals = simulation_->outputs();
         if (sameTime(target, exchange_time))
@@ -275,11 +285,12 @@ namespace GridKit
 
     public:
       CoupledClient(
-          const SimulationOptions& options,
-          NextCoupledStudy         next,
-          CompleteCoupledStudy     complete,
-          bool                     shutdown_peer,
-          bool                     print_results)
+        const SimulationOptions& options,
+        NextCoupledStudy         next,
+        CompleteCoupledStudy     complete,
+        bool                     shutdown_peer,
+        bool                     print_results
+      )
         : options_(options),
           next_(std::move(next)),
           complete_(std::move(complete)),
@@ -303,8 +314,9 @@ namespace GridKit
       }
 
       bool handleReply(
-          const CoSimulationMessage&                    reply,
-          const CoSim::MessageExchangeFunction<double>& exchange)
+        const CoSimulationMessage&                    reply,
+        const CoSim::MessageExchangeFunction<double>& exchange
+      )
       {
         switch (outgoing_.type)
         {
@@ -320,7 +332,8 @@ namespace GridKit
           if (sameTime(simulation_->time(), data_->tmax))
           {
             outgoing_ = CoSimulationMessage(
-                CoSim::MessageType::END, session_, data_->tmax);
+              CoSim::MessageType::END, session_, data_->tmax
+            );
           }
           else
           {

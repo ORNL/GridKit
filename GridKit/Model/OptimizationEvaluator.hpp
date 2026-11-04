@@ -56,7 +56,8 @@ namespace GridKit
       /// Evaluate the Jacobian of \f$g\f$ into `getCsrJacobian()`
       virtual int evaluateJacobian() = 0;
 
-      /// Evaluate the lower Hessian of \f$\sigma f + \lambda^T g\f$ into `getCsrHessian()`
+      /// Evaluate the lower Hessian of \f$\sigma f + \lambda^T g\f$ into
+      /// `getCsrHessian()`
       virtual int evaluateHessian(RealT sigma) = 0;
 
       /// Number of variables

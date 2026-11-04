@@ -10,10 +10,12 @@ namespace AnalysisManager
   {
 
     template <class ScalarT, typename IdxT>
-    DynamicObjective<ScalarT, IdxT>::DynamicObjective(Sundials::Ida<ScalarT, IdxT>* integrator,
-                                                      RealT                         t_init,
-                                                      RealT                         t_final,
-                                                      RealT                         dt_monitor)
+    DynamicObjective<ScalarT, IdxT>::DynamicObjective(
+      Sundials::Ida<ScalarT, IdxT>* integrator,
+      RealT                         t_init,
+      RealT                         t_final,
+      RealT                         dt_monitor
+    )
       : OptimizationSolver<ScalarT, IdxT>(integrator),
         t_init_(t_init),
         t_final_(t_final),
@@ -28,7 +30,13 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style)
+    bool DynamicObjective<ScalarT, IdxT>::get_nlp_info(
+      Index&          n,
+      Index&          m,
+      Index&          nnz_jac_g,
+      Index&          nnz_h_lag,
+      IndexStyleEnum& index_style
+    )
     {
       // This code handles one objective function
       assert(model_->sizeQuadrature() == 1);
@@ -52,12 +60,14 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::get_bounds_info([[maybe_unused]] Index   n,
-                                                          Number*                  x_l,
-                                                          Number*                  x_u,
-                                                          [[maybe_unused]] Index   m,
-                                                          [[maybe_unused]] Number* g_l,
-                                                          [[maybe_unused]] Number* g_u)
+    bool DynamicObjective<ScalarT, IdxT>::get_bounds_info(
+      [[maybe_unused]] Index   n,
+      Number*                  x_l,
+      Number*                  x_u,
+      [[maybe_unused]] Index   m,
+      [[maybe_unused]] Number* g_l,
+      [[maybe_unused]] Number* g_u
+    )
     {
       // Check if sizes are set correctly
       assert(n == (Index) model_->sizeParams());
@@ -76,15 +86,17 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::get_starting_point([[maybe_unused]] Index   n,
-                                                             [[maybe_unused]] bool    init_x,
-                                                             Number*                  x,
-                                                             [[maybe_unused]] bool    init_z,
-                                                             [[maybe_unused]] Number* z_L,
-                                                             [[maybe_unused]] Number* z_U,
-                                                             [[maybe_unused]] Index   m,
-                                                             [[maybe_unused]] bool    init_lambda,
-                                                             [[maybe_unused]] Number* lambda)
+    bool DynamicObjective<ScalarT, IdxT>::get_starting_point(
+      [[maybe_unused]] Index   n,
+      [[maybe_unused]] bool    init_x,
+      Number*                  x,
+      [[maybe_unused]] bool    init_z,
+      [[maybe_unused]] Number* z_L,
+      [[maybe_unused]] Number* z_U,
+      [[maybe_unused]] Index   m,
+      [[maybe_unused]] bool    init_lambda,
+      [[maybe_unused]] Number* lambda
+    )
     {
       // Only initial values for x provided.
       assert(init_x == true);
@@ -100,10 +112,12 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::eval_f([[maybe_unused]] Index n,
-                                                 const Number*          x,
-                                                 [[maybe_unused]] bool  new_x,
-                                                 Number&                obj_value)
+    bool DynamicObjective<ScalarT, IdxT>::eval_f(
+      [[maybe_unused]] Index n,
+      const Number*          x,
+      [[maybe_unused]] bool  new_x,
+      Number&                obj_value
+    )
     {
       // Update optimization parameters
       auto* param = model_->param().getData();
@@ -124,10 +138,12 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::eval_grad_f([[maybe_unused]] Index n,
-                                                      const Number*          x,
-                                                      [[maybe_unused]] bool  new_x,
-                                                      Number*                grad_f)
+    bool DynamicObjective<ScalarT, IdxT>::eval_grad_f(
+      [[maybe_unused]] Index n,
+      const Number*          x,
+      [[maybe_unused]] bool  new_x,
+      Number*                grad_f
+    )
     {
       assert(model_->sizeParams() == static_cast<IdxT>(n));
       // Update optimization parameters
@@ -149,7 +165,8 @@ namespace AnalysisManager
       integrator_->initializeBackwardSimulation(t_final_);
       integrator_->runBackwardSimulation(t_init_);
 
-      // For now assumes only one forward integrand and multiple optimization parameters.
+      // For now assumes only one forward integrand and multiple optimization
+      // parameters.
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
         grad_f[i] = -((integrator_->getAdjointIntegral())[i]);
 
@@ -159,56 +176,64 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::eval_g([[maybe_unused]] Index         n,
-                                                 [[maybe_unused]] const Number* x,
-                                                 [[maybe_unused]] bool          new_x,
-                                                 [[maybe_unused]] Index         m,
-                                                 [[maybe_unused]] Number*       g)
+    bool DynamicObjective<ScalarT, IdxT>::eval_g(
+      [[maybe_unused]] Index         n,
+      [[maybe_unused]] const Number* x,
+      [[maybe_unused]] bool          new_x,
+      [[maybe_unused]] Index         m,
+      [[maybe_unused]] Number*       g
+    )
     {
       return true;
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::eval_jac_g([[maybe_unused]] Index         n,
-                                                     [[maybe_unused]] const Number* x,
-                                                     [[maybe_unused]] bool          new_x,
-                                                     [[maybe_unused]] Index         m,
-                                                     [[maybe_unused]] Index         nele_jac,
-                                                     [[maybe_unused]] Index*        iRow,
-                                                     [[maybe_unused]] Index*        jCol,
-                                                     [[maybe_unused]] Number*       values)
+    bool DynamicObjective<ScalarT, IdxT>::eval_jac_g(
+      [[maybe_unused]] Index         n,
+      [[maybe_unused]] const Number* x,
+      [[maybe_unused]] bool          new_x,
+      [[maybe_unused]] Index         m,
+      [[maybe_unused]] Index         nele_jac,
+      [[maybe_unused]] Index*        iRow,
+      [[maybe_unused]] Index*        jCol,
+      [[maybe_unused]] Number*       values
+    )
     {
       return true;
     }
 
     template <class ScalarT, typename IdxT>
-    bool DynamicObjective<ScalarT, IdxT>::eval_h([[maybe_unused]] Index         n,
-                                                 [[maybe_unused]] const Number* x,
-                                                 [[maybe_unused]] bool          new_x,
-                                                 [[maybe_unused]] Number        obj_factor,
-                                                 [[maybe_unused]] Index         m,
-                                                 [[maybe_unused]] const Number* lambda,
-                                                 [[maybe_unused]] bool          new_lambda,
-                                                 [[maybe_unused]] Index         nele_hess,
-                                                 [[maybe_unused]] Index*        iRow,
-                                                 [[maybe_unused]] Index*        jCol,
-                                                 [[maybe_unused]] Number*       values)
+    bool DynamicObjective<ScalarT, IdxT>::eval_h(
+      [[maybe_unused]] Index         n,
+      [[maybe_unused]] const Number* x,
+      [[maybe_unused]] bool          new_x,
+      [[maybe_unused]] Number        obj_factor,
+      [[maybe_unused]] Index         m,
+      [[maybe_unused]] const Number* lambda,
+      [[maybe_unused]] bool          new_lambda,
+      [[maybe_unused]] Index         nele_hess,
+      [[maybe_unused]] Index*        iRow,
+      [[maybe_unused]] Index*        jCol,
+      [[maybe_unused]] Number*       values
+    )
     {
       return true;
     }
 
     template <class ScalarT, typename IdxT>
-    void DynamicObjective<ScalarT, IdxT>::finalize_solution([[maybe_unused]] SolverReturn               status,
-                                                            [[maybe_unused]] Index                      n,
-                                                            [[maybe_unused]] const Number*              x,
-                                                            [[maybe_unused]] const Number*              z_L,
-                                                            [[maybe_unused]] const Number*              z_U,
-                                                            [[maybe_unused]] Index                      m,
-                                                            [[maybe_unused]] const Number*              g,
-                                                            [[maybe_unused]] const Number*              lambda,
-                                                            [[maybe_unused]] Number                     obj_value,
-                                                            [[maybe_unused]] const IpoptData*           ip_data,
-                                                            [[maybe_unused]] IpoptCalculatedQuantities* ip_cq)
+    void DynamicObjective<ScalarT, IdxT>::finalize_solution(
+      [[maybe_unused]] SolverReturn               status,
+      [[maybe_unused]] Index                      n,
+      [[maybe_unused]] const Number*              x,
+      [[maybe_unused]] const Number*              z_L,
+      [[maybe_unused]] const Number*              z_U,
+      [[maybe_unused]] Index                      m,
+      [[maybe_unused]] const Number*              g,
+      [[maybe_unused]] const Number*              lambda,
+      [[maybe_unused]] Number                     obj_value,
+      [[maybe_unused]] const IpoptData*           ip_data,
+      [[maybe_unused]] IpoptCalculatedQuantities* ip_cq
+    )
     {
     }
 

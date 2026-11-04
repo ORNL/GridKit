@@ -34,7 +34,8 @@ namespace GridKit
      * its input signals only.
      */
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(ScalarT /* Vr */, ScalarT /* Vi */)
+    BusSignalVoltageIn<scalar_type, index_type>::
+      BusSignalVoltageIn(ScalarT /* Vr */, ScalarT /* Vi */)
     {
       size_ = 0;
     }
@@ -48,20 +49,21 @@ namespace GridKit
      * @param[in] data - structure with bus data
      */
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(const ModelDataT& data)
+    BusSignalVoltageIn<scalar_type, index_type>::BusSignalVoltageIn(
+      const ModelDataT& data
+    )
     {
-      bus_id_        = data.bus_id;
-      size_          = 0;
-      monitor_       = std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);
+      bus_id_ = data.bus_id;
+      size_   = 0;
+      monitor_ =
+        std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);
       using Variable = typename ModelDataT::MonitorableVariables;
-      monitor_->set(Variable::Vr, [this]
-                    { return Vr(); });
-      monitor_->set(Variable::Vi, [this]
-                    { return Vi(); });
-      monitor_->set(Variable::Vm, [this]
-                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
-      monitor_->set(Variable::Va, [this]
-                    { return std::atan2(Vi(), Vr()); });
+      monitor_->set(Variable::Vr, [this] { return Vr(); });
+      monitor_->set(Variable::Vi, [this] { return Vi(); });
+      monitor_->set(
+        Variable::Vm, [this] { return std::sqrt(Vr() * Vr() + Vi() * Vi()); }
+      );
+      monitor_->set(Variable::Va, [this] { return std::atan2(Vi(), Vr()); });
     }
 
     template <typename scalar_type, typename index_type>
@@ -116,7 +118,8 @@ namespace GridKit
      * @return The configuration checks; passed() when valid.
      */
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks BusSignalVoltageIn<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks BusSignalVoltageIn<scalar_type, index_type>::
+      verify() const
     {
       Model::ConfigurationChecks checks("BusSignalVoltageIn");
 
@@ -125,11 +128,17 @@ namespace GridKit
         const auto& port = ports_.in.template port<input>();
         if (!port.connected())
         {
-          checks.fail(std::format("{} signal inlet is not connected; a default voltage is not allowed", name));
+          checks.fail(std::format(
+            "{} signal inlet is not connected; a default voltage is not "
+            "allowed",
+            name
+          ));
         }
         else if (!port.linked())
         {
-          checks.fail(std::format("{} signal attached with no linked source", name));
+          checks.fail(
+            std::format("{} signal attached with no linked source", name)
+          );
         }
       };
 
@@ -138,7 +147,11 @@ namespace GridKit
         const auto& port = ports_.out.template port<output>();
         if (port.connected() && !port.linked())
         {
-          checks.fail(std::format("{} signal attached but not linked; connect signal ports before allocate()", name));
+          checks.fail(std::format(
+            "{} signal attached but not linked; connect signal ports before "
+            "allocate()",
+            name
+          ));
         }
       };
 

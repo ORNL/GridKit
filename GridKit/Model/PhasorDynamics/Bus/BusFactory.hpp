@@ -21,12 +21,15 @@ namespace GridKit
       using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using BusData        = GridKit::PhasorDynamics::BusData<RealT, IdxT>;
-      using BusTypeT       = typename GridKit::PhasorDynamics::BusData<RealT, IdxT>::BusType;
+      using BusTypeT =
+        typename GridKit::PhasorDynamics::BusData<RealT, IdxT>::BusType;
 
     public:
       BusFactory() = delete;
 
-      static BusBase<ScalarT, IdxT>* create(const BusData& data, SignalNodeSetT& signal_nodes)
+      static BusBase<ScalarT, IdxT>* create(
+        const BusData& data, SignalNodeSetT& signal_nodes
+      )
       {
         switch (data.bus_type)
         {
@@ -48,7 +51,9 @@ namespace GridKit
         }
         default:
           // Throw exception
-          ::GridKit::Utilities::Logger::error() << "Bus type " << static_cast<int>(data.bus_type) << " unrecognized.\n";
+          ::GridKit::Utilities::Logger::error()
+            << "Bus type " << static_cast<int>(data.bus_type)
+            << " unrecognized.\n";
           return nullptr;
         }
       }

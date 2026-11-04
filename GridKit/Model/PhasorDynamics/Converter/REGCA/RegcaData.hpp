@@ -55,8 +55,8 @@ namespace GridKit
       /// Signal outputs for the REGCA converter model.
       enum class RegcaSignalOutputs : size_t
       {
-        ir,      ///< Optional terminal-current real-component output signal ID
-        ii,      ///< Optional terminal-current imaginary-component output signal ID
+        ir, ///< Optional terminal-current real-component output signal ID
+        ii, ///< Optional terminal-current imaginary-component output signal ID
         pbranch, ///< Optional branch active-power output signal ID
         qbranch, ///< Optional branch reactive-power output signal ID
       };
@@ -73,8 +73,8 @@ namespace GridKit
       /// Initial values for the REGCA converter model.
       enum class RegcaInitialValues : size_t
       {
-        ir,         ///< Initial real terminal current into the bus on system base
-        ii,         ///< Initial imaginary terminal current into the bus on system base
+        ir, ///< Initial real terminal current into the bus on system base
+        ii, ///< Initial imaginary terminal current into the bus on system base
         in_service, ///< Initial service status; defaults to true
       };
 
@@ -89,14 +89,14 @@ namespace GridKit
        * @see Regca
        */
       template <typename real_type, typename index_type>
-      using RegcaData =
-          ComponentData<real_type,
-                        index_type,
-                        RegcaParameters,
-                        RegcaBuses,
-                        RegcaSignalInputs,
-                        RegcaSignalOutputs,
-                        RegcaMonitorableVariables>;
+      using RegcaData = ComponentData<
+        real_type,
+        index_type,
+        RegcaParameters,
+        RegcaBuses,
+        RegcaSignalInputs,
+        RegcaSignalOutputs,
+        RegcaMonitorableVariables>;
     } // namespace Converter
   } // namespace PhasorDynamics
 } // namespace GridKit

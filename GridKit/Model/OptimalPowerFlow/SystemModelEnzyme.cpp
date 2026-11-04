@@ -74,7 +74,8 @@ namespace GridKit
       hessian_assembly_.entries.clear();
       for (auto& component : components_)
       {
-        if (component->evaluateJacobian() != 0 || component->evaluateHessian(ONE<RealT>) != 0)
+        if (component->evaluateJacobian() != 0
+            || component->evaluateHessian(ONE<RealT>) != 0)
         {
           return 1;
         }
@@ -89,10 +90,13 @@ namespace GridKit
       return 0;
     }
 
-    /// Sort and deduplicate the entries of `assembly` into a CSR matrix, and record the CSR entry of each
+    /// Sort and deduplicate the entries of `assembly` into a CSR matrix, and
+    /// record the CSR entry of each
     template <typename scalar_type, typename index_type>
     std::unique_ptr<typename SystemModel<scalar_type, index_type>::CsrMatrixT>
-    SystemModel<scalar_type, index_type>::assemble(IdxT rows, IdxT cols, Assembly& assembly) const
+    SystemModel<scalar_type, index_type>::assemble(
+      IdxT rows, IdxT cols, Assembly& assembly
+    ) const
     {
       IdxT nnz_dup = 0;
       for (const CooBufferT* entries : assembly.entries)
@@ -102,7 +106,8 @@ namespace GridKit
 
       if (assembly.map_to_csr.resize(nnz_dup) != 0)
       {
-        Log::error() << "OptimalPowerFlow::SystemModel: failed to allocate the CSR map\n";
+        Log::error(
+        ) << "OptimalPowerFlow::SystemModel: failed to allocate the CSR map\n";
         throw std::bad_alloc{};
       }
 
@@ -116,11 +121,15 @@ namespace GridKit
       {
         std::copy_n(entries->rows.getData(), entries->nnz, rows_dup + counter);
         std::copy_n(entries->cols.getData(), entries->nnz, cols_dup + counter);
-        std::copy_n(entries->values.getData(), entries->nnz, vals_dup + counter);
+        std::copy_n(
+          entries->values.getData(), entries->nnz, vals_dup + counter
+        );
         counter += entries->nnz;
       }
 
-      LinearAlgebra::CooMatrix<RealT, IdxT> coo(rows, cols, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+      LinearAlgebra::CooMatrix<RealT, IdxT> coo(
+        rows, cols, nnz_dup, &rows_dup, &cols_dup, &vals_dup
+      );
 
       // Populate CSR data with sort and deduplicate
       IdxT*      row_ptrs = coo.getCsrRowData();
@@ -141,12 +150,17 @@ namespace GridKit
       }
       assembly.map_to_csr.setDataUpdated();
 
-      return std::make_unique<CsrMatrixT>(rows, cols, nnz, &row_ptrs, &csr_cols, &csr_vals);
+      return std::make_unique<CsrMatrixT>(
+        rows, cols, nnz, &row_ptrs, &csr_cols, &csr_vals
+      );
     }
 
-    /// Sum the component entries into the CSR values, or fail if their number changed
+    /// Sum the component entries into the CSR values, or fail if their number
+    /// changed
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::refill(CsrMatrixT& matrix, const Assembly& assembly) const
+    int SystemModel<scalar_type, index_type>::refill(
+      CsrMatrixT& matrix, const Assembly& assembly
+    ) const
     {
       IdxT nnz_dup = 0;
       for (const CooBufferT* entries : assembly.entries)
@@ -156,7 +170,8 @@ namespace GridKit
 
       if (nnz_dup != assembly.map_to_csr.getSize())
       {
-        Log::error() << "OptimalPowerFlow::SystemModel: " << nnz_dup << " derivative entries, but "
+        Log::error() << "OptimalPowerFlow::SystemModel: " << nnz_dup
+                     << " derivative entries, but "
                      << assembly.map_to_csr.getSize() << " at assembly\n";
         return 1;
       }

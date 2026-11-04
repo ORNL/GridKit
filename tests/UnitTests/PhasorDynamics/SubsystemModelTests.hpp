@@ -56,7 +56,8 @@ namespace GridKit
         const json         input   = readJson("SubsystemHierarchical.json");
         const json&        b_input = input["subsystems"][1];
         std::vector<DataT> data;
-        for (json system : {input, input["subsystems"][0], b_input, b_input["subsystems"][0]})
+        for (json system :
+             {input, input["subsystems"][0], b_input, b_input["subsystems"][0]})
         {
           system.erase("subsystems");
           system["header"] = input["header"];
@@ -89,11 +90,13 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const DataT top_data = readJson("SubsystemHierarchical.json").template get<DataT>();
+        const DataT top_data =
+          readJson("SubsystemHierarchical.json").template get<DataT>();
 
         success *= top_data.subsystems.size() == 2;
         success *= top_data.subsystems[1].subsystems.size() == 1;
-        success *= top_data.subsystems[1].subsystems[0].va_base == top_data.va_base;
+        success *=
+          top_data.subsystems[1].subsystems[0].va_base == top_data.va_base;
         success *= top_data.level == 0;
         success *= top_data.subsystems[1].id == "B";
         success *= top_data.subsystems[1].level == 1;
@@ -118,7 +121,9 @@ namespace GridKit
 
         // Signal in subsystem C, added to any existing ones
         json input = readJson("SubsystemHierarchical.json");
-        input["subsystems"][1]["subsystems"][0]["signals"].push_back({{"signal_id", 5}, {"name", "s"}});
+        input["subsystems"][1]["subsystems"][0]["signals"].push_back(
+          {{"signal_id", 5}, {"name", "s"}}
+        );
         SystemT top(input.template get<DataT>());
 
         auto* a = top.getSubsystem(0);
@@ -172,32 +177,36 @@ namespace GridKit
         json       input;
 
         // Device uses a bus of a sibling subsystem
-        input                                                  = hierarchical;
-        input["subsystems"][0]["devices"][0]["ports"]["bus2"]  = 3;
-        success                                               *= constructionThrows(input);
+        input                                                 = hierarchical;
+        input["subsystems"][0]["devices"][0]["ports"]["bus2"] = 3;
+        success *= constructionThrows(input);
 
         // Device uses a signal of its parent
         const json signal_r = {{"signal_id", 1}, {"name", "sr"}};
         const json signal_i = {{"signal_id", 2}, {"name", "si"}};
-        const json source   = {{"class", "ConstantSignalSource"},
-                               {"ports", {{"sr", 1}, {"si", 2}}},
-                               {"id", "1"},
-                               {"params", json::object()}};
-        input               = hierarchical;
-        input["signals"]    = json::array({signal_r, signal_i});
+        const json source   = {
+          {"class", "ConstantSignalSource"},
+          {"ports", {{"sr", 1}, {"si", 2}}},
+          {"id", "1"},
+          {"params", json::object()}
+        };
+        input            = hierarchical;
+        input["signals"] = json::array({signal_r, signal_i});
         input["subsystems"][0]["devices"].push_back(source);
         success *= constructionThrows(input);
 
         // Devices in a system with subsystems
-        input                = hierarchical;
-        json load            = input["subsystems"][1]["subsystems"][0]["devices"][2];
+        input     = hierarchical;
+        json load = input["subsystems"][1]["subsystems"][0]["devices"][2];
         load["ports"]["bus"] = 1;
         input["devices"].push_back(load);
         success *= constructionThrows(input);
 
         // Programmatic hierarchy: devices and subsystems in one system
         {
-          SystemT with_device(readJson("SubsystemFlat.json").template get<DataT>());
+          SystemT with_device(
+            readJson("SubsystemFlat.json").template get<DataT>()
+          );
           SystemT with_subsystem;
           SystemT subsystem;
           SystemT other;
@@ -237,9 +246,9 @@ namespace GridKit
         success *= constructionThrows(input);
 
         // Subsystem level not matching the hierarchy (grandchild at level 1)
-        input                                             = hierarchical;
-        input["subsystems"][1]["subsystems"][0]["level"]  = 1;
-        success                                          *= constructionThrows(input);
+        input                                            = hierarchical;
+        input["subsystems"][1]["subsystems"][0]["level"] = 1;
+        success *= constructionThrows(input);
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -301,9 +310,12 @@ namespace GridKit
         TestStatus success = true;
 
         SystemT flat(readJson("SubsystemFlat.json").template get<DataT>());
-        SystemT top(readJson("SubsystemHierarchical.json").template get<DataT>());
-        success *= top.numSubsystems() == 2 && top.getSubsystem(1)->numSubsystems() == 1;
-        if (top.numSubsystems() != 2 || top.getSubsystem(1)->numSubsystems() != 1)
+        SystemT top(readJson("SubsystemHierarchical.json").template get<DataT>()
+        );
+        success *=
+          top.numSubsystems() == 2 && top.getSubsystem(1)->numSubsystems() == 1;
+        if (top.numSubsystems() != 2
+            || top.getSubsystem(1)->numSubsystems() != 1)
         {
           return success.report(__func__);
         }
@@ -312,7 +324,8 @@ namespace GridKit
         auto* c = b->getSubsystem(0);
 
         PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> top_dt(
-            readJson("SubsystemHierarchical.json").template get<DataT>());
+          readJson("SubsystemHierarchical.json").template get<DataT>()
+        );
 
         for (auto* system : {&flat, &top})
         {
@@ -342,7 +355,8 @@ namespace GridKit
           }
           success *= top_dt.evaluateResidual() == 0;
           success *= top_dt.evaluateJacobian() == 0;
-          if (flat.getCsrJacobian() == nullptr || top.getCsrJacobian() == nullptr
+          if (flat.getCsrJacobian() == nullptr
+              || top.getCsrJacobian() == nullptr
               || top_dt.getCsrJacobian() == nullptr)
           {
             success *= false;
@@ -430,7 +444,9 @@ namespace GridKit
       }
 
       /// Whether looking up component `label` from `system` throws
-      static bool componentLookupThrows(SystemT& system, const std::string& label)
+      static bool componentLookupThrows(
+        SystemT& system, const std::string& label
+      )
       {
         bool throws = false;
         try
@@ -478,7 +494,9 @@ namespace GridKit
        * @brief Compare top = [bus 1 | A[bus 2] | B[bus 3 | C[bus 4, load]]]
        * with the flat system, before and after a fault on bus 4.
        */
-      static void compareSystems(SystemT& flat, SystemT& top, TestStatus& success)
+      static void compareSystems(
+        SystemT& flat, SystemT& top, TestStatus& success
+      )
       {
         for (auto* system : {&flat, &top})
         {
@@ -507,7 +525,8 @@ namespace GridKit
         success *= b->offset() == a->offset() + a->size();
         success *= b->size() == b->getBus(3)->size() + c->size();
         success *= c->offset() == b->offset() + b->getBus(3)->size();
-        success *= c->size() == c->getBus(4)->size() + c->getComponent(2)->size();
+        success *=
+          c->size() == c->getBus(4)->size() + c->getComponent(2)->size();
         success *= top.size() == top.getBus(1)->size() + a->size() + b->size();
         success *= top.size() == flat.size();
         if (top.size() != flat.size())

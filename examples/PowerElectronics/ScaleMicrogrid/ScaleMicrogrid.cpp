@@ -13,13 +13,17 @@
 using index_type = size_t;
 using real_type  = double;
 
-// Include solution keys for the three test cases N = (2, 4, 8) plus tolerances here:
+// Include solution keys for the three test cases N = (2, 4, 8) plus tolerances
+// here:
 #include "SolutionKeys.hpp"
 
-static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false);
+static int test(
+  index_type Nsize, real_type test_tolerance, bool error_tol = false
+);
 
 /**
- * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness.
+ * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for
+ * correctness.
  *
  * @param argc unused
  * @param argv unused
@@ -102,7 +106,8 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   auto* y  = sys_model->y().getData();
   auto* yp = sys_model->yp().getData();
 
-  // Create initial points for states. Every state is to specified to the zero initially
+  // Create initial points for states. Every state is to specified to the zero
+  // initially
   for (index_type i = 0; i < sys_model->size(); i++)
   {
     y[i]  = 0.0;
@@ -119,7 +124,8 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     yp[13 * i - 1 + 6] = (params.Kpc_ * params.Kpv_ * params.Vn_) / params.Lf_;
   }
 
-  // since the initial P_com = 0, the set the initial vector to the reference frame
+  // since the initial P_com = 0, the set the initial vector to the reference
+  // frame
   y[network.dg_signal.getNodeConnection(0).idx_] = network.DGParam_list[0].wb_;
 
   sys_model->y().setDataUpdated();
@@ -149,7 +155,8 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   }
 
   // Create numerical integrator and configure it for the generator model
-  auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);
+  auto* idas =
+    new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);
 
   // setup simulation
   idas->setTolerance(rel_tol, abs_tol);
@@ -183,9 +190,12 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   {
     // Print the Elementwise Relative Error
     if (debug_output)
-      std::cout << i << " : " << abs(true_vec->at(i) - yfinal_data[i]) / abs(true_vec->at(i)) << "\n";
+      std::cout << i << " : "
+                << abs(true_vec->at(i) - yfinal_data[i]) / abs(true_vec->at(i))
+                << "\n";
 
-    sum_top    += (true_vec->at(i) - yfinal_data[i]) * (true_vec->at(i) - yfinal_data[i]);
+    sum_top +=
+      (true_vec->at(i) - yfinal_data[i]) * (true_vec->at(i) - yfinal_data[i]);
     sum_bottom += (true_vec->at(i) * true_vec->at(i));
   }
 

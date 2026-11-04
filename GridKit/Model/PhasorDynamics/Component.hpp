@@ -148,24 +148,28 @@ namespace GridKit
        * Only HOST data is bound because PhasorDynamics currently evaluates
        * models on the CPU. Supporting DEVICE data would also require sharing
        * the matching DEVICE pointer and keeping the HOST and DEVICE copies in
-       * sync. This bind operation does neither, so DEVICE access is unsupported.
+       * sync. This bind operation does neither, so DEVICE access is
+       * unsupported.
        *
        * @param[in] y       - System state vector
        * @param[in] yp      - System state derivative vector
        * @param[in] f       - System residual vector
        * @param[in] abs_tol - System absolute tolerance vector
-       * @param[in] offset  - Position of this component's slice in the system vectors
+       * @param[in] offset  - Position of this component's slice in the system
+       * vectors
        *
        * @pre System vectors hold current HOST data of at least offset + size()
        * elements. This component's vectors are unallocated or already bound.
-       * @post allocated_ is true and y_, yp_, f_, abs_tol_ alias system storage.
+       * @post allocated_ is true and y_, yp_, f_, abs_tol_ alias system
+       * storage.
        *
        * @return 0 if successful, non-zero otherwise.
        */
-      int bind(VectorT& y, VectorT& yp, VectorT& f, VectorT& abs_tol, IdxT offset)
+      int bind(
+        VectorT& y, VectorT& yp, VectorT& f, VectorT& abs_tol, IdxT offset
+      )
       {
-        if (y.getSize() < offset + size_
-            || yp.getSize() < offset + size_
+        if (y.getSize() < offset + size_ || yp.getSize() < offset + size_
             || f.getSize() < offset + size_
             || abs_tol.getSize() < offset + size_)
         {
@@ -179,21 +183,26 @@ namespace GridKit
         auto* f_data       = f.getData(memory::HOST);
         auto* abs_tol_data = abs_tol.getData(memory::HOST);
 
-        if (y_data == nullptr || yp_data == nullptr
-            || f_data == nullptr || abs_tol_data == nullptr)
+        if (y_data == nullptr || yp_data == nullptr || f_data == nullptr
+            || abs_tol_data == nullptr)
         {
-          Log::error() << "Component::bind - system vector data is null or stale\n";
+          Log::error(
+          ) << "Component::bind - system vector data is null or stale\n";
           return 1;
         }
 
-        const int y_status       = y_.setData(y_data + offset, size_, memory::HOST);
-        const int yp_status      = yp_.setData(yp_data + offset, size_, memory::HOST);
-        const int f_status       = f_.setData(f_data + offset, size_, memory::HOST);
-        const int abs_tol_status = abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST);
+        const int y_status = y_.setData(y_data + offset, size_, memory::HOST);
+        const int yp_status =
+          yp_.setData(yp_data + offset, size_, memory::HOST);
+        const int f_status = f_.setData(f_data + offset, size_, memory::HOST);
+        const int abs_tol_status =
+          abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST);
 
-        if (y_status != 0 || yp_status != 0 || f_status != 0 || abs_tol_status != 0)
+        if (y_status != 0 || yp_status != 0 || f_status != 0
+            || abs_tol_status != 0)
         {
-          Log::error() << "Component::bind - failed to bind vectors to system storage\n";
+          Log::error(
+          ) << "Component::bind - failed to bind vectors to system storage\n";
           return 1;
         }
 
@@ -359,7 +368,9 @@ namespace GridKit
             }
           }
           coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
-          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
+          coo_jac_->setDataPointers(
+            J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST
+          );
         }
 
         return 0;
@@ -371,7 +382,8 @@ namespace GridKit
        * @note Currently only used for testing, particularly for comparing
        *       Enzyme and DependencyTracking Jacobians.
        *
-       * @todo The matrix is only computed on the first call, and the data is stale on subsequent calls.
+       * @todo The matrix is only computed on the first call, and the data is
+       * stale on subsequent calls.
        * @todo Unify with system-level construction that retains map_to_csr_.
        */
       int constructCsrFromCoo()
@@ -390,10 +402,19 @@ namespace GridKit
           IdxT*  cols = new IdxT[static_cast<size_t>(nnz_)];
           RealT* vals = new RealT[static_cast<size_t>(nnz_)];
 
-          std::copy(coo_jac_->getColData(), coo_jac_->getColData() + nnz_, cols);
+          std::copy(
+            coo_jac_->getColData(), coo_jac_->getColData() + nnz_, cols
+          );
           std::copy(coo_jac_->getValues(), coo_jac_->getValues() + nnz_, vals);
 
-          csr_jac_ = new CsrMatrixT(coo_jac_->getNumRows(), coo_jac_->getNumColumns(), nnz_, &row_ptrs, &cols, &vals);
+          csr_jac_ = new CsrMatrixT(
+            coo_jac_->getNumRows(),
+            coo_jac_->getNumColumns(),
+            nnz_,
+            &row_ptrs,
+            &cols,
+            &vals
+          );
         }
 
         return 0;
@@ -402,19 +423,20 @@ namespace GridKit
       /**
        * @brief CSR construction from Dependency maps.
        *
-       * This merges the y and yp dependencies back to the same location in the Jacobian.
-       * See \ref initializeDependencyTrackingVariableNumbers() for the initial even/odd split.
-       * The DependencyMap manipulations are expected to be a bottleneck, so this is not intended
-       * for simulations.
+       * This merges the y and yp dependencies back to the same location in the
+       * Jacobian. See \ref initializeDependencyTrackingVariableNumbers() for
+       * the initial even/odd split. The DependencyMap manipulations are
+       * expected to be a bottleneck, so this is not intended for simulations.
        *
        * @note Currently only used for testing, particularly for comparing
-       *       Enzyme and DependencyTracking Jacobians. Will be used to benchmark the
-       *       performance of the two methods in the near future.
+       *       Enzyme and DependencyTracking Jacobians. Will be used to
+       * benchmark the performance of the two methods in the near future.
        *
-       * @note For dependency maps, there is no functional difference in Jacobian construction
-       *       between components and systems. However, the resulting component-level CSR will
-       *       be invalid if tracked indices are greater than the local `size_`, and should not
-       *       be used for simulation. Systems do not rely on the component-level results.
+       * @note For dependency maps, there is no functional difference in
+       * Jacobian construction between components and systems. However, the
+       * resulting component-level CSR will be invalid if tracked indices are
+       * greater than the local `size_`, and should not be used for simulation.
+       * Systems do not rely on the component-level results.
        */
       int constructCsrFromDependencies()
         requires std::is_same_v<ScalarT, DependencyTracking::Variable>
@@ -442,8 +464,9 @@ namespace GridKit
               // Divide the stored index by 2
               const size_t jac_col = static_cast<size_t>(col / 2);
 
-              // For counting purposes, there is no need to distinguish odd and even indices.
-              // Attempt to insert the column into the row and increment nnz for new entries.
+              // For counting purposes, there is no need to distinguish odd and
+              // even indices. Attempt to insert the column into the row and
+              // increment nnz for new entries.
               if (row_map.insert({jac_col, RealT{}}).second)
               {
                 ++nnz;
@@ -489,8 +512,9 @@ namespace GridKit
             }
           }
 
-          nnz_     = nnz;
-          csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+          nnz_ = nnz;
+          csr_jac_ =
+            new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
         }
         else
         {
@@ -536,7 +560,8 @@ namespace GridKit
        * @brief Initialize DependencyTracking variable numbers.
        *
        * @note Assigns even indices to y and odd indices to yp.
-       *       Should be called in initialize(), after variables have been set (and updated as needed).
+       *       Should be called in initialize(), after variables have been set
+       * (and updated as needed).
        */
       int initializeDependencyTrackingVariableNumbers()
         requires std::is_same_v<ScalarT, DependencyTracking::Variable>

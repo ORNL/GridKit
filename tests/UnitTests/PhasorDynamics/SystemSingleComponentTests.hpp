@@ -13,8 +13,8 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    /// Smoke test for components (single component connected to an infinite bus)
-    /// through the system model with the minimal constructors
+    /// Smoke test for components (single component connected to an infinite
+    /// bus) through the system model with the minimal constructors
     template <class ScalarT, typename IdxT>
     class SystemSingleComponentTests
     {
@@ -29,13 +29,16 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system =
+          new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus1, bus2;
         system->addBus(&bus1);
         system->addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{});
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(
+          &bus1, &bus2, PhasorDynamics::BranchData<RealT, IdxT>{}
+        );
         system->addComponent(&branch);
 
         success *= system->allocate() == 0;
@@ -55,7 +58,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system =
+          new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus;
         system->addBus(&bus);
@@ -76,16 +80,19 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system =
+          new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
         const auto previous_verbosity = Log::verbosity();
-        // Suppress the expected time-constant-floor warning from the default parameters.
-        // Use EVERYTHING to inspect the diagnostic.
+        // Suppress the expected time-constant-floor warning from the default
+        // parameters. Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT>{});
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(
+          &bus, PhasorDynamics::Exciter::Ieeet1Data<RealT, IdxT>{}
+        );
         Log::setVerbosity(previous_verbosity);
         system->addComponent(&exciter);
 
@@ -119,10 +126,11 @@ namespace GridKit
 
         PhasorDynamics::SystemModelData<RealT, IdxT> data;
         data.bus.resize(1);
-        data.bus[0].bus_id   = bus_id;
-        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(1.0);
-        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.bus[0].bus_id = bus_id;
+        data.bus[0].bus_type =
+          PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0 = static_cast<RealT>(1.0);
+        data.bus[0].Vi0 = static_cast<RealT>(0.0);
 
         data.signal.resize(1);
         data.signal[0].signal_id = efd_id;
@@ -145,7 +153,8 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
+        success *=
+          system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
         auto* efd  = system.getSignalNode(efd_id);
         success   *= efd->linked();
@@ -155,8 +164,10 @@ namespace GridKit
         missing_bus_data.bus[0].bus_id = static_cast<IdxT>(0);
         missing_bus_data.esdc1a[0].buses.clear();
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data);
-        const auto                                 previous_verbosity = Log::verbosity();
+        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(
+          missing_bus_data
+        );
+        const auto previous_verbosity = Log::verbosity();
         // Suppress the expected missing-bus configuration error below.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
@@ -170,12 +181,15 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system =
+          new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus, PhasorDynamics::LoadZData<RealT, IdxT>{});
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(
+          &bus, PhasorDynamics::LoadZData<RealT, IdxT>{}
+        );
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -194,12 +208,15 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system =
+          new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.0, 0.0);
         system->addBus(&bus);
 
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, PhasorDynamics::LoadZIPData<RealT, IdxT>{});
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(
+          &bus, PhasorDynamics::LoadZIPData<RealT, IdxT>{}
+        );
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -220,10 +237,11 @@ namespace GridKit
 
         PhasorDynamics::SystemModelData<RealT, IdxT> data;
         data.bus.resize(1);
-        data.bus[0].bus_id   = static_cast<IdxT>(1);
-        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(1.0);
-        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.bus[0].bus_id = static_cast<IdxT>(1);
+        data.bus[0].bus_type =
+          PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0 = static_cast<RealT>(1.0);
+        data.bus[0].Vi0 = static_cast<RealT>(0.0);
         data.regca.push_back(makeRegcaData());
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
@@ -234,7 +252,10 @@ namespace GridKit
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
         success *= system.size()
-                   == static_cast<IdxT>(Utilities::enum_size<PhasorDynamics::Converter::RegcaInternalVariables>());
+                   == static_cast<IdxT>(
+                     Utilities::enum_size<
+                       PhasorDynamics::Converter::RegcaInternalVariables>()
+                   );
 
         return success.report(__func__);
       }
@@ -253,15 +274,17 @@ namespace GridKit
 
         PhasorDynamics::SystemModelData<RealT, IdxT> data;
         data.bus.resize(1);
-        data.bus[0].bus_id   = bus_id;
-        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(1.0);
-        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.bus[0].bus_id = bus_id;
+        data.bus[0].bus_type =
+          PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0 = static_cast<RealT>(1.0);
+        data.bus[0].Vi0 = static_cast<RealT>(0.0);
 
         data.signal.resize(1);
         data.signal[0].signal_id = input_id;
 
-        typename PhasorDynamics::SystemModelData<RealT, IdxT>::RepcaDataT repca_data;
+        typename PhasorDynamics::SystemModelData<RealT, IdxT>::RepcaDataT
+          repca_data;
         repca_data.buses[Buses::bus]         = bus_id;
         repca_data.signal_inputs[Inputs::ir] = input_id;
         repca_data.signal_inputs[Inputs::ii] = input_id;
@@ -281,7 +304,8 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
+        success *=
+          system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
         return success.report(__func__);
       }
@@ -313,7 +337,8 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
+        success *=
+          system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
         return success.report(__func__);
       }
@@ -332,10 +357,11 @@ namespace GridKit
 
         PhasorDynamics::SystemModelData<RealT, IdxT> data;
         data.bus.resize(1);
-        data.bus[0].bus_id   = bus_id;
-        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(1.0);
-        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.bus[0].bus_id = bus_id;
+        data.bus[0].bus_type =
+          PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0 = static_cast<RealT>(1.0);
+        data.bus[0].Vi0 = static_cast<RealT>(0.0);
 
         Data reecb_data;
         reecb_data.buses[Buses::bus]        = bus_id;
@@ -351,7 +377,8 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
+        success *=
+          system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
         return success.report(__func__);
       }
@@ -360,12 +387,15 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system =
+          new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, PhasorDynamics::GenrouData<RealT, IdxT>{});
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(
+          &bus, PhasorDynamics::GenrouData<RealT, IdxT>{}
+        );
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;
@@ -384,7 +414,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system =
+          new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
@@ -409,11 +440,17 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system =
+          new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
-        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> tgov1(PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{});
-        tgov1.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> tgov1(
+          PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>{}
+        );
+        tgov1.getPorts()
+          .out
+          .template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>()
+          .connect(&pmech);
         system->addComponent(&tgov1);
 
         success *= system->allocate() == 0;
@@ -464,17 +501,20 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
+        success *=
+          system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
         auto* pmech  = system.getSignalNode(pmech_id);
         success     *= pmech->linked();
-        success     *= pmech->getVariableIndex() == static_cast<IdxT>(Vars::PMECH);
+        success *= pmech->getVariableIndex() == static_cast<IdxT>(Vars::PMECH);
 
         auto missing_output_data = data;
         missing_output_data.hygov[0].signal_outputs.clear();
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_output_system(missing_output_data);
-        const auto                                 previous_verbosity = Log::verbosity();
+        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_output_system(
+          missing_output_data
+        );
+        const auto previous_verbosity = Log::verbosity();
         // Suppress the expected missing-output configuration error below.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);

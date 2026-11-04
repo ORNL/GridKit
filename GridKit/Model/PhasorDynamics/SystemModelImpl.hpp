@@ -39,21 +39,26 @@ namespace GridKit
      * subsystems, are created, and correctly connected into the system model.
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
+    SystemModel<scalar_type, index_type>::SystemModel(
+      const SystemModelData<RealT, IdxT>& data
+    )
       : SystemModel(data, {})
     {
     }
 
     /**
-     * @brief Construct a subsystem connected to its parent's buses (external buses)
+     * @brief Construct a subsystem connected to its parent's buses (external
+     * buses)
      *
      * @param[in] data           - Subsystem data with the buses it owns
      * @param[in] external_buses - Parent's buses that subsystem devices may
      * use
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data,
-                                                      const std::vector<BusT*>&           external_buses)
+    SystemModel<scalar_type, index_type>::SystemModel(
+      const SystemModelData<RealT, IdxT>& data,
+      const std::vector<BusT*>&           external_buses
+    )
       : SystemModel()
     {
       using namespace Governor;
@@ -77,7 +82,8 @@ namespace GridKit
       // Add electrical buses
       for (const auto& busdata : data.bus)
       {
-        BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata, signal_nodes_);
+        BusBase<ScalarT, IdxT>* bus =
+          BusFactory<ScalarT, IdxT>::create(busdata, signal_nodes_);
         addBus(bus);
       }
 
@@ -123,9 +129,8 @@ namespace GridKit
           bus2_index = branchdata.buses.at(BranchBuses::bus2);
         }
 
-        auto* branch = new BranchT(getBus(bus1_index),
-                                   getBus(bus2_index),
-                                   branchdata);
+        auto* branch =
+          new BranchT(getBus(bus1_index), getBus(bus2_index), branchdata);
 
         addComponent(branch, branchdata.label());
       }
@@ -152,8 +157,8 @@ namespace GridKit
         {
           bus_index = loadzipdata.buses.at(LoadZIPBuses::bus);
         }
-        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
-                                                   loadzipdata);
+        auto* loadzip =
+          new LoadZIP<ScalarT, IdxT>(getBus(bus_index), loadzipdata);
         addComponent(loadzip, loadzipdata.label());
       }
 
@@ -257,7 +262,8 @@ namespace GridKit
           bus_index = excitedata.buses.at(Ieeet1Buses::bus);
         }
 
-        auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter =
+          new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
         addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
@@ -285,7 +291,8 @@ namespace GridKit
           bus_index = excitedata.buses.at(SexsPtiBuses::bus);
         }
 
-        auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter =
+          new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
         addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
@@ -324,14 +331,16 @@ namespace GridKit
       }
 
       // Add subsystems; they may use this system's buses and its external
-      // buses. Added after devices, so devices above cannot use subsystem buses.
+      // buses. Added after devices, so devices above cannot use subsystem
+      // buses.
       if (!data.subsystems.empty())
       {
         std::vector<BusT*> visible_buses(external_buses);
         visible_buses.insert(visible_buses.end(), buses_.begin(), buses_.end());
         for (const auto& subsystem_data : data.subsystems)
         {
-          auto subsystem = std::make_unique<SystemModel>(subsystem_data, visible_buses);
+          auto subsystem =
+            std::make_unique<SystemModel>(subsystem_data, visible_buses);
           addSubsystem(subsystem.get());
           subsystem.release();
         }
@@ -378,7 +387,9 @@ namespace GridKit
      * @note Should default to 0.
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+    int SystemModel<scalar_type, index_type>::setGridKitComponentID(
+      IdxT component_id
+    )
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -411,7 +422,8 @@ namespace GridKit
       // Allocate global vectors
       if (!allocated_)
       {
-        // Topology changes invalidate the Jacobian sparsity pattern and COO-to-CSR map.
+        // Topology changes invalidate the Jacobian sparsity pattern and
+        // COO-to-CSR map.
         delete csr_jac_;
         csr_jac_ = nullptr;
 
@@ -422,12 +434,11 @@ namespace GridKit
         this->allocateVectors(size_);
       }
 
-      if (y_.getSize() != size_
-          || yp_.getSize() != size_
-          || f_.getSize() != size_
-          || abs_tol_.getSize() != size_)
+      if (y_.getSize() != size_ || yp_.getSize() != size_
+          || f_.getSize() != size_ || abs_tol_.getSize() != size_)
       {
-        Log::error() << "SystemModel vector sizes do not match the system size\n";
+        Log::error(
+        ) << "SystemModel vector sizes do not match the system size\n";
         throw std::runtime_error("SystemModel allocation failed");
       }
 
@@ -439,15 +450,16 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
-      // Signal input indices need all variable indices and a verified configuration
+      // Signal input indices need all variable indices and a verified
+      // configuration
       if (this->setSignalIndices() != 0)
       {
         throw std::runtime_error("SystemModel allocation failed");
       }
 
-      // Sparse-pattern discovery requires an initialized operating point. A failed
-      // initialization aborts allocation before residual/Jacobian evaluation or
-      // monitor startup.
+      // Sparse-pattern discovery requires an initialized operating point. A
+      // failed initialization aborts allocation before residual/Jacobian
+      // evaluation or monitor startup.
       // @todo Replace with a sparsity analysis that sets the NNZ and allocates
       // the Jacobian without needing the Jacobian values.
       if (hasJacobian())
@@ -474,8 +486,9 @@ namespace GridKit
      * @brief Set and return the size of this system, including subsystems
      */
     template <typename scalar_type, typename index_type>
-    typename SystemModel<scalar_type, index_type>::IdxT
-    SystemModel<scalar_type, index_type>::computeSize()
+    typename SystemModel<scalar_type, index_type>::IdxT SystemModel<
+      scalar_type,
+      index_type>::computeSize()
     {
       size_ = 0;
 
@@ -560,7 +573,8 @@ namespace GridKit
         const int bind_status = component->bind(y_, yp_, f_, abs_tol_, offset);
         if (bind_status != 0)
         {
-          Log::error() << "Failed to bind component vectors to system storage\n";
+          Log::error(
+          ) << "Failed to bind component vectors to system storage\n";
           throw std::runtime_error("SystemModel allocation failed");
         }
 
@@ -584,7 +598,8 @@ namespace GridKit
         const int bind_status = subsystem->bind(y_, yp_, f_, abs_tol_, offset);
         if (bind_status != 0)
         {
-          Log::error() << "Failed to bind subsystem vectors to system storage\n";
+          Log::error(
+          ) << "Failed to bind subsystem vectors to system storage\n";
           throw std::runtime_error("SystemModel allocation failed");
         }
 
@@ -607,7 +622,8 @@ namespace GridKit
      * the component ID. passed() is true when all is well.
      */
     template <typename scalar_type, typename index_type>
-    Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
+    Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify(
+    ) const
     {
       Model::ConfigurationChecks checks;
 
@@ -617,7 +633,9 @@ namespace GridKit
         const auto component_checks = component->verify();
         for (const auto& error : component_checks.errors())
         {
-          checks.fail(std::format("component {}: {}", component->getGridKitComponentID(), error));
+          checks.fail(std::format(
+            "component {}: {}", component->getGridKitComponentID(), error
+          ));
         }
       }
 
@@ -626,7 +644,9 @@ namespace GridKit
         const auto subsystem_checks = subsystem->verify();
         for (const auto& error : subsystem_checks.errors())
         {
-          checks.fail(std::format("subsystem {}: {}", subsystem->getGridKitComponentID(), error));
+          checks.fail(std::format(
+            "subsystem {}: {}", subsystem->getGridKitComponentID(), error
+          ));
         }
       }
 
@@ -685,8 +705,8 @@ namespace GridKit
      *
      * @todo Implement writing to system vectors in a thread-safe way.
      *
-     * @note Currently assuming each component stores variables contiguously in memory and
-     * that these are simply concatenated in the global system.
+     * @note Currently assuming each component stores variables contiguously in
+     * memory and that these are simply concatenated in the global system.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
@@ -737,7 +757,8 @@ namespace GridKit
      * @brief Add monitors from buses, components and subsystems to `monitor`
      */
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addMonitorsTo(MonitorT& monitor) const
+    void SystemModel<scalar_type, index_type>::addMonitorsTo(MonitorT& monitor
+    ) const
     {
       for (const auto* bus : buses_)
       {
@@ -839,7 +860,8 @@ namespace GridKit
      * error cannot be used.
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    int SystemModel<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol
+    )
     {
       for (const auto& bus : buses_)
       {
@@ -921,7 +943,8 @@ namespace GridKit
     /**
      * @brief Add bus
      *
-     * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
+     * Add bus at the end of the bus array and map bus ID with GridKit's ID for
+     * the bus
      *
      */
     template <typename scalar_type, typename index_type>
@@ -936,16 +959,19 @@ namespace GridKit
     /**
      * @brief Add component
      *
-     * Add component at the end of the components array and set GridKit's component ID
+     * Add component at the end of the components array and set GridKit's
+     * component ID
      *
      * @param[in] component - Component to add
-     * @param[in] label     - ComponentData::label() of the device (e.g. "Genrou_1"),
-     *                        or empty for components without case-file data
+     * @param[in] label     - ComponentData::label() of the device (e.g.
+     * "Genrou_1"), or empty for components without case-file data
      *
      * @pre This system has no subsystems.
      */
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addComponent(ComponentT* component, const std::string& label)
+    void SystemModel<scalar_type, index_type>::addComponent(
+      ComponentT* component, const std::string& label
+    )
     {
       if (!subsystems_.empty())
       {
@@ -955,8 +981,7 @@ namespace GridKit
 
       IdxT gridkit_component_id = static_cast<IdxT>(components_.size());
       component->setGridKitComponentID(gridkit_component_id);
-      component->setSystemBase(this->freq_system_base_,
-                               this->va_system_base_);
+      component->setSystemBase(this->freq_system_base_, this->va_system_base_);
       components_.push_back(component);
       component_labels_.push_back(label);
       if (!label.empty())
@@ -973,7 +998,9 @@ namespace GridKit
      * has the same system bases. This system has no devices.
      */
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addSubsystem(SystemModel* subsystem)
+    void SystemModel<scalar_type, index_type>::addSubsystem(
+      SystemModel* subsystem
+    )
     {
       if (subsystem == nullptr || subsystem == this || subsystem->is_subsystem_)
       {
@@ -1008,7 +1035,8 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::setSystemBase(
-        RealT freq_system_base, RealT va_system_base)
+      RealT freq_system_base, RealT va_system_base
+    )
     {
       ComponentT::setSystemBase(freq_system_base, va_system_base);
 
@@ -1029,8 +1057,9 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::BusT*
-    SystemModel<scalar_type, index_type>::getBus(IdxT bus_id)
+    SystemModel<scalar_type, index_type>::BusT* SystemModel<
+      scalar_type,
+      index_type>::getBus(IdxT bus_id)
     {
       BusT* bus = findBus(bus_id);
       if (bus == nullptr && external_buses_.contains(bus_id))
@@ -1050,8 +1079,9 @@ namespace GridKit
      * nullptr if there is none
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::BusT*
-    SystemModel<scalar_type, index_type>::findBus(IdxT bus_id)
+    SystemModel<scalar_type, index_type>::BusT* SystemModel<
+      scalar_type,
+      index_type>::findBus(IdxT bus_id)
     {
       BusT*      bus = nullptr;
       const auto it  = gridkit_bus_indices_.find(bus_id);
@@ -1061,7 +1091,8 @@ namespace GridKit
         assert(bus->busID() == bus_id);
       }
 
-      for (IdxT subsystem = 0; bus == nullptr && subsystem < numSubsystems(); ++subsystem)
+      for (IdxT subsystem = 0; bus == nullptr && subsystem < numSubsystems();
+           ++subsystem)
       {
         bus = subsystems_[subsystem]->findBus(bus_id);
       }
@@ -1069,8 +1100,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    typename SystemModel<scalar_type, index_type>::IdxT
-    SystemModel<scalar_type, index_type>::numComponents() const
+    typename SystemModel<scalar_type, index_type>::IdxT SystemModel<
+      scalar_type,
+      index_type>::numComponents() const
     {
       return static_cast<IdxT>(components_.size());
     }
@@ -1080,22 +1112,24 @@ namespace GridKit
      * this system, empty if it has none
      */
     template <typename scalar_type, typename index_type>
-    const std::string&
-    SystemModel<scalar_type, index_type>::getComponentLabel(IdxT gridkit_component_id) const
+    const std::string& SystemModel<scalar_type, index_type>::getComponentLabel(
+      IdxT gridkit_component_id
+    ) const
     {
       return component_labels_.at(gridkit_component_id);
     }
 
     template <typename scalar_type, typename index_type>
-    typename SystemModel<scalar_type, index_type>::IdxT
-    SystemModel<scalar_type, index_type>::numSubsystems() const
+    typename SystemModel<scalar_type, index_type>::IdxT SystemModel<
+      scalar_type,
+      index_type>::numSubsystems() const
     {
       return static_cast<IdxT>(subsystems_.size());
     }
 
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>*
-    SystemModel<scalar_type, index_type>::getSubsystem(IdxT index)
+    SystemModel<scalar_type, index_type>* SystemModel<scalar_type, index_type>::
+      getSubsystem(IdxT index)
     {
       return subsystems_.at(index);
     }
@@ -1104,8 +1138,9 @@ namespace GridKit
      * @brief Global index of this system's first variable and residual
      */
     template <typename scalar_type, typename index_type>
-    typename SystemModel<scalar_type, index_type>::IdxT
-    SystemModel<scalar_type, index_type>::offset() const
+    typename SystemModel<scalar_type, index_type>::IdxT SystemModel<
+      scalar_type,
+      index_type>::offset() const
     {
       return offset_;
     }
@@ -1125,8 +1160,9 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SignalNodeT*
-    SystemModel<scalar_type, index_type>::getSignalNode(IdxT signal_id)
+    SystemModel<scalar_type, index_type>::SignalNodeT* SystemModel<
+      scalar_type,
+      index_type>::getSignalNode(IdxT signal_id)
     {
       SignalNodeT* node = findSignalNode(signal_id);
       if (node == nullptr)
@@ -1142,11 +1178,13 @@ namespace GridKit
      * nullptr if there is none
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SignalNodeT*
-    SystemModel<scalar_type, index_type>::findSignalNode(IdxT signal_id)
+    SystemModel<scalar_type, index_type>::SignalNodeT* SystemModel<
+      scalar_type,
+      index_type>::findSignalNode(IdxT signal_id)
     {
       SignalNodeT* node = signal_nodes_.find(signal_id);
-      for (IdxT subsystem = 0; node == nullptr && subsystem < numSubsystems(); ++subsystem)
+      for (IdxT subsystem = 0; node == nullptr && subsystem < numSubsystems();
+           ++subsystem)
       {
         node = subsystems_[subsystem]->findSignalNode(signal_id);
       }
@@ -1158,10 +1196,12 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::ComponentT*
-    SystemModel<scalar_type, index_type>::getComponent(IdxT gridkit_component_id)
+    SystemModel<scalar_type, index_type>::ComponentT* SystemModel<
+      scalar_type,
+      index_type>::getComponent(IdxT gridkit_component_id)
     {
-      // gridkit_component_id_ is set by System model and guaranteed to be unique
+      // gridkit_component_id_ is set by System model and guaranteed to be
+      // unique
       return components_[gridkit_component_id];
     }
 
@@ -1170,8 +1210,9 @@ namespace GridKit
      * case-file `id`
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::BranchT*
-    SystemModel<scalar_type, index_type>::getBranch(const std::string& id)
+    SystemModel<scalar_type, index_type>::BranchT* SystemModel<
+      scalar_type,
+      index_type>::getBranch(const std::string& id)
     {
       BranchT* branch = dynamic_cast<BranchT*>(findComponent("Branch_" + id));
       if (branch == nullptr)
@@ -1187,8 +1228,9 @@ namespace GridKit
      * label (device class and case-file ID, e.g. "Genrou_1")
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::ComponentT*
-    SystemModel<scalar_type, index_type>::getComponent(const std::string& label)
+    SystemModel<scalar_type, index_type>::ComponentT* SystemModel<
+      scalar_type,
+      index_type>::getComponent(const std::string& label)
     {
       ComponentT* component = findComponent(label);
       if (component == nullptr)
@@ -1204,8 +1246,9 @@ namespace GridKit
      * label, or nullptr if there is none
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::ComponentT*
-    SystemModel<scalar_type, index_type>::findComponent(const std::string& label)
+    SystemModel<scalar_type, index_type>::ComponentT* SystemModel<
+      scalar_type,
+      index_type>::findComponent(const std::string& label)
     {
       ComponentT* component = nullptr;
       const auto  it        = gridkit_component_indices_.find(label);
@@ -1214,7 +1257,9 @@ namespace GridKit
         component = components_[it->second];
       }
 
-      for (IdxT subsystem = 0; component == nullptr && subsystem < numSubsystems(); ++subsystem)
+      for (IdxT subsystem = 0;
+           component == nullptr && subsystem < numSubsystems();
+           ++subsystem)
       {
         component = subsystems_[subsystem]->findComponent(label);
       }

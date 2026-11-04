@@ -4,6 +4,7 @@ BasedOnStyle:  Microsoft
 
 # Indentation
 IndentWidth: 2                    # 2 spaces per indent
+ContinuationIndentWidth: 2
 AccessModifierOffset: -2
 IndentAccessModifiers: false      # Align access modifiers to braces
 NamespaceIndentation: All       # Indent namspace contents
@@ -11,7 +12,6 @@ ConstructorInitializerIndentWidth: 2
 
 # Comments which match this regex will be unformatted (and therefore can be longer or have more whitespace than other comments)
 CommentPragmas: '^\*\*'
-
 
 # Alignment
 AlignConsecutiveAssignments:
@@ -37,7 +37,8 @@ AlignConsecutiveMacros:
   AcrossComments:   true
 
 # Newlines
-ColumnLimit:     0
+AlignAfterOpenBracket: BlockIndent # this will need to be replaced w/ clang-format 22
+ColumnLimit:     80
 BreakBeforeBraces: Allman         # Braces on their own lines
 SeparateDefinitionBlocks: Always  # Separate definitions (functions etc.) with an empty line
 AlwaysBreakTemplateDeclarations: true # Put template on their own lines
