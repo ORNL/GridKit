@@ -46,8 +46,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusSignalVoltageOut<scalar_type, index_type>::BusSignalVoltageOut(const ModelDataT& data)
-      : Vr0_(data.Vr0),
-        Vi0_(data.Vi0)
+      : Vr0_(data.Vr0), Vi0_(data.Vi0)
     {
       bus_id_        = data.bus_id;
       size_          = 2;
@@ -57,8 +56,9 @@ namespace GridKit
                     { return Vr(); });
       monitor_->set(Variable::Vi, [this]
                     { return Vi(); });
-      monitor_->set(Variable::Vm, [this]
-                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+      monitor_->set(
+          Variable::Vm, [this]
+          { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
       monitor_->set(Variable::Va, [this]
                     { return std::atan2(Vi(), Vr()); });
     }
@@ -144,11 +144,15 @@ namespace GridKit
         const auto& port = ports_.in.template port<input>();
         if (!port.connected())
         {
-          checks.fail(std::format("{} signal inlet is not connected; a default current is not allowed", name));
+          checks.fail(std::format(
+              "{} signal inlet is not connected; a default current is not "
+              "allowed",
+              name));
         }
         else if (!port.linked())
         {
-          checks.fail(std::format("{} signal attached with no linked source", name));
+          checks.fail(
+              std::format("{} signal attached with no linked source", name));
         }
       };
 
@@ -157,7 +161,10 @@ namespace GridKit
         const auto& port = ports_.out.template port<output>();
         if (port.connected() && !port.linked())
         {
-          checks.fail(std::format("{} signal attached but not linked; connect signal ports before allocate()", name));
+          checks.fail(std::format(
+              "{} signal attached but not linked; connect signal ports before "
+              "allocate()",
+              name));
         }
       };
 
@@ -176,6 +183,28 @@ namespace GridKit
     int BusSignalVoltageOut<scalar_type, index_type>::setBusID(IdxT bus_id)
     {
       bus_id_ = bus_id;
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageOut<scalar_type, index_type>::setFault(bool status, RealT R, RealT X)
+    {
+      if (status && !(ZERO<RealT> < R * R + X * X))
+      {
+        Log::error()
+            << "BusSignalVoltageOut: fault impedance R + jX must be nonzero\n";
+        return 1;
+      }
+
+      fault_g_ = ZERO<RealT>;
+      fault_b_ = ZERO<RealT>;
+
+      if (status)
+      {
+        fault_g_ = R / (R * R + X * X);
+        fault_b_ = -X / (R * R + X * X);
+      }
+
       return 0;
     }
 
@@ -235,9 +264,9 @@ namespace GridKit
      *
      * Residuals f[0] and f[1] are set to the values read from the `ir` and
      * `ii` signal inlets, respectively. Both inlets are mandatory; verify()
-     * reports an error if either is not connected to a linked signal, and no default
-     * value is used here. Components attached to the bus add their currents
-     * afterwards.
+     * reports an error if either is not connected to a linked signal, and no
+     * default value is used here. Components attached to the bus add their
+     * currents afterwards.
      *
      * @warning This implementation assumes bus residuals are always evaluated
      * _before_ component model residuals.
@@ -247,8 +276,10 @@ namespace GridKit
     {
       auto* f = f_.getData();
 
-      f[0] = ports_.in.template port<BusSignalInputs::ir>().readSignal();
-      f[1] = ports_.in.template port<BusSignalInputs::ii>().readSignal();
+      f[0] = ports_.in.template port<BusSignalInputs::ir>().readSignal()
+             - (fault_g_ * Vr() - fault_b_ * Vi());
+      f[1] = ports_.in.template port<BusSignalInputs::ii>().readSignal()
+             - (fault_b_ * Vr() + fault_g_ * Vi());
 
       f_.setDataUpdated();
       return 0;
