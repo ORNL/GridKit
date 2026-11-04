@@ -362,6 +362,13 @@ namespace GridKit
         // sigmoid with different formulas.
         const RealT tol = 100 * std::numeric_limits<RealT>::epsilon();
 
+        // Nonzero alpha, so the Jacobians include the derivative terms.
+        for (auto* system : {&flat, &top})
+        {
+          system->updateTime(0.0, 1.0);
+        }
+        top_dt.updateTime(0.0, 1.0);
+
         for (const bool fault : {false, true})
         {
           if (fault)
