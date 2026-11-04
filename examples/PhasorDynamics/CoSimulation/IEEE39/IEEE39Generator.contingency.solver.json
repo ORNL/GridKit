@@ -1,0 +1,6 @@
+{
+  "system_model_file": "IEEE39Generator.case.json",
+  "dt_monitor": 0.01,
+  "tmax": 0.12,
+  "events": []
+}

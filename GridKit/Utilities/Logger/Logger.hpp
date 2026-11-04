@@ -16,7 +16,6 @@ namespace GridKit
      * @brief Manages and logs outputs from GridKit code.
      *
      * All methods and data in this class are static.
-     *
      */
     class Logger
     {
