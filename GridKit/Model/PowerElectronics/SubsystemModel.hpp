@@ -63,6 +63,7 @@ namespace GridKit
       using component_type = Component<ScalarT, IdxT>;
       using node_type      = NodeBase<ScalarT, IdxT>;
       using interface_type = PartitionInterface<ScalarT, IdxT>;
+      using TimeFunction   = std::function<void(RealT)>;
 
       using System::abs_tol_;
       using System::allocated_;
@@ -87,8 +88,6 @@ namespace GridKit
       using System::use_jac_;
 
     public:
-      using TimeFunction = std::function<void(RealT)>;
-
       /**
        * @brief Default constructor for the system model
        *
