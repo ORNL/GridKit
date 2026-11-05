@@ -9,6 +9,9 @@
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Utilities/Colors.hpp>
 
+// TODO: allow instantiating a scoped logger that prefixes with some
+//       class/logical distinction name like `[CliArgs]` or `[GENROU]`.
+
 namespace GridKit
 {
   namespace Utilities
@@ -129,14 +132,16 @@ namespace GridKit
     std::ostream& Logger::warning()
     {
       using namespace Colors;
-      *(output_streams_[WARNINGS]) << "[" << YELLOW << "WARNING" << CLEAR << "] ";
+      *(output_streams_[WARNINGS])
+          << "[" << YELLOW << "WARNING" << CLEAR << "] ";
       return *(output_streams_[WARNINGS]);
     }
 
     /**
      * @brief Returns reference to analysis summary messages output stream.
      *
-     * @return Reference to analysis summary messages stream in `output_streams_`.
+     * @return Reference to analysis summary messages stream in
+     * `output_streams_`.
      *
      * @pre `output_streams_` vector is allocated and correctly initialized.
      */
@@ -177,7 +182,8 @@ namespace GridKit
     }
 
     /**
-     * @brief Set outputs of active streams to user provided `std::ostream` object.
+     * @brief Set outputs of active streams to user provided `std::ostream`
+     *        object.
      *
      * All active outputs are redirected to `out` stream. All inactive ones are
      * directed to null device.
