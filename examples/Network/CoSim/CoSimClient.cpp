@@ -237,7 +237,7 @@ int main(int argc, const char* argv[])
   auto sys  = SystemModel<ScalarT, IdxT>(data);
 
   const bool ieee39 = filepath.filename() == "IEEE39Grid.case.json";
-  auto client = CoSimClient<ScalarT, IdxT>(sys,
+  auto       client = CoSimClient<ScalarT, IdxT>(sys,
                                            sys.getSignalNode(ieee39 ? 30 : 1),
                                            sys.getSignalNode(ieee39 ? 31 : 2),
                                            sys.getSignalNode(ieee39 ? 32 : 3),

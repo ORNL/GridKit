@@ -37,5 +37,10 @@ add_test(
   NAME IEEE39CoSimExample
   COMMAND bash run_cosim.sh IEEE39Generator.case.json IEEE39Grid.case.json
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(IEEE39CoSimExample PROPERTIES TIMEOUT 30 RESOURCE_LOCK cosim_port_8800)
+set_tests_properties(
+  IEEE39CoSimExample
+  PROPERTIES TIMEOUT
+             30
+             RESOURCE_LOCK
+             cosim_port_8800)
 set_tests_properties(CoSimExample PROPERTIES RESOURCE_LOCK cosim_port_8800)
