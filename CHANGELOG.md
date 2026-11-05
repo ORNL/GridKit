@@ -32,6 +32,7 @@
 - Verify bus numbers, signal IDs, device IDs per class, and subsystem IDs in PhasorDynamics inputs.
 - Added the EMT model family with `Bus`, `LoadZ` and the `VectorFit` and `Signal` operators, and `Testing::jacobianMatchesResidual`.
 - Added the EMT `VoltageSource` and `LineLumped` models.
+- Added Enzyme Jacobians for fixed-layout EMT models and the EMT `Pll` and `Pmu` operators.
 
 ## v0.2
 

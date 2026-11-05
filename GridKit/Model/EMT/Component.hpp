@@ -7,10 +7,13 @@
 #pragma once
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <memory>
+#include <numeric>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -29,7 +32,20 @@ namespace GridKit
     using Log = ::GridKit::Utilities::Logger;
 
     template <typename scalar_type, typename index_type>
+    class Component;
+
+    template <typename scalar_type, typename index_type>
     class SystemModel;
+
+    /// Constant sizes and a final type, so Enzyme sees the layout and calls the kernels directly.
+    /// A model satisfies it, and so does a set of kernels that a model selects among.
+    template <typename ModelT, typename ScalarT, typename IdxT>
+    concept ComponentKernels =
+        std::is_final_v<ModelT>
+        && ModelT::NUM_INTERNAL_VARIABLES.size() == Utilities::enum_size<typename ModelT::InternalVariablesT>()
+        && ModelT::NUM_TERMINAL_VARIABLES.size() == Utilities::enum_size<typename ModelT::TerminalsT>()
+        && ModelT::NUM_INPUT_VARIABLES.size() == Utilities::enum_size<typename ModelT::InputsT>()
+        && ModelT::NUM_OUTPUT_VARIABLES.size() == Utilities::enum_size<typename ModelT::OutputsT>();
 
     /**
      * @brief EMT component, which views its blocks of the system vectors
@@ -137,6 +153,13 @@ namespace GridKit
       IdxT outputSize(OutputT output) const
       {
         return outputs_[static_cast<IdxT>(output)].indices.size();
+      }
+
+      /// True if `output` is added to a residual
+      template <Utilities::SizedEnum OutputT>
+      bool outputConnected(OutputT output) const
+      {
+        return residual_indices_[size_ + terminals_size_ + outputOffset(output)] != INVALID_INDEX<IdxT>;
       }
 
       /// Entries of output `output` that `evaluateOutputs` evaluated last, zero before the first evaluation
@@ -369,6 +392,9 @@ namespace GridKit
 
       Component();
 
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      explicit Component(std::type_identity<ModelT>);
+
       void setLayout(const std::vector<IdxT>& variables,
                      const std::vector<IdxT>& terminals,
                      const std::vector<IdxT>& inputs,
@@ -403,13 +429,6 @@ namespace GridKit
       IdxT outputOffset(OutputT output) const
       {
         return output_offsets_[static_cast<IdxT>(output)];
-      }
-
-      /// True if `output` is added to a residual
-      template <Utilities::SizedEnum OutputT>
-      bool outputConnected(OutputT output) const
-      {
-        return residual_indices_[size_ + terminals_size_ + outputOffset(output)] != INVALID_INDEX<IdxT>;
       }
 
       template <typename ModelT, Utilities::SizedEnum SymbolT, typename... Args>
@@ -449,6 +468,14 @@ namespace GridKit
         return {output_tol_.data() + outputOffset(output), outputSize(output)};
       }
 
+      /// Enzyme dF/dy' of a fixed-layout model
+      template <ComponentKernels<scalar_type, index_type> KernelsT>
+      int tagDifferentiable(const KernelsT& kernels);
+
+      /// Enzyme dF/dy + alpha dF/dy' of a fixed-layout model
+      template <ComponentKernels<scalar_type, index_type> KernelsT>
+      int evaluateJacobian(const KernelsT& kernels);
+
       /// Simulation time [s], shared with the monitor and time-dependent models.
       const RealT& time() const
       {
@@ -470,6 +497,28 @@ namespace GridKit
       {
         return {vector.getData() + local(variable), size(variable)};
       }
+
+      /// Local values of a fixed layout: internal variables, terminals and inputs
+      template <typename ModelT>
+      static constexpr IdxT valueSize()
+      {
+        return std::accumulate(ModelT::NUM_INTERNAL_VARIABLES.begin(), ModelT::NUM_INTERNAL_VARIABLES.end(), IdxT{0})
+               + std::accumulate(ModelT::NUM_TERMINAL_VARIABLES.begin(), ModelT::NUM_TERMINAL_VARIABLES.end(), IdxT{0})
+               + std::accumulate(ModelT::NUM_INPUT_VARIABLES.begin(), ModelT::NUM_INPUT_VARIABLES.end(), IdxT{0});
+      }
+
+      /// Local residuals of a fixed layout: internal variables, terminals and outputs
+      template <typename ModelT>
+      static constexpr IdxT residualSize()
+      {
+        return std::accumulate(ModelT::NUM_INTERNAL_VARIABLES.begin(), ModelT::NUM_INTERNAL_VARIABLES.end(), IdxT{0})
+               + std::accumulate(ModelT::NUM_TERMINAL_VARIABLES.begin(), ModelT::NUM_TERMINAL_VARIABLES.end(), IdxT{0})
+               + std::accumulate(ModelT::NUM_OUTPUT_VARIABLES.begin(), ModelT::NUM_OUTPUT_VARIABLES.end(), IdxT{0});
+      }
+
+      /// Enzyme entries of beta dF/dy + alpha dF/dy'
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      int evaluateDfDy(const ModelT& model, RealT beta, RealT alpha);
 
       int  connect(Connection& connection, Component& component, std::vector<IdxT> indices, IdxT limit);
       void scatter(const ScalarT* f);
