@@ -23,7 +23,7 @@ The JSON file schema is defined in `partition.schema.json`, and is also
 described below.
 
 The partitioning infrastructure is intended to support automated
-partitioning in the future, where an application would analyze model
+partitioning, where an application would analyze model
 structure and generate `partition.json` file for a given computational
 environment. 
 For now, partitions need to be defined by the user-written JSON file.
@@ -86,9 +86,10 @@ formed partition.
 
 Partition names are not required to be unique, though this is a recommended.
 
+For now, only buses can divide partitions.
 In the future it is envisioned that signals may also be part of the 
 partition definition, allowing connected components to be in separate 
-partitions. For now, only buses can divide partitions.
+partitions. 
 
 ## Examples
 
