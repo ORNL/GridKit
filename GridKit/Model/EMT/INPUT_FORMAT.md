@@ -6,9 +6,10 @@ complex values are `[re, im]`, and matrices are arrays of rows.
 
 ## System Parameters
 
-  Name      | Value
-  ----------|-------------------------------------------------------
-  `va_base` | System power base [VA]
+  Name        | Value
+  ------------|-------------------------------------------------------
+  `freq_base` | System frequency base [Hz]
+  `va_base`   | System power base [VA]
 
 ## Buses
 

@@ -27,6 +27,7 @@
 - Added `SubsystemModel` and `BusLinePartitionInterface` to support partitioning PowerElectronics systems into independently evaluated and simulated subsystems.
 - Added the EMT model family with `Bus`, `LoadZ` and the `VectorFit` operator, and `Testing::jacobianMatchesResidual`.
 - Added the EMT `VoltageSource`, `LineLumped` and `Switch` models, the `TransientSimulation` application, and the ThreeBusBasic EMT example.
+- Added Enzyme Jacobians for fixed-layout EMT models and the EMT `Pll` operator.
 
 ## v0.2
 

@@ -31,6 +31,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     void from_json(const json& j, SystemModelData<RealT, IdxT>& data)
     {
+      j.at("params").at("freq_base").get_to(data.freq_base);
       j.at("params").at("va_base").get_to(data.va_base);
 
       for (const auto& entry : j.at("buses"))
