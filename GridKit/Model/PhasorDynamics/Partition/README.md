@@ -13,7 +13,7 @@ for multi-instantiation, etc.)
 is a fundamentally different goal. It is not
 appropriate to use divisions driven by modeling for solver acceleration.
 
-Partitions for a system are defined in a JSON file withan extension of 
+Partitions for a system are defined in a JSON file with an extension of 
 `.partition.json`, which is separate from the system model 
 definition
 but refers to buses by number from the system model definition.
