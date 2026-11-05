@@ -82,7 +82,7 @@ External buses may appear more than once.
 `Partition`, in the order partitions are listed in the file,
 which contains every one of the `Component`'s connected buses as either an
 internal or external bus in that partition itself. If no such partition exists,
-raise an exception indicating a badly 
+return an error indicating a badly 
 formed partition.
 5. Some components are connected to each other by signals.
 Place signal-connected devices together, 
