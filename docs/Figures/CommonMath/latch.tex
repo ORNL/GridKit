@@ -1,0 +1,27 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{commonmath}
+
+\begin{document}
+\begin{tikzpicture}
+\begin{groupplot}[
+    cmbase,
+    x=3.2cm, y=2.2cm,
+    xmin=-0.12, xmax=1.22, ymin=-0.7, ymax=0.7,
+    xtick={0.5,1}, xticklabels={,},
+    ytick={-0.5,0.5}, yticklabels={$-1/2$,$1/2$},
+    domain=0:1,
+]
+\exactpanel
+  \addplot[domain=0:0.5] {-x};
+  \addplot[domain=0.5:1] {1-x};
+  \cmclosedpoints{(0.5,-0.5)}
+  \cmopenpoints{(0.5,0.5)}
+  \node[font=\scriptsize, anchor=south east, yshift=1.5pt] at (axis cs:0.5,0) {$1/2$};
+  \node[font=\scriptsize, anchor=south, yshift=1.5pt] at (axis cs:1,0) {$1$};
+
+\smoothpanel{sigmaS(x-0.5,\cmu) - x}
+  \node[font=\scriptsize, anchor=south east, yshift=1.5pt] at (axis cs:0.5,0) {$1/2$};
+  \node[font=\scriptsize, anchor=south, yshift=1.5pt] at (axis cs:1,0) {$1$};
+\end{groupplot}
+\end{tikzpicture}
+\end{document}
