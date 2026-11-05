@@ -1,5 +1,6 @@
 #
 add_subdirectory(AutomaticDifferentiation)
+add_subdirectory(EMT)
 add_subdirectory(LinearAlgebra)
 add_subdirectory(Math)
 add_subdirectory(Network)
