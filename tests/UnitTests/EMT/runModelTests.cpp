@@ -16,6 +16,11 @@ int main()
   result += test.invalidVectorFit();
   result += test.invalidInput();
   result += test.absoluteTolerances();
+  result += test.voltageSource();
+  result += test.lineLumped();
+  result += test.bundledLineLumped();
+  result += test.closedSwitch();
+  result += test.openSwitch();
 
   return result.summary();
 }
