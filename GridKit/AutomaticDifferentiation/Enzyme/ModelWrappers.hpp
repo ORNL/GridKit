@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstddef>
+#include <numeric>
 #include <vector>
 
 #include <GridKit/Model/EvaluatorTraits.hpp>
@@ -32,7 +33,8 @@ namespace GridKit
         BusResidual21, //< Special case for branches that are connected to two buses
         BusResidual22, //< Special case for branches that are connected to two buses
         Objective,     //< Optimization objective
-        Constraints    //< Optimization internal constraints and contributions at the ports
+        Constraints,   //< Optimization internal constraints and contributions at the ports
+        Residual       //< EMT residual and contributions at the ports
       };
 
       /**
@@ -281,6 +283,37 @@ namespace GridKit
         {
           model->internalConstraints(x, x + NUM_INTERNAL_INPUTS, g);
           model->externalConstraints(x, x + NUM_INTERNAL_INPUTS, g + NUM_INTERNAL_OUTPUTS);
+        }
+      };
+
+      /**
+       * @brief Wrapper for the residual of a fixed-layout EMT model
+       */
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::Residual>
+      {
+        /// Number of internal variables
+        static constexpr std::size_t NUM_INTERNAL =
+            std::accumulate(ModelT::NUM_INTERNAL_VARIABLES.begin(), ModelT::NUM_INTERNAL_VARIABLES.end(), std::size_t{0});
+
+        /// Number of external variables
+        static constexpr std::size_t NUM_EXTERNAL =
+            std::accumulate(ModelT::NUM_PORT_VARIABLES.begin(), ModelT::NUM_PORT_VARIABLES.end(), std::size_t{0});
+
+        /**
+         * @param[in] model - Model to differentiate
+         * @param[in] y - Internal values
+         * @param[in] yp - Internal derivatives
+         * @param[in] w - External values
+         * @param[in] wp - External derivatives
+         * @param[out] f - Internal residuals, then contributions at the ports
+         */
+        template <typename ScalarT>
+        [[gnu::always_inline]] inline static void
+        eval(const ModelT* model, const ScalarT* y, const ScalarT* yp, const ScalarT* w, const ScalarT* wp, ScalarT* f)
+        {
+          model->internalResidual(y, yp, w, wp, f);
+          model->externalResidual(y, yp, w, wp, f + NUM_INTERNAL);
         }
       };
     } // namespace Sparse

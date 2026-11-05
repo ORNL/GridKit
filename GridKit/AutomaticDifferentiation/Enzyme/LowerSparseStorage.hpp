@@ -282,6 +282,31 @@ namespace GridKit
         row /= sizeof(ScalarT);
         return (ScalarT) (row == col);
       }
+
+      /**
+       * @brief Enzyme identity load scaled by `scale`
+       *
+       * @tparam ScalarT - scalar data type
+       * @tparam IdxT - matrix index data type
+       */
+      template <typename ScalarT, typename IdxT>
+      [[gnu::always_inline]] static ScalarT scaled_ident_load(IdxT row, IdxT col, ScalarT scale)
+      {
+        row /= sizeof(ScalarT);
+        return scale * static_cast<ScalarT>(row == col);
+      }
+
+      /**
+       * @brief Enzyme scaled identity store
+       *
+       * @tparam ScalarT - scalar data type
+       * @tparam IdxT - matrix index data type
+       */
+      template <typename ScalarT, typename IdxT>
+      [[gnu::always_inline]] static void scaled_ident_store(ScalarT, IdxT, IdxT, ScalarT)
+      {
+        assert(0 && "should never store");
+      }
     } // namespace Sparse
   } // namespace Enzyme
 } // namespace GridKit

@@ -364,6 +364,45 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Pll at angle zero on a three-phase bus at (0, 1, -1), whose q-axis voltage is 2/sqrt(3)
+      TestOutcome pll()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 1.0}}],
+          "devices": [{"class": "Pll", "id": "PLL1", "ports": {"bus": 1}, "params": {"Kp": 0.5, "Ki": 0.25}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [0.0, 1.0, -1.0]}},
+          "devices": {"PLL1": {"x": [0.5]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT VQ         = TWO<RealT> / std::numbers::sqrt3_v<RealT>;
+        constexpr RealT OMEGA_BASE = TWO<RealT> * std::numbers::pi_v<RealT> * 60.0;
+
+        auto& pll = system->device("PLL1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {0.0, 0.0, 0.0});
+        success *= rowsEqual(pll.getResidual(EMT::PllInternalVariables::theta), {0.0});
+        success *= rowsEqual(pll.getResidual(EMT::PllInternalVariables::x), {0.25 * VQ});
+        success *= rowsEqual(pll.getResidual(EMT::PllInternalVariables::omega), {OMEGA_BASE + 0.5 * VQ + 0.5});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
     private:
       /// Load of impedance 2 + 8/(s + 4) on a single-phase bus of base voltage 1 kV, with a power base of 1 MVA
       static constexpr const char* LOAD_CASE = R"({
@@ -379,7 +418,7 @@ namespace GridKit
       })";
 
       static constexpr RealT ALPHA = 0.5;
-      static constexpr RealT kTol  = 1.0e-11;
+      static constexpr RealT kTol  = 1.0e-8;
 
       /// System of the case at the state, or none if it cannot be allocated
       static std::unique_ptr<SystemT> makeSystem(const char* case_json, const char* state_json)

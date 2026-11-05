@@ -3,7 +3,7 @@
     "format_version": 0.2,
     "format_revision": 0,
     "case_name": "ThreeBusBasic",
-    "case_description": "Voltage source, switch, lumped line and RL load",
+    "case_description": "Voltage source, switch, lumped line, RL load and PLL",
     "case_comments": ""
   },
   "params": {
@@ -96,6 +96,13 @@
         }
       },
       "mon": ["i"]
+    },
+    {
+      "class": "Pll",
+      "id": "PLL1",
+      "ports": { "bus": 3 },
+      "params": { "Kp": 0.0002, "Ki": 0.005 },
+      "mon": ["omega"]
     }
   ]
 }

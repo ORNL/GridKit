@@ -21,6 +21,7 @@ int main()
   result += test.bundledLineLumped();
   result += test.closedSwitch();
   result += test.openSwitch();
+  result += test.pll();
 
   return result.summary();
 }

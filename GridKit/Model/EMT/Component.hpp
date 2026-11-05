@@ -7,10 +7,13 @@
 #pragma once
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <memory>
+#include <numeric>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -28,7 +31,18 @@ namespace GridKit
     using Log = ::GridKit::Utilities::Logger;
 
     template <typename scalar_type, typename index_type>
+    class Component;
+
+    template <typename scalar_type, typename index_type>
     class SystemModel;
+
+    /// Constant sizes and a final class, so Enzyme sees the layout and calls the kernels directly
+    template <typename ModelT, typename ScalarT, typename IdxT>
+    concept ComponentKernels =
+        std::derived_from<ModelT, Component<ScalarT, IdxT>>
+        && std::is_final_v<ModelT>
+        && ModelT::NUM_INTERNAL_VARIABLES.size() == Utilities::enum_size<typename ModelT::InternalVariablesT>()
+        && ModelT::NUM_PORT_VARIABLES.size() == Utilities::enum_size<typename ModelT::PortsT>();
 
     /**
      * @brief EMT component, which views its blocks of the system vectors
@@ -342,6 +356,10 @@ namespace GridKit
 
       Component();
 
+      /// Sizes from the enumerations of a fixed-layout `ModelT`
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      explicit Component(std::type_identity<ModelT>);
+
       /// Size of each internal variable, then of each port
       void setLayout(const std::vector<IdxT>& variables, const std::vector<IdxT>& ports);
 
@@ -378,6 +396,14 @@ namespace GridKit
       template <typename PortT>
       ScalarT absoluteTolerance(PortT port, IdxT k) const;
 
+      /// Enzyme dF/dy' of a fixed-layout model
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      int tagDifferentiable(const ModelT& model);
+
+      /// Enzyme dF/dy + alpha dF/dy' of a fixed-layout model
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      int evaluateJacobian(const ModelT& model);
+
       VectorT           y_;
       VectorT           yp_;
       VectorT           f_;
@@ -385,7 +411,8 @@ namespace GridKit
       std::vector<bool> tag_;
       RealT             time_{ZERO<RealT>};
       RealT             alpha_{ONE<RealT>};
-      RealT             va_system_base_{ZERO<RealT>}; ///< System power base [VA]
+      RealT             freq_system_base_{ZERO<RealT>}; ///< System frequency base [Hz]
+      RealT             va_system_base_{ZERO<RealT>};   ///< System power base [VA]
 
     private:
       /// Entries of internal variable `variable` in `vector`, a view of the internal block
@@ -394,6 +421,18 @@ namespace GridKit
       {
         return {vector.getData() + local(variable), size(variable)};
       }
+
+      /// Internal and external variables of a fixed layout
+      template <typename ModelT>
+      static constexpr IdxT localSize()
+      {
+        return std::accumulate(ModelT::NUM_INTERNAL_VARIABLES.begin(), ModelT::NUM_INTERNAL_VARIABLES.end(), IdxT{0})
+               + std::accumulate(ModelT::NUM_PORT_VARIABLES.begin(), ModelT::NUM_PORT_VARIABLES.end(), IdxT{0});
+      }
+
+      /// Enzyme entries of beta dF/dy + alpha dF/dy'
+      template <ComponentKernels<scalar_type, index_type> ModelT>
+      int evaluateDfDy(const ModelT& model, RealT beta, RealT alpha);
 
       void gather(ScalarT* y, ScalarT* yp) const;
       void scatter(const ScalarT* f);
