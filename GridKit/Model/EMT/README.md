@@ -43,6 +43,7 @@ that require additional history document that requirement locally.
 
 ## Contents
 
+- [Input Format](INPUT_FORMAT.md)
 - [Bus](Bus/README.md)
 - [Components](Component/README.md)
 - [Operators](Operators/README.md)

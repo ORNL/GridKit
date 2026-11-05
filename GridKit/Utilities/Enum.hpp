@@ -6,7 +6,11 @@
 
 #pragma once
 
+#include <format>
 #include <ranges>
+#include <stdexcept>
+#include <string>
+#include <string_view>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -117,6 +121,18 @@ namespace GridKit
                  static_cast<std::size_t>(magic_enum::enum_count<T>()))
              | std::views::transform([](std::size_t i)
                                      { return static_cast<T>(i); });
+    }
+
+    /// Enumerator named `key`, or throw naming its `kind` and `owner`
+    template <SizedEnum EnumT>
+    EnumT enumKey(const std::string& key, std::string_view kind, std::string_view owner)
+    {
+      const auto value = enum_cast<EnumT>(key);
+      if (!value)
+      {
+        throw std::invalid_argument(std::format("{}: unknown {} '{}'", owner, kind, key));
+      }
+      return *value;
     }
   } // namespace Utilities
 } // namespace GridKit
