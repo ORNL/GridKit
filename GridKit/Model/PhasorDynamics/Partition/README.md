@@ -150,8 +150,6 @@ buses couple between partitions.*
 This example shows how a multi-level hierarchical structure can be implemented
 with partitions.
 
-File name: `deep.partition.json`
-
 ```JSON
 {
   "name": "root",
