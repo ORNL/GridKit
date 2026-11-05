@@ -3,6 +3,16 @@
 The client and server exchange voltage and current over ZeroMQ on TCP port
 8800. The interface buses connect directly to signal nodes in the case files:
 
+The partitioned IEEE39 case is also registered as the `IEEE39CoSimExample`
+test. From the build directory, run:
+
+```sh
+ctest -R '^IEEE39CoSimExample$' --output-on-failure
+```
+
+These two filenames select interface signals 30–33 instead of the three-bus
+signal IDs described below.
+
 - The client uses `BusSignalVoltageOut` (JSON class `SignalVoltageOut`). It
   sends voltage on signals 1 and 2 (`vr`, `vi`) and receives current on
   signals 3 and 4 (`ir`, `ii`).

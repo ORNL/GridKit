@@ -236,15 +236,16 @@ int main(int argc, const char* argv[])
   auto data = parseSystemModelData(filepath);
   auto sys  = SystemModel<ScalarT, IdxT>(data);
 
+  const bool ieee39 = filepath.filename() == "IEEE39Grid.case.json";
   auto client = CoSimClient<ScalarT, IdxT>(sys,
-                                           sys.getSignalNode(1),
-                                           sys.getSignalNode(2),
-                                           sys.getSignalNode(3),
-                                           sys.getSignalNode(4));
+                                           sys.getSignalNode(ieee39 ? 30 : 1),
+                                           sys.getSignalNode(ieee39 ? 31 : 2),
+                                           sys.getSignalNode(ieee39 ? 32 : 3),
+                                           sys.getSignalNode(ieee39 ? 33 : 4));
   sys.allocate();
   client.configure();
 
-  RealT dt = 1.0 / 16.0 / 60.0;
+  RealT dt = ieee39 ? 1.0 / 2.0 / 60.0 : 1.0 / 16.0 / 60.0;
 
   client.runSimulation(0.0, 0.1, dt);
 

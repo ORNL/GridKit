@@ -6,6 +6,8 @@ gridkit_example_add_file(TwoBusCoSimServer.solo.case.json)
 gridkit_example_add_file(TwoBusCoSimServer.solver.json)
 gridkit_example_add_file(ThreeBusCoSimClient.case.json)
 gridkit_example_add_file(ThreeBusCoSimServer.case.json)
+gridkit_example_add_file(IEEE39Generator.case.json)
+gridkit_example_add_file(IEEE39Grid.case.json)
 gridkit_example_add_file(run_cosim.sh)
 
 add_executable(CoSimClient CoSimClient.cpp)
@@ -30,3 +32,10 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set_tests_properties(CoSimExample PROPERTIES TIMEOUT 30)
+
+add_test(
+  NAME IEEE39CoSimExample
+  COMMAND bash run_cosim.sh IEEE39Generator.case.json IEEE39Grid.case.json
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(IEEE39CoSimExample PROPERTIES TIMEOUT 30 RESOURCE_LOCK cosim_port_8800)
+set_tests_properties(CoSimExample PROPERTIES RESOURCE_LOCK cosim_port_8800)

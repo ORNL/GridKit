@@ -217,11 +217,12 @@ int main(int argc, const char* argv[])
   auto data = parseSystemModelData(filepath);
   auto sys  = SystemModel<ScalarT, IdxT>(data);
 
+  const bool ieee39 = filepath.filename() == "IEEE39Generator.case.json";
   auto server = CoSimServer<ScalarT, IdxT>(sys,
-                                           sys.getSignalNode(1),
-                                           sys.getSignalNode(2),
-                                           sys.getSignalNode(3),
-                                           sys.getSignalNode(4));
+                                           sys.getSignalNode(ieee39 ? 32 : 1),
+                                           sys.getSignalNode(ieee39 ? 33 : 2),
+                                           sys.getSignalNode(ieee39 ? 30 : 3),
+                                           sys.getSignalNode(ieee39 ? 31 : 4));
   server.start();
 
   return 0;
