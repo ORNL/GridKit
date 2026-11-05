@@ -30,6 +30,7 @@
 - Added the `state_file` solver option, which sets PhasorDynamics initial bus voltages from a state file.
 - Removed the GenClassical `p0`/`q0` parameters in favor of the state `ir`/`ii`.
 - Verify bus numbers, signal IDs, device IDs per class, and subsystem IDs in PhasorDynamics inputs.
+- Added the EMT model family with `Bus`, `LoadZ` and the `VectorFit` and `Signal` operators, and `Testing::jacobianMatchesResidual`.
 
 ## v0.2
 

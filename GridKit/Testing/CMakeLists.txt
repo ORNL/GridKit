@@ -7,5 +7,6 @@ gridkit_add_library(
           OutputAtTime.hpp
           CSV.hpp
           AggregateErrors.hpp
+          JacobianCheck.hpp
           CommandLine.hpp
   LINK_LIBRARIES PUBLIC GridKit::Utilities)
