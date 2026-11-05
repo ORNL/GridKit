@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/partition",
+  "$defs": {
+    "buses": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0 },
+      "uniqueItems": true
+    },
+    "partition": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "internal": { "$ref": "#/$defs/buses" },
+        "external": { "$ref": "#/$defs/buses" },
+        "partitions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/partition" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

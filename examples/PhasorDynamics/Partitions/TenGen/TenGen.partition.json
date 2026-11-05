@@ -1,0 +1,30 @@
+{
+  "name": "TenGen",
+  "partitions": [
+    {
+      "name": "A",
+      "internal": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "external": [
+        6
+      ]
+    },
+    {
+      "name": "B",
+      "internal": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "external": [
+        6
+      ]
+    }
+  ]
+}
