@@ -1,28 +1,12 @@
 # Electromagnetic Transients (EMT) Examples
 
-This directory preserves the intended model composition for future EMT
-examples. The trees describe ownership and nesting only. They do not define a
-case-file schema.
-
 > [!NOTE]
 > The formulations support $N$ phases; initial development targets three
 > phases.
 
-## LineLumped
-
-```text
-LineLumped
-  parameters: N, K, conductors, dx
-  initial state: i12
-  submodels
-    Zp: VectorFit
-    Yp[1]: VectorFit
-    Yp[2]: VectorFit
-```
-
-Zp represents per-unit-length series impedance. The two Yp instances represent
-terminal shunt admittances. Pole-free coefficients give the RLGC form, while
-poles and residues give the frequency-dependent form.
+| Example | Description |
+| --- | --- |
+| [ThreeBusBasic](Toy/ThreeBusBasic/README.md) | Line energization. |
 
 ## LineDistributed
 

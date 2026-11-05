@@ -5,5 +5,6 @@
 :titlesonly:
 :class: gk-index
 
+EMT <EMT/README>
 Phasor Dynamics <PhasorDynamics/README>
 ```
