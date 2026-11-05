@@ -29,8 +29,9 @@ namespace GridKit
     SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
       : monitor_(std::make_unique<MonitorT>(time_))
     {
-      this->id_             = "SystemModel";
-      this->va_system_base_ = data.va_base;
+      this->id_               = "SystemModel";
+      this->freq_system_base_ = data.freq_base;
+      this->va_system_base_   = data.va_base;
 
       for (const auto& bus : data.buses)
       {
@@ -405,7 +406,8 @@ namespace GridKit
       component.system_f_       = f_.getData();
       component.system_abs_tol_ = abs_tol_.getData();
 
-      component.va_system_base_ = this->va_system_base_;
+      component.freq_system_base_ = this->freq_system_base_;
+      component.va_system_base_   = this->va_system_base_;
       return 0;
     }
   } // namespace EMT

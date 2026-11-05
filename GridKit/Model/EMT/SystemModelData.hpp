@@ -40,7 +40,8 @@ namespace GridKit
       using IdxT            = index_type;
       using MonitorSinkSpec = Model::VariableMonitorBase::SinkSpec;
 
-      RealT va_base{ZERO<RealT>}; ///< System power base [VA]
+      RealT freq_base{ZERO<RealT>}; ///< System frequency base [Hz]
+      RealT va_base{ZERO<RealT>};   ///< System power base [VA]
 
       std::vector<DeviceData<IdxT>> buses; ///< Each with its number as id
       std::vector<DeviceData<IdxT>> devices;
