@@ -1,0 +1,10 @@
+{
+    "system_model_file": "ThreeBusBasic.case.json",
+    "output_file": "ThreeBusBasic.csv",
+    "dt_monitor": 5.0e-5,
+    "tmax": 0.3,
+    "events": [
+        { "time": 0.02, "type": "switch_close", "device": "S1" },
+        { "time": 0.2, "type": "switch_open", "device": "S1" }
+    ]
+}

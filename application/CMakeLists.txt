@@ -1,3 +1,6 @@
 if(TARGET SUNDIALS::idas)
+  if(GRIDKIT_ENABLE_ENZYME)
+    add_subdirectory(EMT)
+  endif()
   add_subdirectory(PhasorDynamics)
 endif()

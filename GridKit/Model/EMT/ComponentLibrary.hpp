@@ -9,7 +9,10 @@
 #include <type_traits>
 
 #include <GridKit/Model/EMT/Bus/Bus.hpp>
+#include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
+#include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
 
 namespace GridKit
 {
@@ -22,7 +25,10 @@ namespace GridKit
       static void forEach(VisitorT&& visit)
       {
         visit(std::type_identity<Bus<ScalarT, IdxT>>{});
+        visit(std::type_identity<LineLumped<ScalarT, IdxT>>{});
         visit(std::type_identity<LoadZ<ScalarT, IdxT>>{});
+        visit(std::type_identity<Switch<ScalarT, IdxT>>{});
+        visit(std::type_identity<VoltageSource<ScalarT, IdxT>>{});
       }
 
       /// Calls `visitor` with `component` as its library model

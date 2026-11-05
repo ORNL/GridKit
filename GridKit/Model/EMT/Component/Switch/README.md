@@ -2,9 +2,9 @@
 
 `Switch` represents an ideal $N$-phase EMT switch between two buses. Series
 current $\mathbf{i}_{12}$ is directed from terminal 1 to terminal 2. The
-required Boolean input `open` operates all phases: `true` is open and
-`false` is closed. The switch contains no energy storage; switching
-transients arise from the connected EMT network.
+Boolean `open` operates all phases: `true` is open and `false` is closed. The
+switch contains no energy storage; switching transients arise from the
+connected EMT network.
 
 ## Block Diagram
 
@@ -17,6 +17,7 @@ Figure 1: Switch model
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $N$ | [-] | `N` | Number of phases | Required, positive integer
+$\mathrm{open}$ | [-] | `open` | Initial switch command | Optional Boolean, `true` open, `false` closed (default)
 
 ### Parameter Validation
 
@@ -32,11 +33,8 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}_1$ | `v1` | Input | [V] | Terminal 1 bus voltage | $\mathbf{v}_1 \in \mathbb{R}^N$
-$\mathbf{v}_2$ | `v2` | Input | [V] | Terminal 2 bus voltage | $\mathbf{v}_2 \in \mathbb{R}^N$
-$\mathrm{open}$ | `open` | Input | [-] | Ganged switch command | Required Boolean; `true` open, `false` closed
-$\mathbf{i}_1$ | `i1` | Output | [A] | Current injection at terminal 1 | $\mathbf{i}_1 \in \mathbb{R}^N$
-$\mathbf{i}_2$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathbf{i}_2 \in \mathbb{R}^N$
+$\mathbf{v}_1$, $\mathbf{i}_1$ | `bus1` | Bus | [V], [A] | Terminal 1 bus voltage and current injection | $\mathbf{v}_1, \mathbf{i}_1 \in \mathbb{R}^N$
+$\mathbf{v}_2$, $\mathbf{i}_2$ | `bus2` | Bus | [V], [A] | Terminal 2 bus voltage and current injection | $\mathbf{v}_2, \mathbf{i}_2 \in \mathbb{R}^N$
 
 ## Submodels
 
@@ -105,12 +103,12 @@ None.
 
 ## Initialization
 
-The `open` command is applied at $t_0$ before enforcing the algebraic
-equations. The switch has no additional model-specific initialization.
+The `open` parameter sets the command at $t_0$, before the algebraic
+equations are enforced. The switch has no additional model-specific
+initialization.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`open` | [-] | Switch command | Boolean; `true` open, `false` closed
 `i12` | [A] | Series current from terminal 1 to terminal 2 | $\mathbf{i}_{12} \in \mathbb{R}^N$

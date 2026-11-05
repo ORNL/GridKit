@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <memory>
+#include <numbers>
 #include <span>
 #include <sstream>
 #include <stdexcept>
@@ -190,6 +191,179 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Unit source behind a unit conductance on a single-phase bus, at time zero
+      TestOutcome voltageSource()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "VoltageSource", "id": "VS1", "ports": {"bus": 1},
+                       "params": {"N": 1, "E": [1.0], "phi": [0.0], "omega": 1.0, "Y": {"D": [[1.0]]}}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [1.0]}},
+          "devices": {"VS1": {"u": [0.5], "i": [0.125]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto& source = system->device("VS1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {0.125});
+        success *= rowsEqual(source.getResidual(EMT::VoltageSourceInternalVariables::u), {std::numbers::sqrt2_v<RealT> - 1.5});
+        success *= rowsEqual(source.getResidual(EMT::VoltageSourceInternalVariables::i), {0.375});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// Series resistance 1 and shunt conductance 0.5 between single-phase buses
+      TestOutcome lineLumped()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "LineLumped", "id": "L1", "ports": {"bus1": 1, "bus2": 2},
+                       "params": {"N": 1, "K": 1, "conductors": [1], "dx": 2.0, "Zp": {"D": [[0.5]]}, "Yp": {"D": [[0.25]]}}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [2.0]}, "2": {"v": [1.0]}},
+          "devices": {"L1": {"i12": [0.5], "i_sh1": [-0.25], "i_sh2": [-0.125]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto& line = system->device("L1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-0.75});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.375});
+        success *= rowsEqual(line.getResidual(EMT::LineLumpedInternalVariables::i12), {-0.5});
+        success *= rowsEqual(line.getResidual(EMT::LineLumpedInternalVariables::i_sh1), {0.5});
+        success *= rowsEqual(line.getResidual(EMT::LineLumpedInternalVariables::i_sh2), {0.25});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// Two conductors on one phase, each of series resistance 1 and shunt conductance 0.5
+      TestOutcome bundledLineLumped()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "LineLumped", "id": "L1", "ports": {"bus1": 1, "bus2": 2},
+                       "params": {"N": 1, "K": 2, "conductors": [1, 1], "dx": 2.0,
+                                  "Zp": {"D": [[0.5, 0.0], [0.0, 0.5]]}, "Yp": {"D": [[0.25, 0.0], [0.0, 0.25]]}}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [2.0]}, "2": {"v": [1.0]}},
+          "devices": {"L1": {"i12": [0.5, 0.25], "i_sh1": [-0.25, -0.5], "i_sh2": [-0.125, -0.25]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto& line = system->device("L1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-1.5});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.375});
+        success *= rowsEqual(line.getResidual(EMT::LineLumpedInternalVariables::i12), {-0.5, -0.75});
+        success *= rowsEqual(line.getResidual(EMT::LineLumpedInternalVariables::i_sh1), {0.5, 0.0});
+        success *= rowsEqual(line.getResidual(EMT::LineLumpedInternalVariables::i_sh2), {0.25, 0.0});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// A closed switch joins the voltages of its single-phase buses
+      TestOutcome closedSwitch()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "Switch", "id": "S1", "ports": {"bus1": 1, "bus2": 2}, "params": {"N": 1, "open": false}}]
+        })";
+
+        const auto system = makeSystem(CASE, SWITCH_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-0.5});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.5});
+        success *= rowsEqual(system->device("S1").getResidual(EMT::SwitchInternalVariables::i12), {-1.0});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// An open switch blocks the current between its single-phase buses
+      TestOutcome openSwitch()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "Switch", "id": "S1", "ports": {"bus1": 1, "bus2": 2}, "params": {"N": 1, "open": true}}]
+        })";
+
+        const auto system = makeSystem(CASE, SWITCH_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-0.5});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.5});
+        success *= rowsEqual(system->device("S1").getResidual(EMT::SwitchInternalVariables::i12), {0.5});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
     private:
       /// Load of impedance 2 + 8/(s + 4) on a single-phase bus of base voltage 1 kV, with a power base of 1 MVA
       static constexpr const char* LOAD_CASE = R"({
@@ -197,6 +371,11 @@ namespace GridKit
         "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
         "devices": [{"class": "LoadZ", "id": "LD1", "ports": {"bus": 1},
                      "params": {"N": 1, "Z": {"D": [[2.0]], "poles": [[-4.0, 0.0]], "residues": [[[[8.0, 0.0]]]]}}}]
+      })";
+
+      static constexpr const char* SWITCH_STATE = R"({
+        "buses": {"1": {"v": [2.0]}, "2": {"v": [1.0]}},
+        "devices": {"S1": {"i12": [0.5]}}
       })";
 
       static constexpr RealT ALPHA = 0.5;
