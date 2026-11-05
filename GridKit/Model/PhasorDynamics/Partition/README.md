@@ -31,12 +31,10 @@ only a single level of partitioning.
 The JSON file schema is defined in `partition.schema.json`, and is also
 described below.
 
-In the future it is envisioned that users would not need to think about
-partitioning a system. Rather, an automated partitioning routine 
-would pick
-the best partitioning for maximum solver efficiency on a given computational
-environment,
-and perhaps write the `partition.json` file as an intermediate step. 
+The partitioning infrastructure is intended to support automated
+partitioning in the future, where an application would analyze model
+structure and generate `partition.json` file for a given computational
+environment. 
 For now, partitions need to be defined by the user-written JSON file.
 
 ## Partition Definitions and JSON Structure
