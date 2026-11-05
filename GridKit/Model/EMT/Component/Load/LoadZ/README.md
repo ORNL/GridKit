@@ -29,8 +29,7 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}$ | `v` | Input | [V] | Bus voltage at load port | $\mathbf{v} \in \mathbb{R}^N$
-$\mathbf{i}$ | `i` | Output | [A] | Current injection at load port | $\mathbf{i} \in \mathbb{R}^N$
+$\mathbf{v}$, $\mathbf{i}$ | `bus` | Bus | [V], [A] | Reads the bus voltage and injects the load current | $\mathbf{v}, \mathbf{i} \in \mathbb{R}^N$
 
 ## Submodels
 
