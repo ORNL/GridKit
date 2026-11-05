@@ -1,0 +1,79 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[american]{circuitikz}
+\input{../diagram-style.tex}
+\standaloneenv{circuitikz}
+
+\begin{document}
+\begin{circuitikz}[emt diagram]
+\ctikzset{bipoles/length=1.05cm}
+
+% d axis, mirrored above the q axis: field and damper windings share the saturable magnetizing inductance.
+\draw[semithick] (0,3.6) to[cV, l=$e_\mathrm{fd}$, invert] (0,2.6)
+  to[R, l_=$R_\mathrm{fd}$] (0,1.6)
+  to[L, l_=$L_\mathrm{lfd}$] (0,0.6)
+  to[short, i^=$i_\mathrm{fd}$] (0,0);
+\draw[semithick] (2,3.6) to[R, l_=$R_\mathrm{1d}$] (2,2.1)
+  to[L, l_=$L_\mathrm{l1d}$] (2,0.6)
+  to[short, i^=$i_\mathrm{1d}$] (2,0);
+\draw[semithick] (4,3.6) to[vL, l_=$K_s L_\mathrm{md}$] (4,0);
+\draw[semithick] (0,3.6) -- (4,3.6);
+\draw[semithick] (0,0) -- (4,0);
+\node[ground, rotate=180] at (3,3.6) {};
+\node[signal, label={[sig]below left:$\psi_\mathrm{ad}$}] at (4,0) {};
+\draw[semithick] (4,0) to[L, l=$L_l$] (6,0)
+  to[cV, l=$-\omega_r\psi_q$] (8,0)
+  to[R, l=$R_s$, i>^=$i_d$] (10,0)
+  node[signal, label={[sig]above:$v_d$}] (vd) {};
+
+% q axis: two damper windings share the saturable magnetizing inductance.
+\draw[semithick] (0,-1.8) to[short, i<=$i_\mathrm{2q}$] (0,-2.4)
+  to[L, l_=$L_\mathrm{l2q}$] (0,-3.9)
+  to[R, l_=$R_\mathrm{2q}$] (0,-5.4);
+\draw[semithick] (2,-1.8) to[short, i<=$i_\mathrm{1q}$] (2,-2.4)
+  to[L, l_=$L_\mathrm{l1q}$] (2,-3.9)
+  to[R, l_=$R_\mathrm{1q}$] (2,-5.4);
+\draw[semithick] (4,-1.8) to[vL, l_=$K_s L_\mathrm{mq}$] (4,-5.4);
+\draw[semithick] (0,-1.8) -- (4,-1.8);
+\draw[semithick] (0,-5.4) -- (4,-5.4);
+\node[ground] at (3,-5.4) {};
+\node[signal, label={[sig]above left:$\psi_\mathrm{aq}$}] at (4,-1.8) {};
+\draw[semithick] (4,-1.8) to[L, l_=$L_l$] (6,-1.8)
+  to[cV, l_=$\omega_r\psi_d$] (8,-1.8)
+  to[R, l_=$R_s$, i>_=$i_q$] (10,-1.8)
+  node[signal, label={[sig]below:$v_q$}] (vq) {};
+
+% Park transformation between the dq0 windings and the bus phases.
+\node[block, minimum width=1.6cm, minimum height=2.8cm] (park) at (12.2,-0.9) {$\mathbf{P}(\theta)$};
+\draw[semithick] (vd) -- (vd -| park.west);
+\draw[semithick] (vq) -- (vq -| park.west);
+\node[signal, label={[sig]above:$\mathbf{v}$}] (bus) at ($(park.east)+(1.0,0)$) {};
+\draw[semithick] (park.east) -- (bus);
+\draw[->, line] (bus) -- ++(1.0,0) node[sig, right] {$\mathbf{i}$};
+
+% Field voltage input on the reciprocal base.
+\node[block, minimum width=1.2cm] (kfd) at (-2.0,3.1) {$k_\mathrm{fd}$};
+\draw[->, line] (-3.8,3.1) node[sig, left] {$E_\mathrm{fd}$} -- (kfd.west);
+\draw[->, line] (kfd.east) -- (-0.45,3.1);
+
+% Rotor mechanics, a compact loop directly below the Park transformation.
+\node[block, minimum width=1.4cm] (angle) at (12.2,-3.4) {$\dfrac{\omega_\mathrm{b}}{s}$};
+\coordinate (wr) at (12.2,-4.5);
+\node[block, minimum width=1.6cm] (swing) at (9.6,-4.5) {$\dfrac{1}{2Hs}$};
+\node[block, minimum width=1.2cm] (friction) at (12.2,-5.9) {$F$};
+\node[sum] (sum) at (9.6,-5.9) {$\Sigma$};
+\node[block, minimum width=1.2cm] (torque) at (9.6,-7.3) {$1/\omega_r$};
+\draw[->, line] (9.6,-9.0) node[sig, below] {$P_m$} -- (torque.south);
+\draw[->, line] (torque.north) -- (sum.south) node[pm, below right] {$+$};
+\draw[->, line] (8.0,-5.9) node[sig, left] {$T_e$} -- (sum.west) node[pm, above left] {$-$};
+\draw[->, line] (friction.west) -- (sum.east) node[pm, above right] {$-$};
+\draw[->, line] (sum.north) -- (swing.south);
+\draw[line] (swing.east) -- (wr);
+\node[signal] at (wr) {};
+\draw[->, line] (wr) -- (angle.south);
+\draw[->, line] (angle.north) -- node[sig, right] {$\theta$} (park.south);
+\draw[->, line] (wr) -- (friction.north);
+\draw[->, line] (wr) -- (15.0,-4.5) node[sig, right] {$\omega_r$};
+
+\draw[enclosure] ($(kfd.west |- 0,4.6)+(-0.35,0)$) rectangle ($(park.east |- torque.south)+(0.35,-0.35)$);
+\end{circuitikz}
+\end{document}

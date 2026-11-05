@@ -1,0 +1,67 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[american]{circuitikz}
+\input{../diagram-style.tex}
+\standaloneenv{circuitikz}
+
+\def\returnrow{-1.2}
+
+\begin{document}
+\begin{circuitikz}[emt diagram]
+\ctikzset{bipoles/length=1.05cm}
+
+% Winding resistances, leakage reactance, and ideal off-nominal ratio.
+\coordinate (w1) at (-0.4,2.8);
+\coordinate (e1) at (2.0,2.8);
+\coordinate (e2) at (5.1,2.8);
+\node[transformer core, anchor=A1] (tap) at (7.3,2.8) {};
+\draw[semithick] (w1) to[R,l=$R_1$] (e1)
+  to[L,l=$X$] (e2) -- (tap.A1);
+\draw[semithick] (tap.B1) to[R,l=$R_2$] ++(2.2,0)
+  coordinate (w2);
+\node[sig, above] at (tap.north) {$\tau:1$};
+\draw[->, line] (3.0,3.8) -- (4.2,3.8)
+  node[sig, midway, above] {$\mathbf{i}_{12}$};
+
+% Each core branch has a loss conductance and a saturable inductance.
+\foreach \x/\e in {2.0/1,5.1/2} {
+  \draw[semithick] (\x,2.8) to[short, i>_=$\mathbf{i}_{\mathrm{m}\e}$] (\x,1.8);
+  \draw[semithick] (\x,1.8) -- ++(-0.75,0)
+    to[R] ++(0,-2.4)
+    -- (\x,-0.6);
+  \draw[semithick] (\x,1.8) -- ++(0.75,0)
+    to[L] ++(0,-2.4)
+    -- (\x,-0.6) -- (\x,\returnrow);
+  \node[sig, anchor=north] at (\x-0.75,-0.68) {$\beta_\e G_\mathrm{c}$};
+  \node[sig, anchor=north] at (\x+0.75,-0.68) {$\beta_\e\,g(\boldsymbol{\psi}_\e)$};
+  \node[signal, label={[sig]above:$\mathbf{e}_\e$}] at (\x,2.8) {};
+  \node[signal] at (\x,1.8) {};
+  \node[signal] at (\x,-0.6) {};
+  \node[signal] at (\x,\returnrow) {};
+}
+
+% One return for both core branches and both windings of the ideal ratio.
+\draw[semithick] (tap.A2) -- (tap.A2 |- 0,\returnrow);
+\draw[semithick] (tap.B2) -- (tap.B2 |- 0,\returnrow);
+\draw[semithick] (2.0,\returnrow) -- (tap.B2 |- 0,\returnrow);
+\node[signal] at (tap.A2 |- 0,\returnrow) {};
+\node[ground] at (3.55,\returnrow) {};
+
+% Connection maps between the bus terminals and the windings.
+\node[block, minimum width=1.3cm, left=0.9cm of w1] (P1) {$\mathbf{P}_1$};
+\node[block, minimum width=1.3cm, right=0.9cm of w2] (P2) {$\mathbf{P}_2$};
+\draw[semithick] (P1.east) to[short, i=$\mathbf{i}_{\mathrm{w}1}$] (w1);
+\draw[semithick] (P2.west) to[short, i=$\mathbf{i}_{\mathrm{w}2}$] (w2);
+
+% Bus terminals and outward current injections.
+\node[signal, label={[sig]above:$\mathbf{v}_1$}] (b1) at ($(P1.west)+(-1.0,0)$) {};
+\node[signal, label={[sig]above:$\mathbf{v}_2$}] (b2) at ($(P2.east)+(1.0,0)$) {};
+\draw[semithick] (b1) -- (P1.west);
+\draw[semithick] (P2.east) -- (b2);
+\draw[->, line] (b1) -- ++(-1.0,0) node[sig, left] {$\mathbf{i}_1$};
+\draw[->, line] (b2) -- ++(1.0,0) node[sig, right] {$\mathbf{i}_2$};
+
+\coordinate (top) at (0,4.5);
+\coordinate (bottom) at (0,-2.1);
+\draw[enclosure] ($(P1.west |- bottom)+(-0.35,0)$) rectangle ($(P2.east |- top)+(0.35,0)$);
+\end{circuitikz}
+\end{document}
