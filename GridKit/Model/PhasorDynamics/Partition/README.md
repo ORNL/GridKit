@@ -3,16 +3,7 @@
 ## Overview and Purpose
 
 The concept of "Partition" is used in phasor dynamics in GridKit to refer
-to dividing up a system model into smaller parts
-**for the purpose of parallel simulation** and other
-solver acceleration techniques. 
-Dividing up a system for _modeling convenience_ (like having physically
-meaningful areas corresponding to particular utilities, 
-containerized subcomponents, template aggregate models
-for multi-instantiation, etc.) 
-is a fundamentally different goal. It is not
-appropriate to use divisions driven by modeling for solver acceleration.
-
+to dividing up a system model into smaller parts.
 Partitions for a system are defined in a JSON file with an extension of 
 `.partition.json`, which is separate from the system model 
 definition
