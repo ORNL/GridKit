@@ -19,6 +19,7 @@ int main(int, char**)
     result += test.axpy(50);
     result += test.scal(50);
     result += test.amax(50);
+    result += test.weightedErrorNorms();
     result += test.gemv(500, 10);
     result += test.axpyMulti(100, 10);
     result += test.massDot(100, 10);
