@@ -26,6 +26,10 @@ target_link_libraries(
          GridKit::solvers_dyn
          cppzmq)
 
+foreach(_target CoSimClient CoSimServer)
+  target_include_directories(${_target} PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/single_include)
+endforeach()
+
 add_test(
   NAME CoSimExample
   COMMAND bash run_cosim.sh
@@ -35,12 +39,18 @@ set_tests_properties(CoSimExample PROPERTIES TIMEOUT 30)
 
 add_test(
   NAME IEEE39CoSimExample
-  COMMAND bash run_cosim.sh IEEE39Generator.case.json IEEE39Grid.case.json
+  COMMAND bash run_cosim.sh ieee39
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(
   IEEE39CoSimExample
   PROPERTIES TIMEOUT
              30
              RESOURCE_LOCK
-             cosim_port_8800)
-set_tests_properties(CoSimExample PROPERTIES RESOURCE_LOCK cosim_port_8800)
+             cosim_port_5556)
+set_tests_properties(CoSimExample PROPERTIES RESOURCE_LOCK cosim_port_5556)
+
+add_test(
+  NAME CoSimSignalsExample
+  COMMAND bash run_cosim.sh three-bus signals
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(CoSimSignalsExample PROPERTIES TIMEOUT 30 RESOURCE_LOCK cosim_port_5556)
