@@ -368,11 +368,11 @@ namespace GridKit
         // Compare against reference solution generated with Mathematica
         const auto*           y    = model.y().getData();
         static constexpr auto tol  = 5.0e-3;
-        success                   *= std::abs(y[0] - 0.8181325137273604) < tol;
-        success                   *= std::abs(y[1] - 1.2467607076859357) < tol;
-        success                   *= std::abs(y[2] - 0.2350113335864333) < tol;
-        success                   *= std::abs(y[3] - 1.4725904879949860) < tol;
-        success                   *= std::abs(y[4] - 1.6662073483671279) < tol;
+        success                   *= isEqual(y[0], 0.8181325137273604, tol);
+        success                   *= isEqual(y[1], 1.2467607076859357, tol);
+        success                   *= isEqual(y[2], 0.2350113335864333, tol);
+        success                   *= isEqual(y[3], 1.4725904879949860, tol);
+        success                   *= isEqual(y[4], 1.6662073483671279, tol);
         success                   *= callbacks == 4;
         success                   *= solver.getStats().num_steps_ == 1000;
         return success.report(__func__);
