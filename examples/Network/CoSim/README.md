@@ -19,4 +19,3 @@ The co-simulated cases may be run in the following ways:
 # test case formulations
 ctest -R 'CoSim.*(Example|Test)$' --output-on-failure
 ```
-

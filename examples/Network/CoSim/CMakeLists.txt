@@ -27,7 +27,8 @@ target_link_libraries(
          cppzmq)
 
 foreach(_target CoSimClient CoSimServer)
-  target_include_directories(${_target} PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/single_include)
+  target_include_directories(${_target}
+                             PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/single_include)
 endforeach()
 
 add_test(
@@ -53,4 +54,9 @@ add_test(
   NAME CoSimSignalsExample
   COMMAND bash run_cosim.sh three-bus signals
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(CoSimSignalsExample PROPERTIES TIMEOUT 30 RESOURCE_LOCK cosim_port_5556)
+set_tests_properties(
+  CoSimSignalsExample
+  PROPERTIES TIMEOUT
+             30
+             RESOURCE_LOCK
+             cosim_port_5556)
