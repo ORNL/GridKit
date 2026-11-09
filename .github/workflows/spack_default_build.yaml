@@ -101,9 +101,17 @@ jobs:
         spack_spec:
           - gridkit@develop ~asan~enzyme~ipopt~klu~resolve~sundials~ubsan
           - gridkit@develop ~asan~enzyme~ipopt~klu~resolve+sundials~ubsan
+            ^sundials@7.8.0
           - gridkit@develop +asan+enzyme+ipopt+klu+resolve+sundials~ubsan build_type=RelWithDebInfo
             ^enzyme@0.0.206
+            ^sundials@7.8.0
           - gridkit@develop +asan~enzyme+ipopt+klu+resolve+sundials+ubsan
+            ^sundials@7.8.0
+          - gridkit@develop +asan+enzyme+ipopt+klu+resolve+sundials~ubsan build_type=RelWithDebInfo
+            ^enzyme@0.0.206
+            ^sundials@partitioned-dae
+          - gridkit@develop +asan~enzyme+ipopt+klu+resolve+sundials+ubsan
+            ^sundials@partitioned-dae
 
     steps:
       - name: Add LLVM
