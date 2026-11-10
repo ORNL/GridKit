@@ -276,6 +276,48 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// A state sets the initial voltages of the buses it names, in subsystems
+      /// too, and leaves the other buses at their case values.
+      TestOutcome stateParse()
+      {
+        using namespace GridKit::PhasorDynamics;
+        using DataT = SystemModelData<RealT, IdxT>;
+
+        const json case_input = json::parse(R"({
+          "header": {"case_name": "State", "case_description": "", "case_comments": ""},
+          "params": {"freq_base": 60.0, "va_base": 100000000.0},
+          "buses": [
+            {"number": 1, "class": "Bus", "name": "Bus 1", "params": {}},
+            {"number": 2, "class": "Bus", "name": "Bus 2", "init": {"Vr": 0.875, "Vi": 0.375}, "params": {}}
+          ],
+          "devices": [],
+          "subsystems": [{
+            "id": "area",
+            "level": 1,
+            "buses": [{"number": 3, "class": "Bus", "name": "Bus 3", "params": {}}],
+            "devices": []
+          }]
+        })");
+
+        const json state = json::parse(R"({
+          "buses": {"1": {"Vr": 0.5, "Vi": 0.25}, "3": {"Vr": 0.75, "Vi": -0.125}}
+        })");
+
+        TestStatus success = true;
+
+        auto data = case_input.template get<DataT>();
+        applyState(state, data);
+
+        success *= data.bus[0].Vr0 == 0.5;
+        success *= data.bus[0].Vi0 == 0.25;
+        success *= data.bus[1].Vr0 == 0.875;
+        success *= data.bus[1].Vi0 == 0.375;
+        success *= data.subsystems[0].bus[0].Vr0 == 0.75;
+        success *= data.subsystems[0].bus[0].Vi0 == -0.125;
+
+        return success.report(__func__);
+      }
+
       TestOutcome signalParse()
       {
         using namespace GridKit::PhasorDynamics;
