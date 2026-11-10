@@ -1,0 +1,296 @@
+"""Fixed-state algebraic test for the IDA initial-condition failures (hunting code).
+
+Holds the pre-fault Genrou states fixed, as at the t=1.0 event re-init, and replaces
+each machine by its Norton source (Genrou::initialize() ported to Python). Then
+continues the fault shunt s*Y_f from s=0 (no fault) to s=1 (target X) with Newton on
+the network KCL. If the continuation reaches s=1, a fault-on solution exists on the
+branch connected to the pre-fault state. If it folds before s=1, no such solution exists
+(H1). An IDA failure with a solution (H2) points at the IC solver.
+
+Dispatch: h1879_n26_dc148-200 (same as ida_mechanism.py). Modes: dc200 (datacenter
+at bus 148, alphaP=1.0, 200 MW) and dc0 (datacenter removed). All 200 fault buses.
+Runs on the current exclusive compute node (check `hostname`), never the login node.
+"""
+import csv
+import json
+import math
+import os
+from multiprocessing import Pool
+from pathlib import Path
+
+import numpy as np
+
+DISPATCH = Path("/scratch/isatkaus/gridkit-campaigns/faultscreen1_ap08/h1879_n26_dc148-200")
+CASE = DISPATCH / "b1_d0.1" / "case.json"
+MECH = Path("/scratch/isatkaus/gridkit-campaigns/ida_zoom/mechanism/results.csv")
+OUT = Path("/scratch/isatkaus/gridkit-campaigns/ida_zoom/fixed_state")
+DC_ALPHA = 1.0
+DS0, DS_MAX, DS_MIN = 0.02, 0.05, 1e-5
+TOL = 1e-10
+MAX_DV = 0.1
+H_FD = 1e-7
+
+
+def sigmoid(x):
+    return 0.5 * (1.0 + math.tanh(120.0 * x))
+
+
+def qramp(x):
+    return x * x * sigmoid(x)
+
+
+def sat_consts(s10, s12):
+    if s12 == 0:
+        return 0.0, 0.0
+    s112 = math.sqrt(s10 / s12)
+    sa = (1.2 * s112 + 1.0) / (s112 + 1.0)
+    sb = (1.2 * s112 - 1.0) / (s112 - 1.0)
+    if sb < sa:
+        sa = sb
+    sb = s12 / ((sa - 1.2) ** 2)
+    return sa, sb
+
+
+def gen_emf(p, vr, vi):
+    """Port of Genrou::initialize(); returns the rotor EMF E (component base, complex)."""
+    k = 100.0 / p["mva"]
+    ra, xqpp, xdpp, xd, xdp, xq, xqp, xl = (p[x] for x in ("Ra", "Xqpp", "Xdpp", "Xd", "Xdp", "Xq", "Xqp", "Xl"))
+    pc, qc = p["p0"] * k, p["q0"] * k
+    vm2 = vr * vr + vi * vi
+    ir = (pc * vr + qc * vi) / vm2
+    ii = (pc * vi - qc * vr) / vm2
+    sa, sb = sat_consts(p["S10"], p["S12"])
+    psipp = math.hypot(vr + ra * ir - xqpp * ii, vi + ra * ii + xqpp * ir)
+    ksat = sb * qramp(psipp - sa)
+    xd2 = xdp - xl
+    xq2 = xqp - xl
+    xd4 = (xdp - xdpp) / xd2
+    xd5 = (xdpp - xl) / xd2
+    xq1 = xq - xqp
+    xq4 = (xqp - xqpp) / xq2
+    xq5 = (xqpp - xl) / xq2
+    xqd = (xq - xl) / (xd - xl)
+    kp = 1.0 + xqd * ksat
+    xsat = kp * xdpp + xq - xqpp
+    delta = math.atan2((vi + ra * ii) * kp + xsat * ir, (vr + ra * ir) * kp - xsat * ii)
+    sd, cd = math.sin(delta), math.cos(delta)
+    id_ = ir * sd - ii * cd
+    iq = ir * cd + ii * sd
+    vq = vr * cd + vi * sd + id_ * xqpp + iq * ra
+    edp = (xq1 - xqd * (xqp - xqpp) * ksat) * iq / kp
+    psiqp = edp + xq2 * iq
+    psidp = vq - (xdpp - xl) * id_
+    eqp = psidp + (xdp - xl) * id_
+    psiqpp = -psiqp * xq4 - edp * xq5
+    psidpp = psidp * xd4 + eqp * xd5
+    vd, vqq = -psiqpp, psidpp
+    return complex(sd * vd + cd * vqq, -cd * vd + sd * vqq)
+
+
+class Net:
+    def __init__(self, case, dc_on):
+        buses = case["buses"]
+        self.num = [b["number"] for b in buses]
+        pos = {n: i for i, n in enumerate(self.num)}
+        n = len(self.num)
+        self.n = n
+        self.V0 = np.array([complex(b["init"]["Vr"], b["init"]["Vi"]) for b in buses])
+        self.Y = np.zeros((n, n), complex)
+        self.Ygb = np.zeros(n, complex)
+        self.EYg = np.zeros(n, complex)
+        ld_bus, s0, az, ai, ap = [], [], [], [], []
+        self.dc_idx = None
+        self.fault_bus = None
+        self.Yf = 0j
+        self.X = None
+        self.gen_check = []
+        for d in case["devices"]:
+            c, p = d["class"], d["params"]
+            if c == "Branch":
+                f, t = pos[d["ports"]["bus1"]], pos[d["ports"]["bus2"]]
+                ys = 1.0 / complex(p["R"], p["X"])
+                bc = p.get("B", 0.0)
+                a = p["tap"] * np.exp(1j * p["phase"])
+                self.Y[f, f] += (ys + 1j * bc / 2) / abs(a) ** 2
+                self.Y[t, t] += ys + 1j * bc / 2
+                self.Y[f, t] += -ys / np.conj(a)
+                self.Y[t, f] += -ys / a
+            elif c == "Genrou":
+                i = pos[d["ports"]["bus"]]
+                yc = 1.0 / complex(p["Ra"], p["Xqpp"])
+                ysys = (p["mva"] / 100.0) * yc
+                e = gen_emf(p, self.V0[i].real, self.V0[i].imag)
+                self.Ygb[i] += ysys
+                self.EYg[i] += ysys * e
+                self.gen_check.append((i, ysys, e, complex(p["p0"], p["q0"])))
+            elif c == "LoadZIP":
+                i = pos[d["ports"]["bus"]]
+                is_dc = d["id"].startswith("datacenter")
+                pn, qn, aI, aP = p["Pnom"], p["Qnom"], p["alphaI"], p["alphaP"]
+                if is_dc:
+                    self.dc_idx = len(ld_bus)
+                    if dc_on:
+                        aP, aI = DC_ALPHA, 1.0 - DC_ALPHA
+                    else:
+                        pn, qn = 0.0, 0.0
+                ld_bus.append(i)
+                s0.append(complex(pn, qn))
+                az.append(1.0 - aI - aP)
+                ai.append(aI)
+                ap.append(aP)
+            elif c == "BusFault":
+                self.fault_bus = pos[d["ports"]["bus"]]
+                self.Yf = 1.0 / complex(p["R"], p["X"])
+                self.X = p["X"]
+        self.ld_bus = np.array(ld_bus, dtype=int)
+        self.S0 = np.array(s0)
+        self.aZ = np.array(az)
+        self.aI = np.array(ai)
+        self.aP = np.array(ap)
+        self.Vn = np.abs(self.V0[self.ld_bus])
+
+    def set_fault_bus(self, bus_index):
+        self.fault_bus = bus_index
+
+    def icons(self, V):
+        vd = V[self.ld_bus]
+        m = np.abs(vd)
+        f = self.aZ * m * m / self.Vn ** 2 + self.aI * m / self.Vn + self.aP
+        i_ld = np.conj(self.S0 * f / vd)
+        out = np.zeros(self.n, complex)
+        np.add.at(out, self.ld_bus, i_ld)
+        return out
+
+    def F(self, V, s):
+        yfv = np.zeros(self.n, complex)
+        yfv[self.fault_bus] = s * self.Yf
+        return self.Y @ V + (self.Ygb + yfv) * V - self.EYg + self.icons(V)
+
+
+def _split(v):
+    return np.concatenate([v.real, v.imag])
+
+
+def _join(x, n):
+    return x[:n] + 1j * x[n:]
+
+
+def newton(net, V, s, maxit=30):
+    n = net.n
+    for _ in range(maxit):
+        Fv = net.F(V, s)
+        if np.max(np.abs(Fv)) < TOL:
+            return V, True
+        g0 = _split(Fv)
+        x = _split(V)
+        J = np.zeros((2 * n, 2 * n))
+        for j in range(2 * n):
+            xp = x.copy()
+            xp[j] += H_FD
+            J[:, j] = (_split(net.F(_join(xp, n), s)) - g0) / H_FD
+        try:
+            dx = np.linalg.solve(J, -g0)
+        except np.linalg.LinAlgError:
+            return V, False
+        V = _join(x + dx, n)
+    return V, bool(np.max(np.abs(net.F(V, s))) < TOL)
+
+
+def continuation(net):
+    s, V = 0.0, net.V0.copy()
+    ds, nsteps = DS0, 0
+    while s < 1.0 - 1e-12:
+        s_try = min(1.0, s + ds)
+        Vt, ok = newton(net, V, s_try)
+        if ok and np.max(np.abs(Vt - V)) < MAX_DV:
+            s, V = s_try, Vt
+            ds = min(ds * 1.5, DS_MAX)
+            nsteps += 1
+        else:
+            ds /= 2.0
+            if ds < DS_MIN:
+                break
+    return s, V, nsteps
+
+
+def job(args):
+    mode, bus = args
+    case = json.loads(CASE.read_text())
+    net = Net(case, dc_on=(mode == "dc200"))
+    net.set_fault_bus(net.num.index(bus))
+    s, V, nsteps = continuation(net)
+    reached = s >= 1.0 - 1e-12
+    vf = abs(V[net.fault_bus]) if s > 0 else abs(net.V0[net.fault_bus])
+    return {
+        "mode": mode,
+        "fault_bus": bus,
+        "reached": reached,
+        "s_max": round(s, 6),
+        "x_crit": "" if reached else round(net.X / s, 6),
+        "nsteps": nsteps,
+        "v_fault_at_smax": round(float(vf), 6),
+    }
+
+
+def prefault_check(mode):
+    case = json.loads(CASE.read_text())
+    net = Net(case, dc_on=(mode == "dc200"))
+    f0 = np.max(np.abs(net.F(net.V0, 0.0)))
+    inj_err = 0.0
+    for i, ysys, e, s0 in net.gen_check:
+        v = net.V0[i]
+        inj = ysys * (e - v)
+        inj_err = max(inj_err, abs(inj - np.conj(s0 / v)))
+    return f0, inj_err, len(net.gen_check), len(net.ld_bus)
+
+
+def load_ida():
+    out = {}
+    with MECH.open() as f:
+        for r in csv.DictReader(f):
+            if r["mode"] != "event":
+                continue
+            if r["exp"] == "nodc":
+                out[("dc0", int(r["fault_bus"]))] = r["status"]
+            elif r["exp"] == "mw" and r["alpha_p"] == "1.0" and r["dc_mw"] == "200":
+                out[("dc200", int(r["fault_bus"]))] = r["status"]
+    return out
+
+
+def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    for mode in ("dc200",):
+        f0, inj_err, ng, nl = prefault_check(mode)
+        print(f"[{mode}] pre-fault |F| = {f0:.3e} (gens {ng}, loads {nl}); "
+              f"gen injection vs conj(S0/V) max err = {inj_err:.3e}")
+    case = json.loads(CASE.read_text())
+    buses = [b["number"] for b in case["buses"]]
+    X_FAULT = next(d["params"]["X"] for d in case["devices"] if d["class"] == "BusFault")
+    jobs = [("dc200", b) for b in buses]
+    ida = load_ida()
+    fields = ["mode", "fault_bus", "reached", "s_max", "x_crit", "nsteps", "v_fault_at_smax", "ida_status"]
+    rows = []
+    # Rows are written as each bus finishes, so a timeout keeps partial results.
+    with (OUT / "results.csv").open("w", newline="") as f, Pool(min(16, os.cpu_count() or 1)) as pool:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        for r in pool.imap_unordered(job, jobs):
+            r["ida_status"] = ida.get((r["mode"], r["fault_bus"]), "")
+            rows.append(r)
+            w.writerow(r)
+            f.flush()
+    for mode in ("dc200",):
+        sub = [r for r in rows if r["mode"] == mode]
+        print(f"[{mode}] fault-on solution reached at X={X_FAULT}: "
+              f"{sum(r['reached'] for r in sub)} of {len(sub)} buses")
+        cross = {}
+        for r in sub:
+            if r["ida_status"]:
+                key = (r["ida_status"], "solution" if r["reached"] else "no-solution")
+                cross[key] = cross.get(key, 0) + 1
+        for k, v in sorted(cross.items()):
+            print(f"  IDA={k[0]:<11} fixed-state={k[1]:<12} count={v}")
+
+
+if __name__ == "__main__":
+    main()

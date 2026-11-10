@@ -48,12 +48,35 @@ class CaseSpec:
     load_class: str = "LoadZIP"
     exciter_class: str = "SexsPti"
     governor_class: str = "Tgov1"
+    # Cases larger than ACTIVSg200 mix machine types (round-rotor and salient
+    # pole) and several exciter/governor/stabiliser models, so the single
+    # *_class fields above are not enough on their own.
+    machine_classes: tuple = ("Genrou",)
     # Suffix on the Genrou's own device id. Empty in pre-#577 cases where the
     # Genrou id was the bare "<bus>_<unit>".
     machine_suffix: str = ""
+    machine_suffixes: dict[str, str] = field(default_factory=dict)
+    # Positional unit numbering misaligns at multi-generator buses; see
+    # match_gens_by_mva. Required for ACTIVSg2000, harmless elsewhere.
+    match_by_mva: bool = False
     companion_suffixes: dict[str, str] = field(
         default_factory=lambda: {"Tgov1": "_tgov1", "SexsPti": "_sexs_pti"}
     )
+
+    @property
+    def unit_classes(self) -> tuple:
+        """Every device class tied to one generating unit."""
+        return tuple(dict.fromkeys((*self.machine_classes, *self.companion_suffixes)))
+
+    @property
+    def all_suffixes(self) -> tuple:
+        s = (
+            self.machine_suffix,
+            *self.machine_suffixes.values(),
+            *self.companion_suffixes.values(),
+        )
+        # longest first so "_genrou" is not shadowed by a shorter match
+        return tuple(sorted({x for x in s if x}, key=len, reverse=True))
 
     @property
     def case_json_path(self) -> Path:
@@ -97,7 +120,36 @@ HAWAII40 = CaseSpec(
     companion_suffixes={"Tgov1": "_tgov1", "Ieeet1": "_ieeet1"},
 )
 
-CASES = {c.name: c for c in (ACTIVSG200, HAWAII40)}
+# 2000-bus TAMU Texas case. Unlike ACTIVSg200 it mixes round-rotor and salient
+# pole machines, two exciter models, two governor models and a stabiliser, and
+# 103 of its online units (renewables and small plant) carry no dynamic model
+# at all -- those are handled as negative load, not as machines.
+ACTIVSG2000 = CaseSpec(
+    name="activsg2000",
+    case_dir=_GRIDKIT / "cases/PhasorDynamics/ACTIVSg2000",
+    case_json="ACTIVSg2000.case.json",
+    solver_dir=_GRIDKIT / "examples/PhasorDynamics/Validation/ACTIVSg2000",
+    solver_json="ACTIVSg2000.solver.json",
+    aux=_TAMU / "ACTIVSg2000/raw-tamu-data/ACTIVSg2000.aux",
+    dyr=_TAMU / "ACTIVSg2000/raw-tamu-data/ACTIVSg2000_dynamics.dyr",
+    template_m=_TAMU / "ACTIVSg2000/grid-v1/case_ACTIVSg2000.m",
+    load_class="LoadZIP",
+    exciter_class="Ieeet1",
+    governor_class="Tgov1",
+    machine_classes=("Genrou", "Gensal"),
+    machine_suffix="_genrou",
+    machine_suffixes={"Genrou": "_genrou", "Gensal": "_gensal"},
+    match_by_mva=True,
+    companion_suffixes={
+        "Tgov1": "_tgov1",
+        "Hygov": "_hygov",
+        "Ieeet1": "_ieeet1",
+        "Esdc1a": "_esdc1a",
+        "Ieeest": "_ieeest",
+    },
+)
+
+CASES = {c.name: c for c in (ACTIVSG200, HAWAII40, ACTIVSG2000)}
 
 
 # --------------------------------------------------------------------------
@@ -321,10 +373,46 @@ def gen_id_of(device_id: str, spec: CaseSpec) -> str:
     and a bare `49_1` all map to `49_1`.
     """
     did = str(device_id)
-    for s in (spec.machine_suffix, *spec.companion_suffixes.values()):
-        if s and did.endswith(s):
+    for s in spec.all_suffixes:
+        if did.endswith(s):
             return did[: -len(s)]
     return did
+
+
+def machines(case: dict, spec: CaseSpec) -> list:
+    """Every synchronous machine device, across all machine classes."""
+    return [
+        d for d in case.get("devices", []) if d.get("class") in spec.machine_classes
+    ]
+
+
+def match_gens_by_mva(case: dict, spec: CaseSpec, gen: pd.DataFrame) -> dict:
+    """Map machine device id -> `.m` generator id using (bus, MBASE).
+
+    Positional unit numbering breaks at multi-generator buses: ACTIVSg2000 has
+    13 such buses, and where the `.m` lists an offline unit that the case
+    omits, every later unit at that bus shifts by one. The symptom is a
+    machine initialised with another unit's dispatch, which shows up as
+    "Tgov1: initial valve position outside [Pvmin, Pvmax]".
+
+    MBASE is stable under that shift. Units sharing a bus *and* a rating are
+    interchangeable, so any consistent assignment among them is correct.
+    Returns only confident matches; callers treat the rest as unmatched.
+    """
+    pool: dict = {}
+    for _, r in gen.iterrows():
+        pool.setdefault((int(r["GEN_BUS"]), round(float(r["MBASE"]), 2)), []).append(r)
+
+    out = {}
+    for d in machines(case, spec):
+        bus = int(d["ports"]["bus"])
+        mva = d["params"].get("mva")
+        if mva is None:
+            continue
+        rows = pool.get((bus, round(float(mva), 2)))
+        if rows:
+            out[d["id"]] = rows.pop(0)["_gid"]
+    return out
 
 
 def companion_report(case: dict, spec: CaseSpec) -> pd.DataFrame:
@@ -686,6 +774,7 @@ def build_case_from_m(
         "gen": 0,
         "gen_removed": 0,
         "gen_added": 0,
+        "gen_static": [],
         "load": 0,
         "shunt": 0,
         "shunt_folded": 0,
@@ -713,7 +802,16 @@ def build_case_from_m(
     grow = {r["_gid"]: r for _, r in gen.iterrows()}
     online_ids = {g for g, r in grow.items() if r["_online"]}
 
-    json_genrou = {gen_id_of(d["id"], spec) for d in devices(case, "Genrou")}
+    # device id -> .m gen id. Positional ids are wrong at multi-generator
+    # buses, so larger cases match on (bus, MBASE) instead.
+    dev2gid = (
+        match_gens_by_mva(case, spec, gen)
+        if spec.match_by_mva
+        else {d["id"]: gen_id_of(d["id"], spec) for d in machines(case, spec)}
+    )
+    gid2dev = {v: k for k, v in dev2gid.items()}
+
+    json_genrou = set(dev2gid.values())
     missing = sorted(online_ids - json_genrou)
     if missing and dyr is None:
         msg = (
@@ -722,27 +820,29 @@ def build_case_from_m(
         )
         if strict:
             raise ValueError(msg)
+        # Not an error in every case: large TAMU cases carry renewable and
+        # small units with no dynamic model at all. The caller converts these
+        # to negative load, the same stand-in used for wind.
         counts["gen_unmatched"] = missing
+        counts["gen_static"] = missing
 
     if remove_offline:
         drop = json_genrou - online_ids
         if drop:
+            drop_dev = {gid2dev[g] for g in drop if g in gid2dev}
+            drop_units = {gen_id_of(x, spec) for x in drop_dev}
             keep = []
             for d in case["devices"]:
                 did, cls = d.get("id", ""), d.get("class")
-                gid = gen_id_of(did, spec)
-                if (
-                    cls in ("Genrou", spec.exciter_class, spec.governor_class)
-                    and gid in drop
-                ):
+                if cls in spec.unit_classes and gen_id_of(did, spec) in drop_units:
                     continue
                 keep.append(d)
             counts["gen_removed"] = len(case["devices"]) - len(keep)
             case["devices"] = keep
 
     if patch_gen:
-        for d in devices(case, "Genrou"):
-            r = grow.get(gen_id_of(d["id"], spec))
+        for d in machines(case, spec):
+            r = grow.get(dev2gid.get(d["id"], ""))
             if r is None or not r["_online"]:
                 continue
             d["params"]["p0"] = float(r["PG"]) / baseMVA

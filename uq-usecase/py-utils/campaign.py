@@ -792,7 +792,9 @@ def add_datacenter(
 ) -> dict:
     """Add datacenter load at a bus, before dispatch. Returns modified frames.
 
-    Added to the `.m` so the OPF has to serve it and the commitment resizes.
+    Added to the `.m` so the OPF has to serve it. The commitment is not resized
+    here: `commit_n` runs afterwards with the same `n`, so a dispatch the
+    committed fleet cannot serve is a failure, not a re-commit.
     `power_factor` 0.98 lagging is an assumption, not a sourced value.
     """
     b = frames["bus"]

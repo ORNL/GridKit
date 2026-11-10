@@ -163,12 +163,18 @@ def enable_monitors(
     case,
     bus: Sequence[str] | None = ("Vr", "Vi"),
     genrou: Sequence[str] | None = ("delta", "omega"),
+    machine_classes: Sequence[str] = ("Genrou", "Gensal"),
 ) -> dict:
     """Set which channels land in the monitor csv. Returns a modified copy.
 
     The post-#577 ACTIVSg200 case monitors `omega` only: every bus carries
     `"mon": []`, so no bus voltage reaches the csv and nothing PMU-observable
     can be computed. Pass None to leave a group untouched.
+
+    `machine_classes` must list every synchronous machine class in the case.
+    ACTIVSg2000 carries 20 `Gensal` alongside 314 `Genrou`; targeting only
+    `Genrou` leaves those 20 without a `delta` channel, which silently removes
+    them from the COI pole-slip stability test.
 
     Valid names are BUS_MONITORS and GENROU_MONITORS.
     """
@@ -187,7 +193,7 @@ def enable_monitors(
             b["mon"] = list(bus)
     if genrou is not None:
         for d in case.get("devices", []):
-            if d.get("class") == "Genrou":
+            if d.get("class") in machine_classes:
                 d["mon"] = list(genrou)
     return case
 

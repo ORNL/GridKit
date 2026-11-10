@@ -1,12 +1,51 @@
 # Datacenter load UQ: campaign plan
 
-Status: **planning**, nothing in this document is implemented yet.
-Companion to [`m_to_case_helper.md`](m_to_case_helper.md), which covers the
-`.aux`/`.dyr` -> `case.json` conversion chain this campaign sits on top of.
+**Status: five campaigns run and collected** — `phase3b` (243 conditions),
+`aleatoric1` (840), `faultscreen1` (1020), `afront1` (1360 runs) and `afront2`
+(2720 runs). This is the design-and-evidence
+document: derivations, measurements, rejected alternatives, change history.
 
 Every number below is tagged with where it came from. Numbers marked
 *(measured)* were produced by a tool run in this workspace; numbers marked
 *(assumed)* are placeholders that still need computing.
+
+Companion to [`m_to_case_helper.md`](m_to_case_helper.md), which covers the
+`.aux`/`.dyr` -> `case.json` conversion chain this campaign sits on top of.
+
+### The three documents, and which to read
+
+| document | answers | read it when |
+|---|---|---|
+| [datacenter_pilot_report.md](datacenter_pilot_report.md) | *what did we find, and how, in general terms* | you want the study. **Stands alone** |
+| **this file** | *why each choice was made, and what every number is* | you want to question a decision |
+| [dc_campaign_pipeline.md](dc_campaign_pipeline.md) | *which function does what* | you are changing the code |
+
+### Settled design *(authoritative)*
+
+**Anything elsewhere in this document that contradicts this table is
+superseded.** Superseded material is kept rather than deleted, because the
+reasoning that was tried and rejected is part of the result; it is marked inline
+and indexed in [Appendix A](#appendix-a-superseded-decisions-and-where-they-were-overturned).
+
+| parameter | settled value | fixed by |
+|---|---|---|
+| case | ACTIVSg200, 200 bus / 246 branch / 49 gen | - |
+| **datacenter load** | **`P/I/Z = 20/80/0`** (`alphaP=0.2`, `alphaI=0.8`, `alphaZ=0`) | [simulability, not physics](#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22) |
+| existing loads | `P/I/Z = 0/0/100` (constant impedance) | shipped case |
+| wind stand-in | `P/I/Z = 0/100/0` negative load | [section 3](#3-wind-why-negative-load-not-fixed) |
+| contingency | self-clearing bus fault, applied at `t = 1.0 s` | [section 5](#5-contingency) |
+| QoI | CCT by bisection, censored at `0.5 s` | [section 9](#why-critical-clearing-time-is-the-headline-metric) |
+| stability test | COI pole slip, $>180°$ | [stability criterion](#stability-criterion) |
+| commitment | $n$ cheapest by merit order, `min_thermal=8`, `reserve=1.10` | [section 7](#7-phases) |
+| dispatch | DC OPF then AC PF, one loss iteration | [section 10](#10-the-dispatch-chain) |
+| epistemic axes | **none active** — `alphaP` was tested and dropped | [section 4](#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22) |
+
+> **The datacenter mix deserves a second look.** `P/I/Z = 20/80/0` was chosen
+> because it is what runs, not because it is what a datacenter is. Industry
+> mixes are nearer `70/20/10`. See
+> [Is the 20/80/0 mix defensible?](#is-the-20800-mix-defensible) for the
+> argument that it is a reasonable *during-fault* model anyway, and for why a
+> rerun at `70/20/10` is currently blocked.
 
 ---
 
@@ -161,13 +200,24 @@ perfectly healthy case can look like sustained swinging.
 ### What a load does during a voltage dip: the ZIP model
 
 Loads are not all the same when the voltage sags. The ZIP model splits a load
-into three behaviours, weighted by `alphaZ`, `alphaI`, `alphaP`:
+into three behaviours, weighted by `alphaZ`, `alphaI`, `alphaP`, which sum to 1.
+The power actually drawn at voltage $V$, against a nominal $P_0$ at $V_0$, is
+
+$$P(V) \;=\; P_0 \left[ \alpha_Z \left(\frac{V}{V_0}\right)^{2} + \alpha_I \left(\frac{V}{V_0}\right) + \alpha_P \right]$$
+
+so the three terms fall off as $V^2$, $V$, and not at all. Substituting
+$V/V_0 = 0.5$:
 
 | share | behaves like | during a 50 % voltage dip, draws |
 |---|---|---|
 | `alphaZ` | a fixed **impedance** (a resistor) | **25 %** of nominal power |
 | `alphaI` | a fixed **current** | 50 % of nominal power |
 | `alphaP` | a fixed **power** | **100 %** of nominal power |
+
+Throughout this document a mix is written **`P/I/Z`** as percentages in that
+order, so `20/80/0` means $\alpha_P = 0.2$, $\alpha_I = 0.8$, $\alpha_Z = 0$.
+Note GridKit stores only `alphaI` and `alphaP`; $\alpha_Z = 1 - \alpha_I -
+\alpha_P$ is implicit and cannot be set directly.
 
 The difference is large and it matters for stability. Constant-impedance load
 **sheds itself** during a dip, which unloads the system and helps it recover.
@@ -386,13 +436,15 @@ negative `Pnom`), not a relocation. A more accurate name would be
 ## 4. ZIP coefficients are a first-class lever
 
 Because `alphaI` and `alphaP` are per-device parameters in `case.json`, load
-character is adjustable without touching GridKit:
+character is adjustable without touching GridKit. What each mix is **actually
+used for**, as shipped today:
 
-| `alphaI` | `alphaP` | behaviour | used for |
-|---|---|---|---|
-| 0 | 0 | constant impedance | the 109 existing loads |
-| 1 | 0 | constant current | not used yet |
-| 0 | 1 | constant power | wind pseudo-load, **datacenter** |
+| `P/I/Z` | `alphaI` | `alphaP` | behaviour | used for |
+|---|---|---|---|---|
+| `0/0/100` | 0 | 0 | constant impedance | the 109 existing loads (case default) |
+| `0/100/0` | 1 | 0 | constant current | the wind stand-in negative load |
+| `20/80/0` | 0.8 | 0.2 | mostly constant current | **the datacenter**, as run |
+| `100/0/0` | 0 | 1 | constant power | the intended datacenter model, not simulable at all buses |
 
 This matters for the headline question. A constant-impedance load sheds itself
 during a voltage dip and *helps* the system; real datacenter load is closer to
@@ -400,7 +452,14 @@ constant power and does not. Modelling the datacenter as constant impedance
 would understate its impact, so the ZIP mix is a deliberate study parameter, not
 a default to inherit.
 
-**Open question:** what ZIP mix best represents datacenter load? Pending a
+> **Superseded.** The paragraph below set the working default to
+> `alphaP = 1.0`. It was overturned by the sensitivity test immediately
+> following, and the campaigns ran at `P/I/Z = 20/80/0`. Kept because the
+> reasoning for wanting `alphaP = 1` is still the right physics, and because it
+> is the reason the simulability limit was found at all.
+
+**Open question *(raised 2026-10-20, superseded 2026-10-22)*:** what ZIP mix
+best represents datacenter load? Pending a
 literature review, the working default is **`alphaP = 1.0`** (pure constant
 power, `alphaI = 0`). Rationale, which is an engineering judgement and not a
 cited value: IT load is fed through rectifiers and UPS and behaves close to
@@ -444,9 +503,71 @@ it is far too weak to carry an epistemic study.
 **Decision: drop `alphaP` as the epistemic dimension and run the pilot
 aleatoric-only.** The model-form parameters remain available later (there are
 many), and this is a legitimate UQ result in its own right: a parameter that was
-expected to matter, tested, and found not to. Adopt `alphaP = 0.2` as the
-working value, which is simulable across the full MW range and gives CCT
-indistinguishable from `alphaP = 1.0` wherever both run.
+expected to matter, tested, and found not to. Adopt `P/I/Z = 20/80/0`
+(`alphaP = 0.2`, `alphaI = 0.8`, `alphaZ = 0`) as the working mix, which is
+simulable across the full MW range and gives CCT indistinguishable from
+`alphaP = 1.0` wherever both run.
+
+### Is the `20/80/0` mix defensible?
+
+It is the obvious thing to attack, so it is argued here in full.
+
+**The honest statement of why it was chosen:** because it runs. `alphaP = 1`
+fails to simulate at some buses and the mechanism is still unexplained
+([five hypotheses, none sufficient](#the-constant-power-simulability-limit-five-hypotheses-none-sufficient-measured-2026-10-30)).
+That is a constraint imposed by the tool, not a modelling judgement, and it is
+reported as such.
+
+**Should we rerun at an industry mix such as `70/20/10`?** *(asked 2026-11-02)*
+Not yet, and the blocker is measured, not speculative. The sensitivity sweep
+above tested exactly this region:
+
+| bus | highest `alphaP` that runs | so `70/20/10` ($\alpha_P = 0.7$) would |
+|---|---|---|
+| 108 | 1.0 | run |
+| 172 | 0.5 (2 hours), 0.2 (2 hours) | **fail** at 2 of 4 hours |
+| 93 | 0.2 | **fail** at all 4 hours |
+
+A campaign at $\alpha_P = 0.7$ would therefore lose conditions at some buses and
+keep them at others — and the losses would be *correlated with the bus*, which
+is the very variable the study compares. That is worse than a uniform
+compromise: it would bias hosting-capacity comparisons by silently deleting the
+hard buses. A uniform `20/80/0` is wrong everywhere by the same amount; a
+non-uniform `70/20/10` would be wrong *differently per bus*.
+
+**What makes `20/80/0` more defensible than it first looks.** The sweep's
+remainder went to constant *current*, not constant impedance, and that choice
+carries a physical argument *(engineering reasoning, not a cited or validated
+model)*: a rectifier/UPS front end draws constant power only while it is
+regulating. During a deep dip it hits its **current limit**, and a
+current-limited converter is by definition a constant-current load. So
+`P/I/Z = 20/80/0` is a plausible *during-fault* behaviour for converter-fed
+load, whereas `70/20/10` describes the *pre-limit*, small-deviation regime. The
+fault is precisely the large-deviation regime.
+
+This is a **working hypothesis**, not a verified claim. It would be falsified by
+a datacenter model with an explicit current limit and undervoltage trip, which
+is what GridKit actually lacks
+([feedback item](#the-constant-power-simulability-limit-five-hypotheses-none-sufficient-measured-2026-10-30)).
+
+**And the stakes are low either way**, which is the strongest practical point.
+Across the 12 (hour, bus) cells where both mixes ran, CCT moved by **0.0000 s in
+10 cells, 0.0070 s in one, and 0.0281 s in one**. The aleatoric effect over the
+same sample is an order of magnitude larger. A rerun would buy presentational
+defensibility, not a different answer.
+
+**Recommended order of work, if this is to be settled:**
+
+1. Measure the feasible-$\alpha_P$ frontier over the *full* sited bus set, not
+   the 3 buses tested. This is a cheap stage-B screen: one dispatch per bus,
+   then a short $\alpha_P$ ladder.
+2. If $\alpha_P = 0.7$ turns out feasible everywhere that matters, rerun
+   `aleatoric1` at `70/20/10` and compare headline numbers directly.
+3. If it does not, report `20/80/0` with the current-limit argument above and
+   the measured $\le 0.0281$ s bound as a stated model-form uncertainty.
+
+Step 1 is worth doing regardless, because the frontier is also the cleanest
+reproducer to hand the GridKit/SUNDIALS developers.
 
 **For contrast, the aleatoric effect is large.** Same 200 MW, same bus, baseline
 versus sited:
@@ -535,11 +656,14 @@ net load -> commitment -> inertia map. Wind then never has to be defended as
 
 | Phase | What it does | Deliverable | Status |
 |---|---|---|---|
-| **0** | Infrastructure: Julia resolver, fault relocation, monitor selection, wind stand-in, loss-aware OPF, reference-bus move, validation gate | a pipeline that cannot fail silently | **in progress** |
-| **1** | **Go/no-go gate.** Do the QoI respond to fault location and to inertia? | evidence the premise holds | **PASSED** |
-| **2** | Aleatoric baseline, no datacenter. Stratified sample over (net load, inertia), reweighted to the true distribution | QoI distribution, `P(violation)`, and whether industry screening cases bound the risk | not started |
-| **3** | Datacenter dimension. (bus, MW, ZIP mix) as design variables on top of Phase 2 | siting map: how much load each bus tolerates | not started |
-| **4** | Model-form robustness. Re-run a subset with wind as REGCA+REECB+REPCA instead of the negative-load stand-in | do the conclusions survive a change of wind model? | optional |
+| **0** | Infrastructure: Julia resolver, fault relocation, monitor selection, wind stand-in, loss-aware OPF, reference-bus move, validation gate | a pipeline that cannot fail silently | **done** *(except the reference-bus move, deliberately deferred)* |
+| **1** | **Go/no-go gate.** Do the QoI respond to fault location and to inertia? | evidence the premise holds | **PASSED 2026-10-20** |
+| **2** | Aleatoric baseline, no datacenter. Stratified sample over (net load, inertia), reweighted to the true distribution | QoI distribution, `P(violation)`, and whether industry screening cases bound the risk | **done** — `aleatoric1`, 840/840 |
+| **3** | Datacenter dimension. (bus, MW, ZIP mix) as design variables on top of Phase 2 | siting map: how much load each bus tolerates | **done** — `phase3b` + `faultscreen1` |
+| **4** | Model-form robustness. Re-run a subset with wind as REGCA+REECB+REPCA instead of the negative-load stand-in | do the conclusions survive a change of wind model? | not started *(optional)* |
+
+*(`afront1` and `afront2` were added later and sit outside this numbering; they
+map the feasible-`alphaP` surface and are covered in section 4.)*
 
 Phases 0-3 are the **sampling-based study** and are self-contained: they produce
 a publishable result without any machine learning. Phase 4 is a robustness check
@@ -556,10 +680,10 @@ be started until Phase 2 has produced the data it would train on.
 | Replace hardcoded `julia112` in `pm_utils.py` with a resolver that **verifies the binary runs** | **done** (`resolve_julia`, `julia_probe`) | the Sienna-Ops build hangs on `println(VERSION)` in a clean env *(measured)* |
 | `su.set_fault_bus(case, bus)` | **done** | relocate the contingency, by number or bus name |
 | `su.enable_monitors(case)` | **done** | shipped case records `omega` only, see below |
-| Wind -> negative `LoadZIP` (`alphaP=1`) in `build_case_from_m` | todo | section 3 |
-| Loss-aware DC OPF wrapper | todo | section 8 |
-| Move the PF reference bus off nuclear `189_1` | todo | section 8 |
-| Validation gate: units within limits, buses within `[VMIN, VMAX]`, slack residual small | todo | silent violations are the main failure mode so far |
+| Wind -> negative `LoadZIP` (`alphaI=1`, constant current) in `build_case_from_m` | **done** | section 3. An early draft of this row said `alphaP=1`; that was never built, because constant power makes the negative injection unsolvable |
+| Loss-aware DC OPF wrapper | **done** (`solve_chain`, one loss iteration) | section 8 |
+| Move the PF reference bus off nuclear `189_1` | **deferred** | would invalidate the five completed campaigns for comparison |
+| Validation gate: units within limits, buses within `[VMIN, VMAX]`, slack residual small | **done** (`max_over_pmax`, `vmin`/`vmax` in every record) | silent violations are the main failure mode so far |
 | Correct the stale "OPF not implemented" text in notebook + doc | **done** | it is implemented and works |
 
 ### Monitors: the shipped case records almost nothing
@@ -591,7 +715,7 @@ before computing frequency or ROCOF.
 Ran the shipped operating point with the fault relocated across 7 buses chosen
 by branch degree. All 7: `rc=0`, zero `ERROR` lines, no NaN, **~0.25 s each**.
 
-| fault bus | degree | gen bus | Vmin fault | Vmin post | nadir Hz | ROCOF Hz/s | max d-spread deg |
+| fault bus | degree | gen bus | Vmin fault | Vmin post | nadir Hz | local ROCOF Hz/s | max d-spread deg |
 |---|---|---|---|---|---|---|---|
 | 149 (shipped) | 8 | no | 0.1921 | 0.8564 | 59.846 | 1.83 | 82.77 |
 | **66** | **11** | no | 0.1413 | 0.8286 | **59.691** | **5.81** | **102.54** |
@@ -603,6 +727,17 @@ by branch degree. All 7: `rc=0`, zero `ERROR` lines, no NaN, **~0.25 s each**.
 
 **ROCOF spans 0.42 to 5.81 Hz/s, a 14x range**; rotor-angle spread spans
 70-103 deg. Ample discrimination, so the campaign premise holds.
+
+> **Which ROCOF, and does the gate depend on it?** The column is
+> `local_max_rocof_Hz_s`, the fastest rate seen on any individual machine. A
+> self-clearing bus fault creates no power imbalance, so this is a local
+> electrical-swing artifact rather than a system frequency excursion, and the
+> QoI table later keeps it **for continuity only**
+> ([why](#observable-vs-internal-use-both-but-tag-them)). **The gate does not
+> depend on it:** rotor-angle spread (70-103 deg) and `Vmin_fault`
+> (0.074-0.335) discriminate over the same seven buses and are the metrics the
+> study actually went on to use. Had ROCOF been the sole evidence, this gate
+> would have to be re-run.
 
 Three findings:
 
@@ -869,7 +1004,7 @@ The two are different in kind and must not be conflated:
 | **aleatoric** | commitment | stratified | feasible band, section 7 |
 | **design** | datacenter bus | chosen | stratified by hop distance |
 | **design** | datacenter MW | chosen | 150 and 400 MW |
-| **design** | datacenter ZIP mix | chosen | `alphaP = 1`, constant power |
+| **design** | datacenter ZIP mix | chosen, then **revised** | `P/I/Z = 100/0/0` at Phase 3 design time; the campaigns ran `20/80/0` ([why](#is-the-20800-mix-defensible)) |
 
 A siting decision is not uncertain, it is a **decision**. So buses and sizes are
 enumerated on a grid, while the operating condition they are exposed to is
@@ -901,12 +1036,15 @@ Three modelling choices that materially affect the answer:
 1. **The datacenter is added before dispatch.** It enters the `.m`, so the OPF
    must serve it and the commitment resizes to cover it. Adding it after
    dispatch would be free power and would understate the impact.
-2. **It gets its own `LoadZIP` with `alphaP = 1`.** `build_case_from_m` folds
-   all demand at a bus into a single device, which would force the datacenter to
-   inherit the surrounding load's constant-impedance behaviour. A real
-   datacenter is rectifier-fed and close to constant power, so it does **not**
-   self-shed during a voltage dip the way the host load does. Folding it in
-   would understate its impact during the fault.
+2. **It gets its own `LoadZIP`, with its own ZIP mix.** `build_case_from_m`
+   folds all demand at a bus into a single device, which would force the
+   datacenter to inherit the surrounding load's constant-impedance behaviour. A
+   real datacenter is rectifier-fed and does **not** self-shed during a voltage
+   dip the way the host load does. Folding it in would understate its impact
+   during the fault. `split_out_datacenter` therefore reduces the host device
+   and appends a separate one. *(Mix written here at design time as
+   `P/I/Z = 100/0/0`; the campaigns ran `20/80/0` — see
+   [Is the 20/80/0 mix defensible?](#is-the-20800-mix-defensible).)*
 3. **Power factor 0.98 lagging** is an assumption, not a sourced value.
 
 #### Two limits, and the thermal one binds first
@@ -1014,14 +1152,23 @@ needing `alphaI = 1`.
 What would falsify it: a modest `Z`/`I` component should rescue the large cases.
 That scan has **not** been run yet.
 
-> **Updated 2026-10-30 — the mechanism is a *ratio*, and two simpler
-> explanations were ruled out.** See
-> [the constant-power ratio limit](#the-constant-power-simulability-limit-three-hypotheses-none-sufficient-measured-2026-10-30).
-> `alphaP = 1` is fine on an existing load of any size tested, and a pure
-> constant-power 200 MW load runs at a bus with an 87.1 MW host. What fails is a
-> large constant-power load with little or no *co-located voltage-dependent*
-> load. The "greenfield" case is simply the ratio-infinite end of the same
-> effect, not a separate phenomenon.
+> ### SUPERSEDED TWICE — do not use the reasoning above or the note below
+>
+> **First revision (2026-10-30)** claimed the mechanism was a *ratio* of
+> constant-power to co-located voltage-dependent load. That was itself
+> falsified: raising the host load at bus 93 from 5 to 50 MW turned a working
+> case into a failing one, i.e. the effect ran backwards.
+>
+> **Current position (2026-11-02).** The controlling variable is **fault
+> location**, which every experiment above held fixed at bus 66. With the fault
+> at bus 108, 148 or 177, pure constant-power load at **200 MW runs at
+> essentially every bus tested** \u2014 so the "roughly `<= 100 MW`" validity limit
+> stated above applies only to **fault bus 66**, not in general.
+> See
+> [fault location is the missing variable](#fault-location-is-the-missing-variable-afront2-measured-2026-11-02).
+>
+> The size-monotone failure rates above (0 % at 50 MW rising to 75 % at 400 MW)
+> remain correct **as measured at bus 66** and are kept for that reason.
 
 **Consequence.** `alphaP = 1` is not merely a modelling preference, it is *not
 simulable under a bus fault at scale in this tool*. So:
@@ -1039,12 +1186,14 @@ meta.json, records/, series/}`.
 
 #### Aleatoric pilot *(`aleatoric1`, run 2026-10-22)*
 
-First campaign with the design settled: **aleatoric only**, `alphaP = 0.2`.
+First campaign with the design settled: **aleatoric only**, datacenter load at
+**`P/I/Z = 20/80/0`** (`alphaP = 0.2`, `alphaI = 0.8`, `alphaZ = 0`; the
+existing 109 loads stay at `0/0/100` and the wind stand-in at `0/100/0`).
 20 hours stratified over 5 net-load quintiles x 2 commitment levels (0.25 and
 0.75 of the feasible band) x 4 buses spanning the hosting-capacity range x
 {50, 100, 200, 300, 400} MW, fault at bus 66. **840 of 840 conditions, nothing
 missing, and zero `sim_failed`** - the 52 model-validity failures of `phase3b`
-are gone, which is the `alphaP = 0.2` decision paying off. 322 runs are
+are gone, which is the `20/80/0` decision paying off. 322 runs are
 `LOCALLY_INFEASIBLE`, which is a result rather than a loss.
 
 **Baseline CCT is strongly ordered by net load**, as Phase 2 found:
@@ -1136,10 +1285,19 @@ location, over the 20 operating conditions:
 | 181 | 0.5 | 0.4297 | 65 % |
 | **the other 13** | 0.5 | 0.5 | **100 %** |
 
-**Thirteen of seventeen fault locations are censored in every single condition**
-- the system rides through a 0.5 s fault there no matter the hour or
-commitment. Counting informative (uncensored) runs per fault bus: 48, 41, 39, 31
-for buses 94, 66, 68, 181; then 5, 1, and **zero for the remaining eleven**.
+**Thirteen of seventeen fault locations are censored in every single baseline
+condition** - the system rides through a 0.5 s fault there no matter the hour or
+commitment. Informative (uncensored) runs per fault bus, **out of the 20
+baseline conditions**: 13, 9, 8, 7 for buses 94, 66, 68, 181, and **zero for
+the other thirteen**.
+
+*(Pooling the datacenter-sited runs as well — 892 ok runs rather than 340 — the
+same four buses give 48, 41, 39, 31 informative runs, buses 118 and 8 pick up 5
+and 1, and the medians fall to 0.2609, 0.1906, 0.3383, 0.4930 because 200 MW of
+extra load makes every contingency harsher. **The two denominators answer
+different questions and must not be mixed**: baseline says whether a
+contingency discriminates between operating conditions, pooled says how harsh
+it is once a datacenter is sited.)*
 
 **This is the sampling-design result.** Contingency location is not something to
 sample uniformly: ~76 % of a uniform budget would land on faults that cannot
@@ -1310,22 +1468,18 @@ It is also nearly free, because of how the cost splits *(measured)*:
 
 | step | cost |
 |---|---|
-| condition setup: DC OPF + AC PF | ~27 s (two Julia launches) |
-| **one dynamic run** | **0.23 - 0.44 s** |
+| condition setup: DC OPF + AC PF, **unbatched** | ~27 s (two Julia launches) |
+| same, **batched** per point | ~2.8 s |
+| same, solver `solve_time` only | 0.029 s |
+| **one dynamic run** (`tmax` 10 s, full monitors) | **0.23 - 0.44 s** |
+
+The three setup figures are the same work measured at three boundaries:
+per-process including two **5.9 s** Julia launches, amortised across a batch, and
+the solve alone. Quote whichever matches the question, but say which.
 
 So a CCT bisection of ~8 dynamic runs adds ~2 s to a 27 s condition. Verified
 findable: on a low-inertia condition the system is stable at 0.30 s and unstable
 at 0.40 s.
-
-### Stability criterion
-
-Use **COI-relative pole slip**: unstable if `max_i |delta_i - delta_COI| > 180`
-degrees, or if the integrator fails or produces NaN.
-
-Do **not** use "final spread is close to max spread" as a divergence test. It
-was tried and gives false positives, because the post-fault angle spread settles
-to a *nonzero* value: a 0.10 s fault was flagged unstable while 0.15 - 0.30 s
-were stable, which is impossible.
 
 ### Stability criterion
 
@@ -1344,34 +1498,33 @@ whenever the whole system speeds up or slows down. What matters is whether
 machines stay together *relative to each other*, so angles are referred to the
 inertia-weighted system average:
 
-```
-                sum_i ( H_i * MVA_i * delta_i(t) )
-delta_COI(t)  = -----------------------------------
-                    sum_i ( H_i * MVA_i )
-```
+$$\delta_{COI}(t) \;=\; \frac{\sum_i H_i \, S_i \, \delta_i(t)}{\sum_i H_i \, S_i}$$
 
-`H_i * MVA_i` is machine i's stored kinetic energy at synchronous speed, so the
-COI is the angle of the equivalent single machine representing the whole system.
-**Weighting matters**: an unweighted mean would give the 1.7 MW wind unit the
-same influence on the reference as the 569 MW nuclear unit.
+where $H_i$ is the inertia constant of machine $i$ in seconds and $S_i$ its MVA
+base, so $H_i S_i$ is its stored kinetic energy at synchronous speed in MW·s and
+the COI is the angle of the equivalent single machine representing the whole
+system. **Weighting matters**: an unweighted mean would give the 1.7 MW wind
+unit the same influence on the reference as the 569 MW nuclear unit.
 
 **The test.** A condition is unstable if any machine separates from the COI by
 more than a threshold at any time:
 
-```
-unstable  <=>  max over i, t of | delta_i(t) - delta_COI(t) |  >  180 degrees
-```
+$$\text{unstable} \iff \max_{i,\,t} \; \bigl| \delta_i(t) - \delta_{COI}(t) \bigr| \;>\; 180°$$
 
 plus three degenerate cases that also count as unstable: the integrator fails,
 the trace contains NaN, or no monitor output is produced. An integrator giving
 up is itself evidence the point was not survivable.
 
-**Why 180 degrees.** Power transfer across a reactance goes as `sin(delta)`, so
-synchronising torque peaks at 90 degrees and reverses beyond 180. Past that a
-machine cannot be pulled back and slips a pole. The 180 degree figure is a
-**practical detection threshold** used by transient-stability tools, not an
-exact theoretical boundary; the true boundary depends on the post-fault
-equilibrium.
+**Why 180 degrees.** Power transfer across a reactance $X$ between internal
+voltages $E_1, E_2$ goes as
+
+$$P \;=\; \frac{E_1 E_2}{X}\,\sin\delta$$
+
+so synchronising torque $\partial P / \partial \delta$ peaks at $\delta = 90°$
+and reverses beyond $180°$. Past that a machine cannot be pulled back and slips
+a pole. The $180°$ figure is a **practical detection threshold** used by
+transient-stability tools, not an exact theoretical boundary; the true boundary
+depends on the post-fault equilibrium.
 
 **It is not a sensitive choice here** *(measured 2026-10-21)*. Across sampled
 runs the two populations separate cleanly:
@@ -1611,8 +1764,15 @@ solves converged:
 | p75 | 1519 | 0.66 % | 16.6 | 0.044 |
 | p100 | 2155 | 0.95 % | 27.1 | 0.062 |
 
-Solve times *(measured)*: DC OPF **0.026 s**, AC OPF **3.02 s**, AC PF
-**2.94 s**.
+Solve times *(measured, single-shot)*: DC OPF **0.026 s**, AC OPF **3.02 s**,
+AC PF **2.94 s**.
+
+> **These are first-call times and include Julia's JIT compilation of the solve
+> path.** The same AC PF measured *warm*, inside a batch where compilation is
+> already paid, is **0.018 s** — 160x faster. Both are correct; quote the warm
+> figure for per-case cost in a batched campaign and the single-shot figure
+> only when something runs once. The AC OPF / AC PF *comparison* above is valid
+> because both were measured the same way.
 
 ### The slack problem
 
@@ -1745,7 +1905,7 @@ would need.
 
 ~27 of every 30 s is two `julia` process launches, and the measured warm cost of
 `using PowerModels` is only 1.2 s. So most of that time is interpreter start, not
-solving (DC OPF solves in 0.026 s, AC PF in 2.94 s).
+solving (DC OPF solves in 0.026 s, AC PF in 2.94 s single-shot, 0.018 s warm).
 
 Remaining optimisations, now that batching is done (below):
 
@@ -1767,7 +1927,7 @@ Two facts force this:
   be enumerated in advance. A strict "solve everything, then simulate
   everything" split breaks as soon as CCT is in the loop.
 * **The cost asymmetry is in process launches, not job topology.** A warm PF
-  solve is ~0.1-0.2 s but costs ~10 s if it pays Julia startup. A dynamic run is
+  solve is ~0.02 s warm but costs ~6 s if it pays Julia startup. A dynamic run is
   0.23-0.44 s. So the thing to minimise is the *number of Julia launches*.
 
 A worker owning 50 operating points used to pay 100 launches, roughly 1000 s of
@@ -1783,7 +1943,7 @@ worker start
 ```mermaid
 flowchart TD
     A[sweep_worker.py starts<br/>owns a slice of N conditions] --> B[build N .m files<br/>apply_hour + commit + datacenter]
-    B --> C["ONE julia --batch call<br/>manifest.json -> results.json<br/>~10 s fixed + N x small"]
+    B --> C["ONE julia --batch call<br/>manifest.json -> results.json<br/>~6 s launch + N x ~0.02 s"]
     C --> D{"per-case ok flag"}
     D -->|ok = false| E["record fail_reason<br/>NO dynamic simulation<br/>no output .m exists"]
     D -->|ok = true| F[build case.json<br/>wind as negative load, monitors, fault bus]
@@ -1999,7 +2159,7 @@ the tmpfs cap and the node's memory.
   especially the `cct/` bisection probes. This is a storm of small files with
   repeated open/close, the access pattern Lustre handles worst. Keeping it off
   ProjectFS is also what will make the planned darshan profiling interpretable.
-* **Durable** `/kfs2/projects/scidac/scidac-data/<campaign>/<sample_id>/` for
+* **Durable** `/kfs2/projects/scidac/scidac-data/gridkit-campaigns/<name>/` for
   the two artifacts worth keeping: `record.json` (the reduced QoI) and
   `mon.parquet` (the time series), written once at the end of each run.
 
@@ -2226,6 +2386,11 @@ study, and the planned darshan profiling belongs with it.
 
 ## Running a campaign
 
+> **Code paths:** this section covers *how to drive* the pipeline. For the
+> module map, data structures, stage-by-stage function reference and the list of
+> traps, see **[dc_campaign_pipeline.md](dc_campaign_pipeline.md)** — that is the
+> file to hand to someone, or some agent, who has to modify the code.
+
 Three scripts plus an analysis step. **Nothing about the sampling design is
 buried in the code**: every dimension is a command-line argument, and the design
 is written out for inspection *before* anything is submitted.
@@ -2299,7 +2464,7 @@ It returns `bus, hops, branches, sum_rate, PD`, stratified by hop distance from
 `from_bus`, so the sample can be *reported* as stratified rather than arbitrary.
 `require_load=True` matters for siting because the datacenter must land beside
 enough voltage-dependent load to stay simulable (see
-[the constant-power ratio limit](#the-constant-power-simulability-limit-three-hypotheses-none-sufficient-measured-2026-10-30)).
+[the constant-power ratio limit](#the-constant-power-simulability-limit-five-hypotheses-none-sufficient-measured-2026-10-30)).
 
 ### Inspect before you submit
 
@@ -2321,7 +2486,7 @@ Set on `CampaignConfig` instead:
 
 | knob | default | effect |
 |---|---|---|
-| `dc_alpha_p` | `0.2` | datacenter constant-power share. `1.0` is physically right but not simulable at scale |
+| `dc_alpha_p` | `0.2` | datacenter constant-power share; `alphaI` takes the remainder, so this is `P/I/Z = 20/80/0`. `1.0` is the intended physics but is not simulable at every bus |
 | `cct_max` | `0.5` | the censoring cap |
 | `min_thermal` | `8` | commitment floor |
 | `reserve` | `1.10` | adequacy margin in the commitment band |
@@ -2363,13 +2528,22 @@ explodes, and it is also the cheapest to explore (stage B). A screen-then-
 concentrate design with a defensible stopping rule is directly useful and
 directly publishable.
 
-**3. Exploiting the cost asymmetry.** Stage A is ~150x the cost of stage B/C
-*(measured: 5.9 s Julia launch, 0.04 s warm solve)*. That is a conditional
+**3. Exploiting the cost asymmetry.** On ACTIVSg200, one unbatched stage A
+costs ~29 s against ~0.3 s for a disturbance, so **a dispatch is ~100x a
+dynamic run** and every disturbance fanned off it is nearly free. *(The 150x
+figure quoted elsewhere is a different comparison — Julia's 5.9 s process
+launch against a 0.04 s warm solve — and is the reason batching works, not the
+stage A / stage B ratio.)* That is a conditional
 independence structure: expensive outer samples over operating conditions, cheap
 inner fan-out over contingencies and model parameters. The motivation is the
 same as multilevel or multifidelity Monte Carlo, but driven by **model
 structure** rather than discretisation level, and the estimator design is not
 obviously off the shelf.
+
+> **This asymmetry weakens slowly with scale, but does not reverse.** At 2000
+> buses a dynamic run is still ~11x the warm solve, while absolute costs rise
+> ~20x. See
+> [scaling to ACTIVSg2000](#scaling-to-activsg2000-measured-2026-11-02).
 
 **4. Censored and partially identified estimation.** Both "survived beyond the
 cap" and "infeasible" are results, not missing data. Treating them properly took
@@ -2384,12 +2558,45 @@ being retained is what would feed it, but nothing here has been done toward it.
 
 ---
 
-### The constant-power simulability limit: three hypotheses, none sufficient *(measured 2026-10-30)*
+### The constant-power simulability limit: five hypotheses, none sufficient *(measured 2026-10-30)*
+
+> ## READ THIS FIRST — the controlling variable is known; the mechanism is not
+>
+> **What is established by experiment:** an *open* `BusFault` attached to the
+> case's 11-branch hub (bus 66) prevents the initial-condition solve. With the
+> fault at bus 108, 148 or 177 instead, pure constant-power load at 200 MW runs
+> at essentially every bus. Two `case.json` files differing in **one integer**
+> behave differently. See
+> [fault location is the missing variable](#fault-location-is-the-missing-variable-afront2-measured-2026-11-02).
+>
+> **What is NOT established:** *why*. The conditioning story is a hypothesis,
+> not a diagnosis. And the result is demonstrated on **four** fault locations,
+> only one of which (66) is discriminating — buses **94, 68 and 181 are
+> discriminating and have never been tested at high `alphaP`**. So "fault
+> location explains the limit" is strongly supported but not proven for the
+> locations the study actually needs.
+>
+> **Everything below is the investigation trail**, kept because each dead end
+> was measured and each rules out an explanation someone will otherwise retry.
+> It is history, not current guidance. Scoreboard:
+>
+> | # | hypothesis | verdict |
+> |---|---|---|
+> | 1 | `alphaP` near 1 as such | falsified |
+> | 2 | absolute size | falsified |
+> | 3 | ratio to co-located load | falsified, and backwards |
+> | 4 | electrical distance to generation (`Zth`) | **not supported** (weaker than falsified) |
+> | 5 | device composition | falsified |
+> | 6 | monotone in `alphaP` | falsified *(from `afront1`)* |
+> | — | **fault location** | **supported — the controlling variable** |
+>
+> Six tested, five falsified, one unsupported. The section title says "five"
+> because hypothesis 6 arrived later; the table above is authoritative.
 
 A high constant-power share (`alphaP` near 1) sometimes cannot be simulated.
-Three explanations were tried and **all three were falsified by experiment**.
-Recording the failures matters, because each was plausible and two of them were
-written into this document before being tested.
+The first three explanations below were tried and **all three falsified by
+experiment**. Recording the failures matters, because each was plausible and
+two of them were written into this document before being tested.
 
 **Hypothesis 1: "`alphaP` near 1 is the problem."** Falsified. Sweeping `alphaP`
 from 0 to 1 on *existing* loads at hour 6164, remainder to `Z`:
@@ -2473,15 +2680,291 @@ and thermal rating, which also fail to order them, this points away from a
 simple physical threshold and toward the conditioning of the algebraic
 subsystem, which is a question for the solver rather than for the case.
 
-**Failure modes seen:** `IDACalcIC` (initial conditions cannot be found, before
-any disturbance, with a healthy power flow) in the bus-93 cells above, and
+**Hypothesis 5: "we are adding the load to the case incorrectly." Falsified.**
+The natural suspicion is that a bus which already carries a `LoadZIP` cannot
+host a second one, so the datacenter device is somehow mis-composed, which would
+explain why original loads tolerate `alphaP = 1` but added ones do not.
+`scripts/check_zip_composition.py` tests this directly at bus 129 (host load
+87.1 MW, one device) by running four variants of the same operating point:
+
+| variant | devices at the bus | result |
+|---|---|---|
+| A | 1 device, 87.1 MW, `alphaZ = 1` | ok |
+| B | 2 devices, 43.5 MW each, `alphaZ = 1` | ok |
+| C | 2 devices, host `alphaZ = 1` + second `alphaP = 1` | ok |
+| D | 1 device, 87.1 MW, `alphaP = 1` | ok |
+
+A and B are the same physical load expressed two ways, so they must produce the
+same trajectory. They do:
+
+```
+max|dV| = 5.9e-08 pu,  max|domega| = 7.8e-08 pu
+```
+
+For scale, the integrator's own noise floor on this case is `max|omega| =
+7.2e-09 pu` on a flat run with no disturbance at all. Splitting one device into
+two changes the residual structure, so IDA takes slightly different steps; 6e-08
+is that, not a physical difference.
+
+**Conclusion: GridKit composes co-located `LoadZIP` devices correctly, and
+`split_out_datacenter` adds them correctly.** The way the datacenter is attached
+is not the cause of the constant-power limit.
+
+*(Caveat: tested at bus 129, which is one of the buses that works. The
+conclusive version would repeat it at bus 93, where failures occur, to rule out
+a composition problem that only appears near the limit. Not yet done.)*
+
+### The feasible-`alphaP` frontier, mapped *(`afront1`, measured 2026-11-02)*
+
+The question this campaign exists to settle: is the limit a property of the
+**bus**, or of the **operating condition** the dynamics initialise from? The
+second would implicate the AC solution and the commitment decision rather than
+the network.
+
+**Design.** 17 candidate buses x 4 hours x 2 commitment levels x {100, 200} MW,
+with `alphaP` in {0.2, 0.5, 0.7, 0.85, 1.0} at each. This is a pure stage-B
+fan-out, because **`alphaP` does not enter the power flow**: at nominal voltage
+all three ZIP terms draw the same P, so one dispatch serves the whole ladder and
+the AC solution is *identical* across it. Any movement of the frontier therefore
+cannot be an artifact of `alphaP` perturbing the operating point.
+
+272 dispatches, 1360 simulations, **~1.5 min wall** on one node with 16 workers.
+48 points were dispatch-infeasible (buses 26, 35, 38 at both sizes, a
+deliverability limit, not dynamics), leaving 224 points x 5 = 1120 dynamic runs,
+every point with all five rungs present.
+
+**Result 1: the frontier is mostly a property of bus and size.** Of 28
+(bus, size) cells, 23 have a frontier that does not move at all across the eight
+operating conditions.
+
+**Result 2: but the commitment decision does move it, and in a consistent
+direction.** Pairing high against low commitment within each
+(bus, size, hour) cell:
+
+| hi - lo frontier | pairs |
+|---|---|
+| higher at high commitment | **9** |
+| unchanged | 91 |
+| lower at high commitment | **1** |
+
+Nine to one on the 10 non-ties is a sign-test $p \approx 0.021$. The cleanest
+single case is bus 172 at 200 MW, where the frontier is `0.5` at high commitment
+and `0.2` at low in **all four hours**. So **more synchronous machines online
+raises the constant-power share that can be simulated.** This is the first
+hypothesis in this investigation that the data have *supported* rather than
+falsified, and it is consistent with a conditioning story: committed machines
+act as voltage sources, and a constant-power load is hardest to initialise where
+voltage is least stiff. *Offered as a working hypothesis; the effect is real but
+small, one rung of the ladder.*
+
+**Result 3: host load and the ratio to it are dead, now on 17 buses.** The
+correlation between the frontier and the log of the datacenter-to-host-load
+ratio is `+0.037` at 100 MW and `-0.359` at 200 MW, inconsistent in sign and
+weak in both. Two pairs settle it outright:
+
+| bus | host load (MW) | ratio at 200 MW | frontier at 200 MW |
+|---|---|---|---|
+| 174 | 4.38 | **45.7** | **1.0** |
+| 57 | 4.46 | 44.8 | 0.2 |
+| 140 | 12.03 | 16.6 | **1.0** |
+| 63 | 12.64 | 15.8 | **no rung runs at all** |
+
+Nearly identical host loads and ratios, opposite outcomes, in both pairs.
+
+**Result 4: 89 % of failures happen before the disturbance.** Of 361 failed
+runs, **322 are `IDACalcIC`** and only 39 are `IDASolve`. The dominant failure
+is that consistent initial conditions cannot be found *at a healthy, converged
+power flow*, with no fault applied. This substantially reframes the problem: it
+is mostly an **initialisation** failure, not a fault-transient one.
+
+| `alphaP` | `IDACalcIC` | `IDASolve` |
+|---|---|---|
+| 0.20 | 19 | 0 |
+| 0.50 | 50 | 24 |
+| 0.70 | 79 | 4 |
+| 0.85 | 92 | 2 |
+| 1.00 | 82 | 9 |
+
+Failures rise steeply with `alphaP` but **not monotonically**: 94 total at 0.85
+against 91 at 1.00. A purely monotone mechanism would not do that, which is one
+more reason to doubt a simple physical threshold.
+
+**Result 5: what separates the buses that never fail.** Six of the 14 dynamically
+tested buses never failed at any size or condition (42, 108, 111, 129, 140,
+174). Comparing them with the eight that failed somewhere:
+
+| | median hops from bus 66 | median branches | median host PD |
+|---|---|---|---|
+| never fails | 9 | 2 | 13.9 |
+| fails somewhere | 2.5 | 2.5 | 10.1 |
+
+Hop distance separates better than anything previously tried, but **not
+cleanly**: bus 111 at 6 hops never fails while bus 172 at 6 hops does. Branch
+count runs *backwards* again, with the 4-branch buses (93, 158) both failing.
+
+> **The experiment this suggests next, and it is cheap.** Hop distance is
+> measured from bus 66, which is also the fixed fault location in this
+> campaign. Initial-condition failures occur *before* any fault, so fault
+> location should be irrelevant to them — unless the `BusFault` device
+> participates in the IC calculation. Re-running the frontier with the fault
+> moved to a different bus would settle whether this is a genuine location
+> effect or an artifact of the fault device. **Not yet done.**
+
+**Consequence for the `70/20/10` question.** The feasibility of an industry mix
+is now measured rather than guessed. Fraction of buses that run at *every* one
+of the eight operating conditions:
+
+| mix | at 100 MW | at 200 MW |
+|---|---|---|
+| `alphaP = 0.70` | **11 of 14** | 6 of 14 |
+| `alphaP = 0.85` | 9 of 14 | 6 of 14 |
+| `alphaP = 1.00` | 9 of 14 | 6 of 14 |
+
+So `70/20/10` is reachable at most buses **if the datacenter is capped near
+100 MW**, and at fewer than half of them at 200 MW. Crucially the losses are
+**bus-correlated and repeatable**, not random: buses 34, 63 and 158 never run a
+high constant-power share at any size, and 39, 57, 93, 172, 184 lose it between
+100 and 200 MW.
+
+> **All of the above is conditioned on the fault being at bus 66.** The next
+> section shows that this single choice drives almost the entire effect, and
+> changes the conclusion.
+
+### Fault location is the missing variable *(`afront2`, measured 2026-11-02)*
+
+**The prediction, and it was wrong.** `IDACalcIC` failures were taken to occur
+at `t = 0`, before any disturbance, so fault location should be irrelevant to
+them. The frontier was expected to be identical across fault locations. It is
+not. *Correction (see the zoom-in section below):* the failing initial-condition
+solve is the one for the faulted network. With the fault device open, no run
+fails at either `alphaP`.
+
+**Design.** The same 17 buses x 2 hours x 2 commitments x {100, 200} MW,
+fanned out over **four fault locations** (66, 108, 148, 177) x the five
+`alphaP` rungs. Fault location is pure stage B, so one dispatch serves all four
+and the operating point is *identical* across them: 136 dispatches, 2720
+simulations, a few minutes on one node.
+
+**Result: the fault location dominates everything else.** Fraction of points
+that run at `alphaP = 1.0` (pure constant power, `P/I/Z = 100/0/0`):
+
+| fault bus | all points | excluding faults *at* the datacenter bus |
+|---|---|---|
+| **66** | **0.589** | **0.589** |
+| 108 | 0.929 | **1.000** |
+| 148 | 0.964 | 0.964 |
+| 177 | 0.973 | 0.973 |
+
+Failures by location: bus 66 accounts for **180 of 231**. With the fault
+anywhere else, pure constant-power load at 200 MW runs at essentially every bus
+we tested.
+
+**Two separate effects, now disentangled.**
+
+1. **A fault at the datacenter's own bus is always fatal.** 40 runs with
+   `dc_bus == fault_bus`, **0 succeeded**, at every `alphaP` including 0.2.
+   This is the one effect that is plausibly physical: a bolted fault holds
+   `V -> 0` at the very bus where a load insists on constant `P`.
+2. **Bus 66 is pathological, and it is pathological because of what it is.**
+
+| fault bus | branches | sum of branch ratings (MVA) | load (MW) |
+|---|---|---|---|
+| **66** | **11** | **1329.4** | 0.0 |
+| 108 | 2 | 442.2 | 13.80 |
+| 148 | 2 | 442.2 | 46.91 |
+| 177 | 3 | 663.3 | 15.40 |
+
+System median is **2 branches**. Bus 66 is the most connected bus in the case,
+with three times the incident rating of any other location tested.
+
+**The minimal reproducer, and why this is a GridKit issue rather than a
+modelling limit.** Two `case.json` files from the same dispatch, same load, same
+`alphaP`, differ in exactly one integer:
+
+```json
+{"class":"BusFault","ports":{"bus":66},  "params":{"state0":false,"R":0.0,"X":0.01}}
+{"class":"BusFault","ports":{"bus":177}, "params":{"state0":false,"R":0.0,"X":0.01}}
+```
+
+`state0: false` — **the fault is open in both.** Same `R`, same `X`, no event
+has fired. The first fails `IDACalcIC` with `IDA_LINESEARCH_FAIL` on the first
+line of the log, before any time stepping; the second initialises and runs to
+`tmax`. **An inactive fault device is therefore not neutral in the
+initial-condition solve, and where it is attached decides whether consistent
+initial conditions can be found at all.**
+
+*Correction (`discrim181`, see [ida_ic_issue.md](./ida_ic_issue.md#3a-event-schedule-discriminator-discrim181-ida_discriminatepy)):* the discriminator shows the failing solve is the event-time re-initialization at t = 1.0, with the fault closed, not the t = 0 solve. The "inactive device" reading above is superseded.
+
+*Mechanism, offered as a hypothesis only:* an open `BusFault` contributes zero
+admittance, so its algebraic variable may enter the system weakly constrained;
+attaching it at an 11-branch hub rather than a 2-branch spur changes the
+surrounding Jacobian enough to tip an already ill-conditioned system containing
+a large constant-power load. This has not been verified and belongs with the
+GridKit/SUNDIALS developers.
+
+**What this does to the earlier hypotheses.** It rehabilitates one and
+reinterprets another. The hop-distance correlation in `afront1` was real, but it
+was not about network position in the abstract: it was distance *from the fault
+device*, which had been held fixed at bus 66 and so was invisible. Host load,
+ratio, size, electrical distance to generation and device composition remain
+falsified. The variable that mattered was one we had held constant.
+
+**And it creates a possible bind for the study — but a narrower one than it
+first appears.** From `faultscreen1`, bus 66 is severe, but it is **not** the
+only informative contingency, and on the baseline denominator it is not even
+the best one:
+
+| fault bus | baseline: median CCT | baseline: censored | informative of 20 | pooled with sited runs: median |
+|---|---|---|---|---|
+| **94** | **0.3664** | **35 %** | **13** | 0.2609 |
+| 66 | 0.5 | 55 % | 9 | **0.1906** |
+| 68 | 0.5 | 60 % | 8 | 0.3383 |
+| 181 | 0.5 | 65 % | 7 | 0.4930 |
+| the other 13 | 0.5 | **100 %** | **0** | 0.5 |
+
+*(Two denominators, kept separate. "Baseline" is the 20 no-datacenter
+conditions and answers whether a contingency discriminates between operating
+conditions. "Pooled" adds the 200 MW sited runs, 892 in total, which makes
+every contingency harsher and lowers every median. Quoting one figure against
+the other's label is the easiest mistake to make here, and was made once.)*
+
+**What is actually established.** Of the four locations whose `alphaP`
+feasibility `afront2` mapped — 66, 108, 148, 177 — exactly one (66) is
+discriminating, and it is exactly the one where constant-power load fails. The
+other three are 100 % censored on baseline: `alphaP = 1` runs happily there and
+tells us nothing.
+
+**What is NOT established.** Buses **94, 68 and 181 are discriminating and were
+never tested at high `alphaP`.** Bus 94 is the most informative location in the
+whole screen. If `alphaP = 1` initialises at bus 94, then there is no bind at
+all: the study could use a realistic datacenter model against an informative
+contingency, and the entire `20/80/0` compromise becomes unnecessary.
+
+> **Next experiment, and it is the cheapest high-value one outstanding:** rerun
+> `alphap_frontier.py` with `--fault-buses 94,68,181`. Roughly two minutes on
+> one node. It either dissolves the central modelling limitation of this pilot
+> or confirms it properly. Until it is run, "the informative contingency and
+> the simulable load model are mutually exclusive" is a **conjecture supported
+> by one fault location**, not a result.
+
+**Consequence for the design.** The `20/80/0` compromise stands for the pilot,
+and the reason for it is now understood rather than merely observed. A rerun at
+`70/20/10` is newly plausible, but on current evidence only against fault
+locations that are uninformative; whether it is possible against an informative
+one is open. The decision therefore
+does not change, but the open question is now sharp and actionable rather than
+diffuse.
+
+**Failure modes seen:** `IDACalcIC` (initial conditions cannot be found for the
+faulted network; the "healthy power flow" reading was wrong, see the zoom-in
+section) in the bus-93 cells above, and
 `IDASolve` 0.02 s into the fault (`h` collapsing to 1.9e-17) in the campaign
 runs. Whether these are one mechanism or two is also unresolved.
 
 **Consequence for the study, which is unchanged by the above.** Datacenter ZIP
 mixes used in practice are around `P/I/Z = 80/20/0` or `70/20/10` *(from a quick
 literature check by the author, not verified here)*, i.e. `alphaP` of 0.7–0.8.
-Our bus sample forces `alphaP = 0.2`. Siting is restricted to load-carrying
+Our bus sample forces `P/I/Z = 20/80/0`. Siting is restricted to load-carrying
 buses because that is what empirically works, **not** because the mechanism is
 understood.
 
@@ -2489,18 +2972,180 @@ No integrator tuning has been attempted. Whether an IDA configuration would
 extend the usable range is an open question for the GridKit and SUNDIALS teams;
 the 2x2x2 table above is a small reproducible case for them.
 
+### High-P rerun and fault-181 CCT *(measured 2026-11-09)*
+
+Three campaigns test whether `alphaP = 1.0` (`P/I/Z = 100/0/0`) on the datacenter
+changes the results of the `20/80/0` campaigns. Same conditions and dispatches as
+the originals; only the datacenter `alphaP` differs. Artifacts under
+`gridkit-campaigns/{cct181,faultscreen1_ap1,aleatoric1_ap1}/`.
+
+- **`cct181`**: CCT at `alphaP` 0.2 and 1.0 for 224 dispatches at fault 181
+  (14 datacenter buses, 100 and 200 MW, 4 hours, 2 commitment fractions; 224 dispatches).
+- **`faultscreen1_ap1`**: sited arm of `faultscreen1` (680 conditions) at 1.0.
+- **`aleatoric1_ap1`**: sited arm of `aleatoric1` (800 conditions) at 1.0.
+
+**Coverage of the original campaigns** (from their `conditions.csv`):
+
+| campaign | fault buses | datacenter buses | MW levels | hours |
+|---|---|---|---|---|
+| `faultscreen1` | 17 | 2 (108, 148) | 1 (200) | 10 |
+| `aleatoric1` | 1 (66) | 4 (6, 120, 108, 148) | 5 (50 to 400) | 20 |
+| `cct181` | 1 (181) | 14 | 2 (100, 200) | 4 |
+
+So the 94 and 68 result (`afront3`, see above) covers two fault buses only. It is
+not evidence about the other 15 or the other datacenter buses.
+
+**Dispatch failures are alphaP-independent.** `LOCALLY_INFEASIBLE` at the
+dispatch stage removes conditions before dynamics. In `faultscreen1`, 51 of 680
+sited conditions (buses 108 and 148, 200 MW). In `aleatoric1`, 322 of 800 sited
+conditions (bus 6: 160, bus 120: 80, bus 108: 47, bus 148: 35; mostly 300 and 400
+MW). Those conditions are never simulated at any `alphaP`.
+
+**Dynamic outcome, `alphaP` 0.2 vs 1.0 on the same dispatches:**
+
+| campaign | arm | ok | IDACalcIC | IDASolve |
+|---|---|---|---|---|
+| `cct181` (224) | 0.2 | 215 | 8 | 1 |
+| `cct181` (224) | 1.0 | 180 | 42 | 2 |
+| `faultscreen1` (629) | 0.2 | 552 | 62 | 15 |
+| `faultscreen1_ap1` (629) | 1.0 | 429 | 191 | 9 |
+| `aleatoric1` (478) | 0.2 | 410 | 0 | 0 |
+| `aleatoric1_ap1` (478) | 1.0 | 410 | 63 | 5 |
+
+Measured facts from these tables:
+
+- **IDA already fails at `alphaP` = 0.2.** The `faultscreen1` failures at 0.2 are
+  77 of 629 (12 %). Their fault buses are 141, 148, 108, 118, 1 and 8. This is a
+  rate question, not a choice between a working and a failing `alphaP`.
+- **`alphaP` = 1.0 adds failures.** `faultscreen1`: all 77 failures at 0.2 also
+  fail at 1.0, and 123 more fail there (200 of 629, 32 %). `aleatoric1`: 0 of 478
+  fail at 0.2, 68 fail at 1.0 (14 %), all at fault 66: bus 120 40, bus 108 26,
+  bus 148 2, with 42 at 200 MW and 26 at 300 MW.
+- **`faultscreen1_ap1`'s failures are at datacenter buses 108 and 148 only**
+  (fault buses 1, 8, 108, 118, 141, 148 and others). Their CCT is not computed.
+
+**CCT shift on conditions where both arms are ok:**
+
+- `faultscreen1` (426 pairs): max |dCCT| 0.0071 s, below the 0.01 s bisection
+  tolerance. No shift is measurable.
+- `aleatoric1` (410 pairs): 8 pairs exceed 0.01 s, all with `alphaP` 1.0 earlier.
+  Seven are at bus 108 and 300 MW, one at bus 108 and 200 MW. Largest is
+  0.098 s (fault 66).
+- `cct181` (179 pairs with CCT on both arms): 41 pairs shift, all earlier at
+  `alphaP` 1.0. The other 138 match to four decimals. Six pairs exceed 0.01 s: three
+  at bus 57, 100 MW (up to 0.274 s; the 0.2 arm is at the 0.5 s cap in two of
+  them), and three at bus 34, 200 MW (0.014 s each).
+
+**What this does and does not show.** Within the sampled buses, the constant-power
+share changes which conditions simulate and, where they do simulate, moves CCT
+only at a few datacenter buses. It does not show that `20/80/0` is a conservative
+or representative choice. The rerun covers only the sampled fault and bus set,
+and the `aleatoric1` CCT shifts are at one bus (108) and one fault (66).
+
+**Failure modes:** `IDACalcIC` dominates at `alphaP` 1.0 in every campaign. This
+matches the fault-location result above, and the earlier finding that IC failure
+depends on fault location (94 and 68 succeed where 181 fails for the same
+dispatch).
+
+### 80/20/0 re-run of the sited arms *(measured 2026-11-09)*
+
+The sited arms of `faultscreen1` and `aleatoric1` are re-run at datacenter
+`P/I/Z = 80/20/0` (`alphaP` 0.8, `alphaI` 0.2, `alphaZ` 0). This is the same ZIP
+mix family as the `20/80/0` campaigns with the roles of P and I swapped, so it
+tests the constant-power share at a value that is still close to the report's
+baseline. Same conditions and dispatches; only the datacenter ZIP mix differs.
+Driver: `scripts/highp_rerun.sh <src> <dst> 0.8 16`.
+
+- **`faultscreen1_ap08`**: sited arm of `faultscreen1` (680 conditions), job 19794031.
+- **`aleatoric1_ap08`**: sited arm of `aleatoric1` (800 conditions), job 19794032.
+
+The pipeline sets `alphaI = 1 − alphaP` and leaves `alphaZ` at 0
+(`campaign.py`, `split_out_datacenter` callers). The 70/20/10 split needs a new
+`dc_alpha_i` parameter and is not run yet.
+
+**Results (sited rows only, paired on condition tag):**
+
+| campaign | alphaP | ok | sim_failed | dispatch-infeasible | max abs ΔCCT on pairs ok at both |
+|---|---|---|---|---|---|
+| `faultscreen1` | 0.2 | 552 | 77 | 51 | (baseline) |
+| `faultscreen1_ap08` | 0.8 | 432 | 197 | 51 | 0.0071 s (10 pairs change) |
+| `faultscreen1_ap1` | 1.0 | 429 | 200 | 51 | 0.0071 s (12 pairs change) |
+| `aleatoric1` | 0.2 | 478 | 0 | 322 | (baseline) |
+| `aleatoric1_ap08` | 0.8 | 417 | 61 | 322 | 0.0422 s (15 pairs change) |
+| `aleatoric1_ap1` | 1.0 | 410 | 68 | 322 | 0.0984 s (26 pairs change) |
+
+- At 0.8, 120 of the 552 ok runs at 0.2 become `sim_failed` in `faultscreen1` (123 at 1.0). No run that failed at 0.2 succeeds at 0.8.
+- The `faultscreen1` failures at 0.8 concentrate at fault buses 1, 8, 141 and 148 (37 each) and at datacenter buses 108 (112) and 148 (85). This is the same pattern as at 1.0, not the 0.2 pattern (3 each at fault 1 and 8).
+- In `aleatoric1` the 0.8 failures are all at fault 66, datacenter buses 108 and 120, at 200 and 300 MW. The 1.0 failures are at the same fault and similar buses (68 at 1.0 vs 61 at 0.8); whether the sets are nested is not checked.
+- Every sim failure is an IDA error, read from each condition's `sim.log`: at 0.8, `faultscreen1` 176 IDACalcIC and 21 IDASolve; `aleatoric1` 57 and 4. Whether the 0.8 and 1.0 failure sets are nested is not checked. See [ida_ic_issue.md](./ida_ic_issue.md).
+- Interpretation (working hypothesis, not yet confirmed): the constant-power share already causes the same failures at 0.8 as at 1.0, so 80/20/0 is not a mild proxy for the 20/80/0 baseline at these fault and bus pairs. The CCT shifts on runs that succeed at both are small (under 0.1 s).
+
+**Run note:** `faultscreen1_ap08` worker 9 crashed at startup with `FileNotFoundError` on `seed.m` (the 16 workers raced on the shared scratch seed). Its 43 conditions (start 387) were rerun as job 19794718 and all 43 completed, giving 680 of 680.
+
+### IDA initial-condition failures *(full findings: [ida_ic_issue.md](./ida_ic_issue.md))*
+
+All sim failures in the sited campaigns are IDA errors (`IDACalcIC` or `IDASolve`).
+At fault 181, the bus sweep rises with `alphaP` (49 failing buses at 0.2, 153 at 1.0).
+Solver options do not rescue `alphaP` 1.0. PF matches IDA at buses 94 and 181 and
+disagrees at buses 1 and 148. The event-schedule discriminator (`discrim181`, buses 1,
+148, 94, 181, `alphaP` 1.0) shows the failing solve is the fault-on solve: a fault
+scheduled at t = 1.0 fails at the t = 1.0 re-initialization with the fault closed,
+even with `tmax` 0.2, while an open fault with no event passes. The IC guess at the
+event is the pre-fault state. Whether the cause is a missing fault-on equilibrium or an
+IDA initial-guess problem is not yet known. The GridKit issue is drafted in the linked
+file and not filed.
+
+**IDA hunt tests (`ida_ic_issue.md` §7).** Diagnostic runs only; no campaign
+data changed. Outputs under `/scratch/isatkaus/gridkit-campaigns/ida_zoom/`.
+- PV→PQ Q-limit PF (`pvpq/`, `ida_pvpq.py`): buses 1 and 148 PF-infeasible at every MW
+  (25 to 600), including 25 MW where IDA IC is ok. Q limits could not be tested there.
+- X-sweep at 200 MW (`xsweep181/`, `ida_xsweep.py`): buses 1 and 148 fail at fault
+  X ≤ 0.2 pu (reference case X = 0.01); bus 94 ok at every X.
+- Event-time repro (`event_repro/`, `ida_event_repro.py`): bus 1 fails at event times
+  0.5, 1.0 and 2.0; bus 94 ok at all three.
+- 0.8 bus sweep on `h1879_n26_dc148-200` (`ap08_bus_h1879/`, `ida_zoom.py --stage bus`),
+  all 200 fault buses: failing buses 5 (0.2), 21 (0.8), 23 (1.0), nested with no
+  exceptions. Buses 1 and 148 fail at 0.8 and 1.0 and pass at 0.2.
+- Mechanism tests (`ida_ic_issue.md` §7 item 6, `ida_mechanism.py`, `mechanism/`):
+  with no datacenter only buses 64 and 146 fail, at every alphaP. At alphaP 0.8 the
+  failures start at lower datacenter MW (7 of 23 at 100 MW, vs 2 at 0.2), and
+  alphaP 0.8 fails at fault X = 0.02 where 0.2 does not. Working hypothesis, not
+  verified: constant-power load shrinks the voltage margin of the fault-on state.
+- Seed test (`ida_ic_issue.md` §7 item 7, `seed_test/`): a PF-solved fault-on state, used
+  as the IDA t = 0 guess, did not fix bus 146 (IDACalcIC with and without the seed). PF had
+  no fault-on solution at buses 64 (both DC) and 1 (200 MW), and IDA failed at those. Open:
+  the seed does not carry the fault-on generator injections (Genrou states are re-derived
+  from the seeded Vr/Vi with pre-fault p0/q0), so H1 vs H2 is unresolved for bus 146.
+
 ---
 
 ## 11. Open questions
 
-1. **Does the single fault discriminate?** Phase 1 answers this. Everything
-   depends on it.
-2. **What ZIP mix represents datacenter load?** Needs a literature check.
+1. ~~**Does the single fault discriminate?**~~ **Answered.** Phase 1 passed, and
+   `faultscreen1` later showed 13 of 17 fault locations are 100 % censored on
+   the 20 baseline conditions, so
+   discrimination is strongly location-dependent.
+2. **What ZIP mix represents datacenter load?** Still needs a literature check.
+   Interim position and the measured blocker on moving to `70/20/10`:
+   [Is the 20/80/0 mix defensible?](#is-the-20800-mix-defensible).
 3. **Realistic commitment pairing.** Commitment follows net load, so a full
    factorial of commitment x condition would include unphysical combinations.
-4. **Sample size.** To be set after Phase 1 reveals the QoI spread.
+4. ~~**Sample size.**~~ Set empirically: 840 conditions in `aleatoric1`.
 5. **Does `Regca` change the conclusions?** The negative-load stand-in is
    conservative; worth revisiting once IBR models are in.
+6. ~~**Why is a high constant-power share sometimes unsimulable?**~~
+   **Controlling variable identified, mechanism still open.** It is dominated
+   by *fault location*: an open `BusFault` at the case's 11-branch hub prevents
+   the initial-condition solve
+   ([section](#fault-location-is-the-missing-variable-afront2-measured-2026-11-02)).
+   The failing solve is the fault-on re-initialization at the event, so the
+   open-device framing is superseded ([ida_ic_issue.md](./ida_ic_issue.md)).
+7. **Can the informative contingency and a realistic load model coexist?**
+   Open. Bus 66 is discriminating and `alphaP = 1` fails there — but buses 94,
+   68 and 181 are also discriminating and have **never been tested at high
+   `alphaP`**. Bus 94 is the most informative location in the screen. This is
+   the cheapest outstanding experiment and it decides whether the `20/80/0`
+   compromise is necessary at all.
 
 ---
 
@@ -2515,5 +3160,318 @@ the 2x2x2 table above is a small reproducible case for them.
 * **Single contingency.** One `BusFault`, relocated per run.
 * **No motor load**, so FIDVR cannot occur by construction.
 * **Loads are constant impedance** unless deliberately changed.
+* **The datacenter ZIP mix is a compromise**, `20/80/0` rather than an industry
+  `70/20/10`, forced by simulability. Bounded model-form effect on CCT:
+  $\le 0.0281$ s measured.
+* **Every headline result uses one fault location, bus 66**, now known to be the
+  case's 11-branch hub. It is the **harshest** contingency once a datacenter is
+  sited (lowest pooled median CCT, 0.1906 s) but it is **not** the most
+  *discriminating* on the baseline denominator — bus 94 is (35 % censored
+  against 55 %). The campaigns are
+  conditional on that choice more strongly than was appreciated when they ran.
 * **One historical year** for the background distribution.
 * **The commitment distribution is unknown**, hence stratified not sampled.
+
+---
+
+## Scaling to ACTIVSg2000 *(measured 2026-11-02)*
+
+Scoping only; no campaign was run. The purpose is to turn "the 200-bus case is
+small" into numbers, and to find out what breaks before committing effort.
+
+**Assets, all already present.**
+
+| thing | where |
+|---|---|
+| GridKit case | `gridkit/cases/PhasorDynamics/ACTIVSg2000/ACTIVSg2000.case.json` (2.93 MB) |
+| validation example | `gridkit/examples/PhasorDynamics/Validation/ACTIVSg2000/` |
+| raw TAMU data | `/kfs2/projects/scidac/scidac-data/ACTIVSg2000/raw-tamu-data/` |
+| processed profiles | `.../ACTIVSg2000/grid-v1/{demand,wind,solar}.csv` |
+
+Note `solar.csv`, which has no counterpart in the 200-bus study and would add a
+second renewable axis to the net-load variability that drives the whole
+question.
+
+**Method.** Both cases were run under the **same** settings as each other:
+`tmax = 10 s`, a 0.15 s fault and `dt_monitor = 1/240 s`, at default and at full
+(`Vr`, `Vi`, `delta`, `omega`) monitoring. *(The later 2000-bus micro-campaign
+in this section used `tmax = 5 s` and a 0.1 s fault, so its 5.95 s per run is
+not directly comparable with the 7.08 s in the table below — shorter horizon,
+fewer monitored channels.)* Stage-A numbers are the per-case
+`solve_time` the solver reports from **one batched Julia process**, so the ~6 s
+launch and JIT cost is paid once; cold single-shot timings were measured too and
+discarded as launch-dominated (a 32.6 s "DC OPF" on the *200*-bus case, which is
+obviously precompilation, not solving). Scripts: `scripts/scale_probe.py` and
+`scripts/scale_stagea.py`.
+
+**Measurements.**
+
+| quantity | ACTIVSg200 | ACTIVSg2000 | ratio |
+|---|---|---|---|
+| buses | 200 | 2,000 | 10× |
+| branches | 246 | 3,206 | 13× |
+| devices | 476 | 5,787 | 12.2× |
+| machines (`Genrou` + `Gensal`) | 40 | 334 | 8.4× |
+| `LoadZIP` | 109 | 1,245 | 11.4× |
+| `case.json` size | 0.24 MB | 2.93 MB | 12.2× |
+| case load into Python | 0.002 s | 0.024 s | 12× |
+| DC OPF, warm | 0.011 s | 0.212 s | 19.1× |
+| AC PF, warm | 0.018 s | 0.331 s | 18.5× |
+| **stage A chain** | **0.029 s** | **0.543 s** | **18.7×** |
+| one dynamic run, default monitors | 0.39 s | 6.39 s | 16.4× |
+| **one dynamic run, full monitors** | **0.28 s** | **7.08 s** | **25.3×** |
+| monitor CSV | 27.3 MB | 262.5 MB | 9.6× |
+| monitor columns | 481 | 4,649 | 9.7× |
+
+*(The 200-bus default-monitor run being slower than its full-monitor run is
+within run-to-run noise at this scale and should not be read as a result. The
+4,649 columns factor as `1 + 2x2000 + 314x2 + 20x1`: the 20 `Gensal` machines
+carried only `omega` because `enable_monitors` targeted `Genrou` alone. Fixed
+2026-11-02; all 334 machines now carry `delta` and `omega`, which matters
+because the stability criterion is COI pole slip on `delta`. The 200-bus
+counts — 481 columns for the shipped case with all 40 machines, 441 in a
+campaign run with 20 committed — factor the same way.)*
+
+**Scaling exponents**, taking $N$ as the bus count and a 10× increase:
+
+$$\text{data} \sim N^{1.0}, \qquad \text{stage A} \sim N^{1.27}, \qquad \text{dynamics} \sim N^{1.40}$$
+
+Compute grows faster than the network; storage grows with it. The dynamic run
+grows fastest of the three, but **not fast enough to reorder the stages**: it
+was ~10x the warm dispatch solve at 200 buses and is ~11x at 2000. What the
+execution model has to absorb is a ~20x rise in absolute cost, not a change of
+bottleneck.
+
+**Projection for an `aleatoric1`-sized campaign** (840 conditions, one full run
+plus ~8 bisection probes each). Arithmetic from the table above, not measured:
+
+| | ACTIVSg200 (measured) | ACTIVSg2000 (projected) |
+|---|---|---|
+| per dynamic run | 0.28 s | ~6.5 s |
+| stage A, all 840 conditions | 24 s | 456 s |
+| **dynamic runs, serial** (840 x 9 = 7,560) | **~35 min** | **~13.7 h** |
+| wall, 1 node x 16 workers | ~2.2 min | **~51 min** |
+| wall, 1 node x 32 workers | ~1.1 min | **~26 min** |
+| raw monitor CSV | ~22 GB | **~220 GB** |
+| after parquet (4.9x) | ~4.5 GB | **~45 GB** |
+
+Wall times assume linear scaling in workers, which is optimistic until
+per-worker memory is known. For calibration, `aleatoric1` actually took ~2.5 min
+across **2 nodes x 16 workers** against a 1.1 min ideal, so roughly a 2x
+overhead factor; apply the same to the 2000-bus figures.
+
+Compute is affordable: **roughly half a node-hour at 16 workers**, less if more
+fit per node. The worker count is set by per-worker memory, which at 2000 buses
+is **unmeasured** — so ~51 min is the number to plan against. **Storage is the binding
+constraint.** The mitigation is the one already proven here — 4,000 of the 4,649
+columns are bus `Vr`/`Vi`, and dropping them for bisection probes bought 13.8×
+at 200 buses. At 2,000 buses that trade is worth far more.
+
+**Sampling-space growth, which is the methods argument.** Per axis the design
+space grows roughly with the network: 108 load buses become 1,245 siting
+candidates, 200 fault locations become 2,000. Holding sampling *density* fixed
+means ~10× more samples at 19–25× the unit cost, so **200–250× the pilot's
+budget** for the same statistical resolution. One order of magnitude in network
+size is survivable by brute force; two is not. That is the concrete motivation
+for screening, surrogates and adaptive refinement, and it also means the
+measured **76 % contingency waste** in `faultscreen1` becomes an expensive
+luxury rather than a curiosity.
+
+**Blocker: our builder could not rebuild this case.** *(resolved 2026-11-02)*
+The 2000-bus dynamics use
+
+| model | count | role |
+|---|---|---|
+| `GENROU` | 314 | round-rotor machine |
+| `GENSAL` | 20 | salient-pole machine |
+| `IEEET1` | 324 | exciter |
+| `ESDC1A` | 10 | exciter |
+| `IEEEST` | 333 | **stabiliser**, not an exciter |
+| `TGOV1` | 314 | governor |
+| `HYGOV` | 20 | hydro governor |
+| `SEXS` | **0** | absent |
+
+324 + 10 = **334 exciters for 334 machines**, so the model set is complete; it
+is simply richer than ACTIVSg200's single `Genrou`/`SexsPti`/`Tgov1` triplet.
+
+**No new PSS/E parsers were needed.** `build_case_from_m` deep-copies the
+template case and only *patches* bus voltages, generator setpoints and loads —
+dynamic parameters ride along untouched. The `.dyr` path is used only for units
+online in the `.m` but absent from the template. So the work was generalising
+four single-class assumptions, not writing five model builders:
+
+| assumption | fix |
+|---|---|
+| one machine class | `CaseSpec.machine_classes = ("Genrou", "Gensal")` |
+| one exciter + one governor class | `companion_suffixes` covers all five companions; `unit_classes` drives removal |
+| every online generator has a dynamic model | `strict=False` returns `counts["gen_static"]` instead of raising |
+| unit ids are positional within a bus | `match_gens_by_mva` |
+
+**101 online units carry no dynamic model.** The `.m` has 544 generators, 432
+online, against 334 machines in the case (314 `Genrou` + 20 `Gensal`). The
+three counts reconcile as:
+
+| | count |
+|---|---|
+| online in `.m` | 432 |
+|   matched to a case machine, patched | **331** |
+|   no dynamic model → negative load | **101** |
+| machines in the case | 334 |
+|   matched and patched | 331 |
+|   not online in the `.m` → removed with companions (12 devices) | **3** |
+
+The surplus is renewables and small plant represented only as injections.
+Omitting them leaves the dynamic model ~9.8 GW short and `IDACalcIC` fails; the
+fix is the **negative-load stand-in already used for wind** (`alphaI = 1`),
+which keeps the dynamic load equal to the dispatched load. This is a pleasing
+consistency: the treatment invented for 6 wind units on a 200-bus case
+generalises unchanged to 101 units on a 2000-bus one.
+
+**The positional-id trap.** 13 buses carry 2–11 generators. At bus 4192 the
+`.m` lists 10 units including one **offline**; the case carries 9 and skips it,
+so every later unit at that bus is off by one and receives another unit's
+dispatch. Two of the 334 machines ended up outside their governor's valve
+limits:
+
+| device | case `p0` | `.m` `PG` | `Trate` | valve / `Pvmax` |
+|---|---|---|---|---|
+| `4192_4` | 10.37 MW | 60.83 MW | 12.48 | **4.87** / 1.0 |
+| `7428_9` | 3.56 MW | 22.79 MW | 14.04 | **1.62** / 1.0 |
+
+presenting as `Tgov1: initial valve position is outside [Pvmin, Pvmax]` and a
+hard stop at initialisation. `match_gens_by_mva` keys on `(bus, MBASE)`, which
+is stable under the shift; units sharing a bus *and* a rating are physically
+interchangeable, so any consistent assignment among them is correct.
+
+**A 200-bus case cannot expose this.** Single-generator buses hid a mapping bug
+that a realistic network surfaces immediately, and the failure was loud rather
+than silent only because GridKit checks governor limits at initialisation.
+
+**Verified end to end** (`scripts/test_2k_rebuild.py`): rebuild 0.12 s, 331
+machines patched, 101 static units converted, dynamics `rc = 0`, 331 machines
+monitored, max speed deviation 0.0029 pu over a 5 s run with a 0.1 s fault.
+
+> **Watch out:** `omega` in the monitor output is a **deviation** from
+> synchronous speed, not absolute pu. Checking `abs(omega - 1)` reports a
+> 1.0 pu excursion on every healthy machine. This cost one false alarm here.
+
+### `faultscreen`-shaped micro-campaign *(measured 2026-11-02)*
+
+One dispatch, eight fault locations at the highest-degree buses
+(`scripts/test_2k_screen.py`), `tmax = 5 s`, 0.1 s fault, `delta` + `omega`
+monitors only:
+
+| fault bus | rc | time | max angle spread |
+|---|---|---|---|
+| 7087 | 0 | 5.53 s | 110.0° |
+| 7255 | 0 | 6.00 s | 110.4° |
+| 7346 | 0 | 5.97 s | 109.2° |
+| 7188 | 0 | 5.87 s | 110.3° |
+| **1071** | **1** | 3.96 s | **failed mid-run** |
+| 7366 | 0 | 6.01 s | 109.5° |
+| 7144 | 0 | 5.28 s | 109.6° |
+| 6239 | 0 | 6.70 s | 106.0° |
+
+7 of 8 ran; 18.2 MB of monitor output each. The one failure is a model-validity
+rate of ~12 % at this sample size, comparable to the 200-bus campaigns, and
+worth characterising before a full screen.
+
+**The per-stage ratio barely moves; the absolute cost moves a lot.**
+
+| | ACTIVSg200 | ACTIVSg2000 | growth |
+|---|---|---|---|
+| stage A, warm solve only | 0.029 s | 0.543 s | 18.7x |
+| stage A, incl. case rebuild and file I/O | ~2.8 s *(per point, batched)* | ~0.66 s *(rebuild 0.12 s + solve)* | not comparable |
+| one disturbance | ~0.3 s | **5.95 s** | 20x |
+| **disturbance / warm solve** | **10.3x** | **11.0x** | **~unchanged** |
+
+> **Correction.** An earlier version of this section claimed the cost structure
+> *inverts* at 2000 buses, with the disturbance becoming ~9x stage A. That
+> compared the 2000-bus **solve-only** figure against the 200-bus **unbatched**
+> stage A (~29 s, which is almost all Julia process launch). Like for like, the
+> disturbance has been ~10x the warm solve at both scales and still is. The
+> fan-out lever is **not** weakening materially: stage A grows 18.7x and the
+> disturbance 20x, so the disturbance share creeps up and nothing more.
+
+**Two different "stage A" numbers appear throughout and they measure different
+things.** `0.029 s` is the solver's own warm `solve_time`; `~2.8 s per point` is
+what a batched campaign actually pays, including writing and parsing `.m` files,
+building the case and Lustre I/O. The campaign figure is the one that matters
+for planning, the solver figure for judging the solver. The 2000-bus `0.66 s`
+is solve + rebuild **without** campaign I/O, so it is a lower bound and not
+directly comparable to `2.8 s`.
+
+**What does change, and it is enough to drive the methods work:** absolute
+cost. A CCT bisection is 8 simulations \u2014 **~2.5 s at 200 buses, ~48 s at
+2000**. Combined with a design space that grows ~10x per axis, holding sampling
+density fixed costs **200\u2013250x** the pilot. The case for spending fewer dynamic
+runs rests on that arithmetic, not on any reordering of the stages.
+
+At 200 buses the entire execution model exists to amortise an expensive
+dispatch over cheap disturbances. At 2000 buses that is backwards: **the
+dynamic run dominates**, and the quantity to minimise is the *number of
+simulations*, not the number of dispatches.
+
+That has a direct consequence for sampling design. CCT by bisection costs
+**8 simulations per condition** — free at 200 buses, ~48 s at 2000. Worth
+pursuing, in rough order of expected payoff:
+
+1. **Cheaper stability screening before bisecting.** Most conditions in
+   `aleatoric1` were censored, i.e. the 8 probes only confirmed "nothing
+   happens". A 1–2 run classifier that detects the censored case would remove
+   most of the cost.
+2. **Surrogate or warm-started CCT.** Neighbouring operating points have
+   strongly correlated CCT; a regression or a bracket seeded from a neighbour
+   should cut probes materially.
+3. **Early-terminating integration.** Instability is detectable well before
+   `tmax = 10 s`; the pole-slip criterion is a stopping rule, not only a
+   post-processing test.
+4. **Contingency screening that stops early**, given 13 of 17 baseline fault
+   locations
+   were 100 % censored at 200 buses.
+
+None of these were worth building at 200 buses, which is precisely why the
+larger case is needed to drive the methods work.
+
+**Not yet ported.** `CampaignConfig` is still ACTIVSg200-specific — merit
+order, commitment band, `apply_hour` and the wind-column mapping all assume
+that case's generator table and profile format. A `faultscreen`-shaped campaign
+needs none of it and runs today; an `aleatoric`-shaped campaign over hours and
+commitments does, and that is the next piece of work.
+
+**Not yet measured, and it may matter more than runtime:** per-worker memory. At
+200 buses it was 0.85 GB, which is what set 16–64 workers per node. With a 12×
+larger case and an 18–262 MB monitor file in flight, this is the next number to
+get; it determines whether the projected 15-minute node-hour is actually
+reachable or whether the job becomes memory-bound.
+
+---
+
+## Appendix A: superseded decisions, and where they were overturned
+
+Nothing in this document has been deleted, because a rejected approach that was
+*measured* is a result. But a reader needs to know which text is live. This
+index lists every decision that was later reversed; each is also marked inline
+at the point it appears.
+
+| decision as first written | superseded by | where |
+|---|---|---|
+| Status line "nothing implemented yet" | five campaigns run and collected | header |
+| Datacenter mix `P/I/Z = 100/0/0` (`alphaP = 1`) | `20/80/0`, forced by simulability | [section 4](#is-the-20800-mix-defensible) |
+| `alphaP` as the first **epistemic** axis | dropped; pilot is aleatoric-only | [section 4](#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22) |
+| Stability by "final spread $\approx$ max spread" | COI pole slip $>180°$ | [section 9](#stability-criterion) |
+| Wind left as `Genrou` | converted to negative constant-current load | [section 3](#3-wind-why-negative-load-not-fixed) |
+| Unbatched one-Julia-launch-per-condition | batched manifest, 10.4x on 12 points | [execution model](#execution-model-one-job-per-worker-julia-batched-inside-it-decided-2026-10-22) |
+| `inertia_MWs` from a lookup defaulting to `0.0` | read from the case object | [bug](#inertia_mws-was-silently-undercounted-bug-fixed-2026-10-22) |
+| Drop censored CCT observations | Kaplan-Meier plus partial identification | [section 7](#7-phases) |
+| Notebook-driven campaign | scripts plus importable utils | [recommended shape](#recommended-shape-scripts-plus-utils-not-a-notebook) |
+
+**The constant-power investigation has a controlling variable but no
+mechanism.** Six hypotheses were tested: five falsified (load model, absolute
+size, ratio to host load, device composition, monotonicity in `alphaP`) and one
+unsupported (electrical distance to generation). The variable that mattered —
+fault location — had been held fixed throughout and so was invisible. Read
+[the result](#fault-location-is-the-missing-variable-afront2-measured-2026-11-02)
+first; the
+[trail](#the-constant-power-simulability-limit-five-hypotheses-none-sufficient-measured-2026-10-30)
+is kept only so the dead ends are not retried.

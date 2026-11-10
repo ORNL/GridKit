@@ -44,9 +44,11 @@ def main():
     p.add_argument("--start", type=int, required=True)
     p.add_argument("--count", type=int, required=True)
     p.add_argument("--no-cct", action="store_true")
+    # datacenter constant-power share; the campaign default is 0.2
+    p.add_argument("--dc-alpha-p", type=float, default=0.2)
     args = p.parse_args()
 
-    cfg = cp.CampaignConfig(name=args.name)
+    cfg = cp.CampaignConfig(name=args.name, dc_alpha_p=args.dc_alpha_p)
     missing = cp.check_runner(cfg)
     if missing:
         print(
