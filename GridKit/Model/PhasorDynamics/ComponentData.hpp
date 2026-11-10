@@ -23,12 +23,14 @@ namespace GridKit
               typename buses_enum,
               typename signal_inputs_enum,
               typename signal_outputs_enum,
-              typename monitorable_variables_enum>
+              typename monitorable_variables_enum,
+              typename initial_values_enum>
       requires std::is_enum_v<parameters_enum>
                && std::is_enum_v<buses_enum>
                && std::is_enum_v<signal_inputs_enum>
                && std::is_enum_v<signal_outputs_enum>
                && std::is_enum_v<monitorable_variables_enum>
+               && std::is_enum_v<initial_values_enum>
     struct ComponentData
     {
       /// Real value type
@@ -52,6 +54,9 @@ namespace GridKit
       /// Enumeration over monitorable variables.
       using MonitorableVariables = monitorable_variables_enum;
 
+      /// Enumeration over initial values.
+      using InitialValues = initial_values_enum;
+
       /// Class of device this is for
       std::string device_class;
 
@@ -69,6 +74,9 @@ namespace GridKit
 
       /// Set of variables being monitored
       std::set<MonitorableVariables> monitored_variables;
+
+      /// Mapping of initial values to their values
+      std::map<InitialValues, std::variant<std::string, bool, RealT, IdxT>> initial_values;
 
       /// Disambiguation string for this device
       std::string disambiguation_string;

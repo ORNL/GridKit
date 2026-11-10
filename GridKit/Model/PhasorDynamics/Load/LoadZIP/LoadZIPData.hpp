@@ -66,6 +66,7 @@ namespace GridKit
                       LoadZIPBuses,
                       LoadZIPSignalInputs,
                       LoadZIPSignalOutputs,
-                      LoadZIPMonitorableVariables>;
+                      LoadZIPMonitorableVariables,
+                      LoadZIPInitialValues>;
   } // namespace PhasorDynamics
 } // namespace GridKit

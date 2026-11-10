@@ -72,7 +72,8 @@ namespace GridKit
                                           Utilities::EmptyEnum,
                                           BusSignalInputs,
                                           BusSignalOutputs,
-                                          BusMonitorableVariables>
+                                          BusMonitorableVariables,
+                                          BusInitialValues>
     {
       using RealT = real_type;
       using IdxT  = index_type;

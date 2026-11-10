@@ -84,7 +84,8 @@ namespace GridKit
                         Ieeet1Buses,
                         Ieeet1SignalInputs,
                         Ieeet1SignalOutputs,
-                        Ieeet1MonitorableVariables>;
+                        Ieeet1MonitorableVariables,
+                        Ieeet1InitialValues>;
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

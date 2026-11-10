@@ -27,20 +27,23 @@ namespace GridKit
               typename Buses,
               typename SignalInputs,
               typename SignalOutputs,
-              typename MonitorableVariables>
+              typename MonitorableVariables,
+              typename InitialValues>
       requires std::is_enum_v<Parameters>
                && std::is_enum_v<Buses>
                && std::is_enum_v<SignalInputs>
                && std::is_enum_v<SignalOutputs>
                && std::is_enum_v<MonitorableVariables>
-    void from_json(const json&                          j,
+               && std::is_enum_v<InitialValues>
+    void from_json(const json&                   j,
                    ComponentData<RealT,
                                  IdxT,
                                  Parameters,
                                  Buses,
                                  SignalInputs,
                                  SignalOutputs,
-                                 MonitorableVariables>& c)
+                                 MonitorableVariables,
+                                 InitialValues>& c)
     {
       j.at("class").get_to(c.device_class);
 

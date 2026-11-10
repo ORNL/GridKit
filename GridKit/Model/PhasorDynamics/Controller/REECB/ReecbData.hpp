@@ -102,7 +102,8 @@ namespace GridKit
                         ReecbBuses,
                         ReecbSignalInputs,
                         ReecbSignalOutputs,
-                        ReecbMonitorableVariables>;
+                        ReecbMonitorableVariables,
+                        ReecbInitialValues>;
     } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

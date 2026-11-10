@@ -84,7 +84,8 @@ namespace GridKit
                         Tgov1Buses,
                         Tgov1SignalInputs,
                         Tgov1SignalOutputs,
-                        Tgov1MonitorableVariables>;
+                        Tgov1MonitorableVariables,
+                        Tgov1InitialValues>;
 
     } // namespace Governor
   } // namespace PhasorDynamics

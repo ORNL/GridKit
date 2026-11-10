@@ -108,7 +108,8 @@ namespace GridKit
                         RepcaBuses,
                         RepcaSignalInputs,
                         RepcaSignalOutputs,
-                        RepcaMonitorableVariables>;
+                        RepcaMonitorableVariables,
+                        RepcaInitialValues>;
     } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

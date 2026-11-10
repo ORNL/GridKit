@@ -101,7 +101,8 @@ namespace GridKit
                         HygovBuses,
                         HygovSignalInputs,
                         HygovSignalOutputs,
-                        HygovMonitorableVariables>;
+                        HygovMonitorableVariables,
+                        HygovInitialValues>;
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit
