@@ -14,6 +14,7 @@
 - `verify()` returns `Model::ConfigurationChecks` listing every configuration problem instead of an error count.
 - Added `Model::ParameterReader`
 - Added the `OptimalPowerFlow` model family, the `SteadyState::IpoptInterface`, and the `EconomicDispatch` example.
+- Added `ComponentManifest` with `MANIFEST` tables for IEEET1 and GENROU, and the `ComponentLibrary` model list.
 - Removed legacy PhasorDynamics component constructors in favor of constructors taking model data.
 - Added hierarchical PhasorDynamics system models.
 - Migrated PhasorDynamics models with real and Boolean parameters to `Model::ParameterReader`.
