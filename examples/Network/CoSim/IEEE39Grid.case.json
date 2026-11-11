@@ -507,7 +507,7 @@
     },
     {
       "number": 39,
-      "class": "SignalVoltageOut",
+      "class": "SignalVoltageIn",
       "name": "39",
       "init": {
         "Vr": 1.014553036142942,
@@ -520,12 +520,12 @@
         "Vm"
       ],
       "ports_in": {
-        "ir": 32,
-        "ii": 33
-      },
-      "ports_out": {
         "vr": 30,
         "vi": 31
+      },
+      "ports_out": {
+        "ir": 32,
+        "ii": 33
       }
     }
   ],

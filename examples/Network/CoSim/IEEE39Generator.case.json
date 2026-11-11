@@ -13,7 +13,7 @@
   "buses": [
     {
       "number": 39,
-      "class": "SignalVoltageIn",
+      "class": "SignalVoltageOut",
       "name": "39",
       "init": {
         "Vr": 1.014553036142942,
@@ -26,12 +26,12 @@
         "Vm"
       ],
       "ports_in": {
-        "vr": 30,
-        "vi": 31
-      },
-      "ports_out": {
         "ir": 32,
         "ii": 33
+      },
+      "ports_out": {
+        "vr": 30,
+        "vi": 31
       }
     }
   ],
