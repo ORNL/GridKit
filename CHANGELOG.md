@@ -27,6 +27,7 @@
 - Added `SubsystemModel` and `BusLinePartitionInterface` to support partitioning PowerElectronics systems into independently evaluated and simulated subsystems.
 - Added a `TwoArea` integration test comparing flat and hierarchical PhasorDynamics systems.
 - Added rate feedback (`Kf`, `Tf`) to the IEEET1 exciters in the `TwoArea` case, whose generators lost synchronism without a fault.
+- Added the `state_file` solver option, which sets PhasorDynamics initial bus voltages from a state file.
 
 ## v0.2
 
