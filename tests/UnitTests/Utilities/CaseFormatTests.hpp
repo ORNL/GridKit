@@ -276,8 +276,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// A state sets the initial voltages of the buses it names, in subsystems
-      /// too, and leaves the other buses at their case values.
+      /// A state must supply initial voltages for every bus, including subsystems.
       TestOutcome stateParse()
       {
         using namespace GridKit::PhasorDynamics;
@@ -300,7 +299,11 @@ namespace GridKit
         })");
 
         const json state = json::parse(R"({
-          "buses": {"1": {"Vr": 0.5, "Vi": 0.25}, "3": {"Vr": 0.75, "Vi": -0.125}}
+          "buses": {
+            "1": {"Vr": 0.5, "Vi": 0.25},
+            "2": {"Vr": 0.625, "Vi": -0.375},
+            "3": {"Vr": 0.75, "Vi": -0.125}
+          }
         })");
 
         TestStatus success = true;
@@ -310,10 +313,18 @@ namespace GridKit
 
         success *= data.bus[0].Vr0 == 0.5;
         success *= data.bus[0].Vi0 == 0.25;
-        success *= data.bus[1].Vr0 == 0.875;
-        success *= data.bus[1].Vi0 == 0.375;
+        success *= data.bus[1].Vr0 == 0.625;
+        success *= data.bus[1].Vi0 == -0.375;
         success *= data.subsystems[0].bus[0].Vr0 == 0.75;
         success *= data.subsystems[0].bus[0].Vi0 == -0.125;
+
+        for (const auto* number : {"2", "3"})
+        {
+          auto incomplete = state;
+          incomplete.at("buses").erase(number);
+          success *= throws<json::out_of_range>([&]()
+                                                { applyState(incomplete, data); });
+        }
 
         return success.report(__func__);
       }
