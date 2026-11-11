@@ -39,19 +39,12 @@ namespace GridKit
      * ). See CliArgs.
      *
      * @todo
-     * - Allow positional arguments
      * - Allow `nargs` to be "arbitrary"
      */
     struct Option
     {
       /**
        * @brief Key(s) by which to refer to this Option
-       *
-       * This is the only field that must be explicitly initialized. It expects
-       * 1 or 2 elements.  The first element must exist and must be the
-       * long-hand form, `--name` (must have exactly two hyphens).  The second
-       * element is optional but must be the short-hand form, `-n` (that is,
-       * only one `-`).
        */
       std::array<std::string, 2> name;
       /// Help description to be printed on request. Can be multiple lines.
@@ -72,6 +65,10 @@ namespace GridKit
       std::size_t                nargs{1};
       /// Default value(s)
       ArgVector                  defaults{};
+      /// Consume values without an option name
+      bool                       positional{false};
+      /// Allow multiple occurrences, each taking nargs values
+      bool                       repeatable{false};
     };
 
   } // namespace Utilities
