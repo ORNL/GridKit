@@ -1068,6 +1068,27 @@ namespace GridKit
       return bus;
     }
 
+    /**
+     * @brief Return the number of this system's own buses, without those of
+     * its subsystems
+     */
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::IdxT
+    SystemModel<scalar_type, index_type>::numBuses() const
+    {
+      return static_cast<IdxT>(buses_.size());
+    }
+
+    /**
+     * @brief Return the bus_id of one of this system's own buses
+     */
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::IdxT
+    SystemModel<scalar_type, index_type>::getBusId(IdxT gridkit_bus_id) const
+    {
+      return buses_.at(gridkit_bus_id)->busID();
+    }
+
     template <typename scalar_type, typename index_type>
     typename SystemModel<scalar_type, index_type>::IdxT
     SystemModel<scalar_type, index_type>::numComponents() const

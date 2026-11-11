@@ -1,6 +1,6 @@
 # Release Changelog
 
-## v.03
+## v0.3
 
 - Added `output_layout` solver option for long monitor output and a PostgreSQL example.
 - Restricted monitored bus names and device ids to letters, digits, spaces, `_`, `.` and `-`.
@@ -25,6 +25,8 @@
 - Fixed REGCA to hold the terminal voltage at `Vhvmax`, as PowerWorld does; `Khv` is accepted but unused.
 - Added the FourBusLimits validation case, which drives the REPCA, REECB, REGCA, and ESDC1A limits.
 - Added `SubsystemModel` and `BusLinePartitionInterface` to support partitioning PowerElectronics systems into independently evaluated and simulated subsystems.
+- Added a `TwoArea` integration test comparing flat and hierarchical PhasorDynamics systems.
+- Added rate feedback (`Kf`, `Tf`) to the IEEET1 exciters in the `TwoArea` case, whose generators lost synchronism without a fault.
 
 ## v0.2
 

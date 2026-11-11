@@ -1,3 +1,9 @@
+/**
+ * @file SubsystemModelTests.hpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
+ * @brief Tests for hierarchical PhasorDynamics system models.
+ *
+ */
 #pragma once
 
 #include <exception>
@@ -117,22 +123,36 @@ namespace GridKit
         TestStatus success = true;
 
         // Signal in subsystem C, added to any existing ones
-        json input = readJson("SubsystemHierarchical.json");
-        input["subsystems"][1]["subsystems"][0]["signals"].push_back({{"signal_id", 5}, {"name", "s"}});
+        json  input             = readJson("SubsystemHierarchical.json");
+        json& input_subsystem_b = input["subsystems"][1];
+        json& input_subsystem_c = input_subsystem_b["subsystems"][0];
+        input_subsystem_c["signals"].push_back({{"signal_id", 5}, {"name", "s"}});
         SystemT top(input.template get<DataT>());
 
         auto* a = top.getSubsystem(0);
         auto* b = top.getSubsystem(1);
         auto* c = b->getSubsystem(0);
 
+        // Bus IDs of each system's own buses
+        success *= top.numBuses() == 1;
+        success *= top.getBusId(0) == 1;
+        success *= a->numBuses() == 1;
+        success *= a->getBusId(0) == 2;
+        success *= b->numBuses() == 1;
+        success *= b->getBusId(0) == 3;
+        success *= c->numBuses() == 1;
+        success *= c->getBusId(0) == 4;
+
         // Labels in construction order
         success *= top.numComponents() == 0;
         success *= a->numComponents() == 1;
         success *= a->getComponentLabel(0) == "Branch_1";
-        success *= c->numComponents() == 3;
+        success *= c->numComponents() == 5;
         success *= c->getComponentLabel(0) == "Branch_2";
         success *= c->getComponentLabel(1) == "Branch_3";
         success *= c->getComponentLabel(2) == "LoadZ_1";
+        success *= c->getComponentLabel(3) == "Genrou_1";
+        success *= c->getComponentLabel(4) == "Tgov1_1";
 
         success *= top.getComponent("LoadZ_1") == c->getComponent(2);
         success *= b->getComponent("Branch_3") == c->getComponent(1);
@@ -172,28 +192,37 @@ namespace GridKit
         json       input;
 
         // Device uses a bus of a sibling subsystem
-        input                                                  = hierarchical;
-        input["subsystems"][0]["devices"][0]["ports"]["bus2"]  = 3;
-        success                                               *= constructionThrows(input);
+        {
+          input                    = hierarchical;
+          json& subsystem_a        = input["subsystems"][0];
+          json& branch             = subsystem_a["devices"][0];
+          branch["ports"]["bus2"]  = 3;
+          success                 *= constructionThrows(input);
+        }
 
         // Device uses a signal of its parent
-        const json signal_r = {{"signal_id", 1}, {"name", "sr"}};
-        const json signal_i = {{"signal_id", 2}, {"name", "si"}};
-        const json source   = {{"class", "ConstantSignalSource"},
-                               {"ports", {{"sr", 1}, {"si", 2}}},
-                               {"id", "1"},
-                               {"params", json::object()}};
-        input               = hierarchical;
-        input["signals"]    = json::array({signal_r, signal_i});
-        input["subsystems"][0]["devices"].push_back(source);
+        const json signal_r         = {{"signal_id", 1}, {"name", "sr"}};
+        const json signal_i         = {{"signal_id", 2}, {"name", "si"}};
+        const json source           = {{"class", "ConstantSignalSource"},
+                                       {"ports", {{"sr", 1}, {"si", 2}}},
+                                       {"id", "1"},
+                                       {"params", json::object()}};
+        input                       = hierarchical;
+        input["signals"]            = json::array({signal_r, signal_i});
+        json& subsystem_with_source = input["subsystems"][0];
+        subsystem_with_source["devices"].push_back(source);
         success *= constructionThrows(input);
 
         // Devices in a system with subsystems
-        input                = hierarchical;
-        json load            = input["subsystems"][1]["subsystems"][0]["devices"][2];
-        load["ports"]["bus"] = 1;
-        input["devices"].push_back(load);
-        success *= constructionThrows(input);
+        {
+          input                = hierarchical;
+          json& subsystem_b    = input["subsystems"][1];
+          json& subsystem_c    = subsystem_b["subsystems"][0];
+          json  load           = subsystem_c["devices"][2];
+          load["ports"]["bus"] = 1;
+          input["devices"].push_back(load);
+          success *= constructionThrows(input);
+        }
 
         // Programmatic hierarchy: devices and subsystems in one system
         {
@@ -237,9 +266,13 @@ namespace GridKit
         success *= constructionThrows(input);
 
         // Subsystem level not matching the hierarchy (grandchild at level 1)
-        input                                             = hierarchical;
-        input["subsystems"][1]["subsystems"][0]["level"]  = 1;
-        success                                          *= constructionThrows(input);
+        {
+          input                 = hierarchical;
+          json& subsystem_b     = input["subsystems"][1];
+          json& subsystem_c     = subsystem_b["subsystems"][0];
+          subsystem_c["level"]  = 1;
+          success              *= constructionThrows(input);
+        }
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
@@ -324,8 +357,17 @@ namespace GridKit
 
         const IdxT n = top.size();
 
-        // Duplicate entries may be summed in a different order.
-        const RealT tol = 10 * std::numeric_limits<RealT>::epsilon();
+        // Duplicate entries may be summed in a different order, and Enzyme
+        // and DependencyTracking differentiate the governor's antiwindup
+        // sigmoid with different formulas.
+        const RealT tol = 100 * std::numeric_limits<RealT>::epsilon();
+
+        // Nonzero alpha, so the Jacobians include the derivative terms.
+        for (auto* system : {&flat, &top})
+        {
+          system->updateTime(0.0, 1.0);
+        }
+        top_dt.updateTime(0.0, 1.0);
 
         for (const bool fault : {false, true})
         {
@@ -353,10 +395,10 @@ namespace GridKit
           const auto jacobian_flat = MapFromCsr(flat.getCsrJacobian());
           const auto jacobian_top  = MapFromCsr(top.getCsrJacobian());
           const auto jacobian_dt   = MapFromCsr(top_dt.getCsrJacobian());
-          for (IdxT i = 0; i < n; ++i)
+          for (IdxT row = 0; row < n; ++row)
           {
-            success *= isEqual(jacobian_top[i], jacobian_flat[i]);
-            success *= isEqual(jacobian_top[i], jacobian_dt[i], tol);
+            success *= isEqual(jacobian_top[row], jacobian_flat[row]);
+            success *= isEqual(jacobian_top[row], jacobian_dt[row], tol);
           }
 
           for (auto* subsystem : {a, b, c})
@@ -379,18 +421,18 @@ namespace GridKit
               return success.report(__func__);
             }
 
-            for (IdxT i = begin; i < end; ++i)
+            for (IdxT row = begin; row < end; ++row)
             {
               DependencyMap expected_row;
               DependencyMap actual_row;
-              for (const auto& [column, value] : jacobian_top[i])
+              for (const auto& [column, value] : jacobian_top[row])
               {
                 if (begin <= column && column < end)
                 {
                   expected_row[column] = value;
                 }
               }
-              for (const auto& [column, value] : jacobian[i])
+              for (const auto& [column, value] : jacobian[row])
               {
                 if (begin <= column && column < end)
                 {
@@ -475,7 +517,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Compare top = [bus 1 | A[bus 2] | B[bus 3 | C[bus 4, load]]]
+       * @brief Compare top = [bus 1 | A[bus 2] | B[bus 3 | C[bus 4, load, machine, governor]]]
        * with the flat system, before and after a fault on bus 4.
        */
       static void compareSystems(SystemT& flat, SystemT& top, TestStatus& success)
@@ -501,13 +543,15 @@ namespace GridKit
         auto* c = b->getSubsystem(0);
 
         // Branches have no variables, so both systems order variables as
-        // buses 1-4, then the load.
+        // buses 1-4, then the load, machine and governor.
         success *= a->offset() == top.getBus(1)->size();
         success *= a->size() == a->getBus(2)->size();
         success *= b->offset() == a->offset() + a->size();
         success *= b->size() == b->getBus(3)->size() + c->size();
         success *= c->offset() == b->offset() + b->getBus(3)->size();
-        success *= c->size() == c->getBus(4)->size() + c->getComponent(2)->size();
+        success *= c->size()
+                   == c->getBus(4)->size() + c->getComponent(2)->size()
+                          + c->getComponent(3)->size() + c->getComponent(4)->size();
         success *= top.size() == top.getBus(1)->size() + a->size() + b->size();
         success *= top.size() == flat.size();
         if (top.size() != flat.size())
@@ -540,9 +584,9 @@ namespace GridKit
           }
           const auto* f_flat = flat.getResidual().getData();
           const auto* f_top  = top.getResidual().getData();
-          for (IdxT i = 0; i < flat.size(); ++i)
+          for (IdxT variable = 0; variable < flat.size(); ++variable)
           {
-            success *= isEqual(f_top[i], f_flat[i]);
+            success *= isEqual(f_top[variable], f_flat[variable]);
           }
         }
       }
