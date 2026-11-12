@@ -134,35 +134,6 @@ namespace GridKit
       /// Hierarchical subsystems; devices may use buses of this system and
       /// its ancestors. System bases must match this system's.
       std::vector<SystemModelData> subsystems;
-
-      /**
-       * @brief Call `visit` on each device vector of `data`
-       *
-       * With several systems, `visit` receives the matching vector of each.
-       * Keep in step with the device vectors above. Partitioning uses this list.
-       */
-      template <class VisitorT, class... DataTs>
-      static void forEachDeviceList(VisitorT& visit, DataTs&... data)
-      {
-        visit(data.branch...);
-        visit(data.regca...);
-        visit(data.reecb...);
-        visit(data.repca...);
-        visit(data.genrou...);
-        visit(data.gensal...);
-        visit(data.genclassical...);
-        visit(data.loadz...);
-        visit(data.loadzip...);
-        visit(data.gov...);
-        visit(data.esdc1a...);
-        visit(data.gastpti...);
-        visit(data.hygov...);
-        visit(data.exciter...);
-        visit(data.sexspti...);
-        visit(data.stabilizer...);
-        visit(data.constant_source...);
-        visit(data.function_source...);
-      }
     };
 
     /**

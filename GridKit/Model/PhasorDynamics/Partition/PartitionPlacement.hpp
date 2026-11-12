@@ -45,12 +45,27 @@ namespace GridKit
     private:
       PartitionPlacement(const DataT& data);
 
+      void addAllDevices();
+
+      template <class DeviceDataT>
+      void addDevices(const std::vector<DeviceDataT>& devices);
+
       DataT place(const PartitionDataT& partition);
-      void  buildSystem(const PartitionDataT& partition, DataT& system);
-      void  addBusList(const std::vector<IdxT>& buses,
-                       const std::string&       name,
-                       bool                     internal,
-                       IdxT                     leaf);
+
+      void buildSystem(const PartitionDataT& partition, DataT& system);
+
+      void addBusList(const std::vector<IdxT>& buses,
+                      const std::string&       name,
+                      bool                     internal,
+                      IdxT                     leaf);
+
+      void fillSystem(IdxT leaf, DataT& system) const;
+
+      template <class DeviceDataT>
+      void copyDevices(const std::vector<DeviceDataT>& devices,
+                       IdxT                            leaf,
+                       std::vector<DeviceDataT>&       system_devices,
+                       IdxT&                           device) const;
 
       const DataT&               data_;   ///< Flat input data
       Model::ConfigurationChecks checks_; ///< Errors of a badly formed partition
@@ -62,12 +77,15 @@ namespace GridKit
       std::vector<std::string>       device_labels_; ///< Label of each device, for messages
       std::vector<std::vector<IdxT>> device_buses_;  ///< Bus indices of each device
       std::vector<IdxT>              device_group_;  ///< Group of each device, its lowest index
-      std::vector<IdxT>              next_in_group_; ///< Next device of its group, or INVALID_INDEX
       std::vector<IdxT>              group_leaf_;    ///< Leaf of each group, at its first device
 
-      std::vector<IdxT> bus_internal_leaf_; ///< Leaf each bus is internal to, or INVALID_INDEX
-      std::vector<IdxT> bus_last_leaf_;     ///< Last leaf listing each bus, or INVALID_INDEX
-      IdxT              num_leaves_{0};     ///< Leaves numbered so far, in file order
+      std::vector<IdxT> signal_use_device_; ///< Device of each signal port, for grouping
+      std::vector<IdxT> signal_use_id_;     ///< Signal ID of each signal port, for grouping
+
+      std::vector<IdxT>   bus_internal_leaf_; ///< Leaf each bus is internal to, or INVALID_INDEX
+      std::vector<IdxT>   bus_last_leaf_;     ///< Last leaf listing each bus, or INVALID_INDEX
+      std::vector<IdxT>   signal_leaf_;       ///< Leaf of each signal, or INVALID_INDEX
+      std::vector<DataT*> leaf_systems_;      ///< System of each leaf, in file order
     };
   } // namespace PhasorDynamics
 } // namespace GridKit
