@@ -15,8 +15,6 @@ machine information.
 
 Symbol            | Units  | JSON  | Description                      | Typical Value | Note
 ------------------|--------|-------|----------------------------------|---------------|------
-$P_0$             | [p.u.] | `p0`  | Initial active power injection   | 1.0           | System base; required initialization source
-$Q_0$             | [p.u.] | `q0`  | Initial reactive power injection | 0.0           | System base; required initialization source
 $S^\mathrm{base}$ | [MVA]  | `mva` | GENCLS component power base      | 100.0         |
 $H$               | [s]  | `H`   | Rotor inertia                    | 3.0           |
 $D$               | [p.u.] | `D`   | Damping coefficient              | 0.0           |
@@ -127,8 +125,8 @@ $E_\mathrm{fd}$ | [p.u.] | Unknown | Field voltage                         | Opt
 \begin{aligned}
   V_\mathrm{r}, V_\mathrm{i}
     &\leftarrow \text{terminal-bus voltage} \\
-  P_0, Q_0
-    &\leftarrow \text{power-flow injection on system base}
+  \text{ir}, \text{ii}
+    &\leftarrow \text{state terminal current on system base}
 \end{aligned}
 ```
 
@@ -139,9 +137,9 @@ All internal derivatives are initialized to zero:
 ```math
 \begin{aligned}
   I_\mathrm{r}
-    &\leftarrow k_\mathrm{base}\dfrac{V_\mathrm{r}P_0+V_\mathrm{i}Q_0}{V_\mathrm{r}^2+V_\mathrm{i}^2} \\
+    &\leftarrow k_\mathrm{base}\,\text{ir} \\
   I_\mathrm{i}
-    &\leftarrow k_\mathrm{base}\dfrac{V_\mathrm{i}P_0-V_\mathrm{r}Q_0}{V_\mathrm{r}^2+V_\mathrm{i}^2} \\
+    &\leftarrow k_\mathrm{base}\,\text{ii} \\
   \delta
     &\leftarrow \text{arg}[V_\mathrm{r}+jV_\mathrm{i}+(R_\mathrm{a}+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})] \\
   \omega

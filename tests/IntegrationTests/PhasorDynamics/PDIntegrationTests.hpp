@@ -120,8 +120,6 @@ namespace GridKit
           const auto& bg = b.genclassical[i];
 
           success *= ag.buses.at(BUS) == bg.buses.at(BUS);
-          success *= ag.parameters.at(Param::p0) == bg.parameters.at(Param::p0);
-          success *= ag.parameters.at(Param::q0) == bg.parameters.at(Param::q0);
           success *= ag.parameters.at(Param::H) == bg.parameters.at(Param::H);
           success *= ag.parameters.at(Param::D) == bg.parameters.at(Param::D);
           success *= ag.parameters.at(Param::Ra) == bg.parameters.at(Param::Ra);
@@ -653,16 +651,12 @@ namespace GridKit
 
         set_data.genclassical.resize(2);
         set_data.genclassical[0].buses[GenClassicalBuses::bus]           = set_data.bus[1].bus_id;
-        set_data.genclassical[0].parameters[GenClassicalParameters::p0]  = 0.5;
-        set_data.genclassical[0].parameters[GenClassicalParameters::q0]  = -0.07588;
         set_data.genclassical[0].parameters[GenClassicalParameters::H]   = 2.7;
         set_data.genclassical[0].parameters[GenClassicalParameters::D]   = 0.;
         set_data.genclassical[0].parameters[GenClassicalParameters::Ra]  = 0.;
         set_data.genclassical[0].parameters[GenClassicalParameters::Xdp] = 0.17;
         set_data.genclassical[0].monitored_variables.insert(GenVar::speed);
         set_data.genclassical[1].buses[GenClassicalBuses::bus]           = set_data.bus[2].bus_id;
-        set_data.genclassical[1].parameters[GenClassicalParameters::p0]  = 0.25;
-        set_data.genclassical[1].parameters[GenClassicalParameters::q0]  = 0.26587;
         set_data.genclassical[1].parameters[GenClassicalParameters::H]   = 1.6;
         set_data.genclassical[1].parameters[GenClassicalParameters::D]   = 0.;
         set_data.genclassical[1].parameters[GenClassicalParameters::Ra]  = 0.;
