@@ -28,6 +28,7 @@
 - Added a `TwoArea` integration test comparing flat and hierarchical PhasorDynamics systems.
 - Added rate feedback (`Kf`, `Tf`) to the IEEET1 exciters in the `TwoArea` case, whose generators lost synchronism without a fault.
 - Added the `state_file` solver option, which sets PhasorDynamics initial bus voltages from a state file.
+- Verify bus numbers, signal IDs, device IDs per class, and subsystem IDs in PhasorDynamics inputs.
 
 ## v0.2
 

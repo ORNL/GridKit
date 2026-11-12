@@ -177,6 +177,206 @@ namespace GridKit
       }
 
       /**
+       * @brief A branch with an empty case-file ID can be looked up.
+       */
+      TestOutcome emptyIdLookup()
+      {
+        TestStatus success = true;
+
+        json  input  = readJson("SubsystemFlat.json");
+        json& device = input["devices"][0];
+        device["id"] = "";
+
+        SystemT    system(input.template get<DataT>());
+        const IdxT first_device = 0;
+
+        success *= system.getBranch("") == system.getComponent(first_device);
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Repeated IDs fail verification, in one system and across the
+       * hierarchy.
+       */
+      TestOutcome duplicateIds()
+      {
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid inputs below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        const json flat         = readJson("SubsystemFlat.json");
+        const json hierarchical = readJson("SubsystemHierarchical.json");
+
+        // Bus number repeated in one system
+        {
+          json       input = flat;
+          json&      buses = input["buses"];
+          const json bus   = buses[0];
+          buses.push_back(bus);
+
+          success *= verifyReports(input, "Duplicate bus ID 1");
+        }
+
+        // Signal ID repeated in one system
+        {
+          json       input   = flat;
+          json&      signals = input["signals"];
+          const json signal  = signals[0];
+          signals.push_back(signal);
+
+          success *= verifyReports(input, "Duplicate signal ID 0");
+        }
+
+        // Device ID repeated per class in one system
+        {
+          json       input   = flat;
+          json&      devices = input["devices"];
+          const json device  = devices[0];
+          devices.push_back(device);
+
+          success *= verifyReports(input, "Duplicate component Branch_1");
+        }
+
+        // Empty device ID repeated per class in one system
+        {
+          json  input   = flat;
+          json& devices = input["devices"];
+          json  device  = devices[0];
+          device["id"]  = "";
+          devices.push_back(device);
+          devices.push_back(device);
+
+          success *= verifyReports(input, "Duplicate component Branch_");
+        }
+
+        // Bus number repeated in a parent and its subsystem (top and A)
+        {
+          json  input       = hierarchical;
+          json& top_buses   = input["buses"];
+          json& subsystem_a = input["subsystems"][0];
+          json& a_buses     = subsystem_a["buses"];
+          a_buses.push_back(top_buses[0]);
+
+          success *= verifyReports(input, "Duplicate bus ID 1");
+        }
+
+        // Bus number repeated in a parent with its own subsystem (top and B, above C)
+        {
+          json  input       = hierarchical;
+          json& top_buses   = input["buses"];
+          json& subsystem_b = input["subsystems"][1];
+          json& b_buses     = subsystem_b["buses"];
+          b_buses.push_back(top_buses[0]);
+
+          success *= verifyReports(input, "Duplicate bus ID 1");
+        }
+
+        // Bus number repeated in a sibling (A and B)
+        {
+          json  input       = hierarchical;
+          json& subsystem_a = input["subsystems"][0];
+          json& subsystem_b = input["subsystems"][1];
+          json& a_buses     = subsystem_a["buses"];
+          json& b_buses     = subsystem_b["buses"];
+          a_buses.push_back(b_buses[0]);
+
+          success *= verifyReports(input, "Duplicate bus ID 3");
+        }
+
+        // Bus number repeated in a sibling's subsystem (A and C)
+        {
+          json  input       = hierarchical;
+          json& subsystem_a = input["subsystems"][0];
+          json& subsystem_b = input["subsystems"][1];
+          json& subsystem_c = subsystem_b["subsystems"][0];
+          json& a_buses     = subsystem_a["buses"];
+          json& c_buses     = subsystem_c["buses"];
+          a_buses.push_back(c_buses[0]);
+
+          success *= verifyReports(input, "Duplicate bus ID 4");
+        }
+
+        // Signal ID repeated across subsystems (A and C)
+        {
+          json  input       = hierarchical;
+          json& subsystem_a = input["subsystems"][0];
+          json& subsystem_b = input["subsystems"][1];
+          json& subsystem_c = subsystem_b["subsystems"][0];
+          json& a_signals   = subsystem_a["signals"];
+          json& c_signals   = subsystem_c["signals"];
+          a_signals         = json::array();
+          a_signals.push_back(c_signals[0]);
+
+          success *= verifyReports(input, "Duplicate signal ID 0");
+        }
+
+        // Device ID repeated per class across subsystems (Branch 1 in A and C)
+        {
+          json  input       = hierarchical;
+          json& subsystem_b = input["subsystems"][1];
+          json& subsystem_c = subsystem_b["subsystems"][0];
+          json& c_devices   = subsystem_c["devices"];
+          json& branch      = c_devices[0];
+          branch["id"]      = "1";
+
+          success *= verifyReports(input, "Duplicate component Branch_1");
+        }
+
+        // Subsystem ID repeated in siblings (A and A)
+        {
+          json  input       = hierarchical;
+          json& subsystem_b = input["subsystems"][1];
+          subsystem_b["id"] = "A";
+
+          success *= verifyReports(input, "Duplicate subsystem ID A");
+        }
+
+        // Subsystem ID repeated across levels (A and C)
+        {
+          json  input       = hierarchical;
+          json& subsystem_b = input["subsystems"][1];
+          json& subsystem_c = subsystem_b["subsystems"][0];
+          subsystem_c["id"] = "A";
+
+          success *= verifyReports(input, "Duplicate subsystem ID A");
+        }
+
+        // Subsystem ID repeated in a parent and its subsystem (B and C)
+        {
+          json  input       = hierarchical;
+          json& subsystem_b = input["subsystems"][1];
+          json& subsystem_c = subsystem_b["subsystems"][0];
+          subsystem_c["id"] = "B";
+
+          success *= verifyReports(input, "Duplicate subsystem ID B");
+        }
+
+        // Buses, signals and devices repeated in subsystems added in code.
+        // A default-built system does not own its subsystems.
+        {
+          const DataT data = flat.template get<DataT>();
+          SystemT     top;
+          SystemT     subsystem_a(data);
+          SystemT     subsystem_b(data);
+          top.addSubsystem(&subsystem_a);
+          top.addSubsystem(&subsystem_b);
+
+          success *= reportedOnce(top, "Duplicate bus ID 1");
+          success *= reportedOnce(top, "Duplicate signal ID 0");
+          success *= reportedOnce(top, "Duplicate component Branch_1");
+          success *= allocationThrows(top);
+        }
+
+        Log::setVerbosity(previous_verbosity);
+
+        return success.report(__func__);
+      }
+
+      /**
        * @brief Invalid hierarchies in the input data fail at construction.
        */
       TestOutcome invalidHierarchy()
@@ -259,6 +459,15 @@ namespace GridKit
         input = hierarchical;
         input["subsystems"][0].erase("id");
         success *= constructionThrows(input);
+
+        // Subsystem with an empty ID
+        {
+          input             = hierarchical;
+          json& subsystem_a = input["subsystems"][0];
+          subsystem_a["id"] = "";
+
+          success *= constructionThrows(input);
+        }
 
         // Subsystem without a level
         input = hierarchical;
@@ -469,6 +678,56 @@ namespace GridKit
           return true;
         }
         return false;
+      }
+
+      /// Whether allocating `system` throws
+      static bool allocationThrows(SystemT& system)
+      {
+        bool throws = false;
+        try
+        {
+          system.allocate();
+        }
+        catch (const std::exception&)
+        {
+          throws = true;
+        }
+        return throws;
+      }
+
+      /// Whether verifying `system` reports `expected_error` exactly once,
+      /// with or without a subsystem prefix
+      static bool reportedOnce(const SystemT& system, const std::string& expected_error)
+      {
+        const auto checks = system.verify();
+
+        IdxT reports = 0;
+        for (const auto& error : checks.errors())
+        {
+          if (error.ends_with(expected_error))
+          {
+            ++reports;
+          }
+        }
+        return reports == 1;
+      }
+
+      /// Whether a system builds from the input and verifying it reports
+      /// `expected_error` exactly once
+      static bool verifyReports(const json& input, const std::string& expected_error)
+      {
+        bool reported = false;
+        try
+        {
+          const DataT data = input.template get<DataT>();
+          SystemT     system(data);
+          reported = reportedOnce(system, expected_error);
+        }
+        catch (const std::exception&)
+        {
+          reported = false;
+        }
+        return reported;
       }
 
       /// Whether looking up component `label` from `system` throws

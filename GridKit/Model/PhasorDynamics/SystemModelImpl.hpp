@@ -1,6 +1,7 @@
 #include <cassert>
 #include <format>
 #include <iostream>
+#include <set>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
@@ -63,6 +64,7 @@ namespace GridKit
       using namespace Converter;
 
       owns_components_ = true;
+      id_              = data.id;
       monitor_         = std::make_unique<MonitorT>(time_);
 
       // Store parsed system bases before constructing data-driven components.
@@ -81,16 +83,13 @@ namespace GridKit
         addBus(bus);
       }
 
+      // A repeated ID keeps the first bus. verify() reports the duplicate.
       for (auto* bus : external_buses)
       {
-        if (gridkit_bus_indices_.contains(bus->busID())
-            || !external_buses_.emplace(bus->busID(), bus).second)
+        if (external_buses_.emplace(bus->busID(), bus).second)
         {
-          Log::error() << "External bus " << bus->busID()
-                       << " is already in the subsystem\n";
-          throw std::runtime_error("SystemModel construction failed");
+          ordered_external_buses_.push_back(bus);
         }
-        ordered_external_buses_.push_back(bus);
       }
 
       // Add REGCA converters
@@ -601,7 +600,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Verify all components are configured correctly
+     * @brief Verify all components are configured correctly and IDs are unique
      *
      * Collects every problem reported by the components, each prefixed with
      * the component ID. passed() is true when all is well.
@@ -610,6 +609,12 @@ namespace GridKit
     Model::ConfigurationChecks SystemModel<scalar_type, index_type>::verify() const
     {
       Model::ConfigurationChecks checks;
+
+      // IDs are unique across a hierarchy, so only its top system checks them.
+      if (!is_subsystem_)
+      {
+        checkUniqueIds(checks);
+      }
 
       // Verify components
       for (const auto& component : components_)
@@ -971,6 +976,8 @@ namespace GridKit
      *
      * @pre The subsystem is not allocated and not part of another system, and
      * has the same system bases. This system has no devices.
+     *
+     * @note Repeated IDs are reported by verify().
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::addSubsystem(SystemModel* subsystem)
@@ -998,6 +1005,59 @@ namespace GridKit
       subsystem->setGridKitComponentID(static_cast<IdxT>(subsystems_.size()));
       subsystems_.push_back(subsystem);
       allocated_ = false;
+    }
+
+    /**
+     * @brief Report every bus, signal, component or subsystem ID that repeats
+     * in this system's tree
+     *
+     * One tree insert per ID, so the cost is N log N in the number of IDs.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::checkUniqueIds(Model::ConfigurationChecks& checks) const
+    {
+      std::set<IdxT>        bus_ids;
+      std::set<IdxT>        signal_ids;
+      std::set<std::string> labels;
+      std::set<std::string> subsystem_ids;
+
+      std::vector<const SystemModel*> systems{this};
+      for (std::size_t entry = 0; entry < systems.size(); ++entry)
+      {
+        const SystemModel* system = systems[entry];
+
+        if (!system->id_.empty() && !subsystem_ids.insert(system->id_).second)
+        {
+          checks.fail(std::format("Duplicate subsystem ID {}", system->id_));
+        }
+
+        // TODO: buses built in code share INVALID_INDEX, so they are not checked.
+        for (const auto* bus : system->buses_)
+        {
+          if (bus->busID() != INVALID_INDEX<IdxT> && !bus_ids.insert(bus->busID()).second)
+          {
+            checks.fail(std::format("Duplicate bus ID {}", bus->busID()));
+          }
+        }
+
+        for (const auto* node : system->signal_nodes_.nodes())
+        {
+          if (!signal_ids.insert(node->signalId()).second)
+          {
+            checks.fail(std::format("Duplicate signal ID {}", node->signalId()));
+          }
+        }
+
+        for (const auto& label : system->component_labels_)
+        {
+          if (!label.empty() && !labels.insert(label).second)
+          {
+            checks.fail(std::format("Duplicate component {}", label));
+          }
+        }
+
+        systems.insert(systems.end(), system->subsystems_.begin(), system->subsystems_.end());
+      }
     }
 
     /**
