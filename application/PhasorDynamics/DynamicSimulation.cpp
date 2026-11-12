@@ -120,6 +120,13 @@ int runApplication(int argc, const char* argv[])
   // Report run time
   Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
+  // Report the outcome of the integration
+  Log::summary() << "IDA reached t = " << final_time << '\n';
+  if (study.output_file.empty() || study.reference_file.empty())
+  {
+    Log::summary() << "The solution was not compared to a reference\n";
+  }
+
   return status.get();
 }
 

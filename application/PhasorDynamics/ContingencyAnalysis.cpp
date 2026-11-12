@@ -198,15 +198,25 @@ int runApplication(int argc, const char* argv[])
   const auto dur  = std::chrono::duration<double>(stop - start);
   Log::summary() << "Complete in " << dur << "\n";
 
-  TestStatus status;
+  TestStatus  status;
+  std::size_t num_failed = 0;
   for (std::size_t i = 0; i < stat_vec.size(); ++i)
   {
     status *= stat_vec[i];
     if (!stat_vec[i])
     {
+      num_failed++;
       Log::error() << "Study failed for fault: "
                    << faults[i].name << '\n';
     }
+  }
+
+  Log::summary() << "Contingency analysis ran " << stat_vec.size()
+                 << " fault studies to t = " << study_data.tmax
+                 << ", " << num_failed << " failed\n";
+  if (study_data.output_file.empty() || study_data.reference_file.empty())
+  {
+    Log::summary() << "The solutions were not compared to a reference\n";
   }
 
   return status.get();
