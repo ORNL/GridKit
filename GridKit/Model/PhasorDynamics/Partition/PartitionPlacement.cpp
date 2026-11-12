@@ -41,6 +41,8 @@ namespace GridKit
      *
      * Each signal port of a device appends one entry to `signal_use_device`
      * (the device index) and `signal_use_id` (the signal ID).
+     *
+     * @todo Place devices using a bus signal in the leaf where the bus is internal.
      */
     template <typename index_type>
     struct CollectDevices
@@ -64,6 +66,7 @@ namespace GridKit
           device_labels.push_back(device_data.label());
           device_buses.emplace_back();
 
+          // Case bus indices of the device's buses
           for (const auto& port : device_data.buses)
           {
             checks.check(bus_index.contains(port.second),
@@ -78,7 +81,6 @@ namespace GridKit
 
           // A signal of a bus stays in the bus's system, and subsystems do not
           // see their parent's signals. Devices using one are rejected for now.
-          // TODO: place them in the leaf where the bus is internal.
           for (const auto& port : device_data.signal_inputs)
           {
             signal_use_device.push_back(device);
@@ -189,15 +191,17 @@ namespace GridKit
       DataT::forEachDeviceList(collect_devices, data_);
 
       // Label each device with the lowest device index of its signal group.
-      // Signals chain devices together, so labels are passed along until none
-      // changes.
       const IdxT num_devices = device_labels_.size();
       device_group_.resize(num_devices);
+
+      // Each device starts as its own group
       for (IdxT device = 0; device < num_devices; ++device)
       {
         device_group_[device] = device;
       }
 
+      // Signals chain devices together, so labels are passed along until none
+      // changes.
       bool changed = true;
       while (changed)
       {
@@ -225,6 +229,8 @@ namespace GridKit
       next_in_group_.assign(num_devices, INVALID_INDEX<IdxT>);
       // Last device chained so far, at the first device of each group
       std::vector<IdxT> last_in_group(num_devices);
+
+      // Chain each device after the last device of its group
       for (IdxT device = 0; device < num_devices; ++device)
       {
         const IdxT group = device_group_[device];
@@ -238,6 +244,14 @@ namespace GridKit
       group_leaf_.assign(num_devices, INVALID_INDEX<IdxT>);
     }
 
+    /**
+     * @brief Build the system tree of `partition` and check the placement
+     *
+     * Every case bus must be listed and every signal group placed in a leaf.
+     * External buses and the signals of no leaf stay in the top system.
+     *
+     * @throws std::runtime_error for a badly formed partition
+     */
     template <typename real_type, typename index_type>
     SystemModelData<real_type, index_type> PartitionPlacement<real_type, index_type>::place(
         const PartitionDataT& partition)
@@ -251,13 +265,15 @@ namespace GridKit
 
       buildSystem(partition, top);
 
-      // A repeated case bus is never listed, so it is reported here too.
+      // Every case bus must be listed. A repeated case bus is never listed, so
+      // it is reported here too.
       for (IdxT bus = 0; bus < data_.bus.size(); ++bus)
       {
         checks_.check(bus_last_leaf_[bus] != INVALID_INDEX<IdxT>,
                       std::format("bus {} is missing", data_.bus[bus].bus_id));
       }
 
+      // Every signal group must be placed in a leaf
       for (IdxT device = 0; device < device_group_.size(); ++device)
       {
         if (device_group_[device] == device)
@@ -278,7 +294,7 @@ namespace GridKit
         throw std::runtime_error("PartitionPlacement::apply failed");
       }
 
-      // External buses, their signals and unused signals stay in the top system.
+      // External buses stay in the top system
       for (IdxT bus = 0; bus < data_.bus.size(); ++bus)
       {
         if (bus_internal_leaf_[bus] == INVALID_INDEX<IdxT>)
@@ -287,6 +303,7 @@ namespace GridKit
         }
       }
 
+      // Signals of external buses and unused signals stay in the top system
       for (IdxT signal = 0; signal < data_.signal.size(); ++signal)
       {
         const IdxT signal_id   = data_.signal[signal].signal_id;
@@ -335,6 +352,8 @@ namespace GridKit
         }
 
         system.subsystems.resize(partition.partitions.size());
+
+        // One subsystem per child partition
         for (IdxT child = 0; child < partition.partitions.size(); ++child)
         {
           DataT& subsystem    = system.subsystems[child];
@@ -352,6 +371,7 @@ namespace GridKit
         addBusList(partition.internal, partition.name, true, leaf);
         addBusList(partition.external, partition.name, false, leaf);
 
+        // Internal buses of this leaf
         for (IdxT bus = 0; bus < data_.bus.size(); ++bus)
         {
           if (bus_internal_leaf_[bus] == leaf)
@@ -367,6 +387,8 @@ namespace GridKit
           {
             bool has_bus          = false;
             bool all_buses_listed = true;
+
+            // Buses of each device in the group
             for (IdxT member = device;
                  all_buses_listed && member != INVALID_INDEX<IdxT>;
                  member = next_in_group_[member])
