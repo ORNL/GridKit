@@ -644,9 +644,11 @@ namespace GridKit
         machine.buses[GenClassicalBuses::bus]                    = kBusId;
         machine.signal_outputs[GenClassicalSignalOutputs::speed] = kSpeedSignalId;
         machine.signal_inputs[GenClassicalSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GenClassicalParameters::p0]           = kInitialActivePower;
-        machine.parameters[GenClassicalParameters::q0]           = kInitialReactivePower;
         machine.parameters[GenClassicalParameters::mva]          = kMachineBaseMva;
+
+        // The bus is at 1 + j0, where the terminal current is P - jQ.
+        machine.initial_values[GenClassicalInitialValues::ir] = kInitialActivePower;
+        machine.initial_values[GenClassicalInitialValues::ii] = -kInitialReactivePower;
 
         return data;
       }
