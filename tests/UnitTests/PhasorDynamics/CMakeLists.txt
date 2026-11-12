@@ -209,7 +209,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemHierarchical.json
                ${CMAKE_CURRENT_BINARY_DIR}/SubsystemHierarchical.json COPYONLY)
 
 add_executable(test_phasor_partition runPartitionTests.cpp)
-target_link_libraries(test_phasor_partition GridKit::phasor_dynamics_partition GridKit::testing)
+target_link_libraries(
+  test_phasor_partition GridKit::phasor_dynamics_partition GridKit::testing)
 configure_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/ThreeBusBasic.case.json
                ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasic.case.json COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/WECC240/WECC240.case.json
