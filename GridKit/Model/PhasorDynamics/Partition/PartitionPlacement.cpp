@@ -17,127 +17,6 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    /**
-     * @brief Empty one device vector of a system
-     *
-     * `forEachDeviceList` calls this once per device type. The top system
-     * starts as a copy of the flat case, so its devices are cleared.
-     */
-    struct ClearDevices
-    {
-      template <class DevicesT>
-      void operator()(DevicesT& devices)
-      {
-        devices.clear();
-      }
-    };
-
-    /**
-     * @brief Record the label, buses and signals of each device
-     *
-     * `forEachDeviceList` calls this once per device type. Each device appends
-     * one entry to `device_labels` and `device_buses`, so devices are numbered
-     * in `forEachDeviceList` order. Buses are stored as case bus indices.
-     *
-     * Each signal port of a device appends one entry to `signal_use_device`
-     * (the device index) and `signal_use_id` (the signal ID).
-     *
-     * @todo Place devices using a bus signal in the leaf where the bus is internal.
-     */
-    template <typename index_type>
-    struct CollectDevices
-    {
-      using IdxT = index_type;
-
-      const std::map<IdxT, IdxT>&     bus_index;
-      const std::map<IdxT, IdxT>&     signal_bus;
-      std::vector<std::string>&       device_labels;
-      std::vector<std::vector<IdxT>>& device_buses;
-      std::vector<IdxT>&              signal_use_device;
-      std::vector<IdxT>&              signal_use_id;
-      Model::ConfigurationChecks&     checks;
-
-      template <class DeviceDataT>
-      void operator()(const std::vector<DeviceDataT>& devices)
-      {
-        for (const auto& device_data : devices)
-        {
-          const IdxT device = device_labels.size();
-          device_labels.push_back(device_data.label());
-          device_buses.emplace_back();
-
-          // Case bus indices of the device's buses
-          for (const auto& port : device_data.buses)
-          {
-            checks.check(bus_index.contains(port.second),
-                         std::format("device {} uses unknown bus {}",
-                                     device_data.label(),
-                                     port.second));
-            if (bus_index.contains(port.second))
-            {
-              device_buses[device].push_back(bus_index.at(port.second));
-            }
-          }
-
-          // A signal of a bus stays in the bus's system, and subsystems do not
-          // see their parent's signals. Devices using one are rejected for now.
-          for (const auto& port : device_data.signal_inputs)
-          {
-            signal_use_device.push_back(device);
-            signal_use_id.push_back(port.second);
-            checks.check(!signal_bus.contains(port.second),
-                         std::format("device {} uses signal {} of a bus",
-                                     device_data.label(),
-                                     port.second));
-          }
-          for (const auto& port : device_data.signal_outputs)
-          {
-            signal_use_device.push_back(device);
-            signal_use_id.push_back(port.second);
-            checks.check(!signal_bus.contains(port.second),
-                         std::format("device {} uses signal {} of a bus",
-                                     device_data.label(),
-                                     port.second));
-          }
-        }
-      }
-    };
-
-    /**
-     * @brief Copy the devices placed in one leaf from the flat case
-     *
-     * `forEachDeviceList` calls this once per device type. It passes the flat
-     * case's vector and the leaf system's vector of the same type.
-     *
-     * `device` numbers the devices of all types in `forEachDeviceList` order, as
-     * `device_group` does. It starts at 0 for each leaf.
-     */
-    template <typename index_type>
-    struct CopyLeafDevices
-    {
-      using IdxT = index_type;
-
-      const std::vector<IdxT>& device_group;
-      const std::vector<IdxT>& group_leaf;
-      IdxT                     leaf;
-      IdxT                     device;
-
-      template <class DeviceDataT>
-      void operator()(const std::vector<DeviceDataT>& devices,
-                      std::vector<DeviceDataT>&       system_devices)
-      {
-        for (const auto& device_data : devices)
-        {
-          const IdxT group = device_group[device];
-          if (group_leaf[group] == leaf)
-          {
-            system_devices.push_back(device_data);
-          }
-          ++device;
-        }
-      }
-    };
-
     template <typename real_type, typename index_type>
     SystemModelData<real_type, index_type> PartitionPlacement<real_type, index_type>::apply(
         const DataT&          data,
@@ -179,16 +58,7 @@ namespace GridKit
       bus_internal_leaf_.assign(data_.bus.size(), INVALID_INDEX<IdxT>);
       bus_last_leaf_.assign(data_.bus.size(), INVALID_INDEX<IdxT>);
 
-      std::vector<IdxT>    signal_use_device;
-      std::vector<IdxT>    signal_use_id;
-      CollectDevices<IdxT> collect_devices{bus_index_,
-                                           signal_bus_,
-                                           device_labels_,
-                                           device_buses_,
-                                           signal_use_device,
-                                           signal_use_id,
-                                           checks_};
-      DataT::forEachDeviceList(collect_devices, data_);
+      addAllDevices();
 
       // Label each device with the lowest device index of its signal group.
       const IdxT num_devices = device_labels_.size();
@@ -206,10 +76,10 @@ namespace GridKit
       while (changed)
       {
         changed = false;
-        for (IdxT use = 0; use < signal_use_id.size(); ++use)
+        for (IdxT use = 0; use < signal_use_id_.size(); ++use)
         {
-          const IdxT device    = signal_use_device[use];
-          const IdxT signal_id = signal_use_id[use];
+          const IdxT device    = signal_use_device_[use];
+          const IdxT signal_id = signal_use_id_[use];
           signal_group_.emplace(signal_id, device_group_[device]);
           const IdxT group = signal_group_.at(signal_id);
           if (group < device_group_[device])
@@ -225,30 +95,97 @@ namespace GridKit
         }
       }
 
-      // Devices of each signal group, chained from its first device
-      next_in_group_.assign(num_devices, INVALID_INDEX<IdxT>);
-      // Last device chained so far, at the first device of each group
-      std::vector<IdxT> last_in_group(num_devices);
-
-      // Chain each device after the last device of its group
-      for (IdxT device = 0; device < num_devices; ++device)
-      {
-        const IdxT group = device_group_[device];
-        if (group != device)
-        {
-          next_in_group_[last_in_group[group]] = device;
-        }
-        last_in_group[group] = device;
-      }
-
       group_leaf_.assign(num_devices, INVALID_INDEX<IdxT>);
     }
 
     /**
-     * @brief Build the system tree of `partition` and check the placement
+     * @brief Add the devices of all types, in the order of fillSystem().
+     *
+     * Devices are numbered in this order.
+     */
+    template <typename real_type, typename index_type>
+    void PartitionPlacement<real_type, index_type>::addAllDevices()
+    {
+      addDevices(data_.branch);
+      addDevices(data_.regca);
+      addDevices(data_.reecb);
+      addDevices(data_.repca);
+      addDevices(data_.genrou);
+      addDevices(data_.gensal);
+      addDevices(data_.genclassical);
+      addDevices(data_.loadz);
+      addDevices(data_.loadzip);
+      addDevices(data_.gov);
+      addDevices(data_.esdc1a);
+      addDevices(data_.gastpti);
+      addDevices(data_.hygov);
+      addDevices(data_.exciter);
+      addDevices(data_.sexspti);
+      addDevices(data_.stabilizer);
+      addDevices(data_.constant_source);
+      addDevices(data_.function_source);
+    }
+
+    /**
+     * @brief Record the label, buses and signals of each device
+     *
+     * Buses are stored as case bus indices. Each signal port of a device
+     * appends one entry to `signal_use_device_` (the device index) and
+     * `signal_use_id_` (the signal ID).
+     *
+     * @todo Place devices using a bus signal in the leaf where the bus is internal.
+     */
+    template <typename real_type, typename index_type>
+    template <class DeviceDataT>
+    void PartitionPlacement<real_type, index_type>::addDevices(
+        const std::vector<DeviceDataT>& devices)
+    {
+      for (const auto& device_data : devices)
+      {
+        const IdxT device = device_labels_.size();
+        device_labels_.push_back(device_data.label());
+        device_buses_.emplace_back();
+
+        // Case bus indices of the device's buses
+        for (const auto& port : device_data.buses)
+        {
+          checks_.check(bus_index_.contains(port.second),
+                        std::format("device {} uses unknown bus {}",
+                                    device_data.label(),
+                                    port.second));
+          if (bus_index_.contains(port.second))
+          {
+            device_buses_[device].push_back(bus_index_.at(port.second));
+          }
+        }
+
+        // A signal of a bus stays in the bus's system, and subsystems do not
+        // see their parent's signals. Devices using one are rejected for now.
+        for (const auto& port : device_data.signal_inputs)
+        {
+          signal_use_device_.push_back(device);
+          signal_use_id_.push_back(port.second);
+          checks_.check(!signal_bus_.contains(port.second),
+                        std::format("device {} uses signal {} of a bus",
+                                    device_data.label(),
+                                    port.second));
+        }
+        for (const auto& port : device_data.signal_outputs)
+        {
+          signal_use_device_.push_back(device);
+          signal_use_id_.push_back(port.second);
+          checks_.check(!signal_bus_.contains(port.second),
+                        std::format("device {} uses signal {} of a bus",
+                                    device_data.label(),
+                                    port.second));
+        }
+      }
+    }
+
+    /**
+     * @brief Build the system tree of `partition`, check the placement and fill the systems
      *
      * Every case bus must be listed and every signal group placed in a leaf.
-     * External buses and the signals of no leaf stay in the top system.
      *
      * @throws std::runtime_error for a badly formed partition
      */
@@ -256,12 +193,29 @@ namespace GridKit
     SystemModelData<real_type, index_type> PartitionPlacement<real_type, index_type>::place(
         const PartitionDataT& partition)
     {
-      // Case metadata and monitor sinks stay in the top system.
+      // Copy, then clear the buses, signals and devices. Case metadata and
+      // monitor sinks stay in the top system.
       DataT top = data_;
       top.bus.clear();
       top.signal.clear();
-      ClearDevices clear_devices;
-      DataT::forEachDeviceList(clear_devices, top);
+      top.branch.clear();
+      top.regca.clear();
+      top.reecb.clear();
+      top.repca.clear();
+      top.genrou.clear();
+      top.gensal.clear();
+      top.genclassical.clear();
+      top.loadz.clear();
+      top.loadzip.clear();
+      top.gov.clear();
+      top.esdc1a.clear();
+      top.gastpti.clear();
+      top.hygov.clear();
+      top.exciter.clear();
+      top.sexspti.clear();
+      top.stabilizer.clear();
+      top.constant_source.clear();
+      top.function_source.clear();
 
       buildSystem(partition, top);
 
@@ -294,41 +248,37 @@ namespace GridKit
         throw std::runtime_error("PartitionPlacement::apply failed");
       }
 
-      // External buses stay in the top system
-      for (IdxT bus = 0; bus < data_.bus.size(); ++bus)
-      {
-        if (bus_internal_leaf_[bus] == INVALID_INDEX<IdxT>)
-        {
-          top.bus.push_back(data_.bus[bus]);
-        }
-      }
-
-      // Signals of external buses and unused signals stay in the top system
+      // A signal goes with its bus, or else with the devices using it.
+      // Unused signals stay in the top system.
+      signal_leaf_.assign(data_.signal.size(), INVALID_INDEX<IdxT>);
       for (IdxT signal = 0; signal < data_.signal.size(); ++signal)
       {
-        const IdxT signal_id   = data_.signal[signal].signal_id;
-        IdxT       signal_leaf = INVALID_INDEX<IdxT>;
+        const IdxT signal_id = data_.signal[signal].signal_id;
         if (signal_bus_.contains(signal_id))
         {
-          const IdxT bus = signal_bus_.at(signal_id);
-          signal_leaf    = bus_internal_leaf_[bus];
+          const IdxT bus       = signal_bus_.at(signal_id);
+          signal_leaf_[signal] = bus_internal_leaf_[bus];
         }
         else if (signal_group_.contains(signal_id))
         {
-          const IdxT group = signal_group_.at(signal_id);
-          signal_leaf      = group_leaf_[group];
-        }
-        if (signal_leaf == INVALID_INDEX<IdxT>)
-        {
-          top.signal.push_back(data_.signal[signal]);
+          const IdxT group     = signal_group_.at(signal_id);
+          signal_leaf_[signal] = group_leaf_[group];
         }
       }
+
+      // Leaves before the top system, so a root leaf lists its own buses first
+      for (IdxT leaf = 0; leaf < leaf_systems_.size(); ++leaf)
+      {
+        DataT& system = *leaf_systems_[leaf];
+        fillSystem(leaf, system);
+      }
+      fillSystem(INVALID_INDEX<IdxT>, top);
 
       return top;
     }
 
     /**
-     * @brief Build the subsystems of `partition`, or fill `system` if it is a leaf
+     * @brief Build the subsystems of `partition`, or record its bus lists if it is a leaf
      *
      * Leaves are numbered in file order, so each signal group goes to the
      * first leaf listing all its buses.
@@ -351,6 +301,8 @@ namespace GridKit
           prefix = system.id + ".";
         }
 
+        // The subsystem vector is not resized afterwards, so leaf_systems_
+        // pointers into it stay valid.
         system.subsystems.resize(partition.partitions.size());
 
         // One subsystem per child partition
@@ -366,69 +318,33 @@ namespace GridKit
       }
       else
       {
-        const IdxT leaf = num_leaves_;
-        ++num_leaves_;
+        const IdxT leaf = leaf_systems_.size();
+        leaf_systems_.push_back(&system);
         addBusList(partition.internal, partition.name, true, leaf);
         addBusList(partition.external, partition.name, false, leaf);
 
-        // Internal buses of this leaf
-        for (IdxT bus = 0; bus < data_.bus.size(); ++bus)
+        // Whether each signal group has a bus, and all its buses in this leaf
+        std::vector<bool> group_has_bus(device_group_.size(), false);
+        std::vector<bool> group_all_listed(device_group_.size(), true);
+        for (IdxT device = 0; device < device_group_.size(); ++device)
         {
-          if (bus_internal_leaf_[bus] == leaf)
+          const IdxT               group = device_group_[device];
+          const std::vector<IdxT>& buses = device_buses_[device];
+          for (IdxT entry = 0; entry < buses.size(); ++entry)
           {
-            system.bus.push_back(data_.bus[bus]);
+            const IdxT bus          = buses[entry];
+            group_has_bus[group]    = true;
+            group_all_listed[group] = group_all_listed[group] && bus_last_leaf_[bus] == leaf;
           }
         }
 
         // Signal groups not placed yet that have all their buses in this leaf
-        for (IdxT device = 0; device < device_group_.size(); ++device)
+        for (IdxT group = 0; group < device_group_.size(); ++group)
         {
-          if (device_group_[device] == device && group_leaf_[device] == INVALID_INDEX<IdxT>)
+          if (device_group_[group] == group && group_leaf_[group] == INVALID_INDEX<IdxT>
+              && group_has_bus[group] && group_all_listed[group])
           {
-            bool has_bus          = false;
-            bool all_buses_listed = true;
-
-            // Buses of each device in the group
-            for (IdxT member = device;
-                 all_buses_listed && member != INVALID_INDEX<IdxT>;
-                 member = next_in_group_[member])
-            {
-              const std::vector<IdxT>& buses = device_buses_[member];
-              for (IdxT entry = 0; all_buses_listed && entry < buses.size(); ++entry)
-              {
-                const IdxT bus   = buses[entry];
-                has_bus          = true;
-                all_buses_listed = bus_last_leaf_[bus] == leaf;
-              }
-            }
-            if (has_bus && all_buses_listed)
-            {
-              group_leaf_[device] = leaf;
-            }
-          }
-        }
-
-        CopyLeafDevices<IdxT> copy_devices{device_group_, group_leaf_, leaf, 0};
-        DataT::forEachDeviceList(copy_devices, data_, system);
-
-        // Signals of the internal buses and of the groups placed here
-        for (IdxT signal = 0; signal < data_.signal.size(); ++signal)
-        {
-          const IdxT signal_id   = data_.signal[signal].signal_id;
-          IdxT       signal_leaf = INVALID_INDEX<IdxT>;
-          if (signal_bus_.contains(signal_id))
-          {
-            const IdxT bus = signal_bus_.at(signal_id);
-            signal_leaf    = bus_internal_leaf_[bus];
-          }
-          else if (signal_group_.contains(signal_id))
-          {
-            const IdxT group = signal_group_.at(signal_id);
-            signal_leaf      = group_leaf_[group];
-          }
-          if (signal_leaf == leaf)
-          {
-            system.signal.push_back(data_.signal[signal]);
+            group_leaf_[group] = leaf;
           }
         }
       }
@@ -471,6 +387,93 @@ namespace GridKit
             bus_internal_leaf_[bus] = leaf;
           }
         }
+      }
+    }
+
+    /**
+     * @brief Copy the buses, signals and devices of `leaf` from the flat case into `system`
+     *
+     * `leaf` is INVALID_INDEX for the top system, which gets the external
+     * buses and the signals of no leaf. Device types are in the order of
+     * addAllDevices().
+     */
+    template <typename real_type, typename index_type>
+    void PartitionPlacement<real_type, index_type>::fillSystem(IdxT leaf, DataT& system) const
+    {
+      for (IdxT bus = 0; bus < data_.bus.size(); ++bus)
+      {
+        if (bus_internal_leaf_[bus] == leaf)
+        {
+          system.bus.push_back(data_.bus[bus]);
+        }
+      }
+
+      for (IdxT signal = 0; signal < data_.signal.size(); ++signal)
+      {
+        if (signal_leaf_[signal] == leaf)
+        {
+          system.signal.push_back(data_.signal[signal]);
+        }
+      }
+
+      IdxT device = 0;
+      copyDevices(data_.branch, leaf, system.branch, device);
+      copyDevices(data_.regca, leaf, system.regca, device);
+      copyDevices(data_.reecb, leaf, system.reecb, device);
+      copyDevices(data_.repca, leaf, system.repca, device);
+      copyDevices(data_.genrou, leaf, system.genrou, device);
+      copyDevices(data_.gensal, leaf, system.gensal, device);
+      copyDevices(data_.genclassical, leaf, system.genclassical, device);
+      copyDevices(data_.loadz, leaf, system.loadz, device);
+      copyDevices(data_.loadzip, leaf, system.loadzip, device);
+      copyDevices(data_.gov, leaf, system.gov, device);
+      copyDevices(data_.esdc1a, leaf, system.esdc1a, device);
+      copyDevices(data_.gastpti, leaf, system.gastpti, device);
+      copyDevices(data_.hygov, leaf, system.hygov, device);
+      copyDevices(data_.exciter, leaf, system.exciter, device);
+      copyDevices(data_.sexspti, leaf, system.sexspti, device);
+      copyDevices(data_.stabilizer, leaf, system.stabilizer, device);
+      copyDevices(data_.constant_source, leaf, system.constant_source, device);
+      copyDevices(data_.function_source, leaf, system.function_source, device);
+
+      // A type missing above would leave devices uncopied.
+      if (device != device_labels_.size())
+      {
+        Log::error() << "Device types of fillSystem and addAllDevices differ\n";
+        throw std::runtime_error("PartitionPlacement::apply failed");
+      }
+    }
+
+    /**
+     * @brief Copy the devices of one type whose signal group is placed in `leaf`
+     *
+     * `device` numbers the devices of all types, as in addAllDevices().
+     */
+    template <typename real_type, typename index_type>
+    template <class DeviceDataT>
+    void PartitionPlacement<real_type, index_type>::copyDevices(
+        const std::vector<DeviceDataT>& devices,
+        IdxT                            leaf,
+        std::vector<DeviceDataT>&       system_devices,
+        IdxT&                           device) const
+    {
+      for (const auto& device_data : devices)
+      {
+        // Device types listed in another order than in addAllDevices() would
+        // give devices the groups of others.
+        if (device >= device_labels_.size() || device_labels_[device] != device_data.label())
+        {
+          Log::error() << "Device " << device_data.label()
+                       << " is out of order in fillSystem compared to addAllDevices\n";
+          throw std::runtime_error("PartitionPlacement::apply failed");
+        }
+
+        const IdxT group = device_group_[device];
+        if (group_leaf_[group] == leaf)
+        {
+          system_devices.push_back(device_data);
+        }
+        ++device;
       }
     }
 
