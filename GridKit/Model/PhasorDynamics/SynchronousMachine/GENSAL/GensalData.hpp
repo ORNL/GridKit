@@ -97,6 +97,7 @@ namespace GridKit
                       GensalBuses,
                       GensalSignalInputs,
                       GensalSignalOutputs,
-                      GensalMonitorableVariables>;
+                      GensalMonitorableVariables,
+                      GensalInitialValues>;
   } // namespace PhasorDynamics
 } // namespace GridKit

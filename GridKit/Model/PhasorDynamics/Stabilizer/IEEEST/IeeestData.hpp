@@ -91,7 +91,8 @@ namespace GridKit
                         IeeestBuses,
                         IeeestSignalInputs,
                         IeeestSignalOutputs,
-                        IeeestMonitorableVariables>;
+                        IeeestMonitorableVariables,
+                        IeeestInitialValues>;
 
     } // namespace Stabilizer
   } // namespace PhasorDynamics

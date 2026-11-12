@@ -44,6 +44,7 @@ namespace GridKit
                                                    Utilities::EmptyEnum,
                                                    Utilities::EmptyEnum,
                                                    Utilities::EmptyEnum,
+                                                   Utilities::EmptyEnum,
                                                    Utilities::EmptyEnum>;
 
     public:

@@ -276,11 +276,13 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// A state must supply initial voltages for every bus, including subsystems.
+      /// A state must supply initial voltages for every bus and may supply device
+      /// initial values, including in subsystems.
       TestOutcome stateParse()
       {
         using namespace GridKit::PhasorDynamics;
-        using DataT = SystemModelData<RealT, IdxT>;
+        using DataT        = SystemModelData<RealT, IdxT>;
+        using BranchValues = decltype(BranchData<RealT, IdxT>::initial_values);
 
         const json case_input = json::parse(R"({
           "header": {"case_name": "State", "case_description": "", "case_comments": ""},
@@ -294,7 +296,7 @@ namespace GridKit
             "id": "area",
             "level": 1,
             "buses": [{"number": 3, "class": "Bus", "name": "Bus 3", "params": {}}],
-            "devices": []
+            "devices": [{"class": "Branch", "id": "line", "params": {}, "ports": {"bus1": 1, "bus2": 3}}]
           }]
         })");
 
@@ -303,8 +305,13 @@ namespace GridKit
             "1": {"Vr": 0.5, "Vi": 0.25},
             "2": {"Vr": 0.625, "Vi": -0.375},
             "3": {"Vr": 0.75, "Vi": -0.125}
-          }
+          },
+          "devices": {"line": {"tap": 1, "phase": 0.25, "in_service": false}}
         })");
+
+        const BranchValues line{{BranchInitialValues::tap, RealT{1.0}},
+                                {BranchInitialValues::phase, RealT{0.25}},
+                                {BranchInitialValues::in_service, false}};
 
         TestStatus success = true;
 
@@ -317,6 +324,7 @@ namespace GridKit
         success *= data.bus[1].Vi0 == -0.375;
         success *= data.subsystems[0].bus[0].Vr0 == 0.75;
         success *= data.subsystems[0].bus[0].Vi0 == -0.125;
+        success *= data.subsystems[0].branch[0].initial_values == line;
 
         for (const auto* number : {"2", "3"})
         {

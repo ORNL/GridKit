@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -11,6 +12,7 @@
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -261,7 +263,38 @@ namespace GridKit
       }
     }
 
-    /// Set every bus's initial voltage from a state keyed by case bus number
+    /// Set the initial values of the devices a state names, keyed by case device id
+    template <typename DataT>
+    void applyDeviceState(const json& devices, std::vector<DataT>& list)
+    {
+      using InitialValues = typename DataT::InitialValues;
+      using RealT         = typename DataT::RealT;
+
+      for (auto& data : list)
+      {
+        if (devices.contains(data.disambiguation_string))
+        {
+          for (const auto& entry : devices.at(data.disambiguation_string).items())
+          {
+            const auto key = Utilities::enum_cast<InitialValues>(entry.key());
+            if (key.has_value())
+            {
+              if (entry.value().is_boolean())
+              {
+                data.initial_values[key.value()] = entry.value().template get<bool>();
+              }
+              else
+              {
+                data.initial_values[key.value()] = entry.value().template get<RealT>();
+              }
+            }
+          }
+        }
+      }
+    }
+
+    /// Set every bus's initial voltage and supplied device values, with buses
+    /// keyed by case bus number and devices by case device id
     template <typename RealT, typename IdxT>
     void applyState(const json& state, SystemModelData<RealT, IdxT>& sm)
     {
@@ -272,6 +305,27 @@ namespace GridKit
         initial.at("Vr").get_to(bus.Vr0);
         initial.at("Vi").get_to(bus.Vi0);
       }
+
+      const auto& devices = state.at("devices");
+      applyDeviceState(devices, sm.branch);
+      applyDeviceState(devices, sm.regca);
+      applyDeviceState(devices, sm.reecb);
+      applyDeviceState(devices, sm.repca);
+      applyDeviceState(devices, sm.genrou);
+      applyDeviceState(devices, sm.gensal);
+      applyDeviceState(devices, sm.genclassical);
+      applyDeviceState(devices, sm.loadz);
+      applyDeviceState(devices, sm.loadzip);
+      applyDeviceState(devices, sm.gov);
+      applyDeviceState(devices, sm.esdc1a);
+      applyDeviceState(devices, sm.gastpti);
+      applyDeviceState(devices, sm.hygov);
+      applyDeviceState(devices, sm.exciter);
+      applyDeviceState(devices, sm.sexspti);
+      applyDeviceState(devices, sm.stabilizer);
+      applyDeviceState(devices, sm.constant_source);
+      applyDeviceState(devices, sm.function_source);
+
       for (auto& subsystem : sm.subsystems)
       {
         applyState(state, subsystem);

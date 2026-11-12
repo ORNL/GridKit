@@ -42,7 +42,8 @@ namespace GridKit
                       FunctionSignalSourceBuses,
                       FunctionSignalSourceSignalInputs,
                       FunctionSignalSourceSignalOutputs,
-                      FunctionSignalSourceMonitorableVariables>;
+                      FunctionSignalSourceMonitorableVariables,
+                      FunctionSignalSourceInitialValues>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

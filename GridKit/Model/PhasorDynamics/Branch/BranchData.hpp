@@ -85,6 +85,7 @@ namespace GridKit
                       BranchBuses,
                       BranchSignalInputs,
                       BranchSignalOutputs,
-                      BranchMonitorableVariables>;
+                      BranchMonitorableVariables,
+                      BranchInitialValues>;
   } // namespace PhasorDynamics
 } // namespace GridKit

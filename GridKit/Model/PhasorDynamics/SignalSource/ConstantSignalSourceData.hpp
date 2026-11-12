@@ -42,7 +42,8 @@ namespace GridKit
                       ConstantSignalSourceBuses,
                       ConstantSignalSourceSignalInputs,
                       ConstantSignalSourceSignalOutputs,
-                      ConstantSignalSourceMonitorableVariables>;
+                      ConstantSignalSourceMonitorableVariables,
+                      ConstantSignalSourceInitialValues>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -92,7 +92,8 @@ namespace GridKit
                         Esdc1aBuses,
                         Esdc1aSignalInputs,
                         Esdc1aSignalOutputs,
-                        Esdc1aMonitorableVariables>;
+                        Esdc1aMonitorableVariables,
+                        Esdc1aInitialValues>;
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit
