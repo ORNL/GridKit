@@ -82,7 +82,8 @@ We recommend developers follow these steps when adding new component models:
     2. Modify `SystemModelDataJSONParser.hpp` so that `MyModel` is recognized by the
        parser.
     3. Modify `SystemModelData.hpp` so that `MyModelData` is visible to the system
-       model.
+       model. Also list the new vector in `forEachDeviceList`, which the partition
+       code uses to loop over device types.
     4. Modify `SystemModel.hpp` so that `MyModel` components can be connected by the
        system composer.
     5. Recommended: If applicable, add a smoke test to
