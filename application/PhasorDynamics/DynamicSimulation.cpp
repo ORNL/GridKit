@@ -4,6 +4,8 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/Partition/PartitionData.hpp>
+#include <GridKit/Model/PhasorDynamics/Partition/PartitionPlacement.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -39,6 +41,14 @@ int runApplication(int argc, const char* argv[])
                    << " requires a bus number\n";
       return 1;
     }
+  }
+
+  // Split the case into subsystems by the partition file, if any
+  if (!study.partition_file.empty())
+  {
+    const PartitionData<index_type> partition = parsePartitionData(study.partition_file);
+    study.model_data =
+        PartitionPlacement<real_type, index_type>::apply(study.model_data, partition);
   }
 
   // Instantiate system
@@ -109,6 +119,13 @@ int runApplication(int argc, const char* argv[])
 
   // Report run time
   Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+
+  // Report the outcome of the integration
+  Log::summary() << "IDA reached t = " << final_time << '\n';
+  if (study.output_file.empty() || study.reference_file.empty())
+  {
+    Log::summary() << "The solution was not compared to a reference\n";
+  }
 
   return status.get();
 }

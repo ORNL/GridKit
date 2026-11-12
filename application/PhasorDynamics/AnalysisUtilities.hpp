@@ -66,6 +66,8 @@ namespace GridKit
       fs::path                                       system_model_file;
       /// path to state JSON file with the initial operating point
       fs::path                                       state_file;
+      /// optional path to partition JSON file, not used by ContingencyAnalysis
+      fs::path                                       partition_file;
       /// monitor output time step size, or 0 for no intermediate monitoring
       double                                         dt_monitor;
       /// max time
@@ -118,6 +120,10 @@ namespace GridKit
       if (j.contains("state_file"))
       {
         j.at("state_file").get_to(c.state_file);
+      }
+      if (j.contains("partition_file"))
+      {
+        j.at("partition_file").get_to(c.partition_file);
       }
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
@@ -267,6 +273,13 @@ namespace GridKit
         if (!data.state_file.is_absolute())
         {
           data.state_file = loc / data.state_file;
+        }
+      }
+      if (!data.partition_file.empty())
+      {
+        if (!data.partition_file.is_absolute())
+        {
+          data.partition_file = loc / data.partition_file;
         }
       }
       if (!data.reference_file.empty())
