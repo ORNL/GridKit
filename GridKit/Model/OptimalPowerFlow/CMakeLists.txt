@@ -31,8 +31,14 @@ if(GRIDKIT_ENABLE_ENZYME)
 
   add_subdirectory(Branch)
   add_subdirectory(Bus)
+  add_subdirectory(Controller)
+  add_subdirectory(Converter)
+  add_subdirectory(Exciter)
   add_subdirectory(Generator)
+  add_subdirectory(Governor)
   add_subdirectory(Load)
+  add_subdirectory(Signal)
+  add_subdirectory(SynchronousMachine)
 
   add_library(GridKit::optimal_power_flow_components ALIAS optimal_power_flow_components)
   add_library(GridKit::optimal_power_flow_components_dependency_tracking ALIAS

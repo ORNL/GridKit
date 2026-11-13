@@ -31,4 +31,7 @@ namespace GridKit
 
   template <typename RealT>
   inline constexpr RealT MINUS_ONE = -1.0;
+
+  template <typename RealT>
+  inline constexpr RealT MEGA = 1.0e6;
 } // namespace GridKit

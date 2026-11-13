@@ -72,13 +72,19 @@ namespace GridKit
      *
      * @tparam ScalarT - scalar data type
      *
+     * @note Written as a sum so that the second derivative has a constant
+     *       term, which Enzyme sparsification of a Hessian needs.
+     *
      * @param[in] x - input signal
      * @return value of the quadratic ramp
      */
     template <class ScalarT>
     __attribute__((always_inline)) inline ScalarT qramp(const ScalarT x)
     {
-      return x * x * sigmoid(x);
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+
+      const ScalarT half_square = HALF<RealT> * x * x;
+      return half_square + half_square * std::tanh(HALF<RealT> * MU<RealT> * x);
     }
 
     /**

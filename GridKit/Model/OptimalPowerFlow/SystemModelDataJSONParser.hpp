@@ -68,14 +68,21 @@ namespace GridKit
       bus.parameters = readParameters<BusParameters, RealT, IdxT>(j.at("params"), std::format("bus {}", bus.number));
     }
 
-    template <typename RealT, typename IdxT, typename Parameters, typename Ports>
-    void from_json(const json& j, ComponentData<RealT, IdxT, Parameters, Ports>& device)
+    template <typename RealT, typename IdxT, typename Parameters, typename Ports, typename Signals>
+    void from_json(const json& j, ComponentData<RealT, IdxT, Parameters, Ports, Signals>& device)
     {
       j.at("id").get_to(device.id);
       device.parameters = readParameters<Parameters, RealT, IdxT>(j.at("params"), device.id);
       for (const auto& [key, value] : j.at("ports").items())
       {
-        value.get_to(device.ports[enumKey<Ports>(key, "port", device.id)]);
+        if (const auto port = Utilities::enum_cast<Ports>(key))
+        {
+          value.get_to(device.ports[*port]);
+        }
+        else
+        {
+          value.get_to(device.signals[enumKey<Signals>(key, "port", device.id)]);
+        }
       }
     }
 
@@ -88,6 +95,11 @@ namespace GridKit
       j.at("params").at("va_base").get_to(data.va_base);
       j.at("buses").get_to(data.bus);
 
+      for (const auto& signal : j.value("signals", json::array()))
+      {
+        data.signal.push_back(signal.at("signal_id").get<IdxT>());
+      }
+
       for (const auto& device : j.at("devices"))
       {
         const auto kind = device.at("class").get<std::string>();
@@ -95,13 +107,61 @@ namespace GridKit
         {
           data.branch.push_back(device.get<typename DataT::BranchDataT>());
         }
+        else if (kind == "Esdc1a")
+        {
+          data.esdc1a.push_back(device.get<typename DataT::Esdc1aDataT>());
+        }
+        else if (kind == "GastPti")
+        {
+          data.gast_pti.push_back(device.get<typename DataT::GastPtiDataT>());
+        }
+        else if (kind == "GenClassical")
+        {
+          data.gen_classical.push_back(device.get<typename DataT::GenClassicalDataT>());
+        }
         else if (kind == "Generator")
         {
           data.generator.push_back(device.get<typename DataT::GeneratorDataT>());
         }
+        else if (kind == "Genrou")
+        {
+          data.genrou.push_back(device.get<typename DataT::GenrouDataT>());
+        }
+        else if (kind == "Gensal")
+        {
+          data.gensal.push_back(device.get<typename DataT::GensalDataT>());
+        }
+        else if (kind == "Hygov")
+        {
+          data.hygov.push_back(device.get<typename DataT::HygovDataT>());
+        }
+        else if (kind == "Ieeet1")
+        {
+          data.ieeet1.push_back(device.get<typename DataT::Ieeet1DataT>());
+        }
         else if (kind == "Load")
         {
           data.load.push_back(device.get<typename DataT::LoadDataT>());
+        }
+        else if (kind == "Reecb")
+        {
+          data.reecb.push_back(device.get<typename DataT::ReecbDataT>());
+        }
+        else if (kind == "Regca")
+        {
+          data.regca.push_back(device.get<typename DataT::RegcaDataT>());
+        }
+        else if (kind == "Repca")
+        {
+          data.repca.push_back(device.get<typename DataT::RepcaDataT>());
+        }
+        else if (kind == "SexsPti")
+        {
+          data.sexs_pti.push_back(device.get<typename DataT::SexsPtiDataT>());
+        }
+        else if (kind == "Tgov1")
+        {
+          data.tgov1.push_back(device.get<typename DataT::Tgov1DataT>());
         }
         else
         {

@@ -1,0 +1,148 @@
+/**
+ * @file Esdc1aImpl.hpp
+ * @brief Definition of an optimal power flow ESDC1A exciter.
+ */
+
+#pragma once
+
+#include <cmath>
+#include <type_traits>
+
+#include <GridKit/CommonMath.hpp>
+#include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Exciter/ESDC1A/Esdc1a.hpp>
+#include <GridKit/Model/ParameterReader.hpp>
+
+namespace GridKit
+{
+  namespace OptimalPowerFlow
+  {
+    namespace Exciter
+    {
+      template <typename scalar_type, typename index_type>
+      Esdc1a<scalar_type, index_type>::Esdc1a(const ModelDataT& data)
+        : ComponentT(std::type_identity<Esdc1a>{}, data.id)
+      {
+        initializeParameters(data);
+      }
+
+      template <typename scalar_type, typename index_type>
+      Model::ConfigurationChecks Esdc1a<scalar_type, index_type>::verify() const
+      {
+        const bool unsaturated = Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+        const bool saturated   = E1_ > ZERO<RealT> && E2_ > ZERO<RealT>
+                               && Se1_ >= ZERO<RealT> && Se2_ >= ZERO<RealT>
+                               && (E2_ - E1_) * (Se2_ - Se1_) > ZERO<RealT>;
+
+        Model::ConfigurationChecks checks("Esdc1a");
+        checks.check(Vrmin_ <= Vrmax_, "Vrmin must not exceed Vrmax");
+        checks.check(unsaturated || saturated, "E1, E2, Se1, and Se2 must give a saturation curve");
+        return checks;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::tagInequality()
+      {
+        const auto VR   = static_cast<size_t>(Esdc1aInternalConstraints::VR);
+        const auto EFDP = static_cast<size_t>(Esdc1aInternalConstraints::EFDP);
+
+        tag_[VR]   = true;
+        tag_[EFDP] = true;
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::initialize()
+      {
+        const auto VR   = static_cast<size_t>(Esdc1aInternalConstraints::VR);
+        const auto EFDP = static_cast<size_t>(Esdc1aInternalConstraints::EFDP);
+
+        RealT* g_lower = g_lower_.getData();
+        RealT* g_upper = g_upper_.getData();
+
+        g_lower[VR]   = Vrmin_;
+        g_upper[VR]   = Vrmax_;
+        g_lower[EFDP] = ZERO<RealT>;
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      [[gnu::always_inline]] void
+      Esdc1a<scalar_type, index_type>::internalConstraints([[maybe_unused]] const ScalarT* x,
+                                                           const ScalarT*                  external,
+                                                           ScalarT*                        g) const
+      {
+        const auto EFD  = static_cast<size_t>(Esdc1aExternalVariables::EFD);
+        const auto VR   = static_cast<size_t>(Esdc1aInternalConstraints::VR);
+        const auto EFDP = static_cast<size_t>(Esdc1aInternalConstraints::EFDP);
+
+        const ScalarT efd  = external[EFD];
+        const ScalarT ksat = SB_ * Math::qramp(efd - SA_);
+
+        g[VR]   = ke_on_ * (Ke_ * efd + ksat) + (ONE<RealT> - ke_on_) * Vrmax_ / 10.0;
+        g[EFDP] = lim_on_ * efd;
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Esdc1a<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      {
+        using Params = Esdc1aParameters;
+
+        const Model::ParameterReader reader(data, "Esdc1a");
+
+        Ke_     = reader.readReal(Params::Ke).value_or(Ke_);
+        Vrmax_  = reader.readReal(Params::Vrmax).value_or(Vrmax_);
+        Vrmin_  = reader.readReal(Params::Vrmin).value_or(Vrmin_);
+        E1_     = reader.readReal(Params::E1).value_or(E1_);
+        Se1_    = reader.readReal(Params::Se1).value_or(Se1_);
+        E2_     = reader.readReal(Params::E2).value_or(E2_);
+        Se2_    = reader.readReal(Params::Se2).value_or(Se2_);
+        exclim_ = reader.readBool(Params::exclim).value_or(exclim_);
+        setDerivedParameters();
+      }
+
+      /// Masks and the saturation coefficients of the PhasorDynamics model
+      template <typename scalar_type, typename index_type>
+      void Esdc1a<scalar_type, index_type>::setDerivedParameters()
+      {
+        ke_on_ = ZERO<RealT>;
+        if (Ke_ != ZERO<RealT>)
+        {
+          ke_on_ = ONE<RealT>;
+        }
+
+        lim_on_ = ZERO<RealT>;
+        if (exclim_)
+        {
+          lim_on_ = ONE<RealT>;
+        }
+
+        SA_ = ZERO<RealT>;
+        SB_ = ZERO<RealT>;
+        if (Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>)
+        {
+          return;
+        }
+
+        if (Se1_ == ZERO<RealT>)
+        {
+          SA_ = E1_;
+          SB_ = Se2_ * E2_ / ((E2_ - E1_) * (E2_ - E1_));
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          SA_ = E2_;
+          SB_ = Se1_ * E1_ / ((E1_ - E2_) * (E1_ - E2_));
+          return;
+        }
+
+        const RealT C = std::sqrt(Se2_ * E2_ / (Se1_ * E1_));
+
+        SA_ = (C * E1_ - E2_) / (C - ONE<RealT>);
+        SB_ = Se1_ * E1_ / ((E1_ - SA_) * (E1_ - SA_));
+      }
+    } // namespace Exciter
+  } // namespace OptimalPowerFlow
+} // namespace GridKit

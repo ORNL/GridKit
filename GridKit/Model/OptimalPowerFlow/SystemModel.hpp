@@ -95,6 +95,7 @@ namespace GridKit
       };
 
       void addBus(const BusData<RealT, IdxT>& data);
+      void addSignal(IdxT id);
 
       template <typename ModelT, typename DataT>
       ModelT* addDevice(const DataT& data);
@@ -106,11 +107,14 @@ namespace GridKit
       std::unique_ptr<CsrMatrixT> assemble(IdxT rows, IdxT cols, Assembly& assembly) const;
       int                         refill(CsrMatrixT& matrix, const Assembly& assembly) const;
 
-      /// Buses first, then devices
+      /// Buses first, then signals, then devices
       std::vector<std::unique_ptr<ComponentT>> components_;
 
       /// Buses by number
       std::map<IdxT, BusT*> buses_;
+
+      /// Signals by id
+      std::map<IdxT, ComponentT*> signals_;
 
       /// Generators by id
       std::map<std::string, GeneratorT*> generators_;

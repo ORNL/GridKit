@@ -124,6 +124,12 @@ namespace GridKit
       /// Read and add to the blocks of `component` from `offset` at `port`
       int connect(IdxT port, Component& component, const Block& offset = {});
 
+      /// Set the system power base in VA
+      void setSystemBase(RealT va_system_base)
+      {
+        va_system_base_ = va_system_base;
+      }
+
       /// Nothing to allocate, since the system binds a component to its blocks
       int allocate() override
       {
@@ -215,6 +221,23 @@ namespace GridKit
       template <ComponentKernels<scalar_type, index_type> ModelT>
       Component(std::type_identity<ModelT>, std::string id);
 
+      void setComponentBase(RealT va_component_base)
+      {
+        va_component_base_ = va_component_base;
+      }
+
+      template <typename value_type>
+      value_type toComponentBase(value_type value) const
+      {
+        return value * (va_system_base_ / va_component_base_);
+      }
+
+      template <typename value_type>
+      value_type toSystemBase(value_type value) const
+      {
+        return value * (va_component_base_ / va_system_base_);
+      }
+
       // Enzyme derivatives of the derived model
 
       template <ComponentKernels<scalar_type, index_type> ModelT>
@@ -238,6 +261,9 @@ namespace GridKit
       using EvaluatorT::x_;
       using EvaluatorT::x_lower_;
       using EvaluatorT::x_upper_;
+
+      RealT va_system_base_{100.0e6};
+      RealT va_component_base_{0};
 
     private:
       template <typename ModelT>

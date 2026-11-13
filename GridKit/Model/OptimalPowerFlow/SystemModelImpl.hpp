@@ -17,8 +17,21 @@
 #include <GridKit/Model/OptimalPowerFlow/Branch/Branch.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
 #include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Controller/REECB/Reecb.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Controller/REPCA/Repca.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Converter/REGCA/Regca.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Exciter/ESDC1A/Esdc1a.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Exciter/IEEET1/Ieeet1.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Generator/Generator.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Governor/GASTPTI/GastPti.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Governor/HYGOV/Hygov.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Load/Load.hpp>
+#include <GridKit/Model/OptimalPowerFlow/Signal/SignalImpl.hpp>
+#include <GridKit/Model/OptimalPowerFlow/SynchronousMachine/GENROU/Genrou.hpp>
+#include <GridKit/Model/OptimalPowerFlow/SynchronousMachine/GENSAL/Gensal.hpp>
+#include <GridKit/Model/OptimalPowerFlow/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/OptimalPowerFlow/SystemModel.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 
@@ -27,15 +40,22 @@ namespace GridKit
   namespace OptimalPowerFlow
   {
     /**
-     * @throw std::invalid_argument for a duplicate bus, an invalid parameter,
-     * or a port without a bus of this system
+     * @throw std::invalid_argument for a duplicate bus or signal, an invalid
+     * parameter, or a port without a bus or signal of this system
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
     {
+      this->setSystemBase(data.va_base);
+
       for (const auto& bus : data.bus)
       {
         addBus(bus);
+      }
+
+      for (const IdxT signal : data.signal)
+      {
+        addSignal(signal);
       }
 
       for (const auto& branch : data.branch)
@@ -51,6 +71,66 @@ namespace GridKit
       for (const auto& load : data.load)
       {
         addDevice<Load<ScalarT, IdxT>>(load);
+      }
+
+      for (const auto& machine : data.genrou)
+      {
+        addDevice<Genrou<ScalarT, IdxT>>(machine);
+      }
+
+      for (const auto& machine : data.gensal)
+      {
+        addDevice<Gensal<ScalarT, IdxT>>(machine);
+      }
+
+      for (const auto& machine : data.gen_classical)
+      {
+        addDevice<GenClassical<ScalarT, IdxT>>(machine);
+      }
+
+      for (const auto& converter : data.regca)
+      {
+        addDevice<Converter::Regca<ScalarT, IdxT>>(converter);
+      }
+
+      for (const auto& exciter : data.esdc1a)
+      {
+        addDevice<Exciter::Esdc1a<ScalarT, IdxT>>(exciter);
+      }
+
+      for (const auto& exciter : data.ieeet1)
+      {
+        addDevice<Exciter::Ieeet1<ScalarT, IdxT>>(exciter);
+      }
+
+      for (const auto& exciter : data.sexs_pti)
+      {
+        addDevice<Exciter::SexsPti<ScalarT, IdxT>>(exciter);
+      }
+
+      for (const auto& governor : data.gast_pti)
+      {
+        addDevice<Governor::GastPti<ScalarT, IdxT>>(governor);
+      }
+
+      for (const auto& governor : data.hygov)
+      {
+        addDevice<Governor::Hygov<ScalarT, IdxT>>(governor);
+      }
+
+      for (const auto& governor : data.tgov1)
+      {
+        addDevice<Governor::Tgov1<ScalarT, IdxT>>(governor);
+      }
+
+      for (const auto& controller : data.reecb)
+      {
+        addDevice<Controller::Reecb<ScalarT, IdxT>>(controller);
+      }
+
+      for (const auto& controller : data.repca)
+      {
+        addDevice<Controller::Repca<ScalarT, IdxT>>(controller);
       }
     }
 
@@ -260,15 +340,29 @@ namespace GridKit
       components_.push_back(std::move(bus));
     }
 
-    /// Device from `data`, connected at each port to the bus it names
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::addSignal(IdxT id)
+    {
+      auto signal = std::make_unique<Signal<ScalarT, IdxT>>(id);
+      if (!signals_.emplace(id, signal.get()).second)
+      {
+        throw std::invalid_argument(std::format("OptimalPowerFlow::SystemModel: duplicate signal {}", id));
+      }
+      components_.push_back(std::move(signal));
+    }
+
+    /// Device from `data`, connected at each port to the bus, then the signal, it names
     template <typename scalar_type, typename index_type>
     template <typename ModelT, typename DataT>
     ModelT* SystemModel<scalar_type, index_type>::addDevice(const DataT& data)
     {
-      using Ports = typename DataT::Ports;
-      static_assert(ModelT::NUM_PORT_VARIABLES.size() == Utilities::enum_size<Ports>());
+      using Ports   = typename DataT::Ports;
+      using Signals = typename DataT::Signals;
+      static_assert(ModelT::NUM_PORT_VARIABLES.size()
+                    == Utilities::enum_size<Ports>() + Utilities::enum_size<Signals>());
 
       auto device = std::make_unique<ModelT>(data);
+      device->setSystemBase(this->va_system_base_);
       for (const Ports port : Utilities::enum_values<Ports>())
       {
         const auto number = data.ports.find(port);
@@ -288,6 +382,29 @@ namespace GridKit
         {
           throw std::invalid_argument(
               std::format("{}: port '{}' does not fit bus {}", data.id, Utilities::enum_name(port), number->second));
+        }
+      }
+
+      for (const Signals port : Utilities::enum_values<Signals>())
+      {
+        const auto id = data.signals.find(port);
+        if (id == data.signals.end())
+        {
+          throw std::invalid_argument(std::format("{}: port '{}' has no signal", data.id, Utilities::enum_name(port)));
+        }
+
+        const auto signal = signals_.find(id->second);
+        if (signal == signals_.end())
+        {
+          throw std::invalid_argument(
+              std::format("{}: port '{}' names unknown signal {}", data.id, Utilities::enum_name(port), id->second));
+        }
+
+        const auto index = static_cast<IdxT>(Utilities::enum_size<Ports>() + static_cast<size_t>(port));
+        if (device->connect(index, *signal->second) != 0)
+        {
+          throw std::invalid_argument(
+              std::format("{}: port '{}' does not fit signal {}", data.id, Utilities::enum_name(port), id->second));
         }
       }
 
