@@ -8,6 +8,7 @@ target_link_libraries(
           GridKit::power_elec_microload
           GridKit::solvers_dyn
           GridKit::power_elec_microbusdq
+          GridKit::testing
           power_elec_partition_examples_helper)
 
 target_link_libraries(
@@ -17,9 +18,11 @@ target_link_libraries(
           GridKit::power_elec_microload
           GridKit::solvers_dyn
           GridKit::power_elec_microbusdq
+          GridKit::testing
           power_elec_partition_examples_helper)
 
 if(GRIDKIT_ENABLE_OPENMP)
+  target_link_libraries(PartitionMicrogrid PRIVATE OpenMP::OpenMP_CXX)
   target_link_libraries(PartitionScaleMicrogrid PRIVATE OpenMP::OpenMP_CXX)
 endif()
 

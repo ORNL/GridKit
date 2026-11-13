@@ -11,13 +11,14 @@
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include <examples/PowerElectronics/ExamplesHelper/JacTestHelper.hpp>
 #include <examples/PowerElectronics/ExamplesHelper/MicrogridNetwork.hpp>
 #include <examples/PowerElectronics/ExamplesHelper/PartitionUtilities.hpp>
+#include <examples/PowerElectronics/ExamplesHelper/SystemAssembler.hpp>
 
 using index_type = size_t;
 using real_type  = double;
 
+using CsrMatrix   = GridKit::LinearAlgebra::CsrMatrix<real_type, index_type>;
 using SignalNode  = GridKit::PowerElectronics::SignalNode<real_type, index_type>;
 using Bus         = GridKit::PowerElectronics::MicrogridBus<real_type, index_type>;
 using BusDQ       = GridKit::MicrogridBusDQ<real_type, index_type>;
@@ -30,13 +31,11 @@ using Load        = GridKit::MicrogridLoad<real_type, index_type>;
  */
 struct RunResult
 {
-  bool        success = true;
-  index_type  num_partitions;
-  real_type   partition_eval_time;  // seconds
-  real_type   monolithic_eval_time; // seconds
-  real_type   speedup;              // monolithic / partition
-  real_type   max_error;
-  std::string jacobian_status;
+  bool       success = true;
+  index_type num_partitions;
+  real_type  partition_eval_time;  // seconds
+  real_type  monolithic_eval_time; // seconds
+  real_type  speedup;              // monolithic / partition
 };
 
 /*
@@ -50,34 +49,32 @@ struct MonolithicReference
   std::vector<real_type> y;
   std::vector<real_type> yp;
   std::vector<real_type> residual;
+  CsrMatrix*             jacobian;
+  index_type             size;
   real_type              monolithic_eval_time;
 };
 
 /**
  * @brief Evaluate the monolithic system and store reference data.
  *
- * Initializes the global state and state-derivative vectors with deterministic
- * values, evaluates and times the monolithic residual, evaluates the full
+ * Initializes the global state and state-derivative vectors,
+ * evaluates and times the monolithic residual, evaluates the full
  * Jacobian, and stores the resulting data for later comparison with
  * partitioned evaluations.
  *
- * The residual evaluation time is measured independently from the Jacobian
- * evaluation so that the stored timing represents only the cost of the
- * monolithic residual evaluation.
- *
- * @param[in,out] system Allocated monolithic power electronics system.
+ * @param[in,out] system Allocated system model.
  *
  * @return MonolithicReference containing the state vector, state-derivative
- *         vector, residual, and residual evaluation time.
+ *         vector, residual, jacobian, size and residual evaluation time.
  *
  * @pre @p system is non-null.
  * @pre @p system has already been assembled and allocated.
  *
  * @post The state and state-derivative vectors of @p system contain the
- *       deterministic reference values.
+ *       reference values.
  * @post The monolithic residual and Jacobian have been evaluated.
  * @post The returned reference contains an independent copy of the
- *       monolithic residual.
+ *       monolithic residual, Jacobian, and size of the system.
  */
 MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real_type, index_type>* system)
 {
@@ -121,13 +118,14 @@ MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real
 
   reference.monolithic_eval_time = std::chrono::duration<real_type>(end_time - start_time).count();
 
-  // evaluate the monolithic Jacobian
-  system->evaluateJacobian();
-
   // Store a copy of the residual return reference data
   auto* residual = system->getResidual().getData();
-
   reference.residual.assign(residual, residual + system->size());
+
+  // evaluate the monolithic Jacobian
+  system->evaluateJacobian();
+  reference.jacobian = system->getCsrJacobian();
+  reference.size     = system->size();
 
   return reference;
 }
@@ -138,7 +136,8 @@ MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real
  *
  * Creates the requested subsystem decomposition, allocates each subsystem,
  * evaluates the partitioned residual, verifies each subsystem Jacobian against
- * the monolithic Jacobian, and compares the reconstructed global residual with
+ * the monolithic Jacobian(make sure it is a subset of the monolithic Jacobian),
+ * and compares the reconstructed global residual with
  * the stored monolithic residual.
  *
  * The partitioned residual evaluation is timed independently and compared with
@@ -154,11 +153,11 @@ MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real
  * @return Performance and validation results for the requested partition count.
  *
  * @pre @p system is non-null and has already been evaluated.
- * @pre @p network has been constructed using buildScaleMicrogridNetwork().
+ * @pre @p network contains components from scale Microgrid example.
  * @pre @p num_partitions is greater than zero and does not exceed the number
  *      of IBRs in the network.
  * @pre @p reference contains state and derivative vectors consistent with the
- *      size of @p system.
+ *      size of @p system, as well as reference Jacobian and residuals.
  *
  * @post All temporary subsystem models created by this function are released
  *       and deleted before returning.
@@ -167,10 +166,9 @@ MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real
  */
 template <class ScalarT, typename IdxT>
 RunResult evaluatePartitioning(
-    ScaleMicrogridNetwork<ScalarT, IdxT>&                  network,
-    GridKit::PowerElectronicsModel<real_type, index_type>* system,
-    const MonolithicReference&                             reference,
-    index_type                                             num_partitions)
+    ScaleMicrogridNetwork<ScalarT, IdxT>& network,
+    const MonolithicReference&            reference,
+    index_type                            num_partitions)
 {
 
   // ---------------------------------------------------------------------------
@@ -179,24 +177,22 @@ RunResult evaluatePartitioning(
 
   std::vector<GridKit::SubsystemModel<real_type, index_type>*> subsystems;
 
-  partitionNetwork(network, subsystems, num_partitions);
+  partitionMicrogridNetwork(network, subsystems, num_partitions);
 
   for (auto* partition : subsystems)
   {
     partition->allocate();
   }
 
-  // Global residual reconstructed from the subsystem residuals.
-  std::vector<real_type> f(system->size(), 1.0);
-  // Elementwise error between the monolithic and reconstructed residuals.
-  std::vector<real_type> error(system->size(), 1.0);
+  std::vector<real_type> f(reference.size, 1.0);
+  std::vector<real_type> error(reference.size, 1.0);
 
   // ---------------------------------------------------------------------------
   // Evaluate and time the partitioned residual
   // ---------------------------------------------------------------------------
   auto start_time = std::chrono::high_resolution_clock::now();
 
-  evaluatePartitionResiduals(subsystems, reference.y, reference.yp, f, 0.1, 0.1);
+  parallelFunctionEval(subsystems, reference.y, reference.yp, f, 0.1, 0.1);
 
   auto end_time            = std::chrono::high_resolution_clock::now();
   auto partition_eval_time = std::chrono::duration<real_type>(end_time - start_time);
@@ -205,34 +201,50 @@ RunResult evaluatePartitioning(
   // Verify subsystem Jacobians against the monolithic Jacobian
   // ---------------------------------------------------------------------------
 
-  auto*     system_jacobian = system->getCsrJacobian();
-  bool      jacobian_match  = true;
-  real_type Jac_tol         = 1e-13;
+  bool    jacobian_matched;
+  ScalarT tolerance = 100 * std::numeric_limits<ScalarT>::epsilon();
 
   for (auto* partition : subsystems)
   {
     partition->evaluateJacobian();
 
-    jacobian_match = jacobian_match
-                     && verifySubsystemJacobian(*system_jacobian,
-                                                *partition->getCsrJacobian(),
-                                                *partition,
-                                                Jac_tol);
+    jacobian_matched = verifySubsystemJacobian(reference.jacobian,
+                                               *partition,
+                                               tolerance);
+
+    if (!jacobian_matched)
+    {
+      break;
+    }
   }
 
   // ---------------------------------------------------------------------------
   // Compare the reconstructed and monolithic residuals
   // ---------------------------------------------------------------------------
-  real_type max_error = 0.0;
 
-  for (index_type i = 0; i < system->size(); ++i)
+  bool residuals_matched;
+
+  for (index_type i = 0; i < reference.size; ++i)
   {
-    error[i] = std::abs(f[i] - reference.residual[i]) / (std::abs(reference.residual[i]) + 1.0);
+    residuals_matched = GridKit::Testing::isEqual(f[i], reference.residual[i]);
 
-    if (max_error < error[i])
+    if (!residuals_matched)
     {
-      max_error = error[i];
+      break;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Check validation results
+  // ---------------------------------------------------------------------------
+  if (!jacobian_matched)
+  {
+    std::cout << "ERROR: At least one subsystem Jacobian is incorrect!" << std::endl;
+  }
+
+  if (!residuals_matched)
+  {
+    std::cout << "ERROR: Max Error too high!: " << std::endl;
   }
 
   // ---------------------------------------------------------------------------
@@ -244,33 +256,15 @@ RunResult evaluatePartitioning(
   result.partition_eval_time  = partition_eval_time.count();
   result.monolithic_eval_time = reference.monolithic_eval_time;
   result.speedup              = reference.monolithic_eval_time / partition_eval_time.count();
-  result.max_error            = max_error;
-  result.jacobian_status      = jacobian_match ? "Correct" : "Wrong";
+  result.success              = jacobian_matched && residuals_matched;
 
   // ---------------------------------------------------------------------------
-  // Check validation results
-  // ---------------------------------------------------------------------------
-  if (!jacobian_match)
-  {
-    std::cout << "ERROR: At least one subsystem Jacobian is incorrect!"
-              << std::endl;
-
-    result.success = false;
-  }
-
-  if (max_error > std::numeric_limits<real_type>::epsilon())
-  {
-    std::cout << "ERROR: Max Error too high!: " << max_error << std::endl;
-    result.success = false;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Release and destroy temporary subsystem models
+  // Release compnents and destroy temporary subsystem models
   // ---------------------------------------------------------------------------
 
   for (auto* partition : subsystems)
   {
-    partition->release();
+    partition->restoreGlobalConnection();
     delete partition;
   }
 
@@ -288,8 +282,6 @@ void printResultsHeader()
             << std::setw(16) << "partition_time"
             << std::setw(18) << "monolithic_time"
             << std::setw(12) << "speedup"
-            << std::setw(14) << "error"
-            << std::setw(16) << "Jacobians"
             << '\n';
 
   std::cout << std::string(92, '-') << '\n';
@@ -310,9 +302,6 @@ void printResult(const RunResult& result)
             << std::setw(16) << result.monolithic_eval_time << " s"
             << std::setw(11) << std::setprecision(2)
             << result.speedup << "x"
-            << std::setw(14) << std::scientific << std::setprecision(3)
-            << result.max_error << ' '
-            << std::setw(16) << result.jacobian_status
             << '\n';
 
   std::cout << std::defaultfloat;
@@ -341,7 +330,7 @@ int main(int argc, char const* argv[])
 {
   index_type N_size = 5000;
 
-  std::vector<index_type> num_partitions_list = {500};
+  std::vector<index_type> num_partitions_list = {20};
 
   /*
    * If command-line arguments are provided, the first argument specifies
@@ -349,6 +338,8 @@ int main(int argc, char const* argv[])
    *
    * Example:
    *   ./PartitionScaleMicrogrid 5000 10 48 100 500
+   *
+   * prints a row for each partition count, showing times and speedup
    */
   if (argc > 1)
   {
@@ -400,7 +391,6 @@ int main(int argc, char const* argv[])
     {
       std::cerr
           << "ERROR: Invalid command-line argument: "
-          << e.what()
           << "\n";
 
       return 1;
@@ -429,7 +419,7 @@ int main(int argc, char const* argv[])
     assert(p <= 2 * N_size);
 
     // Partition the network and perform the parallel function evaluation.
-    const RunResult r = evaluatePartitioning(network, system, reference, p);
+    const RunResult r = evaluatePartitioning(network, reference, p);
 
     if (!r.success)
     {
