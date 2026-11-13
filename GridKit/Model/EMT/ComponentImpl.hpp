@@ -29,6 +29,21 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    template <ComponentKernels<scalar_type, index_type> ModelT>
+    Component<scalar_type, index_type>::Component(std::type_identity<ModelT>)
+    {
+      const std::vector<IdxT> variables(ModelT::NUM_INTERNAL_VARIABLES.begin(), ModelT::NUM_INTERNAL_VARIABLES.end());
+      const std::vector<IdxT> ports(ModelT::NUM_PORT_VARIABLES.begin(), ModelT::NUM_PORT_VARIABLES.end());
+      setLayout(variables, ports);
+
+      if (jacobian_entries_.resize(localSize<ModelT>() * localSize<ModelT>()) != 0 || dfdy_.resize(0) != 0 || dfdyp_.resize(0) != 0)
+      {
+        Log::error() << id_ << ": failed to allocate the derivative entries\n";
+        throw std::bad_alloc{};
+      }
+    }
+
+    template <typename scalar_type, typename index_type>
     template <typename PortT>
     int Component<scalar_type, index_type>::connect(PortT port, Component& component, IdxT offset)
     {

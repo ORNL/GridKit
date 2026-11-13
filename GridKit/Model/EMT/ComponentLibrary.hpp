@@ -13,6 +13,7 @@
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
+#include <GridKit/Model/EMT/Operators/Reference/Pll/Pll.hpp>
 
 namespace GridKit
 {
@@ -27,6 +28,7 @@ namespace GridKit
         visit(std::type_identity<Bus<ScalarT, IdxT>>{});
         visit(std::type_identity<LineLumped<ScalarT, IdxT>>{});
         visit(std::type_identity<LoadZ<ScalarT, IdxT>>{});
+        visit(std::type_identity<Pll<ScalarT, IdxT>>{});
         visit(std::type_identity<Switch<ScalarT, IdxT>>{});
         visit(std::type_identity<VoltageSource<ScalarT, IdxT>>{});
       }
