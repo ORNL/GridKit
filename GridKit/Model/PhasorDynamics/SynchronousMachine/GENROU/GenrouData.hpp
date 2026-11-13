@@ -15,8 +15,6 @@ namespace GridKit
     /// Initial parameters for a Genrou generator model
     enum class GenrouParameters : size_t
     {
-      p0,    ///< Initial active power
-      q0,    ///< Initial reactive power
       H,     ///< Rotor inertia
       D,     ///< Damping coefficient
       Ra,    ///< Winding resistance

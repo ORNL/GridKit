@@ -27,13 +27,11 @@ using real_type   = double;
 using index_type  = size_t;
 
 /// Machine data shared by the example generators
-GridKit::PhasorDynamics::GenrouData<real_type, index_type> genData(real_type p0, real_type q0)
+GridKit::PhasorDynamics::GenrouData<real_type, index_type> genData(real_type ir, real_type ii)
 {
-  using Parameter = GridKit::PhasorDynamics::GenrouParameters;
-
   GridKit::PhasorDynamics::GenrouData<real_type, index_type> data;
-  data.parameters[Parameter::p0] = p0;
-  data.parameters[Parameter::q0] = q0;
+  data.initial_values[GridKit::PhasorDynamics::GenrouInitialValues::ir] = ir;
+  data.initial_values[GridKit::PhasorDynamics::GenrouInitialValues::ii] = ii;
 
   return data;
 }
@@ -94,15 +92,16 @@ int main()
   Branch<scalar_type, index_type> branch89(&bus8, &bus9, branchData(0.001, 0.005, 0, 0));
   Branch<scalar_type, index_type> branch910(&bus9, &bus10, branchData(0.001, 0.005, 0, 0));
 
-  Genrou<scalar_type, index_type> gen2(&bus2, genData(0.5, -0.00442101));
-  Genrou<scalar_type, index_type> gen3(&bus3, genData(0.5, -0.02510812));
-  Genrou<scalar_type, index_type> gen4(&bus4, genData(0.5, -0.04339553));
-  Genrou<scalar_type, index_type> gen5(&bus5, genData(0.5, -0.2334993));
-  Genrou<scalar_type, index_type> gen6(&bus6, genData(0.5, 0.69907194));
-  Genrou<scalar_type, index_type> gen7(&bus7, genData(0.5, -0.08318208));
-  Genrou<scalar_type, index_type> gen8(&bus8, genData(0.5, -0.09123614));
-  Genrou<scalar_type, index_type> gen9(&bus9, genData(0.5, -0.09662372));
-  Genrou<scalar_type, index_type> gen10(&bus10, genData(0.5, -0.09932297));
+  // Terminal currents on system base for 0.5 p.u. active power at each machine
+  Genrou<scalar_type, index_type> gen2(&bus2, genData(0.49976484171804864, 0.01595770384341209));
+  Genrou<scalar_type, index_type> gen3(&bus3, genData(0.49842809144947964, 0.04690261553435533));
+  Genrou<scalar_type, index_type> gen4(&bus4, genData(0.49637293341526384, 0.07414234980340456));
+  Genrou<scalar_type, index_type> gen5(&bus5, genData(0.48050217973938014, 0.27136614463973363));
+  Genrou<scalar_type, index_type> gen6(&bus6, genData(0.6989409828571332, -0.5001830610407554));
+  Genrou<scalar_type, index_type> gen7(&bus7, genData(0.44384521361879553, 0.24478701922449295));
+  Genrou<scalar_type, index_type> gen8(&bus8, genData(0.43918699713024795, 0.25581010462320447));
+  Genrou<scalar_type, index_type> gen9(&bus9, genData(0.43599373572516564, 0.2631455781532484));
+  Genrou<scalar_type, index_type> gen10(&bus10, genData(0.43437070180553167, 0.2668091643678834));
 
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;

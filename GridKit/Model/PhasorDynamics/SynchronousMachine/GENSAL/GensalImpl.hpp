@@ -43,12 +43,13 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Gensal<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
+      using Parameter    = typename ModelDataT::Parameters;
+      using InitialValue = typename ModelDataT::InitialValues;
 
       const Model::ParameterReader reader(data, "Gensal");
 
-      p0_       = reader.readReal(Parameter::p0).value_or(p0_);
-      q0_       = reader.readReal(Parameter::q0).value_or(q0_);
+      ir_       = reader.readReal(InitialValue::ir).value_or(ir_);
+      ii_       = reader.readReal(InitialValue::ii).value_or(ii_);
       H_        = reader.readReal(Parameter::H).value_or(H_);
       D_        = reader.readReal(Parameter::D).value_or(D_);
       Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);
@@ -193,13 +194,10 @@ namespace GridKit
     int Gensal<scalar_type, index_type>::initialize()
     {
       // Network frame terminal values
-      ScalarT vr  = Vr();
-      ScalarT vi  = Vi();
-      ScalarT p   = this->toComponentBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = this->toComponentBase(static_cast<ScalarT>(q0_));
-      ScalarT vm2 = vr * vr + vi * vi;
-      ScalarT ir  = (p * vr + q * vi) / vm2;
-      ScalarT ii  = (p * vi - q * vr) / vm2;
+      ScalarT vr = Vr();
+      ScalarT vi = Vi();
+      ScalarT ir = this->toComponentBase(static_cast<ScalarT>(ir_));
+      ScalarT ii = this->toComponentBase(static_cast<ScalarT>(ii_));
 
       ScalarT Er    = vr + Ra_ * ir - Xq_ * ii;
       ScalarT Ei    = vi + Ra_ * ii + Xq_ * ir;

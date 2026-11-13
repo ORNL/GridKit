@@ -215,7 +215,15 @@ int main(int argc, const char* argv[])
 
   // Instantiate system
   auto data = parseSystemModelData(filepath);
-  auto sys  = SystemModel<ScalarT, IdxT>(data);
+
+  // Initial state from the sibling state file, where the case has one
+  auto state_file = filepath;
+  state_file.replace_extension().replace_extension(".state.json");
+  if (std::filesystem::exists(state_file))
+  {
+    applyState(state_file, data);
+  }
+  auto sys = SystemModel<ScalarT, IdxT>(data);
 
   auto server = CoSimServer<ScalarT, IdxT>(sys,
                                            sys.getSignalNode(1),
