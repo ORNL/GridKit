@@ -29,6 +29,7 @@
 - Added rate feedback (`Kf`, `Tf`) to the IEEET1 exciters in the `TwoArea` case, whose generators lost synchronism without a fault.
 - Added the `state_file` solver option, which sets PhasorDynamics initial bus voltages from a state file.
 - Added the EMT model family with `Bus`, `LoadZ` and the `VectorFit` operator, and `Testing::jacobianMatchesResidual`.
+- Added the EMT `VoltageSource`, `LineLumped` and `Switch` models, the `TransientSimulation` application, and the ThreeBusBasic EMT example.
 
 ## v0.2
 
