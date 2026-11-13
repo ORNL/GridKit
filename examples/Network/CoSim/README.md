@@ -1,16 +1,21 @@
 # Co-simulation example
 
-The client and server exchange voltage and current over ZeroMQ on TCP port
-8800. The interface buses connect directly to signal nodes in the case files:
+`CoSimClient` and `CoSimServer` exchange flat JSON objects over ZeroMQ
+REQ/REP. The client sends bus voltage and the server returns accumulated
+bus current injections.
 
-- The client uses `BusSignalVoltageOut` (JSON class `SignalVoltageOut`). It
-  sends voltage on signals 1 and 2 (`vr`, `vi`) and receives current on
-  signals 3 and 4 (`ir`, `ii`).
-- The server uses `BusSignalVoltageIn` (JSON class `SignalVoltageIn`). It
-  receives voltage on signals 3 and 4 (`vr`, `vi`) and sends the accumulated
-  current injections on signals 1 and 2 (`ir`, `ii`).
+The supplied interface buses are `SignalVoltageOut` on the client and
+`SignalVoltageIn` on the server. Their input ports must be connected to
+the signals in the case file. Output signal ports are optional when reading
+the bus directly.
 
-Note that this example code is temporary and meant simply as an initial
-step towards implementing multi-instance co-simulation with GridKit. It
-will be generalized into an application that can be used for other
-co-simulation cases.
+The co-simulated cases may be run in the following ways:
+
+```sh
+./run_cosim.sh                   # three-bus using bus outputs
+./run_cosim.sh ieee39            # IEEE39 using bus outputs
+./run_cosim.sh ieee39 signals    # IEEE39 using signal outputs
+
+# test case formulations
+ctest -R 'CoSim.*(Example|Test)$' --output-on-failure
+```
