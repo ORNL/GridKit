@@ -85,6 +85,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::ws_indices_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
+        using Component<scalar_type, index_type>::in_service_;
 
       private:
         using ScalarT            = scalar_type;
@@ -233,6 +234,7 @@ namespace GridKit
         RealT bypass_lvpl_{1};
         RealT use_rqmax_{0};
         RealT use_rqmin_{0};
+        RealT use_injection_{1};
 
         // Unattached command setpoints
         ScalarT ipcmd_set_{0};

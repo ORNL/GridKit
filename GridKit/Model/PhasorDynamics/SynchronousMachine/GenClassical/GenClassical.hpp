@@ -61,6 +61,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
+      using Component<scalar_type, index_type>::in_service_;
 
     private:
       using ScalarT      = scalar_type;

@@ -93,6 +93,36 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// A branch the state takes out of service injects no current.
+      TestOutcome outOfServiceState()
+      {
+        TestStatus success = true;
+
+        auto data = branchData(2.0, 4.0, 0.2, 1.2);
+
+        data.initial_values[PhasorDynamics::BranchInitialValues::in_service] = false;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        bus1.allocate();
+        bus1.initialize();
+        bus1.evaluateResidual();
+        bus2.allocate();
+        bus2.initialize();
+        bus2.evaluateResidual();
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
+        branch.allocate();
+        branch.evaluateResidual();
+
+        success *= isEqual(bus1.Ir(), static_cast<ScalarT>(0.0));
+        success *= isEqual(bus1.Ii(), static_cast<ScalarT>(0.0));
+        success *= isEqual(bus2.Ir(), static_cast<ScalarT>(0.0));
+        success *= isEqual(bus2.Ii(), static_cast<ScalarT>(0.0));
+
+        return success.report(__func__);
+      }
+
       TestOutcome offNominalResidual()
       {
         // Verifies tap, phase-shift, line-shunt, and bus-1 magnetizing-shunt contributions.

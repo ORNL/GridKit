@@ -44,6 +44,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
+      using Component<scalar_type, index_type>::in_service_;
 
     private:
       using ScalarT    = scalar_type;
@@ -187,7 +188,6 @@ namespace GridKit
       RealT Bmag_{0.0};
       RealT tap_{1.0};
       RealT phase_{0.0};
-      RealT in_service_{1.0}; ///< 1 in service, 0 out of service
       IdxT  bus1_id_{0};
       IdxT  bus2_id_{0};
 

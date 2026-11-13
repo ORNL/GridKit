@@ -94,8 +94,9 @@ namespace GridKit
         return real;
       }
 
-      /// Read an optional non-negative real parameter.
-      [[nodiscard]] std::optional<RealT> readNonNegative(ParametersT key) const
+      /// Read an optional non-negative real parameter or initial value.
+      template <typename KeyT>
+      [[nodiscard]] std::optional<RealT> readNonNegative(KeyT key) const
       {
         auto value = readReal(key);
         if (value && *value < ZERO<RealT>)
@@ -105,14 +106,16 @@ namespace GridKit
         return value;
       }
 
-      /// Read an optional boolean parameter.
-      [[nodiscard]] std::optional<bool> readBool(ParametersT key) const
+      /// Read an optional boolean parameter or initial value.
+      template <typename KeyT>
+      [[nodiscard]] std::optional<bool> readBool(KeyT key) const
       {
         return readExact<bool>(key, "must be boolean");
       }
 
-      /// Read an optional integer parameter.
-      [[nodiscard]] std::optional<IdxT> readInteger(ParametersT key) const
+      /// Read an optional integer parameter or initial value.
+      template <typename KeyT>
+      [[nodiscard]] std::optional<IdxT> readInteger(KeyT key) const
       {
         return readExact<IdxT>(key, "must be an integer");
       }
@@ -145,8 +148,8 @@ namespace GridKit
       }
 
       /// Read an optional parameter that must hold exactly a T.
-      template <typename T>
-      [[nodiscard]] std::optional<T> readExact(ParametersT key, std::string_view reason) const
+      template <typename T, typename KeyT>
+      [[nodiscard]] std::optional<T> readExact(KeyT key, std::string_view reason) const
       {
         const auto* value = find(key);
         if (value == nullptr)

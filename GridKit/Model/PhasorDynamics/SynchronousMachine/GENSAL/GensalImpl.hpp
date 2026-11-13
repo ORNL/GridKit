@@ -64,6 +64,8 @@ namespace GridKit
       S10_      = reader.readReal(Parameter::S10).value_or(S10_);
       S12_      = reader.readReal(Parameter::S12).value_or(S12_);
       mva_base_ = reader.readReal(Parameter::mva).value_or(mva_base_);
+
+      in_service_ = reader.readBool(InitialValue::in_service).value_or(in_service_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -478,6 +480,14 @@ namespace GridKit
       Xq2_ = Xq_ - Xdpp_;
       G_   = Ra_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
       B_   = -Xdpp_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
+
+      // An out-of-service machine has no terminal admittance
+      if (!in_service_)
+      {
+        G_ = ZERO<RealT>;
+        B_ = ZERO<RealT>;
+      }
+
       this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
     }
   } // namespace PhasorDynamics

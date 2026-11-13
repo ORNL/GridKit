@@ -61,7 +61,8 @@ Device entries give initial outputs and settings such as `in_service`, `tap`, an
 
 `in_service` is an optional Boolean operating setting for branches and
 injection devices. It defaults to `true`. An out-of-service device
-contributes no terminal current to its connected buses.
+contributes no terminal current to its connected buses, so its entry gives
+zero `ir`/`ii` or omits them. Controllers do not take `in_service`.
 
 Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple terminals. Numbers follow the model's terminal numbering. Currents are positive into each connected bus. Phasor currents use the system base. EMT uses the model's phase output names and units.
 
@@ -79,4 +80,4 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 }
 ```
 
-Each model's `<Model>InitialValues` enum lists the state entries it accepts. A model initializes from these values and its terminal voltage, derives anything missing, and checks its initialization equations.
+Each model's `<Model>InitialValues` enum lists the state entries it accepts. A model initializes from these values and its terminal voltage.

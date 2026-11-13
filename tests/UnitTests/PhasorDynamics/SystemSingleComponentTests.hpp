@@ -1,4 +1,6 @@
+#include <array>
 #include <iomanip>
+#include <limits>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -480,6 +482,63 @@ namespace GridKit
         Log::setVerbosity(Log::Verbosity::NONE);
         success *= !missing_output_system.verify().passed();
         Log::setVerbosity(previous_verbosity);
+
+        return success.report(__func__);
+      }
+
+      /// Out-of-service devices rest at zero current and inject none.
+      TestOutcome outOfService()
+      {
+        using namespace PhasorDynamics;
+
+        TestStatus success = true;
+
+        const ScalarT tol = 10 * std::numeric_limits<ScalarT>::epsilon();
+
+        GenrouData<RealT, IdxT> genrou_data;
+        genrou_data.initial_values[GenrouInitialValues::in_service] = false;
+
+        GensalData<RealT, IdxT> gensal_data;
+        gensal_data.initial_values[GensalInitialValues::in_service] = false;
+
+        GenClassicalData<RealT, IdxT> classical_data;
+        classical_data.initial_values[GenClassicalInitialValues::in_service] = false;
+
+        LoadZData<RealT, IdxT> load_data;
+        load_data.initial_values[LoadZInitialValues::in_service] = false;
+
+        auto regca_data = makeRegcaData();
+
+        regca_data.initial_values[Converter::RegcaInitialValues::ir]         = static_cast<RealT>(0.0);
+        regca_data.initial_values[Converter::RegcaInitialValues::in_service] = false;
+
+        Bus<ScalarT, IdxT>              bus(1.0, 0.5);
+        Genrou<ScalarT, IdxT>           genrou(&bus, genrou_data);
+        Gensal<ScalarT, IdxT>           gensal(&bus, gensal_data);
+        GenClassical<ScalarT, IdxT>     classical(&bus, classical_data);
+        LoadZ<ScalarT, IdxT>            load(&bus, load_data);
+        Converter::Regca<ScalarT, IdxT> regca(&bus, regca_data);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+
+        const std::array<Component<ScalarT, IdxT>*, 5> devices{&genrou, &gensal, &classical, &load, &regca};
+        for (auto* device : devices)
+        {
+          success *= device->allocate() == 0;
+          success *= device->initialize() == 0;
+          success *= device->evaluateResidual() == 0;
+
+          const auto* f = device->getResidual().getData();
+          for (IdxT i = 0; i < device->size(); ++i)
+          {
+            success *= isEqual(f[i], static_cast<ScalarT>(0.0), tol);
+          }
+        }
+
+        success *= isEqual(bus.Ir(), static_cast<ScalarT>(0.0), tol);
+        success *= isEqual(bus.Ii(), static_cast<ScalarT>(0.0), tol);
 
         return success.report(__func__);
       }

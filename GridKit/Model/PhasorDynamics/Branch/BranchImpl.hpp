@@ -127,11 +127,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::setInService(bool in_service)
     {
-      in_service_ = ZERO<RealT>;
-      if (in_service)
-      {
-        in_service_ = ONE<RealT>;
-      }
+      in_service_ = in_service;
       setDerivedParams();
       return 0;
     }
@@ -318,6 +314,8 @@ namespace GridKit
       tap_   = reader.readReal(InitialValue::tap).value_or(tap_);
       phase_ = reader.readReal(InitialValue::phase).value_or(phase_);
 
+      in_service_ = reader.readBool(InitialValue::in_service).value_or(in_service_);
+
       if (data.buses.contains(Buses::bus1))
       {
         bus1_id_ = data.buses.at(Buses::bus1);
@@ -445,14 +443,17 @@ namespace GridKit
       b22_ = b_diag - RealT{0.5} * B_;
 
       // An out-of-service branch has zero admittance
-      g11_ *= in_service_;
-      b11_ *= in_service_;
-      g12_ *= in_service_;
-      b12_ *= in_service_;
-      g21_ *= in_service_;
-      b21_ *= in_service_;
-      g22_ *= in_service_;
-      b22_ *= in_service_;
+      if (!in_service_)
+      {
+        g11_ = ZERO<RealT>;
+        b11_ = ZERO<RealT>;
+        g12_ = ZERO<RealT>;
+        b12_ = ZERO<RealT>;
+        g21_ = ZERO<RealT>;
+        b21_ = ZERO<RealT>;
+        g22_ = ZERO<RealT>;
+        b22_ = ZERO<RealT>;
+      }
     }
 
   } // namespace PhasorDynamics

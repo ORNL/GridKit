@@ -93,6 +93,13 @@ namespace GridKit
           bypass_lvpl_ = ZERO<RealT>;
         }
 
+        // An out-of-service converter injects no current
+        use_injection_ = ONE<RealT>;
+        if (!in_service_)
+        {
+          use_injection_ = ZERO<RealT>;
+        }
+
         this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
       }
 
@@ -184,6 +191,8 @@ namespace GridKit
         VA0_      = reader.readReal(Params::VA0).value_or(VA0_);
         VA1_      = reader.readReal(Params::VA1).value_or(VA1_);
         Vhvmax_   = reader.readReal(Params::Vhvmax).value_or(Vhvmax_);
+
+        in_service_ = reader.readBool(InitialValue::in_service).value_or(in_service_);
 
         setDerivedParameters();
       }
@@ -580,13 +589,17 @@ namespace GridKit
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT qnet  = iq - iqextra;
 
+        // An out-of-service converter injects no current
+        const ScalarT ip_out = use_injection_ * ip;
+        const ScalarT iq_out = use_injection_ * qnet;
+
         f[VM] = -vm_dot + vm_rate;
         f[IQ] = -iq_dot + iq_rate;
         f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
                 + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
-        f[IR]      = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
-        f[II]      = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
+        f[IR]      = -this->toComponentBase(vt * ir) + vi * iq_out + vr * ip_out * lvacm;
+        f[II]      = -this->toComponentBase(vt * ii) - vr * iq_out + vi * ip_out * lvacm;
         f[IQEXTRA] = -Math::min(iqextra, Vhvmax_ - vt);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
                 + KL_ * Math::ramp(vm - VL1_);
