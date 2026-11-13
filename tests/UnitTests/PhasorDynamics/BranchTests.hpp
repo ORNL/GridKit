@@ -130,14 +130,15 @@ namespace GridKit
         using Parameter = typename Data::Parameters;
 
         Data data;
-        data.parameters[Parameter::R]     = R;
-        data.parameters[Parameter::X]     = X;
-        data.parameters[Parameter::G]     = G;
-        data.parameters[Parameter::B]     = B;
-        data.parameters[Parameter::Gmag]  = Gmag;
-        data.parameters[Parameter::Bmag]  = Bmag;
-        data.parameters[Parameter::tap]   = tap;
-        data.parameters[Parameter::phase] = phase;
+        data.parameters[Parameter::R]    = R;
+        data.parameters[Parameter::X]    = X;
+        data.parameters[Parameter::G]    = G;
+        data.parameters[Parameter::B]    = B;
+        data.parameters[Parameter::Gmag] = Gmag;
+        data.parameters[Parameter::Bmag] = Bmag;
+
+        data.initial_values[PhasorDynamics::BranchInitialValues::tap]   = tap;
+        data.initial_values[PhasorDynamics::BranchInitialValues::phase] = phase;
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
         branch.allocate();
@@ -466,12 +467,13 @@ namespace GridKit
         using Parameter = PhasorDynamics::BranchParameters;
 
         PhasorDynamics::BranchData<RealT, IdxT> data;
-        data.parameters[Parameter::R]     = R;
-        data.parameters[Parameter::X]     = X;
-        data.parameters[Parameter::G]     = G;
-        data.parameters[Parameter::B]     = B;
-        data.parameters[Parameter::tap]   = tap;
-        data.parameters[Parameter::phase] = phase;
+        data.parameters[Parameter::R] = R;
+        data.parameters[Parameter::X] = X;
+        data.parameters[Parameter::G] = G;
+        data.parameters[Parameter::B] = B;
+
+        data.initial_values[PhasorDynamics::BranchInitialValues::tap]   = tap;
+        data.initial_values[PhasorDynamics::BranchInitialValues::phase] = phase;
         return data;
       }
 

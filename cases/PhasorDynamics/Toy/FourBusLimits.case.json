@@ -15,10 +15,6 @@
       "number": 1,
       "class": "BusInfinite",
       "name": "Grid",
-      "init": {
-        "Vr": 1.0,
-        "Vi": 0.0
-      },
       "params": {
         "kv": 115.0
       }
@@ -27,10 +23,6 @@
       "number": 2,
       "class": "Bus",
       "name": "Machine",
-      "init": {
-        "Vr": 1.0512044703293908,
-        "Vi": 0.03945205479452054
-      },
       "params": {
         "kv": 115.0
       },
@@ -42,10 +34,6 @@
       "number": 3,
       "class": "Bus",
       "name": "Plant",
-      "init": {
-        "Vr": 1.050476503149779,
-        "Vi": 0.053694079654108655
-      },
       "params": {
         "kv": 115.0
       },
@@ -57,10 +45,6 @@
       "number": 4,
       "class": "Bus",
       "name": "Remote",
-      "init": {
-        "Vr": 1.0683356616298911,
-        "Vi": 0.020547945205479447
-      },
       "params": {
         "kv": 115.0
       },

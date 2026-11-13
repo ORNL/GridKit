@@ -1,0 +1,18 @@
+{
+    "header": {
+        "format_version": 0.2,
+        "format_revision": 0,
+        "description": "Initial operating point of the TwoBusCoSimServer case"
+    },
+    "buses": {
+        "1": {
+            "Vr": 1.0599558398065716,
+            "Vi": -0.009675621941024773
+        },
+        "2": {
+            "Vr": 1.06,
+            "Vi": 0.0
+        }
+    },
+    "devices": {}
+}

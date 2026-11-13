@@ -83,6 +83,4 @@ Use `ir`/`ii` for one terminal and `ir1`/`ii1`, `ir2`/`ii2` for multiple termina
 
 Each model's `<Model>InitialValues` enum lists the state entries it accepts. A model initializes from these values and its terminal voltage, derives anything missing, and checks its initialization equations.
 
-- `Bus`: the case `init` voltages `Vr`/`Vi` move to the state file.
-- `Branch`: the state `tap`/`phase` replace the case parameters.
-- `REGCA`, `GENROU`, `GENSAL`, `GenClassical`: the state `ir`/`ii` replace the `p0`/`q0` parameters.
+- `REGCA`: the state `ir`/`ii` replace the `p0`/`q0` parameters.
