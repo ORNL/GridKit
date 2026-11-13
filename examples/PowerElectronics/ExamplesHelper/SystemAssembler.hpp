@@ -97,8 +97,8 @@ void assembleSystem(ScaleMicrogridNetwork<ScalarT, IdxT>&                  netwo
  */
 template <class ScalarT, typename IdxT>
 void assembleSystemLeftToRight(
-    ScaleMicrogridNetwork<ScalarT, IdxT>&          network,
-    GridKit::PowerElectronicsModel<ScalarT, IdxT>& sys_model)
+    ScaleMicrogridNetwork<ScalarT, IdxT>&                  network,
+    GridKit::PowerElectronics::SystemModel<ScalarT, IdxT>& sys_model)
 {
   const size_t num_ibrs = 2 * network.N_size;
 

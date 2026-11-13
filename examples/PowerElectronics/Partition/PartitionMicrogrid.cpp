@@ -5,20 +5,21 @@
 #include <iostream>
 #include <vector>
 
-#include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
+#include <GridKit/Model/PowerElectronics/PartitionInterface/BusLinePartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
+#include "GridKit/Model/PowerElectronics/SystemModel.hpp"
 #include <examples/PowerElectronics/ExamplesHelper/MicrogridNetwork.hpp>
 #include <examples/PowerElectronics/ExamplesHelper/PartitionUtilities.hpp>
 #include <examples/PowerElectronics/ExamplesHelper/SystemAssembler.hpp>
 
-using Component = GridKit::CircuitComponent<double, size_t>;
+using Component = GridKit::PowerElectronics::Component<double, size_t>;
 using Node      = GridKit::PowerElectronics::NodeBase<double, size_t>;
-using Subsystem = GridKit::SubsystemModel<double, size_t>;
-using System    = GridKit::PowerElectronicsModel<double, size_t>;
+using Subsystem = GridKit::PowerElectronics::SubsystemModel<double, size_t>;
+using System    = GridKit::PowerElectronics::SystemModel<double, size_t>;
 
 /*
  * Verify partitioned residual and Jacobian evaluation against the
@@ -80,7 +81,7 @@ int main()
   // Create 2 Partitions and  a Partition interfaces to split to network
   // --------------------------------------------------------------------------------
 
-  auto* bus_interface = new GridKit::PowerElectronics::BusPartitionInterface<double, size_t>(
+  auto* bus_interface = new GridKit::PowerElectronics::BusLinePartitionInterface<double, size_t>(
       &network.buses[1],
       network.lines[1],
       14);

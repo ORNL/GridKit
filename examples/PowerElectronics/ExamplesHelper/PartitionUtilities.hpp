@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
-#include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
+#include <GridKit/Model/PowerElectronics/PartitionInterface/BusLInePartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -41,9 +41,9 @@
  */
 template <class ScalarT, typename IdxT>
 void partitionMicrogridNetwork(
-    ScaleMicrogridNetwork<ScalarT, IdxT>&                 network,
-    std::vector<GridKit::SubsystemModel<ScalarT, IdxT>*>& subsystems,
-    size_t                                                num_partitions)
+    ScaleMicrogridNetwork<ScalarT, IdxT>&                                   network,
+    std::vector<GridKit::PowerElectronics::SubsystemModel<ScalarT, IdxT>*>& subsystems,
+    size_t                                                                  num_partitions)
 {
   const size_t num_ibrs = 2 * network.N_size;
 
@@ -60,7 +60,7 @@ void partitionMicrogridNetwork(
 
   for (IdxT j = 0; j < num_partitions; j++)
   {
-    auto* partition = new GridKit::SubsystemModel<ScalarT, IdxT>();
+    auto* partition = new GridKit::PowerElectronics::SubsystemModel<ScalarT, IdxT>();
 
     // Add the reference signal node to the first partition.
     if (j == 0)
@@ -99,7 +99,7 @@ void partitionMicrogridNetwork(
 
       const IdxT boundary_line_index = partition_end - 1;
 
-      auto* bus_interface = new GridKit::PowerElectronics::BusPartitionInterface<ScalarT, IdxT>(
+      auto* bus_interface = new GridKit::PowerElectronics::BusLinePartitionInterface<ScalarT, IdxT>(
           &network.buses[boundary_line_index],
           network.lines[boundary_line_index],
           interface_id++);
@@ -142,12 +142,12 @@ void partitionMicrogridNetwork(
  */
 template <class ScalarT, typename IdxT>
 void parallelFunctionEval(
-    const std::vector<GridKit::SubsystemModel<ScalarT, IdxT>*>& subsystems,
-    const std::vector<ScalarT>&                                 y,
-    const std::vector<ScalarT>&                                 yp,
-    std::vector<ScalarT>&                                       f,
-    typename GridKit::ScalarTraits<ScalarT>::RealT              time,
-    typename GridKit::ScalarTraits<ScalarT>::RealT              alpha)
+    const std::vector<GridKit::PowerElectronics::SubsystemModel<ScalarT, IdxT>*>& subsystems,
+    const std::vector<ScalarT>&                                                   y,
+    const std::vector<ScalarT>&                                                   yp,
+    std::vector<ScalarT>&                                                         f,
+    typename GridKit::ScalarTraits<ScalarT>::RealT                                time,
+    typename GridKit::ScalarTraits<ScalarT>::RealT                                alpha)
 {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(guided)
@@ -226,9 +226,9 @@ void parallelFunctionEval(
 
 template <typename ScalarT, typename IdxT>
 bool verifySubsystemJacobian(
-    GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* full_jac,
-    GridKit::SubsystemModel<ScalarT, IdxT>&           subsystem,
-    ScalarT                                           tolerance = std::numeric_limits<ScalarT>::epsilon())
+    GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>*         full_jac,
+    GridKit::PowerElectronics::SubsystemModel<ScalarT, IdxT>& subsystem,
+    ScalarT                                                   tolerance = std::numeric_limits<ScalarT>::epsilon())
 {
   const auto subsystem_jacobian = GridKit::Testing::MapFromCsr(subsystem.getCsrJacobian());
   const auto reference_jacobian = GridKit::Testing::MapFromCsr(full_jac);

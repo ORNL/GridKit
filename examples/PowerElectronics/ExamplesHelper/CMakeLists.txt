@@ -18,7 +18,7 @@ add_library(
 
 target_link_libraries(
   power_elec_partition_examples_helper
-  INTERFACE GridKit::power_elec_partition_interfaces
+  INTERFACE GridKit::power_elec_bus_line_interface
             GridKit::testing
             GridKit::sparse_matrix
             power_elec_microgrid_network)

@@ -21,10 +21,10 @@ using real_type  = double;
 using CsrMatrix   = GridKit::LinearAlgebra::CsrMatrix<real_type, index_type>;
 using SignalNode  = GridKit::PowerElectronics::SignalNode<real_type, index_type>;
 using Bus         = GridKit::PowerElectronics::MicrogridBus<real_type, index_type>;
-using BusDQ       = GridKit::MicrogridBusDQ<real_type, index_type>;
-using DGGenerator = GridKit::DistributedGenerator<real_type, index_type>;
-using Line        = GridKit::MicrogridLine<real_type, index_type>;
-using Load        = GridKit::MicrogridLoad<real_type, index_type>;
+using BusDQ       = GridKit::PowerElectronics::MicrogridBusDQ<real_type, index_type>;
+using DGGenerator = GridKit::PowerElectronics::DistributedGenerator<real_type, index_type>;
+using Line        = GridKit::PowerElectronics::MicrogridLine<real_type, index_type>;
+using Load        = GridKit::PowerElectronics::MicrogridLoad<real_type, index_type>;
 
 /*
  * Output data for each parallel function evaluation run
@@ -76,7 +76,7 @@ struct MonolithicReference
  * @post The returned reference contains an independent copy of the
  *       monolithic residual, Jacobian, and size of the system.
  */
-MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real_type, index_type>* system)
+MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronics::SystemModel<real_type, index_type>* system)
 {
   MonolithicReference reference;
 
@@ -175,7 +175,7 @@ RunResult evaluatePartitioning(
   // Create and allocate subsystem partitions
   // ---------------------------------------------------------------------------
 
-  std::vector<GridKit::SubsystemModel<real_type, index_type>*> subsystems;
+  std::vector<GridKit::PowerElectronics::SubsystemModel<real_type, index_type>*> subsystems;
 
   partitionMicrogridNetwork(network, subsystems, num_partitions);
 
@@ -403,7 +403,7 @@ int main(int argc, char const* argv[])
   ScaleMicrogridNetwork<real_type, index_type> network(N_size);
 
   // Build, assemble and allocate the monolithic system once.
-  auto* system = new GridKit::PowerElectronicsModel<real_type, index_type>(use_jac);
+  auto* system = new GridKit::PowerElectronics::SystemModel<real_type, index_type>(use_jac);
 
   assembleSystemLeftToRight(network, *system);
   system->allocate();
