@@ -8,8 +8,6 @@ contribution to the connected bus residual.
 
 Symbol           | Units  | JSON     | Description                     | Typical Value | Note
 -----------------|--------|----------|---------------------------------|---------------|-----
-$P_\mathrm{nom}$ | [p.u.] | `Pnom`   | Nominal consumed real power     | 0.0           |
-$Q_\mathrm{nom}$ | [p.u.] | `Qnom`   | Nominal consumed reactive power | 0.0           |
 $\alpha_I$       | [-]    | `alphaI` | Constant current load fraction  | 0.0           |
 $\alpha_P$       | [-]    | `alphaP` | Constant power load fraction    | 0.0           |
 
@@ -19,12 +17,15 @@ None.
 
 ### Model Derived Parameters
 
-$V_\mathrm{nom}$ is the initial voltage magnitude of the respective bus.
+$V_\mathrm{nom}$ is the initial voltage magnitude of the respective bus. $P_0$
+and $Q_0$ are the power the state terminal current consumes at that voltage.
 
 ```math
 \begin{aligned}
-G &= \dfrac{P_\mathrm{nom}}{V_\mathrm{nom}^2} \\
-B &= -\dfrac{Q_\mathrm{nom}}{V_\mathrm{nom}^2} \\
+P_0 &= -(V_\mathrm{r}I_\mathrm{r}+V_\mathrm{i}I_\mathrm{i}) \\
+Q_0 &= -(V_\mathrm{i}I_\mathrm{r}-V_\mathrm{r}I_\mathrm{i}) \\
+G &= \dfrac{P_0}{V_\mathrm{nom}^2} \\
+B &= -\dfrac{Q_0}{V_\mathrm{nom}^2} \\
 \alpha_Z &= 1 - \alpha_I - \alpha_P
 \end{aligned}
 ```
@@ -105,8 +106,7 @@ I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i
 
 ```math
 \begin{aligned}
-    I_r &\leftarrow -G V_r + B V_i \\
-    I_i &\leftarrow -G V_i - B V_r
+    I_r, I_i &\leftarrow \text{state terminal current on system base}
 \end{aligned}
 ```
 

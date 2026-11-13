@@ -119,8 +119,9 @@ namespace GridKit
         // publish the resolved steady-state commands over them.
         auto data                    = makeData();
         data.parameters[Params::mva] = 50.0;
-        data.parameters[Params::p0]  = 0.4;
-        data.parameters[Params::q0]  = -0.1;
+
+        data.initial_values[Data::InitialValues::ir] = 0.26;
+        data.initial_values[Data::InitialValues::ii] = 0.32;
 
         Fixture<ScalarT> fixture(data, 0.8, 0.6);
         fixture.attachIpcmd(-1.0);
@@ -157,8 +158,9 @@ namespace GridKit
         // Without attached ports the commands latch p0 and q0. Displace the
         // current states by different amounts; the latched commands pull
         // both back at the interior first-order rates.
-        auto latch_data                   = makeDynamicData();
-        latch_data.parameters[Params::q0] = 0.2;
+        auto latch_data = makeDynamicData();
+
+        latch_data.initial_values[Data::InitialValues::ii] = -0.2;
 
         Fixture<ScalarT> latched(latch_data);
         success *= latched.initialize();
@@ -222,9 +224,10 @@ namespace GridKit
         // is rejected.
         {
           auto data                    = makeData();
-          data.parameters[Params::p0]  = 0.6;
           data.parameters[Params::IL1] = 0.2;
           data.parameters[Params::VL1] = 1.05;
+
+          data.initial_values[Data::InitialValues::ir] = 0.6;
 
           Fixture<ScalarT> fixture(data);
           success *= fixture.prepare();
@@ -238,9 +241,10 @@ namespace GridKit
         // VA1 itself is an admissible LVACM boundary and the operating
         // point reproduces the P0/Q0 injection.
         {
-          auto data                   = makeData();
-          data.parameters[Params::p0] = 0.2;
-          data.parameters[Params::q0] = 0.1;
+          auto data = makeData();
+
+          data.initial_values[Data::InitialValues::ir] = 0.2 / kVa1;
+          data.initial_values[Data::InitialValues::ii] = -0.1 / kVa1;
 
           Fixture<ScalarT> fixture(data, kVa1);
           success *= fixture.initialize();
@@ -256,9 +260,10 @@ namespace GridKit
         // strictly below the moving limit.
         {
           auto data                    = makeData();
-          data.parameters[Params::p0]  = 0.25;
           data.parameters[Params::IL1] = 1.0;
           data.parameters[Params::VA1] = 0.5;
+
+          data.initial_values[Data::InitialValues::ir] = 0.25 / vm;
 
           Fixture<ScalarT> fixture(data, vm);
           success *= fixture.initialize();
@@ -279,8 +284,9 @@ namespace GridKit
         {
           const RealT il1              = 1.1;
           auto        data             = makeData();
-          data.parameters[Params::p0]  = 1.3;
           data.parameters[Params::IL1] = il1;
+
+          data.initial_values[Data::InitialValues::ir] = 1.3;
 
           Fixture<ScalarT> fixture(data);
           success *= fixture.initialize();
@@ -300,10 +306,11 @@ namespace GridKit
         // its active current exceeds the moving limit.
         {
           auto data                    = makeData();
-          data.parameters[Params::p0]  = 0.25;
           data.parameters[Params::sL]  = false;
           data.parameters[Params::IL1] = 0.2;
           data.parameters[Params::VA1] = 0.5;
+
+          data.initial_values[Data::InitialValues::ir] = 0.25 / vm;
 
           Fixture<ScalarT> fixture(data, vm);
           success *= fixture.initialize();
@@ -543,8 +550,9 @@ namespace GridKit
 
         for (const auto& test_case : cases)
         {
-          auto data                   = makeDynamicData();
-          data.parameters[Params::q0] = test_case.q0;
+          auto data = makeDynamicData();
+
+          data.initial_values[Data::InitialValues::ii] = -test_case.q0;
 
           Fixture<ScalarT> fixture(data);
           fixture.attachIqcmd(test_case.q0);
@@ -570,8 +578,9 @@ namespace GridKit
         {
           const RealT terminal_voltage = kHvrcmVoltageLimit - hvrcmTransition();
 
-          auto data                   = makeData();
-          data.parameters[Params::q0] = 0.1;
+          auto data = makeData();
+
+          data.initial_values[Data::InitialValues::ii] = -0.1 / terminal_voltage;
 
           Fixture<ScalarT> fixture(data, terminal_voltage);
           success *= fixture.initialize();
@@ -837,8 +846,6 @@ namespace GridKit
         data.monitored_variables.insert(Mon::p);
         data.monitored_variables.insert(Mon::q);
 
-        data.parameters[Params::p0]     = 0.0;
-        data.parameters[Params::q0]     = 0.0;
         data.parameters[Params::mva]    = 100.0;
         data.parameters[Params::Tg]     = 0.02;
         data.parameters[Params::TM]     = 0.02;
@@ -861,14 +868,15 @@ namespace GridKit
       Data makeDynamicData()
       {
         auto data                       = makeData();
-        data.parameters[Params::p0]     = 0.6;
-        data.parameters[Params::q0]     = -0.2;
         data.parameters[Params::Tg]     = 0.2;
         data.parameters[Params::TM]     = 0.4;
         data.parameters[Params::Rqmax]  = 0.5;
         data.parameters[Params::Rqmin]  = -0.6;
         data.parameters[Params::Rpmax]  = 0.7;
         data.parameters[Params::Vhvmax] = kDynamicHvrcmVoltageLimit;
+
+        data.initial_values[Data::InitialValues::ir] = 0.6;
+        data.initial_values[Data::InitialValues::ii] = 0.2;
         return data;
       }
 
@@ -879,8 +887,9 @@ namespace GridKit
       Data makeJacobianData()
       {
         auto data                    = makeDynamicData();
-        data.parameters[Params::p0]  = 0.0;
         data.parameters[Params::mva] = 50.0;
+
+        data.initial_values[Data::InitialValues::ir] = 0.0;
         return data;
       }
 #endif

@@ -61,18 +61,6 @@ namespace GridKit
       }
 
     public:
-      void setPnom(RealT Pnom)
-      {
-        Pnom_ = Pnom;
-        setDerivedParams();
-      }
-
-      void setQnom(RealT Qnom)
-      {
-        Qnom_ = Qnom;
-        setDerivedParams();
-      }
-
       void setAlphaI(RealT alphaI)
       {
         alphaI_ = alphaI;
@@ -120,8 +108,9 @@ namespace GridKit
 
     private:
       BusT* bus_{nullptr};
-      RealT Pnom_{0};
-      RealT Qnom_{0};
+      /// Initial terminal current into the bus on system base
+      RealT ir_{0};
+      RealT ii_{0};
       /// ZIP anchor voltage, derived from the bus voltage at initialization
       RealT Vnom_{1.0};
       RealT alphaI_{0};

@@ -36,12 +36,13 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
+      using Parameter    = typename ModelDataT::Parameters;
+      using InitialValue = typename ModelDataT::InitialValues;
 
       const Model::ParameterReader reader(data, "LoadZIP");
 
-      Pnom_   = reader.readReal(Parameter::Pnom).value_or(Pnom_);
-      Qnom_   = reader.readReal(Parameter::Qnom).value_or(Qnom_);
+      ir_     = reader.readReal(InitialValue::ir).value_or(ir_);
+      ii_     = reader.readReal(InitialValue::ii).value_or(ii_);
       alphaI_ = reader.readReal(Parameter::alphaI).value_or(alphaI_);
       alphaP_ = reader.readReal(Parameter::alphaP).value_or(alphaP_);
 
@@ -101,24 +102,28 @@ namespace GridKit
       const ScalarT vr = Vr();
       const ScalarT vi = Vi();
 
-      // The nominal dispatch, initialized bus voltage, and ZIP anchor are one
-      // initial condition, so derive them together on every reset. Anchoring
-      // at the initialized voltage makes the dispatch exact there for any
-      // load fractions.
+      // The initial consumption, initialized bus voltage, and ZIP anchor are
+      // one initial condition, so derive them together on every reset.
+      // Anchoring at the initialized voltage makes the consumption exact
+      // there for any load fractions.
       const RealT vm0 = static_cast<RealT>(std::sqrt(vr * vr + vi * vi));
       if (!(vm0 > RealT{0}) || !std::isfinite(vm0))
       {
         return 1;
       }
       Vnom_ = vm0;
-      setDerivedParams();
+
+      // Consumed power of the state current into the bus
+      const RealT p0 = -(static_cast<RealT>(vr) * ir_ + static_cast<RealT>(vi) * ii_);
+      const RealT q0 = -(static_cast<RealT>(vi) * ir_ - static_cast<RealT>(vr) * ii_);
+      G_             = p0 / (Vnom_ * Vnom_);
+      B_             = q0 / (Vnom_ * Vnom_);
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      // The ZIP factor is one at the anchor voltage
-      y[0]  = -G_ * vr - B_ * vi;
-      y[1]  = -G_ * vi + B_ * vr;
+      y[0]  = ir_;
+      y[1]  = ii_;
       yp[0] = 0.0;
       yp[1] = 0.0;
       y_.setDataUpdated();
@@ -243,10 +248,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::setDerivedParams()
     {
-      const RealT Vnom2 = Vnom_ * Vnom_;
-
-      G_      = Pnom_ / Vnom2;
-      B_      = Qnom_ / Vnom2;
       alphaZ_ = ONE<RealT> - alphaI_ - alphaP_;
     }
 

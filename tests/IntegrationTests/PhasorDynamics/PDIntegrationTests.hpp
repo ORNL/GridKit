@@ -748,8 +748,6 @@ namespace GridKit
         converter.signal_outputs[RegcaSignalOutputs::ii]      = signalId(LoopSignal::II);
         converter.signal_outputs[RegcaSignalOutputs::pbranch] = signalId(LoopSignal::PBRANCH);
         converter.signal_outputs[RegcaSignalOutputs::qbranch] = signalId(LoopSignal::QBRANCH);
-        converter.parameters[RegcaParameters::p0]             = INITIAL_ACTIVE_POWER;
-        converter.parameters[RegcaParameters::q0]             = INITIAL_REACTIVE_POWER;
         converter.parameters[RegcaParameters::mva]            = COMPONENT_MVA;
         converter.parameters[RegcaParameters::Tg]             = FAST_TIME_CONSTANT;
         converter.parameters[RegcaParameters::TM]             = FAST_TIME_CONSTANT;
@@ -763,6 +761,10 @@ namespace GridKit
         converter.parameters[RegcaParameters::VA0]            = static_cast<RealT>(0.4);
         converter.parameters[RegcaParameters::VA1]            = static_cast<RealT>(0.9);
         converter.parameters[RegcaParameters::Vhvmax]         = static_cast<RealT>(1.2);
+
+        // The bus is at 1 + j0, where the terminal current is P - jQ.
+        converter.initial_values[RegcaInitialValues::ir] = INITIAL_ACTIVE_POWER;
+        converter.initial_values[RegcaInitialValues::ii] = -INITIAL_REACTIVE_POWER;
 
         auto& controller                                     = data.reecb.emplace_back();
         controller.buses[ReecbBuses::bus]                    = RENEWABLE_BUS_ID;

@@ -69,8 +69,7 @@ namespace GridKit
        * @brief Resolve parameter-derived constants and limiter selections.
        *
        * The time constants are raised to the well-posedness floor. Complementary
-       * LVPL masks keep the residual branchless, while the sign of the initial
-       * reactive-power injection selects the applicable recovery-rate limit.
+       * LVPL masks keep the residual branchless.
        */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setDerivedParameters()
@@ -92,17 +91,6 @@ namespace GridKit
         {
           use_lvpl_    = ONE<RealT>;
           bypass_lvpl_ = ZERO<RealT>;
-        }
-
-        use_rqmax_ = ZERO<RealT>;
-        use_rqmin_ = ZERO<RealT>;
-        if (q0_ > ZERO<RealT> && Rqmax_ > ZERO<RealT>)
-        {
-          use_rqmax_ = ONE<RealT>;
-        }
-        else if (q0_ < ZERO<RealT> && Rqmin_ < ZERO<RealT>)
-        {
-          use_rqmin_ = ONE<RealT>;
         }
 
         this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
@@ -176,12 +164,13 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        using Params = typename ModelDataT::Parameters;
+        using Params       = typename ModelDataT::Parameters;
+        using InitialValue = typename ModelDataT::InitialValues;
 
         const Model::ParameterReader reader(data, "Regca");
 
-        p0_       = reader.readReal(Params::p0).value_or(p0_);
-        q0_       = reader.readReal(Params::q0).value_or(q0_);
+        ir_       = reader.readReal(InitialValue::ir).value_or(ir_);
+        ii_       = reader.readReal(InitialValue::ii).value_or(ii_);
         mva_base_ = reader.readReal(Params::mva).value_or(mva_base_);
         Tg_       = reader.readNonNegative(Params::Tg).value_or(Tg_);
         TM_       = reader.readNonNegative(Params::TM).value_or(TM_);
@@ -410,10 +399,16 @@ namespace GridKit
           return 1;
         }
 
-        // P0 is a system-base power-flow injection. Resolve the component-base
-        // active current through the LVACM network-interface gain.
+        // Power of the state current on system base
+        const ScalarT ir = static_cast<ScalarT>(ir_);
+        const ScalarT ii = static_cast<ScalarT>(ii_);
+        const ScalarT p0 = vr * ir + vi * ii;
+        const ScalarT q0 = vi * ir - vr * ii;
+
+        // Resolve the component-base active current through the LVACM
+        // network-interface gain.
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT ip0   = this->toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
+        const ScalarT ip0   = this->toComponentBase(p0 / vt) / lvacm;
         const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_)
                             + KL_ * Math::ramp(vt - VL1_);
 
@@ -424,13 +419,26 @@ namespace GridKit
         }
         const ScalarT ipcmd0 = ip0;
 
-        // Invert the HVRCM ceiling and preserve the requested Q0.
+        // Invert the HVRCM ceiling and preserve Q0.
         const RealT   margin   = Vhvmax_ - static_cast<RealT>(vt);
         const ScalarT iqextra0 = static_cast<ScalarT>(margin - iramp(margin));
-        const ScalarT qnet0    = this->toComponentBase(static_cast<ScalarT>(q0_) / vt);
+        const ScalarT qnet0    = this->toComponentBase(q0 / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
-        const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
-        const ScalarT ii0      = (-vr * qnet0 + vi * ip0 * lvacm) / vt;
+
+        // The sign of Q0 selects the recovery-rate limit. A Q0 within rounding
+        // of the state current counts as zero.
+        const RealT q_zero = REACTIVE_POWER_ROUNDING * static_cast<RealT>(vt * std::sqrt(ir * ir + ii * ii));
+
+        use_rqmax_ = ZERO<RealT>;
+        use_rqmin_ = ZERO<RealT>;
+        if (q0 > q_zero && Rqmax_ > ZERO<RealT>)
+        {
+          use_rqmax_ = ONE<RealT>;
+        }
+        else if (q0 < -q_zero && Rqmin_ < ZERO<RealT>)
+        {
+          use_rqmin_ = ONE<RealT>;
+        }
 
         y[VM]      = vt;
         y[VT]      = vt;
@@ -438,8 +446,8 @@ namespace GridKit
         y[IQ]      = iqcmd0;
         y[IQEXTRA] = iqextra0;
         y[IL]      = il0;
-        y[IR]      = this->toSystemBase(ir0);
-        y[II]      = this->toSystemBase(ii0);
+        y[IR]      = ir;
+        y[II]      = ii;
         y[PBR]     = vr * y[IR] + vi * y[II];
         y[QBR]     = vi * y[IR] - vr * y[II];
 
