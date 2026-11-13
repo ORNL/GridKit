@@ -5,6 +5,7 @@
 :titlesonly:
 :hidden:
 
+Modulation <Modulation/README>
 Rational <Rational/README>
 Reference <Reference/README>
 Shift <Shift/README>

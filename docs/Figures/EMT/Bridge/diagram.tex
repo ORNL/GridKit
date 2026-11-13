@@ -1,0 +1,39 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+% TUNABLES: spacing of the representative phase legs.
+\def\legrow{2.0}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+
+% Common DC rails carry the aggregate current of the three depicted legs.
+\draw[line] (-1,-2.7) -- (-1,3.75);
+\draw[line] (0,-2.7) -- (0,3.75);
+\node[signal, label={[sig]left:$v_+$}] (dcplus) at (-1,3.75) {};
+\node[signal, label={[sig]right:$v_-$}] (dcminus) at (0,3.75) {};
+\draw[->, line] (dcplus) -- ++(0,0.9) node[sig, above] {$i_+$};
+\draw[->, line] (dcminus) -- ++(0,0.9) node[sig, above] {$i_-$};
+
+% Representative a, b, c contacts share both rails.
+% The upper position is drawn; the caption defines the smooth interpolation.
+\foreach \y/\n in {\legrow/a,0/b,-\legrow/c} {
+    \draw[wire jump] (-1,\y+0.45) -- (2,\y+0.45);
+    \draw[line] (0,\y-0.45) -- (2,\y-0.45);
+    \node[signal] at (-1,\y+0.45) {};
+    \node[signal] at (0,\y-0.45) {};
+    \node[signal] at (2,\y+0.45) {};
+    \node[signal] at (2,\y-0.45) {};
+    \node[signal] (ac\n) at (2.9,\y) {};
+    \draw[line] (ac\n) -- (2,\y+0.45);
+    \node[sig] at (2.65,\y+0.65) {$s_\n$};
+
+    \node[signal, label={[sig]above:$v_\n$}] (v\n) at (4.35,\y) {};
+    \draw[line] (ac\n) -- (v\n);
+    \draw[->, line] (v\n) -- ++(1.0,0) node[sig, right] {$i_\n$};
+}
+% Electrical terminals remain outside the physical model enclosure.
+\draw[enclosure] (-1.6,-3.05) rectangle (3.65,3.15);
+
+\end{tikzpicture}
+\end{document}
