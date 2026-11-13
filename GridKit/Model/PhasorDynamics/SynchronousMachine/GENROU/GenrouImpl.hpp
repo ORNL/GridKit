@@ -43,13 +43,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Genrou<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
-      using Buses     = typename ModelDataT::Buses;
+      using Parameter    = typename ModelDataT::Parameters;
+      using InitialValue = typename ModelDataT::InitialValues;
+      using Buses        = typename ModelDataT::Buses;
 
       const Model::ParameterReader reader(data, "Genrou");
 
-      p0_       = reader.readReal(Parameter::p0).value_or(p0_);
-      q0_       = reader.readReal(Parameter::q0).value_or(q0_);
+      ir_       = reader.readReal(InitialValue::ir).value_or(ir_);
+      ii_       = reader.readReal(InitialValue::ii).value_or(ii_);
       H_        = reader.readReal(Parameter::H).value_or(H_);
       D_        = reader.readReal(Parameter::D).value_or(D_);
       Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);
@@ -184,13 +185,10 @@ namespace GridKit
     int Genrou<scalar_type, index_type>::initialize()
     {
       // Network Frame Terminal Values
-      ScalarT vr  = Vr();
-      ScalarT vi  = Vi();
-      ScalarT p   = this->toComponentBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = this->toComponentBase(static_cast<ScalarT>(q0_));
-      ScalarT vm2 = vr * vr + vi * vi;
-      ScalarT ir  = (p * vr + q * vi) / vm2;
-      ScalarT ii  = (p * vi - q * vr) / vm2;
+      ScalarT vr = Vr();
+      ScalarT vi = Vi();
+      ScalarT ir = this->toComponentBase(static_cast<ScalarT>(ir_));
+      ScalarT ii = this->toComponentBase(static_cast<ScalarT>(ii_));
 
       // The subtransient-flux magnitude is invariant under the rotor-frame
       // rotation, so saturation is available directly from network quantities.

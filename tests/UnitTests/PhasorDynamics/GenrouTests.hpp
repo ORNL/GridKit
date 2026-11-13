@@ -37,8 +37,6 @@ namespace GridKit
         data.device_class                 = "Genrou";
         data.disambiguation_string        = "1";
         data.buses[Buses::bus]            = 1;
-        data.parameters[Parameter::p0]    = RealT{1.0};
-        data.parameters[Parameter::q0]    = RealT{0.05013};
         data.parameters[Parameter::H]     = RealT{3.0};
         data.parameters[Parameter::D]     = RealT{0.0};
         data.parameters[Parameter::Ra]    = RealT{0.0};
@@ -55,6 +53,10 @@ namespace GridKit
         data.parameters[Parameter::Xl]    = RealT{0.15};
         data.parameters[Parameter::S10]   = RealT{0.0};
         data.parameters[Parameter::S12]   = RealT{0.0};
+
+        // Terminal current of 1 + j0.05013 p.u. at a 1 + j0 bus
+        data.initial_values[PhasorDynamics::GenrouInitialValues::ir] = RealT{1.0};
+        data.initial_values[PhasorDynamics::GenrouInitialValues::ii] = RealT{-0.05013};
 
         return data;
       }
@@ -177,8 +179,6 @@ namespace GridKit
         TestStatus success = true;
 
         // GenRou generator parameters
-        RealT p0{1};
-        RealT q0{.05013};
         RealT H{3};
         RealT D{.5};
         RealT Ra{.1};
@@ -202,8 +202,6 @@ namespace GridKit
         using Parameter = typename GenrouDataT::Parameters;
 
         GenrouDataT data;
-        data.parameters[Parameter::p0]    = p0;
-        data.parameters[Parameter::q0]    = q0;
         data.parameters[Parameter::H]     = H;
         data.parameters[Parameter::D]     = D;
         data.parameters[Parameter::Ra]    = Ra;

@@ -29,6 +29,7 @@
 - Added rate feedback (`Kf`, `Tf`) to the IEEET1 exciters in the `TwoArea` case, whose generators lost synchronism without a fault.
 - Added the `state_file` solver option, which sets PhasorDynamics initial bus voltages from a state file.
 - Removed the GenClassical `p0`/`q0` parameters in favor of the state `ir`/`ii`.
+- Removed the GENROU and GENSAL `p0`/`q0` parameters in favor of the state `ir`/`ii`.
 
 ## v0.2
 

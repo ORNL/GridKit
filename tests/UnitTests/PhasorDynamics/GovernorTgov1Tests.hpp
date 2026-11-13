@@ -75,8 +75,6 @@ namespace GridKit
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[Parameter::p0]    = 1.;
-        gendata.parameters[Parameter::q0]    = 0.05013;
         gendata.parameters[Parameter::H]     = 3.;
         gendata.parameters[Parameter::D]     = 0.;
         gendata.parameters[Parameter::Ra]    = 0.;
@@ -93,6 +91,10 @@ namespace GridKit
         gendata.parameters[Parameter::Xl]    = 0.15;
         gendata.parameters[Parameter::S10]   = 0.;
         gendata.parameters[Parameter::S12]   = 0.;
+
+        // Terminal current of 1 + j0.05013 p.u. at the 1 + j0 bus
+        gendata.initial_values[PhasorDynamics::GenrouInitialValues::ir] = 1.;
+        gendata.initial_values[PhasorDynamics::GenrouInitialValues::ii] = -0.05013;
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
@@ -182,8 +184,6 @@ namespace GridKit
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[Parameter::p0]    = 1.;
-        gendata.parameters[Parameter::q0]    = 0.05013;
         gendata.parameters[Parameter::H]     = 3.;
         gendata.parameters[Parameter::D]     = 0.;
         gendata.parameters[Parameter::Ra]    = 0.;
@@ -200,6 +200,10 @@ namespace GridKit
         gendata.parameters[Parameter::Xl]    = 0.15;
         gendata.parameters[Parameter::S10]   = 0.;
         gendata.parameters[Parameter::S12]   = 0.;
+
+        // Terminal current of 1 + j0.05013 p.u. at the 1 + j0 bus
+        gendata.initial_values[PhasorDynamics::GenrouInitialValues::ir] = 1.;
+        gendata.initial_values[PhasorDynamics::GenrouInitialValues::ii] = -0.05013;
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
@@ -268,8 +272,6 @@ namespace GridKit
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[Parameter::p0]    = 1.;
-        gendata.parameters[Parameter::q0]    = 0.05013;
         gendata.parameters[Parameter::H]     = 3.;
         gendata.parameters[Parameter::D]     = 0.;
         gendata.parameters[Parameter::Ra]    = 0.;
@@ -286,6 +288,10 @@ namespace GridKit
         gendata.parameters[Parameter::Xl]    = 0.15;
         gendata.parameters[Parameter::S10]   = 0.;
         gendata.parameters[Parameter::S12]   = 0.;
+
+        // Terminal current of 1 + j0.05013 p.u. at the 1 + j0 bus
+        gendata.initial_values[PhasorDynamics::GenrouInitialValues::ir] = 1.;
+        gendata.initial_values[PhasorDynamics::GenrouInitialValues::ii] = -0.05013;
 
         /// Jacobian via DependencyTracking
         std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(busdata, gendata);

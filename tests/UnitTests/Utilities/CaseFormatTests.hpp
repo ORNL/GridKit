@@ -153,9 +153,9 @@ namespace GridKit
                ],
                "devices": [
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "Gmag":0.01, "Bmag":0.02, "tap":1.05, "phase":0.1} },
-                   { "class": "Genrou", "ports": {"bus":1}, "id": "1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
+                   { "class": "Genrou", "ports": {"bus":1}, "id": "1", "params": {"H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
                           "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
-                   { "class": "Gensal", "ports": {"bus":1}, "id": "2", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
+                   { "class": "Gensal", "ports": {"bus":1}, "id": "2", "params": {"H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
                           "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Regca", "ports": {"bus":1}, "id": "CV1", "params": {"p0":0.0, "q0":0.0, "mva":100, "Tg":0.02, "TM":0.02, "Rqmax":999.0, "Rqmin":-999.0, "Rpmax":999.0, "sL":true, "IL1":1.1, "VL0":0.4, "VL1":0.9, "VA0":0.4, "VA1":0.9, "Vhvmax":1.2}, "mon": ["ir", "ii", "p", "q"] },
                    { "class": "Reecb", "ports": {"bus":1}, "id": "REE1", "params": {"mva":50.0, "Pqflag":true}, "mon": ["iqcmd", "ipcmd", "vmeas", "pmeas"] }
@@ -216,8 +216,6 @@ namespace GridKit
         success *= result.branch[0].disambiguation_string == "1";
         success *= result.branch[0].monitored_variables.empty();
 
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::p0]) == 1.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::q0]) == 0.05013;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::H]) == 3.0;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::D]) == 0.0;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Ra]) == 0.0;
@@ -239,8 +237,6 @@ namespace GridKit
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
 
-        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::p0]) == 1.0;
-        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::q0]) == 0.05013;
         success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xd]) == 2.1;
         success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xq]) == 0.5;
         success *= result.gensal[0].buses[GensalBuses::bus] == 1;
@@ -396,7 +392,7 @@ namespace GridKit
                ],
                "devices": [
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "tap":1.05, "phase":0.1} },
-                   { "class": "Genrou", "ports": {"bus":1, "speed": 1, "pmech":2, "efd":3}, "id": "DV1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
+                   { "class": "Genrou", "ports": {"bus":1, "speed": 1, "pmech":2, "efd":3}, "id": "DV1", "params": {"H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Tgov1", "ports": {"speed": 1, "pref":10, "pmech":2}, "id": "DV2", "params": {"R":0.05, "T1":0.5,"T2":2.5, "T3":7.5, "Pvmax":1.0, "Pvmin":0.0, "Dt":0.0}},
                    { "class": "Esdc1a", "ports": {"bus":1, "speed":1, "vref":4, "vs":5, "vuel":6, "efd":3}, "id": "DV5", "params": {"Tr":0.0, "Ka":40.0, "Ta":0.1, "Tb":0.0, "Tc":0.0, "Vrmax":1.0, "Vrmin":-1.0, "Ke":0.1, "Te":0.5, "Kf":0.05, "Tf1":0.7, "Spdmlt":false, "E1":2.8, "Se1":0.08, "E2":3.7, "Se2":0.33, "UEL":0, "exclim":true}, "mon": ["efd", "vc", "vr", "vf", "se", "vfe"] },
                    { "class": "Hygov", "ports": {"speed": 1, "pmech": 7, "pref": 8, "paux": 9}, "id": "DV6", "params": {"Trate": 80.0, "Rperm": 0.05, "Rtemp": 0.35, "Tr": 5.0, "Tf": 0.05, "Tg": 0.5,
@@ -487,8 +483,6 @@ namespace GridKit
         success *= result.branch[0].disambiguation_string == "BR1";
         success *= result.branch[0].monitored_variables.empty();
 
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::p0]) == 1.0;
-        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::q0]) == 0.05013;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::H]) == 3.0;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::D]) == 0.0;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Ra]) == 0.0;

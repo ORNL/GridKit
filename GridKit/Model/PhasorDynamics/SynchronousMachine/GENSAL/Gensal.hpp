@@ -145,9 +145,9 @@ namespace GridKit
       /* Component ports */
       SignalPortsT ports_;
 
-      /* Initial terminal conditions */
-      RealT p0_{0.0};
-      RealT q0_{0.0};
+      /* Initial terminal current on system base */
+      RealT ir_{0.0};
+      RealT ii_{0.0};
 
       /* Input parameters */
       RealT H_{3.0};

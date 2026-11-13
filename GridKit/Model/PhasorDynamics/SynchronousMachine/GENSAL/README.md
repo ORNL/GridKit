@@ -19,8 +19,6 @@ Figure 1: GENSAL. Figure courtesy of
 
 Symbol            | Units  | JSON    | Description                                            | Typical Value | Note
 ------------------|--------|---------|--------------------------------------------------------|---------------|-----
-$P_0$             | [p.u.] | `p0`    | Initial active power injection                         | 1.0           |
-$Q_0$             | [p.u.] | `q0`    | Initial reactive power injection                       | 0.0           |
 $H$               | [s]    | `H`     | rotor inertia                                          | 3             |
 $D$               | [p.u.] | `D`     | damping coefficient                                    | 0             |
 $R_\mathrm{a}$             | [p.u.] | `Ra`    | winding resistance                                     | 0             |
@@ -165,9 +163,8 @@ I_i^{\mathrm{bus}}
 
 ## Initialization
 
-Using the power-flow solution, initial currents are calculated from active and
-reactive power injection. The remaining variables are initialized from the
-steady-state GENSAL equations.
+The state gives $V_r$, $V_i$, $I_r$, and $I_i$. The remaining variables are
+initialized from the steady-state GENSAL equations.
 
 ```math
 \begin{aligned}

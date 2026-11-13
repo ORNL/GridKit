@@ -15,8 +15,6 @@ namespace GridKit
     /// Initial parameters for a Gensal generator model
     enum class GensalParameters : size_t
     {
-      p0,    ///< \f$P_0\f$ Initial active power
-      q0,    ///< \f$Q_0\f$ Initial reactive power
       H,     ///< \f$H\f$ Rotor inertia
       D,     ///< \f$D\f$ Damping coefficient
       Ra,    ///< \f$R_a\f$ Winding resistance

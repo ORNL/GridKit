@@ -50,8 +50,10 @@ namespace GridKit
 
         TestStatus success = true;
 
-        const auto flat_data         = parseSystemModelData(std::string("TwoArea.case.json"));
-        const auto hierarchical_data = parseSystemModelData(std::string("TwoAreaHierarchical.case.json"));
+        auto flat_data         = parseSystemModelData(std::string("TwoArea.case.json"));
+        auto hierarchical_data = parseSystemModelData(std::string("TwoAreaHierarchical.case.json"));
+        applyState("TwoArea.state.json", flat_data);
+        applyState("TwoArea.state.json", hierarchical_data);
 
         SystemT flat(flat_data);
         SystemT hierarchical(hierarchical_data);
