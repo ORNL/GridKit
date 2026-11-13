@@ -33,6 +33,7 @@
 - Removed the bus `init` section from the PhasorDynamics case format. Initial bus voltages come from the state file.
 - Removed the Branch `tap`/`phase` parameters in favor of the state `tap`/`phase`.
 - Removed the REGCA `p0`/`q0` and LoadZIP `Pnom`/`Qnom` parameters in favor of the state `ir`/`ii`.
+- Added the state `in_service` setting for PhasorDynamics branches, machines, converters and loads.
 
 ## v0.2
 

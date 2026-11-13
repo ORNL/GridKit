@@ -13,6 +13,7 @@ int main()
   result += test.dataConstructorDefaults();
   result += test.parameterSetters();
   result += test.residual();
+  result += test.outOfServiceState();
   result += test.offNominalResidual();
   result += test.jacobian();
   result += test.offNominalJacobian();

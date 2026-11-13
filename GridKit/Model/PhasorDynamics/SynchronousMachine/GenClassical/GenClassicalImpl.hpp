@@ -59,6 +59,8 @@ namespace GridKit
       Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);
       Xdp_      = reader.readReal(Parameter::Xdp).value_or(Xdp_);
       mva_base_ = reader.readReal(Parameter::mva).value_or(mva_base_);
+
+      in_service_ = reader.readBool(InitialValue::in_service).value_or(in_service_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -389,6 +391,13 @@ namespace GridKit
     {
       G_ = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
       B_ = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+
+      // An out-of-service machine has no terminal admittance
+      if (!in_service_)
+      {
+        G_ = ZERO<RealT>;
+        B_ = ZERO<RealT>;
+      }
       this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
     }
 

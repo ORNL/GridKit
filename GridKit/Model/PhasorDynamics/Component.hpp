@@ -615,6 +615,8 @@ namespace GridKit
       RealT va_system_base_{100.0e6};
       RealT va_component_base_{0};
 
+      bool in_service_{true}; ///< Whether the component is in service
+
       using NotImplementedError = GridKit::Utilities::NotImplementedError;
 
     public:
