@@ -1,22 +1,24 @@
 # Bridge Model
 
 `Bridge` represents a two-level converter with $N$ legs, two DC terminals, and
-an LCL filter to the EMT bus. Switching functions set the pole voltages and DC
-current injections. Grid-side currents $\mathbf{i}_g$ are injected from the
-bridge into the EMT bus.
+an LCL filter to the EMT bus. Its signals are in dq coordinates at the
+angle $\theta$. Modulation signals set the pole voltages and DC current
+injections. Grid-side currents $\mathbf{i}_g$ are injected from the bridge
+into the EMT bus.
 
 ## Block Diagram
 
-![Bridge model diagram](../../../../../../docs/Figures/EMT/Bridge/diagram.png)
+![Bridge model block diagram](../../../../../../docs/Figures/EMT/Bridge/diagram.png)
 
-Figure 1: Representative three-phase bridge with binary contact positions;
-the equations apply to $N$ legs and define continuous interpolation
+Figure 1: Bridge model with one representative filter leg; signals crossing the
+solid edge change between the dq frame and the abc frame at the angle
+$\theta_\mathrm{pll}$, and the converter symbol denotes the legs
 
 ## Model Parameters
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$N$ | [-] | `N` | Number of legs | Required, positive integer
+$N$ | [-] | `N` | Number of legs | Required, integer of at least $3$
 $R_\mathrm{s}$ | $[\Omega]$ | `Rs` | Converter-side resistance | Nonnegative
 $L_\mathrm{s}$ | [H] | `Ls` | Converter-side inductance | Required, positive
 $C$ | [F] | `C` | Filter capacitance | Required, positive
@@ -27,7 +29,7 @@ $L_g$ | [H] | `Lg` | Grid-side inductance | Required, positive
 
 ```math
 \begin{aligned}
-N &\in \mathbb{Z}_{>0} \\
+N &\in \mathbb{Z}_{\ge 3} \\
 R_\mathrm{s} &\ge 0 \\
 L_\mathrm{s} &> 0 \\
 C &> 0 \\
@@ -38,40 +40,49 @@ L_g &> 0
 
 ### Model Derived Parameters
 
-Define the leg-index set
+Define the leg-index set and the phase offsets
 
 ```math
-\mathcal{N} = \{1,\ldots,N\}
+\begin{aligned}
+\mathcal{N} &= \{1,\ldots,N\} \\
+\gamma_n &= -\dfrac{2\pi}{N}(n-1),
+     \quad n \in \mathcal{N}
+\end{aligned}
 ```
 
 ## Model Ports
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{s}$ | `s` | Input | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$
 $\mathbf{v}$, $\mathbf{i}_g$ | `bus` | Bus | [V], [A] | Reads the bus voltage and injects the grid-side current | $\mathbf{v}, \mathbf{i}_g \in \mathbb{R}^N$
 $v_+$, $i_+$ | `vpos` | Bus | [V], [A] | Positive DC terminal voltage and current injection | Scalar
 $v_-$, $i_-$ | `vneg` | Bus | [V], [A] | Negative DC terminal voltage and current injection | Scalar
-$\mathbf{i}$ | `i` | Output | [A] | Converter-side currents | $\mathbf{i} \in \mathbb{R}^N$
-$\mathbf{v}_\mathrm{o}$ | `vo` | Output | [V] | Capacitor voltages | $\mathbf{v}_\mathrm{o} \in \mathbb{R}^N$
-$\mathbf{i}_g$ | `ig` | Output | [A] | Grid-side currents | $\mathbf{i}_g \in \mathbb{R}^N$
+$\theta$ | `theta` | Input | [rad] | Angle | Scalar
+$\mathbf{m}_\mathrm{dq}$ | `mdq` | Input | [-] | Modulation signals | $\mathbf{m}_\mathrm{dq} \in \mathbb{R}^2$
+$\mathbf{i}_\mathrm{dq}$ | `idq` | Output | [A] | Converter-side currents | $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
+$\mathbf{v}_\mathrm{o,dq}$ | `vodq` | Output | [V] | Capacitor voltages | $\mathbf{v}_\mathrm{o,dq} \in \mathbb{R}^2$
 
 All currents are positive from the bridge toward the connected buses. The
-capacitor voltages share the bus voltage reference. Each switching function
-satisfies $0 \le s_n \le 1$ and may come from
-[PWM](../../../Operators/Modulation/PWM/README.md).
+capacitor voltages share the bus voltage reference. The dq vectors are amplitude invariant, and their d- and q-axis components carry the
+subscripts $d$ and $q$, such as $i_d$ and $i_q$. The angle may come from
+[Pll](../../../Operators/Reference/Pll/README.md), and the modulation signals
+from [CurrentControl](../../Controller/CurrentControl/README.md).
 
 ## Submodels
 
-None.
+Symbol | Description | Type | Order | JSON | Inputs | Outputs
+------ | ----------- | ---- | ----- | ---- | ------ | -------
+$\mathbf{p}$ | Pulse-width modulation | [PWM](../../../Operators/Modulation/PWM/README.md) | $0$ | `pwm` | $\mathbb{R}^N$ | $\mathbb{R}^N$
 
 ### Submodel Validation
 
-None.
+The submodel uses the $N$ of the bridge.
 
 ### Submodel Wiring
 
-None.
+```math
+\mathbf{s} \leftarrow \mathbf{p}[\mathbf{m}]
+```
 
 ## Model Variables
 
@@ -87,7 +98,10 @@ $\mathbf{i}_g$ | [A] | Grid-side currents | $\mathbf{i}_g \in \mathbb{R}^N$
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{i}_\mathrm{dq}$ | [A] | Converter-side currents | $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
+$\mathbf{v}_\mathrm{o,dq}$ | [V] | Capacitor voltages | $\mathbf{v}_\mathrm{o,dq} \in \mathbb{R}^2$
 
 ### External Variables
 
@@ -105,11 +119,15 @@ None.
 
 ## Model Equations
 
-The pole voltages are
+The phase modulation signals and pole voltages are
 
 ```math
-e_n = (1-s_n)v_- + s_n v_+,
-\quad n \in \mathcal{N}
+\begin{aligned}
+m_n &= m_d\cos(\theta + \gamma_n) - m_q\sin(\theta + \gamma_n),
+     \quad n \in \mathcal{N} \\
+e_n &= (1-s_n)v_- + s_n v_+,
+     \quad n \in \mathcal{N}
+\end{aligned}
 ```
 
 ### Internal Equations
@@ -131,17 +149,20 @@ For each leg $n \in \mathcal{N}$,
 
 #### Algebraic
 
-None.
+```math
+\begin{aligned}
+0 &= -i_d + \dfrac{2}{N}\sum_{n \in \mathcal{N}} i_n \cos(\theta + \gamma_n) \\
+0 &= -i_q - \dfrac{2}{N}\sum_{n \in \mathcal{N}} i_n \sin(\theta + \gamma_n) \\
+0 &= -v_{\mathrm{o},d} + \dfrac{2}{N}\sum_{n \in \mathcal{N}} v_{\mathrm{o},n} \cos(\theta + \gamma_n) \\
+0 &= -v_{\mathrm{o},q} - \dfrac{2}{N}\sum_{n \in \mathcal{N}} v_{\mathrm{o},n} \sin(\theta + \gamma_n)
+\end{aligned}
+```
 
 ### External Equations
 
-The bridge supplies input $d$ of the [bus current balance](../../../Bus/README.md#model-equations):
-
-```math
-\mathbf{i}_d \leftarrow \mathbf{i}_g
-```
-
-The DC current injections are
+The grid-side currents $\mathbf{i}_g$ enter the
+[bus current balance](../../../Bus/README.md#model-equations). The DC current
+injections are
 
 ```math
 \begin{aligned}
@@ -161,6 +182,8 @@ Monitor | Units | Description | Note
 `i` | [A] | Converter-side currents | $\mathbf{i} \in \mathbb{R}^N$
 `vo` | [V] | Capacitor voltages | $\mathbf{v}_\mathrm{o} \in \mathbb{R}^N$
 `ig` | [A] | Grid-side currents | $\mathbf{i}_g \in \mathbb{R}^N$
+`idq` | [A] | Converter-side currents | $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
+`vodq` | [V] | Capacitor voltages | $\mathbf{v}_\mathrm{o,dq} \in \mathbb{R}^2$
 `ipos` | [A] | Positive DC current injection | Scalar
 `ineg` | [A] | Negative DC current injection | Scalar
 `e` | [V] | Pole voltages | $\mathbf{e} \in \mathbb{R}^N$

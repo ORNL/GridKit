@@ -56,8 +56,8 @@ $\mathbf{s}$ | `s` | Output | [-] | Switching functions | $\mathbf{s} \in \mathb
 
 The modulation signals must give duty ratios $0 \le d_n \le 1$. Each
 switching function satisfies $0 \le s_n \le 1$.
-The switching functions can drive
-[Bridge](../../../Component/Converter/Bridge/README.md).
+[Bridge](../../../Component/Converter/Bridge/README.md) uses this model as a
+submodel.
 
 ## Submodels
 

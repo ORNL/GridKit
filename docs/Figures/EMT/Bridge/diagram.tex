@@ -3,48 +3,73 @@
 \input{../diagram-style.tex}
 \standaloneenv{circuitikz}
 
-% TUNABLES: spacing of the representative phase legs.
-\def\legrow{2.9}
+% Measurements share one accent color and modulation signals its complement.
+\definecolor{measure}{HTML}{2F5F8A}
+\definecolor{control}{HTML}{A8473D}
 
 \begin{document}
 \begin{circuitikz}[emt diagram]
 \ctikzset{bipoles/length=1.05cm}
 
-% Common DC rails carry the aggregate current of the three depicted legs.
-\draw[line] (-1,-\legrow-0.7) -- (-1,\legrow+1.75);
-\draw[line] (0,-\legrow-0.7) -- (0,\legrow+1.75);
-\node[signal, label={[sig]left:$v_+$}] (dcplus) at (-1,\legrow+1.75) {};
-\node[signal, label={[sig]right:$v_-$}] (dcminus) at (0,\legrow+1.75) {};
+% Phase quantities inside; the solid bottom edge is the change to dq coordinates.
+\draw[enclosure] (0,-1.6) -- (0,2.0) -- (12.3,2.0) -- (12.3,-1.6);
+\draw[line width=1.6pt] (0,-1.6) -- (12.3,-1.6);
+
+\node[block, minimum width=1.4cm] (pwm) at (1.6,0) {PWM};
+\node[block, minimum width=1.4cm, minimum height=1.4cm] (legs) at (4.6,0) {};
+
+% Converter symbol: DC side toward the rails, AC side toward the filter.
+\draw[semithick] (legs.south west) -- (legs.north east);
+\draw[semithick] ($(legs.center)+(-0.52,0.42)$) -- ++(0.4,0);
+\draw[semithick] ($(legs.center)+(-0.52,0.28)$) -- ++(0.4,0);
+\node at ($(legs.center)+(0.32,-0.34)$) {$\sim$};
+
+\draw[->, line, control] (pwm.east) -- (legs.west)
+    node[sig, midway, above] {$\mathbf{s}$};
+
+% One representative filter leg between the pole voltage and the bus terminal.
+\coordinate (itap) at (5.9,0);
+\coordinate (vo) at (8.8,0);
+\draw[semithick] (legs.east) -- (itap)
+    to[R, l=$R_\mathrm{s}$] (7.2,0)
+    to[L, l=$L_\mathrm{s}$] (8.4,0) -- (9.2,0)
+    to[R, l=$R_g$] (10.5,0)
+    to[L, l=$L_g$] (11.8,0);
+\draw[semithick] (vo) to[C, l_=$C$] (8.8,1.35) node[ground, rotate=180] {};
+
+% Signals cross the solid edge between dq coordinates and phase quantities.
+\draw[->, line, control] (1.6,-2.7) -- (pwm.south);
+\node[sig, control, anchor=west] at (1.7,-2.15) {$\mathbf{m}$};
+% A current transformer reads the converter-side current.
+\draw[measure, semithick, fill=white] (itap) ellipse (0.1 and 0.24);
+\draw[semithick] ($(itap)+(-0.1,0)$) -- ($(itap)+(0.1,0)$);
+\draw[->, line, measure] ($(itap)+(0,-0.24)$) -- (5.9,-2.7);
+\node[sig, measure, anchor=west] at (6.0,-2.15) {$\mathbf{i}$};
+% A potential transformer reads the capacitor voltage.
+\draw[measure, semithick] (vo) -- (8.8,-0.3);
+\draw[measure, semithick] (8.8,-0.46) circle (0.16);
+\draw[measure, semithick] (8.8,-0.68) circle (0.16);
+\draw[->, line, measure] (8.8,-0.84) -- (8.8,-2.7);
+\node[sig, measure, anchor=west] at (8.9,-2.15) {$\mathbf{v}_\mathrm{o}$};
+\node[signal] at (vo) {};
+
+\node[signal, label={[sig]above:$\theta_\mathrm{pll}$}] (theta) at (-1.2,-1.6) {};
+\draw[->, line] (theta) -- (0,-1.6);
+
+\node[sig, anchor=south east] at (12.15,-1.55) {abc Frame};
+\node[sig, anchor=north east] at (12.15,-1.7) {dq Frame};
+
+% Electrical terminals remain outside the model enclosure.
+\node[signal, label={[sig]above:$\mathbf{v}$}] (bus) at (12.9,0) {};
+\draw[semithick] (11.8,0) -- (bus);
+\draw[->, line] (bus) -- ++(1.0,0) node[sig, right] {$\mathbf{i}_g$};
+
+\node[signal, label={[sig]left:$v_+$}] (dcplus) at (4.3,2.7) {};
+\node[signal, label={[sig]right:$v_-$}] (dcminus) at (4.9,2.7) {};
+\draw[line] ($(legs.north)+(-0.3,0)$) -- (dcplus);
+\draw[line] ($(legs.north)+(0.3,0)$) -- (dcminus);
 \draw[->, line] (dcplus) -- ++(0,0.9) node[sig, above] {$i_+$};
 \draw[->, line] (dcminus) -- ++(0,0.9) node[sig, above] {$i_-$};
-
-% Representative a, b, c contacts share both rails.
-% The upper position is drawn; the caption defines the smooth interpolation.
-\foreach \y/\n in {\legrow/a,0/b,-\legrow/c} {
-    \draw[wire jump] (-1,\y+0.45) -- (2,\y+0.45);
-    \draw[line] (0,\y-0.45) -- (2,\y-0.45);
-    \node[signal] at (-1,\y+0.45) {};
-    \node[signal] at (0,\y-0.45) {};
-    \node[signal] at (2,\y+0.45) {};
-    \node[signal] at (2,\y-0.45) {};
-    \node[signal] (ac\n) at (2.9,\y) {};
-    \draw[line] (ac\n) -- (2,\y+0.45);
-    \node[sig] at (2.65,\y+0.65) {$s_\n$};
-
-    % Each pole feeds the bus through its LCL filter leg.
-    \draw[semithick] (ac\n) to[short, i>^=$i_\n$] (4.0,\y)
-        to[R, l=$R_\mathrm{s}$] (5.6,\y)
-        to[L, l=$L_\mathrm{s}$] (7.2,\y) coordinate (vo\n)
-        to[R, l=$R_g$] (9.0,\y)
-        to[L, l=$L_g$] (10.6,\y);
-    \draw[semithick] (vo\n) to[C, l=$C$] ++(0,-1.4) node[ground] {};
-    \node[signal, label={[sig]above:$v_{\mathrm{o},\n}$}] at (vo\n) {};
-    \node[signal, label={[sig]above:$v_\n$}] (v\n) at (11.9,\y) {};
-    \draw[semithick] (10.6,\y) -- (v\n);
-    \draw[->, line] (v\n) -- ++(1.0,0) node[sig, right] {$i_{g,\n}$};
-}
-% Electrical terminals remain outside the physical model enclosure.
-\draw[enclosure] (-1.6,-\legrow-2.2) rectangle (11.2,\legrow+1.15);
 
 \end{circuitikz}
 \end{document}

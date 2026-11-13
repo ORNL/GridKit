@@ -49,11 +49,13 @@ $\mathbf{m}_\mathrm{dq}$ | `mdq` | Output | [-] | Modulation signals | $\mathbf{
 
 The dq vectors are amplitude invariant, and their d- and q-axis components
 carry the subscripts $d$ and $q$, such as $v_d$ and $v_q$. The model reads the
-DC terminal voltages and injects no current. The inductance $L$ connects the
-converter AC terminals to the bus of $\mathbf{v}_\mathrm{dq}$, and
-$\mathbf{i}_\mathrm{dq}$ is positive toward that bus. The dq coordinates
-rotate at $\omega$, which may come from
-[Pll](../../../Operators/Reference/Pll/README.md).
+DC terminal voltages and injects no current. The currents
+$\mathbf{i}_\mathrm{dq}$ flow through the inductance $L$ toward the voltages
+$\mathbf{v}_\mathrm{dq}$. Both may come from
+[Bridge](../../Converter/Bridge/README.md), as its converter-side currents and
+capacitor voltages. The dq coordinates rotate at $\omega$, which may come from
+[Pll](../../../Operators/Reference/Pll/README.md). The modulation signals can
+drive [Bridge](../../Converter/Bridge/README.md).
 
 ## Submodels
 
@@ -79,7 +81,9 @@ $\mathbf{x}_\mathrm{dq}$ | [V] | Integrator states | $\mathbf{x}_\mathrm{dq} \in
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{m}_\mathrm{dq}$ | [-] | Modulation signals | $\mathbf{m}_\mathrm{dq} \in \mathbb{R}^2$
 
 ### External Variables
 
@@ -138,16 +142,16 @@ u_q^\mathrm{lim} &= \dfrac{1}{v_\mathrm{mod}}v_\mathrm{dc}u_q
 
 #### Algebraic
 
-None.
+```math
+\begin{aligned}
+0 &= -m_d + \dfrac{2}{v_\mathrm{mod}}u_d \\
+0 &= -m_q + \dfrac{2}{v_\mathrm{mod}}u_q
+\end{aligned}
+```
 
 ### External Equations
 
-```math
-\begin{aligned}
-m_d &\leftarrow \dfrac{2}{v_\mathrm{mod}}u_d \\
-m_q &\leftarrow \dfrac{2}{v_\mathrm{mod}}u_q
-\end{aligned}
-```
+None.
 
 ## Initialization
 
