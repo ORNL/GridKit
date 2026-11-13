@@ -14,8 +14,7 @@ target_link_libraries(
 add_library(
   power_elec_partition_examples_helper
   INTERFACE
-  PartitionUtilities.hpp
-  JacTestHelper.hpp)
+  PartitionUtilities.hpp)
 
 target_link_libraries(
   power_elec_partition_examples_helper

@@ -1,29 +1,29 @@
 // PartitionUtilities.hpp
 #pragma once
 
-#include <omp.h>
-
 #include <cassert>
 #include <cstddef>
+#include <unordered_map>
 #include <vector>
 
+#include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
+#include <GridKit/ScalarTraits.hpp>
+#include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 #include <examples/PowerElectronics/ExamplesHelper/MicrogridNetwork.hpp>
 
 /**
- * @brief Partition a scaled microgrid network into subsystem models.
+ * @brief Partition a scaled microgrid network  and assemble into subsystem models.
  *
  * Divides the network into contiguous groups of IBRs and creates one
  * subsystem for each group. The IBRs are distributed as evenly as possible,
- * with any remainder assigned to the first partitions.
+ * with any remainder assigned to the leading partitions. A partition
+ * interface is added the appropriate subsystem
  *
- * The reference signal node is added to the first subsystem. A partition
- * interface is added at the right boundary of every subsystem except the
- * last to represent its connection to the neighboring subsystem.
- *
- * @param[in,out] network Scaled microgrid network to partition.
+ * @param[in,out] network Microgrid network to be partitioned.
  * @param[out] subsystems Vector populated with the created subsystem models.
  * @param[in] num_partitions Number of subsystems to create.
  *
@@ -35,19 +35,19 @@
  *
  * @post @p subsystems contains exactly @p num_partitions subsystem models.
  * @post Every IBR in the network belongs to exactly one subsystem.
- * @post Every subsystem except the last has a partition interface at its
- *       right boundary.
  *
  * @note The subsystem models are dynamically allocated. The caller is
  *       responsible for releasing and deleting them.
  */
 template <class ScalarT, typename IdxT>
-void partitionNetwork(
+void partitionMicrogridNetwork(
     ScaleMicrogridNetwork<ScalarT, IdxT>&                 network,
     std::vector<GridKit::SubsystemModel<ScalarT, IdxT>*>& subsystems,
     size_t                                                num_partitions)
 {
   const size_t num_ibrs = 2 * network.N_size;
+
+  auto interface_id = network.model_id_next;
 
   assert(num_partitions <= num_ibrs);
 
@@ -69,9 +69,6 @@ void partitionNetwork(
     }
 
     // Divide the IBRs as evenly as possible among the partitions.
-    // Each partition receives q IBRs, and the first r partitions receive
-    // one additional IBR to account for any remainder. The partition spans
-    // [partition_begin, partition_end).
     const IdxT partition_size = q + ((j < r) ? 1 : 0);
     const IdxT partition_end  = partition_begin + partition_size;
 
@@ -96,18 +93,16 @@ void partitionNetwork(
       partition->addNode(&network.buses[i]);
     }
 
-    // If another partition exists to the right, the line crossing this
-    // partition's right boundary is owned by that next partition. Add an
-    // interface here to the left partition.
+    // Insert a partition interface inbetween every partition
     if (partition_end < num_ibrs)
     {
 
       const IdxT boundary_line_index = partition_end - 1;
 
-      auto* bus_interface = new GridKit::BusPartitionInterface<ScalarT, IdxT>(
+      auto* bus_interface = new GridKit::PowerElectronics::BusPartitionInterface<ScalarT, IdxT>(
           &network.buses[boundary_line_index],
           network.lines[boundary_line_index],
-          network.model_id_next++);
+          interface_id++);
 
       bus_interface->allocate();
       partition->addInterface(bus_interface);
@@ -139,8 +134,6 @@ void partitionNetwork(
  * @pre @p y and @p yp contain all global entries
  * @pre @p f is large enough to contain every global residual entry referenced
  *      by the subsystems.
- * @pre The subsystems have disjoint internal index sets so that parallel
- *      writes to @p f do not overlap.
  *
  * @post Each subsystem residual has been evaluated at the supplied
  *       @p time and @p alpha.
@@ -148,19 +141,20 @@ void partitionNetwork(
  *       represented by the subsystems.
  */
 template <class ScalarT, typename IdxT>
-void evaluatePartitionResiduals(
+void parallelFunctionEval(
     const std::vector<GridKit::SubsystemModel<ScalarT, IdxT>*>& subsystems,
     const std::vector<ScalarT>&                                 y,
     const std::vector<ScalarT>&                                 yp,
     std::vector<ScalarT>&                                       f,
-    ScalarT                                                     time,
-    ScalarT                                                     alpha)
+    typename GridKit::ScalarTraits<ScalarT>::RealT              time,
+    typename GridKit::ScalarTraits<ScalarT>::RealT              alpha)
 {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(guided)
 #endif
-  for (auto* partition : subsystems)
+  for (size_t p = 0; p < subsystems.size(); ++p)
   {
+    auto* partition = subsystems[p];
     partition->updateTime(time, alpha);
 
     auto* external_y  = partition->getExternalDataY().getData();
@@ -205,52 +199,92 @@ void evaluatePartitionResiduals(
 }
 
 /**
- * @brief Assemble the scaled microgrid from left to right.
+ * @brief Verify that the subsystem Jacobian is an exact subset of the
+ * full-system Jacobian to ensure accuracy of subsystem Jacobians.
  *
- * Adds the network components to @p sys_model in physical left-to-right
- * order. For each bus location, the generator, virtual DQ bus, load, line,
- * and bus associated with that location are added before moving to the next
- * location in the network.
+ * Each subsystem Jacobian entry should match the corresponding entry in the
+ * full-system Jacobian after converting local subsystem indices back to global
+ * indices. The check verifies that:
  *
- * This ordering is useful when comparing the monolithic system with
- * partition-based evaluations that traverse the network from left to right.
+ * - every subsystem entry exists in the full-system Jacobian,
+ * - every full-system entry whose row and column belong to the subsystem
+ * exists in the subsystem Jacobian, and
+ * - matching entries agree within the specified tolerance.
  *
- * @param[in] network Constructed scaled microgrid network.
- * @param[in,out] sys_model Power electronics model to populate.
+ * @note When the components in a subsystem are evaluated in a different order
+ *       than in the monolithic reference system, a larger tolerance may be
+ *       required to account for floating-point roundoff introduced by the
+ *       different summation order.
  *
- * @pre @c network.N_size is greater than zero.
- * @pre @p network has been constructed by buildScaleMicrogridNetwork().
- * @pre All component and node pointers stored in @p network are valid.
+ * @param full_jac Full-system Jacobian.
+ * @param subsystem Subsystem associated with sub_jac.
+ * @param tolerance Maximum allowed difference between matching entries.
  *
- * @post All nodes and components in @p network have been added to
- *       @p sys_model in left-to-right network order.
+ * @return true if the subsystem Jacobian is an exact subset of the
+ * full-system Jacobian, false otherwise.
  */
-template <class ScalarT, typename IdxT>
-void assembleSystemLeftToRight(
-    ScaleMicrogridNetwork<ScalarT, IdxT>&          network,
-    GridKit::PowerElectronicsModel<ScalarT, IdxT>& sys_model)
+
+template <typename ScalarT, typename IdxT>
+bool verifySubsystemJacobian(
+    GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* full_jac,
+    GridKit::SubsystemModel<ScalarT, IdxT>&           subsystem,
+    ScalarT                                           tolerance = std::numeric_limits<ScalarT>::epsilon())
 {
-  const size_t num_ibrs = 2 * network.N_size;
+  const auto subsystem_jacobian = GridKit::Testing::MapFromCsr(subsystem.getCsrJacobian());
+  const auto reference_jacobian = GridKit::Testing::MapFromCsr(full_jac);
 
-  assert(network.N_size > 0);
+  const auto partition_size = subsystem.getInternalSize();
 
-  sys_model.addNode(&network.dg_signal);
+  // A table to lookup if global connection index falls within this partition
+  std::unordered_map<IdxT, IdxT> global_to_local;
 
-  for (IdxT i = 0; i < num_ibrs; ++i)
+  for (size_t i = 0; i < partition_size; ++i)
   {
-    sys_model.addComponent(network.generators[i]);
-    sys_model.addComponent(network.busesDQ[i]);
-
-    if (network.loads[i] != nullptr)
-    {
-      sys_model.addComponent(network.loads[i]);
-    }
-
-    if (i > 0)
-    {
-      sys_model.addComponent(network.lines[i - 1]);
-    }
-
-    sys_model.addNode(&network.buses[i]);
+    global_to_local[subsystem.getNodeConnection(i)] = i;
   }
+
+  for (size_t row = 0; row < partition_size; ++row)
+  {
+    const auto global_row = subsystem.getNodeConnection(row);
+
+    const auto& reference_row = reference_jacobian[global_row];
+    const auto& partition_row = subsystem_jacobian[row];
+
+    size_t matched = 0;
+
+    // Compare only full-system entries belonging to the subsystem.
+    for (const auto& [global_col, reference_value] : reference_row)
+    {
+      // Skip columns outside the subsystem.
+      if (!global_to_local.contains(global_col))
+      {
+        continue;
+      }
+
+      const auto local_col = global_to_local.at(global_col);
+
+      // The corresponding subsystem entry must exist.
+      if (!partition_row.contains(local_col))
+      {
+        return false;
+      }
+
+      // Compare the Jacobian values.
+      bool status = GridKit::Testing::isEqual(partition_row.at(local_col), reference_value, tolerance);
+
+      if (!status)
+      {
+        return false;
+      }
+      ++matched;
+    }
+
+    // Make sure there are no additional entries in the subsystem row that hasn't been checked.
+    if (matched != partition_row.size())
+    {
+      return false;
+    }
+  }
+
+  return true;
 }
