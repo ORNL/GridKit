@@ -44,11 +44,26 @@ def main():
     p.add_argument("--start", type=int, required=True)
     p.add_argument("--count", type=int, required=True)
     p.add_argument("--no-cct", action="store_true")
-    # datacenter constant-power share; the campaign default is 0.2
-    p.add_argument("--dc-alpha-p", type=float, default=0.2)
+    # datacenter constant-power share; the campaign default is 0.8
+    p.add_argument("--dc-alpha-p", type=float, default=0.8)
+    # PV->PQ switching of generator Q limits in the AC PF. Default: on, unless
+    # --ac-opf. --no-enforce-q-lims reproduces the unlimited-Q campaigns.
+    qg = p.add_mutually_exclusive_group()
+    qg.add_argument("--enforce-q-lims", dest="enforce_q_lims", action="store_true")
+    qg.add_argument("--no-enforce-q-lims", dest="enforce_q_lims", action="store_false")
+    p.set_defaults(enforce_q_lims=None)
+    p.add_argument("--ac-opf", action="store_true")
+    # control for --ac-opf: generator Q limits widened so they never bind
+    p.add_argument("--ac-opf-relax-q", action="store_true")
     args = p.parse_args()
 
-    cfg = cp.CampaignConfig(name=args.name, dc_alpha_p=args.dc_alpha_p)
+    cfg = cp.CampaignConfig(
+        name=args.name,
+        dc_alpha_p=args.dc_alpha_p,
+        enforce_q_lims=args.enforce_q_lims,
+        ac_opf=args.ac_opf,
+        ac_opf_relax_q=args.ac_opf_relax_q,
+    )
     missing = cp.check_runner(cfg)
     if missing:
         print(

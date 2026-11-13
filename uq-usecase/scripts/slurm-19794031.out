@@ -1,0 +1,2 @@
+host=x1008c4s7b1n1 src=faultscreen1 dst=faultscreen1_ap08 alphaP=0.8 sited=680 workers=16 per=43
+all workers done

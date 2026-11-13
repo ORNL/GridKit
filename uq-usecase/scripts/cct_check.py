@@ -36,7 +36,8 @@ def main():
 
     alphas = [float(x) for x in args.alphas.split(",")]
     fbs = [int(x) for x in args.fault_buses.split(",")]
-    cfg = cp.CampaignConfig(name=args.name)
+    # Unlimited Q, as these campaigns were run (the config default is switched).
+    cfg = cp.CampaignConfig(name=args.name, enforce_q_lims=False)
     missing = cp.check_runner(cfg)
     if missing:
         print("FATAL: runner cannot load its libraries:", *missing, sep="\n  ")

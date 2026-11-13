@@ -96,7 +96,8 @@ def main():
     p.add_argument("--list", action="store_true")
     args = p.parse_args()
 
-    cfg = cp.CampaignConfig(name=args.name)
+    # Unlimited Q, as these campaigns were run (the config default is switched).
+    cfg = cp.CampaignConfig(name=args.name, enforce_q_lims=False)
     missing = cp.check_runner(cfg)
     if missing:
         print("FATAL: runner cannot load its libraries:", *missing, sep="\n  ")

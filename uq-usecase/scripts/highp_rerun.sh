@@ -1,7 +1,8 @@
 #!/bin/bash
 # Re-run the datacenter (sited) arm of an existing campaign at another dc alphaP.
 # Same conditions, same dispatches; baseline rows (no datacenter) are dropped
-# because they do not depend on alphaP.
+# because they do not depend on alphaP. Unlimited Q: passes --no-enforce-q-lims,
+# since these campaigns were run without Q limits.
 # usage: sbatch highp_rerun.sh <src-campaign> <dst-campaign> <alphaP> <workers>
 #   e.g. sbatch highp_rerun.sh faultscreen1 faultscreen1_ap1 1.0 16
 #SBATCH --job-name=highp
@@ -30,7 +31,8 @@ for i in $(seq 0 $((W-1))); do
   START=$(( i * PER ))
   [ "$START" -ge "$N" ] && break
   $PY "$S/sweep_worker.py" --conditions "$ROOT/$DST/conditions.csv" --name "$DST" \
-      --start "$START" --count "$PER" --dc-alpha-p "$ALPHA" > "$OUT/w${i}.log" 2>&1 &
+      --start "$START" --count "$PER" --dc-alpha-p "$ALPHA" --no-enforce-q-lims \
+      > "$OUT/w${i}.log" 2>&1 &
 done
 wait
 echo "all workers done"

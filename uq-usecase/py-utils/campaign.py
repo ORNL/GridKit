@@ -226,8 +226,15 @@ class CampaignConfig:
         loss_iters: int = 1,
         cct_max: float = 0.5,
         keep_timeseries: bool = True,
-        dc_alpha_p: float = 0.2,
+        dc_alpha_p: float = 0.8,
+        enforce_q_lims: bool | None = None,
+        ac_opf: bool = False,
+        ac_opf_relax_q: bool = False,
     ):
+        if enforce_q_lims and ac_opf:
+            raise ValueError("enforce_q_lims and ac_opf are two ways to the same end; pick one")
+        if ac_opf_relax_q and not ac_opf:
+            raise ValueError("ac_opf_relax_q only applies with ac_opf")
         self.spec = spec or mu.ACTIVSG200
         self.name = name
         # `work` is the old single-directory argument; it now means scratch.
@@ -235,10 +242,22 @@ class CampaignConfig:
         self.store = Path(store or STORE_ROOT / name)
         self.work = self.scratch
         self.keep_timeseries = keep_timeseries
-        # alphaP=1.0 is not simulable under a fault once the datacenter is large
-        # relative to its host load; 0.2 is, and measured CCT is indistinguishable
-        # wherever both run (see plan doc, section 4).
+        # Pilot default 0.8 (alphaP 1.0 fails more IDA initial conditions; see
+        # pilot report section 4.4). Where both solve, CCT at 0.2 is close to 0.8.
         self.dc_alpha_p = dc_alpha_p
+        # PV->PQ switching of generator reactive limits in the AC PF. On by
+        # default (the pilot campaign). None means on unless ac_opf, which
+        # carries Q limits itself. Pass False to reproduce the unlimited-Q
+        # campaigns (faultscreen1, highp reruns, cct_check, alphap_frontier).
+        if enforce_q_lims is None:
+            enforce_q_lims = not ac_opf
+        self.enforce_q_lims = enforce_q_lims
+        # PM.jl AC OPF replaces DC OPF + AC PF: it re-dispatches P and V and
+        # carries Q limits as constraints. Mutually exclusive with switching.
+        self.ac_opf = ac_opf
+        # Control arm: AC OPF with generator Q limits widened to +/-9999 Mvar.
+        # Same OPF, no Q constraints, so the difference from ac_opf isolates Q limits.
+        self.ac_opf_relax_q = ac_opf_relax_q
         prepare_storage(self.scratch, self.store)
         self.fault_bus = fault_bus
         self.t_on, self.t_off, self.tmax = t_on, t_off, tmax
@@ -373,41 +392,125 @@ def _fail(workdir: Path, stage: str, it: int, err: str) -> dict:
     return {"fail_stage": f"{stage}@{it}", "fail_reason": reason}
 
 
+# PV->PQ switching of generator reactive limits in the AC PF (MATPOWER
+# enforce_q_lims style). A unit whose Q leaves [QMIN, QMAX] is fixed at the
+# violated limit. For the solve, its P and Q move into the bus load and its
+# gen goes out of service. The solved case then restores it as an in-service
+# gen at the fixed Q, so the dynamic case still contains the machine.
+Q_TOL_MVAR = 0.1
+V_TOL_PU = 1e-4
+Q_MAX_ITER = 30
+Q_MAX_RETURNS = 2  # a unit that has returned to PV this often is held fixed
+
+
+def _q_violations(solved) -> int:
+    """In-service non-slack gens whose QG is outside [QMIN, QMAX] by more than Q_TOL_MVAR."""
+    bus, gen = solved["bus"], solved["gen"]
+    slack = set(bus.loc[bus["BUS_TYPE"] == 3, "BUS_I"].astype(int))
+    g = gen[(gen["GEN_STATUS"] == 1) & ~gen["GEN_BUS"].astype(int).isin(slack)]
+    bad = (g["QG"] > g["QMAX"] + Q_TOL_MVAR) | (g["QG"] < g["QMIN"] - Q_TOL_MVAR)
+    return int(bad.sum())
+
+
+def _q_units(base):
+    """Gen row -> (bus, QMAX, QMIN, VG) for in-service, non-slack gens."""
+    bus, gen = base["bus"], base["gen"]
+    slack = set(bus.loc[bus["BUS_TYPE"] == 3, "BUS_I"].astype(int))
+    units = {}
+    for i in range(len(gen)):
+        g = gen.iloc[i]
+        if g["GEN_STATUS"] != 1 or int(g["GEN_BUS"]) in slack:
+            continue
+        units[i] = (
+            int(g["GEN_BUS"]),
+            float(g["QMAX"]),
+            float(g["QMIN"]),
+            float(g["VG"]),
+        )
+    return units
+
+
+def _q_switched(base, state, vm):
+    """`base` with the switched units moved into the bus load.
+
+    `state` maps gen row -> (kind, Q_fixed). A switched bus becomes PQ unless
+    an in-service unit still holds it as PV. `vm` (bus -> VM) warm-starts.
+    """
+    f = perturb.copy_frames(base)
+    bus, gen = f["bus"], f["gen"]
+    bi = bus["BUS_I"].astype(int)
+    st, qg_col = gen.columns.get_loc("GEN_STATUS"), gen.columns.get_loc("QG")
+    touched = set()
+    for i, (_, qfix) in state.items():
+        b = int(gen["GEN_BUS"].iloc[i])
+        m = bi == b
+        bus.loc[m, "PD"] -= float(gen["PG"].iloc[i])
+        bus.loc[m, "QD"] -= qfix
+        gen.iloc[i, st] = 0
+        gen.iloc[i, qg_col] = qfix
+        touched.add(b)
+    on_bus = set(gen.loc[gen["GEN_STATUS"] == 1, "GEN_BUS"].astype(int))
+    for b in touched:
+        m = bi == b
+        if int(bus.loc[m, "BUS_TYPE"].iloc[0]) != 3:
+            bus.loc[m, "BUS_TYPE"] = 2 if b in on_bus else 1
+    if vm:
+        bus["VM"] = bi.map(vm).fillna(bus["VM"]).values
+    return f
+
+
+def _q_step(base, solved, state, returns):
+    """Update `state` from one solved switched case. Returns the change count."""
+    vm = dict(zip(solved["bus"]["BUS_I"].astype(int), solved["bus"]["VM"]))
+    qg = solved["gen"]["QG"].astype(float).values
+    changes = 0
+    for i, (b, qmax, qmin, vg) in _q_units(base).items():
+        if i in state:
+            kind = state[i][0]
+            if returns.get(i, 0) >= Q_MAX_RETURNS:
+                continue
+            back_to_pv = (kind == "max" and vm[b] > vg + V_TOL_PU) or (
+                kind == "min" and vm[b] < vg - V_TOL_PU
+            )
+            if back_to_pv:
+                del state[i]
+                returns[i] = returns.get(i, 0) + 1
+                changes += 1
+        elif qg[i] > qmax + Q_TOL_MVAR:
+            state[i] = ("max", qmax)
+            changes += 1
+        elif qg[i] < qmin - Q_TOL_MVAR:
+            state[i] = ("min", qmin)
+            changes += 1
+    return changes
+
+
+def _q_restore(base, solved, state):
+    """Solved case, with the switched units restored as in-service gens.
+
+    Bus loads and bus types come from `base` (the case before switching).
+    Voltages and the other gens come from `solved`.
+    """
+    f = perturb.copy_frames(solved)
+    f["bus"]["PD"] = base["bus"]["PD"].values
+    f["bus"]["QD"] = base["bus"]["QD"].values
+    f["bus"]["BUS_TYPE"] = base["bus"]["BUS_TYPE"].values
+    gen = f["gen"]
+    st, pg_col = gen.columns.get_loc("GEN_STATUS"), gen.columns.get_loc("PG")
+    qg_col = gen.columns.get_loc("QG")
+    for i, (_, qfix) in state.items():
+        gen.iloc[i, st] = 1
+        gen.iloc[i, pg_col] = float(base["gen"]["PG"].iloc[i])
+        gen.iloc[i, qg_col] = qfix
+    return f
+
+
 def solve_chain(cfg: CampaignConfig, frames: dict, workdir: Path):
-    """Loss-aware DC OPF then AC PF. Returns (solved frames | None, info)."""
-    workdir.mkdir(parents=True, exist_ok=True)
-    pd_total = frames["bus"]["PD"].sum()
-    loss, solved, info = 0.0, None, {}
-    for i in range(cfg.loss_iters + 1):
-        # DC OPF is lossless, so inflate load by the measured loss and let the
-        # next AC PF land with a near-zero slack correction.
-        infl = perturb.scale_load(perturb.copy_frames(frames), 1.0 + loss / pd_total)
-        aux_to_m.write_matpower_m(infl, workdir / "dcin.m", case_name="c")
-        _, err, rc = pm_utils.solve_pf(
-            workdir / "dcin.m", workdir / "dc.m", pf_type="dc-opf"
-        )
-        if rc != 0:
-            return None, _fail(workdir, "dc-opf", i, err)
-        f2 = perturb.copy_frames(frames)  # original load, OPF dispatch
-        f2["gen"]["PG"] = aux_to_m.m_to_frames(workdir / "dc.m")["gen"]["PG"].values
-        aux_to_m.write_matpower_m(f2, workdir / "acin.m", case_name="c")
-        _, err, rc = pm_utils.solve_pf(
-            workdir / "acin.m", workdir / "ac.m", pf_type="ac"
-        )
-        if rc != 0:
-            return None, _fail(workdir, "ac-pf", i, err)
-        solved = aux_to_m.m_to_frames(workdir / "ac.m")
-        on = solved["gen"][solved["gen"].GEN_STATUS == 1]
-        loss = on["PG"].sum() - pd_total
-        info = {
-            "losses_mw": round(float(loss), 2),
-            "max_over_pmax": round(
-                float((on["PG"] - on["PMAX"]).clip(lower=0).max()), 3
-            ),
-            "vmin": round(float(solved["bus"]["VM"].min()), 4),
-            "vmax": round(float(solved["bus"]["VM"].max()), 4),
-        }
-    return solved, info
+    """Loss-aware DC OPF then AC PF for one condition. Returns (solved | None, info).
+
+    A one-item `solve_chain_batch`, so the single and batch paths cannot drift.
+    """
+    return solve_chain_batch(cfg, [(frames, workdir)])[0]
 
 
 def solve_chain_batch(cfg: CampaignConfig, items: list) -> list:
@@ -440,11 +543,11 @@ def solve_chain_batch(cfg: CampaignConfig, items: list) -> list:
     # here would have every worker overwrite the others' manifest and results.
     batch_dir = items[0][1].parent / f"_batch_{os.getpid()}"
 
-    def run_stage(stage, pf_type, prepare):
+    def run_stage(stage, pf_type, prepare, skip=frozenset()):
         """prepare(k) writes the input .m and returns (input, output) paths."""
         cases, idx = [], []
         for k in range(n):
-            if dead[k] is not None:
+            if dead[k] is not None or k in skip:
                 continue
             src, dst = prepare(k)
             cases.append({"input": str(src), "output": str(dst), "pf_type": pf_type})
@@ -477,7 +580,110 @@ def solve_chain_batch(cfg: CampaignConfig, items: list) -> list:
                     str(rec.get("status", "")) + "\n" + str(rec.get("error", "")),
                 )
 
-    for it in range(cfg.loss_iters + 1):
+    q_state, q_returns, q_vm, q_iters = {}, {}, {}, {}
+
+    def ac_frames(k):
+        """AC PF input for condition k: original load, DC OPF dispatch."""
+        frames, wd = items[k]
+        f2 = perturb.copy_frames(frames)
+        f2["gen"]["PG"] = aux_to_m.m_to_frames(wd / "dc.m")["gen"]["PG"].values
+        return f2
+
+    def ac_switched(it):
+        """AC PF with PV->PQ switching, repeated until no unit changes state.
+
+        Each pass is one batched Julia solve over the conditions still
+        switching. Writes each settled condition's `ac.m`. A condition that
+        does not settle within Q_MAX_ITER solves is marked failed.
+        """
+        base = {k: ac_frames(k) for k in range(n) if dead[k] is None}
+        for k in base:
+            q_state[k], q_returns[k], q_vm[k], q_iters[k] = {}, {}, None, 0
+        todo = set(base)
+        for _ in range(Q_MAX_ITER):
+            run_now = sorted(k for k in todo if dead[k] is None)
+            if not run_now:
+                break
+
+            def prep_q(k):
+                wd = items[k][1]
+                f_in = _q_switched(base[k], q_state[k], q_vm[k])
+                aux_to_m.write_matpower_m(f_in, wd / "qin.m", case_name="c")
+                return wd / "qin.m", wd / "qsol.m"
+
+            run_stage("ac-pf", "ac", prep_q, skip=set(range(n)) - set(run_now))
+            for k in run_now:
+                if dead[k] is not None:
+                    continue
+                wd = items[k][1]
+                solved_q = aux_to_m.m_to_frames(wd / "qsol.m")
+                q_iters[k] += 1
+                q_vm[k] = dict(
+                    zip(solved_q["bus"]["BUS_I"].astype(int), solved_q["bus"]["VM"])
+                )
+                if _q_step(base[k], solved_q, q_state[k], q_returns[k]) == 0:
+                    todo.discard(k)
+                    restored = _q_restore(base[k], solved_q, q_state[k])
+                    aux_to_m.write_matpower_m(restored, wd / "ac.m", case_name="c")
+        for k in todo:
+            if dead[k] is None:
+                dead[k] = _fail(
+                    items[k][1],
+                    "ac-pf-q",
+                    it,
+                    f"Q-limit switching did not settle in {Q_MAX_ITER} solves",
+                )
+
+    def prep_opf(k):
+        frames, wd = items[k]
+        if cfg.ac_opf_relax_q:
+            frames = dict(frames)
+            gen = frames["gen"].copy()
+            gen["QMAX"] = 9999.0
+            gen["QMIN"] = -9999.0
+            frames["gen"] = gen
+        aux_to_m.write_matpower_m(frames, wd / "opfin.m", case_name="c")
+        return wd / "opfin.m", wd / "ac.m"
+
+    def collect():
+        for k in range(n):
+            if dead[k] is not None:
+                continue
+            solved = aux_to_m.m_to_frames(items[k][1] / "ac.m")
+            q_src = solved
+            if cfg.ac_opf_relax_q:
+                # The OPF saw widened limits; score Q against the real ones.
+                true_gen = items[k][0]["gen"]
+                q_src = dict(solved)
+                q_src["gen"] = solved["gen"].assign(
+                    QMAX=true_gen["QMAX"].values, QMIN=true_gen["QMIN"].values
+                )
+            on = solved["gen"][solved["gen"].GEN_STATUS == 1]
+            loss[k] = float(on["PG"].sum() - pd_tot[k])
+            out[k] = solved
+            info[k] = {
+                "losses_mw": round(loss[k], 2),
+                "max_over_pmax": round(
+                    float((on["PG"] - on["PMAX"]).clip(lower=0).max()), 3
+                ),
+                "vmin": round(float(solved["bus"]["VM"].min()), 4),
+                "vmax": round(float(solved["bus"]["VM"].max()), 4),
+                "q_viol": _q_violations(q_src),
+                "q_lims": cfg.enforce_q_lims or (cfg.ac_opf and not cfg.ac_opf_relax_q),
+                "ac_opf": cfg.ac_opf,
+                "ac_opf_relax_q": cfg.ac_opf_relax_q,
+                "q_fixed": len(q_state.get(k, {})),
+                "q_solves": q_iters.get(k, 0),
+            }
+
+    if cfg.ac_opf:
+        # One OPF per condition. It includes losses, so it needs neither the
+        # DC OPF nor the loss iteration. `it` is read by run_stage on failure.
+        it = 0
+        run_stage("ac-opf", "ac-opf", prep_opf)
+        collect()
+
+    for it in range(0 if cfg.ac_opf else cfg.loss_iters + 1):
 
         def prep_dc(k):
             frames, wd = items[k]
@@ -492,29 +698,16 @@ def solve_chain_batch(cfg: CampaignConfig, items: list) -> list:
         run_stage("dc-opf", "dc-opf", prep_dc)
 
         def prep_ac(k):
-            frames, wd = items[k]
-            f2 = perturb.copy_frames(frames)  # original load, OPF dispatch
-            f2["gen"]["PG"] = aux_to_m.m_to_frames(wd / "dc.m")["gen"]["PG"].values
-            aux_to_m.write_matpower_m(f2, wd / "acin.m", case_name="c")
+            wd = items[k][1]
+            aux_to_m.write_matpower_m(ac_frames(k), wd / "acin.m", case_name="c")
             return wd / "acin.m", wd / "ac.m"
 
-        run_stage("ac-pf", "ac", prep_ac)
+        if cfg.enforce_q_lims:
+            ac_switched(it)
+        else:
+            run_stage("ac-pf", "ac", prep_ac)
 
-        for k in range(n):
-            if dead[k] is not None:
-                continue
-            solved = aux_to_m.m_to_frames(items[k][1] / "ac.m")
-            on = solved["gen"][solved["gen"].GEN_STATUS == 1]
-            loss[k] = float(on["PG"].sum() - pd_tot[k])
-            out[k] = solved
-            info[k] = {
-                "losses_mw": round(loss[k], 2),
-                "max_over_pmax": round(
-                    float((on["PG"] - on["PMAX"]).clip(lower=0).max()), 3
-                ),
-                "vmin": round(float(solved["bus"]["VM"].min()), 4),
-                "vmax": round(float(solved["bus"]["VM"].max()), 4),
-            }
+        collect()
 
     return [
         (None, dead[k]) if dead[k] is not None else (out[k], info[k]) for k in range(n)

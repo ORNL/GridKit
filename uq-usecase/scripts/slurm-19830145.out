@@ -1,0 +1,2 @@
+host=x1006c3s6b1n1 src=aleatoric2 dst=aleatoric2_ap08_qlim alphaP=0.8 rows=3780 workers=16 per=237 method=switch
+all workers done

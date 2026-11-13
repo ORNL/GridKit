@@ -28,7 +28,7 @@ RESULTS = WORK / "phase2_results.csv"
 
 NET_BINS = 5
 HOURS_PER_BIN = 4
-COMMIT_FRACTIONS = (0.0, 0.25, 0.50, 0.80)  # position within the feasible band
+COMMIT_FRACTIONS = (0.25, 0.75)  # position within the feasible band
 SEED = 0
 
 cfg = cp.CampaignConfig(work=WORK)

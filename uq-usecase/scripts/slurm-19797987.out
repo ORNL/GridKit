@@ -1,0 +1,2 @@
+host=x1001c3s1b0n0 src=faultscreen1 dst=faultscreen1_ap08_acopf alphaP=0.8 rows=1020 workers=16 per=64 method=acopf
+all workers done

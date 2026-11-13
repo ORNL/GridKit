@@ -87,7 +87,7 @@ Do **not** export it globally: that makes Julia load the wrong SuiteSparse.
 
 | file | lines | role |
 |---|---|---|
-| `py-utils/campaign.py` | 1138 | **the pipeline.** Config, stages, QoI, CCT, storage |
+| `py-utils/campaign.py` | 1277 | **the pipeline.** Config, stages, QoI, CCT, storage, PV→PQ Q-limit switching (§4.2a) |
 | `py-utils/m_to_case_utils.py` | 868 | `.aux`/`.dyr`/`.m` → `case.json`; device construction |
 | `py-utils/aux_to_m.py` | 381 | `.aux` ↔ MATPOWER `.m` frames |
 | `py-utils/perturb.py` | 327 | frame-level edits: load scaling, commitment, gen output |
@@ -96,8 +96,13 @@ Do **not** export it globally: that makes Julia load the wrong SuiteSparse.
 | `py-utils/slurm_utils.py` | 1058 | SLURM submit/monitor. **Only the submit half is used** |
 | `pm-solver/pm_solve.jl` | ~480 | Julia: DC OPF / AC PF, single and `--batch` |
 | `scripts/sweep_build.py` | — | design → `conditions.csv` + sbatch |
-| `scripts/sweep_worker.py` | 175 | run a slice of conditions; `--dc-alpha-p` sets the datacenter `alphaP` (default 0.2) |
-| `scripts/highp_rerun.sh` | 36 | SLURM: re-run the sited arm of a campaign at another `alphaP` (`sbatch highp_rerun.sh <src> <dst> <alphaP> <workers>`); baseline rows dropped |
+| `scripts/sweep_worker.py` | 181 | run a slice of conditions; `--dc-alpha-p` sets the datacenter `alphaP` (default 0.8); `--no-enforce-q-lims` turns PV→PQ switching off (on by default, §4.2a); `--enforce-q-lims` is still accepted; `--ac-opf` replaces DC OPF and AC PF with a PM.jl AC OPF (§4.2b); `--ac-opf-relax-q` is that route's no-Q-limit control |
+| `scripts/highp_rerun.sh` | 36 | SLURM: re-run the sited arm of a campaign at another `alphaP` (`sbatch highp_rerun.sh <src> <dst> <alphaP> <workers>`); baseline rows dropped. **Not valid for Q-limited campaigns**, where the baseline changes too |
+| `scripts/qlim_campaign.sh` | — | SLURM: full design (baseline and sited rows) at `alphaP` with `--enforce-q-lims`. `sbatch --account=scidac --partition=short qlim_campaign.sh <src> <dst> <alphaP> <workers>`. Used for `faultscreen1_ap08_qlim` (job 19797428) and `faultscreen1_qlim` (job 19797515). The fifth argument is the method: `switch` (default), `acopf` (§4.2b), or `acopf_noq` (control). Used for `faultscreen1_{ap08_,}acopf` (jobs 19797889/890, rerun 19797987/988) and `faultscreen1_{ap08_,}acopfnoq` (jobs 19798072/073, rerun 19798109/110) |
+| `scripts/qlim_pf_check.py` | — | Five-point check of §4.2a: unlimited vs switched AC PF (Q violations, units fixed, vmin, losses). Writes under `/scratch/.../qlim_check/` |
+| `scripts/qlim_dyn_check.py` | — | Pre-fault drift check on one sited point with the default disturbance, unlimited vs switched |
+| `scripts/acopf_pilot.py` | — | Five-point check of §4.2b: AC OPF vs switched PF (losses, dispatch change, slack at PMAX, Vmax, warm solve time, pre-fault drift). `--design --points --dc-alpha-p --dyn`. Writes under `/scratch/.../qlim_check/acopf_pilot/` (copy at `/kfs2/.../gridkit-campaigns/qlim_check/acopf_pilot/`) |
+| `scripts/qlim_compare.py` | — | Paired CCT comparison of two campaigns by tag: censoring, mean/max ΔCCT, uncensored-in-both subset. `python qlim_compare.py <first> <second>`; the output labels the first arm "unlimited" whatever it is, so read the directories |
 | `scripts/sweep_collect.py` | — | records → `results.parquet` |
 | `scripts/analyse_censored.py` | — | censored-aware stats + figures |
 | `scripts/alphap_frontier.py` | — | feasible-`alphaP` surface over buses / sizes / faults |
@@ -115,6 +120,10 @@ Do **not** export it globally: that makes Julia load the wrong SuiteSparse.
 | `scripts/ida_pvpq.py` | 114 | Driver for `ida_pvpq.jl` (test 2): builds cases with `pm_fault_check.build_case` (warm and flat starts, buses 1, 148, 94, 181, none × `MW_GRID`), calls `pm_utils.resolve_julia()`, prints P/S/X tables next to IDA IC status. Output `ida_zoom/pvpq/results.csv` |
 | `scripts/ida_mechanism.py` | 87 | Mechanism tests on `h1879` (`ida_ic_issue.md` §7 item 6), event mode, 913 runs via `ida_zoom.run_one`: `nodc` (`dc_zero`, all 200 buses), `mw` (MW ∈ {25…200} × alphaP ∈ {0.2, 0.8, 1.0} for the 23 buses failing at 1.0), `xsweep` (X ∈ {0.5…0.01} × alphaP ∈ {0.2, 0.8}). Output `ida_zoom/mechanism/results.csv`. Run `python ida_mechanism.py --workers 16` (SLURM ~1 min) |
 | `scripts/ida_seed_test.py` | 122 | IDA seed test (`ida_ic_issue.md` §7 item 7): solves fault-on AC PF with `pm_fault_check.build_case` and `pm_utils.run_pm_solve_batch` (PM.jl) at buses 64, 146, 1, 94 and datacenter 0 / 200 MW; writes the solved bus voltages into a copy of `case.json` as the bus `init` (the IDA t = 0 guess, `Bus::initialize`); runs `ida_zoom.run_one` in `closed` mode with the original and seeded guess. Output `ida_zoom/seed_test/results.csv`. Run `python ida_seed_test.py` on the current exclusive compute node (check with `hostname`; it changes from day to day), never the login node (~1 min) |
+| `scripts/failure_audit.py` | 111 | Tally of `solve_failed` by stage and reason, and of `sim_failed` by `sim_rc` and class (IDACalcIC vs IDASolve, read from scratch `sim.log`). `python failure_audit.py <campaign> [--ref <campaign>] [--out <file>]`; `--ref` splits the sim-failed overlap. Issue doc §10.11 |
+| `scripts/dispatch_margin.py` | 63 | Committed thermal PMAX minus `net_mw` per dispatch (net_mw includes the datacenter MW), to test DC OPF infeasibility. `python dispatch_margin.py <campaign>` |
+| `scripts/dispatch_pf_probe.py` | 82 | Solves four `solve_failed` operating points from `faultscreen1` with Q limits off and on, logging each Julia batch pass. Writes only to scratch `dispatch_probe/`. `python dispatch_pf_probe.py` |
+| `scripts/fold_check_h1879.py` | 72 | Checks h1879 sim-failed rows against the fixed-state fold sets (`ida_zoom/fixed_state/alpha_sweep.csv`, IDACalcIC at 200 MW). Assumes the sweep used the same datacenter bus (not checked). `python fold_check_h1879.py` |
 | `scripts/check_docs.py` | — | validates work-notes tables, fences, anchors, links |
 
 `slurm_utils.generate_sim_script` is **not** used: it xargs `DynamicSimulation`
@@ -233,12 +242,86 @@ workers share the campaign scratch on Lustre and a plain write interleaves.
 | `merit_order(cfg)` | nuclear must-run first, then by `c1` |
 | `commitment_band(cfg, net_mw, order)` | `(n_min, n_max)`; necessary condition only |
 | `commit_n(cfg, frames, n, order)` | commits the `n` cheapest; non-dispatchables stay on |
-| `solve_chain(cfg, frames, workdir)` | DC OPF → AC PF with loss loop, **one condition** |
-| `solve_chain_batch(cfg, items)` | same, **many conditions in lockstep**, 2·(loss_iters+1) Julia launches total |
+| `solve_chain(cfg, frames, workdir)` | DC OPF → AC PF with loss loop, **one condition**; a one-item call to `solve_chain_batch` |
+| `solve_chain_batch(cfg, items)` | same, **many conditions in lockstep**, 2·(loss_iters+1) Julia launches total; with `enforce_q_lims` each AC step is the switching loop of §4.2a |
 | `solve_point` / `solve_points_batch` | the above plus case construction; return `(case, rec)` |
 
 `solve_*` returns `case is None` on dispatch failure — **callers must check**,
 and a failed case writes no `ac.m`, so nothing stale can be picked up.
+
+### 4.2a Reactive limits: PV-to-PQ switching
+
+On by default: `CampaignConfig(enforce_q_lims=None)` resolves to on unless `ac_opf`. Pass `enforce_q_lims=False` or
+`sweep_worker.py --no-enforce-q-lims` to reproduce the unlimited campaigns exactly.
+The physics, the OPF/PF split and the measured effect are in
+[plan §10](datacenter_load_uq_plan.md#reactive-limits-in-the-ac-pf-pv-to-pq-switching)
+and [pilot §4.2a](datacenter_pilot_report.md#42a-reactive-limits-pv-to-pq-switching).
+This section is the code.
+
+Module-level helpers (before `solve_chain`), constants `Q_TOL_MVAR` 0.1,
+`V_TOL_PU` 1e-4, `Q_MAX_ITER` 30, `Q_MAX_RETURNS` 2:
+
+| function | does |
+|---|---|
+| `_q_units(base)` | in-service, non-slack gens → `{gen row: (bus, QMAX, QMIN, VG)}` |
+| `_q_switched(base, state, vm)` | copy of the frames with each switched unit moved into its bus: `PD -= PG`, `QD -= Qfix`, `GEN_STATUS = 0`. Bus becomes PQ (type 1) unless an in-service unit still holds it (type 2). `vm` warm-starts the voltages |
+| `_q_step(base, solved, state, returns)` | updates `state` in place from one solved case. A violating unit is fixed at its limit (`("max", QMAX)` or `("min", QMIN)`). A fixed unit whose voltage passes its setpoint returns to PV, counted in `returns`, at most `Q_MAX_RETURNS` times. Returns the number of changes |
+| `_q_restore(base, solved, state)` | the solved frames, with bus `PD`/`QD`/`BUS_TYPE` from `base`, and each switched unit back in service with `PG` from `base` and `QG = Qfix` |
+
+The batch driver is the closure `ac_switched(it)` inside `solve_chain_batch`. It
+replaces the single `run_stage("ac-pf", ...)` when the flag is on:
+
+1. `ac_frames(k)`: original load with the DC OPF `PG`. Same start as the unswitched path.
+2. Up to `Q_MAX_ITER` passes. Each pass runs `_q_switched`, writes `qin.m`, runs one
+   batched `run_stage("ac-pf")` over the conditions still switching, reads `qsol.m`,
+   then `_q_step`. A condition with no changes is done: `_q_restore` writes `ac.m`.
+3. A condition still changing at the cap is marked dead, `fail_reason` `ac-pf-q`.
+
+Per-condition state: `q_state[k]` (fixed units), `q_returns[k]`, `q_vm[k]` (warm
+start), `q_iters[k]` (AC solves in the last loss pass). These feed the record fields
+`q_lims`, `q_fixed` and `q_solves`. `run_stage` gained `skip=` so that settled and
+dead conditions are not re-run.
+
+`solve_chain` is now a one-item call to `solve_chain_batch`, so there is one
+implementation.
+
+**Invariant.** The dynamic build reads only the final `ac.m`
+(`build_case_from_m`, §4.3). A switched unit is therefore never absent from `ac.m`:
+it is restored in service at its fixed `QG`. `qin.m` and `qsol.m` are intermediate
+(scratch) files only.
+
+### 4.2b AC OPF path (PM.jl), second Q-limit route
+
+Opt-in: `CampaignConfig(ac_opf=True)`, `sweep_worker.py --ac-opf`, or launcher
+method `acopf`. It replaces the whole DC OPF plus AC PF chain with one PM.jl
+`ac-opf` solve. The reasoning and the pilot are in
+[plan §10](datacenter_load_uq_plan.md#ac-opf-as-a-second-q-limit-route-pmjl) and
+[pilot §4.2b](datacenter_pilot_report.md#42b-ac-opf-as-a-second-q-limit-route).
+
+Flow in `solve_chain_batch`, when `cfg.ac_opf` is set:
+
+1. `prep_opf(k)` writes the original frames (load, commitment, no switching) to
+   `opfin.m`. `run_stage("ac-opf", "ac-opf", prep_opf)` makes one batched
+   `pm_solve.jl --pf-type ac-opf` launch. `solve_ac_opf` carries `QMIN`/`QMAX` as
+   constraints. `write_solved_m` returns `ac.m` with only `Vm`/`Va` and `Pg`/`Qg`
+   patched in.
+2. `collect()` reads `ac.m` and fills `losses_mw` (in-service PG minus total PD),
+   `max_over_pmax`, `vmin`, `vmax`, and `q_viol`.
+3. The loss loop runs zero times (`range(0)`), because AC OPF includes losses.
+
+`q_viol` counts in-service non-slack units outside their limits by more than
+`Q_TOL_MVAR`, using the limits the solve used. In the relaxed control the solve used
+±9999, so `collect()` scores against the original limits from the frames
+(`q_src`). Records carry `ac_opf`, `ac_opf_relax_q`, and `q_lims`, which is true for
+switched campaigns and for AC OPF without relaxation.
+
+**Dispatch differs.** AC OPF re-dispatches P, unlike the DC OPF path. On the five
+pilot points the summed change was about 280 MW, and one unit moved 53 MW. Rows with
+no datacenter also shift. So an AC OPF campaign differs from a switched campaign in
+dispatch as well as Q. The `acopf_noq` control isolates the Q part (§4.2b in the
+pilot report).
+
+**Pitfall.** Do not read `sacct` COMPLETED as success for this path (§6).
 
 ### 4.3 Case shaping
 
@@ -281,12 +364,15 @@ disk is how resume works.
 
 | knob | default | note |
 |---|---|---|
-| `dc_alpha_p` | `0.2` | datacenter constant-power share; `alphaI` takes the remainder, so the shipped mix is `P/I/Z = 20/80/0`. `1.0` is the intended physics but is not simulable at every bus |
+| `dc_alpha_p` | `0.8` | datacenter constant-power share; `alphaI` takes the remainder, so the shipped mix is `P/I/Z = 80/20/0` (the first campaigns ran `20/80/0`, `alphaP` 0.2). `1.0` is the intended physics but has more IDA initial-condition folds (issue doc §10.2) |
 | `cct_max` | `0.5` | censoring cap |
 | `fault_bus`, `t_on`, `t_off`, `tmax` | 66, 1.0, 1.1, 10.0 | build the default `cfg.disturbance`; a sweep overrides per sample |
 | `min_thermal` | `8` | commitment floor |
 | `reserve` | `1.10` | adequacy margin |
 | `loss_iters` | `1` | DC OPF loss iterations |
+| `enforce_q_lims` | `None` | PV→PQ switching of generator Q limits in the AC PF (§4.2a). `None` means on unless `ac_opf`. `False` reproduces the unlimited campaigns |
+| `ac_opf` | `False` | PM.jl AC OPF replaces DC OPF and AC PF; loss loop skipped (§4.2b). Mutually exclusive with `enforce_q_lims` (ValueError) |
+| `ac_opf_relax_q` | `False` | with `ac_opf`: QMIN/QMAX widened to ±9999 on the OPF input only, as a control. Requires `ac_opf` (ValueError otherwise) |
 | `keep_timeseries` | `True` | write `mon.parquet` |
 
 `cfg.work` is a legacy alias for `cfg.scratch`.
@@ -308,12 +394,16 @@ Each of these has already caused a real failure here.
 | **Aggregating over a swept dimension** | omitting `fault_bus` from a `groupby` key made `max()` pick the best fault location, so every frontier read `1.0` and the real effect vanished | put every swept dimension in the key |
 | **Monitors default to almost nothing** | `"mon": []` on every bus | `su.enable_monitors` |
 | **Event duplicate timestamps** | two rows at the same `t`; `np.gradient` → `inf` | `drop_duplicates(subset="t")`, done once at parquet write |
-| **`dc_alpha_p` on `cct_check` records** | `cct_check.py` sets `alphaP` by editing the case dict, so the record field `dc_alpha_p` stays at the config default 0.2 for both arms; the true value is in `alpha_p_dc` | read `alpha_p_dc` for `cct_check` / `cct181`; `dc_alpha_p` for the `highp_rerun` campaigns |
+| **`dc_alpha_p` on `cct_check` records** | `cct_check.py` sets `alphaP` by editing the case dict, so the record field `dc_alpha_p` stays at the config default for both arms (0.2 when `cct_check` ran; 0.8 now); the true value is in `alpha_p_dc` | read `alpha_p_dc` for `cct_check` / `cct181`; `dc_alpha_p` for the `highp_rerun` campaigns |
 | **`;;` at the end of gen rows in `ac.m`** | the base `ac.m` of `faultscreen1_ap1` has `;;` on gen rows; PowerModels fails with `matrix parsing error, inconsistent number of items in each row` on every case | `build_case` in `pm_fault_check.py` replaces `;;` with `;` before writing |
 | **Docstring before `using` in a `.jl` script** | Julia errors `LoadError: cannot document the following expression: using PowerModels`; the Python caller raises `RuntimeError` with that text | write the header as `#` comments (as in `ida_pvpq.jl`) |
 | **ZIP mix is `alphaI = 1 − alphaP`, so `alphaZ` is always 0** | `split_out_datacenter` callers in `campaign.py` hard-code `alpha_i=1.0 - cfg.dc_alpha_p`; `dc_alpha_p` 0.8 gives 80/20/0, 0.7 gives 70/30/0, and 70/20/10 is not reachable | needs a new `dc_alpha_i` parameter (not yet added); `alphaZ = 1 − alphaI − alphaP` is derived in GridKit `LoadZIP` |
 | **16 workers started together race on `seed.m`** | `faultscreen1_ap08` worker 9 crashed at `CampaignConfig` init with `FileNotFoundError: seed.m` while other workers were starting; 43 conditions were missing | rerun the crashed worker alone with its `--start`/`--count` (existing records are skipped); check `records` count against `conditions.csv` after every `highp_rerun.sh` job |
 | **`\|` inside a markdown table cell** | breaks the table even in backticks | avoid in docs |
+| **Dropping a switched unit from the final `ac.m`** | `build_case_from_m` drops every gen with `GEN_STATUS = 0`, so the machine leaves the dynamic case and its inertia and dynamics change with no error | `_q_restore` returns every unit to service at its fixed `QG`. The restore check: 49 gens, 33 in service, same `PD`/`QD` as the unlimited case |
+| **Loop variable read in a skipped loop** | `run_stage` reads the enclosing `it` on its failure path. The AC OPF branch skips the loop that assigns `it`, so 3 of 16 workers per campaign crashed with `NameError` and 188 of 1020 rows were missing. `sacct` still said COMPLETED | assign `it = 0` before the branch. Check the record count against `conditions.csv` and grep `slurm/*.log` for `Traceback`, not `sacct` |
+| **Control scored against its own widened limits** | the relaxed AC OPF solve writes ±9999 into `ac.m`, so `q_viol` read zero at every point | `collect()` scores against the original frames (`q_src`). Records from before this fix are invalid for the control, and the control was rerun |
+| **`highp_rerun.sh` on a Q-limited campaign** | it drops the baseline rows, but with Q limits the baseline solution changes too (2 → 0 violations), so the arms are not comparable | use `qlim_campaign.sh`, which keeps every row |
 
 ---
 
@@ -335,6 +425,17 @@ Cheapest first. All are things that have actually caught bugs here.
    single-worker tests. Run ≥2 workers before trusting a sweep.
 6. **Markdown**: tables and fences validate with the snippet in
    `work-notes/` history; broken tables render silently wrong.
+7. **Q-limit switching** (only when `enforce_q_lims` is touched): run
+   `scripts/qlim_pf_check.py` (five points, unlimited vs switched: Q violations,
+   units fixed, vmin, losses) and `scripts/qlim_dyn_check.py` (pre-fault drift with
+   the default disturbance). Known-good 2026-11-09: switched violations 0 at all five
+   points; pre-fault drift 1.3e-6 unlimited, 2.2e-6 switched.
+8. **AC OPF path** (only when `ac_opf` or `ac_opf_relax_q` is touched): run
+   `scripts/acopf_pilot.py` (five points, AC OPF vs switched). Then check that the
+   `acopf_noq` control shows `q_viol` above zero against the real limits. Known-good
+   2026-11-09: 0 violations at all points with limits, and 952 of 952 control rows
+   violate (max 16 Mvar). Finally confirm the record count equals `conditions.csv`
+   and that `slurm/*.log` has no `Traceback`.
 
 ---
 

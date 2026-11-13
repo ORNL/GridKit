@@ -1,0 +1,2 @@
+host=x1002c4s2b1n1 src=aleatoric1 dst=aleatoric1_ap08 alphaP=0.8 sited=800 workers=16 per=50
+all workers done

@@ -14,7 +14,8 @@ summaries.
 (and 1.0) campaigns are explained by working hypothesis H1 (§6, §11): a fault-on
 **fold** (saddle-node, "nose") of the network algebra. There is no fault-on equilibrium
 on the branch reached from the pre-fault state, so IDA has no consistent initial
-condition to find. The hunt results are in §10, the hypothesis and its tests in §11, and
+condition to find. The hunt results are in §10, the campaign failure diagnosis (dispatch-stage and
+sim-failed rows) in §10.11, the hypothesis and its tests in §11, and
 every script and output path in §12. Terms are defined in §9.
 
 **Verified (tool output, §10):**
@@ -24,6 +25,9 @@ every script and output path in §12. Terms are defined in §9.
   (buses 2, 134, 142 at 0.8) fold at 250 MW: integration failures near a fold.
 - **Cross-dispatch (§10.8):** the same exact match holds on h2151 (15 folds = 15 IDACalcIC)
   and h4770 (16 = 16). Only the IDA IC failures are tested this way.
+- Q limits (§10.10): PV→PQ switching changes CCT by 14 ms or less among uncensored rows at 0.8,
+  and AC OPF with Q limits changes it by −0.002 s on average against the Q-relaxed control.
+  Neither changes the fold picture; AC OPF's large shift against switching comes from re-dispatch.
 - Folds grow with alphaP and with MW, and shrink as the datacenter moves towards
   constant impedance (alphaZ). Fold sets are nested in all three cases.
 - Bus 148 folds at 0.8 and 200 MW but not with constant impedance.
@@ -44,7 +48,7 @@ high-P modelling in the first place.
 folds on the continuation branch. The PF root may sit on another branch; not checked.
 (ii) The IDASolve failures are not explained by H1. The three at 0.8 on h1879 are
 near-folds at 200 MW (folds at 250 MW). Bus 117 fails IDASolve on h2151 and h4770 where
-it is not a fold at all (§10.8). The user has asked not to chase these. (iii) The X = 0.01 convention and the lack of an exciter limiter in the modelremain caveats (§10.9).
+it is not a fold at all (§10.8). The user has asked not to chase these. (iii) The X = 0.01 convention and the lack of an exciter limiter in the model remain caveats (§10.9).
 
 ## 1. The problem
 
@@ -197,8 +201,9 @@ missing equilibrium. Hypotheses 1 and 2 predict different things: 1 predicts fai
 at fault-on points that PF also rejects; 2 predicts failures at points PF accepts.
 
 **Not established:**
-- Whether the failures at buses 1 and 148 are physical or a PF setup issue. PM.jl does
-  not enforce Q limits, and those buses are infeasible in PF even at 25 MW.
+- Whether the failures at buses 1 and 148 are physical or a PF setup issue. The AC PF
+  path does not enforce Q limits (the AC OPF path does, §10.10), and those buses are infeasible
+  in PF even at 25 MW.
 - Whether the 0.8 failures are IDA defects or physical loadability limits. Now
   supported as physical (H1, §10–§11), but not proven: the fold scan and the IDA sweep
   agree at 200 MW on h1879, and on h2151 and h4770 as well (§10.8).
@@ -555,6 +560,142 @@ continuation reaches the target and the bus is not folded.
 - Exciter and field limiters (SexsPti) and OEL/UEL are not modelled in the fold tests.
 - Q limit tolerance 0.1 MVAr and a 30-iteration cap are assumed harmless (not varied).
 
+### 10.10 Campaign effect of Q limits: switched PF and AC OPF *(measured 2026-11-09)*
+
+Question: over the full datacenter design, do reactive limits change CCT, and does the
+route used to enforce them matter? Two routes were run: PV→PQ switching inside AC PF
+(§4.2a of the pilot report) and PM.jl AC OPF with Q limits as constraints (§4.2b). A
+no-Q-limit control runs the same AC OPF with limits widened to ±9999. Paired by tag with
+`scripts/qlim_compare.py`. CCT is capped at 0.5 s, so 70 to 80 % of ok rows are censored.
+
+Status counts (ok / sim_failed / solve_failed), 1020 rows per campaign:
+
+| campaign | alphaP | ok / sim_failed / solve_failed |
+|---|---|---|
+| unlimited, `faultscreen1` | 0.2 | 892 / 77 / 51 |
+| switched PF, `faultscreen1_qlim` | 0.2 | 864 / 71 / 85 |
+| AC OPF, `faultscreen1_acopf` | 0.2 | 876 / 59 / 85 |
+| AC OPF, Q relaxed (control), `faultscreen1_acopfnoq` | 0.2 | 893 / 59 / 68 |
+| switched PF, `faultscreen1_ap08_qlim` | 0.8 | 767 / 168 / 85 |
+| AC OPF, `faultscreen1_ap08_acopf` | 0.8 | 779 / 156 / 85 |
+| AC OPF, Q relaxed (control), `faultscreen1_ap08_acopfnoq` | 0.8 | 788 / 164 / 68 |
+
+*(measured)* **Switched PF vs unlimited.** At alphaP 0.8, 422 paired rows, 16 changed
+(14 lower), mean ΔCCT −0.0007 s over 119 rows uncensored in both, largest change 14 ms.
+At alphaP 0.2, 524 paired rows, 16 changed, mean −0.0008 s. Solve failures rise from 51
+to 85 at 0.2 (28 ok rows lost, mostly at hours 204, 711, 2151, 5781, 6483, 7311, 7536).
+All 85 at 0.8 are `LOCALLY_INFEASIBLE`. Which stage raises them is not yet checked.
+
+*(measured)* **AC OPF vs switched PF.** At alphaP 0.2, 524 paired rows, 118 changed,
+mean +0.022 s, largest +0.32 s. At alphaP 0.8, 427 paired, 116 changed, mean +0.027 s.
+Baseline rows (no datacenter) also shift, mean +0.006 s over 40 changed rows, so the
+shift does not come from the datacenter load.
+
+*(measured)* **Q limits inside AC OPF (control).** The control reads 952 of 952 points
+violating the real limits (max 16 Mvar), against 0 of 935 for the Q-limited AC OPF. The
+control is therefore really unlimited. Relaxed minus limited: mean −0.002 s over 536
+rows at alphaP 0.2 and 433 at 0.8, range −0.106 to +0.014 s. Over 106 rows uncensored in
+both, the mean is −0.011 s. The sign is mixed.
+
+*(working hypothesis)* Most of the AC OPF shift is the re-dispatch (higher losses,
+slack at `PMAX`), not the Q limits. The Q-limit effect is small on this case, like the
+switched PF. The baseline shift supports this. The mechanism (slack governor response,
+starting point) is not isolated.
+
+*(working hypothesis)* The unlimited campaigns are not materially biased for CCT on this
+case. Switching adds solve failures, so the Q-limited result is a separate check, not a
+replacement. Limits here are enforced only at PF and OPF; OEL/UEL are not modelled.
+
+**Superseded runs (kept for traceability, not in the results above).** `faultscreen1_acopf`
+and `faultscreen1_ap08_acopf` first ran as 19797890 and 19797889. Three of 16 workers
+crashed each with a `NameError` (the `it` fix), so the first run had only 832 rows each.
+`faultscreen1_acopfnoq` and `faultscreen1_ap08_acopfnoq` first ran as 19798073 and
+19798072, and the first run scored `q_viol` against the widened limits (always zero). Both
+were deleted and rerun. `sacct` reports COMPLETED for the failed runs too, so check the
+record counts and the `slurm/*.log` files, not `sacct` alone.
+
+### 10.11 Diagnosis of dispatch-stage and sim-failed rows, fault sweep *(measured 2026-11-10)*
+
+Question: what causes the 85 `solve_failed` rows and the 168 `sim_failed` rows in the
+fault sweep `faultscreen1_ap08_qlim` (alphaP 0.8, switched PF)? Scripts:
+`failure_audit.py`, `dispatch_margin.py`, `dispatch_pf_probe.py` and `fold_check_h1879.py`
+(§12 rows 28–31). Outputs are in `gridkit-campaigns/failure_audit/`.
+
+**Dispatch-stage failures (85 rows, all `LOCALLY_INFEASIBLE`).** These come from five
+(operating point, datacenter bus) cases of 17 fault rows each. Solve failures do not
+depend on alphaP, because DC OPF and AC PF run before the ZIP split.
+
+| hour, n_commit | dc bus | stage | rows | committed thermal PMAX − need (MW) | Q limits off (probe) | switched |
+|---|---|---|---|---|---|---|
+| 7536, 18 | 108 and 148 | DC OPF | 34 | −10.2 | fails | fails |
+| 6483, 21 | 108 | AC PF | 17 | +199.8 | fails | fails |
+| 6483, 21 | 148 | AC PF | 17 | +199.8 | ok | fails |
+| 7536, 23 | 108 | AC PF | 17 | +521.4 | ok | fails |
+
+*(measured)* **DC OPF, 34 rows.** Committed thermal PMAX is 913.3 MW and the dispatch needs
+923.5 MW. The need includes the 200 MW datacenter, because `net_mw` is taken after
+`add_datacenter`. With this commitment, the thermal units cannot serve the load, so DC OPF
+has no feasible point. This is a commitment shortfall from the merit-order `n_commit`, not
+a solver fault. *(not tested)* Committing one more unit would probably clear it. Line limits
+are not in this test.
+
+*(measured)* **AC PF, the fail with Q limits off.** The point 6483/21/108 fails with
+limits off, in the unlimited campaign as well. Its capacity margin is +199.8 MW, so
+capacity is not the cause. The cause is not identified. *(working hypothesis)* At this
+operating point the voltage and reactive state has no solution from the solver's start.
+
+*(measured)* **AC PF, the two fails only with switching on.** The probe logs every Julia
+batch. Switching runs in two passes: pass 1 solves with limits off (3 cases, 2 converge);
+pass 2 re-solves the cases that had violations with those units set to PQ at their limits
+(2 cases, 0 converge). The two extra failures are therefore in pass 2. `LOCALLY_INFEASIBLE`
+is a statement about the local solver from its start point. It is not proof that no
+solution exists. The stage label `ac-pf@0` does not say which pass failed. The probe log
+does.
+
+**Sim-failed rows (168 at alphaP 0.8).** The record fields are the same for every row
+(`sim_rc` = 1, `sim_errors` = 3), so the mechanism is read from each run's `sim.log`.
+Of the 168, 160 are `IDACalcIC` (158 `IDA_CONV_FAIL`, 2 line search) and 8 are `IDASolve`.
+All are at 200 MW. Split by whether the same run also fails at alphaP 0.2 switched
+(`faultscreen1_qlim`):
+
+| group | rows | IDACalcIC | IDASolve | dc bus 108 / 148 | fault bus = datacenter bus |
+|---|---|---|---|---|---|
+| fails at alphaP 0.2 and 0.8 | 71 | 71 | 0 | 33 / 38 | 35 (108: 17, 148: 18) |
+| fails at alphaP 0.8 only | 97 | 89 | 8 | 62 / 35 | 0 |
+
+Both groups cover the same 18 (hour, n_commit) operating points. All 97 alphaP-0.8-only
+rows are ok at alphaP 0.2 switched. The 71 shared rows are no-outcome at both alphaP
+levels.
+
+*(measured)* **The 8 `IDASolve` failures** are all at dc bus 108. Fault buses are 148 (6)
+and 8 (2). Fault-on is at t = 1.0 s and the failure times are t = 1.0005–1.021 s, that
+is 0.5–21 ms after fault-on, so they fail at the fault event. Whether they share the fold
+mechanism is not checked.
+
+*(measured)* **The alphaP-0.8-only group against the h1879 folds** (`fold_check_h1879.py`).
+At h1879 there are 20 sim-failed rows (n_commit 26 and 37, both datacenter buses). Eleven are
+0.8-only. All 11 have a fault bus in the h1879 alphaP-0.8 fold set {1, 8, 141, 148}. No ok
+datacenter run at alphaP 0.8 has its fault bus in that set (no falsifier). This is
+consistent with H1 (§11). It is one dispatch, and the sweep's datacenter bus is not
+recorded in `alpha_sweep.csv`, so the check assumes the same placement.
+
+*(measured)* **The 71 shared rows** are not explained by the fold sets. 35 have the fault at
+the datacenter bus. At h1879 the shared rows include faults at 108 and 118, which are in neither h1879 fold set
+(alphaP 0.2 {64, 141, 146}; alphaP 0.8 has 18 buses, none of them 108 or 118). A bolted
+fault on the bus that holds the constant-power load may be a separate case.
+*(educated guess)* This is not tested.
+
+**Not checked.** Why 6483/21/108 fails with limits off. Whether committing one more unit
+clears the DC OPF shortfall at 7536/18. Whether the 8 `IDASolve` failures are folds. Whether
+the 71 shared rows are folds at alphaP 0.2 at their own dispatch. The fold check beyond
+h1879. These are follow-up items, not part of the default result.
+
+**What it means for the pilot.** At alphaP 0.8 the fault sweep has 253 of 680
+datacenter runs with no outcome (97 + 71 + 85). At 0.2 switched it has 156 (71 + 85).
+The 97 extra no-outcome runs at 0.8 fit H1 on the one dispatch checked (11 of 11 at
+h1879). The other 35 operating points are not checked, so the mechanism for all 97 is
+not established. The pilot report keeps them as no outcome (§7.0).
+
 ## 11. Hypothesis H1 and what it means
 
 ### 11.1 Statement
@@ -658,18 +799,38 @@ or they oversubscribe.
 | 13 | Hunt: constant-Z | `ida_hunt_matrix.sh --loads zconst` | `hunt/h1879/zconst.csv` | 19796642 | §10.7 |
 | 14 | Hunt: h2151 dispatch | `ida_hunt_matrix.sh --dispatch h2151` | `hunt/h2151/h2151.csv` | 19796643 | §10.6 |
 | 15 | Hunt: h4770 dispatch | `ida_hunt_matrix.sh --dispatch h4770` | `hunt/h4770/h4770.csv` | 19796644 | §10.6 |
-| 16 | Hunt smoke test | `ida_hunt_matrix.py` (login node) | `hunt/h1879/smoke.csv` | none | §10.1 |
+| 16 | Hunt smoke test | `ida_hunt_matrix.py` | `hunt/h1879/smoke.csv` | none | §10.1 |
 | 17 | Cross-dispatch IDA check | `ida_xdisp.sh` (calls `ida_zoom.py --stage bus`) | `xdisp/`, `xdisp_{h1879,h2151,h4770}/results.csv`; log `xdisp/slurm_19797339.log` | 19797339 | §10.8 (done) |
+| 18 | Q-limited campaign, alphaP 0.2 (PV→PQ switching in AC PF) | `scripts/qlim_campaign.sh <src> <dst> 0.2 <workers> switch` | `gridkit-campaigns/faultscreen1_qlim/` | 19797515 (confirmed `COMPLETED`) | §10.10, pilot §4.2a |
+| 19 | Q-limited campaign, alphaP 0.8 | `scripts/qlim_campaign.sh <src> <dst> 0.8 <workers> switch` | `gridkit-campaigns/faultscreen1_ap08_qlim/` | 19797428 (confirmed) | §10.10, pilot §4.2a |
+| 20 | AC OPF (PM.jl) campaign, alphaP 0.2 | `scripts/qlim_campaign.sh ... 0.2 <workers> acopf` | `gridkit-campaigns/faultscreen1_acopf/` | 19797988 (confirmed; rerun, see §10.10 superseded note) | §10.10, pilot §4.2b |
+| 21 | AC OPF campaign, alphaP 0.8 | `scripts/qlim_campaign.sh ... 0.8 <workers> acopf` | `gridkit-campaigns/faultscreen1_ap08_acopf/` | 19797987 (confirmed; rerun) | §10.10, pilot §4.2b |
+| 22 | AC OPF no-Q-limit control, alphaP 0.2 | `scripts/qlim_campaign.sh ... 0.2 <workers> acopf_noq` | `gridkit-campaigns/faultscreen1_acopfnoq/` | 19798110 (confirmed; rerun) | §10.10 |
+| 23 | AC OPF no-Q-limit control, alphaP 0.8 | `scripts/qlim_campaign.sh ... 0.8 <workers> acopf_noq` | `gridkit-campaigns/faultscreen1_ap08_acopfnoq/` | 19798109 (confirmed; rerun) | §10.10 |
+| 24 | AC OPF pilot, five points, with `--dyn` | `scripts/acopf_pilot.py --design ... --dyn` | `gridkit-campaigns/qlim_check/acopf_pilot/` (also in scratch) | not recorded | pilot §4.2b |
+| 2[56] | Switching PF check, five points | `scripts/qlim_pf_check.py` | not recorded | not recorded | pilot §4.2a |
+| 2[56] | Pre-fault drift check | `scripts/qlim_dyn_check.py` | not recorded | not recorded | pilot §4.2a |
+| 27 | Paired CCT comparison (used for 18–23) | `scripts/qlim_compare.py <first> <second>` | stdout; rerun on the directories above | none | §10.10 |
+| 28 | Dispatch-stage and sim-failed tally (ref overlap, log classification) | `scripts/failure_audit.py <campaign> [--ref <campaign>] [--out <file>]` | `failure_audit/ap08_qlim_vs_qlim.txt`, `failure_audit/qlim02.txt`, `failure_audit/unlimited02.txt` | none (reads records and scratch `sim.log`) | §10.11 |
+| 29 | Committed-capacity margin per dispatch | `scripts/dispatch_margin.py <campaign>` | `failure_audit/dispatch_margin_ap08_qlim.txt` | none | §10.11 |
+| 30 | Switching probe, four dispatches, per-batch Julia log | `scripts/dispatch_pf_probe.py` | `failure_audit/dispatch_pf_probe.txt` (cases in scratch `dispatch_probe/`) | none (one process on compute node `x1001c0s1b0n0`) | §10.11 |
+| 31 | Sim-failed rows at h1879 against the fixed-state fold sets | `scripts/fold_check_h1879.py` | `failure_audit/fold_check_h1879.txt` | none (reads `ida_zoom/fixed_state/alpha_sweep.csv`) | §10.11, §11 |
+
+Rows 18–23 are campaign outputs in `/kfs2/projects/scidac/scidac-data/`. Rows 28–31 read
+the same store. The superseded runs (19797889/890, 19798072/073) are
+listed in §10.10, not in this table. Rows 25–26 have no recorded output location.
 
 Earlier analysis scripts (§2–§5): `ida_discriminate.py`, `ida_closed_check.py`,
 `ida_closed_variants.py`, `ida_mw_balanced.py` (also row 9), `ida_fixed_state_test.py`
 (core algebra and continuation; used by rows 7–9 and the hunt).
 
-**Reproduce a row.** Run `sbatch scripts/<script>.sh` for rows with a wrapper, or
-`python scripts/<script>.py` on the login node for small runs. For the hunt:
+**Reproduce a row.** Run `sbatch scripts/<script>.sh` for rows with a wrapper. Python
+scripts run through SLURM too, or on the compute node for 1–2 process work. Never on the
+login node. For the hunt:
 `sbatch scripts/ida_hunt_matrix.sh --dispatch h1879 --modes unlim qlim --mw 200 --tag <name>`.
 Check the output CSVs listed above against the tables in §10.
 
 **Caveat on job IDs.** The job IDs above come from session notes. They do not appear in
 the log files under `ida_zoom/`, so confirm each one with `sacct` before the report is
 finalised. The rows marked "not recorded" have no ID in the notes.
+
