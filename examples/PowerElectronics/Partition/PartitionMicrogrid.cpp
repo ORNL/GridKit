@@ -169,12 +169,13 @@ int main()
   // ---------------------------------------------------------------------------
   // Clean up
   // ---------------------------------------------------------------------------
-  delete system;
 
   for (auto* partition : partitions)
   {
     delete partition;
   }
+
+  delete system;
 
   return 0;
 }
