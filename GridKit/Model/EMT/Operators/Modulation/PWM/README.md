@@ -85,20 +85,13 @@ None.
 
 ### External Variables
 
-The tables apply to inputs that reference DAE variables owned by connected
-models. Prescribed and computed signals introduce no variables.
-
 #### Differential
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{m}$ | [-] | Modulation signals | $\mathbf{m} \in \mathbb{R}^N$
+None.
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{m}$ | [-] | Modulation signals | $\mathbf{m} \in \mathbb{R}^N$
+None.
 
 ## Model Equations
 

@@ -127,8 +127,6 @@ $\mathbf{i}_\mathrm{w2}$ | [p.u.] | Winding 2 current | Positive into the windin
 
 #### Differential
 
-When a connected equation depends on the bus-voltage derivative:
-
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}_1$ | [V] | Terminal 1 voltage owned by EMT bus | $\mathbf{v}_1 \in \mathbb{R}^N$
@@ -136,7 +134,7 @@ $\mathbf{v}_2$ | [V] | Terminal 2 voltage owned by EMT bus | $\mathbf{v}_2 \in \
 
 #### Algebraic
 
-Otherwise, the bus-voltage variables above are algebraic.
+None.
 
 ## Model Equations
 

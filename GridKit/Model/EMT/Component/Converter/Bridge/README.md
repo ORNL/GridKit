@@ -1,8 +1,9 @@
 # Bridge Model
 
-`Bridge` represents an ideal two-level converter with $N$ legs and two DC
-terminals. Switching functions set the pole voltages and DC current injections.
-The bridge is lossless and contains no energy storage.
+`Bridge` represents a two-level converter with $N$ legs, two DC terminals, and
+an LCL filter to the EMT bus. Switching functions set the pole voltages and DC
+current injections. Grid-side currents $\mathbf{i}_g$ are injected from the
+bridge into the EMT bus.
 
 ## Block Diagram
 
@@ -16,28 +17,48 @@ the equations apply to $N$ legs and define continuous interpolation
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $N$ | [-] | `N` | Number of legs | Required, positive integer
+$R_\mathrm{s}$ | $[\Omega]$ | `Rs` | Converter-side resistance | Nonnegative
+$L_\mathrm{s}$ | [H] | `Ls` | Converter-side inductance | Required, positive
+$C$ | [F] | `C` | Filter capacitance | Required, positive
+$R_g$ | $[\Omega]$ | `Rg` | Grid-side resistance | Nonnegative
+$L_g$ | [H] | `Lg` | Grid-side inductance | Required, positive
 
 ### Parameter Validation
 
 ```math
-N \in \mathbb{Z}_{>0}
+\begin{aligned}
+N &\in \mathbb{Z}_{>0} \\
+R_\mathrm{s} &\ge 0 \\
+L_\mathrm{s} &> 0 \\
+C &> 0 \\
+R_g &\ge 0 \\
+L_g &> 0
+\end{aligned}
 ```
 
 ### Model Derived Parameters
 
-None.
+Define the leg-index set
+
+```math
+\mathcal{N} = \{1,\ldots,N\}
+```
 
 ## Model Ports
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{s}$ | `s` | Input | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$
-$\mathbf{v}$, $\mathbf{i}$ | `ac` | Bus | [V], [A] | AC pole voltages and current injections | $\mathbf{v} \in \mathbb{R}^N$ and $\mathbf{i} \in \mathbb{R}^N$
+$\mathbf{v}$, $\mathbf{i}_g$ | `bus` | Bus | [V], [A] | Reads the bus voltage and injects the grid-side current | $\mathbf{v}, \mathbf{i}_g \in \mathbb{R}^N$
 $v_+$, $i_+$ | `vpos` | Bus | [V], [A] | Positive DC terminal voltage and current injection | Scalar
 $v_-$, $i_-$ | `vneg` | Bus | [V], [A] | Negative DC terminal voltage and current injection | Scalar
+$\mathbf{i}$ | `i` | Output | [A] | Converter-side currents | $\mathbf{i} \in \mathbb{R}^N$
+$\mathbf{v}_\mathrm{o}$ | `vo` | Output | [V] | Capacitor voltages | $\mathbf{v}_\mathrm{o} \in \mathbb{R}^N$
+$\mathbf{i}_g$ | `ig` | Output | [A] | Grid-side currents | $\mathbf{i}_g \in \mathbb{R}^N$
 
-All terminal currents are positive from the bridge into the connected buses.
-Each switching function satisfies $0 \le s_n \le 1$ and may come from
+All currents are positive from the bridge toward the connected buses. The
+capacitor voltages share the bus voltage reference. Each switching function
+satisfies $0 \le s_n \le 1$ and may come from
 [PWM](../../../Operators/Modulation/PWM/README.md).
 
 ## Submodels
@@ -58,62 +79,74 @@ None.
 
 #### Differential
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{i}$ | [A] | Converter-side currents | $\mathbf{i} \in \mathbb{R}^N$
+$\mathbf{v}_\mathrm{o}$ | [V] | Capacitor voltages | $\mathbf{v}_\mathrm{o} \in \mathbb{R}^N$
+$\mathbf{i}_g$ | [A] | Grid-side currents | $\mathbf{i}_g \in \mathbb{R}^N$
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{i}$ | [A] | AC current injections | $\mathbf{i} \in \mathbb{R}^N$
+None.
 
 ### External Variables
-
-Classification follows the assembled DAE. The tables apply only to connected
-DAE variables; prescribed and computed switching signals introduce no variables.
 
 #### Differential
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | AC pole voltages | $\mathbf{v} \in \mathbb{R}^N$
-$v_+$ | [V] | Positive DC terminal voltage |
-$v_-$ | [V] | Negative DC terminal voltage |
-$\mathbf{s}$ | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$
+$\mathbf{v}$ | [V] | Bus voltage vector owned by EMT bus | $\mathbf{v} \in \mathbb{R}^N$
+$v_+$ | [V] | Positive DC terminal voltage owned by EMT bus |
+$v_-$ | [V] | Negative DC terminal voltage owned by EMT bus |
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | AC pole voltages | $\mathbf{v} \in \mathbb{R}^N$
-$v_+$ | [V] | Positive DC terminal voltage |
-$v_-$ | [V] | Negative DC terminal voltage |
-$\mathbf{s}$ | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$
+None.
 
 ## Model Equations
+
+The pole voltages are
+
+```math
+e_n = (1-s_n)v_- + s_n v_+,
+\quad n \in \mathcal{N}
+```
 
 ### Internal Equations
 
 #### Differential
 
-None.
+For each leg $n \in \mathcal{N}$,
+
+```math
+\begin{aligned}
+0 &= L_\mathrm{s}\dfrac{\mathrm{d}i_n}{\mathrm{d}t}
+     + R_\mathrm{s}i_n + v_{\mathrm{o},n} - e_n \\
+0 &= C\dfrac{\mathrm{d}v_{\mathrm{o},n}}{\mathrm{d}t}
+     + i_{g,n} - i_n \\
+0 &= L_g\dfrac{\mathrm{d}i_{g,n}}{\mathrm{d}t}
+     + R_g i_{g,n} + v_n - v_{\mathrm{o},n}
+\end{aligned}
+```
 
 #### Algebraic
 
-For each leg,
-
-```math
-0 = -v_n + (1-s_n)v_- + s_n v_+
-```
+None.
 
 ### External Equations
 
-The owned currents $\mathbf{i}$ contribute directly to the AC bus balances.
+The bridge supplies input $d$ of the [bus current balance](../../../Bus/README.md#model-equations):
+
+```math
+\mathbf{i}_d \leftarrow \mathbf{i}_g
+```
+
 The DC current injections are
 
 ```math
 \begin{aligned}
-i_+ &\leftarrow -\sum_{n=1}^N s_n i_n \\
-i_- &\leftarrow -\sum_{n=1}^N (1-s_n)i_n
+i_+ &\leftarrow -\sum_{n \in \mathcal{N}} s_n i_n \\
+i_- &\leftarrow -\sum_{n \in \mathcal{N}} (1-s_n)i_n
 \end{aligned}
 ```
 
@@ -125,7 +158,9 @@ None.
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`i` | [A] | AC current injections | $\mathbf{i} \in \mathbb{R}^N$
+`i` | [A] | Converter-side currents | $\mathbf{i} \in \mathbb{R}^N$
+`vo` | [V] | Capacitor voltages | $\mathbf{v}_\mathrm{o} \in \mathbb{R}^N$
+`ig` | [A] | Grid-side currents | $\mathbf{i}_g \in \mathbb{R}^N$
 `ipos` | [A] | Positive DC current injection | Scalar
 `ineg` | [A] | Negative DC current injection | Scalar
-`e` | [V] | Pole voltages relative to their mean | $\mathbf{e} \in \mathbb{R}^N$
+`e` | [V] | Pole voltages | $\mathbf{e} \in \mathbb{R}^N$

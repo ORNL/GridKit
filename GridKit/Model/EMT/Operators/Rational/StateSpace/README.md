@@ -142,7 +142,7 @@ $\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$, $\mathbf{E} = \mathbf{0}$
 
 ## Model Equations
 

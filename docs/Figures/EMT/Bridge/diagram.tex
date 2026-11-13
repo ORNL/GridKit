@@ -1,17 +1,20 @@
 \documentclass[tikz,border=12pt]{standalone}
+\usepackage[american]{circuitikz}
 \input{../diagram-style.tex}
+\standaloneenv{circuitikz}
 
 % TUNABLES: spacing of the representative phase legs.
-\def\legrow{2.0}
+\def\legrow{2.9}
 
 \begin{document}
-\begin{tikzpicture}[emt diagram]
+\begin{circuitikz}[emt diagram]
+\ctikzset{bipoles/length=1.05cm}
 
 % Common DC rails carry the aggregate current of the three depicted legs.
-\draw[line] (-1,-2.7) -- (-1,3.75);
-\draw[line] (0,-2.7) -- (0,3.75);
-\node[signal, label={[sig]left:$v_+$}] (dcplus) at (-1,3.75) {};
-\node[signal, label={[sig]right:$v_-$}] (dcminus) at (0,3.75) {};
+\draw[line] (-1,-\legrow-0.7) -- (-1,\legrow+1.75);
+\draw[line] (0,-\legrow-0.7) -- (0,\legrow+1.75);
+\node[signal, label={[sig]left:$v_+$}] (dcplus) at (-1,\legrow+1.75) {};
+\node[signal, label={[sig]right:$v_-$}] (dcminus) at (0,\legrow+1.75) {};
 \draw[->, line] (dcplus) -- ++(0,0.9) node[sig, above] {$i_+$};
 \draw[->, line] (dcminus) -- ++(0,0.9) node[sig, above] {$i_-$};
 
@@ -28,12 +31,20 @@
     \draw[line] (ac\n) -- (2,\y+0.45);
     \node[sig] at (2.65,\y+0.65) {$s_\n$};
 
-    \node[signal, label={[sig]above:$v_\n$}] (v\n) at (4.35,\y) {};
-    \draw[line] (ac\n) -- (v\n);
-    \draw[->, line] (v\n) -- ++(1.0,0) node[sig, right] {$i_\n$};
+    % Each pole feeds the bus through its LCL filter leg.
+    \draw[semithick] (ac\n) to[short, i>^=$i_\n$] (4.0,\y)
+        to[R, l=$R_\mathrm{s}$] (5.6,\y)
+        to[L, l=$L_\mathrm{s}$] (7.2,\y) coordinate (vo\n)
+        to[R, l=$R_g$] (9.0,\y)
+        to[L, l=$L_g$] (10.6,\y);
+    \draw[semithick] (vo\n) to[C, l=$C$] ++(0,-1.4) node[ground] {};
+    \node[signal, label={[sig]above:$v_{\mathrm{o},\n}$}] at (vo\n) {};
+    \node[signal, label={[sig]above:$v_\n$}] (v\n) at (11.9,\y) {};
+    \draw[semithick] (10.6,\y) -- (v\n);
+    \draw[->, line] (v\n) -- ++(1.0,0) node[sig, right] {$i_{g,\n}$};
 }
 % Electrical terminals remain outside the physical model enclosure.
-\draw[enclosure] (-1.6,-3.05) rectangle (3.65,3.15);
+\draw[enclosure] (-1.6,-\legrow-2.2) rectangle (11.2,\legrow+1.15);
 
-\end{tikzpicture}
+\end{circuitikz}
 \end{document}

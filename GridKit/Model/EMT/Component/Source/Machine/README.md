@@ -148,20 +148,13 @@ $\mathbf{i}_s$ | [p.u.] | Instantaneous stator currents | $\mathbf{i}_s \in \mat
 
 #### Differential
 
-When a connected equation depends on the bus-voltage derivative:
-
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}$ | [V] | Bus voltage vector owned by EMT bus | $\mathbf{v} \in \mathbb{R}^N$
 
 #### Algebraic
 
-Otherwise, the bus-voltage variables above are algebraic.
-
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$E_\mathrm{fd}$ | [p.u.] | Field voltage owned by an exciter | Latched setpoint when unattached
-$P_m$ | [p.u.] | Mechanical power owned by a governor | Latched setpoint when unattached
+None.
 
 ## Model Equations
 

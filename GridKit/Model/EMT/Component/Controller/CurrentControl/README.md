@@ -83,30 +83,16 @@ None.
 
 ### External Variables
 
-Classification follows the assembled DAE. The tables apply only to connected
-DAE variables; prescribed and computed signals introduce no variables.
-
 #### Differential
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$v_+$ | [V] | Positive DC terminal voltage |
-$v_-$ | [V] | Negative DC terminal voltage |
-$\mathbf{v}_\mathrm{dq}$ | [V] | Voltages | $\mathbf{v}_\mathrm{dq} \in \mathbb{R}^2$
-$\mathbf{i}_\mathrm{dq}$ | [A] | Currents | $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
-$\omega$ | [rad/s] | Frequency |
-$\mathbf{i}_\mathrm{dq}^\mathrm{cmd}$ | [A] | Current commands | $\mathbf{i}_\mathrm{dq}^\mathrm{cmd} \in \mathbb{R}^2$
+$v_+$ | [V] | Positive DC terminal voltage owned by EMT bus |
+$v_-$ | [V] | Negative DC terminal voltage owned by EMT bus |
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$v_+$ | [V] | Positive DC terminal voltage |
-$v_-$ | [V] | Negative DC terminal voltage |
-$\mathbf{v}_\mathrm{dq}$ | [V] | Voltages | $\mathbf{v}_\mathrm{dq} \in \mathbb{R}^2$
-$\mathbf{i}_\mathrm{dq}$ | [A] | Currents | $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
-$\omega$ | [rad/s] | Frequency |
-$\mathbf{i}_\mathrm{dq}^\mathrm{cmd}$ | [A] | Current commands | $\mathbf{i}_\mathrm{dq}^\mathrm{cmd} \in \mathbb{R}^2$
+None.
 
 ## Model Equations
 
