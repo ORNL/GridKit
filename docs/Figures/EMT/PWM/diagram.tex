@@ -1,19 +1,26 @@
 \documentclass[tikz,border=12pt]{standalone}
 \input{../diagram-style.tex}
 
-% TUNABLES: pulse-edge spacing, stack offsets, and output spacing.
+% TUNABLES: pulse-edge spacing and stack offsets.
 \def\edgerow{1.2}
 \def\stackstep{0.22}
 \def\stackfar{0.8}
-\def\outputrow{1.05}
 
 \begin{document}
 \begin{tikzpicture}[emt diagram]
 
 % Duty and alignment remain dimensionless until the final edge-time gains.
-\node[signal, label={[sig]left:$\mathbf{d}$}] (d) at (3.2,-3.3) {};
+\node[signal, label={[sig]left:$\mathbf{m}$}] (m) at (5.2,-4.9) {};
+\node[block, minimum width=1.2cm] (half) at (3.2,-3.4) {$\dfrac{1}{2}$};
+\node[sum] (duty) at (5.2,-3.4) {$\Sigma$};
+\draw[->, line] (m) -- (duty.south);
+\draw[->, line] (6.6,-3.4) node[sig, right] {$1 + m_0$} -- (duty.east);
+\draw[->, line] (duty.west) -- (half.east);
+\node[pm, anchor=north west] at ($(duty.south)+(0.08,-0.08)$) {$+$};
+\node[pm, anchor=south west] at ($(duty.east)+(0.08,0.08)$) {$+$};
 \node[signal] (split) at (3.2,-\edgerow) {};
-\draw[line] (d) -- (split);
+\draw[line] (half.north) -- (split)
+    node[sig, pos=0.2, left] {$\mathbf{d}$};
 
 % The hollow input bubble complements duty before applying the alignment gain.
 \node[block, minimum width=1.2cm] (align) at (3.2,0) {$\alpha$};
@@ -68,22 +75,22 @@
 \node[pm, anchor=east] at ($(pulse.north)+(-0.12,0.15)$) {$+$};
 \node[pm, anchor=east] at ($(pulse.south)+(-0.12,-0.15)$) {$-$};
 
-\node[sum] (periods) at (12.6,0) {$\Sigma$};
-\draw[->, line] (pulse.east) -- (periods.west);
-\draw[->, line] (10.95+\stackfar+\stackstep,\outputrow) -| (periods.north);
-\draw[->, line] (10.95+\stackstep,-\outputrow) -| (periods.south);
-\node[signal, label={[sig]above:$\mathbf{s}$}, right=0.55cm of periods] (s) {};
-\draw[line] (periods.east) -- (s);
+% Every page meets one collecting edge along the stack; its far end is the sum.
+\draw[->, line] (pulse.east) -- (12.5,0);
+\foreach \offset in {\stackstep,\stackfar,\stackfar+\stackstep}
+    \draw[->, line] (10.95+\offset,\offset) -- (12.5+\offset,\offset);
+\node[signal, label={[sig]above:$\mathbf{s}$}] (s) at (13.9,1.4) {};
+\draw[semithick] (12.5,0) -- (s);
 \draw[->, line] (s) -- ++(1.35,0);
 
 % The stack continues along the carrier-period index.
-\draw[->, line] (12.15,2.65) -- (13.15,3.65)
+\draw[->, line] (1.75,3.05) -- (2.77,4.07)
     node[sig, midway, above left] {$k$};
 \foreach \offset in {0.36,0.5,0.64}
     \fill (10.95+\offset,2.8+\offset) circle (0.65pt);
 
 \begin{scope}[on background layer]
-    \draw[enclosure] (1.4,-2.85) rectangle (14.15,4.2);
+    \draw[enclosure] (1.2,-4.4) rectangle (14.6,4.4);
     \foreach \offset in {\stackfar+\stackstep,\stackfar,\stackstep,0} {
         \draw[semithick, fill=white]
             (2.0+\offset,-2.25+\offset)

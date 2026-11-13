@@ -29,6 +29,7 @@
 \node[signal] (usplit) at (8.4,1.0) {};
 \node[block, minimum width=1.4cm] (limit) at (9.8,1.0) {$\dfrac{1}{v_\mathrm{mod}}$};
 \node[signal] (msplit) at (11.4,1.0) {};
+\node[block, minimum width=1.0cm] (two) at (12.7,1.0) {$2$};
 
 % Limited-voltage feedback to the integrator.
 \node[sum] (excess) at (8.4,-1.8) {$\Sigma$};
@@ -67,8 +68,9 @@
     node[sig, midway, above] {$\mathbf{u}_\mathrm{dq}$};
 \draw[->, line] (usplit) -- (limit.west);
 \draw[line] (limit.east) -- (msplit);
-\node[signal, label={[sig]above:$\mathbf{m}_\mathrm{dq}$}] (mout) at (12.6,1.0) {};
-\draw[line] (msplit) -- (mout);
+\node[signal, label={[sig]above:$\mathbf{m}_\mathrm{dq}$}] (mout) at (14.1,1.0) {};
+\draw[->, line] (msplit) -- (two.west);
+\draw[line] (two.east) -- (mout);
 \draw[->, line] (mout) -- ++(1.3,0);
 
 \draw[->, line] (usplit) -- (excess.north);
@@ -111,7 +113,7 @@
 \node[signal, label={[sig]right:$v_+$}] at (vposin) {};
 \node[signal, label={[sig]left:$v_-$}] at (vnegin) {};
 
-\draw[enclosure] (0,-4.5) rectangle (13.1,4.7);
+\draw[enclosure] (0,-4.5) rectangle (14.6,4.7);
 
 \end{tikzpicture}
 \end{document}

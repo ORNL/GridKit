@@ -1,9 +1,7 @@
 # PWM Model
 
-`PWM` maps duty ratios to smooth switching functions for $N$ channels.
-Channels share carrier timing. Voltage limiting, coordinate transformations,
-and duty generation belong to the upstream controller. Any limited-voltage
-feedback for antiwindup remains there.
+`PWM` maps modulation signals to smooth switching functions for $N$ channels.
+Channels share carrier timing. Duty ratios are internal.
 
 ## Block Diagram
 
@@ -14,7 +12,7 @@ and the stacked pulse branches sum over all carrier periods
 
 ![PWM switching functions](../../../../../../docs/Figures/EMT/PWM/waveforms.png)
 
-Figure 2: Centered switching functions for sinusoidal duty inputs with modulation
+Figure 2: Centered switching functions for sinusoidal duty ratios with modulation
 index $\frac{4}{5}$, frequency $60\,\mathrm{Hz}$, and carrier frequency $900\,\mathrm{Hz}$
 at $\mu^{-1}=5\,\mu\mathrm{s}$ and $\mu^{-1}=1\,\mathrm{ms}$
 
@@ -25,6 +23,8 @@ Symbol | Units | JSON | Description | Note
 $N$ | [-] | `N` | Number of channels | Required, positive integer
 $f_{\mathrm{c}}$ | [Hz] | `fc` | Carrier frequency | Required, positive
 $\alpha$ | [-] | `alignment` | Pulse alignment | Default $\frac{1}{2}$
+$\mathrm{injection}$ | [-] | `injection` | Zero-sequence injection | Optional Boolean, `true` injects (default)
+$k_0$ | [-] | `k0` | Zero-state partition | Default $\frac{1}{2}$
 
 ### Parameter Validation
 
@@ -34,9 +34,12 @@ All real parameters must be finite.
 \begin{aligned}
 N &\in \mathbb{Z}_{>0} \\
 f_{\mathrm{c}} &> 0 \\
-0 &\le \alpha \le 1
+0 &\le \alpha \le 1 \\
+0 &\le k_0 \le 1
 \end{aligned}
 ```
+
+A single channel requires no zero-sequence injection.
 
 ### Model Derived Parameters
 
@@ -48,10 +51,11 @@ T = \dfrac{1}{f_{\mathrm{c}}}
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{d}$ | `d` | Input | [-] | Duty ratios | $\mathbf{d} \in \mathbb{R}^N$
+$\mathbf{m}$ | `m` | Input | [-] | Modulation signals | $\mathbf{m} \in \mathbb{R}^N$
 $\mathbf{s}$ | `s` | Output | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$
 
-Each channel satisfies $0 \le d_n \le 1$ and $0 \le s_n \le 1$.
+The modulation signals must give duty ratios $0 \le d_n \le 1$. Each
+switching function satisfies $0 \le s_n \le 1$.
 The switching functions can drive
 [Bridge](../../../Component/Converter/Bridge/README.md).
 
@@ -88,19 +92,36 @@ models. Prescribed and computed signals introduce no variables.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{d}$ | [-] | Duty ratios | $\mathbf{d} \in \mathbb{R}^N$
+$\mathbf{m}$ | [-] | Modulation signals | $\mathbf{m} \in \mathbb{R}^N$
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{d}$ | [-] | Duty ratios | $\mathbf{d} \in \mathbb{R}^N$
+$\mathbf{m}$ | [-] | Modulation signals | $\mathbf{m} \in \mathbb{R}^N$
 
 ## Model Equations
 
-Smooth functions: [$\sigma$](../../../../../CommonMath.md#logistic-function).
+Smooth functions: [`max`](../../../../../CommonMath.md#maximum), [`min`](../../../../../CommonMath.md#minimum), [$\sigma$](../../../../../CommonMath.md#logistic-function).
 
 Scalar offsets and smooth functions apply componentwise.
+The extremes $m^{\max}$ and $m^{\min}$ apply `max` and `min` across the
+channels. The zero-sequence signal is
+
+```math
+m_0 =
+\begin{cases}
+-\left[(1 - 2k_0) + k_0 m^{\max} + (1 - k_0)m^{\min}\right], & \text{injection} \\
+0, & \text{otherwise}
+\end{cases}
+```
+
+The duty ratios are
+
+```math
+\mathbf{d} = \dfrac{1}{2}(1 + \mathbf{m} + m_0)
+```
+
 For each integer $k$, the pulse-edge vectors are
 
 ```math
@@ -111,7 +132,7 @@ For each integer $k$, the pulse-edge vectors are
 ```
 
 All channels use the same carrier periods starting at $t=kT$.
-Electrical phase and phase sequence are carried by $\mathbf{d}$.
+Electrical phase and phase sequence are carried by $\mathbf{m}$.
 Every periodic copy uses the current duty vector. There is no sample-and-hold.
 Alignment $\alpha=0$ fixes the rising edge at the period start,
 $\alpha=1$ fixes the falling edge at the period end, and
@@ -142,4 +163,5 @@ None.
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
+`d` | [-] | Duty ratios | $\mathbf{d} \in \mathbb{R}^N$
 `s` | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$

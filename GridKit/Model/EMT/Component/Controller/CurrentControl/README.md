@@ -18,6 +18,7 @@ Symbol | Units | JSON | Description | Note
 $K_P$ | $[\Omega]$ | `Kp` | Proportional gain | Required, positive
 $K_I$ | $[\Omega/\mathrm{s}]$ | `Ki` | Integral gain | Required, positive
 $L$ | [H] | `L` | Decoupling inductance | Required, positive
+$M^{\max}$ | [-] | `Mmax` | Maximum modulation magnitude | Default $1$
 
 ### Parameter Validation
 
@@ -25,7 +26,8 @@ $L$ | [H] | `L` | Decoupling inductance | Required, positive
 \begin{aligned}
 K_P &\in \mathbb{R}_{>0} \\
 K_I &\in \mathbb{R}_{>0} \\
-L &\in \mathbb{R}_{>0}
+L &\in \mathbb{R}_{>0} \\
+M^{\max} &\in \mathbb{R}_{>0}
 \end{aligned}
 ```
 
@@ -129,7 +131,7 @@ The limited voltage commands are
 
 ```math
 \begin{aligned}
-v_\mathrm{mod} &= \sqrt{\text{max}\left(v_\mathrm{dc}^2, 3(u_d^2 + u_q^2)\right)} \\
+v_\mathrm{mod} &= \sqrt{\text{max}\left(v_\mathrm{dc}^2, \dfrac{4}{(M^{\max})^2}(u_d^2 + u_q^2)\right)} \\
 u_d^\mathrm{lim} &= \dfrac{1}{v_\mathrm{mod}}v_\mathrm{dc}u_d \\
 u_q^\mathrm{lim} &= \dfrac{1}{v_\mathrm{mod}}v_\mathrm{dc}u_q
 \end{aligned}
@@ -156,8 +158,8 @@ None.
 
 ```math
 \begin{aligned}
-m_d &\leftarrow \dfrac{1}{v_\mathrm{mod}}u_d \\
-m_q &\leftarrow \dfrac{1}{v_\mathrm{mod}}u_q
+m_d &\leftarrow \dfrac{2}{v_\mathrm{mod}}u_d \\
+m_q &\leftarrow \dfrac{2}{v_\mathrm{mod}}u_q
 \end{aligned}
 ```
 
