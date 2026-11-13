@@ -34,8 +34,8 @@ $G$              | [p.u.] | `G`     | Total line shunt conductance            | 
 $B$              | [p.u.] | `B`     | Total line shunt susceptance            | 0.0           |
 $G_\mathrm{mag}$ | [p.u.] | `Gmag`  | Magnetizing shunt conductance at bus 1  | 0.0           |
 $B_\mathrm{mag}$ | [p.u.] | `Bmag`  | Magnetizing shunt susceptance at bus 1  | 0.0           |
-$\tau$           | [p.u.] | `tap`   | Off-nominal tap magnitude on bus-1 side | 1.0           |
-$\theta$         | [rad]  | `phase` | Phase-shift angle                       | 0.0           |
+$\tau$           | [p.u.] | `tap`   | Off-nominal tap magnitude on bus-1 side | 1.0           | State file entry
+$\theta$         | [rad]  | `phase` | Phase-shift angle                       | 0.0           | State file entry
 
 ### Parameter Validation
 

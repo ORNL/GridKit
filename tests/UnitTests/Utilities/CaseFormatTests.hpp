@@ -148,11 +148,11 @@ namespace GridKit
                    }
                ],
                "buses": [
-                   { "number": 1, "class": "Bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
-                   { "number": 2, "class": "BusInfinite", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "params": {"kv": 115.0} }
+                   { "number": 1, "class": "Bus", "name": "Bus 1", "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
+                   { "number": 2, "class": "BusInfinite", "name": "Bus 2", "params": {"kv": 115.0} }
                ],
                "devices": [
-                   { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "Gmag":0.01, "Bmag":0.02, "tap":1.05, "phase":0.1} },
+                   { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "Gmag":0.01, "Bmag":0.02} },
                    { "class": "Genrou", "ports": {"bus":1}, "id": "1", "params": {"H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
                           "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Gensal", "ports": {"bus":1}, "id": "2", "params": {"H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
@@ -190,16 +190,12 @@ namespace GridKit
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
         success *= result.bus[0].name == "Bus 1";
-        success *= result.bus[0].Vr0 == 0.994988;
-        success *= result.bus[0].Vi0 == 0.099997;
         success *= std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
-        success *= result.bus[1].Vr0 == 1.0;
-        success *= result.bus[1].Vi0 == 0.0;
         success *= std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[1].monitored_variables.empty();
 
@@ -209,8 +205,6 @@ namespace GridKit
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::Gmag]) == 0.01;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::Bmag]) == 0.02;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::tap]) == 1.05;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::phase]) == 0.1;
         success *= result.branch[0].buses[BranchBuses::bus1] == 1;
         success *= result.branch[0].buses[BranchBuses::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "1";
@@ -285,7 +279,7 @@ namespace GridKit
           "params": {"freq_base": 60.0, "va_base": 100000000.0},
           "buses": [
             {"number": 1, "class": "Bus", "name": "Bus 1", "params": {}},
-            {"number": 2, "class": "Bus", "name": "Bus 2", "init": {"Vr": 0.875, "Vi": 0.375}, "params": {}}
+            {"number": 2, "class": "Bus", "name": "Bus 2", "params": {}}
           ],
           "devices": [],
           "subsystems": [{
@@ -357,8 +351,8 @@ namespace GridKit
                    "va_base": 100000000.0
                },
                "buses": [
-                   { "number": 1, "class": "Bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
-                   { "number": 2, "class": "BusInfinite", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "params": {"kv": 115.0} }
+                   { "number": 1, "class": "Bus", "name": "Bus 1", "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
+                   { "number": 2, "class": "BusInfinite", "name": "Bus 2", "params": {"kv": 115.0} }
                ],
                "signals": [
                    { "signal_id": 1, "name": "Machine Speed Deviation"},
@@ -391,7 +385,7 @@ namespace GridKit
                    { "signal_id": 28, "name": "Active Current Command"}
                ],
                "devices": [
-                   { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "tap":1.05, "phase":0.1} },
+                   { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
                    { "class": "Genrou", "ports": {"bus":1, "speed": 1, "pmech":2, "efd":3}, "id": "DV1", "params": {"H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Tgov1", "ports": {"speed": 1, "pref":10, "pmech":2}, "id": "DV2", "params": {"R":0.05, "T1":0.5,"T2":2.5, "T3":7.5, "Pvmax":1.0, "Pvmin":0.0, "Dt":0.0}},
                    { "class": "Esdc1a", "ports": {"bus":1, "speed":1, "vref":4, "vs":5, "vuel":6, "efd":3}, "id": "DV5", "params": {"Tr":0.0, "Ka":40.0, "Ta":0.1, "Tb":0.0, "Tc":0.0, "Vrmax":1.0, "Vrmin":-1.0, "Ke":0.1, "Te":0.5, "Kf":0.05, "Tf1":0.7, "Spdmlt":false, "E1":2.8, "Se1":0.08, "E2":3.7, "Se2":0.33, "UEL":0, "exclim":true}, "mon": ["efd", "vc", "vr", "vf", "se", "vfe"] },
@@ -436,16 +430,12 @@ namespace GridKit
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
         success *= result.bus[0].name == "Bus 1";
-        success *= result.bus[0].Vr0 == 0.994988;
-        success *= result.bus[0].Vi0 == 0.099997;
         success *= std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
-        success *= result.bus[1].Vr0 == 1.0;
-        success *= result.bus[1].Vi0 == 0.0;
         success *= std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[1].monitored_variables.empty();
 
@@ -476,8 +466,6 @@ namespace GridKit
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::G]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::tap]) == 1.05;
-        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::phase]) == 0.1;
         success *= result.branch[0].buses[BranchBuses::bus1] == 1;
         success *= result.branch[0].buses[BranchBuses::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "BR1";

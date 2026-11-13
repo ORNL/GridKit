@@ -306,6 +306,7 @@ namespace GridKit
 
         std::string      in_file   = "TwoBusBasic/TwoBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("TwoBusBasic/TwoBusBasic.state.json", file_data);
 
         auto success = compare(set_data, file_data);
 
@@ -417,6 +418,7 @@ namespace GridKit
 
         std::string      in_file   = "TwoBusIeeet1/TwoBusIeeet1.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("TwoBusIeeet1/TwoBusIeeet1.state.json", file_data);
 
         auto success = compare(set_data, file_data);
 
@@ -495,6 +497,7 @@ namespace GridKit
 
         std::string      in_file   = "TwoBusTgov1/TwoBusTgov1.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("TwoBusTgov1/TwoBusTgov1.state.json", file_data);
 
         auto success = compare(set_data, file_data);
         return success.report(__func__);
@@ -591,6 +594,7 @@ namespace GridKit
 
         std::string      in_file   = "ThreeBusBasic/ThreeBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("ThreeBusBasic/ThreeBusBasic.state.json", file_data);
 
         auto success = compare(set_data, file_data);
         return success.report(__func__);
@@ -662,6 +666,7 @@ namespace GridKit
 
         std::string      in_file   = "ThreeBusClassical/ThreeBusClassical.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("ThreeBusClassical/ThreeBusClassical.state.json", file_data);
 
         auto success = compare(set_data, file_data);
         return success.report(__func__);

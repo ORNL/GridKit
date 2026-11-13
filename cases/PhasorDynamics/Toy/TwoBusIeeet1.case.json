@@ -21,10 +21,6 @@
       "number": 0,
       "class": "Bus",
       "name": "Bus 1",
-      "init": {
-        "Vr": 0.9949877346411762,
-        "Vi": 0.09999703952427966
-      },
       "params": {
         "kv": 115.0
       },
@@ -36,10 +32,6 @@
       "number": 1,
       "class": "BusInfinite",
       "name": "Bus 2",
-      "init": {
-        "Vr": 1.0,
-        "Vi": 0.0
-      },
       "params": {
         "kv": 115.0
       }

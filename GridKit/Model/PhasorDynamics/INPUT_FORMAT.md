@@ -90,7 +90,6 @@ a bus and has the following fields:
   `number`           | Unique non-negative integer identifying the bus
   `class`            | A string indicating the class of node. See the table below for more information
   `name`             | String containing the name of the node. This may be empty or non-unique. Only ASCII letters, digits, spaces, `_`, `.` and `-` are allowed
-  `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
   `params`           | Object mapping bus parameter names to values. Supported parameter: `kv`, the bus voltage base in kV.
   `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
   `extension`        | Optional field containing an object with implementation-defined keys
@@ -105,7 +104,7 @@ specified:
   `Bus`              | Positive-sequence, AC phasor domain bus                    | `Vr`, `Vi`               | `Vm`, `Va`
   `BusInfinite`      | Positive-sequence, AC phasor domain bus with fixed voltage | `Vr`, `Vi`               | `Vm`, `Va`
 
-`Vr` defaults to `1.0`, and `Vi` defaults to `0.0`.
+The state file sets the initial `Vr` and `Vi`. Without one, `Vr` defaults to `1.0` and `Vi` to `0.0`.
 
 ### Signals
 
@@ -208,8 +207,8 @@ detected.
        "va_base": 100e6
    },
    "buses": [
-       { "number": 1, "class": "Bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
-       { "number": 2, "class": "BusInfinite", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "params": {"kv": 115.0} }
+       { "number": 1, "class": "Bus", "name": "Bus 1", "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
+       { "number": 2, "class": "BusInfinite", "name": "Bus 2", "params": {"kv": 115.0} }
    ],
    "signals": [
        { "signal_id": 1, "name": "Machine Speed Deviation"},

@@ -67,10 +67,10 @@ namespace GridKit
           system.erase("subsystems");
           system["header"] = input["header"];
           system["params"] = input["params"];
-          data.push_back(system.template get<DataT>());
+          data.push_back(readData(system));
         }
 
-        SystemT flat(readJson("SubsystemFlat.json").template get<DataT>());
+        SystemT flat(readData(readJson("SubsystemFlat.json")));
 
         // The top system and B own (and delete) their subsystems. B contains
         // only bus 3 and C, so C gets branch 2 to bus 1.
@@ -95,7 +95,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const DataT top_data = readJson("SubsystemHierarchical.json").template get<DataT>();
+        const DataT top_data = readData(readJson("SubsystemHierarchical.json"));
 
         success *= top_data.subsystems.size() == 2;
         success *= top_data.subsystems[1].subsystems.size() == 1;
@@ -106,7 +106,7 @@ namespace GridKit
         success *= top_data.subsystems[1].subsystems[0].id == "C";
         success *= top_data.subsystems[1].subsystems[0].level == 2;
 
-        SystemT flat(readJson("SubsystemFlat.json").template get<DataT>());
+        SystemT flat(readData(readJson("SubsystemFlat.json")));
         SystemT top(top_data);
 
         compareSystems(flat, top, success);
@@ -127,7 +127,7 @@ namespace GridKit
         json& input_subsystem_b = input["subsystems"][1];
         json& input_subsystem_c = input_subsystem_b["subsystems"][0];
         input_subsystem_c["signals"].push_back({{"signal_id", 5}, {"name", "s"}});
-        SystemT top(input.template get<DataT>());
+        SystemT top(readData(input));
 
         auto* a = top.getSubsystem(0);
         auto* b = top.getSubsystem(1);
@@ -226,7 +226,7 @@ namespace GridKit
 
         // Programmatic hierarchy: devices and subsystems in one system
         {
-          SystemT with_device(readJson("SubsystemFlat.json").template get<DataT>());
+          SystemT with_device(readData(readJson("SubsystemFlat.json")));
           SystemT with_subsystem;
           SystemT subsystem;
           SystemT other;
@@ -333,8 +333,8 @@ namespace GridKit
 
         TestStatus success = true;
 
-        SystemT flat(readJson("SubsystemFlat.json").template get<DataT>());
-        SystemT top(readJson("SubsystemHierarchical.json").template get<DataT>());
+        SystemT flat(readData(readJson("SubsystemFlat.json")));
+        SystemT top(readData(readJson("SubsystemHierarchical.json")));
         success *= top.numSubsystems() == 2 && top.getSubsystem(1)->numSubsystems() == 1;
         if (top.numSubsystems() != 2 || top.getSubsystem(1)->numSubsystems() != 1)
         {
@@ -345,7 +345,7 @@ namespace GridKit
         auto* c = b->getSubsystem(0);
 
         PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> top_dt(
-            readJson("SubsystemHierarchical.json").template get<DataT>());
+            readData(readJson("SubsystemHierarchical.json")));
 
         for (auto* system : {&flat, &top})
         {
@@ -454,6 +454,14 @@ namespace GridKit
       {
         std::ifstream file(file_name);
         return json::parse(file);
+      }
+
+      /// System data of an input, at the initial bus voltages of the test state
+      static DataT readData(const json& input)
+      {
+        DataT data = input.template get<DataT>();
+        PhasorDynamics::applyState(readJson("Subsystem.state.json"), data);
+        return data;
       }
 
       /// Whether constructing a system from the input throws

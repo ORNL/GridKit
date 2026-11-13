@@ -1,0 +1,26 @@
+{
+    "header": {
+        "format_version": 0.2,
+        "format_revision": 0,
+        "description": "Initial bus voltages of the subsystem test inputs"
+    },
+    "buses": {
+        "1": {
+            "Vr": 1.01,
+            "Vi": 0.1
+        },
+        "2": {
+            "Vr": 1.02,
+            "Vi": 0.2
+        },
+        "3": {
+            "Vr": 1.03,
+            "Vi": 0.3
+        },
+        "4": {
+            "Vr": 1.04,
+            "Vi": 0.4
+        }
+    },
+    "devices": {}
+}

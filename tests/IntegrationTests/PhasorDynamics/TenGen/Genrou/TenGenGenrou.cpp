@@ -47,12 +47,13 @@ GridKit::PhasorDynamics::BranchData<real_type, index_type> branchData(const real
   using Parameter = GridKit::PhasorDynamics::BranchParameters;
 
   GridKit::PhasorDynamics::BranchData<real_type, index_type> data;
-  data.parameters[Parameter::R]     = R;
-  data.parameters[Parameter::X]     = X;
-  data.parameters[Parameter::G]     = G;
-  data.parameters[Parameter::B]     = B;
-  data.parameters[Parameter::tap]   = tap;
-  data.parameters[Parameter::phase] = phase;
+  data.parameters[Parameter::R] = R;
+  data.parameters[Parameter::X] = X;
+  data.parameters[Parameter::G] = G;
+  data.parameters[Parameter::B] = B;
+
+  data.initial_values[GridKit::PhasorDynamics::BranchInitialValues::tap]   = tap;
+  data.initial_values[GridKit::PhasorDynamics::BranchInitialValues::phase] = phase;
 
   return data;
 }

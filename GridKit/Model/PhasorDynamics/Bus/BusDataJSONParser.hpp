@@ -41,27 +41,6 @@ namespace GridKit
         throw std::runtime_error("JSON parser failed");
       }
 
-      if (j.contains("init"))
-      {
-        for (auto& raw_parameter : j.at("init").items())
-        {
-          if (raw_parameter.key() == "Vi")
-          {
-            raw_parameter.value().get_to(bd.Vi0);
-          }
-          else if (raw_parameter.key() == "Vr")
-          {
-            raw_parameter.value().get_to(bd.Vr0);
-          }
-          else
-          {
-            Log::error() << "\n\tInvalid initial parameter \""
-                         << raw_parameter.key() << "\" in \"init\" section."
-                         << error_context.str() << std::endl;
-          }
-        }
-      }
-
       auto string_class = j.at("class").get<std::string>();
       if (string_class == "Bus")
       {

@@ -303,8 +303,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
-      using Buses     = typename ModelDataT::Buses;
+      using Parameter    = typename ModelDataT::Parameters;
+      using InitialValue = typename ModelDataT::InitialValues;
+      using Buses        = typename ModelDataT::Buses;
 
       const Model::ParameterReader reader(data, "Branch");
 
@@ -314,8 +315,8 @@ namespace GridKit
       B_     = reader.readReal(Parameter::B).value_or(B_);
       Gmag_  = reader.readReal(Parameter::Gmag).value_or(Gmag_);
       Bmag_  = reader.readReal(Parameter::Bmag).value_or(Bmag_);
-      tap_   = reader.readReal(Parameter::tap).value_or(tap_);
-      phase_ = reader.readReal(Parameter::phase).value_or(phase_);
+      tap_   = reader.readReal(InitialValue::tap).value_or(tap_);
+      phase_ = reader.readReal(InitialValue::phase).value_or(phase_);
 
       if (data.buses.contains(Buses::bus1))
       {

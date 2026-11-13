@@ -30,6 +30,8 @@
 - Added the `state_file` solver option, which sets PhasorDynamics initial bus voltages from a state file.
 - Removed the GenClassical `p0`/`q0` parameters in favor of the state `ir`/`ii`.
 - Removed the GENROU and GENSAL `p0`/`q0` parameters in favor of the state `ir`/`ii`.
+- Removed the bus `init` section from the PhasorDynamics case format. Initial bus voltages come from the state file.
+- Removed the Branch `tap`/`phase` parameters in favor of the state `tap`/`phase`.
 
 ## v0.2
 

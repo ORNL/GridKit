@@ -13,10 +13,6 @@
             "number": 1,
             "class": "Bus",
             "name": "1",
-            "init": {
-                "Vr": 1.01,
-                "Vi": 0.1
-            },
             "params": {
                 "kv": 138.0
             }
@@ -32,10 +28,6 @@
                     "number": 2,
                     "class": "Bus",
                     "name": "2",
-                    "init": {
-                        "Vr": 1.02,
-                        "Vi": 0.2
-                    },
                     "params": {
                         "kv": 138.0
                     }
@@ -66,10 +58,6 @@
                     "number": 3,
                     "class": "Bus",
                     "name": "3",
-                    "init": {
-                        "Vr": 1.03,
-                        "Vi": 0.3
-                    },
                     "params": {
                         "kv": 138.0
                     }
@@ -85,10 +73,6 @@
                             "number": 4,
                             "class": "Bus",
                             "name": "4",
-                            "init": {
-                                "Vr": 1.04,
-                                "Vi": 0.4
-                            },
                             "params": {
                                 "kv": 138.0
                             }
