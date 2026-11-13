@@ -256,8 +256,6 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> q;
 
         PhasorDynamics::Converter::RegcaData<RealT, IdxT> converter_data;
-        converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.4);
-        converter_data.parameters[ConverterParams::q0]     = static_cast<RealT>(0.1);
         converter_data.parameters[ConverterParams::mva]    = static_cast<RealT>(100.0);
         converter_data.parameters[ConverterParams::Tg]     = static_cast<RealT>(0.02);
         converter_data.parameters[ConverterParams::TM]     = static_cast<RealT>(0.02);
@@ -271,6 +269,10 @@ namespace GridKit
         converter_data.parameters[ConverterParams::VA0]    = static_cast<RealT>(0.4);
         converter_data.parameters[ConverterParams::VA1]    = static_cast<RealT>(0.9);
         converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.2);
+
+        // The bus is at 1 + j0, where the terminal current is P - jQ.
+        converter_data.initial_values[PhasorDynamics::Converter::RegcaInitialValues::ir] = static_cast<RealT>(0.4);
+        converter_data.initial_values[PhasorDynamics::Converter::RegcaInitialValues::ii] = -static_cast<RealT>(0.1);
 
         PhasorDynamics::Controller::RepcaData<RealT, IdxT> plant_data;
         plant_data.parameters[PlantParams::mva] = static_cast<RealT>(50.0);
@@ -346,8 +348,6 @@ namespace GridKit
         // The operating point is exactly representable, so the pair rests at
         // an exact steady state.
         PhasorDynamics::Converter::RegcaData<RealT, IdxT> converter_data;
-        converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.375);
-        converter_data.parameters[ConverterParams::q0]     = static_cast<RealT>(0.0625);
         converter_data.parameters[ConverterParams::mva]    = static_cast<RealT>(100.0);
         converter_data.parameters[ConverterParams::Tg]     = static_cast<RealT>(0.02);
         converter_data.parameters[ConverterParams::TM]     = static_cast<RealT>(0.02);
@@ -361,6 +361,10 @@ namespace GridKit
         converter_data.parameters[ConverterParams::VA0]    = static_cast<RealT>(0.25);
         converter_data.parameters[ConverterParams::VA1]    = static_cast<RealT>(0.75);
         converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.5);
+
+        // The bus is at 1 + j0, where the terminal current is P - jQ.
+        converter_data.initial_values[PhasorDynamics::Converter::RegcaInitialValues::ir] = static_cast<RealT>(0.375);
+        converter_data.initial_values[PhasorDynamics::Converter::RegcaInitialValues::ii] = -static_cast<RealT>(0.0625);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(&bus, converter_data);
 
