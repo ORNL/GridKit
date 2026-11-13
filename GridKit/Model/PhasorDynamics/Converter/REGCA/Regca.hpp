@@ -8,6 +8,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <limits>
 #include <memory>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -202,11 +203,17 @@ namespace GridKit
         static constexpr RealT KL_                   = static_cast<RealT>(100.0);
         static void            logTimeConstantWarning();
 
+        /// Bound, relative to the apparent power, on rounding in a reactive
+        /// power recovered from the state current
+        static constexpr RealT REACTIVE_POWER_ROUNDING = std::numeric_limits<RealT>::epsilon();
+
         BusT* bus_{nullptr};
 
+        // Initial terminal current on system base
+        RealT ir_{0};
+        RealT ii_{0};
+
         // Input parameters
-        RealT p0_{0};
-        RealT q0_{0};
         RealT mva_base_{0};
         RealT Tg_{0};
         RealT TM_{0};

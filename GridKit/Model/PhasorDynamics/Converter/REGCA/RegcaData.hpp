@@ -18,8 +18,6 @@ namespace GridKit
       /// optional; all other keys are required.
       enum class RegcaParameters : size_t
       {
-        p0,     ///< Initial active power injection on system base
-        q0,     ///< Initial reactive power injection on system base
         mva,    ///< REGCA component power base
         Tg,     ///< Converter current-control lag time constant
         TM,     ///< Terminal voltage sensor time constant

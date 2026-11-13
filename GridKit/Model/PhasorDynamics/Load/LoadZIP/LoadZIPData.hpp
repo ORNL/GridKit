@@ -10,8 +10,6 @@ namespace GridKit
     /// Parameters for a loadZIP
     enum class LoadZIPParameters : size_t
     {
-      Pnom,   ///< Nominal real power
-      Qnom,   ///< Nominal reactive power
       alphaI, ///< Fraction of load represented as constant current
       alphaP, ///< Fraction of load represented as constant power
     };

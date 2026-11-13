@@ -146,8 +146,6 @@
       },
       "id": "load_2",
       "params": {
-        "Pnom": 1.0,
-        "Qnom": 0.0,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
