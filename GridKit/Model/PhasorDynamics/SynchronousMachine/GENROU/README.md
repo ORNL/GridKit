@@ -18,8 +18,6 @@ Figure 1: GENROU. Figure courtesy of
 
 Symbol            | Units  | JSON    | Description                                            | Typical Value | Note
 ------------------|--------|---------|--------------------------------------------------------|---------------|-----
-$P_0$             | [p.u.] | `p0`    | Initial active power injection                         | 1.0           |
-$Q_0$             | [p.u.] | `q0`    | Initial reactive power injection                       | 0.0           |
 $H$               | [s]    | `H`     | rotor inertia                                          | 3             |
 $D$               | [p.u.] | `D`     | damping coefficient                                    | 0             |
 $R_\mathrm{a}$             | [p.u.] | `Ra`    | winding resistance                                     | 0             |
@@ -180,7 +178,7 @@ I_i^{\mathrm{bus}}
 
 ## Initialization
 
-The power-flow solution gives $V_r$, $V_i$, $I_r$, and $I_i$. At synchronous
+The state gives $V_r$, $V_i$, $I_r$, and $I_i$. At synchronous
 speed, the total subtransient-flux magnitude is available directly in the
 network frame and is independent of rotor angle:
 
