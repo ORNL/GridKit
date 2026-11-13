@@ -45,9 +45,9 @@ $\omega$ | `omega` | Input | [rad/s] | Frequency | Scalar
 $\mathbf{i}_\mathrm{dq}^\mathrm{cmd}$ | `icmd` | Input | [A] | Current commands | $\mathbf{i}_\mathrm{dq}^\mathrm{cmd} \in \mathbb{R}^2$
 $\mathbf{m}_\mathrm{dq}$ | `mdq` | Output | [-] | Modulation signals | $\mathbf{m}_\mathrm{dq} \in \mathbb{R}^2$
 
-The d- and q-axis components of each dq vector carry the subscripts $d$ and
-$q$, such as $v_d$ and $v_q$. The model reads the DC terminal voltages and
-injects no current. The inductance $L$ connects the
+The dq vectors are amplitude invariant, and their d- and q-axis components
+carry the subscripts $d$ and $q$, such as $v_d$ and $v_q$. The model reads the
+DC terminal voltages and injects no current. The inductance $L$ connects the
 converter AC terminals to the bus of $\mathbf{v}_\mathrm{dq}$, and
 $\mathbf{i}_\mathrm{dq}$ is positive toward that bus. The dq coordinates
 rotate at $\omega$, which may come from
@@ -88,23 +88,23 @@ DAE variables; prescribed and computed signals introduce no variables.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$v_+$ | [V] | Positive DC terminal voltage | Differential voltage
-$v_-$ | [V] | Negative DC terminal voltage | Differential voltage
-$\mathbf{v}_\mathrm{dq}$ | [V] | Voltages | Differential input, $\mathbf{v}_\mathrm{dq} \in \mathbb{R}^2$
-$\mathbf{i}_\mathrm{dq}$ | [A] | Currents | Differential input, $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
-$\omega$ | [rad/s] | Frequency | Differential input
-$\mathbf{i}_\mathrm{dq}^\mathrm{cmd}$ | [A] | Current commands | Differential input, $\mathbf{i}_\mathrm{dq}^\mathrm{cmd} \in \mathbb{R}^2$
+$v_+$ | [V] | Positive DC terminal voltage |
+$v_-$ | [V] | Negative DC terminal voltage |
+$\mathbf{v}_\mathrm{dq}$ | [V] | Voltages | $\mathbf{v}_\mathrm{dq} \in \mathbb{R}^2$
+$\mathbf{i}_\mathrm{dq}$ | [A] | Currents | $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
+$\omega$ | [rad/s] | Frequency |
+$\mathbf{i}_\mathrm{dq}^\mathrm{cmd}$ | [A] | Current commands | $\mathbf{i}_\mathrm{dq}^\mathrm{cmd} \in \mathbb{R}^2$
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$v_+$ | [V] | Positive DC terminal voltage | Algebraic voltage
-$v_-$ | [V] | Negative DC terminal voltage | Algebraic voltage
-$\mathbf{v}_\mathrm{dq}$ | [V] | Voltages | Algebraic input, $\mathbf{v}_\mathrm{dq} \in \mathbb{R}^2$
-$\mathbf{i}_\mathrm{dq}$ | [A] | Currents | Algebraic input, $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
-$\omega$ | [rad/s] | Frequency | Algebraic input
-$\mathbf{i}_\mathrm{dq}^\mathrm{cmd}$ | [A] | Current commands | Algebraic input, $\mathbf{i}_\mathrm{dq}^\mathrm{cmd} \in \mathbb{R}^2$
+$v_+$ | [V] | Positive DC terminal voltage |
+$v_-$ | [V] | Negative DC terminal voltage |
+$\mathbf{v}_\mathrm{dq}$ | [V] | Voltages | $\mathbf{v}_\mathrm{dq} \in \mathbb{R}^2$
+$\mathbf{i}_\mathrm{dq}$ | [A] | Currents | $\mathbf{i}_\mathrm{dq} \in \mathbb{R}^2$
+$\omega$ | [rad/s] | Frequency |
+$\mathbf{i}_\mathrm{dq}^\mathrm{cmd}$ | [A] | Current commands | $\mathbf{i}_\mathrm{dq}^\mathrm{cmd} \in \mathbb{R}^2$
 
 ## Model Equations
 
@@ -171,42 +171,3 @@ Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `xdq` | [V] | Integrator states | $\mathbf{x}_\mathrm{dq} \in \mathbb{R}^2$
 `mdq` | [-] | Modulation signals | $\mathbf{m}_\mathrm{dq} \in \mathbb{R}^2$
-
-## Development
-
-The voltage limit is a circle:
-
-```math
-\begin{aligned}
-\sqrt{u_d^2 + u_q^2} &\le \dfrac{1}{\sqrt{3}}v_\mathrm{dc} \\
-\sqrt{m_d^2 + m_q^2} &\le \dfrac{1}{\sqrt{3}}
-\end{aligned}
-```
-
-The modulation signals always satisfy the second bound. The radius assumes
-amplitude-invariant dq coordinates of three phases, whose line-to-line peak is
-$\sqrt{3}$ times the dq magnitude.
-
-Inside the limit $v_\mathrm{mod} = v_\mathrm{dc}$, the limited voltage commands
-equal the voltage commands, and the antiwindup terms vanish. Outside the limit
-the integrators follow the realizable current commands
-
-```math
-\begin{aligned}
-i_d^\mathrm{r} &= i_d^\mathrm{cmd} + \dfrac{1}{K_P}(u_d^\mathrm{lim} - u_d) \\
-i_q^\mathrm{r} &= i_q^\mathrm{cmd} + \dfrac{1}{K_P}(u_q^\mathrm{lim} - u_q)
-\end{aligned}
-```
-
-which return the limited voltage commands when substituted for the current
-commands.
-
-With the [Pll](../../../Operators/Reference/Pll/README.md) Park convention,
-the active and reactive power injected into the bus are
-
-```math
-\begin{aligned}
-P &= \dfrac{3}{2}(v_d i_d + v_q i_q) \\
-Q &= \dfrac{3}{2}(v_q i_d - v_d i_q)
-\end{aligned}
-```

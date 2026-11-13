@@ -12,6 +12,12 @@ feedback for antiwindup remains there.
 Figure 1: PWM model; the input bubble denotes $1-\mathbf{d}$ componentwise,
 and the stacked pulse branches sum over all carrier periods
 
+![PWM switching functions](../../../../../../docs/Figures/EMT/PWM/waveforms.png)
+
+Figure 2: Centered switching functions for sinusoidal duty inputs with modulation
+index $\frac{4}{5}$, frequency $60\,\mathrm{Hz}$, and carrier frequency $900\,\mathrm{Hz}$
+at $\mu^{-1}=5\,\mu\mathrm{s}$ and $\mu^{-1}=1\,\mathrm{ms}$
+
 ## Model Parameters
 
 Symbol | Units | JSON | Description | Note
@@ -82,13 +88,13 @@ models. Prescribed and computed signals introduce no variables.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{d}$ | [-] | Duty ratios | Differential input, $\mathbf{d} \in \mathbb{R}^N$
+$\mathbf{d}$ | [-] | Duty ratios | $\mathbf{d} \in \mathbb{R}^N$
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{d}$ | [-] | Duty ratios | Algebraic input, $\mathbf{d} \in \mathbb{R}^N$
+$\mathbf{d}$ | [-] | Duty ratios | $\mathbf{d} \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -137,25 +143,3 @@ None.
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `s` | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$
-
-## Development
-
-For fixed duty, periodic summation preserves the carrier-period mean:
-
-```math
-\dfrac{1}{T}\int_0^T \mathbf{s}(t)\mathrm{d}t = \mathbf{d}
-```
-
-The shared [CommonMath smoothing scale](../../../../../CommonMath.md#primitives)
-$\mu$ selects resolution within the same model. Small $\mu T$ approaches
-instantaneous duty; large $\mu T$ resolves switching. The isolated-edge width is
-
-```math
-\Delta t_{10\text{–}90} = \dfrac{2\ln 9}{\mu}
-```
-
-![PWM switching functions](../../../../../../docs/Figures/EMT/PWM/waveforms.png)
-
-Figure 2: Centered switching functions for sinusoidal duty inputs with modulation
-index $\frac{4}{5}$, frequency $60\,\mathrm{Hz}$, and carrier frequency $900\,\mathrm{Hz}$
-at $\mu^{-1}=5\,\mu\mathrm{s}$ and $\mu^{-1}=1\,\mathrm{ms}$

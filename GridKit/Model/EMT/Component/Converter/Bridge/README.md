@@ -75,19 +75,19 @@ DAE variables; prescribed and computed switching signals introduce no variables.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | AC pole voltages | Differential voltage, $\mathbf{v} \in \mathbb{R}^N$
-$v_+$ | [V] | Positive DC terminal voltage | Differential voltage
-$v_-$ | [V] | Negative DC terminal voltage | Differential voltage
-$\mathbf{s}$ | [-] | Switching functions | Differential input, $\mathbf{s} \in \mathbb{R}^N$
+$\mathbf{v}$ | [V] | AC pole voltages | $\mathbf{v} \in \mathbb{R}^N$
+$v_+$ | [V] | Positive DC terminal voltage |
+$v_-$ | [V] | Negative DC terminal voltage |
+$\mathbf{s}$ | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | AC pole voltages | Algebraic voltage, $\mathbf{v} \in \mathbb{R}^N$
-$v_+$ | [V] | Positive DC terminal voltage | Algebraic voltage
-$v_-$ | [V] | Negative DC terminal voltage | Algebraic voltage
-$\mathbf{s}$ | [-] | Switching functions | Algebraic input, $\mathbf{s} \in \mathbb{R}^N$
+$\mathbf{v}$ | [V] | AC pole voltages | $\mathbf{v} \in \mathbb{R}^N$
+$v_+$ | [V] | Positive DC terminal voltage |
+$v_-$ | [V] | Negative DC terminal voltage |
+$\mathbf{s}$ | [-] | Switching functions | $\mathbf{s} \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -129,27 +129,3 @@ Monitor | Units | Description | Note
 `ipos` | [A] | Positive DC current injection | Scalar
 `ineg` | [A] | Negative DC current injection | Scalar
 `e` | [V] | Pole voltages relative to their mean | $\mathbf{e} \in \mathbb{R}^N$
-
-## Development
-
-Current and instantaneous power are conserved:
-
-```math
-\begin{aligned}
-\sum_{n=1}^N i_n + i_+ + i_- &= 0 \\
-\sum_{n=1}^N v_n i_n + v_+ i_+ + v_- i_- &= 0
-\end{aligned}
-```
-
-Binary switching selects one DC rail per leg. Fractional switching functions
-give a lossless interpolation; they do not represent partial semiconductor
-conduction. Losses, dead time, and diode blocking are outside this model.
-
-The derived voltage monitor is
-
-```math
-e_n \leftarrow v_n - \dfrac{1}{N}\sum_{k=1}^N v_k
-```
-
-It preserves line-to-line voltages without defining a load neutral or imposing
-zero-sum AC current. Neutral and grounding connections belong to the network.

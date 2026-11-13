@@ -247,22 +247,3 @@ Monitor | Units | Description | Note
 `psi2` | [p.u.] | Node 2 magnetizing flux linkage | $\boldsymbol{\psi}_2 \in \mathbb{R}^N$
 `i1` | [A] | Terminal 1 current injection | $\mathbf{i}_1 \in \mathbb{R}^N$
 `i2` | [A] | Terminal 2 current injection | $\mathbf{i}_2 \in \mathbb{R}^N$
-
-## Development
-
-The per-unit rows are equivalent to the SI winding circuit referred to
-winding 1, with base impedance $Z_\mathrm{b} = 3V_\mathrm{w1}^2/S_\mathrm{b}$:
-
-```math
-\begin{aligned}
-L_\mathrm{s} &= X Z_\mathrm{b} / \omega_\mathrm{b} \\
-R_1^\mathrm{SI} &= R_1 Z_\mathrm{b} \\
-R_2^\mathrm{SI} &= R_2 Z_\mathrm{b}\,(V_\mathrm{w2}/V_\mathrm{w1})^2 \\
-L_\mathrm{m}^\mathrm{SI} &= L_\mathrm{m} Z_\mathrm{b} / \omega_\mathrm{b} \\
-\lambda_\mathrm{K} &= \psi_\mathrm{K}\,V_\mathrm{pk1} / \omega_\mathrm{b}
-\end{aligned}
-```
-
-A no-load test at rated voltage sees the two magnetizing branches in
-parallel, so $I_0$, $P_0$, $\psi_\mathrm{K}$, and $L_\mathrm{sat}$ are terminal
-quantities of the bank.

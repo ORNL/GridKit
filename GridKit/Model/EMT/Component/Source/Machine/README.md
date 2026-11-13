@@ -8,8 +8,7 @@ Current $\mathbf{i}$ is injected from the machine into the EMT bus.
 
 Winding equations use the rotor $dq0$ frame. Terminal voltages are transformed
 directly; algebraic inverse-Park rows define the injected phase currents in SI
-units. The equivalent phase-domain inductance synthesis is given in
-[Development](#development).
+units.
 
 > [!NOTE]
 > Internal machine quantities use the rated machine per-unit bases.
@@ -334,23 +333,3 @@ Monitor | Units | Description | Note
 `q` | [var] | Reactive power injection | SI
 `id` | [p.u.] | d-axis stator current |
 `iq` | [p.u.] | q-axis stator current |
-
-## Development
-
-The implemented formulation is algebraically identical to the phase-domain
-form in which the stator flux linkages couple through the time-varying
-inductance synthesis
-
-```math
-\mathbf{L}_{s}(\theta) = \mathbf{T}(\theta)^{-1}
-  \,\mathrm{diag}(L_\mathrm{ad} + L_l,\; L_\mathrm{aq} + L_l,\; L_0)\,
-  \mathbf{T}(\theta),
-```
-
-with $\mathbf{T}(\theta)$ the Park transformation above; for example, the
-phase-a self inductance is
-
-```math
-L_{aa}(\theta) = \dfrac{L_\mathrm{ad} + L_\mathrm{aq}}{3} + \dfrac{L_0}{3} + L_l\,\dfrac{2}{3}
-  + \dfrac{L_\mathrm{ad} - L_\mathrm{aq}}{3}\cos 2\theta .
-```
