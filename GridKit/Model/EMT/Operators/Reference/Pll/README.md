@@ -35,6 +35,7 @@ K_I &\in \mathbb{R}_{>0}
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{v}$ | `bus` | Bus | [V] | Bus voltage, phases a, b and c | $\mathbf{v} \in \mathbb{R}^3$
+$\theta$ | `theta` | Output | [rad] | Angle |
 $\omega$ | `omega` | Output | [rad/s] | Frequency |
 
 ## Submodels
