@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
@@ -33,7 +34,7 @@ struct ScaleMicrogridNetwork
   using Load        = GridKit::PowerElectronics::MicrogridLoad<ScalarT, IdxT>;
   using GenParams   = GridKit::PowerElectronics::DistributedGeneratorParameters<ScalarT, IdxT>;
 
-  size_t                    model_id_next;
+  IdxT                      model_id_next;
   size_t                    N_size;
   SignalNode                dg_signal;
   std::vector<Bus>          buses;
@@ -53,6 +54,11 @@ struct ScaleMicrogridNetwork
       loads(2 * n_size, nullptr),
       DGParam_list(2 * n_size)
   {
+    if (n_size == 0)
+    {
+      throw std::invalid_argument("ScaleMicrogridNetwork: n_size must be positive");
+    }
+
     buildScaleMicrogridNetwork();
   }
 
@@ -146,7 +152,7 @@ struct ScaleMicrogridNetwork
     ScalarT              Lline2 = 0.58 / (2.0 * M_PI * 50.0);
     std::vector<ScalarT> rline_list(2 * N_size - 1, 0.0);
     std::vector<ScalarT> Lline_list(2 * N_size - 1, 0.0);
-    for (IdxT i = 0; i < rline_list.size(); i++)
+    for (size_t i = 0; i < rline_list.size(); i++)
     {
       rline_list[i] = (i % 2) ? rline2 : rline1;
       Lline_list[i] = (i % 2) ? Lline2 : Lline1;
@@ -177,7 +183,7 @@ struct ScaleMicrogridNetwork
     generators[0] = dg_ref;
 
     // Create the remaining generators.
-    for (IdxT i = 1; i < 2 * N_size; i++)
+    for (size_t i = 1; i < 2 * N_size; i++)
     {
       auto* dg = new DGGenerator(model_id_next++,
                                  DGParam_list[i],
@@ -189,7 +195,7 @@ struct ScaleMicrogridNetwork
     }
 
     // Create transmission lines between consecutive buses.
-    for (IdxT i = 0; i < 2 * N_size - 1; i++)
+    for (size_t i = 0; i < 2 * N_size - 1; i++)
     {
       auto* line_model = new Line(model_id_next++,
                                   rline_list[i],
@@ -202,7 +208,7 @@ struct ScaleMicrogridNetwork
     }
 
     // Create loads on every other bus.
-    for (IdxT i = 0; i < N_size; i++)
+    for (size_t i = 0; i < N_size; i++)
     {
       auto* load_model = new Load(model_id_next++,
                                   rload_list[i],
@@ -214,7 +220,7 @@ struct ScaleMicrogridNetwork
     }
 
     // Create and Add all the microgrid Virtual DQ Buses
-    for (IdxT i = 0; i < 2 * N_size; i++)
+    for (size_t i = 0; i < 2 * N_size; i++)
     {
       auto* virDQbus_model = new BusDQ(model_id_next++,
                                        RN,
