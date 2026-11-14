@@ -41,7 +41,7 @@ machinery and learn where the difficulty lives.
 
 ## 2. Glossary
 
-Several of these read backwards on first encounter.
+Main terms used in our pilot study that follows.
 
 | Term | Meaning |
 |---|---|
@@ -68,11 +68,7 @@ Several of these read backwards on first encounter.
 | **Q limit** | A generator's maximum (`QMAX`, field-current heating) and minimum (`QMIN`, stator end-region heating) reactive output. |
 | **PV→PQ switching** | When a generator's Q leaves its limits, it is fixed at the limit and its bus is solved as PQ. Standard in planning tools; the pipeline's version is in §4.2a. |
 
-> **New to power-system dynamics?** The plan doc has a
-> [physical intuition section](datacenter_load_uq_plan.md#physical-intuition)
-> covering why a fault is dangerous, why inertia buys time, what a ZIP load does
-> during a voltage dip, and why censored runs are results rather than missing
-> data.
+> **Details:** [physical intuition](datacenter_load_uq_plan.md#physical-intuition) covering faults, inertia, ZIP load during voltage dips, censored runs, etc.
 
 ---
 
@@ -98,8 +94,7 @@ Hourly load and wind come from an 8,760-hour dataset for this footprint, so the
 
 The shipped case is not used directly. Once per case, it is rebuilt from the two TAMU
 source files, and the rebuild is checked against the shipped `case.json`. That gives two
-artifacts. The **base case** supplies every machine's dynamic parameters. The **seed
-`.m`** supplies the dispatch: which units are online and how much they produce.
+artifacts. The **base case** supplies every machine's dynamic parameters. The **seed `.m`** supplies the dispatch: which units are online and how much they produce.
 Each condition then overwrites only the dispatch, on a copy of the base case.
 Blue boxes are the one-time build; grey boxes run per condition.
 
@@ -134,8 +129,7 @@ What we change relative to what ships:
   inertia, so dynamics are always inherited from the base case.
 * **Six wind units become negative load stand-ins** (§4.3), so they carry no inertia.
 
-Details and the validation checks are in
-[m_to_case_helper.md, The chain](m_to_case_helper.md#the-chain).
+> **Details:** [where validation checks are](m_to_case_helper.md#the-chain) describing the case rebuilding chain.
 
 ---
 
@@ -216,6 +210,8 @@ committing more units.
 > [commitment is a first-order driver (Phase 1b inertia sweep)](datacenter_load_uq_plan.md#1b-inertia-sweep-measured-2026-10-20)
 
 ### 4.2 Dispatch: DC OPF then AC PF
+
+> **Implementation note:** Currently, the dispatch pipeline uses PowerModels.jl for both DC OPF and AC PF solves. As OPF functionality becomes available in GridKit (currently under development), we can readily substitute it into the pipeline. Maintaining PowerModels.jl as an alternative is beneficial for validation purposes and exploration of various AC OPF relaxation formulations.
 
 Both solves use PowerModels.jl with Ipopt. Per condition:
 
