@@ -328,7 +328,7 @@ void printResult(const RunResult& result)
  */
 int main(int argc, char const* argv[])
 {
-  index_type N_size = 5000;
+  index_type N_size = 500;
 
   std::vector<index_type> num_partitions_list = {20};
 

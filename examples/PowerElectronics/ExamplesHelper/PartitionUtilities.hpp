@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
-#include <GridKit/Model/PowerElectronics/PartitionInterface/BusLInePartitionInterface.hpp>
+#include <GridKit/Model/PowerElectronics/PartitionInterface/BusLinePartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Testing/Testing.hpp>

@@ -3,21 +3,13 @@ add_executable(PartitionScaleMicrogrid PartitionScaleMicrogrid.cpp)
 
 target_link_libraries(
   PartitionMicrogrid
-  PRIVATE GridKit::power_elec_disgen
-          GridKit::power_elec_microline
-          GridKit::power_elec_microload
-          GridKit::solvers_dyn
-          GridKit::power_elec_microbusdq
+  PRIVATE GridKit::solvers_dyn
           GridKit::testing
           power_elec_partition_examples_helper)
 
 target_link_libraries(
   PartitionScaleMicrogrid
-  PRIVATE GridKit::power_elec_disgen
-          GridKit::power_elec_microline
-          GridKit::power_elec_microload
-          GridKit::solvers_dyn
-          GridKit::power_elec_microbusdq
+  PRIVATE GridKit::solvers_dyn
           GridKit::testing
           power_elec_partition_examples_helper)
 

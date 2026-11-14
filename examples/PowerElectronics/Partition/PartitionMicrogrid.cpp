@@ -7,11 +7,11 @@
 
 #include <GridKit/Model/PowerElectronics/PartitionInterface/BusLinePartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include "GridKit/Model/PowerElectronics/SystemModel.hpp"
 #include <examples/PowerElectronics/ExamplesHelper/MicrogridNetwork.hpp>
 #include <examples/PowerElectronics/ExamplesHelper/PartitionUtilities.hpp>
 #include <examples/PowerElectronics/ExamplesHelper/SystemAssembler.hpp>
