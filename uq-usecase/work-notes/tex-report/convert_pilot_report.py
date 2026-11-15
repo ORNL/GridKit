@@ -49,6 +49,17 @@ INLINE_CODE_FORMAT = "texttt"  # Choose preferred rendering: "math" or "texttt"
 EXCLUDE_SECTIONS = []  # Set to ["4.2a", "4.2b"] to exclude those sections
 
 # ============================================================================
+# CITATION MAPPING — Maps numeric citations [1], [2], etc. to BibTeX keys
+# ============================================================================
+# Usage in markdown: (Author et al., YEAR [1], details)
+# Converts to LaTeX: (Author et al., YEAR \cite{BibtexKey}, details)
+
+CITATION_MAP = {
+    "1": "Elliott2021",       # Elliott et al., 2021 - OSTI 1819998 (Advanced Control and Monitoring of IBRs)
+    "2": "PolitisRomano1994", # Politis and Romano, 1994 - Subsampling under minimal assumptions
+}
+
+# ============================================================================
 # PHASE 1: Extract §1 and convert to LaTeX
 # ============================================================================
 
@@ -569,11 +580,19 @@ def markdown_inline_formatting(text):
 
     text = re.sub(r"`([^`]+?)`", convert_code, text)
 
-    # [text](url) → \href{url}{text} (markdown links to LaTeX)
-    # Use \href to keep link text together without spacing issues
+    # [text](url) → text (markdown links to LaTeX)
+    # Strip URL and keep only link text to avoid hyperlink formatting issues
     text = re.sub(
         r"\[([^\]]+?)\]\(([^)]+?)\)",
-        lambda m: r"\href{" + m.group(2) + "}{" + m.group(1) + "}",
+        lambda m: m.group(1),
+        text,
+    )
+
+    # [1], [2], etc. → \cite{BibtexKey} (numeric citations to LaTeX)
+    # Convert numeric citations like "[1]" to "\cite{Elliott2021}"
+    text = re.sub(
+        r"\[(\d+)\]",
+        lambda m: r"\cite{" + CITATION_MAP.get(m.group(1), f"cite{m.group(1)}") + "}",
         text,
     )
 
@@ -757,18 +776,20 @@ def format_details_blockquote(blockquote_md):
             first_link_url.split("#")[0] if "#" in first_link_url else first_link_url
         )
 
-        # Build full GitHub URL (one URL for all sections from same file)
-        github_url = f"{REPO_BASE}/blob/{REPO_BRANCH}/uq-usecase/work-notes/{filename}"
+        # Use just the filename (without full path) to avoid overfull boxes
+        just_filename = filename.split("/")[-1] if "/" in filename else filename
 
         # Extract all link texts (section names as they appear in markdown)
         section_names = [match.group(1) for match in matches]
 
-        # Format: Details: [full URL]. Sections: "section1", "section2", "section3"
+        # Format: Details: filename. Sections: "section1", "section2", "section3"
         # Section names are quoted so they stand out as section references
+        # Use smaller font size for sections to avoid overfull boxes
         sections_str = ", ".join(f'"{name}"' for name in section_names)
 
         details_latex = (
-            f"\\textbf{{Details:}} \\url{{{github_url}}}. Sections: {sections_str}"
+            f"\\textbf{{Details:}} {just_filename}. "
+            f"{{\\small Sections: {sections_str}}}"
         )
 
         return details_latex

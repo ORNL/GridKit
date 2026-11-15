@@ -357,8 +357,7 @@ injection scales with |V|, which is constant current.
 **Why it is acceptable.** Converter-interfaced generation is modelled in
 positive-sequence transient stability as a controllable current source. The
 Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
-interface is "a controllable current source" (Elliott et al., 2021,
-[OSTI 1819998](https://www.osti.gov/biblio/1819998), abstract). A constant-current
+interface is "a controllable current source" (Elliott et al., 2021 [1], abstract). A constant-current
 ZIP is a simple stand-in for that current injection.
 
 ### 4.4 The datacenter
@@ -655,7 +654,7 @@ Two points. First, the datacenter moves P(CCT < 0.25 s) from about 0.5 to 0.73 i
 
 ### 7.3 More operating conditions: how the estimate settles
 
-We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each pool (*subsampling*, Politis and Romano, 1994; references and details in the [plan](datacenter_load_uq_plan.md#subsampling-the-term-what-it-is-used-for-and-what-73-showed)). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both pools. This holds for these two pools only, and the check does not give an uncertainty; that is the Greenwood interval in §7.2b. The campaign did not need it, because all samples are already used. We might use the same check later as an alternative way to size a future study, if a full-size design costs too much. The plan sets out how.
+We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each pool (*subsampling* [2]; references and details in the [plan](datacenter_load_uq_plan.md#subsampling-the-term-what-it-is-used-for-and-what-73-showed)). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both pools. This holds for these two pools only, and the check does not give an uncertainty; that is the Greenwood interval in §7.2b. The campaign did not need it, because all samples are already used. We might use the same check later as an alternative way to size a future study, if a full-size design costs too much. The plan sets out how.
 
 ![convergence of the KM estimate, 37 and 171 conditions](figures/main_convergence_37_vs_171.png)
 
