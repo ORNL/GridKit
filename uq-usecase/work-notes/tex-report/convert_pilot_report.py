@@ -114,15 +114,20 @@ def markdown_to_latex_text(text):
     in_list = False
     quote_buffer = []
     list_buffer = []
+    quote_started = False  # Track if we've output \begin{quote}
 
     def close_quote():
-        nonlocal in_quote, quote_buffer
+        nonlocal in_quote, quote_buffer, quote_started
         if in_quote:
             processed_quote = "\n".join(quote_buffer)
-            
+
             # Check if this is a Details blockquote
             if "Details:" in processed_quote and INCLUDE_FOOTNOTES:
-                # Format as Details blockquote with fbox
+                # Format as Details blockquote with fbox (no quote tags)
+                # Close quote tag if it was started (for mixed blockquotes)
+                if quote_started:
+                    result_lines.append("\\end{quote}")
+                
                 blockquote_md = "> " + processed_quote  # Reconstruct markdown format
                 details_latex = format_details_blockquote(blockquote_md)
                 if details_latex:
@@ -134,6 +139,10 @@ def markdown_to_latex_text(text):
                     result_lines.append(r"\vspace{0.2em}")
             else:
                 # Regular blockquote
+                if not quote_started:
+                    result_lines.append("\\begin{quote}")
+                    quote_started = True
+                
                 processed_quote = markdown_inline_formatting(processed_quote)
 
                 # Convert markdown links in blockquote
@@ -147,7 +156,8 @@ def markdown_to_latex_text(text):
                 )
                 result_lines.extend(processed_quote.split("\n"))
                 result_lines.append("\\end{quote}")
-            
+                quote_started = False
+
             quote_buffer = []
             in_quote = False
 
@@ -175,7 +185,7 @@ def markdown_to_latex_text(text):
             quote_buffer.append(quote_line)
             if not in_quote:
                 in_quote = True
-                result_lines.append("\\begin{quote}")
+                # Don't add \begin{quote} yet - wait until close_quote() to decide
             i += 1
 
         # Check for bullet list line (starts with * or -)
@@ -1881,7 +1891,9 @@ def extract_section_4_4(md_content):
 
     # Collect all remaining text (including Details blockquotes inline)
     while i < len(lines):
-        text_lines.append(lines[i])  # Keep all lines including blank ones and blockquotes
+        text_lines.append(
+            lines[i]
+        )  # Keep all lines including blank ones and blockquotes
         i += 1
 
     text = "\n".join(text_lines).strip()
