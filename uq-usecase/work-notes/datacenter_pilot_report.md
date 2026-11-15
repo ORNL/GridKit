@@ -493,12 +493,6 @@ flowchart LR
 *Figure 6.1. Per worker, aleatoric means. Fault sweep: stage A 122 s, dynamics 92 s.
 Launch counts from the timing job, not the campaign logs.*
 
-**At 2,000 buses.** Per-worker memory is partly measured. One dynamic run with full
-monitors peaked at 126 MB, and one stage-A batch of two cases (dc-opf and ac) peaked at
-1.0 GB including Julia (SLURM 19830315, a single-process probe, not a campaign). A full
-worker batch of about 225 dispatches is not measured, and it sets the per-worker number.
-Wall time and storage at 2,000 buses are projections in [§8](#8-first-look-at-activsg2000).
-
 ---
 
 ## 7. Results
