@@ -2100,9 +2100,7 @@ def convert_pilot_report(phase="1"):
             try:
                 impl_note, text, details_md = extract_section_4_4(md_content)
                 if text or impl_note:
-                    print(
-                        f"✓ Extracted §4.4 'The datacenter' ({len(text)} bytes)"
-                    )
+                    print(f"✓ Extracted §4.4 'The datacenter' ({len(text)} bytes)")
                     latex_4_4 = generate_latex_section_4_4(impl_note, text, details_md)
                     latex_sections.append(latex_4_4)
                     print(f"✓ Generated §4.4 LaTeX ({len(latex_4_4)} bytes)")
