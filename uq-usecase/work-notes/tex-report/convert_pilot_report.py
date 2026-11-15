@@ -45,8 +45,8 @@ INLINE_CODE_FORMAT = "texttt"  # Choose preferred rendering: "math" or "texttt"
 
 # Sections to exclude from conversion
 # Useful for optional subsections that may not be needed in final report
-# Example: EXCLUDE_SECTIONS = ["4.2a", "4.2b"]  # Skip reactive limits and AC OPF sections
-EXCLUDE_SECTIONS = []  # Set to ["4.2a", "4.2b"] to exclude those sections
+# Example: EXCLUDE_SECTIONS = ["4.2"]  # Skip a section (4.2a and 4.2b are now paragraphs within 4.2)
+EXCLUDE_SECTIONS = []  # Currently empty; set to ["4.2"] or other sections to exclude
 
 # ============================================================================
 # CITATION MAPPING — Maps numeric citations [1], [2], etc. to BibTeX keys
