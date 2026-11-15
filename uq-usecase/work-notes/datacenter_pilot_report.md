@@ -667,16 +667,7 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 
 ### 7.7 Earlier campaigns and the alphaP sensitivity
 
-These results are not in the headline numbers above. Their details are in the plan.
-
-* **`phase3b`** (243 conditions, 16 buses, 3 hours) is the siting pilot. It found that hosting capacity varies 8× across buses (50 to 400 MW). The limit at a given bus shifts with the operating condition, so capacity is not hour-independent.
-* **`aleatoric1` and `faultscreen1`** at alphaP 0.2 with unlimited Q are first-pass versions of the two main campaigns. Their analyses, including the earlier censoring factors of 1.36× and 4.31×, are in the plan.
-* **alphaP** was tested as a sensitivity. CCT spread across alphaP was zero in 10 of 12 cases, but alphaP decides whether a case simulates at all. The main campaigns use 0.8 with switching. At alphaP 0.8, 253 of 680 datacenter runs have no outcome, against 156 at 0.2 (§7.5). With the fault at the three other locations tested, pure constant-power load at 200 MW runs at 93–100% of feasible dispatches, against 59% at bus 66. The limit is therefore not primarily a property of the load; see the plan and [issue §11](ida_ic_issue.md#11-hypothesis-h1-and-what-it-means).
-
-> **Details:** [`alphaP` tested as a sensitivity](datacenter_load_uq_plan.md#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22) ·
-> [the feasible-`alphaP` frontier, mapped](datacenter_load_uq_plan.md#the-feasible-alphap-frontier-mapped-afront1-measured-2026-11-02) ·
-> [fault location is the missing variable](datacenter_load_uq_plan.md#fault-location-is-the-missing-variable-afront2-measured-2026-11-02) ·
-> [the 52 `phase3b` `sim_failed` are a model-validity limit, not instability](datacenter_load_uq_plan.md#the-52-sim_failed-are-a-model-validity-limit-not-instability)
+> **Details:** [`alphaP` tested as a sensitivity](datacenter_load_uq_plan.md#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22) · [the feasible-`alphaP` frontier, mapped](datacenter_load_uq_plan.md#the-feasible-alphap-frontier-mapped-afront1-measured-2026-11-02) · [fault location is the missing variable](datacenter_load_uq_plan.md#fault-location-is-the-missing-variable-afront2-measured-2026-11-02) · [`phase3b` siting pilot and earlier campaigns](datacenter_load_uq_plan.md#phase3b-siting-pilot-243-conditions-16-buses-3-hours)
 
 ---
 
