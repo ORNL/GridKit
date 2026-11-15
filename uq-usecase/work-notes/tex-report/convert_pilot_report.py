@@ -55,8 +55,8 @@ EXCLUDE_SECTIONS = []  # Set to ["4.2a", "4.2b"] to exclude those sections
 # Converts to LaTeX: (Author et al., YEAR \cite{BibtexKey}, details)
 
 CITATION_MAP = {
-    "1": "Elliott2021",       # Elliott et al., 2021 - OSTI 1819998 (Advanced Control and Monitoring of IBRs)
-    "2": "PolitisRomano1994", # Politis and Romano, 1994 - Subsampling under minimal assumptions
+    "1": "Elliott2021",  # Elliott et al., 2021 - OSTI 1819998 (Advanced Control and Monitoring of IBRs)
+    "2": "PolitisRomano1994",  # Politis and Romano, 1994 - Subsampling under minimal assumptions
 }
 
 # ============================================================================
@@ -607,9 +607,16 @@ def markdown_inline_formatting(text):
 
     # *italic* → \textit{italic}
     # Use DOTALL flag to match across newlines and normalize whitespace
+    # Also escape underscores inside italic text so they render correctly
+    def convert_italic(m):
+        text_content = m.group(1).replace("\n", " ")
+        # Escape underscores in italic text
+        text_content = text_content.replace("_", r"\_")
+        return r"\textit{" + text_content + "}"
+    
     text = re.sub(
         r"(?<!\*)\*(.+?)\*(?!\*)",
-        lambda m: r"\textit{" + m.group(1).replace("\n", " ") + "}",
+        convert_italic,
         text,
         flags=re.DOTALL,
     )
@@ -776,20 +783,18 @@ def format_details_blockquote(blockquote_md):
             first_link_url.split("#")[0] if "#" in first_link_url else first_link_url
         )
 
-        # Use just the filename (without full path) to avoid overfull boxes
-        just_filename = filename.split("/")[-1] if "/" in filename else filename
+        # Build full GitHub URL (one URL for all sections from same file)
+        github_url = f"{REPO_BASE}/blob/{REPO_BRANCH}/uq-usecase/work-notes/{filename}"
 
         # Extract all link texts (section names as they appear in markdown)
         section_names = [match.group(1) for match in matches]
 
-        # Format: Details: filename. Sections: "section1", "section2", "section3"
+        # Format: Details: [full URL]. Sections: "section1", "section2", "section3"
         # Section names are quoted so they stand out as section references
-        # Use smaller font size for sections to avoid overfull boxes
         sections_str = ", ".join(f'"{name}"' for name in section_names)
 
         details_latex = (
-            f"\\textbf{{Details:}} {just_filename}. "
-            f"{{\\small Sections: {sections_str}}}"
+            f"\\textbf{{Details:}} \\url{{{github_url}}}. Sections: {sections_str}"
         )
 
         return details_latex
