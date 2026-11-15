@@ -1825,6 +1825,107 @@ def generate_latex_section_4_3(impl_note, text, details_blockquotes):
     return latex_output
 
 
+def extract_section_4_4(md_content):
+    """
+    Extract section §4.4 "The datacenter" from markdown.
+    Returns: (impl_note, text, details_blockquotes)
+    """
+    pattern_start = r"^### 4\.4\s+The datacenter"
+    match_start = re.search(pattern_start, md_content, re.MULTILINE)
+    if not match_start:
+        return ("", "", [])
+
+    start_pos = match_start.end()
+    next_newline = md_content.find("\n", start_pos)
+    if next_newline != -1:
+        start_pos = next_newline + 1
+
+    # Section ends at §5 or later (next ## heading that's not ### subsection)
+    pattern_end = r"^## 5\."
+    match_end = re.search(pattern_end, md_content[start_pos:], re.MULTILINE)
+    end_pos = start_pos + match_end.start() if match_end else len(md_content)
+
+    section_text = md_content[start_pos:end_pos].strip()
+
+    # Extract: implementation note, main text, and details blockquotes
+    impl_note = ""
+    text_lines = []
+    details_blockquotes = []
+
+    lines = section_text.split("\n")
+    i = 0
+
+    # Check if first blockquote is an implementation note
+    if i < len(lines) and lines[i].strip().startswith(">"):
+        if "note:" in lines[i].lower():
+            blockquote_lines = []
+            while i < len(lines) and lines[i].strip().startswith(">"):
+                blockquote_lines.append(lines[i])
+                i += 1
+            impl_note = "\n".join(blockquote_lines)
+
+    # Collect main text and Details blockquotes
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+
+        if stripped.startswith(">") and (
+            "Details:" in stripped or "note:" in stripped.lower()
+        ):
+            # Details blockquote
+            blockquote_lines = []
+            while i < len(lines) and lines[i].strip().startswith(">"):
+                blockquote_lines.append(lines[i])
+                i += 1
+            details_blockquotes.append("\n".join(blockquote_lines))
+        else:
+            text_lines.append(
+                line
+            )  # Keep all lines including blank ones for paragraph breaks
+            i += 1
+
+    text = "\n".join(text_lines).strip()
+    return impl_note, text, details_blockquotes
+
+
+def generate_latex_section_4_4(impl_note, text, details_blockquotes):
+    """Convert extracted §4.4 markdown to LaTeX."""
+    latex_output = r"\subsubsection*{0.0.4.4 The datacenter}" + "\n"
+    latex_output += (
+        r"\addcontentsline{toc}{subsubsection}{0.0.4.4 The datacenter}" + "\n"
+    )
+    latex_output += r"\label{sec:datacenter}" + "\n\n"
+
+    # Add implementation note at beginning if present
+    if impl_note and INCLUDE_FOOTNOTES:
+        latex_output += r"\noindent\fbox{\parbox[t]{0.98\textwidth}{%" + "\n"
+        latex_output += r"\setlength{\parskip}{0pt}%" + "\n"
+        note_latex = format_details_blockquote(impl_note)
+        if note_latex:
+            latex_output += note_latex + "\n"
+        latex_output += r"}}" + "\n"
+        latex_output += r"\vspace{0.4em}" + "\n\n"
+
+    # Add main text
+    if text:
+        latex_text = markdown_to_latex_text(text)
+        latex_output += latex_text + "\n"
+
+    # Add Details blockquotes at the end
+    if details_blockquotes and INCLUDE_FOOTNOTES:
+        latex_output += r"\par\vspace{0.8em}" + "\n"
+        latex_output += r"\noindent\fbox{\parbox[t]{0.98\textwidth}{%" + "\n"
+        latex_output += r"\setlength{\parskip}{0pt}%" + "\n"
+        for blockquote in details_blockquotes:
+            details_latex = format_details_blockquote(blockquote)
+            if details_latex:
+                latex_output += details_latex + "\n"
+        latex_output += r"}}" + "\n"
+        latex_output += r"\vspace{0.2em}" + "\n"
+
+    return latex_output
+
+
 def convert_pilot_report(phase="1"):
     """
     Main conversion function. Converts specified phases and all prior phases.
@@ -1995,6 +2096,20 @@ def convert_pilot_report(phase="1"):
                 print(f"ERROR: Could not process §4.3: {e}", file=sys.stderr)
                 return False
 
+        if phase_int >= 6:
+            try:
+                impl_note, text, details_md = extract_section_4_4(md_content)
+                if text or impl_note:
+                    print(
+                        f"✓ Extracted §4.4 'The datacenter' ({len(text)} bytes)"
+                    )
+                    latex_4_4 = generate_latex_section_4_4(impl_note, text, details_md)
+                    latex_sections.append(latex_4_4)
+                    print(f"✓ Generated §4.4 LaTeX ({len(latex_4_4)} bytes)")
+            except Exception as e:
+                print(f"ERROR: Could not process §4.4: {e}", file=sys.stderr)
+                return False
+
     # Combine all sections
     latex_output = "".join(latex_sections)
 
@@ -2032,6 +2147,10 @@ def convert_pilot_report(phase="1"):
     elif phase_int < 5:
         print(
             f"  2. Run again: python convert_pilot_report.py phase=5 (add Section 4.3 Wind)"
+        )
+    elif phase_int < 6:
+        print(
+            f"  2. Run again: python convert_pilot_report.py phase=6 (add Section 4.4 Datacenter)"
         )
     else:
         print(f"  2. Test: cd ../chapters/uq-subsections && pdflatex test_main.tex")
