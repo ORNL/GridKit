@@ -335,6 +335,8 @@ control design are in [plan §10](datacenter_load_uq_plan.md#ac-opf-as-a-second-
 
 ### 4.3 Wind becomes negative load
 
+> **Implementation note:** The ACTIVSg200 case lacks native renewable energy converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models—specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)—which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
+
 Wind units are removed as `Genrou` machines and re-inserted as a **negative
 `LoadZIP`** at their own bus, with `alphaI = 1` (constant current). Left as
 synchronous machines, they could contribute **up to 2,766 MW·s** of inertia at
@@ -350,23 +352,18 @@ treats positive `Pnom` as consumed, so the negative value injects PG. At the
 initial voltage this reproduces the power-flow P and Q exactly; after that the
 injection scales with |V|, which is constant current.
 
-> **Details:** [wind pipeline, function by function](datacenter_load_uq_plan.md#pipeline-trace-one-wind-unit-one-hour)
+> **Details:** [wind pipeline, function by function](datacenter_load_uq_plan.md#pipeline-trace-one-wind-unit-one-hour) · [wind: why negative load, not fixed](datacenter_load_uq_plan.md#3-wind-why-negative-load-not-fixed) · [implementation](datacenter_load_uq_plan.md#implementation) · ["net load" is an aggregate, not a per-bus subtraction](datacenter_load_uq_plan.md#net-load-is-an-aggregate-not-a-per-bus-subtraction)
 
 **Why it is acceptable.** Converter-interfaced generation is modelled in
 positive-sequence transient stability as a controllable current source. The
 Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
 interface is "a controllable current source" (Elliott et al., 2021,
 [OSTI 1819998](https://www.osti.gov/biblio/1819998), abstract). A constant-current
-ZIP is a simple stand-in for that current injection, not a REGC_A model. GridKit
-accepts negative ZIP values (no parameter validation), and the pre-fault power
-drift includes the stand-ins. Post-fault behaviour with them is not separately
-verified.
-
-> **Details:** [wind: why negative load, not fixed](datacenter_load_uq_plan.md#3-wind-why-negative-load-not-fixed) ·
-> [implementation](datacenter_load_uq_plan.md#implementation) ·
-> ["net load" is an aggregate, not a per-bus subtraction](datacenter_load_uq_plan.md#net-load-is-an-aggregate-not-a-per-bus-subtraction)
+ZIP is a simple stand-in for that current injection.
 
 ### 4.4 The datacenter
+
+> **Implementation note:** The GridKit team has plans to develop comprehensive dynamic models for datacenter loads. Once implemented and validated, these models will be readily incorporated to replace the quasi-static ZIP approximation and improve system response fidelity.
 
 A datacenter is represented as **additional electrical load placed at one
 bus**. Two things about *how* it is added matter to the answer.
@@ -408,7 +405,7 @@ datacenter (N2, `P/I/Z = 80/20/0`). That is the same as adding an N2 device
 beside an untouched N1; the subtraction only undoes the fold. A bus with no load
 has no host to restore, and the datacenter device is the only one.
 
-> **Details:** [datacenter pipeline, function by function](datacenter_load_uq_plan.md#how-a-datacenter-enters-the-model-pipeline-trace)
+> **Details:** [datacenter pipeline, function by function](datacenter_load_uq_plan.md#how-a-datacenter-enters-the-model-pipeline-trace) · [placement selection](datacenter_load_uq_plan.md#placement-selection)
 
 **Placement.** The candidate pool is the 16 load-carrying buses of the `phase3b`
 siting sample. The two main campaigns use subsets of it:
@@ -416,8 +413,6 @@ siting sample. The two main campaigns use subsets of it:
 * the fault sweep (`faultscreen1_ap08_qlim`, §7.5): buses 108 and 148, at 200 MW;
 * the aleatoric campaign (`aleatoric1_ap08_qlim`, §7.0): buses 6, 108, 120 and 148, at
   50, 100, 200, 300 or 400 MW.
-
-> **Details:** [placement selection](datacenter_load_uq_plan.md#placement-selection)
 
 **The pilot mix is `P/I/Z = 80/20/0`.** The physically intended model is pure
 constant power, `100/0/0`. It is not simulable at every bus (see
