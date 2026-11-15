@@ -958,3 +958,29 @@ The campaign execution infrastructure — including scripts for fault screening,
 
 ## References
 
+The bracketed numbers used above (e.g. [1]) refer to this list. BibTeX entries
+are in `tex-report/uq-usecase_refs.bib`.
+
+1. R. T. Elliott et al., "Advanced Control and Monitoring of Inverter-Based Resources (PSTess)," National Renewable Energy Laboratory (NREL), 2021. <https://www.osti.gov/biblio/1819998>
+2. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754
+3. S. Peles et al., *GridKit*, Version 0.2.0, 2025. <https://github.com/ORNL/GridKit>, doi:10.11578/dc.20250310.1
+4. A. B. Birchfield, T. Xu, K. M. Gegner, K. S. Shetye, and T. J. Overbye, "Grid Structural Characteristics as Validation Criteria for Synthetic Networks," *IEEE Transactions on Power Systems*, 32(4):3258–3265, 2017. doi:10.1109/TPWRS.2016.2616385
+5. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu>
+6. C. Coffrin, R. Bent, K. Sundar, Y. Ng, and M. Lubin, "PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations," *Power Systems Computation Conference (PSCC)*, 2018. doi:10.23919/PSCC.2018.8442948
+7. A. Wächter and L. T. Biegler, "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming," *Mathematical Programming*, 106(1):25–57, 2006. doi:10.1007/s10107-004-0559-y
+8. A. C. Hindmarsh et al., "SUNDIALS: Suite of Nonlinear and Differential/Algebraic Equation Solvers," *ACM Transactions on Mathematical Software*, 31(3):363–396, 2005. doi:10.1145/1089014.1089020
+9. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3
+10. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671
+11. A. Der Kiureghian and O. Ditlevsen, "Aleatory or Epistemic? Does It Matter?," *Structural Safety*, 31(2):105–112, 2009. doi:10.1016/j.strusafe.2008.06.020
+12. F. Milano, F. Dörfler, G. Hug, D. J. Hill, and G. Verbič, "Foundations and Challenges of Low-Inertia Systems," *Power Systems Computation Conference (PSCC)*, 2018. doi:10.23919/PSCC.2018.8450880
+13. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837
+14. J. V. Milanović, K. Yamashita, S. Martínez Villanueva, S. Ž. Djokić, and L. M. Korunović, "International Industry Practice on Power-System Load Modeling," *IEEE Transactions on Power Systems*, 28(3):3038–3046, 2013. doi:10.1109/TPWRS.2012.2231969
+15. P. Pourbeik et al., "Generic Dynamic Models for Modeling Wind Power Plants and Other Renewable Technologies in Large-Scale Power System Studies," *IEEE Transactions on Energy Conversion*, 32(3):1108–1116, 2017. doi:10.1109/TEC.2016.2639050
+16. A. Shehabi et al., "2024 United States Data Center Energy Usage Report," Lawrence Berkeley National Laboratory, LBNL-2001637, 2024.
+17. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981
+18. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994.
+19. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998.
+20. B. Stott, "Review of Load-Flow Calculation Methods," *Proceedings of the IEEE*, 62(7):916–929, 1974. doi:10.1109/PROC.1974.9544
+21. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452
+22. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926.
+23. M. B. Giles, "Multilevel Monte Carlo Methods," *Acta Numerica*, 24:259–328, 2015. doi:10.1017/S096249291500001X

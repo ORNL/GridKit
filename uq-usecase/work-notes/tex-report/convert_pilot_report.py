@@ -26,10 +26,15 @@ SOURCE_MD = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes
 FIGURES_SOURCE_DIR = (
     "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/figures/"
 )
-TARGET_PATH = "/Users/isatkaus/projects/scidac/docs/report/SciDAC_OE_Technical_Report/chapters/uq-subsections/pilot_uq_usecase.tex"
 
-# Output figure directory (for final report)
+# PRIMARY OUTPUT: SciDAC technical report
+TARGET_PATH = "/Users/isatkaus/projects/scidac/docs/report/SciDAC_OE_Technical_Report/chapters/uq-subsections/pilot_uq_usecase.tex"
 FIGURES_OUTPUT_DIR = "/Users/isatkaus/projects/scidac/docs/report/SciDAC_OE_Technical_Report/chapters/uq-subsections/figs/"
+
+# SECONDARY OUTPUT: Keep generated LaTeX in repo for version control
+REPO_OUTPUT_PATH = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/pilot_uq_usecase.tex"
+REPO_FIGURES_OUTPUT_DIR = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/figs/"
+REPO_BIBTEX_PATH = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/uq-usecase_refs.bib"
 
 # Phase 2+ options
 INCLUDE_FOOTNOTES = True  # Set to False to omit cross-document references as footnotes
@@ -80,6 +85,116 @@ CITATION_MAP = {
     "22": "Greenwood1926",  # Greenwood's variance formula
     "23": "Giles2015",  # multilevel Monte Carlo
 }
+
+# ============================================================================
+# UNICODE HANDLING — text-mode and math-mode replacements
+# ============================================================================
+# The report uses Unicode symbols that pdflatex cannot typeset directly.
+# Inside math ($...$ and $$...$$) they map to math commands; in prose they map
+# to text-mode equivalents (wrapped in $...$ where only a math glyph exists).
+
+# Applied INSIDE math spans (content is already LaTeX math).
+MATH_UNICODE = {
+    "°": r"^{\circ}",
+    "×": r"\times ",
+    "·": r"\cdot ",
+    "−": "-",
+    "∼": r"\sim ",
+    "≤": r"\le ",
+    "≥": r"\ge ",
+    "≈": r"\approx ",
+    "≠": r"\ne ",
+    "±": r"\pm ",
+    "²": r"^{2}",
+    "³": r"^{3}",
+    "…": r"\dots ",
+    "→": r"\to ",
+    "∞": r"\infty ",
+    "∈": r"\in ",
+    "≡": r"\equiv ",
+    "∝": r"\propto ",
+    "–": "-",
+    "—": "---",
+    "Δ": r"\Delta ",
+    "δ": r"\delta ",
+    "α": r"\alpha ",
+    "β": r"\beta ",
+    "σ": r"\sigma ",
+    "μ": r"\mu ",
+    "θ": r"\theta ",
+    "λ": r"\lambda ",
+    "π": r"\pi ",
+    "ρ": r"\rho ",
+    "ω": r"\omega ",
+    "γ": r"\gamma ",
+    "Σ": r"\Sigma ",
+}
+
+# Applied in text (prose) mode. Order does not matter (all keys are distinct).
+TEXT_UNICODE = [
+    ("§", r"{\textsection}"),
+    ("•", r"\textbullet{}"),
+    ("–", "--"),
+    ("—", "---"),
+    ("→", r"$\to$"),
+    ("←", r"$\leftarrow$"),
+    ("↔", r"$\leftrightarrow$"),
+    ("×", r"$\times$"),
+    ("·", r"$\cdot$"),
+    ("−", r"$-$"),
+    ("∼", r"$\sim$"),
+    ("≈", r"$\approx$"),
+    ("≤", r"$\le$"),
+    ("≥", r"$\ge$"),
+    ("≠", r"$\ne$"),
+    ("±", r"$\pm$"),
+    ("°", r"$^{\circ}$"),
+    ("²", r"$^{2}$"),
+    ("³", r"$^{3}$"),
+    ("…", r"\dots "),
+    ("∞", r"$\infty$"),
+    ("∈", r"$\in$"),
+    ("≡", r"$\equiv$"),
+    ("∝", r"$\propto$"),
+    ("✓", r"$\checkmark$"),
+    ("“", "``"),
+    ("”", "''"),
+    ("‘", "`"),
+    ("’", "'"),
+    ("Δ", r"$\Delta$"),
+    ("α", r"$\alpha$"),
+    ("β", r"$\beta$"),
+    ("δ", r"$\delta$"),
+    ("σ", r"$\sigma$"),
+    ("μ", r"$\mu$"),
+    ("θ", r"$\theta$"),
+    ("λ", r"$\lambda$"),
+    ("π", r"$\pi$"),
+    ("ρ", r"$\rho$"),
+    ("ω", r"$\omega$"),
+    ("γ", r"$\gamma$"),
+    ("Σ", r"$\Sigma$"),
+]
+
+
+def latexify_math(s):
+    """Fix Unicode symbols inside a LaTeX math span (content between $...$)."""
+    for uni, rep in MATH_UNICODE.items():
+        s = s.replace(uni, rep)
+    return s
+
+
+def latex_text_safe(s):
+    """Sanitize a short plain-text string for LaTeX text mode (e.g. link labels).
+
+    Drops backticks, maps Unicode, and escapes LaTeX specials _ & # %.
+    """
+    s = s.replace("`", "")
+    for uni, rep in TEXT_UNICODE:
+        s = s.replace(uni, rep)
+    s = re.sub(r"(?<!\\)([_&#%])", r"\\\1", s)
+    return s
+
 
 # ============================================================================
 # PHASE 1: Extract §1 and convert to LaTeX
@@ -255,10 +370,22 @@ def markdown_to_latex_text(text):
             close_quote()
             close_list()
 
-            # Handle subsections: ### text → \subsubsection{text}
-            if stripped.startswith("### "):
-                subsection_text = stripped[4:].strip()
-                result_lines.append(f"\\subsubsection{{{subsection_text}}}")
+            # Handle headings: ## / ### / #### → section levels (strip manual numbers)
+            heading_match = re.match(r"^(#{2,4})\s+(.*)$", stripped)
+            if heading_match:
+                hashes = heading_match.group(1)
+                htext = re.sub(
+                    r"^\d+(\.\d+)*[a-z]?\.?\s+", "", heading_match.group(2).strip()
+                )
+                htext = markdown_inline_formatting(htext)
+                if hashes == "##":
+                    result_lines.append(f"\\subsection{{{htext}}}")
+                elif hashes == "###":
+                    result_lines.append(f"\\subsubsection{{{htext}}}")
+                else:
+                    result_lines.append(f"\\paragraph{{{htext}}}")
+            elif stripped == "---":
+                pass  # Markdown horizontal rule → ignore
             elif stripped:  # Non-empty line
                 # Collect consecutive non-empty lines as a paragraph
                 # This allows bold/italic formatting to work across line breaks
@@ -280,7 +407,9 @@ def markdown_to_latex_text(text):
                         and next_stripped[1] == " "
                     ):
                         break
-                    if next_stripped.startswith("### "):
+                    if re.match(r"^#{2,4}\s", next_stripped):
+                        break
+                    if next_stripped == "---":
                         break
 
                     # This is part of the same paragraph
@@ -525,52 +654,49 @@ def markdown_table_to_latex_tabular(table_md, float=True, compact=False):
         latex += r"\normalsize\raggedright" + "\n"
         return latex
 
-    # Determine column count and format
+    # Clean, borderless layout (matching the compact "commitment" tables):
+    # a content-sized first column so long identifiers never overlap the next
+    # column, and ragged, wrapping X columns for the rest so wide cells stay
+    # within \textwidth instead of overflowing.
     n_cols = len(header)
-    col_format = "p{0.25\\textwidth}p{0.7\\textwidth}"  # 2 columns, adjust if needed
-    if n_cols != 2:
-        col_format = " ".join(["l"] * n_cols)  # Fallback: left-aligned
+    if n_cols <= 1:
+        col_spec = r">{\raggedright\arraybackslash}X"
+    else:
+        col_spec = "l " + " ".join([r">{\raggedright\arraybackslash}X"] * (n_cols - 1))
 
     # Start with table wrapper (floating) or direct tabularx (inline)
     if float:
         latex = r"\begin{table}[htb]" + "\n"
-        latex += r"  \small" + "\n"
-        latex += r"  \renewcommand{\arraystretch}{1.4}" + "\n"
-        latex += r"  \begin{tabularx}{\textwidth}{|p{0.35\textwidth}|X|}" + "\n"
+        latex += r"  \centering\small" + "\n"
+        latex += r"  \renewcommand{\arraystretch}{1.25}" + "\n"
+        latex += r"  \begin{tabularx}{\textwidth}{" + col_spec + "}" + "\n"
     else:
         # Inline table: no float wrapper, just tabularx with spacing
-        latex = r"\vspace{0.3cm}" + "\n"
-        latex += r"\small" + "\n"
-        latex += r"\renewcommand{\arraystretch}{1.4}" + "\n"
-        latex += r"\begin{tabularx}{\textwidth}{|p{0.35\textwidth}|X|}" + "\n"
+        latex = r"\vspace{0.25cm}" + "\n"
+        latex += r"\centering\small" + "\n"
+        latex += r"\renewcommand{\arraystretch}{1.25}" + "\n"
+        latex += r"\begin{tabularx}{\textwidth}{" + col_spec + "}" + "\n"
 
-    latex += r"    \hline" + "\n"
+    latex += r"\toprule" + "\n"
 
     # Add header
-    header_cells = []
-    for cell in header:
-        # Convert markdown formatting in header cells
-        cell = markdown_inline_formatting(cell)
-        header_cells.append(cell)
+    header_cells = [markdown_inline_formatting(cell) for cell in header]
     latex += "    " + " & ".join(header_cells) + r" \\" + "\n"
-    latex += r"    \hline" + "\n"
+    latex += r"\midrule" + "\n"
 
-    # Add rows (no \hline after each row for cleaner spacing)
+    # Add rows
     for row in rows:
-        row_cells = []
-        for cell in row:
-            # Convert markdown formatting in cells
-            cell = markdown_inline_formatting(cell)
-            row_cells.append(cell)
+        row_cells = [markdown_inline_formatting(cell) for cell in row]
         latex += "    " + " & ".join(row_cells) + r" \\" + "\n"
 
-    latex += r"    \hline" + "\n"
-    latex += r"  \end{tabularx}" + "\n"
+    latex += r"\bottomrule" + "\n"
+    latex += r"\end{tabularx}" + "\n"
 
     if float:
         latex += r"\end{table}" + "\n"
     else:
-        latex += r"\vspace{0.3cm}" + "\n"
+        latex += r"\vspace{0.25cm}" + "\n"
+        latex += r"\normalsize\raggedright" + "\n"
 
     return latex
 
@@ -586,19 +712,32 @@ def markdown_inline_formatting(text):
     - "math": `code` → $code$ (inline math mode, preserves operators but can lose spacing)
     - "texttt": `code` → \texttt{code} (monospace font, preserves spacing, simpler rendering)
     """
-    # Escape Unicode characters for LaTeX FIRST (before applying formatting)
-    text = text.replace("§", r"{\textsection}")  # Section symbol
-    text = text.replace("→", r"\textrightarrow{}")  # Right arrow
-    text = text.replace("•", r"\textbullet{}")  # Bullet
-    text = text.replace("–", "--")  # En-dash
-    text = text.replace("—", "---")  # Em-dash
+    # Protect inline math $...$ from text formatting; fix Unicode inside it
+    math_spans = []
+
+    def _stash_math(m):
+        math_spans.append(latexify_math(m.group(1)))
+        return f"\x00M{len(math_spans) - 1}\x00"
+
+    text = re.sub(r"\$([^$]+?)\$", _stash_math, text)
 
     # `code` → format based on INLINE_CODE_FORMAT setting
-    # First, find all backtick-enclosed code blocks (handle multi-line with DOTALL)
-    import re
-
     def convert_code(m):
         code = m.group(1)
+
+        # Normalize Unicode symbols that appear inside code to ASCII equivalents
+        for u, r in (
+            ("−", "-"),
+            ("–", "-"),
+            ("—", "--"),
+            ("∼", "~"),
+            ("×", "x"),
+            ("·", "."),
+            ("≤", "<="),
+            ("≥", ">="),
+            ("°", "deg"),
+        ):
+            code = code.replace(u, r)
 
         if INLINE_CODE_FORMAT == "math":
             # Math mode: $code$
@@ -624,9 +763,25 @@ def markdown_inline_formatting(text):
             )  # Underscore (still needs escaping in texttt)
             code = code.replace("~", r"\textasciitilde{}")  # Tilde
             code = code.replace("^", r"\textasciicircum{}")  # Caret
+            # Allow long identifiers to wrap after underscores (no overflow/overlap)
+            code = code.replace(r"\_", r"\_\allowbreak{}")
             return r"\texttt{" + code + "}"
 
-    text = re.sub(r"`([^`]+?)`", convert_code, text)
+    # Stash code spans so text-mode substitutions below do not touch them
+    code_spans = []
+
+    def _stash_code(m):
+        code_spans.append(convert_code(m))
+        return f"\x00C{len(code_spans) - 1}\x00"
+
+    text = re.sub(r"`([^`]+?)`", _stash_code, text)
+
+    # Escape Unicode and angle brackets for LaTeX (text mode)
+    for uni, rep in TEXT_UNICODE:
+        text = text.replace(uni, rep)
+    text = text.replace("<", r"\textless{}").replace(">", r"\textgreater{}")
+    # Escape remaining LaTeX specials in prose (code and math are stashed above)
+    text = text.replace("%", r"\%").replace("&", r"\&").replace("#", r"\#")
 
     # [text](url) → text (markdown links to LaTeX)
     # Strip URL and keep only link text to avoid hyperlink formatting issues
@@ -667,6 +822,12 @@ def markdown_inline_formatting(text):
         convert_italic,
         text,
         flags=re.DOTALL,
+    )
+
+    # Restore protected code and inline math
+    text = re.sub(r"\x00C(\d+)\x00", lambda m: code_spans[int(m.group(1))], text)
+    text = re.sub(
+        r"\x00M(\d+)\x00", lambda m: "$" + math_spans[int(m.group(1))] + "$", text
     )
 
     return text
@@ -810,7 +971,7 @@ def format_details_blockquote(blockquote_md):
         text = re.sub(r"\*\*Implementation note:\*\*\s*", "", text, flags=re.IGNORECASE)
         # Remove generic "**note:**" if present
         text = re.sub(r"\*\*[Nn]ote:\*\*\s*", "", text)
-        return f"\\textbf{{Implementation note:}} {text}"
+        return f"\\textbf{{Implementation note:}} {markdown_inline_formatting(text)}"
 
     # Handle Details format (with links)
     if has_details:
@@ -823,7 +984,7 @@ def format_details_blockquote(blockquote_md):
 
         if not matches:
             # No links found, just return the text with Details label
-            return f"\\textbf{{Details:}} {text}"
+            return f"\\textbf{{Details:}} {markdown_inline_formatting(text)}"
 
         # Extract filename from FIRST link
         first_link_url = matches[0].group(2)
@@ -835,7 +996,7 @@ def format_details_blockquote(blockquote_md):
         github_url = f"{REPO_BASE}/blob/{REPO_BRANCH}/uq-usecase/work-notes/{filename}"
 
         # Extract all link texts (section names as they appear in markdown)
-        section_names = [match.group(1) for match in matches]
+        section_names = [latex_text_safe(match.group(1)) for match in matches]
 
         # Format: Details: [full URL]. Sections: "section1", "section2", "section3"
         # Section names are quoted so they stand out as section references
@@ -1130,19 +1291,33 @@ def generate_latex_figure_with_mermaid(
         print(f"  → Then re-run this script", file=sys.stderr)
         return ""
 
-    # Copy to output directory
+    # Copy to both output directories
     png_filename = f"{fig_label}.png"
-    Path(FIGURES_OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
-    png_output_path = Path(FIGURES_OUTPUT_DIR) / png_filename
 
-    try:
-        shutil.copy(str(png_source), str(png_output_path))
-        print(f"  ✓ Copied figure: {png_output_path.name}")
-    except Exception as e:
-        print(f"WARNING: Could not copy figure: {e}", file=sys.stderr)
-        return ""
+    for figures_dir in [FIGURES_OUTPUT_DIR, REPO_FIGURES_OUTPUT_DIR]:
+        Path(figures_dir).mkdir(parents=True, exist_ok=True)
+        png_output_path = Path(figures_dir) / png_filename
 
-    # Create LaTeX figure environment
+        try:
+            shutil.copy(str(png_source), str(png_output_path))
+            print(f"  ✓ Copied figure: {png_output_path}")
+        except Exception as e:
+            print(
+                f"WARNING: Could not copy figure to {figures_dir}: {e}", file=sys.stderr
+            )
+            return ""
+
+    # Create LaTeX figure with a manual (non-floating-numbered) caption so the
+    # figure numbers match the "Figure N.N" references in the prose.
+    return _emit_figure_latex(png_filename, caption, width)
+
+
+def _emit_figure_latex(png_filename, caption_md, width=0.75):
+    """Emit a figure environment with a manual caption line (keeps 'Figure N.N').
+
+    Using plain text rather than \\caption avoids LaTeX auto-numbering, which does
+    not match the manual 'Figure 7.2' style used throughout the report.
+    """
     latex = r"\begin{figure}[htb]" + "\n"
     latex += r"  \centering" + "\n"
     latex += (
@@ -1150,20 +1325,44 @@ def generate_latex_figure_with_mermaid(
         + f"{width:.2f}"
         + r"\textwidth]{figs/"
         + png_filename
-        + "}"
-        + "\n"
+        + "}\n"
     )
-
-    # Add caption
-    if caption:
-        # Convert markdown *text* to LaTeX
-        caption_text = caption.replace("*", "").strip()
-        latex += r"  \caption{" + caption_text + "}" + "\n"
-
-    latex += r"  \label{" + fig_label + "}" + "\n"
+    if caption_md:
+        cap = caption_md.replace("*", "").strip()
+        cap = markdown_inline_formatting(cap)
+        latex += r"  \par\vspace{0.4em}" + "\n"
+        latex += r"  {\small " + cap + "}\n"
     latex += r"\end{figure}" + "\n"
-
     return latex
+
+
+def generate_latex_figure_image(image_rel_path, caption_md, width=0.85):
+    """Convert a Markdown image (![alt](figures/foo.png)) to a LaTeX figure.
+
+    Copies the referenced PNG from FIGURES_SOURCE_DIR into the output figs/
+    directories and emits a figure with a manual caption. Returns "" if the
+    source image cannot be found.
+    """
+    import shutil
+
+    basename = Path(image_rel_path).name
+    png_source = Path(FIGURES_SOURCE_DIR) / basename
+    if not png_source.exists():
+        print(f"WARNING: Image not found: {png_source}", file=sys.stderr)
+        return ""
+
+    for figures_dir in [FIGURES_OUTPUT_DIR, REPO_FIGURES_OUTPUT_DIR]:
+        Path(figures_dir).mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.copy(str(png_source), str(Path(figures_dir) / basename))
+            print(f"  ✓ Copied figure: {basename}")
+        except Exception as e:
+            print(
+                f"WARNING: Could not copy image to {figures_dir}: {e}", file=sys.stderr
+            )
+            return ""
+
+    return _emit_figure_latex(basename, caption_md, width)
 
 
 def generate_latex_section_3(
@@ -1972,20 +2171,137 @@ def extract_section_n(md_content, section_num):
     return section_text
 
 
+def _emit_mermaid_from_caption(caption, section_num):
+    """Emit a mermaid figure (via its pre-generated PNG) from its caption line."""
+    if not caption:
+        return ""
+    caption_text = caption.replace("*", "").strip()
+    caption_text = re.sub(r"^Figure\s+[\d.]+\.\s*", "", caption_text)
+    fig_label = generate_figure_label(section_num, caption_text)
+    return generate_latex_figure_with_mermaid(None, caption, fig_label, width=0.72)
+
+
+def markdown_section_body_to_latex(text, section_num):
+    """Robust block-level converter for section bodies (§5-§12).
+
+    Handles markdown tables, $$ display math, images, fenced code and mermaid
+    blocks explicitly, and delegates prose, lists, blockquotes (incl. Details
+    boxes) and headings to markdown_to_latex_text.
+    """
+    lines = text.split("\n")
+    n = len(lines)
+    out = []
+    buf = []
+
+    def flush():
+        if buf:
+            chunk = "\n".join(buf)
+            if chunk.strip():
+                out.append(markdown_to_latex_text(chunk))
+            buf.clear()
+
+    i = 0
+    while i < n:
+        line = lines[i]
+        stripped = line.strip()
+
+        # Fenced code / mermaid block
+        if stripped.startswith("```"):
+            flush()
+            lang = stripped[3:].strip().lower()
+            body = []
+            j = i + 1
+            while j < n and not lines[j].strip().startswith("```"):
+                body.append(lines[j])
+                j += 1
+            if lang == "mermaid":
+                k = j + 1
+                while k < n and not lines[k].strip():
+                    k += 1
+                caption = None
+                next_i = j + 1
+                if k < n and lines[k].strip().startswith("*") and "Figure" in lines[k]:
+                    caption = lines[k].strip()
+                    next_i = k + 1
+                fig = _emit_mermaid_from_caption(caption, section_num)
+                if fig:
+                    out.append(fig)
+                i = next_i
+            else:
+                code = "\n".join(body)
+                out.append("\\begin{verbatim}\n" + code + "\n\\end{verbatim}")
+                i = j + 1
+            continue
+
+        # Display math $$...$$
+        if stripped.startswith("$$"):
+            flush()
+            if stripped.endswith("$$") and len(stripped) > 3:
+                math = stripped[2:-2]
+                i += 1
+            else:
+                body = [stripped[2:]]
+                j = i + 1
+                while j < n and not lines[j].strip().endswith("$$"):
+                    body.append(lines[j])
+                    j += 1
+                if j < n:
+                    body.append(lines[j].strip()[:-2])
+                math = "\n".join(body)
+                i = j + 1
+            out.append("\\[\n" + latexify_math(math.strip()) + "\n\\]")
+            continue
+
+        # Image ![alt](path), optionally followed by a *Figure ...* caption
+        img = re.match(r"^\s*!\[([^\]]*)\]\(([^)]+)\)\s*$", line)
+        if img:
+            flush()
+            path = img.group(2)
+            k = i + 1
+            while k < n and not lines[k].strip():
+                k += 1
+            caption = None
+            next_i = i + 1
+            if k < n and lines[k].strip().startswith("*") and "Figure" in lines[k]:
+                caption = lines[k].strip()
+                next_i = k + 1
+            fig = generate_latex_figure_image(path, caption)
+            if fig:
+                out.append(fig)
+            i = next_i
+            continue
+
+        # Markdown table (header row followed by |---| separator row)
+        if (
+            stripped.startswith("|")
+            and i + 1 < n
+            and re.match(r"^\s*\|[\s:|-]+\|?\s*$", lines[i + 1])
+        ):
+            flush()
+            tbl = [line]
+            j = i + 1
+            while j < n and lines[j].strip().startswith("|"):
+                tbl.append(lines[j])
+                j += 1
+            out.append(markdown_table_to_latex_tabular("\n".join(tbl), float=False))
+            i = j
+            continue
+
+        buf.append(line)
+        i += 1
+
+    flush()
+    return "\n\n".join(b for b in out if b and b.strip())
+
+
 def generate_latex_section_n(section_num, section_title, text, label_name):
-    """Generic generator for sections 5-12."""
+    """Generic generator for sections 5-12 using the robust block converter."""
     if not text:
         return ""
 
-    latex_output = rf"\section*{{0.{section_num} {section_title}}}" + "\n"
-    latex_output += (
-        rf"\addcontentsline{{toc}}{{section}}{{0.{section_num} {section_title}}}" + "\n"
-    )
+    latex_output = rf"\subsection{{{section_title}}}" + "\n"
     latex_output += rf"\label{{sec:{label_name}}}" + "\n\n"
-
-    # Convert markdown to LaTeX
-    latex_text = markdown_to_latex_text(text)
-    latex_output += latex_text + "\n\n"
+    latex_output += markdown_section_body_to_latex(text, section_num) + "\n\n"
 
     return latex_output
 
@@ -2145,8 +2461,8 @@ def convert_pilot_report(phase="1"):
                 print(f"ERROR: Could not process §4.2b: {e}", file=sys.stderr)
                 return False
 
-        # Extract and generate §4.3 (Wind becomes negative load) (if requested)
-        if phase_int >= 5:
+        # Extract and generate §4.3 (Wind becomes negative load)
+        if True:
             try:
                 impl_note, text, details_md = extract_section_4_3(md_content)
                 if text or impl_note:
@@ -2160,7 +2476,7 @@ def convert_pilot_report(phase="1"):
                 print(f"ERROR: Could not process §4.3: {e}", file=sys.stderr)
                 return False
 
-        if phase_int >= 6:
+        if True:
             try:
                 impl_note, text = extract_section_4_4(md_content)
                 if text or impl_note:
@@ -2172,7 +2488,7 @@ def convert_pilot_report(phase="1"):
                 print(f"ERROR: Could not process §4.4: {e}", file=sys.stderr)
                 return False
 
-        # Sections 5-12 (phases 7-13)
+        # Sections 5-12: phase N includes every section with number <= N
         section_info = [
             (5, "CCT by bisection", "cct_bisection"),
             (6, "Parallel execution on Kestrel", "parallel_kestrel"),
@@ -2184,8 +2500,8 @@ def convert_pilot_report(phase="1"):
             (12, "Implementation", "implementation"),
         ]
 
-        for idx, (sect_num, sect_title, sect_label) in enumerate(section_info, start=7):
-            if phase_int >= idx:
+        for sect_num, sect_title, sect_label in section_info:
+            if phase_int >= sect_num:
                 try:
                     text = extract_section_n(md_content, sect_num)
                     if text:
@@ -2206,34 +2522,36 @@ def convert_pilot_report(phase="1"):
     # Combine all sections
     latex_output = "".join(latex_sections)
 
-    # Add bibliography commands at the end
-    latex_output += "\n" + "=" * 80 + "\n"
-    latex_output += "% BIBLIOGRAPHY\n"
-    latex_output += "=" * 80 + "\n\n"
-    latex_output += r"\bibliographystyle{plain}" + "\n"
-    latex_output += r"\bibliography{uq-usecase_refs}" + "\n"
+    # Note: no \bibliography here. This file is \input into a parent document
+    # (the SciDAC report, or test_main.tex) which owns the bibliography.
 
-    # Ensure target directory exists
-    target_dir = Path(TARGET_PATH).parent
-    try:
-        target_dir.mkdir(parents=True, exist_ok=True)
-        print(f"✓ Target directory ready: {target_dir}")
-    except Exception as e:
-        print(f"ERROR: Could not create target directory: {e}", file=sys.stderr)
-        return False
+    # Write to both output locations (SciDAC report and repo)
+    output_paths = [TARGET_PATH, REPO_OUTPUT_PATH]
 
-    # Write LaTeX
-    try:
-        with open(TARGET_PATH, "w", encoding="utf-8") as f:
-            f.write(latex_output)
-        print(f"✓ Wrote LaTeX file: {TARGET_PATH}")
-    except Exception as e:
-        print(f"ERROR: Could not write LaTeX file: {e}", file=sys.stderr)
-        return False
+    for output_path in output_paths:
+        target_dir = Path(output_path).parent
+        try:
+            target_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            print(
+                f"ERROR: Could not create directory {target_dir}: {e}", file=sys.stderr
+            )
+            return False
+
+        try:
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(latex_output)
+            print(f"✓ Wrote LaTeX file: {output_path}")
+        except Exception as e:
+            print(
+                f"ERROR: Could not write LaTeX file {output_path}: {e}", file=sys.stderr
+            )
+            return False
 
     print(f"\n[SUCCESS] Phase {phase} conversion complete!")
     print(f"Next steps:")
     print(f"  1. Review output: {TARGET_PATH}")
+    print(f"  2. Or repo version: {REPO_OUTPUT_PATH}")
     if phase_int < 2:
         print(f"  2. Run again: python convert_pilot_report.py phase=2 (add Glossary)")
     elif phase_int < 3:
@@ -2287,6 +2605,17 @@ def convert_pilot_report(phase="1"):
     )
     print(f"\nFor more info, see: convert_pilot_report.md")
 
+    # Copy BibTeX file to repo location for version control
+    import shutil
+
+    bibtex_source = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-usecase_refs.bib"
+    try:
+        Path(REPO_BIBTEX_PATH).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(bibtex_source, REPO_BIBTEX_PATH)
+        print(f"✓ Copied bibliography file to repo: {REPO_BIBTEX_PATH}")
+    except Exception as e:
+        print(f"WARNING: Could not copy BibTeX file: {e}", file=sys.stderr)
+
     return True
 
 
@@ -2294,7 +2623,7 @@ if __name__ == "__main__":
     # Parse phase from command line if provided
     import sys
 
-    phase = "3"  # Default
+    phase = "9"  # Default: convert through §9
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
             if arg.startswith("phase="):

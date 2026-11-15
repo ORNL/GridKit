@@ -84,8 +84,14 @@ python convert_pilot_report.py phase=1      # Run specific phase
 
 ### Step 3: Test PDF Compilation (Optional)
 
+Citations resolve only after a full BibTeX cycle. A single `pdflatex` pass leaves
+them as `?`, so run all four steps:
+
 ```bash
 cd /Users/isatkaus/projects/scidac/docs/report/SciDAC_OE_Technical_Report/chapters/uq-subsections
+pdflatex test_main.tex
+bibtex   test_main
+pdflatex test_main.tex
 pdflatex test_main.tex
 open test_main.pdf
 ```
@@ -114,10 +120,21 @@ REPO_BASE = "https://github.com/ORNL/GridKit"
 
 ## Phases
 
+Each run converts the requested section **and all prior sections**. The default
+(no argument) is `phase=9`, which converts §1 through §9.
+
 - **Phase 1**: §1 "What this is" - Text with blockquotes, bold, italic
 - **Phase 2**: §2 "Glossary" - Table → definition-list with footnotes
 - **Phase 3**: §3 "The system" - Text with mermaid diagram (PNG) and details boxes
-- **Phase 4+**: Future sections §4-10
+- **Phase 4**: §4 "Building one operating condition" (incl. §4.1–§4.4)
+- **Phase 5–9**: §5–§9 via the generic robust block converter
+  (tables, `$$` display math, images, fenced code/mermaid, headings, details boxes)
+- **Phase 10–12**: §10–§12 (available but not part of the default run)
+
+Citations: `[N]` markers in the markdown map through `CITATION_MAP` to
+`\cite{key}`; keys are defined in `uq-usecase_refs.bib`. The generated
+`pilot_uq_usecase.tex` is `\input` into a parent document that owns the
+bibliography (the SciDAC report, or `test_main.tex`).
 
 ## Features
 
