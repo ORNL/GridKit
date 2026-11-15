@@ -721,146 +721,104 @@ already known: 4,000 of the 4,649 columns are bus `Vr`/`Vi`, so selective
 monitoring is worth far more here than it was at 200 buses, where the same trick
 already bought 13.8× on bisection probes.
 
-**The real reason this matters for the methods work.** The *design space* grows
-along two axes: siting candidates grow about 11.5× (108 load buses to 1,245),
-and fault locations grow 10× (200 to 2,000). Taken together that is about 115×
-more design points, while per-sample cost grows 19–25×. Holding sampling
-*density* fixed therefore projects to roughly **2,150–2,900×** the pilot's cost
-(a projection, not a measurement). Brute force survives one order of magnitude and not two, which is the
-concrete case for screening, surrogates and adaptive refinement rather than a
-larger factorial. It also makes the pilot's measured 76 % contingency waste far
-more expensive to tolerate.
+**Why this matters for the methods work.** The *design space* grows along two
+axes: siting candidates about 11.5× (108 load buses to 1,245) and fault
+locations 10× (200 to 2,000), roughly 115× more design points, while per-sample
+cost grows 19–25×. Holding sampling *density* fixed projects to roughly
+**2,150–2,900×** the pilot's cost (a projection, not a measurement). Brute force
+survives one order of magnitude, not two. The execution model also inverts: at
+200 buses it exists to amortise an expensive dispatch over cheap disturbances,
+whereas at 2,000 buses the dynamic run dominates and the quantity to minimise
+becomes the *number of simulations*, not the number of dispatches. That is the
+concrete case for screening, surrogates and adaptive refinement over a larger
+factorial, and it makes the pilot's measured 76 % contingency waste far more
+expensive to tolerate.
 
-**One blocker found, and it is in our code, not GridKit's.** The 2000-bus case
-mixes machine, exciter and governor classes the 200-bus pipeline never saw, and
-**101 of its online units carry no dynamic model at all**. Four single-class
-assumptions had to be lifted before a re-dispatched case could be built. That
-work is now done and verified: a case rebuilt through the campaign's own code
-path initialises and runs, with the 101 static units handled as negative load —
-the same stand-in already used for wind.
+Porting the pipeline to 2,000 buses surfaced one blocker — in our campaign code,
+not GridKit's, now fixed and verified end to end. The case mixes machine,
+exciter and governor classes the 200-bus pipeline never saw; 101 online units
+carry no dynamic model and are handled as the same negative-load stand-in used
+for wind; and positional unit ids at the 13 multi-generator buses hid a
+dispatch-mapping bug (`match_gens_by_mva` on `(bus, MBASE)` fixes it) that a
+200-bus case is too small to expose. A `faultscreen`-shaped micro-campaign
+already runs on the case.
 
-The subtle one is worth recording. At 13 buses carrying 2–11 generators, unit
-ids are **positional**, and where the `.m` lists an offline unit that the case
-omits, every later unit at that bus shifts by one. The machine then receives
-another unit's dispatch. It does not show up as a wrong answer; it shows up as
+The pilot's aleatoric campaign is a 40-condition grid. A campaign at this scale
+needs distributions over more wind and load conditions, more placements and more
+fault buses, with spatial structure, which brute force will not reach. The pilot
+already shows where the leverage is: the estimate of P(CCT < 0.25 s) has a
+standard error of about 0.07 at 37 conditions (§7.2), and CCT spread is
+concentrated by net-load quintile (§7.4), so conditioning and stratification —
+not simply more samples — are what tighten the answer. `aleatoric2` (SLURM
+19830145: 3,780 design rows, 1,958 solved, 17.1 min on one node, 9.9 GB stored)
+already measured how cost scales with the sample count. The question becomes
+*which* dynamic runs to spend, which is where §9 takes up.
 
-```
-[ERROR] Tgov1: initial valve position is outside [Pvmin, Pvmax]
-```
-
-Only 2 of the 334 machines were affected, and both were enough to stop the case
-dead. Matching on `(bus, MBASE)` fixes it. **A 200-bus case is too small to
-expose this**, which is the general lesson: single-generator buses hid a
-mapping bug that a real network surfaces immediately.
-
-**A `faultscreen`-shaped micro-campaign now runs on ACTIVSg2000.** One
-dispatch, eight fault locations chosen at the highest-degree buses:
-
-| | value |
-|---|---|
-| case rebuild | 0.12 s |
-| per fault location | **5.95 s** |
-| ran successfully | **7 of 8** |
-| monitor output, `delta`+`omega` only | 18.2 MB per fault |
-| max angle spread across the 7 | 106–110° |
-
-**What scales, and what does not.** It is tempting to say the cost structure
-inverts at 2000 buses. It does not. Like for like, a dynamic run has been about
-**10× the warm dispatch solve at 200 buses and 13× at 2000** (0.28 s against 0.029 s; 7.08 s against 0.543 s). Stage A grows 18.7× and a dynamic run
-25.3×, so the disturbance share creeps up and nothing more — the stage-split
-fan-out still pays.
-
-**What changes is absolute cost, and that is enough.** A CCT bisection is 8
-simulations: **~2.2 s at 200 buses (8 × 0.28 s), ~57 s at 2000 (8 × 7.08 s)**. Combined with a design
-space that grows about 115x (siting 11.5x × fault locations 10x), holding
-sampling density fixed projects to **roughly 2,150–2,900x** the pilot's cost
-(a projection, not a measurement).
-
-So the optimisation target shifts for reasons of scale rather than ordering:
-spend fewer dynamic runs. In rough order of expected payoff — a cheap
-classifier that detects the censored case before committing to a bisection
-(most of `aleatoric1` was censored, so those 8 probes mostly confirmed "nothing
-happens"); surrogate or warm-started CCT seeded from neighbouring operating
-points; early-terminating integration, since pole slip is detectable well
-before `tmax`; and contingency screening that stops early. More parallelism
-does not help, because it does not reduce the number of runs.
-
-**Still to port.** `CampaignConfig` remains ACTIVSg200-specific: merit order,
-commitment band and hourly profile mapping all assume that case's generator
-table. A `faultscreen`-shaped campaign needs none of it and runs today; an
-`aleatoric`-shaped campaign over hours and commitments does, and that is the
-next piece of work.
-
-**Partly measured:** per-worker memory. At 200 buses it was 0.88 GB per worker with
-16 workers. At 2000 buses a dynamic run peaked at 126 MB and a two-case stage-A batch at
-1.0 GB, but a full worker batch is not yet measured, and it may bind before runtime does.
-
-> **Details:** [scaling measurements and projections](datacenter_load_uq_plan.md#scaling-to-activsg2000-measured-2026-11-02) ·
+> **Details:** [scaling measurements, the ACTIVSg2000 port, and the positional-id trap](datacenter_load_uq_plan.md#scaling-to-activsg2000-measured-2026-11-02) ·
+> [sampling at scale and the sampling dimensions](datacenter_load_uq_plan.md#sampling-at-scale-aleatoric-uq-beyond-the-pilot-recommendations-2026-11-11-aleatoric2-run-to-measure-cost) ·
 > [working with ACTIVSg2000](dc_campaign_pipeline.md#9-working-with-activsg2000)
-
----
-
-## 8a. Sampling at scale
-
-The pilot's aleatoric campaign is a grid of 40 operating conditions. Later
-uncertainty work will need distributions over more wind and load conditions, more
-placements and more fault buses, with spatial structure. Brute force will not scale,
-so the question is which dynamic runs to spend, not only how fast each one is.
-
-What the pilot shows, verified:
-
-- At 37 solved conditions, the estimate of P(CCT < 0.25 s) has a standard error of
-  about 0.07 ([§7.2](#72-a-simple-example-one-bus-one-size-one-fault)). Halving that
-  error takes four times the conditions.
-- CCT spread is concentrated by net-load quintile ([§7.4](#74-risk-by-net-load)).
-  Stratifying on net load is a candidate variance reduction, not yet tested.
-- Wind and load are not separate axes. `CampaignConfig` has `load_scale` and
-  `wind_scale`, but the hour selection does not use them.
-
-Recommendations, and one run to measure cost:
-
-1. **Decompose the variance of the existing 840 runs** over hour, commitment, bus and
-   size before any new run. This costs nothing and shows which axes matter.
-2. **`aleatoric2` ran** (SLURM 19830145): 3,780 design rows, 1,958 solved, 17.1 min on
-   one node, 9.9 GB stored. Wind and load stay one axis. Dynamics cost per simulated run
-   is unchanged at about 3.8 s (§6).
-3. **Treat spatial sampling as its own design question**, where the datacenter sits
-   and where the fault is. Screen placements cheaply, then sample in proportion to
-   their effect.
-4. **Cut cost per sample** (censoring classifier, warm-started bisection, early
-   termination) alongside the sample count. At 2000 buses, 10,000 bisections are
-   about 158 h of serial dynamic time per placement and fault, so the sample count
-   must be controlled, not only the per-run cost.
-
-> **Details:** [sampling at scale](datacenter_load_uq_plan.md#sampling-at-scale-aleatoric-uq-beyond-the-pilot-recommendations-2026-11-11-aleatoric2-run-to-measure-cost) ·
-> [the sampling dimensions](datacenter_load_uq_plan.md#the-sampling-dimensions)
 
 ---
 
 ## 9. Where this goes
 
-The pilot establishes that the expensive part is **stage A**, and that the
+The pilot leaves a clear picture of where cost lives and therefore where the
+methods work should go. At 200 buses the expensive part is **stage A**, and the
 scientifically interesting dimensions — contingency location, disturbance
-severity, model form — are nearly free once a dispatch exists. That asymmetry is
-the lever for larger grids:
+severity, model form — are nearly free once a dispatch exists. At 2,000 buses
+(§8) that asymmetry inverts: the dynamic run dominates, the design space grows by
+two orders of magnitude, and the quantity to minimise becomes the number of
+simulations. Making aleatoric UQ affordable at that scale is **FY27 planned
+work**, pursued along two complementary tracks.
 
-1. **Screen contingencies cheaply, then concentrate.** Measured here: 76 % of a
-   uniform budget is wasted. On a 10k-bus case the contingency list is the part
-   that explodes, and it is also the part that is free to explore.
+**Track 1 — spend fewer, better-chosen dynamic runs.** The pilot already
+measured the levers:
+
+1. **Screen contingencies cheaply, then concentrate.** 76 % of a uniform fault
+   budget was wasted here (§7.5), with 13 of 17 locations fully censored. On a
+   10k-bus case the contingency list is the part that explodes and also the part
+   that is free to explore.
 2. **Treat censoring as information.** Both "survived beyond the cap" and
-   "infeasible" are results, and at 82 % censoring among `faultscreen1`'s
-   completed runs (alphaP 0.2, unlimited) they are most of the dataset.
-3. **Exploit the conditional-independence structure.** Expensive outer samples
+   "infeasible" are results, and at high censoring they are most of the dataset.
+   A cheap 1–2 run classifier that detects the censored case before committing to
+   an 8-run CCT bisection would remove most of the cost.
+3. **Condition and stratify, rather than only adding samples.** CCT spread is
+   largely explained by net load (§7.4), so stratified or importance sampling on
+   net load cuts variance at fixed cost; a variance decomposition of the existing
+   840 runs is a zero-cost first step.
+4. **Surrogate or warm-started CCT, and early-terminating integration.**
+   Neighbouring dispatches have strongly correlated CCT, and pole slip is
+   detectable well before `tmax`, so both the number and the length of
+   simulations can be cut.
+5. **Exploit the conditional-independence structure.** Expensive outer samples
    over operating conditions, cheap inner fan-out over disturbances and model
-   parameters — the same motivation as multilevel Monte Carlo [23], but driven by
+   parameters — the same motivation as multilevel Monte Carlo [23], driven by
    model structure rather than discretisation.
 
-Immediate next steps are a wider contingency screen, paired-censoring treatment
-of `dCCT`, and a short literature check on datacenter load modelling so §10's
-constraint can be addressed rather than worked around. On the larger case, the
-first task is the `CampaignConfig` port identified in §8 — merit order,
-commitment band and hourly profile mapping — followed by a full-batch memory
-measurement at 2000 buses.
+**Track 2 — a graph surrogate, as an alternative and supplement to sampling.**
+The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian
+over buses, a fault propagates through branch impedances as a message-passing
+process, and "which bus to site load at" is itself a graph question. Graph
+neural networks and graph transformers carry exactly that inductive bias [24],
+and have been used as fast power-system surrogates [25]. A surrogate trained on
+the records the sampling campaigns already produce — the
+`(graph, operating point, parameters, fault)` → trajectory map — could emulate
+CCT or the stability label cheaply, turning the expensive solver into a screening
+oracle and reserving dynamic runs for confirmation and for labelling the cases
+where the surrogate is least certain, an active-learning loop [26] that chooses
+which runs to spend. This is **supplemental** to sampling-based UQ, not a
+replacement: the surrogate lowers per-sample cost, while the sampling design
+still fixes what the estimate means. Our fuller survey of these ideas is in
+`gt_ideas.md`.
+
+The near-term steps are the cheap ones: a wider contingency screen, a
+paired-censoring treatment of `dCCT`, a variance decomposition of the existing
+runs, a short literature check on datacenter load modelling so §10's constraint
+can be addressed rather than worked around, and porting `CampaignConfig` to
+ACTIVSg2000 (§8). The graph-surrogate track builds on the dataset those
+campaigns are already generating.
+
+> **Details:** [where numerical-methods contributions could be made](datacenter_load_uq_plan.md#where-numerical-methods-contributions-could-be-made)
 
 ---
 
@@ -984,3 +942,6 @@ are in `tex-report/uq-usecase_refs.bib`.
 21. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452
 22. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926.
 23. M. B. Giles, "Multilevel Monte Carlo Methods," *Acta Numerica*, 24:259–328, 2015. doi:10.1017/S096249291500001X
+24. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018.
+25. B. Donon, R. Clément, B. Donnot, A. Marot, I. Guyon, and M. Schoenauer, "Neural Networks for Power Flow: Graph Neural Solver," *Electric Power Systems Research*, 189:106547, 2020. doi:10.1016/j.epsr.2020.106547
+26. B. Settles, "Active Learning Literature Survey," University of Wisconsin–Madison, Computer Sciences Technical Report 1648, 2009.

@@ -84,6 +84,9 @@ CITATION_MAP = {
     "21": "KaplanMeier1958",  # Kaplan-Meier estimator
     "22": "Greenwood1926",  # Greenwood's variance formula
     "23": "Giles2015",  # multilevel Monte Carlo
+    "24": "Battaglia2018",  # graph networks / relational inductive bias
+    "25": "Donon2020",  # GNN surrogate for power flow
+    "26": "Settles2009",  # active learning survey
 }
 
 # ============================================================================
@@ -251,6 +254,7 @@ def markdown_to_latex_text(text):
     in_list = False
     quote_buffer = []
     list_buffer = []
+    list_kind = None  # "itemize" or "enumerate"
     quote_started = False  # Track if we've output \begin{quote}
 
     def close_quote():
@@ -299,16 +303,18 @@ def markdown_to_latex_text(text):
             in_quote = False
 
     def close_list():
-        nonlocal in_list, list_buffer
+        nonlocal in_list, list_buffer, list_kind
         if in_list:
-            result_lines.append("\\begin{itemize}")
+            env = "enumerate" if list_kind == "enumerate" else "itemize"
+            result_lines.append("\\begin{" + env + "}")
             for list_item in list_buffer:
                 # Join multi-line items with spaces and apply formatting
                 formatted_item = markdown_inline_formatting(list_item)
                 result_lines.append(f"  \\item {formatted_item}")
-            result_lines.append("\\end{itemize}")
+            result_lines.append("\\end{" + env + "}")
             list_buffer = []
             in_list = False
+            list_kind = None
 
     i = 0
     while i < len(lines):
@@ -333,6 +339,8 @@ def markdown_to_latex_text(text):
             and stripped[1] == " "
         ):
             close_quote()
+            if in_list and list_kind != "itemize":
+                close_list()
             # Extract bullet item text
             item_text = stripped[2:].strip()
 
@@ -362,7 +370,41 @@ def markdown_to_latex_text(text):
             list_buffer.append(item_text)
             if not in_list:
                 in_list = True
+                list_kind = "itemize"
             # i is already incremented by while loop
+            continue
+
+        # Check for ordered list line (starts with "N. ")
+        elif re.match(r"^\d+\.\s", stripped):
+            close_quote()
+            if in_list and list_kind != "enumerate":
+                close_list()
+            item_text = re.sub(r"^\d+\.\s+", "", stripped)
+
+            # Look ahead for continuation lines (indented, non-item lines)
+            i += 1
+            while i < len(lines):
+                next_line = lines[i]
+                next_stripped = next_line.strip()
+                if not next_stripped:
+                    break
+                if re.match(r"^\d+\.\s", next_stripped):
+                    break
+                if (
+                    len(next_stripped) > 1
+                    and next_stripped[0] in ("*", "-")
+                    and next_stripped[1] == " "
+                ):
+                    break
+                if next_line and next_line[0] not in (" ", "\t"):  # Not indented
+                    break
+                item_text += " " + next_stripped
+                i += 1
+
+            list_buffer.append(item_text)
+            if not in_list:
+                in_list = True
+                list_kind = "enumerate"
             continue
 
         else:
@@ -406,6 +448,8 @@ def markdown_to_latex_text(text):
                         and next_stripped[0] in ("*", "-")
                         and next_stripped[1] == " "
                     ):
+                        break
+                    if re.match(r"^\d+\.\s", next_stripped):
                         break
                     if re.match(r"^#{2,4}\s", next_stripped):
                         break
@@ -2609,12 +2653,23 @@ def convert_pilot_report(phase="1"):
     import shutil
 
     bibtex_source = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-usecase_refs.bib"
-    try:
-        Path(REPO_BIBTEX_PATH).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(bibtex_source, REPO_BIBTEX_PATH)
-        print(f"✓ Copied bibliography file to repo: {REPO_BIBTEX_PATH}")
-    except Exception as e:
-        print(f"WARNING: Could not copy BibTeX file: {e}", file=sys.stderr)
+    # Keep every copy next to a .tex that references it in sync with the source,
+    # including the local copy test_main.tex reads from the report directory.
+    bibtex_targets = [
+        REPO_BIBTEX_PATH,
+        str(Path(TARGET_PATH).parent / "uq-usecase_refs.bib"),
+        str(Path(REPO_OUTPUT_PATH).parent / "uq-usecase_refs.bib"),
+    ]
+    for bibtex_target in bibtex_targets:
+        try:
+            Path(bibtex_target).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(bibtex_source, bibtex_target)
+            print(f"✓ Synced bibliography: {bibtex_target}")
+        except Exception as e:
+            print(
+                f"WARNING: Could not copy BibTeX file to {bibtex_target}: {e}",
+                file=sys.stderr,
+            )
 
     return True
 

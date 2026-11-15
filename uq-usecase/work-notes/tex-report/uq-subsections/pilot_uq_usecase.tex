@@ -3,7 +3,10 @@
 
 Two deliverables, one study:
 
-1. \textbf{Exercise GridKit as an end user} \cite{GridKit2025} on a problem it has not been pointed at before, and report back what works and what does not. 2. \textbf{Demonstrate aleatoric UQ by sampling} \cite{DerKiureghian2009} on a dynamics problem, and find out where the sampling cost actually goes --- with a view to much larger grids where brute force stops being an option.
+\begin{enumerate}
+  \item \textbf{Exercise GridKit as an end user} \cite{GridKit2025} on a problem it has not been pointed at before, and report back what works and what does not.
+  \item \textbf{Demonstrate aleatoric UQ by sampling} \cite{DerKiureghian2009} on a dynamics problem, and find out where the sampling cost actually goes --- with a view to much larger grids where brute force stops being an option.
+\end{enumerate}
 
 The vehicle is a question utilities are being asked right now \cite{Shehabi2024}:
 
@@ -149,7 +152,10 @@ Adding a datacenter does \textbf{not} change the commitment. The same \texttt{n}
 
 Both solves use PowerModels.jl \cite{Coffrin2018} with Ipopt \cite{Wachter2006}. Per condition:
 
-1. \textbf{DC OPF} sets the economic dispatch. It is lossless, so the load is inflated by the loss estimate from the previous pass (zero on the first). 2. \textbf{AC PF} solves the real network at that dispatch, giving voltages, Q and the actual losses. The losses feed the next DC OPF.
+\begin{enumerate}
+  \item \textbf{DC OPF} sets the economic dispatch. It is lossless, so the load is inflated by the loss estimate from the previous pass (zero on the first).
+  \item \textbf{AC PF} solves the real network at that dispatch, giving voltages, Q and the actual losses. The losses feed the next DC OPF.
+\end{enumerate}
 
 \textit{Figure 4.2} shows the loop. With \texttt{loss\_\allowbreak{}iters = 1} there is one correction, so each condition runs two DC OPFs and two AC PFs.
 
@@ -722,77 +728,16 @@ The 200-bus case is small enough that brute force works: whole campaigns finish 
 
 Compute is still affordable, but it is not negligible. At 200 buses the 104 cores bind before memory does: at 0.88 GB per worker, 246 GB would allow about 280 workers before OS overhead. The 16 workers per node were the pilot's choice, not a hard limit. At 2000 buses one dynamic run peaked at 126 MB and a two-case stage-A batch at 1.0 GB, but a full worker batch is \textbf{unmeasured}, so it is the number to measure before relying on any wall-time projection. Until then, treat ~2.5 h (calibrated, one node, 16 workers) as the planning number. \textbf{Storage, not compute, is the binding constraint}, and the mitigation is already known: 4,000 of the 4,649 columns are bus \texttt{Vr}/\texttt{Vi}, so selective monitoring is worth far more here than it was at 200 buses, where the same trick already bought 13.8$\times$ on bisection probes.
 
-\textbf{The real reason this matters for the methods work.} The \textit{design space} grows along two axes: siting candidates grow about 11.5$\times$ (108 load buses to 1,245), and fault locations grow 10$\times$ (200 to 2,000). Taken together that is about 115$\times$ more design points, while per-sample cost grows 19--25$\times$. Holding sampling \textit{density} fixed therefore projects to roughly \textbf{2,150--2,900$\times$} the pilot's cost (a projection, not a measurement). Brute force survives one order of magnitude and not two, which is the concrete case for screening, surrogates and adaptive refinement rather than a larger factorial. It also makes the pilot's measured 76 \% contingency waste far more expensive to tolerate.
+\textbf{Why this matters for the methods work.} The \textit{design space} grows along two axes: siting candidates about 11.5$\times$ (108 load buses to 1,245) and fault locations 10$\times$ (200 to 2,000), roughly 115$\times$ more design points, while per-sample cost grows 19--25$\times$. Holding sampling \textit{density} fixed projects to roughly \textbf{2,150--2,900$\times$} the pilot's cost (a projection, not a measurement). Brute force survives one order of magnitude, not two. The execution model also inverts: at 200 buses it exists to amortise an expensive dispatch over cheap disturbances, whereas at 2,000 buses the dynamic run dominates and the quantity to minimise becomes the \textit{number of simulations}, not the number of dispatches. That is the concrete case for screening, surrogates and adaptive refinement over a larger factorial, and it makes the pilot's measured 76 \% contingency waste far more expensive to tolerate.
 
-\textbf{One blocker found, and it is in our code, not GridKit's.} The 2000-bus case mixes machine, exciter and governor classes the 200-bus pipeline never saw, and \textbf{101 of its online units carry no dynamic model at all}. Four single-class assumptions had to be lifted before a re-dispatched case could be built. That work is now done and verified: a case rebuilt through the campaign's own code path initialises and runs, with the 101 static units handled as negative load --- the same stand-in already used for wind.
+Porting the pipeline to 2,000 buses surfaced one blocker --- in our campaign code, not GridKit's, now fixed and verified end to end. The case mixes machine, exciter and governor classes the 200-bus pipeline never saw; 101 online units carry no dynamic model and are handled as the same negative-load stand-in used for wind; and positional unit ids at the 13 multi-generator buses hid a dispatch-mapping bug (\texttt{match\_\allowbreak{}gens\_\allowbreak{}by\_\allowbreak{}mva} on \texttt{(bus, MBASE)} fixes it) that a 200-bus case is too small to expose. A \texttt{faultscreen}-shaped micro-campaign already runs on the case.
 
-The subtle one is worth recording. At 13 buses carrying 2--11 generators, unit ids are \textbf{positional}, and where the \texttt{.m} lists an offline unit that the case omits, every later unit at that bus shifts by one. The machine then receives another unit's dispatch. It does not show up as a wrong answer; it shows up as
-
-
-\begin{verbatim}
-[ERROR] Tgov1: initial valve position is outside [Pvmin, Pvmax]
-\end{verbatim}
-
-Only 2 of the 334 machines were affected, and both were enough to stop the case dead. Matching on \texttt{(bus, MBASE)} fixes it. \textbf{A 200-bus case is too small to expose this}, which is the general lesson: single-generator buses hid a mapping bug that a real network surfaces immediately.
-
-\textbf{A \texttt{faultscreen}-shaped micro-campaign now runs on ACTIVSg2000.} One dispatch, eight fault locations chosen at the highest-degree buses:
-
-
-\vspace{0.25cm}
-\centering\small
-\renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X}
-\toprule
-     & value \\
-\midrule
-    case rebuild & 0.12 s \\
-    per fault location & \textbf{5.95 s} \\
-    ran successfully & \textbf{7 of 8} \\
-    monitor output, \texttt{delta}+\texttt{omega} only & 18.2 MB per fault \\
-    max angle spread across the 7 & 106--110$^{\circ}$ \\
-\bottomrule
-\end{tabularx}
-\vspace{0.25cm}
-\normalsize\raggedright
-
-
-\textbf{What scales, and what does not.} It is tempting to say the cost structure inverts at 2000 buses. It does not. Like for like, a dynamic run has been about \textbf{10$\times$ the warm dispatch solve at 200 buses and 13$\times$ at 2000} (0.28 s against 0.029 s; 7.08 s against 0.543 s). Stage A grows 18.7$\times$ and a dynamic run 25.3$\times$, so the disturbance share creeps up and nothing more --- the stage-split fan-out still pays.
-
-\textbf{What changes is absolute cost, and that is enough.} A CCT bisection is 8 simulations: \textbf{~2.2 s at 200 buses (8 $\times$ 0.28 s), ~57 s at 2000 (8 $\times$ 7.08 s)}. Combined with a design space that grows about 115x (siting 11.5x $\times$ fault locations 10x), holding sampling density fixed projects to \textbf{roughly 2,150--2,900x} the pilot's cost (a projection, not a measurement).
-
-So the optimisation target shifts for reasons of scale rather than ordering: spend fewer dynamic runs. In rough order of expected payoff --- a cheap classifier that detects the censored case before committing to a bisection (most of \texttt{aleatoric1} was censored, so those 8 probes mostly confirmed "nothing happens"); surrogate or warm-started CCT seeded from neighbouring operating points; early-terminating integration, since pole slip is detectable well before \texttt{tmax}; and contingency screening that stops early. More parallelism does not help, because it does not reduce the number of runs.
-
-\textbf{Still to port.} \texttt{CampaignConfig} remains ACTIVSg200-specific: merit order, commitment band and hourly profile mapping all assume that case's generator table. A \texttt{faultscreen}-shaped campaign needs none of it and runs today; an \texttt{aleatoric}-shaped campaign over hours and commitments does, and that is the next piece of work.
-
-\textbf{Partly measured:} per-worker memory. At 200 buses it was 0.88 GB per worker with 16 workers. At 2000 buses a dynamic run peaked at 126 MB and a two-case stage-A batch at 1.0 GB, but a full worker batch is not yet measured, and it may bind before runtime does.
+The pilot's aleatoric campaign is a 40-condition grid. A campaign at this scale needs distributions over more wind and load conditions, more placements and more fault buses, with spatial structure, which brute force will not reach. The pilot already shows where the leverage is: the estimate of P(CCT \textless{} 0.25 s) has a standard error of about 0.07 at 37 conditions ({\textsection}7.2), and CCT spread is concentrated by net-load quintile ({\textsection}7.4), so conditioning and stratification --- not simply more samples --- are what tighten the answer. \texttt{aleatoric2} (SLURM 19830145: 3,780 design rows, 1,958 solved, 17.1 min on one node, 9.9 GB stored) already measured how cost scales with the sample count. The question becomes \textit{which} dynamic runs to spend, which is where {\textsection}9 takes up.
 
 \par\vspace{0.4em}
 \noindent\fbox{\parbox[t]{0.98\textwidth}{%
 \setlength{\parskip}{0pt}%
-\textbf{Details:} \url{https://github.com/ORNL/GridKit/blob/isatkaus/uq-usecase/uq-usecase/work-notes/datacenter_load_uq_plan.md}. Sections: "scaling measurements and projections", "working with ACTIVSg2000"
-}}
-\vspace{0.2em}
-
-\subsection{Sampling at scale}
-
-The pilot's aleatoric campaign is a grid of 40 operating conditions. Later uncertainty work will need distributions over more wind and load conditions, more placements and more fault buses, with spatial structure. Brute force will not scale, so the question is which dynamic runs to spend, not only how fast each one is.
-
-What the pilot shows, verified:
-
-\begin{itemize}
-  \item At 37 solved conditions, the estimate of P(CCT \textless{} 0.25 s) has a standard error of about 0.07 ({\textsection}7.2). Halving that error takes four times the conditions.
-  \item CCT spread is concentrated by net-load quintile ({\textsection}7.4). Stratifying on net load is a candidate variance reduction, not yet tested.
-  \item Wind and load are not separate axes. \texttt{CampaignConfig} has \texttt{load\_\allowbreak{}scale} and \texttt{wind\_\allowbreak{}scale}, but the hour selection does not use them.
-\end{itemize}
-
-Recommendations, and one run to measure cost:
-
-1. \textbf{Decompose the variance of the existing 840 runs} over hour, commitment, bus and size before any new run. This costs nothing and shows which axes matter. 2. \textbf{\texttt{aleatoric2} ran} (SLURM 19830145): 3,780 design rows, 1,958 solved, 17.1 min on one node, 9.9 GB stored. Wind and load stay one axis. Dynamics cost per simulated run is unchanged at about 3.8 s ({\textsection}6). 3. \textbf{Treat spatial sampling as its own design question}, where the datacenter sits and where the fault is. Screen placements cheaply, then sample in proportion to their effect. 4. \textbf{Cut cost per sample} (censoring classifier, warm-started bisection, early termination) alongside the sample count. At 2000 buses, 10,000 bisections are about 158 h of serial dynamic time per placement and fault, so the sample count must be controlled, not only the per-run cost.
-
-\par\vspace{0.4em}
-\noindent\fbox{\parbox[t]{0.98\textwidth}{%
-\setlength{\parskip}{0pt}%
-\textbf{Details:} \url{https://github.com/ORNL/GridKit/blob/isatkaus/uq-usecase/uq-usecase/work-notes/datacenter_load_uq_plan.md}. Sections: "sampling at scale", "the sampling dimensions"
+\textbf{Details:} \url{https://github.com/ORNL/GridKit/blob/isatkaus/uq-usecase/uq-usecase/work-notes/datacenter_load_uq_plan.md}. Sections: "scaling measurements, the ACTIVSg2000 port, and the positional-id trap", "sampling at scale and the sampling dimensions", "working with ACTIVSg2000"
 }}
 \vspace{0.2em}
 
@@ -800,10 +745,27 @@ Recommendations, and one run to measure cost:
 \subsection{Where this goes}
 \label{sec:where_this_goes}
 
-The pilot establishes that the expensive part is \textbf{stage A}, and that the scientifically interesting dimensions --- contingency location, disturbance severity, model form --- are nearly free once a dispatch exists. That asymmetry is the lever for larger grids:
+The pilot leaves a clear picture of where cost lives and therefore where the methods work should go. At 200 buses the expensive part is \textbf{stage A}, and the scientifically interesting dimensions --- contingency location, disturbance severity, model form --- are nearly free once a dispatch exists. At 2,000 buses ({\textsection}8) that asymmetry inverts: the dynamic run dominates, the design space grows by two orders of magnitude, and the quantity to minimise becomes the number of simulations. Making aleatoric UQ affordable at that scale is \textbf{FY27 planned work}, pursued along two complementary tracks.
 
-1. \textbf{Screen contingencies cheaply, then concentrate.} Measured here: 76 \% of a uniform budget is wasted. On a 10k-bus case the contingency list is the part that explodes, and it is also the part that is free to explore. 2. \textbf{Treat censoring as information.} Both "survived beyond the cap" and "infeasible" are results, and at 82 \% censoring among \texttt{faultscreen1}'s completed runs (alphaP 0.2, unlimited) they are most of the dataset. 3. \textbf{Exploit the conditional-independence structure.} Expensive outer samples over operating conditions, cheap inner fan-out over disturbances and model parameters --- the same motivation as multilevel Monte Carlo \cite{Giles2015}, but driven by model structure rather than discretisation.
+\textbf{Track 1 --- spend fewer, better-chosen dynamic runs.} The pilot already measured the levers:
 
-Immediate next steps are a wider contingency screen, paired-censoring treatment of \texttt{dCCT}, and a short literature check on datacenter load modelling so {\textsection}10's constraint can be addressed rather than worked around. On the larger case, the first task is the \texttt{CampaignConfig} port identified in {\textsection}8 --- merit order, commitment band and hourly profile mapping --- followed by a full-batch memory measurement at 2000 buses.
+\begin{enumerate}
+  \item \textbf{Screen contingencies cheaply, then concentrate.} 76 \% of a uniform fault budget was wasted here ({\textsection}7.5), with 13 of 17 locations fully censored. On a 10k-bus case the contingency list is the part that explodes and also the part that is free to explore.
+  \item \textbf{Treat censoring as information.} Both "survived beyond the cap" and "infeasible" are results, and at high censoring they are most of the dataset. A cheap 1--2 run classifier that detects the censored case before committing to an 8-run CCT bisection would remove most of the cost.
+  \item \textbf{Condition and stratify, rather than only adding samples.} CCT spread is largely explained by net load ({\textsection}7.4), so stratified or importance sampling on net load cuts variance at fixed cost; a variance decomposition of the existing 840 runs is a zero-cost first step.
+  \item \textbf{Surrogate or warm-started CCT, and early-terminating integration.} Neighbouring dispatches have strongly correlated CCT, and pole slip is detectable well before \texttt{tmax}, so both the number and the length of simulations can be cut.
+  \item \textbf{Exploit the conditional-independence structure.} Expensive outer samples over operating conditions, cheap inner fan-out over disturbances and model parameters --- the same motivation as multilevel Monte Carlo \cite{Giles2015}, driven by model structure rather than discretisation.
+\end{enumerate}
+
+\textbf{Track 2 --- a graph surrogate, as an alternative and supplement to sampling.} The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias \cite{Battaglia2018}, and have been used as fast power-system surrogates \cite{Donon2020}. A surrogate trained on the records the sampling campaigns already produce --- the \texttt{(graph, operating point, parameters, fault)} $\to$ trajectory map --- could emulate CCT or the stability label cheaply, turning the expensive solver into a screening oracle and reserving dynamic runs for confirmation and for labelling the cases where the surrogate is least certain, an active-learning loop \cite{Settles2009} that chooses which runs to spend. This is \textbf{supplemental} to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means. Our fuller survey of these ideas is in \texttt{gt\_\allowbreak{}ideas.md}.
+
+The near-term steps are the cheap ones: a wider contingency screen, a paired-censoring treatment of \texttt{dCCT}, a variance decomposition of the existing runs, a short literature check on datacenter load modelling so {\textsection}10's constraint can be addressed rather than worked around, and porting \texttt{CampaignConfig} to ACTIVSg2000 ({\textsection}8). The graph-surrogate track builds on the dataset those campaigns are already generating.
+
+\par\vspace{0.4em}
+\noindent\fbox{\parbox[t]{0.98\textwidth}{%
+\setlength{\parskip}{0pt}%
+\textbf{Details:} \url{https://github.com/ORNL/GridKit/blob/isatkaus/uq-usecase/uq-usecase/work-notes/datacenter_load_uq_plan.md}. Sections: "where numerical-methods contributions could be made"
+}}
+\vspace{0.2em}
 
 
