@@ -66,7 +66,7 @@ Main terms used in our pilot study that follows.
 | **DC OPF / AC PF** | DC OPF sets *who generates* from active power only (lossless, no voltages, no Q). AC PF takes that dispatch and solves the voltages and reactive power. |
 | **PV bus / PQ bus** | PV: the generator fixes P and voltage magnitude, and Q is whatever holds the voltage. PQ: P and Q are fixed (a load); voltage is a result. |
 | **Q limit** | A generator's maximum (`QMAX`, field-current heating) and minimum (`QMIN`, stator end-region heating) reactive output. |
-| **PV→PQ switching** | When a generator's Q leaves its limits, it is fixed at the limit and its bus is solved as PQ. Standard in planning tools; the pipeline's version is in §4.2a. |
+| **PV→PQ switching** | When a generator's Q leaves its limits, it is fixed at the limit and its bus is solved as PQ. Standard in planning tools; the pipeline's version is in §4.2. |
 
 > **Details:** [physical intuition](datacenter_load_uq_plan.md#physical-intuition) covering faults, inertia, ZIP load during voltage dips, censored runs, etc.
 
@@ -243,95 +243,24 @@ whole load change. One loss correction reduces the overshoot from 27.05 MW to
 0.34 MW on the worst hour (0.016 % of load), which is why `loss_iters = 1`. A
 second correction reduces it only to 0.005 MW.
 
-**Why AC OPF is not the reported path.** We ran AC OPF too, as the other way to get Q
-limits (§4.2b). Reporting DC OPF then AC PF with switching is a choice, for one main
-reason:
-
-* *The dispatch stays fixed.* Switching changes Q, not the dispatch, so a CCT
-  difference from the unlimited run is due to reactive limits. AC OPF re-dispatches
-  (about 280 MW summed in the pilot), so its results cannot be compared with the
-  switched PF on Q alone.
-
-A supporting reason: AC OPF drove the maximum voltage to exactly 1.100 pu in every
-hour tested, riding the limit, while DC OPF then AC PF kept it at 0.99 to 1.06 pu. We
-take the latter as the better starting state, but we have not tested its effect on CCT.
-
-AC OPF stays in the pipeline as the `ac_opf` option. It is a cross-check, and it can be
-reported if needed.
+**Why we use switching, not AC OPF.** We tested AC OPF as an alternative Q-limit route
+(discussed further below). AC OPF changes dispatch (about 280 MW summed in the pilot),
+so a CCT difference cannot be attributed to Q limits alone. Switching keeps the DC OPF
+dispatch and changes only Q, isolating the Q-limit effect that this report asks about.
+AC OPF stays in the pipeline as the `ac_opf` option for cross-checks.
 
 > **Details:** [the dispatch chain](datacenter_load_uq_plan.md#10-the-dispatch-chain) ·
 > [the slack problem](datacenter_load_uq_plan.md#the-slack-problem) ·
 > [the loss-iteration fix, with convergence table](datacenter_load_uq_plan.md#fix) ·
 > [why DC OPF then AC PF, rather than AC OPF](datacenter_load_uq_plan.md#why-dc-opf-then-ac-pf-rather-than-ac-opf)
 
-### 4.2a Reactive limits: PV to PQ switching
+**Reactive limits: PV→PQ switching.** AC power flow does not enforce generator `QMAX`/`QMIN` limits natively (measured: 2 to 11 violations per scenario without mitigation). We enforce them via PV→PQ switching: after solving voltages, any generator exceeding a Q limit is fixed at that limit and its bus switched to PQ, then re-solved. Fixed generators return to PV if voltage recovers past setpoint (repeat up to twice). The DC OPF dispatch is never changed—only Q adjusts. This preserves dispatch so that CCT differences from the unlimited-Q run can be attributed to reactive limits alone. The feature is on by default (`enforce_q_lims`) in the main campaigns but disabled in unlimited-Q studies.
 
-**Why.** A power flow has three bus types. A PQ bus has fixed P and Q (a load).
-A PV bus fixes P and voltage magnitude, and its Q is whatever holds that voltage,
-so the solver can ask a machine for any Q. A real generator cannot: it is limited
-by field-current heating at the top (`QMAX`) and stator end-region heating at the
-bottom (`QMIN`). Without a limit the PF can hold a bus at its setpoint with a
-reactive output the machine cannot deliver.
+> **Details:** [switching implementation and five-scenario measurements](datacenter_load_uq_plan.md#reactive-limits-in-the-ac-pf-pv-to-pq-switching) · [pipeline code](dc_campaign_pipeline.md#42a-reactive-limits-pv-to-pq-switching) · [Q-limit fold recount](ida_ic_issue.md#105-q-limits-pvpq-outer-loop-q_limit_pfpy)
 
-**OPF and PF, and where Q limits can enter.**
-- **DC OPF** chooses the dispatch. It uses active power only (lossless, no
-  voltages, no Q), so Q limits cannot appear in it at all.
-- **AC OPF** could carry `QMAX`/`QMIN` as constraints. It is not the reported
-  path (§4.2), so the limits are enforced in the **AC PF**.
-- **AC PF** takes the dispatch as given and solves voltages and Q. The PF we run
-  does not enforce Q limits by itself. *(measured: 2 to 11 Q-limit violations per
-  scenario, §4.2a table below.)*
+**AC OPF as a second Q-limit route.** PowerModels.jl's AC OPF enforces Q limits as constraints, replacing DC OPF + AC PF + switching. We built it as an opt-in path (`ac_opf`) but did not adopt it for the main campaigns: AC OPF changes dispatch (∼280 MW summed in the pilot), making it impossible to isolate Q-limit effects from dispatch effects. Switching preserves dispatch and changes only Q (∼0.82 MW loss variation), cleanly answering the report's question. AC OPF remains as a cross-check and can be reported if needed.
 
-**What we implemented.** Standard PV→PQ switching as an outer loop around the AC
-PF. Solve; any unit with Q beyond a limit is fixed at that limit and its bus is
-treated as PQ; re-solve; a fixed unit whose bus voltage recovers past its setpoint
-returns to PV (at most twice); repeat until nothing changes. The DC OPF dispatch
-(P) is never changed. Every unit is restored as an in-service machine at its fixed
-Q, so the dynamic model still contains all of them. The switch is on by
-default (`enforce_q_lims`). The unlimited-Q campaigns (`faultscreen1`, the highp reruns,
-`cct_check`, `alphap_frontier`) pin it off, so they still reproduce. Both main campaigns (`aleatoric1_ap08_qlim` and `faultscreen1_ap08_qlim`, alphaP 0.8) run with it on.
-
-**How switching sits in the loop.** Switching runs inside each AC PF and does not
-touch the DC OPF, which never sees Q. Each AC PF restarts from all units at PV, at the
-new dispatch, and re-discovers its own switches. Nothing carries into the next DC OPF
-except the losses. A switched PF can shift losses (0.00 to 0.82 MW across the
-five measured scenarios, linked below), and that shifts the next load inflation. A unit switched to PQ in one pass is
-therefore not PQ in the next DC OPF or the next AC PF's start.
-
-> **Details:** [PV to PQ switching in the plan, with the five-scenario measurements and the effect on earlier results](datacenter_load_uq_plan.md#reactive-limits-in-the-ac-pf-pv-to-pq-switching) ·
-> [code walkthrough in the pipeline](dc_campaign_pipeline.md#42a-reactive-limits-pv-to-pq-switching) ·
-> [Q-limited fold recount](ida_ic_issue.md#105-q-limits-pvpq-outer-loop-q_limit_pfpy)
-
-### 4.2b AC OPF as a second Q-limit route
-
-**What.** PM.jl's AC OPF carries `QMAX`/`QMIN` as constraints, so it enforces Q
-limits without a switching loop. It replaces DC OPF plus AC PF, and the pipeline
-runs it as an opt-in path (`ac_opf`). The full reasoning is in
-[plan §10](datacenter_load_uq_plan.md#ac-opf-as-a-second-q-limit-route-pmjl); the
-code is in [pipeline §4.2b](dc_campaign_pipeline.md#42b-ac-opf-path-pmjl-second-q-limit-route).
-
-**Pilot** (five scenarios at hour 204, alphaP 0.8: four sited scenarios, bus 108 or 148 × commitment 27 or 38, plus one no-datacenter base at commitment 27): the AC OPF converged at all five with zero Q
-violations. Losses were lower than the switched PF (23.6 to 26.3 MW against 32 to
-36 MW). The dispatch moved by about 280 MW summed, and the slack sat at its `PMAX`
-with zero headroom, against 0.75 to 1.53 MW switched. `Vmax` reached 1.100.
-
-**Campaigns** (full design, 1020 rows each). Relative to the switched PF, AC OPF
-shifts CCT upward: mean +0.022 s at alphaP 0.2 and +0.027 s at 0.8, with a largest
-shift of +0.32 s. The control, the same AC OPF with Q limits widened, differs from
-the Q-limited AC OPF by −0.002 s on average (range −0.106 to +0.014 s). So the Q
-limits themselves account for almost none of the AC OPF shift. What produces the rest
-is not isolated.
-
-**Why switching, not AC OPF.** AC OPF changes the dispatch, and switching does not.
-In the pilot, AC OPF moved about 280 MW summed and parked the slack at `PMAX`.
-Switching keeps the DC OPF dispatch and changes only Q, moving losses by at most
-0.82 MW. So a CCT difference from the unlimited run can be attributed to reactive
-limits alone. That is the one reason we report switching, and it is the question this
-report asks.
-
-**Status.** Not adopted for the main campaigns. Switching stays the primary Q-limit route, and
-AC OPF stays a cross-check that can be reported if asked. Details, status counts and the
-control design are in [plan §10](datacenter_load_uq_plan.md#ac-opf-as-a-second-q-limit-route-pmjl).
+> **Details:** [AC OPF design and pilot results](datacenter_load_uq_plan.md#ac-opf-as-a-second-q-limit-route-pmjl)
 
 ### 4.3 Wind becomes negative load
 
@@ -585,7 +514,7 @@ Wall time and storage at 2,000 buses are projections in [§10](#10-first-look-at
 
 ### 7.0 Sampling space and the two main campaigns
 
-Both main campaigns use the operating-condition design of §4.2, where an operating condition is an (hour, commitment) pair. Both use DC OPF dispatch, then AC power flow with PV→PQ switching (§4.2a), the datacenter as an 80/20/0 ZIP device added on top of the host load (§4.4), and alphaP 0.8. They differ in what else varies:
+Both main campaigns use the operating-condition design of §4.2, where an operating condition is an (hour, commitment) pair. Both use DC OPF dispatch, then AC power flow with PV→PQ switching (§4.2), the datacenter as an 80/20/0 ZIP device added on top of the host load (§4.4), and alphaP 0.8. They differ in what else varies:
 
 | | **Aleatoric campaign** `aleatoric1_ap08_qlim` | **Fault campaign** `faultscreen1_ap08_qlim` |
 |---|---|---|
@@ -818,8 +747,7 @@ failure-mode breakdown.
   It is **not** the most *discriminating* on baseline: bus 94 is (§7.5). It is also where constant-power load fails most often (46 of 112 feasible runs at `alphaP = 1`; 4 at 148, 3 at 177). Results are
   conditional on it in a way we did not appreciate when the campaigns were run.
 * **Q limits are enforced in the main campaigns, not in the earlier ones.** Every
-  campaign before `faultscreen1_ap08_qlim` is unlimited. The main campaigns are switched
-  (§4.2a), and AC OPF is a second route with a control (§4.2b). Switching raises the solve-failed rows from 51 to 85 (5 dispatches instead of 3, all `LOCALLY_INFEASIBLE`).
+  campaign before `faultscreen1_ap08_qlim` is unlimited. The main campaigns use switching with Q limits (§4.2), with AC OPF as an alternative (§4.2). Switching raises the solve-failed rows from 51 to 85 (5 dispatches instead of 3, all `LOCALLY_INFEASIBLE`).
 * **No-outcome runs are not stable or unstable.** Of the 680 sited runs in the
   fault sweep, 253 have no outcome: 97 fail only at alphaP 0.8 (89 initialization,
   8 transient), 71 fail initialization at both alphaP levels, and 85 fail at dispatch
