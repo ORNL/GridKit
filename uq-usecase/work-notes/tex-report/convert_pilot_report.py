@@ -6,7 +6,8 @@ This script incrementally converts sections of the markdown pilot UQ report
 into LaTeX format for inclusion in the SciDAC technical report.
 
 Phase 1 (MVP): Converts §1 "What this is" (text only, no figures/tables).
-Future phases will add tables (§2), figures/Mermaid (§3–7), math/footnotes (§5–10).
+Phases 2-6: Add tables (§2), figures/Mermaid (§3-4.4), math/footnotes.
+Phases 7-13: Add remaining sections (§5-12) with text/math/tables.
 
 Design: Idempotent, deterministic conversion. Each run parses the full markdown
 and regenerates the LaTeX output from scratch. No state files or checksums.
@@ -1947,6 +1948,48 @@ def generate_latex_section_4_4(impl_note, text):
     return latex_output
 
 
+# PHASE 7+: Extract §5-12 (Remaining sections)
+
+
+def extract_section_n(md_content, section_num):
+    """Generic extractor for sections 5-12."""
+    pattern_start = rf"^## {section_num}\."
+    match_start = re.search(pattern_start, md_content, re.MULTILINE)
+    if not match_start:
+        return ""
+
+    start_pos = match_start.end()
+    next_newline = md_content.find("\n", start_pos)
+    if next_newline != -1:
+        start_pos = next_newline + 1
+
+    # Section ends at next ## heading
+    pattern_end = rf"^## {section_num + 1}\."
+    match_end = re.search(pattern_end, md_content[start_pos:], re.MULTILINE)
+    end_pos = start_pos + match_end.start() if match_end else len(md_content)
+
+    section_text = md_content[start_pos:end_pos].strip()
+    return section_text
+
+
+def generate_latex_section_n(section_num, section_title, text, label_name):
+    """Generic generator for sections 5-12."""
+    if not text:
+        return ""
+
+    latex_output = rf"\section*{{0.{section_num} {section_title}}}" + "\n"
+    latex_output += (
+        rf"\addcontentsline{{toc}}{{section}}{{0.{section_num} {section_title}}}" + "\n"
+    )
+    latex_output += rf"\label{{sec:{label_name}}}" + "\n\n"
+
+    # Convert markdown to LaTeX
+    latex_text = markdown_to_latex_text(text)
+    latex_output += latex_text + "\n\n"
+
+    return latex_output
+
+
 def convert_pilot_report(phase="1"):
     """
     Main conversion function. Converts specified phases and all prior phases.
@@ -2129,6 +2172,37 @@ def convert_pilot_report(phase="1"):
                 print(f"ERROR: Could not process §4.4: {e}", file=sys.stderr)
                 return False
 
+        # Sections 5-12 (phases 7-13)
+        section_info = [
+            (5, "CCT by bisection", "cct_bisection"),
+            (6, "Parallel execution on Kestrel", "parallel_kestrel"),
+            (7, "Results", "results"),
+            (8, "First look at ACTIVSg2000", "first_look_activsg2000"),
+            (9, "Where this goes", "where_this_goes"),
+            (10, "GridKit end-user feedback", "gridkit_feedback"),
+            (11, "Limitations", "limitations"),
+            (12, "Implementation", "implementation"),
+        ]
+
+        for idx, (sect_num, sect_title, sect_label) in enumerate(section_info, start=7):
+            if phase_int >= idx:
+                try:
+                    text = extract_section_n(md_content, sect_num)
+                    if text:
+                        print(
+                            f"✓ Extracted §{sect_num} '{sect_title}' ({len(text)} bytes)"
+                        )
+                        latex_section = generate_latex_section_n(
+                            sect_num, sect_title, text, sect_label
+                        )
+                        latex_sections.append(latex_section)
+                        print(
+                            f"✓ Generated §{sect_num} LaTeX ({len(latex_section)} bytes)"
+                        )
+                except Exception as e:
+                    print(f"ERROR: Could not process §{sect_num}: {e}", file=sys.stderr)
+                    return False
+
     # Combine all sections
     latex_output = "".join(latex_sections)
 
@@ -2177,6 +2251,34 @@ def convert_pilot_report(phase="1"):
     elif phase_int < 6:
         print(
             f"  2. Run again: python convert_pilot_report.py phase=6 (add Section 4.4 Datacenter)"
+        )
+    elif phase_int < 7:
+        print(
+            f"  2. Run again: python convert_pilot_report.py phase=7 (add Section 5 CCT)"
+        )
+    elif phase_int < 8:
+        print(
+            f"  2. Run again: python convert_pilot_report.py phase=8 (add Section 6 Parallel)"
+        )
+    elif phase_int < 9:
+        print(
+            f"  2. Run again: python convert_pilot_report.py phase=9 (add Section 7 Results)"
+        )
+    elif phase_int < 10:
+        print(
+            f"  2. Run again: python convert_pilot_report.py phase=10 (add Section 8 ACTIVSg2000)"
+        )
+    elif phase_int < 11:
+        print(
+            f"  2. Run again: python convert_pilot_report.py phase=11 (add Section 9 Where)"
+        )
+    elif phase_int < 12:
+        print(
+            f"  2. Run again: python convert_pilot_report.py phase=12 (add Section 10 Feedback)"
+        )
+    elif phase_int < 13:
+        print(
+            f"  2. Run again: python convert_pilot_report.py phase=13 (add Sections 11-12 Limitations & Implementation)"
         )
     else:
         print(f"  2. Test: cd ../chapters/uq-subsections && pdflatex test_main.tex")
