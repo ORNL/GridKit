@@ -2132,6 +2132,13 @@ def convert_pilot_report(phase="1"):
     # Combine all sections
     latex_output = "".join(latex_sections)
 
+    # Add bibliography commands at the end
+    latex_output += "\n" + "=" * 80 + "\n"
+    latex_output += "% BIBLIOGRAPHY\n"
+    latex_output += "=" * 80 + "\n\n"
+    latex_output += r"\bibliographystyle{plain}" + "\n"
+    latex_output += r"\bibliography{uq-usecase_refs}" + "\n"
+
     # Ensure target directory exists
     target_dir = Path(TARGET_PATH).parent
     try:

@@ -954,3 +954,7 @@ failure-mode breakdown.
 
 The campaign execution infrastructure — including scripts for fault screening, statistical analysis, and scaling studies — is documented in the [dc_campaign_pipeline.md](dc_campaign_pipeline.md) reference manual. Refer to that document for implementation details, function signatures, and usage instructions for the analysis pipeline.
 
+---
+
+## References
+
