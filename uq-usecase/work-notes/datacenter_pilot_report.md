@@ -669,92 +669,6 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 
 ---
 
-## 8. GridKit end-user feedback
-
-Findings from using the tool in anger, offered as concrete issues:
-
-| finding | impact |
-|---|---|
-| **`REPCA` cannot do frequency droop** — the regulated bus exposes no frequency signal | No primary frequency response from IBR, so any nadir/ROCOF study with inverters is incomplete |
-| **A `BusFault` that closes during the run makes the event-time initial-condition solve fail.** Discriminator at `alphaP` 1.0: an event-closed fault fails `IDACalcIC` at buses 1, 148 and 181 while bus 94 runs; the same open fault with no event passes | At `alphaP` 0.8, 97 sited runs (200 MW) fail that pass at 0.2 (89 initialization, 8 transient) and have no outcome (§7.5). The mechanism is a candidate (IDA initial guess is the pre-fault state), consistent on the one dispatch checked (h1879), not yet confirmed generally. See `ida_ic_issue.md` |
-| **`LoadZIP` has no current limit or undervoltage trip** | Constant-power load — the physically right model for a datacenter — cannot self-limit. This is a modelling gap in its own right; whether it is also the root of the conditioning problem above is **unresolved** |
-| **A fault *at* a constant-power load bus always fails** — 40 of 40 runs, at every `alphaP` including 0.2 | The most interesting contingency for a datacenter study is out of reach |
-| **Events are `FAULT_ON`/`FAULT_OFF` only** | No generator-trip or load-step contingency, so no true power-imbalance event |
-| **Monitors default to almost nothing** — post-#577 cases carry `"mon": []` on every bus | Nothing PMU-observable is recorded unless explicitly enabled |
-
-Also verified, as a portability result: **GridKit built on RHEL 8 runs unchanged
-on RHEL 9**. The binary needs GLIBC ≤ 2.14 and GLIBCXX ≤ 3.4.31 against a
-glibc 2.34 node, all libraries resolve, and `WECC240_validation` passes in
-0.64 s. One real difference: `/lib64/libomp.so` exists on RHEL 8 but not on
-RHEL 9 compute nodes, so the runtime library path must point at the build's own
-LLVM prefix — **scoped to the child process**, because putting it on the job
-environment makes Julia load the wrong SuiteSparse.
-
-> **Details:** [disturbances: what a bus fault can and cannot tell us](datacenter_load_uq_plan.md#8-disturbances-what-a-bus-fault-can-and-cannot-tell-us) ·
-> [a disturbance-type limitation that shapes the study](datacenter_load_uq_plan.md#a-disturbance-type-limitation-that-shapes-the-study) ·
-> [monitors](datacenter_load_uq_plan.md#monitors-the-shipped-case-records-almost-nothing) ·
-> RHEL 9 evidence is in [kestrel_install.md](../kestrel_install.md)
-
----
-
-### Issue draft: superseded, see `ida_ic_issue.md`
-
-The earlier draft (an inactive `BusFault` failing at t = 0) is superseded. The
-discriminator shows the failing solve is the fault-on one at the event time (see
-[`ida_ic_issue.md` §3a](ida_ic_issue.md#3a-event-schedule-discriminator-discrim181-ida_discriminatepy)).
-The draft GridKit issue, and the tests still needed before filing, are in
-[`ida_ic_issue.md` §7–8](ida_ic_issue.md). **Not filed.**
-
-**Reproduction (campaign-level).** `scripts/alphap_frontier.py --name afront2 --fault-buses
-66,108,148,177` maps the surface in a few minutes on one node;
-`scripts/alphap_collect.py --name afront2` prints the frontier table and the
-failure-mode breakdown.
-
----
-
-## 9. Limitations
-
-* **One contingency type.** Self-clearing bus faults only. These are angular and
-  voltage events, not frequency events; the frequency QoI respond weakly by
-  construction.
-* **One system, small.** 200 buses. Hosting capacity being network-determined
-  may not survive on a meshed transmission system with more redundancy.
-* **Commitment is bracketed, not distributed.** No UC model, so all results are
-  conditional on commitment.
-* **Wind is a non-inertial stand-in**, not a real IBR model with
-  fault-ride-through.
-* **The datacenter ZIP mix is a choice, not a fitted value.** The pilot mix is
-  `P/I/Z = 80/20/0`, and the earlier campaigns used `20/80/0`. A commonly cited
-  industry mix near `70/20/10` is *unsourced* (see §11). The measured effect of the
-  alphaP choice on CCT is at most 0.0281 s, and exactly zero in 10 of 12 cases
-  tested (§7.7), so it does not move the headline results. But at alphaP 0.8, 253
-  of 680 sited runs have no outcome, against 156 at 0.2 (§7.5), so the mix does change which runs can be
-  measured. See §8.
-* **The aleatoric results use one fault location, bus 66** (§7.2–7.4). Bus 66 is
-  the case's 11-branch hub. In the earlier unlimited-Q campaign it had the lowest pooled
-  median CCT of all 17 locations, but that was not re-checked on the switched campaign.
-  It is **not** the most *discriminating* on baseline: bus 94 is (§7.5). It is also where constant-power load fails most often (46 of 112 feasible runs at `alphaP = 1`; 4 at 148, 3 at 177). Results are
-  conditional on it in a way we did not appreciate when the campaigns were run.
-* **Q limits are enforced in the main campaigns, not in the earlier ones.** Every
-  campaign before `faultscreen1_ap08_qlim` is unlimited. The main campaigns use switching with Q limits (§4.2), with AC OPF as an alternative (§4.2). Switching raises the solve-failed rows from 51 to 85 (5 dispatches instead of 3, all `LOCALLY_INFEASIBLE`).
-* **No-outcome runs are not stable or unstable.** Of the 680 sited runs in the
-  fault sweep, 253 have no outcome: 97 fail only at alphaP 0.8 (89 initialization,
-  8 transient), 71 fail initialization at both alphaP levels, and 85 fail at dispatch
-  (34 DC OPF, 51 AC PF) (§7.5). We report them as no outcome. The 97 are the largest
-  unknown in the headline result.
-* **Sample sizes are pilot-scale.** 20 hours supports distributional statements
-  about the bulk, not about tails.
-* The reference bus remains the nuclear unit `189_1`, which has 0.0082 MW of
-  headroom — a known oddity not yet closed.
-
-> **Details:** [known modelling limitations](datacenter_load_uq_plan.md#12-known-modelling-limitations) ·
-> [open questions](datacenter_load_uq_plan.md#11-open-questions) ·
-> [contingency choice](datacenter_load_uq_plan.md#5-contingency) ·
-> [a self-clearing bus fault is an angular event, not a frequency event](datacenter_load_uq_plan.md#a-self-clearing-bus-fault-is-an-angular-and-voltage-event-not-a-frequency-event) ·
-> [Phase 4: wind as a real IBR](datacenter_load_uq_plan.md#phase-4-optional-model-form-robustness-wind-as-a-real-ibr)
-
----
-
 ## 10. First look at ACTIVSg2000
 
 The 200-bus case is small enough that brute force works: whole campaigns finish
@@ -975,3 +889,89 @@ measurement at 2000 buses.
 `scripts/alphap_{frontier,collect}.py`, `scripts/scale_{probe,stagea}.py`, `scripts/probe_2000_mem.{py,sh}`,
 `py-utils/campaign.py`. Campaign artifacts under
 `/kfs2/projects/scidac/scidac-data/gridkit-campaigns/`.*
+## 8. GridKit end-user feedback
+
+Findings from using the tool in anger, offered as concrete issues:
+
+| finding | impact |
+|---|---|
+| **`REPCA` cannot do frequency droop** — the regulated bus exposes no frequency signal | No primary frequency response from IBR, so any nadir/ROCOF study with inverters is incomplete |
+| **A `BusFault` that closes during the run makes the event-time initial-condition solve fail.** Discriminator at `alphaP` 1.0: an event-closed fault fails `IDACalcIC` at buses 1, 148 and 181 while bus 94 runs; the same open fault with no event passes | At `alphaP` 0.8, 97 sited runs (200 MW) fail that pass at 0.2 (89 initialization, 8 transient) and have no outcome (§7.5). The mechanism is a candidate (IDA initial guess is the pre-fault state), consistent on the one dispatch checked (h1879), not yet confirmed generally. See `ida_ic_issue.md` |
+| **`LoadZIP` has no current limit or undervoltage trip** | Constant-power load — the physically right model for a datacenter — cannot self-limit. This is a modelling gap in its own right; whether it is also the root of the conditioning problem above is **unresolved** |
+| **A fault *at* a constant-power load bus always fails** — 40 of 40 runs, at every `alphaP` including 0.2 | The most interesting contingency for a datacenter study is out of reach |
+| **Events are `FAULT_ON`/`FAULT_OFF` only** | No generator-trip or load-step contingency, so no true power-imbalance event |
+| **Monitors default to almost nothing** — post-#577 cases carry `"mon": []` on every bus | Nothing PMU-observable is recorded unless explicitly enabled |
+
+Also verified, as a portability result: **GridKit built on RHEL 8 runs unchanged
+on RHEL 9**. The binary needs GLIBC ≤ 2.14 and GLIBCXX ≤ 3.4.31 against a
+glibc 2.34 node, all libraries resolve, and `WECC240_validation` passes in
+0.64 s. One real difference: `/lib64/libomp.so` exists on RHEL 8 but not on
+RHEL 9 compute nodes, so the runtime library path must point at the build's own
+LLVM prefix — **scoped to the child process**, because putting it on the job
+environment makes Julia load the wrong SuiteSparse.
+
+> **Details:** [disturbances: what a bus fault can and cannot tell us](datacenter_load_uq_plan.md#8-disturbances-what-a-bus-fault-can-and-cannot-tell-us) ·
+> [a disturbance-type limitation that shapes the study](datacenter_load_uq_plan.md#a-disturbance-type-limitation-that-shapes-the-study) ·
+> [monitors](datacenter_load_uq_plan.md#monitors-the-shipped-case-records-almost-nothing) ·
+> RHEL 9 evidence is in [kestrel_install.md](../kestrel_install.md)
+
+---
+
+### Issue draft: superseded, see `ida_ic_issue.md`
+
+The earlier draft (an inactive `BusFault` failing at t = 0) is superseded. The
+discriminator shows the failing solve is the fault-on one at the event time (see
+[`ida_ic_issue.md` §3a](ida_ic_issue.md#3a-event-schedule-discriminator-discrim181-ida_discriminatepy)).
+The draft GridKit issue, and the tests still needed before filing, are in
+[`ida_ic_issue.md` §7–8](ida_ic_issue.md). **Not filed.**
+
+**Reproduction (campaign-level).** `scripts/alphap_frontier.py --name afront2 --fault-buses
+66,108,148,177` maps the surface in a few minutes on one node;
+`scripts/alphap_collect.py --name afront2` prints the frontier table and the
+failure-mode breakdown.
+
+---
+
+## 9. Limitations
+
+* **One contingency type.** Self-clearing bus faults only. These are angular and
+  voltage events, not frequency events; the frequency QoI respond weakly by
+  construction.
+* **One system, small.** 200 buses. Hosting capacity being network-determined
+  may not survive on a meshed transmission system with more redundancy.
+* **Commitment is bracketed, not distributed.** No UC model, so all results are
+  conditional on commitment.
+* **Wind is a non-inertial stand-in**, not a real IBR model with
+  fault-ride-through.
+* **The datacenter ZIP mix is a choice, not a fitted value.** The pilot mix is
+  `P/I/Z = 80/20/0`, and the earlier campaigns used `20/80/0`. A commonly cited
+  industry mix near `70/20/10` is *unsourced* (see §11). The measured effect of the
+  alphaP choice on CCT is at most 0.0281 s, and exactly zero in 10 of 12 cases
+  tested (§7.7), so it does not move the headline results. But at alphaP 0.8, 253
+  of 680 sited runs have no outcome, against 156 at 0.2 (§7.5), so the mix does change which runs can be
+  measured. See §8.
+* **The aleatoric results use one fault location, bus 66** (§7.2–7.4). Bus 66 is
+  the case's 11-branch hub. In the earlier unlimited-Q campaign it had the lowest pooled
+  median CCT of all 17 locations, but that was not re-checked on the switched campaign.
+  It is **not** the most *discriminating* on baseline: bus 94 is (§7.5). It is also where constant-power load fails most often (46 of 112 feasible runs at `alphaP = 1`; 4 at 148, 3 at 177). Results are
+  conditional on it in a way we did not appreciate when the campaigns were run.
+* **Q limits are enforced in the main campaigns, not in the earlier ones.** Every
+  campaign before `faultscreen1_ap08_qlim` is unlimited. The main campaigns use switching with Q limits (§4.2), with AC OPF as an alternative (§4.2). Switching raises the solve-failed rows from 51 to 85 (5 dispatches instead of 3, all `LOCALLY_INFEASIBLE`).
+* **No-outcome runs are not stable or unstable.** Of the 680 sited runs in the
+  fault sweep, 253 have no outcome: 97 fail only at alphaP 0.8 (89 initialization,
+  8 transient), 71 fail initialization at both alphaP levels, and 85 fail at dispatch
+  (34 DC OPF, 51 AC PF) (§7.5). We report them as no outcome. The 97 are the largest
+  unknown in the headline result.
+* **Sample sizes are pilot-scale.** 20 hours supports distributional statements
+  about the bulk, not about tails.
+* The reference bus remains the nuclear unit `189_1`, which has 0.0082 MW of
+  headroom — a known oddity not yet closed.
+
+> **Details:** [known modelling limitations](datacenter_load_uq_plan.md#12-known-modelling-limitations) ·
+> [open questions](datacenter_load_uq_plan.md#11-open-questions) ·
+> [contingency choice](datacenter_load_uq_plan.md#5-contingency) ·
+> [a self-clearing bus fault is an angular event, not a frequency event](datacenter_load_uq_plan.md#a-self-clearing-bus-fault-is-an-angular-and-voltage-event-not-a-frequency-event) ·
+> [Phase 4: wind as a real IBR](datacenter_load_uq_plan.md#phase-4-optional-model-form-robustness-wind-as-a-real-ibr)
+
+---
+
