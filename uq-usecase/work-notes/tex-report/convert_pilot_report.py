@@ -613,7 +613,7 @@ def markdown_inline_formatting(text):
         # Escape underscores in italic text
         text_content = text_content.replace("_", r"\_")
         return r"\textit{" + text_content + "}"
-    
+
     text = re.sub(
         r"(?<!\*)\*(.+?)\*(?!\*)",
         convert_italic,

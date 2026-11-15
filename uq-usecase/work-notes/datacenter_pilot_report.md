@@ -350,7 +350,7 @@ are removed and a `LoadZIP` is added with `Pnom = −PG/100` and
 `Qnom = −QG/100` (per unit, 100 MVA base), `alphaI = 1`, `alphaP = 0`. GridKit
 treats positive `Pnom` as consumed, so the negative value injects PG. At the
 initial voltage this reproduces the power-flow P and Q exactly; after that the
-injection scales with |V|, which is constant current.
+injection scales with `|V|`, which is constant current.
 
 > **Details:** [wind pipeline, function by function](datacenter_load_uq_plan.md#pipeline-trace-one-wind-unit-one-hour) · [wind: why negative load, not fixed](datacenter_load_uq_plan.md#3-wind-why-negative-load-not-fixed) · [implementation](datacenter_load_uq_plan.md#implementation) · ["net load" is an aggregate, not a per-bus subtraction](datacenter_load_uq_plan.md#net-load-is-an-aggregate-not-a-per-bus-subtraction)
 
