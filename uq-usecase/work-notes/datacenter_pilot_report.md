@@ -357,11 +357,8 @@ campaigns used `20/80/0`, now a sensitivity case; its effect on CCT is in the
 > **Details:** [fold hunt summary: IDA initial-condition failures at high alphaP](datacenter_load_uq_plan.md#fold-hunt-summary-ida-initial-condition-failures-at-high-alphap) ·
 > [IDA initial-condition issue record](ida_ic_issue.md#0-read-first) ·
 > [results](ida_ic_issue.md#10-method-and-results) ·
-> [hypothesis](ida_ic_issue.md#11-hypothesis-h1-and-what-it-means)
-
-Power factor is assumed 0.98 lagging.
-
-> **Details:** [ZIP coefficients are a first-class lever](datacenter_load_uq_plan.md#4-zip-coefficients-are-a-first-class-lever) ·
+> [hypothesis](ida_ic_issue.md#11-hypothesis-h1-and-what-it-means) ·
+> [ZIP coefficients are a first-class lever](datacenter_load_uq_plan.md#4-zip-coefficients-are-a-first-class-lever) ·
 > [is the 20/80/0 mix defensible?](datacenter_load_uq_plan.md#is-the-20800-mix-defensible) ·
 > [Phase 3: datacenter dimension](datacenter_load_uq_plan.md#phase-3-datacenter-dimension) ·
 > [what is sampled, and what is chosen](datacenter_load_uq_plan.md#what-is-sampled-and-what-is-chosen) ·
