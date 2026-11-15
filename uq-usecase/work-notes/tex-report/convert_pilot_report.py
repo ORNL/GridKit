@@ -569,11 +569,11 @@ def markdown_inline_formatting(text):
 
     text = re.sub(r"`([^`]+?)`", convert_code, text)
 
-    # [text](url) → text \url{url} (markdown links to LaTeX)
-    # Preserve link text and make URL a hyperlink
+    # [text](url) → \href{url}{text} (markdown links to LaTeX)
+    # Use \href to keep link text together without spacing issues
     text = re.sub(
         r"\[([^\]]+?)\]\(([^)]+?)\)",
-        lambda m: m.group(1) + r" \url{" + m.group(2) + "}",
+        lambda m: r"\href{" + m.group(2) + "}{" + m.group(1) + "}",
         text,
     )
 
@@ -1751,7 +1751,9 @@ def extract_section_4_3(md_content):
                 i += 1
             details_blockquotes.append("\n".join(blockquote_lines))
         else:
-            text_lines.append(line)  # Keep all lines including blank ones for paragraph breaks
+            text_lines.append(
+                line
+            )  # Keep all lines including blank ones for paragraph breaks
             i += 1
 
     text = "\n".join(text_lines).strip()
