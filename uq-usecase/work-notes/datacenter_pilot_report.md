@@ -53,8 +53,8 @@ Main terms used in our pilot study that follows.
 | **CCT** | Critical clearing time: the longest fault the system survives. Larger is safer. |
 | **Fault duration** | How long the fault stays on before it is cleared, in seconds. Stored as `fault_duration_s`. The pilot campaigns run each row at 0.1 s. The CCT search sets its own durations in `[0.05, 0.5]` s (§5). |
 | **h-scale** | Multiplier on every generator's inertia constant `H` in the case. `1.0` is the base case, stored as `h_scale`. All pilot rows use `1.0`. |
-| **Nadir** | The lowest system frequency reached after the fault, taken as the mean bus frequency (a proxy for the centre-of-inertia frequency), after the post-fault blank window. Higher is safer. Recorded, but not the stability test (§9). |
-| **ROCOF** | Rate of change of frequency, `\|d f / dt\|` of that mean bus frequency in Hz/s, maximum after the blank window. Fast change means little inertia to absorb the imbalance. Recorded, but not the stability test (§9). |
+| **Nadir** | The lowest system frequency reached after the fault, taken as the mean bus frequency (a proxy for the centre-of-inertia frequency), after the post-fault blank window. Higher is safer. Recorded, but not the stability test (§11). |
+| **ROCOF** | Rate of change of frequency, `\|d f / dt\|` of that mean bus frequency in Hz/s, maximum after the blank window. Fast change means little inertia to absorb the imbalance. Recorded, but not the stability test (§11). |
 | **The cap** | `cct_max = 0.5 s`, the top of the search. Set at a credible protection time; we do not look past it. |
 | **Censored** | **CCT is at or above the cap** — the system survived the longest fault we consider. The stored `0.5` is a **lower bound, not a measurement**. Censored means *very stable*. |
 | **Uncensored pair** | A (baseline, sited) pair where **both** are measured, so `dCCT` is a number rather than an inequality. |
@@ -497,7 +497,7 @@ Launch counts from the timing job, not the campaign logs.*
 monitors peaked at 126 MB, and one stage-A batch of two cases (dc-opf and ac) peaked at
 1.0 GB including Julia (SLURM 19830315, a single-process probe, not a campaign). A full
 worker batch of about 225 dispatches is not measured, and it sets the per-worker number.
-Wall time and storage at 2,000 buses are projections in [§10](#10-first-look-at-activsg2000).
+Wall time and storage at 2,000 buses are projections in [§8](#8-first-look-at-activsg2000).
 
 ---
 
@@ -632,7 +632,7 @@ Matched by (hour, commitment, fault), using datacenter runs that solved:
 
 Reading: on this campaign the datacenter raises P(CCT < 0.25 s) only slightly, from 0.04 to 0.07 at bus 108 and from 0.03 to 0.06 at bus 148. Most baseline runs are censored (81–84% on these pairs), so the signal is weak. The direction matches §7.2, which uses a different fault and a measured baseline.
 
-> **Working hypothesis for the 97 runs that fail only at alphaP 0.8.** These are datacenter runs that solve at alphaP 0.2 and fail at alphaP 0.8: 89 at initialization and 8 in the transient. The constant-power share may move the fault-on dispatch past a bolted fault, so no post-fault start exists. This is supported on one dispatch (h1879), not established elsewhere, and can be falsified. The predictions, and the breakdown of the 71 shared failures and the 85 dispatch failures, are in the [issue doc §11](ida_ic_issue.md#11-hypothesis-h1-and-what-it-means) and the [plan](datacenter_load_uq_plan.md#main-results-the-two-switched-campaigns-measured-2026-11-10). Report these runs as no outcome.
+> **Working hypothesis for the 97 runs that fail only at alphaP 0.8.** These are datacenter runs that solve at alphaP 0.2 and fail at alphaP 0.8: 89 at initialization and 8 in the transient. The constant-power share may move the fault-on dispatch past a bolted fault, so no post-fault start exists. This is supported on one dispatch (h1879), not established elsewhere, and can be falsified. The predictions, and the breakdown of the 71 shared failures and the 85 dispatch failures, are in the [issue doc §9](ida_ic_issue.md#9-hypothesis-h1-and-what-it-means) and the [plan](datacenter_load_uq_plan.md#main-results-the-two-switched-campaigns-measured-2026-11-10). Report these runs as no outcome.
 
 All 85 dispatch failures fall in q0, the lowest net-load quintile: 85 of its 136 datacenter runs, or 63%. No dispatch failure occurs in q1 to q4. The cause of the q0 concentration has not been checked.
 
@@ -669,7 +669,7 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 
 ---
 
-## 10. First look at ACTIVSg2000
+## 8. First look at ACTIVSg2000
 
 The 200-bus case is small enough that brute force works: whole campaigns finish
 in minutes. That is convenient but it hides the question the methods work
@@ -821,7 +821,7 @@ next piece of work.
 
 ---
 
-## 10a. Sampling at scale
+## 8a. Sampling at scale
 
 The pilot's aleatoric campaign is a grid of 40 operating conditions. Later
 uncertainty work will need distributions over more wind and load conditions, more
@@ -858,7 +858,7 @@ Recommendations, and one run to measure cost:
 
 ---
 
-## 11. Where this goes
+## 9. Where this goes
 
 The pilot establishes that the expensive part is **stage A**, and that the
 scientifically interesting dimensions — contingency location, disturbance
@@ -877,9 +877,9 @@ the lever for larger grids:
    model structure rather than discretisation.
 
 Immediate next steps are a wider contingency screen, paired-censoring treatment
-of `dCCT`, and a short literature check on datacenter load modelling so §8's
+of `dCCT`, and a short literature check on datacenter load modelling so §10's
 constraint can be addressed rather than worked around. On the larger case, the
-first task is the `CampaignConfig` port identified in §10 — merit order,
+first task is the `CampaignConfig` port identified in §8 — merit order,
 commitment band and hourly profile mapping — followed by a full-batch memory
 measurement at 2000 buses.
 
@@ -889,7 +889,7 @@ measurement at 2000 buses.
 `scripts/alphap_{frontier,collect}.py`, `scripts/scale_{probe,stagea}.py`, `scripts/probe_2000_mem.{py,sh}`,
 `py-utils/campaign.py`. Campaign artifacts under
 `/kfs2/projects/scidac/scidac-data/gridkit-campaigns/`.*
-## 8. GridKit end-user feedback
+## 10. GridKit end-user feedback
 
 Findings from using the tool in anger, offered as concrete issues:
 
@@ -932,7 +932,7 @@ failure-mode breakdown.
 
 ---
 
-## 9. Limitations
+## 11. Limitations
 
 * **One contingency type.** Self-clearing bus faults only. These are angular and
   voltage events, not frequency events; the frequency QoI respond weakly by
@@ -945,11 +945,11 @@ failure-mode breakdown.
   fault-ride-through.
 * **The datacenter ZIP mix is a choice, not a fitted value.** The pilot mix is
   `P/I/Z = 80/20/0`, and the earlier campaigns used `20/80/0`. A commonly cited
-  industry mix near `70/20/10` is *unsourced* (see §11). The measured effect of the
+  industry mix near `70/20/10` is *unsourced* (see §9). The measured effect of the
   alphaP choice on CCT is at most 0.0281 s, and exactly zero in 10 of 12 cases
   tested (§7.7), so it does not move the headline results. But at alphaP 0.8, 253
   of 680 sited runs have no outcome, against 156 at 0.2 (§7.5), so the mix does change which runs can be
-  measured. See §8.
+  measured. See §10.
 * **The aleatoric results use one fault location, bus 66** (§7.2–7.4). Bus 66 is
   the case's 11-branch hub. In the earlier unlimited-Q campaign it had the lowest pooled
   median CCT of all 17 locations, but that was not re-checked on the switched campaign.
