@@ -885,10 +885,6 @@ measurement at 2000 buses.
 
 ---
 
-*Machinery: `scripts/sweep_{build,worker,collect}.py`, `scripts/analyse_censored.py`,
-`scripts/alphap_{frontier,collect}.py`, `scripts/scale_{probe,stagea}.py`, `scripts/probe_2000_mem.{py,sh}`,
-`py-utils/campaign.py`. Campaign artifacts under
-`/kfs2/projects/scidac/scidac-data/gridkit-campaigns/`.*
 ## 10. GridKit end-user feedback
 
 Findings from using the tool in anger, offered as concrete issues:
@@ -971,7 +967,11 @@ failure-mode breakdown.
 > [open questions](datacenter_load_uq_plan.md#11-open-questions) ·
 > [contingency choice](datacenter_load_uq_plan.md#5-contingency) ·
 > [a self-clearing bus fault is an angular event, not a frequency event](datacenter_load_uq_plan.md#a-self-clearing-bus-fault-is-an-angular-and-voltage-event-not-a-frequency-event) ·
-> [Phase 4: wind as a real IBR](datacenter_load_uq_plan.md#phase-4-optional-model-form-robustness-wind-as-a-real-ibr)
+> [Phase 4: optional model form robustness — wind as a real IBR](datacenter_load_uq_plan.md#phase-4-optional-model-form-robustness-wind-as-a-real-ibr)
 
 ---
+
+## 12. Implementation
+
+The campaign execution infrastructure — including scripts for fault screening, statistical analysis, and scaling studies — is documented in the [dc_campaign_pipeline.md](dc_campaign_pipeline.md) reference manual. Refer to that document for implementation details, function signatures, and usage instructions for the analysis pipeline.
 
