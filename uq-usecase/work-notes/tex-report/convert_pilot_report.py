@@ -119,19 +119,35 @@ def markdown_to_latex_text(text):
         nonlocal in_quote, quote_buffer
         if in_quote:
             processed_quote = "\n".join(quote_buffer)
-            processed_quote = markdown_inline_formatting(processed_quote)
+            
+            # Check if this is a Details blockquote
+            if "Details:" in processed_quote and INCLUDE_FOOTNOTES:
+                # Format as Details blockquote with fbox
+                blockquote_md = "> " + processed_quote  # Reconstruct markdown format
+                details_latex = format_details_blockquote(blockquote_md)
+                if details_latex:
+                    result_lines.append(r"\par\vspace{0.4em}")
+                    result_lines.append(r"\noindent\fbox{\parbox[t]{0.98\textwidth}{%")
+                    result_lines.append(r"\setlength{\parskip}{0pt}%")
+                    result_lines.append(details_latex)
+                    result_lines.append(r"}}")
+                    result_lines.append(r"\vspace{0.2em}")
+            else:
+                # Regular blockquote
+                processed_quote = markdown_inline_formatting(processed_quote)
 
-            # Convert markdown links in blockquote
-            def link_to_url(m):
-                link_text = m.group(1)
-                link_url = m.group(2)
-                return "\\url{" + link_url + "} (" + link_text + ")"
+                # Convert markdown links in blockquote
+                def link_to_url(m):
+                    link_text = m.group(1)
+                    link_url = m.group(2)
+                    return "\\url{" + link_url + "} (" + link_text + ")"
 
-            processed_quote = re.sub(
-                r"\[([^\]]+)\]\(([^)]+)\)", link_to_url, processed_quote
-            )
-            result_lines.extend(processed_quote.split("\n"))
-            result_lines.append("\\end{quote}")
+                processed_quote = re.sub(
+                    r"\[([^\]]+)\]\(([^)]+)\)", link_to_url, processed_quote
+                )
+                result_lines.extend(processed_quote.split("\n"))
+                result_lines.append("\\end{quote}")
+            
             quote_buffer = []
             in_quote = False
 
@@ -1828,12 +1844,12 @@ def generate_latex_section_4_3(impl_note, text, details_blockquotes):
 def extract_section_4_4(md_content):
     """
     Extract section §4.4 "The datacenter" from markdown.
-    Returns: (impl_note, text, details_blockquotes)
+    Returns: (impl_note, text) where text includes Details blockquotes inline.
     """
     pattern_start = r"^### 4\.4\s+The datacenter"
     match_start = re.search(pattern_start, md_content, re.MULTILINE)
     if not match_start:
-        return ("", "", [])
+        return ("", "")
 
     start_pos = match_start.end()
     next_newline = md_content.find("\n", start_pos)
@@ -1847,10 +1863,9 @@ def extract_section_4_4(md_content):
 
     section_text = md_content[start_pos:end_pos].strip()
 
-    # Extract: implementation note, main text, and details blockquotes
+    # Extract: implementation note at beginning, then all remaining text inline
     impl_note = ""
     text_lines = []
-    details_blockquotes = []
 
     lines = section_text.split("\n")
     i = 0
@@ -1864,32 +1879,17 @@ def extract_section_4_4(md_content):
                 i += 1
             impl_note = "\n".join(blockquote_lines)
 
-    # Collect main text and Details blockquotes
+    # Collect all remaining text (including Details blockquotes inline)
     while i < len(lines):
-        line = lines[i]
-        stripped = line.strip()
-
-        if stripped.startswith(">") and (
-            "Details:" in stripped or "note:" in stripped.lower()
-        ):
-            # Details blockquote
-            blockquote_lines = []
-            while i < len(lines) and lines[i].strip().startswith(">"):
-                blockquote_lines.append(lines[i])
-                i += 1
-            details_blockquotes.append("\n".join(blockquote_lines))
-        else:
-            text_lines.append(
-                line
-            )  # Keep all lines including blank ones for paragraph breaks
-            i += 1
+        text_lines.append(lines[i])  # Keep all lines including blank ones and blockquotes
+        i += 1
 
     text = "\n".join(text_lines).strip()
-    return impl_note, text, details_blockquotes
+    return impl_note, text
 
 
-def generate_latex_section_4_4(impl_note, text, details_blockquotes):
-    """Convert extracted §4.4 markdown to LaTeX."""
+def generate_latex_section_4_4(impl_note, text):
+    """Convert extracted §4.4 markdown to LaTeX, with Details blockquotes inline."""
     latex_output = r"\subsubsection*{0.0.4.4 The datacenter}" + "\n"
     latex_output += (
         r"\addcontentsline{toc}{subsubsection}{0.0.4.4 The datacenter}" + "\n"
@@ -1906,25 +1906,10 @@ def generate_latex_section_4_4(impl_note, text, details_blockquotes):
         latex_output += r"}}" + "\n"
         latex_output += r"\vspace{0.4em}" + "\n\n"
 
-    # Add main text
+    # Add main text with Details blockquotes inline (converted by markdown_to_latex_text)
     if text:
         latex_text = markdown_to_latex_text(text)
         latex_output += latex_text + "\n"
-
-    # Add Details blockquotes at the end as separate boxes
-    if details_blockquotes and INCLUDE_FOOTNOTES:
-        for i, blockquote in enumerate(details_blockquotes):
-            if i > 0:
-                latex_output += r"\vspace{0.4em}" + "\n"
-            else:
-                latex_output += r"\par\vspace{0.8em}" + "\n"
-            latex_output += r"\noindent\fbox{\parbox[t]{0.98\textwidth}{%" + "\n"
-            latex_output += r"\setlength{\parskip}{0pt}%" + "\n"
-            details_latex = format_details_blockquote(blockquote)
-            if details_latex:
-                latex_output += details_latex + "\n"
-            latex_output += r"}}" + "\n"
-        latex_output += r"\vspace{0.2em}" + "\n"
 
     return latex_output
 
@@ -2101,10 +2086,10 @@ def convert_pilot_report(phase="1"):
 
         if phase_int >= 6:
             try:
-                impl_note, text, details_md = extract_section_4_4(md_content)
+                impl_note, text = extract_section_4_4(md_content)
                 if text or impl_note:
                     print(f"✓ Extracted §4.4 'The datacenter' ({len(text)} bytes)")
-                    latex_4_4 = generate_latex_section_4_4(impl_note, text, details_md)
+                    latex_4_4 = generate_latex_section_4_4(impl_note, text)
                     latex_sections.append(latex_4_4)
                     print(f"✓ Generated §4.4 LaTeX ({len(latex_4_4)} bytes)")
             except Exception as e:
