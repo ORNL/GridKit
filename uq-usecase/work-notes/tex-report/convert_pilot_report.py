@@ -57,6 +57,27 @@ EXCLUDE_SECTIONS = []  # Currently empty; set to ["4.2"] or other sections to ex
 CITATION_MAP = {
     "1": "Elliott2021",  # Elliott et al., 2021 - OSTI 1819998 (Advanced Control and Monitoring of IBRs)
     "2": "PolitisRomano1994",  # Politis and Romano, 1994 - Subsampling under minimal assumptions
+    "3": "GridKit2025",  # GridKit v0.2.0 - the simulation framework used
+    "4": "Birchfield2017",  # ACTIVSg synthetic grids (validation criteria)
+    "5": "TAMUrepo",  # Texas A&M Electric Grid Test Case Repository
+    "6": "Coffrin2018",  # PowerModels.jl
+    "7": "Wachter2006",  # Ipopt interior-point NLP solver
+    "8": "Hindmarsh2005",  # SUNDIALS / IDA DAE integrator
+    "9": "Yoo2003",  # SLURM resource manager
+    "10": "Bezanson2017",  # Julia language
+    "11": "DerKiureghian2009",  # aleatory vs epistemic uncertainty
+    "12": "Milano2018",  # low-inertia systems (renewables reduce inertia)
+    "13": "IEEELoad1993",  # ZIP load model (IEEE Task Force)
+    "14": "Milanovic2013",  # international industry load-modeling practice
+    "15": "Pourbeik2017",  # generic dynamic models for IBRs
+    "16": "Shehabi2024",  # datacenter energy / grid impact
+    "17": "Kundur2004",  # definition and classification of power system stability
+    "18": "Kundur1994",  # Power System Stability and Control (textbook)
+    "19": "SauerPai1998",  # Power System Dynamics and Stability (COI)
+    "20": "Stott1974",  # review of load-flow methods (PV/PQ switching)
+    "21": "KaplanMeier1958",  # Kaplan-Meier estimator
+    "22": "Greenwood1926",  # Greenwood's variance formula
+    "23": "Giles2015",  # multilevel Monte Carlo
 }
 
 # ============================================================================
@@ -127,7 +148,7 @@ def markdown_to_latex_text(text):
                 # Close quote tag if it was started (for mixed blockquotes)
                 if quote_started:
                     result_lines.append("\\end{quote}")
-                
+
                 blockquote_md = "> " + processed_quote  # Reconstruct markdown format
                 details_latex = format_details_blockquote(blockquote_md)
                 if details_latex:
@@ -142,7 +163,7 @@ def markdown_to_latex_text(text):
                 if not quote_started:
                     result_lines.append("\\begin{quote}")
                     quote_started = True
-                
+
                 processed_quote = markdown_inline_formatting(processed_quote)
 
                 # Convert markdown links in blockquote

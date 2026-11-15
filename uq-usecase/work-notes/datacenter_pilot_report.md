@@ -2,6 +2,7 @@
 
 **Status:** pilot, October 2026; main campaigns updated November 2026 to the
 P = 0.8, switched-PF setup (§7.0). ACTIVSg200 (Illinois 200-bus synthetic case).
+All simulations use GridKit v0.2.0 [3].
 
 **This report stands alone.** It explains what we asked, how we went about it,
 and what came out, in general terms. It does not assume you have read the other
@@ -21,17 +22,17 @@ Links marked **Details** point into the plan. They are optional.
 
 Two deliverables, one study:
 
-1. **Exercise GridKit as an end user** on a problem it has not been pointed at
+1. **Exercise GridKit as an end user** [3] on a problem it has not been pointed at
    before, and report back what works and what does not.
-2. **Demonstrate aleatoric UQ by sampling** on a dynamics problem, and find out
+2. **Demonstrate aleatoric UQ by sampling** [11] on a dynamics problem, and find out
    where the sampling cost actually goes — with a view to much larger grids
    where brute force stops being an option.
 
-The vehicle is a question utilities are being asked right now:
+The vehicle is a question utilities are being asked right now [16]:
 
 > **Where, and how much, large datacenter load can be added before dynamic
 > security degrades — given that renewable output makes system inertia vary
-> hour to hour?**
+> hour to hour?** [12]
 
 This is a pilot. The grid is small, the contingency set is narrow, and several
 conclusions are bounded by model validity. The point is to establish the
@@ -74,7 +75,7 @@ Main terms used in our pilot study that follows.
 
 ## 3. The system
 
-ACTIVSg200, a synthetic Illinois case: **200 buses, 246 branches, 49 generators**
+ACTIVSg200, a synthetic Illinois case [4]: **200 buses, 246 branches, 49 generators**
 (25 coal, 17 natural gas, 6 wind, 1 nuclear). The seed dispatch totals
 **2,178 MW** of demand, which is the annual peak. The dynamic case
 (`ACTIVSg200.case.json`) carries **40 Genrou** machines: 34 thermal and the 6 wind
@@ -157,7 +158,7 @@ commitments and sample across it:
 
 * **lower bound** — adequacy (`capacity >= net x 1.10`) and a floor of 8 thermal
   units, below which the network loses voltage support and the integrator fails
-  to initialise;
+  to initialise [8];
 * **upper bound** — `sum(PMIN) <= net`, above which the OPF is infeasible.
 
 At 762 MW net load the band is `[18, 38]`. Both ends are legitimate: at `n = 33`
@@ -213,7 +214,7 @@ committing more units.
 
 > **Implementation note:** Currently, the dispatch pipeline uses PowerModels.jl for both DC OPF and AC PF solves. As OPF functionality becomes available in GridKit (currently under development), we can readily substitute it into the pipeline. Maintaining PowerModels.jl as an alternative is beneficial for validation purposes and exploration of various AC OPF relaxation formulations.
 
-Both solves use PowerModels.jl with Ipopt. Per condition:
+Both solves use PowerModels.jl [6] with Ipopt [7]. Per condition:
 
 1. **DC OPF** sets the economic dispatch. It is lossless, so the load is
    inflated by the loss estimate from the previous pass (zero on the first).
@@ -254,7 +255,7 @@ AC OPF stays in the pipeline as the `ac_opf` option for cross-checks.
 > [the loss-iteration fix, with convergence table](datacenter_load_uq_plan.md#fix) ·
 > [why DC OPF then AC PF, rather than AC OPF](datacenter_load_uq_plan.md#why-dc-opf-then-ac-pf-rather-than-ac-opf)
 
-**Reactive limits: PV→PQ switching.** AC power flow does not enforce generator `QMAX`/`QMIN` limits natively (measured: 2 to 11 violations per scenario without mitigation). We enforce them via PV→PQ switching: after solving voltages, any generator exceeding a Q limit is fixed at that limit and its bus switched to PQ, then re-solved. Fixed generators return to PV if voltage recovers past setpoint (repeat up to twice). The DC OPF dispatch is never changed—only Q adjusts. This preserves dispatch so that CCT differences from the unlimited-Q run can be attributed to reactive limits alone. The feature is on by default (`enforce_q_lims`) in the main campaigns but disabled in unlimited-Q studies.
+**Reactive limits: PV→PQ switching.** AC power flow does not enforce generator `QMAX`/`QMIN` limits natively (measured: 2 to 11 violations per scenario without mitigation). We enforce them via PV→PQ switching [20]: after solving voltages, any generator exceeding a Q limit is fixed at that limit and its bus switched to PQ, then re-solved. Fixed generators return to PV if voltage recovers past setpoint (repeat up to twice). The DC OPF dispatch is never changed—only Q adjusts. This preserves dispatch so that CCT differences from the unlimited-Q run can be attributed to reactive limits alone. The feature is on by default (`enforce_q_lims`) in the main campaigns but disabled in unlimited-Q studies.
 
 > **Details:** [switching implementation and five-scenario measurements](datacenter_load_uq_plan.md#reactive-limits-in-the-ac-pf-pv-to-pq-switching) · [pipeline code](dc_campaign_pipeline.md#42a-reactive-limits-pv-to-pq-switching) · [Q-limit fold recount](ida_ic_issue.md#105-q-limits-pvpq-outer-loop-q_limit_pfpy)
 
@@ -284,9 +285,9 @@ injection scales with `|V|`, which is constant current.
 > **Details:** [wind pipeline, function by function](datacenter_load_uq_plan.md#pipeline-trace-one-wind-unit-one-hour) · [wind: why negative load, not fixed](datacenter_load_uq_plan.md#3-wind-why-negative-load-not-fixed) · [implementation](datacenter_load_uq_plan.md#implementation) · ["net load" is an aggregate, not a per-bus subtraction](datacenter_load_uq_plan.md#net-load-is-an-aggregate-not-a-per-bus-subtraction)
 
 **Why it is acceptable.** Converter-interfaced generation is modelled in
-positive-sequence transient stability as a controllable current source. The
+positive-sequence transient stability as a controllable current source [15]. The
 Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
-interface is "a controllable current source" (Elliott et al., 2021 [1], abstract). A constant-current
+interface is "a controllable current source" [1]. A constant-current
 ZIP is a simple stand-in for that current injection.
 
 ### 4.4 The datacenter
@@ -303,7 +304,7 @@ nor the OPF would see it: the power flow would have the slack bus supply it, and
 the committed fleet could be too small to serve it or larger than needed.
 
 **It gets its own load device, with its own voltage behaviour.** Load in these
-cases is represented by a **ZIP model**, which splits demand into three parts by
+cases is represented by a **ZIP model** [13], which splits demand into three parts by
 how each responds when voltage sags: a constant-**impedance** part (falls as
 $V^2$), a constant-**current** part (falls as $V$), and a constant-**power**
 part (does not fall at all). The split is written here as `P/I/Z` percentages.
@@ -311,7 +312,7 @@ part (does not fall at all). The split is written here as `P/I/Z` percentages.
 The distinction is the physical reason a datacenter is interesting. Ordinary
 constant-impedance load *sheds itself* during a voltage dip and helps the system
 recover. Datacenter load is rectifier- and UPS-fed and behaves far closer to
-constant power: it keeps demanding the same megawatts at reduced voltage, which
+constant power [14]: it keeps demanding the same megawatts at reduced voltage, which
 means drawing more current, which depresses voltage further. If the new load
 were simply folded into whatever device already existed at the bus, it would
 inherit the host's helpful constant-impedance behaviour and the study would
@@ -363,8 +364,8 @@ campaigns used `20/80/0`, now a sensitivity case; its effect on CCT is in the
 ## 5. CCT by bisection
 
 Critical clearing time is found by bisecting fault duration in `[0.05, 0.5]` s,
-with a stability test of **pole slip relative to the centre of inertia**. The
-centre of inertia is the inertia-weighted average rotor angle of the fleet,
+with a stability test of **pole slip relative to the centre of inertia** [17], [18]. The
+centre of inertia [19] is the inertia-weighted average rotor angle of the fleet,
 
 $$\delta_{COI}(t) = \frac{\sum_i H_i S_i \delta_i(t)}{\sum_i H_i S_i}$$
 
@@ -419,7 +420,7 @@ resulting CCT **identical** (0.2891 both ways).
 
 ## 6. Parallel execution on Kestrel
 
-The aleatoric campaign ran as one SLURM job on one node: 16 single-core workers, each taking a contiguous slice of `conditions.csv`. A worker solves its stage-A dispatches in one batched Julia pass, then runs dynamics for the dispatches that solved. Records are written per run, so a campaign can resume.
+The aleatoric campaign ran as one SLURM job [9] on one node: 16 single-core workers, each taking a contiguous slice of `conditions.csv`. A worker solves its stage-A dispatches in one batched Julia pass [10], then runs dynamics for the dispatches that solved. Records are written per run, so a campaign can resume.
 
 > **Details:** [wall time for the two main campaigns](datacenter_load_uq_plan.md#wall-time-in-the-two-main-campaigns-measured-2026-11-10) ·
 > [parallel sampling runs](datacenter_load_uq_plan.md#parallel-sampling-runs) ·
@@ -511,7 +512,7 @@ The aleatoric campaign varies operating conditions, placement and size, at one f
 
 ### 7.1 Reading the curves: Kaplan–Meier and censoring
 
-Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator uses censored runs correctly:
+Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator [21] uses censored runs correctly:
 
 $$\hat S(t)=\prod_{t_i\le t}\Bigl(1-\frac{d_i}{n_i}\Bigr),\qquad \widehat P(\mathrm{CCT}<t)=1-\hat S(t)$$
 
@@ -525,7 +526,7 @@ The rest of §7 runs as follows. §7.2 works one matched example, and §7.2b put
 
 **Sampling:** `aleatoric1_ap08_qlim`, 200 MW at bus 108, fault at bus 66. Of the 40 operating conditions, 37 solve with the datacenter. The baseline is the same 37 conditions with no datacenter.
 
-**Greenwood interval.** Greenwood's formula estimates the variance of a KM estimate: $\widehat{\mathrm{Var}}\big(\hat S(t)\big)=\hat S(t)^2\sum_{t_i\le t}\frac{d_i}{n_i(n_i-d_i)}$, with $d_i$ and $n_i$ as in §7.1. We report $\mathrm{SE}=\sqrt{\widehat{\mathrm{Var}}}$. The 95% interval is $\hat P\pm 1.96\,\mathrm{SE}$, with $\hat P=1-\hat S(t)$ (the plain interval, not log–log).
+**Greenwood interval.** Greenwood's formula [22] estimates the variance of a KM estimate: $\widehat{\mathrm{Var}}\big(\hat S(t)\big)=\hat S(t)^2\sum_{t_i\le t}\frac{d_i}{n_i(n_i-d_i)}$, with $d_i$ and $n_i$ as in §7.1. We report $\mathrm{SE}=\sqrt{\widehat{\mathrm{Var}}}$. The 95% interval is $\hat P\pm 1.96\,\mathrm{SE}$, with $\hat P=1-\hat S(t)$ (the plain interval, not log–log).
 
 | | no datacenter | 200 MW at bus 108 |
 |---|---|---|
@@ -652,7 +653,7 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 The 200-bus case is small enough that brute force works: whole campaigns finish
 in minutes. That is convenient but it hides the question the methods work
 exists to answer, so before pausing we measured what changes at **ACTIVSg2000**
-(2,000 buses, the TAMU synthetic Texas case). This is scoping, not a campaign.
+(2,000 buses, the TAMU synthetic Texas case [5]). This is scoping, not a campaign.
 
 **What already exists.** A GridKit `case.json` ships with the repo, raw TAMU
 data and processed hourly `demand` / `wind` / **`solar`** profiles are on
@@ -851,7 +852,7 @@ the lever for larger grids:
    completed runs (alphaP 0.2, unlimited) they are most of the dataset.
 3. **Exploit the conditional-independence structure.** Expensive outer samples
    over operating conditions, cheap inner fan-out over disturbances and model
-   parameters — the same motivation as multilevel Monte Carlo, but driven by
+   parameters — the same motivation as multilevel Monte Carlo [23], but driven by
    model structure rather than discretisation.
 
 Immediate next steps are a wider contingency screen, paired-censoring treatment
