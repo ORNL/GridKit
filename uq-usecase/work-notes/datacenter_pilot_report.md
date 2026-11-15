@@ -352,18 +352,12 @@ behaves as constant current. The 20% is a choice, not a fitted value. The earlie
 campaigns used `20/80/0`, now a sensitivity case; its effect on CCT is in the
 [plan](datacenter_load_uq_plan.md#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22).
 
-**Hunt summary (IDA initial-condition failures at high `alphaP`).** At 200 MW and `alphaP`
-0.8, the 18 buses where IDA finds no fault-on initial condition are the buses where the
-fault-on network algebra has a fold. This matches exactly on three dispatches. The working
-hypothesis is that the datacenter moves the fold past a bolted fault, so these are physical
-no-steady-state outcomes, not an IDA defect. In practice, a higher `alphaP` leaves fewer buses
-where a datacenter of a given size can be sited. This is supported, not proven. The IDASolve
-(integration) failures are a separate issue. Definitions, how the fold is computed, the
-results and the table are in the [plan](datacenter_load_uq_plan.md#fold-hunt-summary-ida-initial-condition-failures-at-high-alphap);
-the full record is in [the IDA initial-condition issue](ida_ic_issue.md)
-([read first](ida_ic_issue.md#0-read-first), [results](ida_ic_issue.md#10-method-and-results),
-[hypothesis](ida_ic_issue.md#11-hypothesis-h1-and-what-it-means),
-[experiment index](ida_ic_issue.md#12-experiment-index)).
+**Hunt summary (IDA initial-condition failures at high `alphaP`).** At high `alphaP`, the datacenter shifts the network-algebraic fold past a bolted fault, creating no-steady-state outcomes that limit where datacenters can be sited.
+
+> **Details:** [fold hunt summary: IDA initial-condition failures at high alphaP](datacenter_load_uq_plan.md#fold-hunt-summary-ida-initial-condition-failures-at-high-alphap) ·
+> [IDA initial-condition issue record](ida_ic_issue.md#0-read-first) ·
+> [results](ida_ic_issue.md#10-method-and-results) ·
+> [hypothesis](ida_ic_issue.md#11-hypothesis-h1-and-what-it-means)
 
 Power factor is assumed 0.98 lagging.
 
