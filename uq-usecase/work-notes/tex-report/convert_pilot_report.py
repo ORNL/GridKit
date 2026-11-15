@@ -1911,16 +1911,19 @@ def generate_latex_section_4_4(impl_note, text, details_blockquotes):
         latex_text = markdown_to_latex_text(text)
         latex_output += latex_text + "\n"
 
-    # Add Details blockquotes at the end
+    # Add Details blockquotes at the end as separate boxes
     if details_blockquotes and INCLUDE_FOOTNOTES:
-        latex_output += r"\par\vspace{0.8em}" + "\n"
-        latex_output += r"\noindent\fbox{\parbox[t]{0.98\textwidth}{%" + "\n"
-        latex_output += r"\setlength{\parskip}{0pt}%" + "\n"
-        for blockquote in details_blockquotes:
+        for i, blockquote in enumerate(details_blockquotes):
+            if i > 0:
+                latex_output += r"\vspace{0.4em}" + "\n"
+            else:
+                latex_output += r"\par\vspace{0.8em}" + "\n"
+            latex_output += r"\noindent\fbox{\parbox[t]{0.98\textwidth}{%" + "\n"
+            latex_output += r"\setlength{\parskip}{0pt}%" + "\n"
             details_latex = format_details_blockquote(blockquote)
             if details_latex:
                 latex_output += details_latex + "\n"
-        latex_output += r"}}" + "\n"
+            latex_output += r"}}" + "\n"
         latex_output += r"\vspace{0.2em}" + "\n"
 
     return latex_output
