@@ -130,6 +130,8 @@ $E_\mathrm{fd}$ | [p.u.] | Unknown | Field voltage                         | Opt
 \end{aligned}
 ```
 
+The state `ir` and `ii` default to zero.
+
 ### Internal Initialization
 
 All internal derivatives are initialized to zero:
