@@ -73,9 +73,10 @@ def generate_diagram_label(section_num, caption_text=None):
         slug = re.sub(r"_+", "_", slug)  # Remove consecutive underscores
         slug = slug.strip("_")  # Remove leading/trailing underscores
 
-        return f"fig:{section_num}_{slug}"
+        # Underscore, not colon: colons in filenames break on Overleaf/Windows.
+        return f"fig_{section_num}_{slug}"
     else:
-        return f"fig:{section_num}"
+        return f"fig_{section_num}"
 
 
 def find_all_mermaid_blocks(md_content):

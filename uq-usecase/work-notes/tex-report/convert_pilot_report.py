@@ -27,19 +27,43 @@ FIGURES_SOURCE_DIR = (
     "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/figures/"
 )
 
-# PRIMARY OUTPUT: SciDAC technical report
+# Figures are referenced as \includegraphics{figs/uq-pilot/<name>}. LaTeX resolves
+# that path from the MAIN document's directory (the Overleaf PROJECT ROOT, where
+# main.tex lives), NOT from the \input'd file. So on Overleaf the PNGs must be
+# uploaded to <project-root>/figs/uq-pilot/ — the same top-level figs/ tree the
+# report already uses (figs/ignas/...), not chapters/uq-subsections/figs/.
+# Change FIG_TEX_DIR if you want a different sub-folder (e.g. "figs/ignas/uq-pilot").
+FIG_TEX_DIR = "figs/uq-pilot"
+
+# PRIMARY OUTPUT: SciDAC technical report. The faithful harness (test_uq_pilot.tex,
+# built via chapters/uq-subsections/build_test.sh) finds these figures through
+# \graphicspath{{chapters/uq-subsections/}}, so they must sit at
+# chapters/uq-subsections/figs/uq-pilot/.
 TARGET_PATH = "/Users/isatkaus/projects/scidac/docs/report/SciDAC_OE_Technical_Report/chapters/uq-subsections/pilot_uq_usecase.tex"
-FIGURES_OUTPUT_DIR = "/Users/isatkaus/projects/scidac/docs/report/SciDAC_OE_Technical_Report/chapters/uq-subsections/figs/"
+FIGURES_OUTPUT_DIR = (
+    "/Users/isatkaus/projects/scidac/docs/report/SciDAC_OE_Technical_Report/chapters/uq-subsections/"
+    + FIG_TEX_DIR
+    + "/"
+)
 
 # SECONDARY OUTPUT: Keep generated LaTeX in repo for version control
 REPO_OUTPUT_PATH = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/pilot_uq_usecase.tex"
-REPO_FIGURES_OUTPUT_DIR = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/figs/"
+REPO_FIGURES_OUTPUT_DIR = (
+    "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/"
+    + FIG_TEX_DIR
+    + "/"
+)
 REPO_BIBTEX_PATH = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/uq-usecase_refs.bib"
 
 # Phase 2+ options
 INCLUDE_FOOTNOTES = True  # Set to False to omit cross-document references as footnotes
 REPO_BRANCH = "isatkaus/uq-usecase"  # Git branch where details are located
 REPO_BASE = "https://github.com/ORNL/GridKit"  # GitHub repository base URL
+
+# Sections to omit from the report (the markdown keeps them; they are just not
+# emitted here). Inbound "§N" cross-references to a skipped section are cleaned up
+# automatically by apply_numbered_headings_and_refs so nothing dangles.
+SKIP_SECTIONS = {10, 11}  # 10 = GridKit end-user feedback, 11 = Limitations
 
 # Phase 3+ options (Mermaid diagrams)
 MERMAID_FORMAT = "png"  # Options: "tikz" (inline, styled), "png" (requires mermaid-cli, creates placeholder if unavailable)
@@ -67,7 +91,7 @@ CITATION_MAP = {
     "4": "Birchfield2017",  # ACTIVSg synthetic grids (validation criteria)
     "5": "TAMUrepo",  # Texas A&M Electric Grid Test Case Repository
     "6": "Coffrin2018",  # PowerModels.jl
-    "7": "Wachter2006",  # Ipopt interior-point NLP solver
+    "7": "wachter2006",  # Ipopt interior-point NLP solver (matches main report key)
     "8": "Hindmarsh2005",  # SUNDIALS / IDA DAE integrator
     "9": "Yoo2003",  # SLURM resource manager
     "10": "Bezanson2017",  # Julia language
@@ -262,8 +286,11 @@ def markdown_to_latex_text(text):
         if in_quote:
             processed_quote = "\n".join(quote_buffer)
 
-            # Check if this is a Details blockquote
-            if "Details:" in processed_quote and INCLUDE_FOOTNOTES:
+            # Boxed note: Details and Implementation-note blockquotes use the fbox
+            if (
+                "Details:" in processed_quote
+                or "Implementation note:" in processed_quote
+            ) and INCLUDE_FOOTNOTES:
                 # Format as Details blockquote with fbox (no quote tags)
                 # Close quote tag if it was started (for mixed blockquotes)
                 if quote_started:
@@ -416,16 +443,22 @@ def markdown_to_latex_text(text):
             heading_match = re.match(r"^(#{2,4})\s+(.*)$", stripped)
             if heading_match:
                 hashes = heading_match.group(1)
-                htext = re.sub(
-                    r"^\d+(\.\d+)*[a-z]?\.?\s+", "", heading_match.group(2).strip()
-                )
-                htext = markdown_inline_formatting(htext)
+                # Keep the manual section number (e.g. "7.0") so "§7.0" references
+                # in the prose resolve to the heading. Use starred (unnumbered)
+                # commands so LaTeX does not add its own conflicting number.
+                htext = markdown_inline_formatting(heading_match.group(2).strip())
                 if hashes == "##":
-                    result_lines.append(f"\\subsection{{{htext}}}")
+                    result_lines.append(f"\\subsection*{{{htext}}}")
+                    result_lines.append(
+                        f"\\addcontentsline{{toc}}{{subsection}}{{{htext}}}"
+                    )
                 elif hashes == "###":
-                    result_lines.append(f"\\subsubsection{{{htext}}}")
+                    result_lines.append(f"\\subsubsection*{{{htext}}}")
+                    result_lines.append(
+                        f"\\addcontentsline{{toc}}{{subsubsection}}{{{htext}}}"
+                    )
                 else:
-                    result_lines.append(f"\\paragraph{{{htext}}}")
+                    result_lines.append(f"\\paragraph*{{{htext}}}")
             elif stripped == "---":
                 pass  # Markdown horizontal rule → ignore
             elif stripped:  # Non-empty line
@@ -490,9 +523,13 @@ def generate_latex_section_1(md_section_1):
     # Convert markdown formatting
     latex_text = markdown_to_latex_text(md_section_1)
 
-    # Wrap in LaTeX \subsection
-    latex_output = r"""\subsection{Pilot Aleatoric UQ Usecase}
+    # Numbered subsection so the pilot gets a report-numbered ToC entry (9.1.x)
+    # when \input into uq.tex. All inner headings are likewise numbered (see the
+    # apply_numbered_headings_and_refs post-processor); uqp:1 lets prose "§1"
+    # references resolve to this heading's auto-number.
+    latex_output = r"""\subsection{Pilot Study: Datacenter Load and Transient Security}
 \label{sec:pilot_uq_usecase}
+\label{uqp:1}
 
 """
     latex_output += latex_text
@@ -671,9 +708,12 @@ def markdown_table_to_latex_tabular(table_md, float=True, compact=False):
 
     # For small inline tables (like 2-row commitment table), use compact format
     if compact:
-        # Simple compact format without borders or fancy styling
+        # Simple compact format without borders or fancy styling.
+        # The centering/size changes are kept inside a group ({...\par}) so
+        # \parfillskip set by \centering cannot leak out and make titlesec
+        # stretch every following heading to full width.
         latex = r"\vspace{0.15cm}" + "\n"
-        latex += r"\centering\small" + "\n"
+        latex += r"{\centering\small" + "\n"
         latex += r"\setlength{\tabcolsep}{8pt}" + "\n"
         latex += r"\begin{tabular}{lll}" + "\n"  # 3 columns, left-aligned, no borders
 
@@ -694,19 +734,27 @@ def markdown_table_to_latex_tabular(table_md, float=True, compact=False):
             latex += " & ".join(row_cells) + r" \\" + "\n"
 
         latex += r"\end{tabular}" + "\n"
+        latex += r"\par}" + "\n"
         latex += r"\vspace{0.15cm}" + "\n"
-        latex += r"\normalsize\raggedright" + "\n"
         return latex
 
     # Clean, borderless layout (matching the compact "commitment" tables):
     # a content-sized first column so long identifiers never overlap the next
     # column, and ragged, wrapping X columns for the rest so wide cells stay
-    # within \textwidth instead of overflowing.
+    # within \textwidth instead of overflowing. If the first column holds long
+    # text (not a short label), make it a wrapping X column too.
     n_cols = len(header)
+    x_col = r">{\raggedright\arraybackslash}X"
+    col0_cells = [header[0]] + [r[0] for r in rows if r]
+    col0_max = max(
+        (len(c.replace("*", "").replace("`", "")) for c in col0_cells), default=0
+    )
     if n_cols <= 1:
-        col_spec = r">{\raggedright\arraybackslash}X"
+        col_spec = x_col
+    elif col0_max <= 24:
+        col_spec = "l " + " ".join([x_col] * (n_cols - 1))
     else:
-        col_spec = "l " + " ".join([r">{\raggedright\arraybackslash}X"] * (n_cols - 1))
+        col_spec = " ".join([x_col] * n_cols)
 
     # Start with table wrapper (floating) or direct tabularx (inline)
     if float:
@@ -715,9 +763,11 @@ def markdown_table_to_latex_tabular(table_md, float=True, compact=False):
         latex += r"  \renewcommand{\arraystretch}{1.25}" + "\n"
         latex += r"  \begin{tabularx}{\textwidth}{" + col_spec + "}" + "\n"
     else:
-        # Inline table: no float wrapper, just tabularx with spacing
+        # Inline table: no float wrapper, just tabularx with spacing. Group the
+        # centering/size so \parfillskip from \centering does not leak (which
+        # would make titlesec stretch subsequent headings to full width).
         latex = r"\vspace{0.25cm}" + "\n"
-        latex += r"\centering\small" + "\n"
+        latex += r"{\centering\small" + "\n"
         latex += r"\renewcommand{\arraystretch}{1.25}" + "\n"
         latex += r"\begin{tabularx}{\textwidth}{" + col_spec + "}" + "\n"
 
@@ -739,8 +789,8 @@ def markdown_table_to_latex_tabular(table_md, float=True, compact=False):
     if float:
         latex += r"\end{table}" + "\n"
     else:
+        latex += r"\par}" + "\n"
         latex += r"\vspace{0.25cm}" + "\n"
-        latex += r"\normalsize\raggedright" + "\n"
 
     return latex
 
@@ -828,12 +878,23 @@ def markdown_inline_formatting(text):
     text = text.replace("%", r"\%").replace("&", r"\&").replace("#", r"\#")
 
     # [text](url) → text (markdown links to LaTeX)
-    # Strip URL and keep only link text to avoid hyperlink formatting issues
-    text = re.sub(
-        r"\[([^\]]+?)\]\(([^)]+?)\)",
-        lambda m: m.group(1),
-        text,
-    )
+    # Strip URL and keep only link text. Escape LaTeX specials the link text may
+    # carry (e.g. underscores in a file name like dc_campaign_pipeline.md).
+    #
+    # Section references ("§N") are resolved later by apply_numbered_headings_and_refs,
+    # which turns "{\textsection}N" into "\ref{uqp:N}". That is only correct for
+    # *internal* references (bare "§N", or links whose target is a same-document
+    # "#anchor"). A link to another file (e.g. "ida_ic_issue.md#...") that happens to
+    # contain "§3a" points at a DIFFERENT document's section, so we render its "§"
+    # as "\S{}" (same glyph) to hide it from the ref pass and keep it literal.
+    def _convert_link(m):
+        link_text = re.sub(r"(?<!\\)([_&#%])", r"\\\1", m.group(1))
+        target = m.group(2).strip()
+        if not target.startswith("#"):
+            link_text = link_text.replace(r"{\textsection}", r"\S{}")
+        return link_text
+
+    text = re.sub(r"\[([^\]]+?)\]\(([^)]+?)\)", _convert_link, text)
 
     # [1], [2], etc. → \cite{BibtexKey} (numeric citations to LaTeX)
     # Convert numeric citations like "[1]" to "\cite{Elliott2021}"
@@ -1059,7 +1120,7 @@ def generate_figure_label(section_num, caption_text=None):
     """
     Generate figure label matching the format used by extract_and_generate_mermaid.py.
     Examples:
-        section=3, caption="One-time seed building (blue)..." → "fig:3_one_time_seed_building_blue_..."
+        section=3, caption="One-time seed building (blue)..." → "fig_3_one_time_seed_building_blue_..."
 
     Returns: Label for looking up pre-generated PNG file
     """
@@ -1073,9 +1134,10 @@ def generate_figure_label(section_num, caption_text=None):
         slug = re.sub(r"_+", "_", slug)  # Remove consecutive underscores
         slug = slug.strip("_")  # Remove leading/trailing underscores
 
-        return f"fig:{section_num}_{slug}"
+        # Underscore, not colon: colons in filenames break on Overleaf/Windows.
+        return f"fig_{section_num}_{slug}"
     else:
-        return f"fig:{section_num}"
+        return f"fig_{section_num}"
 
 
 def find_figure_file(fig_label):
@@ -1306,8 +1368,40 @@ def extract_section_3(md_content):
     return text_before, mermaid_code, caption, text_after, details_blockquotes
 
 
+def _png_size(path):
+    """Return (width, height) in pixels from a PNG header, or None. Stdlib only."""
+    import struct
+
+    try:
+        with open(path, "rb") as f:
+            head = f.read(24)
+        if len(head) < 24 or head[:8] != b"\x89PNG\r\n\x1a\n":
+            return None
+        return struct.unpack(">II", head[16:24])
+    except Exception:
+        return None
+
+
+def _mermaid_width_for(png_source, fallback):
+    """Pick an \\includegraphics width fraction from a mermaid PNG's aspect ratio.
+
+    Mermaid flowcharts render at a fixed small font, so wide (horizontal) diagrams
+    are illegible when shrunk. Give landscape diagrams the full text width; keep
+    portrait/square ones at the caller's smaller default so they don't overflow.
+    """
+    size = _png_size(str(png_source))
+    if not size or not size[1]:
+        return fallback
+    ratio = size[0] / size[1]
+    if ratio >= 2.0:  # clearly horizontal → use all available width
+        return 1.0
+    if ratio >= 1.3:  # mildly landscape
+        return max(fallback, 0.95)
+    return fallback  # portrait/square → keep the narrower default
+
+
 def generate_latex_figure_with_mermaid(
-    mermaid_code, caption, fig_label="fig:system_overview", width=0.6
+    mermaid_code, caption, fig_label="fig_system_overview", width=0.6
 ):
     """
     Generate LaTeX figure environment with pre-generated mermaid diagram.
@@ -1338,6 +1432,9 @@ def generate_latex_figure_with_mermaid(
     # Copy to both output directories
     png_filename = f"{fig_label}.png"
 
+    # Size the figure from its aspect ratio: wide mermaid diagrams get full width.
+    width = _mermaid_width_for(png_source, width)
+
     for figures_dir in [FIGURES_OUTPUT_DIR, REPO_FIGURES_OUTPUT_DIR]:
         Path(figures_dir).mkdir(parents=True, exist_ok=True)
         png_output_path = Path(figures_dir) / png_filename
@@ -1367,7 +1464,9 @@ def _emit_figure_latex(png_filename, caption_md, width=0.75):
     latex += (
         r"  \includegraphics[width="
         + f"{width:.2f}"
-        + r"\textwidth]{figs/"
+        + r"\textwidth]{"
+        + FIG_TEX_DIR
+        + "/"
         + png_filename
         + "}\n"
     )
@@ -1420,7 +1519,8 @@ def generate_latex_section_3(
         section_num: Section number (for figure label generation)
         details_md_list: List of blockquote strings (may be empty)
     """
-    latex_output = r"""\subsection{The system}
+    latex_output = r"""\subsection*{3. The system}
+\addcontentsline{toc}{subsection}{3. The system}
 \label{sec:the_system}
 
 """
@@ -1471,7 +1571,8 @@ def generate_latex_section_2(table_md, footnote_md):
     Uses definition-list format (flowing text with bold terms) instead of table.
     Much better for long glossaries.
     """
-    latex_output = r"""\subsection{Glossary}
+    latex_output = r"""\subsection*{2. Glossary}
+\addcontentsline{toc}{subsection}{2. Glossary}
 \label{sec:glossary}
 
 Main terms used in our pilot study that follows.
@@ -1584,7 +1685,8 @@ def generate_latex_section_4_1(
     Handles text before table, inline table, text after table, and details blockquotes.
     Preserves the original markdown order.
     """
-    latex_output = r"""\subsubsection{Commitment: a feasible band, not an economic optimum}
+    latex_output = r"""\subsubsection*{4.1 Commitment: a feasible band, not an economic optimum}
+\addcontentsline{toc}{subsubsection}{4.1 Commitment: a feasible band, not an economic optimum}
 \label{sec:commitment}
 
 """
@@ -1677,7 +1779,8 @@ def generate_latex_section_4(text_before, mermaid_code, caption, text_after):
     Convert extracted §4 markdown to LaTeX.
     Includes: intro text, mermaid figure with caption, followup text.
     """
-    latex_output = r"""\subsection{Building one operating condition}
+    latex_output = r"""\subsection*{4. Building one operating condition}
+\addcontentsline{toc}{subsection}{4. Building one operating condition}
 \label{sec:building_condition}
 
 """
@@ -1885,10 +1988,9 @@ def generate_latex_section_4_2(
     text_before, mermaid_code, caption, text_after, details_blockquotes
 ):
     """Convert extracted §4.2 markdown to LaTeX."""
-    latex_output = r"\subsubsection*{0.0.4.2 Dispatch: DC OPF then AC PF}" + "\n"
+    latex_output = r"\subsubsection*{4.2 Dispatch: DC OPF then AC PF}" + "\n"
     latex_output += (
-        r"\addcontentsline{toc}{subsubsection}{0.0.4.2 Dispatch: DC OPF then AC PF}"
-        + "\n"
+        r"\addcontentsline{toc}{subsubsection}{4.2 Dispatch: DC OPF then AC PF}" + "\n"
     )
     latex_output += r"\label{sec:dispatch_dc_opf_ac_pf}" + "\n\n"
 
@@ -1948,18 +2050,12 @@ def generate_latex_section_4_2(
 def generate_latex_section_4_2a(text, details_blockquotes):
     """Convert extracted §4.2a markdown to LaTeX."""
     # Use unnumbered subsubsection with custom numbering and TOC entry
-    latex_output = (
-        r"\subsubsection*{0.0.4.2a Reactive limits: PV to PQ switching}" + "\n"
-    )
+    latex_output = r"\subsubsection*{4.2a Reactive limits: PV to PQ switching}" + "\n"
     latex_output += (
-        r"\addcontentsline{toc}{subsubsection}{0.0.4.2a Reactive limits: PV to PQ switching}"
+        r"\addcontentsline{toc}{subsubsection}{4.2a Reactive limits: PV to PQ switching}"
         + "\n"
     )
     latex_output += r"\label{sec:reactive_limits_pv_pq}" + "\n\n"
-    latex_output += (
-        r"\textcolor{red}{\emph{Optional section---may move to appendix or details later.}}"
-        + "\n\n"
-    )
 
     if text:
         latex_text = markdown_to_latex_text(text)
@@ -1982,16 +2078,12 @@ def generate_latex_section_4_2a(text, details_blockquotes):
 def generate_latex_section_4_2b(text, details_blockquotes):
     """Convert extracted §4.2b markdown to LaTeX."""
     # Use unnumbered subsubsection with custom numbering and TOC entry
-    latex_output = r"\subsubsection*{0.0.4.2b AC OPF as a second Q-limit route}" + "\n"
+    latex_output = r"\subsubsection*{4.2b AC OPF as a second Q-limit route}" + "\n"
     latex_output += (
-        r"\addcontentsline{toc}{subsubsection}{0.0.4.2b AC OPF as a second Q-limit route}"
+        r"\addcontentsline{toc}{subsubsection}{4.2b AC OPF as a second Q-limit route}"
         + "\n"
     )
     latex_output += r"\label{sec:ac_opf_q_limits}" + "\n\n"
-    latex_output += (
-        r"\textcolor{red}{\emph{Optional section---may move to appendix or details later.}}"
-        + "\n\n"
-    )
 
     if text:
         latex_text = markdown_to_latex_text(text)
@@ -2079,10 +2171,9 @@ def extract_section_4_3(md_content):
 
 def generate_latex_section_4_3(impl_note, text, details_blockquotes):
     """Convert extracted §4.3 markdown to LaTeX."""
-    latex_output = r"\subsubsection*{0.0.4.3 Wind becomes negative load}" + "\n"
+    latex_output = r"\subsubsection*{4.3 Wind becomes negative load}" + "\n"
     latex_output += (
-        r"\addcontentsline{toc}{subsubsection}{0.0.4.3 Wind becomes negative load}"
-        + "\n"
+        r"\addcontentsline{toc}{subsubsection}{4.3 Wind becomes negative load}" + "\n"
     )
     latex_output += r"\label{sec:wind_negative_load}" + "\n\n"
 
@@ -2167,10 +2258,8 @@ def extract_section_4_4(md_content):
 
 def generate_latex_section_4_4(impl_note, text):
     """Convert extracted §4.4 markdown to LaTeX, with Details blockquotes inline."""
-    latex_output = r"\subsubsection*{0.0.4.4 The datacenter}" + "\n"
-    latex_output += (
-        r"\addcontentsline{toc}{subsubsection}{0.0.4.4 The datacenter}" + "\n"
-    )
+    latex_output = r"\subsubsection*{4.4 The datacenter}" + "\n"
+    latex_output += r"\addcontentsline{toc}{subsubsection}{4.4 The datacenter}" + "\n"
     latex_output += r"\label{sec:datacenter}" + "\n\n"
 
     # Add implementation note at beginning if present
@@ -2206,8 +2295,9 @@ def extract_section_n(md_content, section_num):
     if next_newline != -1:
         start_pos = next_newline + 1
 
-    # Section ends at next ## heading
-    pattern_end = rf"^## {section_num + 1}\."
+    # Section ends at the next top-level "## " heading (next section, "## 8a",
+    # or the standalone "## References" list, which the bibliography handles).
+    pattern_end = r"^## "
     match_end = re.search(pattern_end, md_content[start_pos:], re.MULTILINE)
     end_pos = start_pos + match_end.start() if match_end else len(md_content)
 
@@ -2343,11 +2433,101 @@ def generate_latex_section_n(section_num, section_title, text, label_name):
     if not text:
         return ""
 
-    latex_output = rf"\subsection{{{section_title}}}" + "\n"
+    heading = f"{section_num}. {section_title}"
+    latex_output = rf"\subsection*{{{heading}}}" + "\n"
+    latex_output += rf"\addcontentsline{{toc}}{{subsection}}{{{heading}}}" + "\n"
     latex_output += rf"\label{{sec:{label_name}}}" + "\n\n"
     latex_output += markdown_section_body_to_latex(text, section_num) + "\n\n"
 
     return latex_output
+
+
+# ============================================================================
+# POST-PROCESSOR: numbered headings + cross-reference resolution
+# ============================================================================
+
+
+def apply_numbered_headings_and_refs(latex):
+    r"""Convert starred headings to numbered ones and wire up cross-references.
+
+    The report loads titlesec, which (a) does not number \subsection*/\subsubsection*
+    and (b) typesets their titles stretched to full justified width. The generators
+    emit starred headings carrying a *manual* number in the title (e.g.
+    "\subsection*{2. Glossary}"), which therefore lose the report's 9.1.x prefix and
+    render stretched. This pass rewrites them to numbered commands so LaTeX supplies
+    the correct 9.1.x / 9.1.x.y numbers automatically:
+
+        \subsection*{2. Glossary}              -> \subsection{Glossary}
+        \addcontentsline{toc}{subsection}{...}    \label{uqp:2}
+
+    The manual number becomes a \label{uqp:<number>}, and every prose cross-reference
+    ("{\textsection}7.6", i.e. the converted form of "§7.6") is rewritten to
+    "{\textsection}\ref{uqp:7.6}" so it always prints the heading's real number.
+    """
+    heading_re = re.compile(r"^\\(subsection|subsubsection|paragraph)\*\{(.*)\}\s*$")
+    # Leading manual number: "2", "4.2", "4.2a", "7.0" (optional trailing dot).
+    num_re = re.compile(r"^(\d+(?:\.\d+)*[a-z]?)\.?\s+(.*)$")
+
+    lines = latex.split("\n")
+    out = []
+    i = 0
+    while i < len(lines):
+        m = heading_re.match(lines[i])
+        if not m:
+            out.append(lines[i])
+            i += 1
+            continue
+
+        cmd, title = m.group(1), m.group(2)
+        # Numbered headings add themselves to the ToC, so drop a trailing
+        # \addcontentsline line the generators emitted for the starred form.
+        drop_acl = i + 1 < len(lines) and lines[i + 1].lstrip().startswith(
+            r"\addcontentsline{toc}"
+        )
+
+        nm = num_re.match(title)
+        if nm:
+            number, clean_title = nm.group(1), nm.group(2)
+            out.append(rf"\{cmd}{{{clean_title}}}")
+            out.append(rf"\label{{uqp:{number}}}")
+        else:
+            # No manual number (e.g. a plain "One-time seed building"): just number it.
+            out.append(rf"\{cmd}{{{title}}}")
+
+        i += 2 if drop_acl else 1
+
+    latex = "\n".join(out)
+
+    # Clean up inbound references to skipped sections BEFORE resolving the rest.
+    # The target heading no longer exists, so "\ref{uqp:N}" would be undefined; strip
+    # the reference (and its scaffolding) so the sentence still reads cleanly.
+    for n in sorted(SKIP_SECTIONS):
+        sec = r"\{\\textsection\}" + str(n) + r"(?![0-9.])"
+        before = latex
+        # "(see §N)" / "(§N)" parentheticals, and a preceding space.
+        latex = re.sub(r"\s*\(see " + sec + r"\)", "", latex)
+        latex = re.sub(r"\s*\(" + sec + r"\)", "", latex)
+        # Trailing "See §N." sentence.
+        latex = re.sub(r"\s*See " + sec + r"\.", "", latex)
+        # Possessive "§N's X" -> "the X".
+        latex = re.sub(sec + r"'s\b", "the", latex)
+        # Anything left: drop the bare reference and warn so it can be reviewed.
+        if re.search(sec, latex):
+            print(
+                f"WARNING: leftover reference to skipped §{n}; removed bare '§{n}'.",
+                file=sys.stderr,
+            )
+            latex = re.sub(r"\s*" + sec, "", latex)
+        if latex != before:
+            print(f"  ✓ Cleaned inbound references to skipped §{n}")
+
+    # Prose "§N" / "§N.M" (already unicode-converted to "{\textsection}N...") -> \ref.
+    latex = re.sub(
+        r"\{\\textsection\}(\d+(?:\.\d+)*[a-z]?)",
+        lambda mm: r"{\textsection}\ref{uqp:" + mm.group(1) + "}",
+        latex,
+    )
+    return latex
 
 
 def convert_pilot_report(phase="1"):
@@ -2545,6 +2725,9 @@ def convert_pilot_report(phase="1"):
         ]
 
         for sect_num, sect_title, sect_label in section_info:
+            if sect_num in SKIP_SECTIONS:
+                print(f"⏭  Skipping §{sect_num} '{sect_title}' (in SKIP_SECTIONS)")
+                continue
             if phase_int >= sect_num:
                 try:
                     text = extract_section_n(md_content, sect_num)
@@ -2565,6 +2748,20 @@ def convert_pilot_report(phase="1"):
 
     # Combine all sections
     latex_output = "".join(latex_sections)
+
+    # Switch every inner heading to a numbered command and resolve "§N.M" refs so
+    # the block inherits the report's 9.1.x numbering (titlesec stretches starred
+    # headings and gives them no number — see apply_numbered_headings_and_refs).
+    latex_output = apply_numbered_headings_and_refs(latex_output)
+
+    # Number down to subsubsection for this block, then restore the report default
+    # (report class default is 2) so later chapters are unaffected.
+    latex_output = (
+        "% Auto-generated from datacenter_pilot_report.md — do not edit by hand.\n"
+        "\\setcounter{secnumdepth}{3}% number subsubsections within this block\n\n"
+        + latex_output
+        + "\n\\setcounter{secnumdepth}{2}% restore report default\n"
+    )
 
     # Note: no \bibliography here. This file is \input into a parent document
     # (the SciDAC report, or test_main.tex) which owns the bibliography.
@@ -2643,7 +2840,9 @@ def convert_pilot_report(phase="1"):
             f"  2. Run again: python convert_pilot_report.py phase=13 (add Sections 11-12 Limitations & Implementation)"
         )
     else:
-        print(f"  2. Test: cd ../chapters/uq-subsections && pdflatex test_main.tex")
+        print(
+            f"  2. Test: bash ../chapters/uq-subsections/build_test.sh  (-> _build/test_uq_pilot.pdf)"
+        )
     print(
         f"  3. Integrate: Add to uq.tex: \\input{{chapters/uq-subsections/pilot_uq_usecase}}"
     )
@@ -2654,7 +2853,8 @@ def convert_pilot_report(phase="1"):
 
     bibtex_source = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-usecase_refs.bib"
     # Keep every copy next to a .tex that references it in sync with the source,
-    # including the local copy test_main.tex reads from the report directory.
+    # including the copy the faithful harness (test_uq_pilot.tex) reads from the
+    # report directory.
     bibtex_targets = [
         REPO_BIBTEX_PATH,
         str(Path(TARGET_PATH).parent / "uq-usecase_refs.bib"),
@@ -2678,7 +2878,7 @@ if __name__ == "__main__":
     # Parse phase from command line if provided
     import sys
 
-    phase = "9"  # Default: convert through §9
+    phase = "12"  # Default: convert the whole report (§1–§12)
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
             if arg.startswith("phase="):
