@@ -353,7 +353,15 @@ namespace AnalysisManager
     {
       const RealT tout = getMonitorTime(tf, dt_monitor, step, nsteps);
       RealT       tret;
-      auto        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
+      int         retval = 0;
+      if (callback.has_value())
+      {
+        // The callback may change model inputs, so the solver must not step
+        // past the time at which it is called
+        retval = IDASetStopTime(solver_, tout);
+        checkOutput(retval, "IDASetStopTime");
+      }
+      retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
       checkOutput(retval, "IDASolve");
 
       if (callback.has_value() || model_->monitoring())

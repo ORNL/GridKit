@@ -1,15 +1,24 @@
+#include <algorithm>
+#include <array>
 #include <exception>
 #include <filesystem>
 #include <fstream>
+#include <functional>
+#include <optional>
+#include <vector>
 
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
 #include "AnalysisUtilities.hpp"
+#ifdef GRIDKIT_ENABLE_ZMQ
+#include <zmq.hpp>
+#endif
 
 using namespace AnalysisManager::Sundials;
 using namespace GridKit::PhasorDynamics;
@@ -43,7 +52,117 @@ int runApplication(int argc, const char* argv[])
 
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
+
+  // Exchanges the interface bus signals with the co-simulation peers at each step
+  std::optional<std::function<void(real_type)>> exchange;
+
+#ifdef GRIDKIT_ENABLE_ZMQ
+  // Signals of an interface bus and the socket to its co-simulation peer
+  struct Link
+  {
+    bool                                                      replies{};
+    zmq::socket_t                                             socket;
+    std::array<scalar_type, 2>                                input{};
+    std::array<index_type, 2>                                 input_index{};
+    std::array<const SignalNode<scalar_type, index_type>*, 2> output{};
+  };
+
+  zmq::context_t    context;
+  std::vector<Link> links(study.connections.size());
+
+  for (std::size_t i = 0; i < links.size(); ++i)
+  {
+    const auto& connection = study.connections[i];
+    auto&       link       = links[i];
+
+    // The interface bus receives its input signals from the peer and sends its
+    // output signals to the peer
+    using BusDataT   = BusData<real_type, index_type>;
+    const auto  bus  = std::ranges::find(study.model_data.bus, connection.bus, &BusDataT::bus_id);
+    std::size_t port = 0;
+    link.input_index.fill(GridKit::INVALID_INDEX<index_type>);
+    for (const auto& signal : bus->signal_inputs)
+    {
+      sys.getSignalNode(signal.second)->link(&link.input[port], &link.input_index[port]);
+      ++port;
+    }
+    port = 0;
+    for (const auto& signal : bus->signal_outputs)
+    {
+      link.output[port] = sys.getSignalNode(signal.second);
+      ++port;
+    }
+
+    // The voltage input side binds the endpoint and replies with the current
+    // drawn at the voltage it receives
+    const int timeout = 10000;
+    link.replies      = bus->bus_type == BusDataT::BusType::SIGNAL_VOLTAGE_IN;
+    if (link.replies)
+    {
+      link.socket = zmq::socket_t(context, zmq::socket_type::rep);
+      link.socket.bind(connection.address);
+    }
+    else
+    {
+      link.socket = zmq::socket_t(context, zmq::socket_type::req);
+      link.socket.connect(connection.address);
+    }
+    link.socket.set(zmq::sockopt::rcvtimeo, timeout);
+    link.socket.set(zmq::sockopt::linger, timeout);
+  }
+
+  auto receive = [](Link& link)
+  {
+    if (!link.socket.recv(zmq::buffer(link.input), zmq::recv_flags::none))
+    {
+      throw std::runtime_error("Peer did not respond");
+    }
+  };
+
+  auto send = [](Link& link)
+  {
+    const std::array<scalar_type, 2> values{link.output[0]->read(), link.output[1]->read()};
+    link.socket.send(zmq::buffer(values), zmq::send_flags::none);
+  };
+
+  if (!links.empty())
+  {
+    // Send the interface values at time t and receive those of the peers. A
+    // voltage input side integrates each step at the voltage its peer reached,
+    // so it has nothing to receive at the final time.
+    exchange = [&](real_type t)
+    {
+      sys.evaluateResidual();
+      for (auto& link : links)
+      {
+        send(link);
+      }
+      for (auto& link : links)
+      {
+        if (!link.replies || t < study.tmax)
+        {
+          receive(link);
+        }
+      }
+    };
+  }
+
+  // A voltage input side initializes at the voltage it receives
+  for (auto& link : links)
+  {
+    if (link.replies)
+    {
+      receive(link);
+    }
+  }
+#endif
+
   sys.allocate();
+
+  if (exchange)
+  {
+    (*exchange)(0.0);
+  }
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
@@ -52,6 +171,8 @@ int runApplication(int argc, const char* argv[])
   ida.setMaxSteps(study.max_steps);
   ida.setMaxOrder(study.max_order);
   ida.setConsistentICType(study.consistent_ic_type);
+  // Received inputs are discontinuous and the algebraic variables jump with them
+  ida.setSuppressAlgebraicErrors(exchange.has_value());
   ida.configureSimulation();
 
   // Start timer
@@ -64,7 +185,7 @@ int runApplication(int argc, const char* argv[])
   for (const auto& event : study.events)
   {
     // Run to event time
-    ida.runSimulation(event.time, dt_monitor);
+    ida.runSimulation(event.time, dt_monitor, exchange);
 
     // Set up run for event (to start at event time)
     int ret = 0;
@@ -97,7 +218,7 @@ int runApplication(int argc, const char* argv[])
   }
 
   // Run to final time
-  ida.runSimulation(final_time, dt_monitor);
+  ida.runSimulation(final_time, dt_monitor, exchange);
 
   real_type stop = static_cast<real_type>(clock());
 
