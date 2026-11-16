@@ -70,9 +70,9 @@ namespace GridKit
     /// Initial values for a Genrou generator model
     enum class GenrouInitialValues : size_t
     {
-      ir,         ///< Initial real terminal current into the bus on system base
-      ii,         ///< Initial imaginary terminal current into the bus on system base
-      in_service, ///< Initial service status; defaults to true
+      ir,
+      ii,
+      in_service,
     };
 
     /**
@@ -95,9 +95,9 @@ namespace GridKit
     {
       /// Units, symbols and descriptions of the GENROU data
       static constexpr typename GenrouData::Manifest MANIFEST{
-          .class_name  = "Genrou",
-          .description = "Round-rotor synchronous machine model",
-          .parameters  = {{
+          .class_name     = "Genrou",
+          .description    = "Round-rotor synchronous machine model",
+          .parameters     = {{
               {GenrouParameters::p0, "p.u.", "P_0", "Initial active power injection"},
               {GenrouParameters::q0, "p.u.", "Q_0", "Initial reactive power injection"},
               {GenrouParameters::H, "s", "H", "Rotor inertia"},
@@ -118,17 +118,17 @@ namespace GridKit
               {GenrouParameters::S12, "p.u.", "S_{12}", "Saturation factor at 1.2 pu flux"},
               {GenrouParameters::mva, "MVA", "S^\\mathrm{base}", "Machine power base"},
           }},
-          .buses       = {{
+          .buses          = {{
               {GenrouBuses::bus, "Terminal bus"},
           }},
-          .inputs      = {{
+          .inputs         = {{
               {GenrouSignalInputs::pmech, "Mechanical-power input"},
               {GenrouSignalInputs::efd, "Field-voltage input"},
           }},
-          .outputs     = {{
+          .outputs        = {{
               {GenrouSignalOutputs::speed, "Machine speed-deviation output"},
           }},
-          .monitors    = {{
+          .monitors       = {{
               {GenrouMonitorableVariables::ir, "p.u.", "Terminal current, real component, system base"},
               {GenrouMonitorableVariables::ii, "p.u.", "Terminal current, imaginary component, system base"},
               {GenrouMonitorableVariables::p, "p.u.", "Active power, system base"},
@@ -136,6 +136,11 @@ namespace GridKit
               {GenrouMonitorableVariables::delta, "rad", "Machine internal rotor angle"},
               {GenrouMonitorableVariables::omega, "p.u.", "Machine speed deviation"},
               {GenrouMonitorableVariables::speed, "p.u.", "Per-unit machine speed"},
+          }},
+          .initial_values = {{
+              {GenrouInitialValues::ir, "p.u.", "Initial real terminal current into the bus on system base"},
+              {GenrouInitialValues::ii, "p.u.", "Initial imaginary terminal current into the bus on system base"},
+              {GenrouInitialValues::in_service, "binary", "Initial service status, defaults to true"},
           }},
       };
 

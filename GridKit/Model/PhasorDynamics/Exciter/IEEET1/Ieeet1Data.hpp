@@ -88,9 +88,9 @@ namespace GridKit
       {
         /// Units, symbols and descriptions of the IEEET1 data
         static constexpr typename Ieeet1Data::Manifest MANIFEST{
-            .class_name  = "Ieeet1",
-            .description = "IEEE Type 1 excitation-system model",
-            .parameters  = {{
+            .class_name     = "Ieeet1",
+            .description    = "IEEE Type 1 excitation-system model",
+            .parameters     = {{
                 {Ieeet1Parameters::Tr, "s", "T_R", "Time constant for voltage sensing"},
                 {Ieeet1Parameters::Ka, "p.u.", "K_A", "Coefficient for voltage regulation"},
                 {Ieeet1Parameters::Ta, "s", "T_A", "Time constant for voltage regulation"},
@@ -106,23 +106,24 @@ namespace GridKit
                 {Ieeet1Parameters::Se2, "p.u.", "S_2", "Saturation parameter"},
                 {Ieeet1Parameters::Ispdlim, "binary", "I_{\\mathrm{spdlim}}", "Speed limit flag indicator"},
             }},
-            .buses       = {{
+            .buses          = {{
                 {Ieeet1Buses::bus, "Terminal bus voltage"},
             }},
-            .inputs      = {{
+            .inputs         = {{
                 {Ieeet1SignalInputs::speed, "Machine speed deviation"},
                 {Ieeet1SignalInputs::vref, "Voltage-control reference"},
                 {Ieeet1SignalInputs::vs, "Stabilizer input signal"},
                 {Ieeet1SignalInputs::vuel, "Under-excitation limiter input"},
                 {Ieeet1SignalInputs::voel, "Over-excitation limiter input"},
             }},
-            .outputs     = {{
+            .outputs        = {{
                 {Ieeet1SignalOutputs::efd, "Field-voltage output seeded by the machine"},
             }},
-            .monitors    = {{
+            .monitors       = {{
                 {Ieeet1MonitorableVariables::efd, "p.u.", "Field winding voltage"},
                 {Ieeet1MonitorableVariables::ksat, "p.u.", "Scaled-quadratic saturation contribution"},
             }},
+            .initial_values = {},
         };
 
         static_assert(MANIFEST.complete());

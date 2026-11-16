@@ -58,6 +58,20 @@ namespace GridKit
       }
     };
 
+    /// Manifest entry describing one initial value
+    template <Utilities::SizedEnum EnumT>
+    struct InitialValueEntry
+    {
+      EnumT            key;
+      std::string_view units;
+      std::string_view description;
+
+      constexpr std::string_view name() const
+      {
+        return Utilities::enum_name(key);
+      }
+    };
+
     /// True when every enumeration value has exactly one described entry
     template <typename EntryT, std::size_t N>
     consteval bool entriesComplete(const std::array<EntryT, N>& entries)
@@ -85,26 +99,29 @@ namespace GridKit
               Utilities::SizedEnum BusesT,
               Utilities::SizedEnum InputsT,
               Utilities::SizedEnum OutputsT,
-              Utilities::SizedEnum MonitorsT>
+              Utilities::SizedEnum MonitorsT,
+              Utilities::SizedEnum InitialValuesT>
     struct ComponentManifest
     {
       template <typename EntryT, typename EnumT>
       using Table = std::array<EntryT, Utilities::enum_size<EnumT>()>;
 
-      std::string_view                                class_name;
-      std::string_view                                description;
-      Table<ParameterEntry<ParametersT>, ParametersT> parameters;
-      Table<PortEntry<BusesT>, BusesT>                buses;
-      Table<PortEntry<InputsT>, InputsT>              inputs;
-      Table<PortEntry<OutputsT>, OutputsT>            outputs;
-      Table<MonitorEntry<MonitorsT>, MonitorsT>       monitors;
+      std::string_view                                         class_name;
+      std::string_view                                         description;
+      Table<ParameterEntry<ParametersT>, ParametersT>          parameters;
+      Table<PortEntry<BusesT>, BusesT>                         buses;
+      Table<PortEntry<InputsT>, InputsT>                       inputs;
+      Table<PortEntry<OutputsT>, OutputsT>                     outputs;
+      Table<MonitorEntry<MonitorsT>, MonitorsT>                monitors;
+      Table<InitialValueEntry<InitialValuesT>, InitialValuesT> initial_values;
 
       /// True when the class and description are set and every table is complete
       consteval bool complete() const
       {
         return !class_name.empty() && !description.empty() && entriesComplete(parameters)
                && entriesComplete(buses) && entriesComplete(inputs)
-               && entriesComplete(outputs) && entriesComplete(monitors);
+               && entriesComplete(outputs) && entriesComplete(monitors)
+               && entriesComplete(initial_values);
       }
     };
 
@@ -159,7 +176,8 @@ namespace GridKit
                                          Buses,
                                          SignalInputs,
                                          SignalOutputs,
-                                         MonitorableVariables>;
+                                         MonitorableVariables,
+                                         InitialValues>;
 
       /// Class of device this is for
       std::string device_class;

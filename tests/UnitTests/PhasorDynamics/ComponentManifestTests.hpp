@@ -39,6 +39,11 @@ namespace GridKit
       state,
     };
 
+    enum class ExampleInitialValues : size_t
+    {
+      state,
+    };
+
     template <typename RealT, typename IdxT>
     struct ExampleData : PhasorDynamics::ComponentData<RealT,
                                                        IdxT,
@@ -47,24 +52,27 @@ namespace GridKit
                                                        ExampleSignalInputs,
                                                        ExampleSignalOutputs,
                                                        ExampleMonitorableVariables,
-                                                       Utilities::EmptyEnum>
+                                                       ExampleInitialValues>
     {
       static constexpr typename ExampleData::Manifest MANIFEST{
-          .class_name  = "Example",
-          .description = "Example component",
-          .parameters  = {{
+          .class_name     = "Example",
+          .description    = "Example component",
+          .parameters     = {{
               {ExampleParameters::gain, "p.u.", "K", "Gain"},
               {ExampleParameters::time_constant, "s", "T", "Time constant"},
           }},
-          .buses       = {{
+          .buses          = {{
               {ExampleBuses::bus, "Terminal bus"},
           }},
-          .inputs      = {},
-          .outputs     = {{
+          .inputs         = {},
+          .outputs        = {{
               {ExampleSignalOutputs::output, "Output signal"},
           }},
-          .monitors    = {{
+          .monitors       = {{
               {ExampleMonitorableVariables::state, "p.u.", "State"},
+          }},
+          .initial_values = {{
+              {ExampleInitialValues::state, "p.u.", "Initial state"},
           }},
       };
 
@@ -75,11 +83,12 @@ namespace GridKit
 
     /// Single-entry bus table left out, so its entry is value-initialized and undescribed
     inline constexpr ExampleDataT::Manifest INCOMPLETE_MANIFEST{
-        .class_name  = "Example",
-        .description = "Example component",
-        .parameters  = ExampleDataT::MANIFEST.parameters,
-        .outputs     = ExampleDataT::MANIFEST.outputs,
-        .monitors    = ExampleDataT::MANIFEST.monitors,
+        .class_name     = "Example",
+        .description    = "Example component",
+        .parameters     = ExampleDataT::MANIFEST.parameters,
+        .outputs        = ExampleDataT::MANIFEST.outputs,
+        .monitors       = ExampleDataT::MANIFEST.monitors,
+        .initial_values = ExampleDataT::MANIFEST.initial_values,
     };
     static_assert(!INCOMPLETE_MANIFEST.complete());
 
@@ -98,6 +107,7 @@ namespace GridKit
         success *= (manifest.buses[0].name() == "bus");
         success *= (manifest.outputs[0].name() == "output");
         success *= (manifest.monitors[0].name() == "state");
+        success *= (manifest.initial_values[0].name() == "state");
 
         // Compiles the empty-enumeration path of name(), the loop body never runs
         success *= manifest.inputs.empty();
