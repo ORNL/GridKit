@@ -3,8 +3,10 @@
 set -eu
 readonly _cosim_dir=$(dirname "$(realpath "$0")")
 cd "${_cosim_dir}"
+_case=${1:-three-bus}
+_tf=1.0
 
-case "${1:-three-bus}" in
+case "$_case" in
     three-bus)
         _server=ThreeBusCoSimServer.case.json
         _client=ThreeBusCoSimClient.case.json
@@ -13,7 +15,7 @@ case "${1:-three-bus}" in
         _srv_vr=3 _srv_vi=4 _srv_ir=1 _srv_ii=2
         _dt=0.0010416666666666667
         ;;
-    ieee39)
+    ieee39|ieee39-fault)
         # The generator owns the bus 39 voltage. Its subtransient impedance is
         # smaller than the grid Thevenin impedance, which the exchange requires.
         _server=IEEE39Grid.case.json
@@ -23,7 +25,7 @@ case "${1:-three-bus}" in
         _srv_vr=30 _srv_vi=31 _srv_ir=32 _srv_ii=33
         _dt=0.0010416666666666667
         ;;
-    *) echo "Usage: $0 [three-bus|ieee39] [bus|signals]" >&2; exit 2 ;;
+    *) echo "Usage: $0 [three-bus|ieee39|ieee39-fault] [bus|signals]" >&2; exit 2 ;;
 esac
 
 case "${2:-bus}" in
@@ -32,7 +34,11 @@ case "${2:-bus}" in
     *) echo "Output selection must be bus or signals" >&2; exit 2 ;;
 esac
 _output_mode=$1
-./CoSimServer "$_server" "$@" --input-tags "${_client_bus}_vr" "${_client_bus}_vi" --output-tags "${_server_bus}_ir" "${_server_bus}_ii" --time-step "$_dt" &
+if [ "$_case" = ieee39-fault ]; then
+    _tf=10.0
+    set -- "$@" --fault 16 1.0 1.15 0.0 0.01
+fi
+./CoSimServer "$_server" "$@" --input-tags "${_client_bus}_vr" "${_client_bus}_vi" --output-tags "${_server_bus}_ir" "${_server_bus}_ii" --time-step "$_dt" --final-time "$_tf" &
 _srv_pid=$!
 trap 'kill "$_srv_pid" 2>/dev/null || true' EXIT HUP INT TERM
 
@@ -41,6 +47,6 @@ if [ "$_output_mode" = --output-bus ]; then
 else
     set -- --output-signals "$_vr" "$_vi" --input-signals "$_ir" "$_ii"
 fi
-./CoSimClient "$_client" "$@" --input-tags "${_server_bus}_ir" "${_server_bus}_ii" --output-tags "${_client_bus}_vr" "${_client_bus}_vi" --time-step "$_dt"
+./CoSimClient "$_client" "$@" --input-tags "${_server_bus}_ir" "${_server_bus}_ii" --output-tags "${_client_bus}_vr" "${_client_bus}_vi" --time-step "$_dt" --final-time "$_tf"
 wait "$_srv_pid"
 trap - EXIT HUP INT TERM

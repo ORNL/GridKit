@@ -84,10 +84,40 @@ namespace GridKit
 
         const auto                                 data = PhasorDynamics::parseSystemModelData(args["case-file"]());
         PhasorDynamics::SystemModel<ScalarT, IdxT> sys(data);
-        auto                                       output = outputReader<ScalarT, IdxT>(sys, args, !server);
-        const auto [real_id, imag_id]                     = inputSignalIds(data, args, server);
-        auto* real_input                                  = sys.getSignalNode(real_id);
-        auto* imag_input                                  = sys.getSignalNode(imag_id);
+
+        PhasorDynamics::BusBase<ScalarT, IdxT>* fault_bus      = nullptr;
+        int                                     fault_on_step  = -1;
+        int                                     fault_off_step = -1;
+        ScalarT                                 fault_R{}, fault_X{};
+        if (!args["fault"].empty())
+        {
+          const auto& fault = args["fault"];
+          fault_bus         = sys.getBus(parseId<IdxT>(fault[0]()));
+          const auto on     = fault[1].as<double>();
+          const auto off    = fault[2].as<double>();
+          fault_R           = fault[3].as<double>();
+          fault_X           = fault[4].as<double>();
+          if (!std::isfinite(on) || !std::isfinite(off)
+              || on < 0.0 || off <= on || off > tf
+              || !std::isfinite(fault_R) || !std::isfinite(fault_X)
+              || (fault_R == 0.0 && fault_X == 0.0))
+          {
+            throw std::invalid_argument(
+                "Fault requires 0 <= ON_TIME < OFF_TIME <= final time and finite, nonzero impedance");
+          }
+          if (std::abs(on / dt - std::round(on / dt)) > 1.0e-9
+              || std::abs(off / dt - std::round(off / dt)) > 1.0e-9)
+          {
+            throw std::invalid_argument("Fault times must lie on communication boundaries");
+          }
+          fault_on_step  = static_cast<int>(std::round(on / dt));
+          fault_off_step = static_cast<int>(std::round(off / dt));
+        }
+
+        auto output                   = outputReader<ScalarT, IdxT>(sys, args, !server);
+        const auto [real_id, imag_id] = inputSignalIds(data, args, server);
+        auto* real_input              = sys.getSignalNode(real_id);
+        auto* imag_input              = sys.getSignalNode(imag_id);
         if (real_input == imag_input)
         {
           throw std::invalid_argument("Input signals must have distinct IDs");
@@ -162,6 +192,18 @@ namespace GridKit
             const auto target = step == steps ? tf : std::fma(static_cast<double>(step), dt, 0.0);
             ida.initializeSimulation(t);
             ida.runSimulationStep(target, dt, 1, 1);
+          }
+          if (step == fault_on_step || step == fault_off_step)
+          {
+            const int status = step == fault_on_step
+                                   ? fault_bus->setFault(true, fault_R, fault_X)
+                                   : fault_bus->clearFault();
+            if (status != 0)
+            {
+              throw std::runtime_error("Failed to apply or clear co-simulation fault");
+            }
+            const auto t = step == steps ? tf : std::fma(static_cast<double>(step), dt, 0.0);
+            ida.initializeSimulation(t);
           }
           sys.evaluateResidual();
           send();

@@ -15,7 +15,12 @@ The co-simulated cases may be run in the following ways:
 ./run_cosim.sh                   # three-bus using bus outputs
 ./run_cosim.sh ieee39            # IEEE39 using bus outputs
 ./run_cosim.sh ieee39 signals    # IEEE39 using signal outputs
+./run_cosim.sh ieee39-fault      # IEEE39 bus 16 fault, 10-second simulation
 
 # test case formulations
 ctest -R 'CoSim.*(Example|Test)$' --output-on-failure
 ```
+
+The fault case uses the IEEE39 validation disturbance: R = 0 and X = 0.01 pu
+at bus 16, applied at 1.0 s and cleared at 1.15 s. The grid partition applies
+the fault. Outputs are `IEEE39Grid.csv` and `IEEE39Generator.csv`.
