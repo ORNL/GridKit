@@ -18,6 +18,8 @@ import re
 import sys
 from pathlib import Path
 
+import md_refs
+
 # ============================================================================
 # CONFIGURATION — Adjust these paths as needed
 # ============================================================================
@@ -103,39 +105,17 @@ INLINE_CODE_FORMAT = "texttt"  # Choose preferred rendering: "math" or "texttt"
 EXCLUDE_SECTIONS = []  # Currently empty; set to ["4.2"] or other sections to exclude
 
 # ============================================================================
-# CITATION MAPPING — Maps numeric citations [1], [2], etc. to BibTeX keys
+# CITATIONS — [N] in the markdown → \cite{key}
 # ============================================================================
-# Usage in markdown: (Author et al., YEAR [1], details)
-# Converts to LaTeX: (Author et al., YEAR \cite{BibtexKey}, details)
+# The markdown "## References" list is the source of truth: each entry ends with
+# a hidden <!-- bib:Key --> tag. The map is rebuilt from it on every run and
+# validated by md_refs.check (see README "Citations").
 
-CITATION_MAP = {
-    "1": "Elliott2021",  # Elliott et al., 2021 - OSTI 1819998 (Advanced Control and Monitoring of IBRs)
-    "2": "PolitisRomano1994",  # Politis and Romano, 1994 - Subsampling under minimal assumptions
-    "3": "GridKit2025",  # GridKit v0.2.0 - the simulation framework used
-    "4": "Birchfield2017",  # ACTIVSg synthetic grids (validation criteria)
-    "5": "TAMUrepo",  # Texas A&M Electric Grid Test Case Repository
-    "6": "Coffrin2018",  # PowerModels.jl
-    "7": "wachter2006",  # Ipopt interior-point NLP solver (matches main report key)
-    "8": "Hindmarsh2005",  # SUNDIALS / IDA DAE integrator
-    "9": "Yoo2003",  # SLURM resource manager
-    "10": "Bezanson2017",  # Julia language
-    "11": "DerKiureghian2009",  # aleatory vs epistemic uncertainty
-    "12": "Milano2018",  # low-inertia systems (renewables reduce inertia)
-    "13": "IEEELoad1993",  # ZIP load model (IEEE Task Force)
-    "14": "Milanovic2013",  # international industry load-modeling practice
-    "15": "Pourbeik2017",  # generic dynamic models for IBRs
-    "16": "Shehabi2024",  # datacenter energy / grid impact
-    "17": "Kundur2004",  # definition and classification of power system stability
-    "18": "Kundur1994",  # Power System Stability and Control (textbook)
-    "19": "SauerPai1998",  # Power System Dynamics and Stability (COI)
-    "20": "Stott1974",  # review of load-flow methods (PV/PQ switching)
-    "21": "KaplanMeier1958",  # Kaplan-Meier estimator
-    "22": "Greenwood1926",  # Greenwood's variance formula
-    "23": "Giles2015",  # multilevel Monte Carlo
-    "24": "Battaglia2018",  # graph networks / relational inductive bias
-    "25": "Donon2020",  # GNN surrogate for power flow
-    "26": "Settles2009",  # active learning survey
-}
+BIB_SOURCE = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-usecase_refs.bib"
+# Local copy of the Overleaf main bibliography (what the harness compiles against).
+REPORT_MAIN_BIB = str(Path(TARGET_PATH).parents[2] / "references.bib")
+
+CITATION_MAP = {}  # filled from the markdown in convert_pilot_report()
 
 # ============================================================================
 # UNICODE HANDLING — text-mode and math-mode replacements
@@ -960,11 +940,12 @@ def markdown_inline_formatting(text, acronyms=True):
     if acronyms:
         text = apply_acronyms(text)
 
-    # [1], [2], etc. → \cite{BibtexKey} (numeric citations to LaTeX)
-    # Convert numeric citations like "[1]" to "\cite{Elliott2021}"
+    # [1] / [1, 2] → \cite{key} / \cite{key1,key2}
     text = re.sub(
-        r"\[(\d+)\]",
-        lambda m: r"\cite{" + CITATION_MAP.get(m.group(1), f"cite{m.group(1)}") + "}",
+        r"\[(\d+(?:\s*,\s*\d+)*)\]",
+        lambda m: r"\cite{"
+        + ",".join(CITATION_MAP[n] for n in re.split(r"\s*,\s*", m.group(1)))
+        + "}",
         text,
     )
 
@@ -2634,6 +2615,23 @@ def convert_pilot_report(phase="1"):
         print(f"ERROR: Could not read markdown file: {e}", file=sys.stderr)
         return False
 
+    errors, warnings, num_to_key = md_refs.check(
+        md_content, BIB_SOURCE, REPORT_MAIN_BIB
+    )
+    for w in warnings:
+        print(f"WARNING (citations): {w}")
+    for e in errors:
+        print(f"ERROR (citations): {e}", file=sys.stderr)
+    if errors:
+        print(
+            "Fix the citations above (see README 'Citations'); nothing written.",
+            file=sys.stderr,
+        )
+        return False
+    CITATION_MAP.clear()
+    CITATION_MAP.update(num_to_key)
+    print(f"✓ Citations: {len(num_to_key)} references mapped from the markdown")
+
     # Text wrapped in <!-- tex:skip --> ... <!-- /tex:skip --> stays in the markdown only.
     md_content = re.sub(
         r"<!--\s*tex:skip\s*-->.*?<!--\s*/tex:skip\s*-->\n?",
@@ -2820,7 +2818,7 @@ def convert_pilot_report(phase="1"):
     # Copy BibTeX file to repo location for version control
     import shutil
 
-    bibtex_source = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-usecase_refs.bib"
+    bibtex_source = BIB_SOURCE
     # Keep every copy next to a .tex that references it in sync with the source,
     # including the copy the faithful harness (test_uq_pilot.tex) reads from the
     # report directory.

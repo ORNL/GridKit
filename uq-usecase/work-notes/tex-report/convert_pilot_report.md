@@ -90,24 +90,9 @@ REPO_BIBTEX_PATH = "...tex-report/uq-subsections/uq-usecase_refs.bib"
 
 ## Citation Mapping
 
-The script maps numeric markdown citations `[1]`, `[2]`, etc. to BibTeX keys:
-
-**Markdown**:
-```markdown
-...controllable current source [1] on a problem...
-```
-
-**Converted LaTeX**:
-```latex
-...controllable current source \cite{Elliott2021} on a problem...
-```
-
-**Compiled PDF** (with BibTeX):
-```
-...controllable current source [1] on a problem...
-```
-
-Map is defined in `CITATION_MAP` (lines 52-75) with 23 BibTeX entries.
+`[N]` maps to the BibTeX key in the `<!-- bib:Key -->` tag of entry N in the
+markdown References list (no hard-coded map). See README.md, "Citations", for the
+add/remove/renumber procedure and `md_refs.py`.
 
 ## PDF Compilation
 
@@ -155,7 +140,7 @@ Helper function `markdown_to_latex_text()` handles inline transformations:
 - `*italic*` → `\textit{italic}`
 - `` `code` `` → `\texttt{code}` (or `$code$` in math mode)
 - `[link](url)` → `\href{url}{link}`
-- `[1]` → `\cite{Elliott2021}` (via `CITATION_MAP`)
+- `[1]` → `\cite{Elliott2021}` (via the References-list tags)
 
 ### 4. Figure Handling
 Pre-generated Mermaid diagrams (.png) are copied to both output directories:

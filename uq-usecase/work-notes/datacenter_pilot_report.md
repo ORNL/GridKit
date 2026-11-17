@@ -2,7 +2,7 @@
 
 **Status:** pilot, October 2026; main campaigns updated November 2026 to the
 P = 0.8, switched-PF setup (§7.0). ACTIVSg200 (Illinois 200-bus synthetic case).
-All simulations use GridKit v0.2.0 [3].
+All simulations use GridKit v0.2.0 [1].
 
 **This report stands alone.** It explains what we asked, how we went about it,
 and what came out, in general terms. It does not assume you have read the other
@@ -22,17 +22,17 @@ Links marked **Details** point into the plan. They are optional.
 
 Two deliverables, one study:
 
-1. **Exercise GridKit as an end user** [3] on a problem it has not been pointed at
+1. **Exercise GridKit as an end user** [1] on a problem it has not been pointed at
    before, and report back what works and what does not.
-2. **Demonstrate aleatoric UQ by sampling** [11] on a dynamics problem, and find out
+2. **Demonstrate aleatoric UQ by sampling** [2] on a dynamics problem, and find out
    where the sampling cost actually goes — with a view to much larger grids
    where brute force stops being an option.
 
-The vehicle is a central interconnection question [16]:
+The vehicle is a central interconnection question [3]:
 
 > **Where, and how much, large datacenter load can be added before dynamic
 > security degrades — given that renewable output makes system inertia vary
-> hour to hour?** [12]
+> hour to hour?** [4]
 
 This is a pilot. The grid is small, the contingency set is narrow, and several
 conclusions are bounded by model validity. The point is to establish the
@@ -68,7 +68,7 @@ Main terms used in our pilot study that follows.
 
 ## 3. The Illinois synthetic grid (ACTIVSg200)
 
-ACTIVSg200, a synthetic Illinois case [4]: **200 buses, 246 branches, 49 generators**
+ACTIVSg200, a synthetic Illinois case [5]: **200 buses, 246 branches, 49 generators**
 (25 coal, 17 natural gas, 6 wind, 1 nuclear). The seed dispatch totals
 **2,178 MW** of demand, which is the annual peak. The dynamic case
 carries **40 synchronous machines** (34 thermal and the 6 wind units). The
@@ -247,7 +247,7 @@ correction reduces it only to 0.005 MW, so one is enough.
 **Reactive power limits: PV→PQ switching.** AC power flow does not enforce
 generators' reactive power limits (Q limits) on its own: without mitigation we
 measured 2 to 11 violations per operating condition. We enforce them by PV→PQ
-switching [20]: after solving voltages, any generator outside a Q limit is fixed
+switching [8]: after solving voltages, any generator outside a Q limit is fixed
 at that limit and its bus switched to PQ, then the power flow is re-solved.
 Fixed generators return to PV if voltage recovers past setpoint (repeated up to
 twice). The DC OPF dispatch is never changed, only reactive power.
@@ -286,9 +286,9 @@ injection scales with `|V|`, which is constant current.
 > **Details:** [wind pipeline, function by function](datacenter_load_uq_plan.md#pipeline-trace-one-wind-unit-one-hour) · [wind: why negative load, not fixed](datacenter_load_uq_plan.md#3-wind-why-negative-load-not-fixed) · [implementation](datacenter_load_uq_plan.md#implementation) · ["net load" is an aggregate, not a per-bus subtraction](datacenter_load_uq_plan.md#net-load-is-an-aggregate-not-a-per-bus-subtraction)
 
 **Why it is acceptable.** Converter-interfaced generation is modelled in
-positive-sequence transient stability as a controllable current source [15]. The
+positive-sequence transient stability as a controllable current source [9]. The
 Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
-interface is "a controllable current source" [1]. A constant-current
+interface is "a controllable current source" [10]. A constant-current
 load is a simple stand-in for that current injection.
 
 > **Implementation note:** The ACTIVSg200 case lacks native renewable energy converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models—specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)—which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
@@ -305,7 +305,7 @@ nor the OPF would see it: the power flow would have the slack bus supply it, and
 the committed fleet could be too small to serve it or larger than needed.
 
 **It gets its own load device, with its own voltage behaviour.** Load in these
-cases is represented by a **ZIP model** [13], which splits demand into three parts by
+cases is represented by a **ZIP model** [11], which splits demand into three parts by
 how each responds when voltage sags: a constant-**impedance** part (falls as
 $V^2$), a constant-**current** part (falls as $V$), and a constant-**power**
 part (does not fall at all). The split is written here as P/I/Z percentages.
@@ -313,7 +313,7 @@ part (does not fall at all). The split is written here as P/I/Z percentages.
 The distinction is the physical reason a datacenter is interesting. Ordinary
 constant-impedance load *sheds itself* during a voltage dip and helps the system
 recover. Datacenter load is fed through rectifiers and UPS units and behaves far closer to
-constant power [14]: it keeps demanding the same megawatts at reduced voltage, which
+constant power [12]: it keeps demanding the same megawatts at reduced voltage, which
 means drawing more current, which depresses voltage further. If the new load
 were simply folded into the load already at the bus, it would
 inherit that load's helpful constant-impedance behaviour and the study would
@@ -339,8 +339,8 @@ bus 108 or bus 148. Campaigns aleatoric-1 and aleatoric-2 (§7.0) place it at bu
 ## 5. CCT by bisection
 
 Critical clearing time is found by bisecting fault duration in `[0.05, 0.5]` s,
-with a stability test of **pole slip relative to the centre of inertia** [17], [18]. The
-centre of inertia [19] is the inertia-weighted average rotor angle of the fleet,
+with a stability test of **pole slip relative to the centre of inertia** [13], [14]. The
+centre of inertia [15] is the inertia-weighted average rotor angle of the fleet,
 
 $$\delta_{COI}(t) = \frac{\sum_i H_i S_i \delta_i(t)}{\sum_i H_i S_i}$$
 
@@ -395,7 +395,7 @@ resulting CCT **identical** (0.2891 both ways).
 
 ## 6. Parallel execution on Kestrel
 
-Each campaign ran as one SLURM job [9] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass [10] (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
+Each campaign ran as one SLURM job [16] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass [17] (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
 
 > **Details:** [wall time for the two main campaigns](datacenter_load_uq_plan.md#wall-time-in-the-two-main-campaigns-measured-2026-11-10) ·
 > [parallel sampling runs](datacenter_load_uq_plan.md#parallel-sampling-runs) ·
@@ -484,7 +484,7 @@ Campaign aleatoric-1 varies operating conditions, placement and size, at one fau
 
 ### 7.1 Reading the curves: Kaplan–Meier and censoring
 
-Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator [21] uses censored runs correctly:
+Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator [18] uses censored runs correctly:
 
 $$\hat S(t)=\prod_{t_i\le t}\Bigl(1-\frac{d_i}{n_i}\Bigr),\qquad \widehat P(\mathrm{CCT}<t)=1-\hat S(t)$$
 
@@ -500,7 +500,7 @@ The rest of §7 runs as follows. §7.2 works one matched example, and §7.3 repe
 
 **Sampling:** aleatoric-1, 200 MW at bus 108, fault at bus 66. Of the 40 operating conditions, 37 solve with the datacenter. The baseline is the same 37 conditions with no datacenter.
 
-**Greenwood interval.** Greenwood's formula [22] estimates the variance of a KM estimate:
+**Greenwood interval.** Greenwood's formula [19] estimates the variance of a KM estimate:
 
 $$\widehat{\mathrm{Var}}\big(\hat S(t)\big)=\hat S(t)^2\sum_{t_i\le t}\frac{d_i}{n_i(n_i-d_i)}$$
 
@@ -544,7 +544,7 @@ Two points. First, the datacenter moves P(CCT < 0.25 s) from about 0.5 to 0.73 i
 
 ### 7.4 More operating conditions: how the estimate settles
 
-We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (*subsampling* [2]). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in §7.3. We might use the same check later to size a future study, if a full-size design costs too much.
+We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (*subsampling* [20]). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in §7.3. We might use the same check later to size a future study, if a full-size design costs too much.
 
 ![convergence of the KM estimate, 37 and 171 conditions](figures/main_convergence_37_vs_171.png)
 
@@ -641,7 +641,7 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 The 200-bus case is small enough that brute force works: whole campaigns finish
 in minutes. That is convenient but it hides the question the methods work
 exists to answer, so we measured what changes on the Texas synthetic grid,
-**ACTIVSg2000** (2,000 buses, from the TAMU repository [5]). This is a scoping
+**ACTIVSg2000** (2,000 buses, from the TAMU repository [21]). This is a scoping
 study, not a campaign.
 
 **What already exists.** A GridKit dynamic case is distributed with GridKit, and
@@ -744,20 +744,19 @@ not a hardware one, which §9 takes up.
 ## 9. Next steps
 
 The pilot leaves a clear picture of where cost lives and therefore where the
-methods work should go. At 200 buses the expensive part is the **dispatch stage**, and the
-scientifically interesting dimensions — contingency location, disturbance
-severity, model form — are nearly free once a dispatch exists. At 2,000 buses
-(§8) that asymmetry inverts: the dynamic run dominates, the design space grows by
-two orders of magnitude, and the quantity to minimise becomes the number of
+methods work should go. At 200 buses the expensive part is the **dispatch stage**, and
+interesting dimensions such as contingency location or disturbance
+severity are nearly free once a dispatch exists. However, at 2,000 buses
+(§8), the dynamic run dominates, the design space grows by
+two orders of magnitude, and the quantity to minimise becomes the number of dynamic
 simulations. Making aleatoric UQ affordable at that scale is **FY27 planned
-work**, pursued along two complementary tracks.
+work**, pursued along two tracks.
 
-**Track 1 — spend fewer, better-chosen dynamic runs.** The pilot already
-measured the levers:
+**Track 1 — spend fewer, better-chosen dynamic runs.** 
 
 1. **Screen contingencies cheaply, then concentrate.** 76 % of a uniform fault
    budget was wasted here (§7.6), with 13 of 17 locations fully censored. On a
-   10k-bus case the contingency list is the part that explodes and also the part
+   2k-bus case the contingency list is the part that explodes and also the part
    that is free to explore.
 2. **Treat censoring as information.** Both "survived beyond the cap" and
    "infeasible" are results, and at high censoring they are most of the dataset.
@@ -771,30 +770,26 @@ measured the levers:
    Neighbouring dispatches have strongly correlated CCT, and pole slip is
    detectable well before the end of the simulated window, so both the number and the length of
    simulations can be cut.
-5. **Exploit the conditional-independence structure.** Expensive outer samples
-   over operating conditions, cheap inner fan-out over disturbances and model
-   parameters — the same motivation as multilevel Monte Carlo [23], driven by
-   model structure rather than discretisation.
+
 
 **Track 2 — a graph surrogate, as an alternative and supplement to sampling.**
 The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian
 over buses, a fault propagates through branch impedances as a message-passing
 process, and "which bus to site load at" is itself a graph question. Graph
-neural networks and graph transformers carry exactly that inductive bias [24],
-and have been used as fast power-system surrogates [25]. A surrogate trained on
-the records the sampling campaigns already produce — the
-`(graph, operating point, parameters, fault)` → trajectory map — could emulate
+neural networks and graph transformers carry exactly that inductive bias [22],
+and have been used as fast power-system surrogates [23]. A surrogate trained on
+the records the sampling campaigns already produce, e.g.,
+`(graph, operating point, parameters, fault)` → trajectory map, could emulate
 CCT or the stability label cheaply, turning the expensive solver into a screening
-oracle and reserving dynamic runs for confirmation and for labelling the cases
-where the surrogate is least certain, an active-learning loop [26] that chooses
-which runs to spend. This is **supplemental** to sampling-based UQ, not a
+tool. Full dynamic runs could be reserved for confirmation and for labelling the cases
+where the surrogate is least certain, an active-learning approach [24] that chooses
+which runs to do. This is **supplemental** to sampling-based UQ, not a
 replacement: the surrogate lowers per-sample cost, while the sampling design
 still fixes what the estimate means.
 
-The near-term steps are the cheap ones: a wider contingency screen, a
+The near-term steps are: a wider contingency screen, a
 treatment of censoring in the paired (with and without datacenter) comparison,
-a variance decomposition of the existing runs, a short literature check on
-datacenter load modelling, and running the campaigns on the Texas grid
+a variance decomposition of the existing runs, and running the campaigns on the Texas grid
 (§8). The graph-surrogate track builds on the dataset those
 campaigns are already generating.
 
@@ -899,29 +894,31 @@ The campaign execution infrastructure — including scripts for fault screening,
 The bracketed numbers used above (e.g. [1]) refer to this list. BibTeX entries
 are in `tex-report/uq-usecase_refs.bib`.
 
-1. R. T. Elliott et al., "Advanced Control and Monitoring of Inverter-Based Resources (PSTess)," National Renewable Energy Laboratory (NREL), 2021. <https://www.osti.gov/biblio/1819998>
-2. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754
-3. S. Peles et al., *GridKit*, Version 0.2.0, 2025. <https://github.com/ORNL/GridKit>, doi:10.11578/dc.20250310.1
-4. A. B. Birchfield, T. Xu, K. M. Gegner, K. S. Shetye, and T. J. Overbye, "Grid Structural Characteristics as Validation Criteria for Synthetic Networks," *IEEE Transactions on Power Systems*, 32(4):3258–3265, 2017. doi:10.1109/TPWRS.2016.2616385
-5. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu>
-6. C. Coffrin, R. Bent, K. Sundar, Y. Ng, and M. Lubin, "PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations," *Power Systems Computation Conference (PSCC)*, 2018. doi:10.23919/PSCC.2018.8442948
-7. A. Wächter and L. T. Biegler, "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming," *Mathematical Programming*, 106(1):25–57, 2006. doi:10.1007/s10107-004-0559-y
-8. A. C. Hindmarsh et al., "SUNDIALS: Suite of Nonlinear and Differential/Algebraic Equation Solvers," *ACM Transactions on Mathematical Software*, 31(3):363–396, 2005. doi:10.1145/1089014.1089020
-9. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3
-10. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671
-11. A. Der Kiureghian and O. Ditlevsen, "Aleatory or Epistemic? Does It Matter?," *Structural Safety*, 31(2):105–112, 2009. doi:10.1016/j.strusafe.2008.06.020
-12. F. Milano, F. Dörfler, G. Hug, D. J. Hill, and G. Verbič, "Foundations and Challenges of Low-Inertia Systems," *Power Systems Computation Conference (PSCC)*, 2018. doi:10.23919/PSCC.2018.8450880
-13. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837
-14. J. V. Milanović, K. Yamashita, S. Martínez Villanueva, S. Ž. Djokić, and L. M. Korunović, "International Industry Practice on Power-System Load Modeling," *IEEE Transactions on Power Systems*, 28(3):3038–3046, 2013. doi:10.1109/TPWRS.2012.2231969
-15. P. Pourbeik et al., "Generic Dynamic Models for Modeling Wind Power Plants and Other Renewable Technologies in Large-Scale Power System Studies," *IEEE Transactions on Energy Conversion*, 32(3):1108–1116, 2017. doi:10.1109/TEC.2016.2639050
-16. A. Shehabi et al., "2024 United States Data Center Energy Usage Report," Lawrence Berkeley National Laboratory, LBNL-2001637, 2024.
-17. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981
-18. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994.
-19. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998.
-20. B. Stott, "Review of Load-Flow Calculation Methods," *Proceedings of the IEEE*, 62(7):916–929, 1974. doi:10.1109/PROC.1974.9544
-21. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452
-22. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926.
-23. M. B. Giles, "Multilevel Monte Carlo Methods," *Acta Numerica*, 24:259–328, 2015. doi:10.1017/S096249291500001X
-24. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018.
-25. B. Donon, R. Clément, B. Donnot, A. Marot, I. Guyon, and M. Schoenauer, "Neural Networks for Power Flow: Graph Neural Solver," *Electric Power Systems Research*, 189:106547, 2020. doi:10.1016/j.epsr.2020.106547
-26. B. Settles, "Active Learning Literature Survey," University of Wisconsin–Madison, Computer Sciences Technical Report 1648, 2009.
+<!-- Each entry ends with a hidden "bib:Key" comment naming its BibTeX key in
+tex-report/uq-usecase_refs.bib. The LaTeX converter maps [N] through these tags.
+See tex-report/README.md, section "Citations". -->
+
+1. S. Peles et al., *GridKit*, Version 0.2.0, 2025. <https://github.com/ORNL/GridKit>, doi:10.11578/dc.20250310.1 <!-- bib:GridKit2025 -->
+2. A. Der Kiureghian and O. Ditlevsen, "Aleatory or Epistemic? Does It Matter?," *Structural Safety*, 31(2):105–112, 2009. doi:10.1016/j.strusafe.2008.06.020 <!-- bib:DerKiureghian2009 -->
+3. A. Shehabi et al., "2024 United States Data Center Energy Usage Report," Lawrence Berkeley National Laboratory, LBNL-2001637, 2024. <!-- bib:Shehabi2024 -->
+4. F. Milano, F. Dörfler, G. Hug, D. J. Hill, and G. Verbič, "Foundations and Challenges of Low-Inertia Systems," *Power Systems Computation Conference (PSCC)*, 2018. doi:10.23919/PSCC.2018.8450880 <!-- bib:Milano2018 -->
+5. A. B. Birchfield, T. Xu, K. M. Gegner, K. S. Shetye, and T. J. Overbye, "Grid Structural Characteristics as Validation Criteria for Synthetic Networks," *IEEE Transactions on Power Systems*, 32(4):3258–3265, 2017. doi:10.1109/TPWRS.2016.2616385 <!-- bib:Birchfield2017 -->
+6. C. Coffrin, R. Bent, K. Sundar, Y. Ng, and M. Lubin, "PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations," *Power Systems Computation Conference (PSCC)*, 2018. doi:10.23919/PSCC.2018.8442948 <!-- bib:Coffrin2018 -->
+7. A. Wächter and L. T. Biegler, "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming," *Mathematical Programming*, 106(1):25–57, 2006. doi:10.1007/s10107-004-0559-y <!-- bib:wachter2006 -->
+8. B. Stott, "Review of Load-Flow Calculation Methods," *Proceedings of the IEEE*, 62(7):916–929, 1974. doi:10.1109/PROC.1974.9544 <!-- bib:Stott1974 -->
+9. P. Pourbeik et al., "Generic Dynamic Models for Modeling Wind Power Plants and Other Renewable Technologies in Large-Scale Power System Studies," *IEEE Transactions on Energy Conversion*, 32(3):1108–1116, 2017. doi:10.1109/TEC.2016.2639050 <!-- bib:Pourbeik2017 -->
+10. R. T. Elliott et al., "Advanced Control and Monitoring of Inverter-Based Resources (PSTess)," National Renewable Energy Laboratory (NREL), 2021. <https://www.osti.gov/biblio/1819998> <!-- bib:Elliott2021 -->
+11. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837 <!-- bib:IEEELoad1993 -->
+12. J. V. Milanović, K. Yamashita, S. Martínez Villanueva, S. Ž. Djokić, and L. M. Korunović, "International Industry Practice on Power-System Load Modeling," *IEEE Transactions on Power Systems*, 28(3):3038–3046, 2013. doi:10.1109/TPWRS.2012.2231969 <!-- bib:Milanovic2013 -->
+13. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981 <!-- bib:Kundur2004 -->
+14. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
+15. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998. <!-- bib:SauerPai1998 -->
+16. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
+17. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671 <!-- bib:Bezanson2017 -->
+18. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
+19. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
+20. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
+21. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
+22. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
+23. B. Donon, R. Clément, B. Donnot, A. Marot, I. Guyon, and M. Schoenauer, "Neural Networks for Power Flow: Graph Neural Solver," *Electric Power Systems Research*, 189:106547, 2020. doi:10.1016/j.epsr.2020.106547 <!-- bib:Donon2020 -->
+24. B. Settles, "Active Learning Literature Survey," University of Wisconsin–Madison, Computer Sciences Technical Report 1648, 2009. <!-- bib:Settles2009 -->

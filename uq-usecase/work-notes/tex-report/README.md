@@ -34,6 +34,8 @@ work-notes/
     ├── convert_pilot_report.py           # markdown -> LaTeX converter (script 2)
     ├── extract_and_generate_mermaid.py   # mermaid -> PNG (script 1)
     ├── merge_bib.py                       # merge our refs into the main bib
+    ├── md_refs.py                         # check / renumber markdown citations
+    ├── uq-usecase_refs.bib                # BibTeX entries for every reference (source)
     ├── README.md                          # this file
     └── uq-subsections/                    # *** UPLOAD COPY: only final files ***
         ├── pilot_uq_usecase.tex           #   -> Overleaf  chapters/uq-subsections/
@@ -83,6 +85,94 @@ open /Users/isatkaus/projects/scidac/docs/report/SciDAC_OE_Technical_Report/chap
 
 If you added or changed a **mermaid diagram**, run
 `python extract_and_generate_mermaid.py` once before step 2 to regenerate its PNG.
+
+If you added, removed, or changed a **citation**, follow [Citations](#citations).
+
+## Citations
+
+**How it works.** The markdown `## References` list is the single source of truth.
+Every entry ends with a hidden tag naming its BibTeX key:
+
+```markdown
+23. M. B. Giles, "Multilevel Monte Carlo Methods," *Acta Numerica*, 24:259–328, 2015. <!-- bib:Giles2015 -->
+```
+
+The tag is invisible in rendered markdown. On every run the converter reads the
+list, maps each `[N]` in the text to the key of entry N, and writes `\cite{key}`.
+`[17, 18]` becomes `\cite{Kundur2004,Kundur1994}`. The full BibTeX record lives in
+`uq-usecase_refs.bib`; that file is a library, and plain BibTeX prints only what
+is cited, so unused entries there do no harm.
+
+The converter validates first and **writes nothing** if something is wrong:
+
+| Check | Result |
+|---|---|
+| `[N]` in the text with no entry N in References | ERROR |
+| References entry without a `<!-- bib:Key -->` tag | ERROR |
+| Tag key not in `uq-usecase_refs.bib` | ERROR |
+| Duplicate entry number or key | ERROR |
+| References entry never cited in the text | WARNING (it won't appear in the PDF) |
+| Cited key missing from the report's `references.bib` | WARNING (run `merge_bib.py`, upload) |
+
+Run the same checks on their own at any time:
+
+```bash
+cd /Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report
+python md_refs.py check
+```
+
+### Remove a citation
+
+1. Delete `[N]` from the text. That is all the tex needs: the `\cite` disappears and
+   the reference drops out of the PDF bibliography.
+2. Delete entry N from the References list, or leave it and run
+   `python md_refs.py renumber --prune` (below), which deletes uncited entries and
+   closes the gap. A gap in the numbers is harmless if you prefer not to renumber.
+3. Leave the BibTeX entry in `uq-usecase_refs.bib` (harmless) or delete it.
+4. Convert, build, re-upload `pilot_uq_usecase.tex`. No `references.bib` change needed.
+
+### Add a citation
+
+1. Add the BibTeX entry to `uq-usecase_refs.bib`. If the work has a DOI, doi.org
+   returns a BibTeX record you can paste (check and tidy the key):
+   ```bash
+   curl -sLH "Accept: application/x-bibtex" https://doi.org/10.1017/S096249291500001X
+   ```
+   Before inventing a key, search the report's `references.bib` for the same work;
+   reuse its key if it exists (as we did with `wachter2006`) to avoid a duplicate.
+2. Add an entry to the markdown References list with the next free number and the tag:
+   `27. A. Author, "Title," *Journal*, 2024. <!-- bib:Author2024 -->`
+3. Cite it in the text as `[27]` (or `[3, 27]`).
+4. Convert and build. The converter warns that the key is missing from
+   `references.bib`; merge it (Porting step 3: `python merge_bib.py .../references.bib`),
+   rebuild, then upload both `pilot_uq_usecase.tex` and `references.bib` to Overleaf.
+
+### Change a reference
+
+- **Fix the details of a work** (authors, pages, DOI): edit the entry in
+  `uq-usecase_refs.bib` and the human-readable line in the markdown. The key stays,
+  so nothing else changes. Note `merge_bib.py` only appends **missing** keys; for a
+  key already in Overleaf's `references.bib`, make the same edit there by hand.
+- **Point a number at a different work**: change the tag on that markdown entry
+  (and its text), make sure the new key is in `uq-usecase_refs.bib`, then treat it
+  like an addition (step 4).
+
+### Renumber
+
+Numbers only need to agree between the text and the References list; the key in
+the tag travels with its entry, so renumbering never changes the tex. To tidy the
+numbers into order of first appearance:
+
+```bash
+python md_refs.py renumber --dry-run   # show old -> new numbers
+python md_refs.py renumber             # rewrite the markdown (backup: .md.bak)
+python md_refs.py renumber --prune     # same, and drop uncited entries
+```
+
+It rewrites every `[N]` in the text (code and math spans are left alone) and the
+References list together, and refuses to run while `check` reports an error.
+Don't renumber by hand: changing a number in the list without changing the
+matching `[N]` in the text silently re-points that citation.
 
 ## Usage
 
@@ -242,8 +332,9 @@ Each run converts the requested section **and all prior sections**. The default
   (tables, `$$` display math, images, fenced code/mermaid, headings, details boxes)
 - **Phase 10–12**: §10 feedback, §11 limitations, §12 implementation
 
-Citations: `[N]` markers in the markdown map through `CITATION_MAP` to
-`\cite{key}`; keys are defined in `uq-usecase_refs.bib`. The generated
+Citations: `[N]` markers in the markdown map to `\cite{key}` through the
+`<!-- bib:Key -->` tags in the markdown References list (see [Citations](#citations)).
+The generated
 `pilot_uq_usecase.tex` is `\input` into a parent document that owns the
 bibliography (the SciDAC report, or the faithful harness `test_uq_pilot.tex`).
 
@@ -257,7 +348,7 @@ bibliography (the SciDAC report, or the faithful harness `test_uq_pilot.tex`).
 - **Ordered / bullet lists** → `enumerate` / `itemize`
 - **Links** (`[text](url)`) → plain text (URL dropped), specials in the text escaped
 - **Inline / display math** (`$…$`, `$$…$$`) → protected from text formatting; Unicode mapped per math vs text context (°, ×, ·, −, ≤, ≥, Δ, …)
-- **Citations** (`[N]`) → `\cite{key}` via `CITATION_MAP`
+- **Citations** (`[N]`, `[N, M]`) → `\cite{key}` via the References-list tags
 
 ### Figure Handling
 
@@ -387,8 +478,9 @@ Each run (re)writes a clean, self-contained copy to this folder:
    existing key, so `\cite{wachter2006}` resolves to the entry already there — no
    duplicate. **SUNDIALS** (`hindmarsh2005sundials`) and **GridKit**
    (`peles2025gridkit`) exist under *different* keys than ours, so they are appended
-   as a (harmless but redundant) second entry for the same work; repoint those via
-   `CITATION_MAP` and reconvert if you prefer a single entry. **Never** put a
+   as a (harmless but redundant) second entry for the same work; change the
+   `<!-- bib:... -->` tag on those markdown entries to the report's key and
+   reconvert if you prefer a single entry. **Never** put a
    `\bibliography` inside `pilot_uq_usecase.tex` — `main.tex` owns the single
    bibliography.
 
@@ -406,7 +498,8 @@ Each run (re)writes a clean, self-contained copy to this folder:
 ### Re-porting after edits
 
 Edit the markdown, re-run `convert_pilot_report.py`, then repeat step 1 (and step 3
-only if citations changed). The output is deterministic, so re-uploading the
+if a citation was added: the converter warns when a cited key is missing from
+`references.bib`). The output is deterministic, so re-uploading the
 folder is safe.
 
 ## Dependencies
