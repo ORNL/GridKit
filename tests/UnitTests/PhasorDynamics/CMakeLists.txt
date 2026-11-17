@@ -208,6 +208,16 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemFlat.json
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemHierarchical.json
                ${CMAKE_CURRENT_BINARY_DIR}/SubsystemHierarchical.json COPYONLY)
 
+add_executable(test_phasor_partition runPartitionTests.cpp)
+target_link_libraries(
+  test_phasor_partition GridKit::phasor_dynamics_partition GridKit::testing)
+configure_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/ThreeBusBasic.case.json
+               ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasic.case.json COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/WECC240/WECC240.case.json
+               ${CMAKE_CURRENT_BINARY_DIR}/WECC240.case.json COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/examples/PhasorDynamics/Partitions/WECC240/WECC240.partition.json
+               ${CMAKE_CURRENT_BINARY_DIR}/WECC240.partition.json COPYONLY)
+
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(
   test_phasor_system_single_component
@@ -247,6 +257,10 @@ add_test(
   COMMAND test_phasor_system
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSubsystemModelTest COMMAND test_phasor_subsystem_model)
+add_test(
+  NAME PhasorDynamicsPartitionTest
+  COMMAND test_phasor_partition
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
 
@@ -272,6 +286,7 @@ install(
           test_phasor_gen_classical
           test_phasor_system
           test_phasor_subsystem_model
+          test_phasor_partition
           test_phasor_system_single_component
           test_phasor_component_connection
   RUNTIME DESTINATION bin)

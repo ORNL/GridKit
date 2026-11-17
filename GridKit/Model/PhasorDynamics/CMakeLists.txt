@@ -81,5 +81,7 @@ gridkit_add_library(
     PUBLIC
     GridKit::phasor_dynamics_components_dependency_tracking)
 
+add_subdirectory(Partition)
+
 install(TARGETS phasor_dynamics_components phasor_dynamics_components_dependency_tracking
         EXPORT gridkit-targets)

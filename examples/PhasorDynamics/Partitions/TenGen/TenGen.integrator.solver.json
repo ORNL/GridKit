@@ -1,0 +1,9 @@
+{
+    "system_model_file": "TenGen.case.json",
+    "partition_file": "TenGen.partition.json",
+    "output_file": "TenGen.integrator.speed.csv",
+    "dt_monitor": 0.004166666666666667,
+    "dt_fixed": 0.004166666666666667,
+    "tmax": 1.0,
+    "events": []
+}

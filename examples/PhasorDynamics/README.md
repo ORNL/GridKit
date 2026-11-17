@@ -8,6 +8,7 @@ use the reusable models in `cases/PhasorDynamics/`.
 | [DynamicSimulation](DynamicSimulation/README.md) | Individual simulation studies. |
 | [ContingencyAnalysis](ContingencyAnalysis/README.md) | Bus-fault contingency studies. |
 | [Validation](Validation/README.md) | System studies compared against PowerWorld reference results. |
+| Partitions ([WECC240](Partitions/WECC240/README.md), [TenGen](Partitions/TenGen/README.md)) | Studies split into subsystems by a partition file, solved as one system by IDA or with the partitioned integrator. |
 
 ## Running a Study
 
