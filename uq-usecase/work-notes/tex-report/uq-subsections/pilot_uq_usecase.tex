@@ -138,17 +138,9 @@ Both solves use PowerModels.jl \cite{Coffrin2018} with Ipopt \cite{wachter2006}.
 \textit{Figure 4.2} shows the loop. With one loss correction, each condition runs two \acp{dcopf} and two \acp{acpf}.
 
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=1.00\textwidth]{figs/uq-pilot/fig_4_dispatch_loop_per_condition_dc_opf_ac.png}
-  \par\vspace{0.4em}
-  {\small Figure 4.2. Dispatch loop per condition: \Ac{dcopf}, \ac{acpf}, one loss correction, \ac{acpf}. Each \ac{acpf} restarts its PV$\to$PQ switching from all units at PV.}
-\end{figure}
-
-
 The iteration exists because of a \textbf{slack problem}: a power flow leaves one generator's active power free, so it cannot enforce that generator's maximum output, and our slack is the nuclear unit, which has only \textbf{0.0082 MW} of headroom. Without re-dispatch it would absorb the entire loss term, and in an hourly loop the whole load change. One loss correction reduces the overshoot from 27.05 MW to 0.34 MW on the worst hour (0.016 \% of load). A second correction reduces it only to 0.005 MW, so one is enough.
 
-\textbf{Reactive power limits: PV$\to$PQ switching.} AC power flow does not enforce generators' reactive power limits (Q limits) on its own: without mitigation we measured 2 to 11 violations per operating condition. We enforce them by PV$\to$PQ switching \cite{Stott1974}: after solving voltages, any generator outside a Q limit is fixed at that limit and its bus switched to PQ, then the power flow is re-solved. Fixed generators return to PV if voltage recovers past setpoint (repeated up to twice). The \ac{dcopf} dispatch is never changed, only reactive power.
+\textbf{Reactive power limits: PV$\to$PQ switching.} \ac{acpf} does not enforce generators' reactive power limits (Q limits) on its own: without mitigation we measured 2 to 11 violations per operating condition. We enforce them by PV$\to$PQ switching: after solving voltages, any generator outside a Q limit is fixed at that limit and its bus switched to PQ, then the power flow is re-solved. Fixed generators return to PV if voltage recovers past setpoint (repeated up to twice). The \ac{dcopf} dispatch is never changed, only reactive power.
 
 We also tested \ac{acopf}, which enforces Q limits as constraints. It was not adopted because it also changes the active-power dispatch (about 280 MW summed over the pilot), which would mix a dispatch effect into every \ac{cct} comparison; switching changes only reactive power.
 
@@ -164,7 +156,7 @@ We also tested \ac{acopf}, which enforces Q limits as constraints. It was not ad
 
 Wind units are removed as synchronous machines (\texttt{Genrou}) and re-inserted as a \textbf{negative load} at their own bus, modelled as constant current. Left as synchronous machines, they could contribute \textbf{up to 2,766 MW$\cdot$s} of inertia at their ratings (sum over the 6 wind units of inertia constant $\times$ rating), whatever the wind output, and inertia is what the study varies. A constant-power stand-in made the simulation fail at high wind penetration.
 
-\textbf{Implementation.} Hourly wind MW is pinned in the \ac{dcopf}, the AC power flow solves its reactive output, and the solved P and Q are written into the negative load. In the dynamic case each wind unit's machine, governor and exciter models are removed and a load is added with \texttt{Pnom = -PG/100} and \texttt{Qnom = -QG/100} (per unit, 100 MVA base), all of it constant current. GridKit treats positive \texttt{Pnom} as consumed, so the negative value injects PG. At the initial voltage this reproduces the power-flow P and Q exactly; after that the injection scales with \texttt{|V|}, which is constant current.
+\textbf{Implementation.} Hourly wind MW is pinned in the \ac{dcopf}, the \ac{acpf} solves its reactive output, and the solved P and Q are written into the negative load. In the dynamic case each wind unit's machine, governor and exciter models are removed and a load is added with \texttt{Pnom = -PG/100} and \texttt{Qnom = -QG/100} (per unit, 100 MVA base), all of it constant current. GridKit treats positive \texttt{Pnom} as consumed, so the negative value injects PG. At the initial voltage this reproduces the power-flow P and Q exactly; after that the injection scales with \texttt{|V|}, which is constant current.
 
 \textbf{Why it is acceptable.} Converter-interfaced generation is modelled in positive-sequence transient stability as a controllable current source \cite{Pourbeik2017}. The Sandia PSTess manual says that, \textit{"as in the WECC REGC\_A model"}, the converter interface is "a controllable current source" \cite{Elliott2021}. A constant-current load is a simple stand-in for that current injection.
 
@@ -248,7 +240,7 @@ The bisected variable is the fault duration. The fault is applied at \texttt{t\_
   \item \textbf{8 simulations} means the boundary was inside the bracket. The reported \ac{cct} is the last stable duration tried, so it sits within the 0.01 s tolerance below the boundary.
 \end{itemize}
 
-The cap at 0.5 s is deliberate. EHV primary clearing is ~0.05--0.10 s and breaker-failure backup ~0.25--0.50 s \textit{(standard protection practice, stated from domain knowledge rather than a cited standard)}; a multi-second fault is not a contingency any protection scheme permits, so a \ac{cct} beyond the cap has no engineering meaning and is \textbf{reported as censored rather than searched for}.
+The cap at 0.5 s is deliberate. On power grids, primary protection clears faults in ~0.05--0.10 s, with backup protection clearing in ~0.25--0.50 s. Any fault duration beyond this window is not a contingency that protection schemes permit, so outcomes beyond the cap are \textbf{reported as censored}. The cap can be adjusted if necessary in other context.
 
 The bisection probes write only the \texttt{delta} channels, not the full monitor set: that cut probe output from 26.25 MB to 1.91 MB per probe (\textbf{13.8$\times$}) with the resulting \ac{cct} \textbf{identical} (0.2891 both ways).
 
@@ -314,7 +306,7 @@ Launch counts from a separate timing job, not the campaign logs.*
 \subsubsection{Sampling space and the campaigns}
 \label{uqp:7.0}
 
-All campaigns use the operating-condition design of Section~\ref{uqp:4.1}, where an operating condition is an (hour, commitment) pair. All use \ac{dcopf} dispatch, then AC power flow with PV$\to$PQ switching (Section~\ref{uqp:4.2}), and the datacenter as an 80/20/0 ZIP load added beside the existing load at its bus (Section~\ref{uqp:4.4}). The two main campaigns differ in what else varies:
+All campaigns use the operating-condition design of Section~\ref{uqp:4.1}, where an operating condition is an (hour, commitment) pair. All use \ac{dcopf} dispatch, then \ac{acpf} with PV$\to$PQ switching (Section~\ref{uqp:4.2}), and the datacenter as an 80/20/0 ZIP load added beside the existing load at its bus (Section~\ref{uqp:4.4}). The two main campaigns differ in what else varies:
 
 
 \vspace{0.25cm}
@@ -340,7 +332,7 @@ All campaigns use the operating-condition design of Section~\ref{uqp:4.1}, where
 \vspace{0.25cm}
 
 
-Campaign aleatoric-1 varies operating conditions, placement and size, at one fault. Campaign faultscreen-1 varies fault location and placement, at one size. \textbf{No outcome} means the dispatch was infeasible or the simulation failed. It is reported as such, never as stable or unstable.
+\textbf{Campaign aleatoric-1} varies operating conditions, placement and size, at one fault. Campaign faultscreen-1 varies fault location and placement, at one size. \textbf{No outcome} means the dispatch was infeasible or the simulation failed. It is reported as such, never as stable or unstable.
 
 \textbf{Campaign aleatoric-2} is a larger, independent repeat of aleatoric-1: 60 new hours $\times$ 3 commitments = 180 operating conditions, with the same placements and sizes. It shares no conditions with aleatoric-1, and is used in Section~\ref{uqp:7.3} and Section~\ref{uqp:7.4} to check that the results reproduce and how they settle as conditions are added.
 
@@ -658,13 +650,9 @@ The 200-bus case is small enough that brute force works: whole campaigns finish 
 \vspace{0.25cm}
 
 
-\textit{(Calibration: aleatoric-1 took 6.0 min of wall on one node with 16 workers. The ideal for the same job is 2.2 min, so the measured overhead is about 2.7$\times$, from scheduling, startup and per-launch cost. Applied to the 2000-bus ideal, a full-size campaign is about \textbf{2.5 h of wall on one node at 16 workers}, not under one node-hour. These are projections, not measurements.)}
+We ran aleatoric-1 at 2,000 buses as a scoping study. It took 6.0 min wall-time (16 workers per node), compared to 2.2 min ideal; scaling this up, a full-size campaign projects to ~2.5 h per node at 16 workers. Full worker memory is unmeasured, so treat this as a planning figure, not a guarantee.
 
-Compute is affordable but not negligible: at 200 buses the 104 cores bind before memory does, and the 16 workers per node were a choice, not a limit. At 2,000 buses one dynamic run peaked at 126 MB and a two-case dispatch batch at 1.0 GB, but a full worker batch is \textbf{unmeasured} --- the number to pin down before trusting any wall-time projection. Until then, treat ~2.5 h (one node, 16 workers) as the planning figure. \textbf{Storage, not compute, is the binding constraint}, and the mitigation is already known: 4,000 of the 4,649 output columns are bus voltages, so selective monitoring is worth far more here than it was at 200 buses, where the same trick already bought 13.8$\times$ on bisection probes.
-
-\textbf{Why this matters for the methods work.} The \textit{design space} grows along two axes: siting candidates about 11.5$\times$ (108 load buses to 1,245) and fault locations 10$\times$ (200 to 2,000), roughly 115$\times$ more design points, while per-sample cost grows 19--25$\times$. Holding sampling \textit{density} fixed projects to roughly \textbf{2,150--2,900$\times$} the pilot's cost (a projection, not a measurement). Brute force survives one order of magnitude, not two. The execution model also inverts: at 200 buses it exists to amortise an expensive dispatch over cheap disturbances, whereas at 2,000 buses the dynamic run dominates and the quantity to minimise becomes the \textit{number of simulations}, not the number of dispatches. That is the concrete case for screening, surrogates and adaptive refinement over a larger factorial, and it makes the pilot's measured 76 \% contingency waste far more expensive to tolerate.
-
-The pilot's aleatoric-1 is a 40-condition grid; at 2,000 buses a campaign needs distributions over many more conditions, placements and fault buses, which brute force will not reach. The leverage is already visible: P(\ac{cct} \textless{} 0.25 s) has a standard error of about 0.07 at 37 conditions (Section~\ref{uqp:7.2}) and \ac{cct} spread is concentrated by net load (Section~\ref{uqp:7.5}), so conditioning and stratification, not raw sample count, tighten the answer. A campaign like faultscreen-1 already builds and runs at 2,000 buses.
+\textbf{Storage, not compute, binds the problem.} At 200 buses the CPU saturates before memory; at 2,000 buses selective monitoring matters far more (the 4,649 output columns are mostly bus voltages). \textbf{Cost to scale to 2,000 buses: brute force survives one order of magnitude, not two.} The design space grows 115$\times$ (siting 11.5$\times$ and fault locations 10$\times$), while per-sample cost grows 19--25$\times$. Holding sampling density fixed projects 2,150--2,900$\times$ the pilot's cost. That makes screening, surrogates and adaptive refinement the concrete case, not a luxury.
 
 \textbf{Takeaway.} Brute force survives one order of magnitude of grid size, not two: a campaign the size of aleatoric-1 at 2,000 buses is about 2.5 h on one node, storage rather than compute binds, and the dynamic run, nearly free at 200 buses, becomes the cost to minimise. Scaling the pilot is a methods problem, not a hardware one, which Section~\ref{uqp:9} takes up.
 

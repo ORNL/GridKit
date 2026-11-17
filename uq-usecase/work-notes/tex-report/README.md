@@ -264,25 +264,38 @@ FIGURES_OUTPUT_DIR = ".../work-notes/figures/"
 OUTPUT_FORMAT = "png"  # or "tikz" (future)
 ```
 
-### convert_pilot_report.py — `CONFIGURATION` block (top of file, ~lines 25-66)
-```python
-SOURCE_MD = "...datacenter_pilot_report.md"      # markdown you edit
-FIGURES_SOURCE_DIR = ".../work-notes/figures/"   # read pre-generated PNGs
-FIG_TEX_DIR = "figs/uq-pilot"                    # figure sub-path in \includegraphics
-TARGET_PATH = ".../chapters/uq-subsections/pilot_uq_usecase.tex"        # report copy
-REPO_OUTPUT_PATH = ".../tex-report/uq-subsections/pilot_uq_usecase.tex" # upload copy
-INCLUDE_FOOTNOTES = True
+### convert_pilot_report.py — `CONFIGURATION` block (top of file)
 
-# Sections to OMIT from the report (the markdown keeps them). Inbound "§N"
-# references to a skipped section are cleaned up automatically.
-SKIP_SECTIONS = {10, 11, 12}   # feedback, limitations, implementation
+Edit the value at the top of `convert_pilot_report.py`, re-run the converter, and
+rebuild. Every option affects only the generated `.tex`; the markdown is never changed.
 
-# "> **Details:** [...](plan.md#...)" link boxes: kept in the markdown, dropped here.
-INCLUDE_DETAILS = False
+| Option | Current | What it controls |
+|---|---|---|
+| `SKIP_SECTIONS` | `{10, 11, 12}` | Sections left out of the report. Ints for whole sections, strings for subsections (`"7.6"`). |
+| `INCLUDE_DETAILS_BOXES` | `False` | Whether `> **Details:** [...](plan.md#...)` boxes appear in the report. |
+| `INCLUDE_FOOTNOTES` | `True` | `True`: Details and Implementation-note blockquotes are framed boxes. `False`: plain indented quotes. |
+| `REPO_BASE`, `REPO_BRANCH` | GridKit, `isatkaus/uq-usecase` | GitHub URL printed in Details boxes (the notes they link to live on this branch). |
+| `ACRONYMS`, `ACRONYM_PLAIN` | see file | Prose terms rendered as `\ac{...}`; plain short form used in headings/glossary labels. |
+| `INLINE_CODE_FORMAT` | `"texttt"` | Backtick rendering: `"texttt"` (monospace) or `"math"`. |
+| `SOURCE_MD` | …`/datacenter_pilot_report.md` | The markdown you edit. |
+| `FIGURES_SOURCE_DIR` | …`/work-notes/figures/` | Where the pre-generated PNGs are read from. |
+| `FIG_TEX_DIR` | `"figs/uq-pilot"` | Path used in `\includegraphics` (relative to the Overleaf project root). |
+| `TARGET_PATH`, `REPO_OUTPUT_PATH` | report copy, upload copy | The two `.tex` outputs. |
+| `BIB_SOURCE`, `REPORT_MAIN_BIB` | `uq-usecase_refs.bib`, report `references.bib` | Bib files used by the citation checks (see [Citations](#citations)). |
 
-# Prose terms rendered as \ac{...} (first use spelled out, hyperlinked).
-ACRONYMS = [("DC OPF", r"\ac{dcopf}"), ("AC PF", r"\ac{acpf}"), ("CCT", r"\ac{cct}"), ...]
+For a one-off test without editing the file, override options from Python; this
+writes to the normal outputs:
+
+```bash
+python -c "import convert_pilot_report as c; c.INCLUDE_DETAILS_BOXES=True; c.convert_pilot_report('12')"
 ```
+
+**Details boxes on/off.** `INCLUDE_DETAILS_BOXES = False` (the default since the
+review round) drops every `> **Details:** ...` blockquote: they link to working
+notes on a GitHub branch, which a report reader can't use. Set it to `True` to
+print each as a framed box with the GitHub URL and the linked section names.
+Implementation-note boxes are always kept. A Details box inside a
+`<!-- tex:skip -->` block or a skipped section stays out either way.
 
 **Markdown-only text.** Wrap anything that should stay in the markdown but not
 appear in the report in skip markers:
@@ -301,7 +314,18 @@ Headings and glossary labels use the plain short form (DCOPF, ACPF) instead.
 
 **Skip / un-skip a section.** Edit `SKIP_SECTIONS` near the top of
 `convert_pilot_report.py`, then re-run the converter. Examples:
-`{10, 11, 12}` drops all three; `{10, 12}` brings Limitations back; `set()` keeps everything.
+`{10, 11, 12}` drops all three; `{10, 12}` brings Limitations back; `set()` keeps
+everything; `{10, 11, 12, "7.6"}` also drops subsection 7.6 (a `###` or `####`
+heading and everything up to the next heading of the same or higher level).
+Skipping `7` also drops references to `7.x`.
+
+References to a skipped section are cleaned automatically: `(see §N)`, `(§N)`,
+`See §N.` and `§N's X` are removed or reworded. Any other reference is deleted
+with a `WARNING: leftover reference to skipped §N` message. Review those sentences
+in the PDF and reword them in the markdown (e.g. `§7.2–§7.6` or `§7.6 checks …`).
+
+`EXCLUDE_SECTIONS` and `MERMAID_FORMAT` no longer exist: the first was never
+implemented (use `SKIP_SECTIONS`), the second was unused (diagrams are always PNG).
 
 **Adjust figure sizes.** Mermaid diagram widths are picked automatically from each
 PNG's aspect ratio in `_mermaid_width_for()` (search for that function):

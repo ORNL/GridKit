@@ -58,12 +58,15 @@ REPO_FIGURES_OUTPUT_DIR = (
 REPO_BIBTEX_PATH = "/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/uq-usecase_refs.bib"
 
 # Phase 2+ options
-INCLUDE_FOOTNOTES = True  # Set to False to omit cross-document references as footnotes
-REPO_BRANCH = "isatkaus/uq-usecase"  # Git branch where details are located
-REPO_BASE = "https://github.com/ORNL/GridKit"  # GitHub repository base URL
+# True: "Details" and "Implementation note" blockquotes render as framed boxes.
+# False: they render as plain indented quotes.
+INCLUDE_FOOTNOTES = True
+REPO_BRANCH = "isatkaus/uq-usecase"  # branch used in Details-box GitHub URLs
+REPO_BASE = "https://github.com/ORNL/GridKit"  # repo used in Details-box GitHub URLs
 
 # Sections to omit from the report (the markdown keeps them; they are just not
-# emitted here). Inbound "§N" cross-references to a skipped section are cleaned up
+# emitted here). Whole sections as ints (10), subsections as strings ("7.6").
+# Inbound "§N" cross-references to a skipped section are cleaned up
 # automatically by apply_numbered_headings_and_refs so nothing dangles.
 SKIP_SECTIONS = {
     10,
@@ -71,14 +74,22 @@ SKIP_SECTIONS = {
     12,
 }  # 10 = GridKit feedback, 11 = Limitations, 12 = Implementation
 
-# "> **Details:** [...](plan.md#...)" boxes link into the working notes; useful in the
-# markdown, noise in the report. Implementation-note boxes are always kept.
-INCLUDE_DETAILS = False
+# "> **Details:** [...](plan.md#...)" boxes linking to the working notes.
+# Implementation-note boxes are always kept.
+INCLUDE_DETAILS_BOXES = False
 
 # Prose terms rendered with the report's acronym commands (keys must exist in
 # common/acronyms.tex). Longest/plural forms first. Headings and glossary labels
 # are excluded and use the plain short form instead.
 ACRONYMS = [
+    # New format (direct acronyms in markdown)
+    (r"ACOPFs", r"\acp{acopf}"),
+    (r"ACOPF", r"\ac{acopf}"),
+    (r"DCOPFs", r"\acp{dcopf}"),
+    (r"DCOPF", r"\ac{dcopf}"),
+    (r"ACPFs", r"\acp{acpf}"),
+    (r"ACPF", r"\ac{acpf}"),
+    # Legacy format (expanded terms)
     (r"AC OPFs", r"\acp{acopf}"),
     (r"AC OPF", r"\ac{acopf}"),
     (r"DC OPFs", r"\acp{dcopf}"),
@@ -91,18 +102,10 @@ ACRONYMS = [
 ]
 ACRONYM_PLAIN = {"AC OPF": "ACOPF", "DC OPF": "DCOPF", "AC PF": "ACPF"}
 
-# Phase 3+ options (Mermaid diagrams)
-MERMAID_FORMAT = "png"  # Options: "tikz" (inline, styled), "png" (requires mermaid-cli, creates placeholder if unavailable)
-
 # Inline code formatting options
 # INLINE_CODE_FORMAT = "math"   # `code` → $code$ (inline math mode, current behavior)
 # INLINE_CODE_FORMAT = "texttt"  # `code` → \texttt{code} (monospace font, simpler, preserves spacing)
 INLINE_CODE_FORMAT = "texttt"  # Choose preferred rendering: "math" or "texttt"
-
-# Sections to exclude from conversion
-# Useful for optional subsections that may not be needed in final report
-# Example: EXCLUDE_SECTIONS = ["4.2"]  # Skip a section (4.2a and 4.2b are now paragraphs within 4.2)
-EXCLUDE_SECTIONS = []  # Currently empty; set to ["4.2"] or other sections to exclude
 
 # ============================================================================
 # CITATIONS — [N] in the markdown → \cite{key}
@@ -290,7 +293,10 @@ def markdown_to_latex_text(text):
         if in_quote:
             processed_quote = "\n".join(quote_buffer)
 
-            if processed_quote.lstrip().startswith("**Details") and not INCLUDE_DETAILS:
+            if (
+                processed_quote.lstrip().startswith("**Details")
+                and not INCLUDE_DETAILS_BOXES
+            ):
                 if quote_started:
                     result_lines.append("\\end{quote}")
                     quote_started = False
@@ -1631,7 +1637,7 @@ Main terms used in our pilot study that follows.
     latex_output += "\n"
 
     # Add note box after glossary (if requested)
-    if INCLUDE_DETAILS:
+    if INCLUDE_DETAILS_BOXES:
         details_latex = format_details_blockquote(footnote_md)
         if details_latex:
             # Create a compact styled details box with minimal spacing
@@ -2550,8 +2556,9 @@ def apply_numbered_headings_and_refs(latex):
     # Clean up inbound references to skipped sections BEFORE resolving the rest.
     # The target heading no longer exists, so "\ref{uqp:N}" would be undefined; strip
     # the reference (and its scaffolding) so the sentence still reads cleanly.
-    for n in sorted(SKIP_SECTIONS):
-        sec = r"\{\\textsection\}" + str(n) + r"(?![0-9.])"
+    for n in sorted(SKIP_SECTIONS, key=str):
+        # Skipping "7" also covers references to "7.x".
+        sec = r"\{\\textsection\}" + re.escape(str(n)) + r"(?:\.\d+)*(?![0-9])"
         before = latex
         # "(see §N)" / "(§N)" parentheticals, and a preceding space.
         latex = re.sub(r"\s*\(see " + sec + r"\)", "", latex)
@@ -2585,6 +2592,24 @@ def apply_numbered_headings_and_refs(latex):
     )
     latex = latex.replace(r"{\textsection}\ref{", r"Section~\ref{")
     return latex
+
+
+def drop_skipped_subsections(md):
+    """Remove '### 7.6 ...' (or ####) blocks listed as strings in SKIP_SECTIONS."""
+    for num in sorted(s for s in SKIP_SECTIONS if isinstance(s, str)):
+        m = re.search(rf"^(#{{3,4}})\s+{re.escape(num)}\.?\s.*$", md, re.MULTILINE)
+        if not m:
+            print(
+                f"WARNING: SKIP_SECTIONS has '{num}' but no such subsection heading",
+                file=sys.stderr,
+            )
+            continue
+        nxt = re.compile(rf"^#{{2,{len(m.group(1))}}}\s", re.MULTILINE).search(
+            md, m.end()
+        )
+        md = md[: m.start()] + md[nxt.start() if nxt else len(md) :]
+        print(f"⏭  Skipping §{num} (in SKIP_SECTIONS)")
+    return md
 
 
 def convert_pilot_report(phase="1"):
@@ -2639,6 +2664,8 @@ def convert_pilot_report(phase="1"):
         md_content,
         flags=re.DOTALL,
     )
+
+    md_content = drop_skipped_subsections(md_content)
 
     # Build LaTeX output progressively
     latex_sections = []

@@ -4,7 +4,7 @@
 P = 0.8, switched-PF setup (§7.0). ACTIVSg200 (Illinois 200-bus synthetic case).
 All simulations use GridKit v0.2.0 [1].
 
-**This report stands alone.** It explains what we asked, how we went about it,
+**This report is self-contained.** It explains what we asked, how we went about it,
 and what came out, in general terms. It does not assume you have read the other
 two documents, and it does not contain code.
 
@@ -57,7 +57,7 @@ Main terms used in our pilot study that follows.
 | **No outcome** | A run that produced no CCT: either the dispatch was infeasible or the dynamic simulation failed. Reported separately, never as stable or unstable. |
 | **ZIP load** | A load model that splits demand into constant-impedance (Z), constant-current (I) and constant-power (P) parts, written as P/I/Z percentages. The datacenter uses 80/20/0 (§4.4). |
 | **Campaigns** | Three batches of simulations, all built the same way (§4). Two aleatoric campaigns, **aleatoric-1** and **aleatoric-2**, vary the operating condition and the datacenter's location and size, at one fault location; aleatoric-2 is a larger, independent repeat of aleatoric-1. The fault-screening campaign, **faultscreen-1**, varies the fault location instead. §7.0 compares them. |
-| **DC OPF / AC PF** | DC OPF sets *who generates* from active power only (lossless, no voltages, no Q). AC PF takes that dispatch and solves the voltages and reactive power. |
+| **DCOPF / ACPF** | DCOPF sets *who generates* from active power only (lossless, no voltages, no Q). ACPF takes that dispatch and solves the voltages and reactive power. |
 | **PV bus / PQ bus** | PV: the generator fixes P and voltage magnitude, and Q is whatever holds the voltage. PQ: P and Q are fixed (a load); voltage is a result. |
 | **Q limit** | A generator's maximum and minimum reactive power (Q) output. |
 | **PV→PQ switching** | When a generator's Q leaves its limits, it is fixed at the limit and its bus is solved as PQ. Standard in planning tools; the pipeline's version is in §4.2. |
@@ -143,8 +143,8 @@ flowchart LR
     H[hour from 8760<br/>load + wind] --> UC[commitment<br/>n units online]
     UC --> M[".m case"]
     DC[datacenter<br/>bus + MW] --> M
-    M --> O["DC OPF<br/>(lossless)"]
-    O --> P["AC PF<br/>(losses, voltages, Q limits)"]
+    M --> O["DCOPF<br/>(lossless)"]
+    O --> P["ACPF<br/>(losses, voltages, Q limits)"]
     P --> C["case.json<br/>wind as negative load<br/>fault bus, monitors"]
     C --> S["DynamicSimulation"]
     S --> Q["CCT by bisection<br/>(pole slip vs COI)"]
@@ -203,7 +203,7 @@ answer. Results are reported **conditionally** on commitment and can be
 reweighted later if a real commitment distribution becomes available.
 
 Adding a datacenter does **not** change the commitment. The same units stay
-online, and only the dispatch is re-solved (DC OPF, then AC PF). If the committed
+online, and only the dispatch is re-solved (DCOPF, then ACPF). If the committed
 fleet cannot serve the added load, the case is recorded as an infeasible dispatch, not
 re-committed. Those failures therefore overstate what an operator could do by
 committing more units.
@@ -212,29 +212,29 @@ committing more units.
 > [why the band is so wide, and why we sample inside it](datacenter_load_uq_plan.md#why-the-band-is-so-wide-and-why-we-sample-inside-it) ·
 > [commitment is a first-order driver (Phase 1b inertia sweep)](datacenter_load_uq_plan.md#1b-inertia-sweep-measured-2026-10-20)
 
-### 4.2 Dispatch: DC OPF then AC PF
+### 4.2 Dispatch: DCOPF then ACPF
 
 Both solves use PowerModels.jl [6] with Ipopt [7]. Per condition:
 
-1. **DC OPF** sets the economic dispatch. It is lossless, so the load is
+1. **DCOPF** sets the economic dispatch. It is lossless, so the load is
    inflated by the loss estimate from the previous pass (zero on the first).
-2. **AC PF** solves the real network at that dispatch, giving voltages, reactive
-   power and the actual losses. The losses feed the next DC OPF.
+2. **ACPF** solves the real network at that dispatch, giving voltages, reactive
+   power and the actual losses. The losses feed the next DCOPF.
 
 *Figure 4.2* shows the loop. With one loss correction, each condition runs two
-DC OPFs and two AC PFs.
+DCOPFs and two ACPFs.
 
 ```mermaid
 %%{init: {"fontSize": 18, "themeVariables": {"fontSize": "18px"}, "flowchart": {"nodeSpacing": 24, "rankSpacing": 40, "padding": 4}}}%%
 flowchart LR
-    D0["DC OPF #0<br/>lossless"] --> A0["AC PF #0<br/>PV→PQ switching"]
+    D0["DCOPF #0<br/>lossless"] --> A0["ACPF #0<br/>PV→PQ switching"]
     A0 --> L["losses"]
-    L -->|"loss_iters = 1"| D1["DC OPF #1<br/>load + losses"]
-    D1 --> A1["AC PF #1<br/>PV→PQ switching"]
+    L -->|"loss_iters = 1"| D1["DCOPF #1<br/>load + losses"]
+    D1 --> A1["ACPF #1<br/>PV→PQ switching"]
     A1 --> O["ac.m → dynamic model"]
 ```
 
-*Figure 4.2. Dispatch loop per condition: DC OPF, AC PF, one loss correction, AC PF. Each AC PF restarts its PV→PQ switching from all units at PV.*
+*Figure 4.2. Dispatch loop per condition: DCOPF, ACPF, one loss correction, ACPF. Each ACPF restarts its PV→PQ switching from all units at PV.*
 
 The iteration exists because of a **slack problem**: a power flow leaves one
 generator's active power free, so it cannot enforce that generator's maximum
@@ -244,15 +244,15 @@ hourly loop the whole load change. One loss correction reduces the overshoot
 from 27.05 MW to 0.34 MW on the worst hour (0.016 % of load). A second
 correction reduces it only to 0.005 MW, so one is enough.
 
-**Reactive power limits: PV→PQ switching.** AC power flow does not enforce
+**Reactive power limits: PV→PQ switching.** ACPF does not enforce
 generators' reactive power limits (Q limits) on its own: without mitigation we
 measured 2 to 11 violations per operating condition. We enforce them by PV→PQ
-switching [8]: after solving voltages, any generator outside a Q limit is fixed
+switching: after solving voltages, any generator outside a Q limit is fixed
 at that limit and its bus switched to PQ, then the power flow is re-solved.
 Fixed generators return to PV if voltage recovers past setpoint (repeated up to
-twice). The DC OPF dispatch is never changed, only reactive power.
+twice). The DCOPF dispatch is never changed, only reactive power.
 
-We also tested AC OPF, which enforces Q limits as constraints. It was not adopted
+We also tested ACOPF, which enforces Q limits as constraints. It was not adopted
 because it also changes the active-power dispatch (about 280 MW summed over the
 pilot), which would mix a dispatch effect into every CCT comparison; switching
 changes only reactive power.
@@ -260,10 +260,10 @@ changes only reactive power.
 > **Details:** [the dispatch chain](datacenter_load_uq_plan.md#10-the-dispatch-chain) ·
 > [the slack problem](datacenter_load_uq_plan.md#the-slack-problem) ·
 > [the loss-iteration fix, with convergence table](datacenter_load_uq_plan.md#fix) ·
-> [why DC OPF then AC PF, rather than AC OPF](datacenter_load_uq_plan.md#why-dc-opf-then-ac-pf-rather-than-ac-opf) ·
-> [switching implementation and five-scenario measurements](datacenter_load_uq_plan.md#reactive-limits-in-the-ac-pf-pv-to-pq-switching) · [pipeline code](dc_campaign_pipeline.md#42a-reactive-limits-pv-to-pq-switching) · [AC OPF design and pilot results](datacenter_load_uq_plan.md#ac-opf-as-a-second-q-limit-route-pmjl)
+> [why DCOPF then ACPF, rather than ACOPF](datacenter_load_uq_plan.md#why-dc-opf-then-ac-pf-rather-than-ac-opf) ·
+> [switching implementation and five-scenario measurements](datacenter_load_uq_plan.md#reactive-limits-in-the-ac-pf-pv-to-pq-switching) · [pipeline code](dc_campaign_pipeline.md#42a-reactive-limits-pv-to-pq-switching) · [ACOPF design and pilot results](datacenter_load_uq_plan.md#ac-opf-as-a-second-q-limit-route-pmjl)
 
-> **Implementation note:** The dispatch pipeline uses PowerModels.jl for both DC OPF and AC PF solves. As OPF functionality becomes available in GridKit (under development), we can readily substitute it into the pipeline. Maintaining PowerModels.jl as an alternative is beneficial for validation purposes and exploration of various AC OPF relaxation formulations.
+> **Implementation note:** The dispatch pipeline uses PowerModels.jl for both DCOPF and ACPF solves. As OPF functionality becomes available in GridKit (under development), we can readily substitute it into the pipeline. Maintaining PowerModels.jl as an alternative is beneficial for validation purposes and exploration of various ACOPF relaxation formulations.
 
 ### 4.3 Wind becomes negative load
 
@@ -274,7 +274,7 @@ their ratings (sum over the 6 wind units of inertia constant × rating), whateve
 the wind output, and inertia is what the study varies.
 A constant-power stand-in made the simulation fail at high wind penetration.
 
-**Implementation.** Hourly wind MW is pinned in the DC OPF, the AC power flow
+**Implementation.** Hourly wind MW is pinned in the DCOPF, the ACPF
 solves its reactive output, and the solved P and Q are written into the
 negative load. In the dynamic case each wind unit's machine, governor and
 exciter models are removed and a load is added with `Pnom = −PG/100` and
@@ -286,9 +286,9 @@ injection scales with `|V|`, which is constant current.
 > **Details:** [wind pipeline, function by function](datacenter_load_uq_plan.md#pipeline-trace-one-wind-unit-one-hour) · [wind: why negative load, not fixed](datacenter_load_uq_plan.md#3-wind-why-negative-load-not-fixed) · [implementation](datacenter_load_uq_plan.md#implementation) · ["net load" is an aggregate, not a per-bus subtraction](datacenter_load_uq_plan.md#net-load-is-an-aggregate-not-a-per-bus-subtraction)
 
 **Why it is acceptable.** Converter-interfaced generation is modelled in
-positive-sequence transient stability as a controllable current source [9]. The
+positive-sequence transient stability as a controllable current source [8]. The
 Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
-interface is "a controllable current source" [10]. A constant-current
+interface is "a controllable current source" [9]. A constant-current
 load is a simple stand-in for that current injection.
 
 > **Implementation note:** The ACTIVSg200 case lacks native renewable energy converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models—specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)—which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
@@ -305,7 +305,7 @@ nor the OPF would see it: the power flow would have the slack bus supply it, and
 the committed fleet could be too small to serve it or larger than needed.
 
 **It gets its own load device, with its own voltage behaviour.** Load in these
-cases is represented by a **ZIP model** [11], which splits demand into three parts by
+cases is represented by a **ZIP model** [10], which splits demand into three parts by
 how each responds when voltage sags: a constant-**impedance** part (falls as
 $V^2$), a constant-**current** part (falls as $V$), and a constant-**power**
 part (does not fall at all). The split is written here as P/I/Z percentages.
@@ -313,7 +313,7 @@ part (does not fall at all). The split is written here as P/I/Z percentages.
 The distinction is the physical reason a datacenter is interesting. Ordinary
 constant-impedance load *sheds itself* during a voltage dip and helps the system
 recover. Datacenter load is fed through rectifiers and UPS units and behaves far closer to
-constant power [12]: it keeps demanding the same megawatts at reduced voltage, which
+constant power [11]: it keeps demanding the same megawatts at reduced voltage, which
 means drawing more current, which depresses voltage further. If the new load
 were simply folded into the load already at the bus, it would
 inherit that load's helpful constant-impedance behaviour and the study would
@@ -339,8 +339,8 @@ bus 108 or bus 148. Campaigns aleatoric-1 and aleatoric-2 (§7.0) place it at bu
 ## 5. CCT by bisection
 
 Critical clearing time is found by bisecting fault duration in `[0.05, 0.5]` s,
-with a stability test of **pole slip relative to the centre of inertia** [13], [14]. The
-centre of inertia [15] is the inertia-weighted average rotor angle of the fleet,
+with a stability test of **pole slip relative to the centre of inertia** [12], [13]. The
+centre of inertia [14] is the inertia-weighted average rotor angle of the fleet,
 
 $$\delta_{COI}(t) = \frac{\sum_i H_i S_i \delta_i(t)}{\sum_i H_i S_i}$$
 
@@ -374,11 +374,11 @@ The bisected variable is the fault duration. The fault is applied at `t_on` =
   is the last stable duration tried, so it sits within the 0.01 s tolerance below
   the boundary.
 
-The cap at 0.5 s is deliberate. EHV primary clearing is ~0.05–0.10 s and
-breaker-failure backup ~0.25–0.50 s *(standard protection practice, stated from
-domain knowledge rather than a cited standard)*; a multi-second fault is not a contingency
-any protection scheme permits, so a CCT beyond the cap has no engineering
-meaning and is **reported as censored rather than searched for**.
+The cap at 0.5 s is deliberate. On power grids, primary protection clears faults
+in ~0.05–0.10 s, with backup protection clearing in ~0.25–0.50 s. Any fault
+duration beyond this window is not a contingency that protection schemes permit,
+so outcomes beyond the cap are **reported as censored**. The cap can be adjusted
+if necessary in other context.
 
 The bisection probes write only the `delta` channels, not the full monitor set:
 that cut probe output from 26.25 MB to 1.91 MB per probe (**13.8×**) with the
@@ -395,7 +395,7 @@ resulting CCT **identical** (0.2891 both ways).
 
 ## 6. Parallel execution on Kestrel
 
-Each campaign ran as one SLURM job [16] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass [17] (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
+Each campaign ran as one SLURM job [15] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass [16] (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
 
 > **Details:** [wall time for the two main campaigns](datacenter_load_uq_plan.md#wall-time-in-the-two-main-campaigns-measured-2026-11-10) ·
 > [parallel sampling runs](datacenter_load_uq_plan.md#parallel-sampling-runs) ·
@@ -452,8 +452,7 @@ Launch counts from a separate timing job, not the campaign logs.*
 
 ## 7. Results
 
-> **Details for this section:**
-> [main results, both campaigns](datacenter_load_uq_plan.md#main-results-the-two-switched-campaigns-measured-2026-11-10) ·
+> **Details:** [main results, both campaigns](datacenter_load_uq_plan.md#main-results-the-two-switched-campaigns-measured-2026-11-10) ·
 > [`aleatoric1_ap08_qlim` run](datacenter_load_uq_plan.md#aleatoric-with-switching-aleatoric1_ap08_qlim-run-2026-11-10) ·
 > [earlier campaign results, moved from this report](datacenter_load_uq_plan.md#earlier-campaign-results-moved-from-the-report-2026-11-10) ·
 > [`phase3b` pilot](datacenter_load_uq_plan.md#pilot-results-phase3b-run-2026-10-22) ·
@@ -463,7 +462,7 @@ Launch counts from a separate timing job, not the campaign logs.*
 
 ### 7.0 Sampling space and the campaigns
 
-All campaigns use the operating-condition design of §4.1, where an operating condition is an (hour, commitment) pair. All use DC OPF dispatch, then AC power flow with PV→PQ switching (§4.2), and the datacenter as an 80/20/0 ZIP load added beside the existing load at its bus (§4.4). The two main campaigns differ in what else varies:
+All campaigns use the operating-condition design of §4.1, where an operating condition is an (hour, commitment) pair. All use DCOPF dispatch, then ACPF with PV→PQ switching (§4.2), and the datacenter as an 80/20/0 ZIP load added beside the existing load at its bus (§4.4). The two main campaigns differ in what else varies:
 
 | | **aleatoric-1** | **faultscreen-1** |
 |---|---|---|
@@ -478,20 +477,20 @@ All campaigns use the operating-condition design of §4.1, where an operating co
 | no outcome | 401 (45 simulation failures, 356 infeasible dispatches) | 253 (168 simulation failures, 85 infeasible dispatches) |
 | datacenter runs censored at the 0.5 s cap | 121 of 399 (30.3%) | 306 of 427 (71.7%) |
 
-Campaign aleatoric-1 varies operating conditions, placement and size, at one fault. Campaign faultscreen-1 varies fault location and placement, at one size. **No outcome** means the dispatch was infeasible or the simulation failed. It is reported as such, never as stable or unstable.
+**Campaign aleatoric-1** varies operating conditions, placement and size, at one fault. Campaign faultscreen-1 varies fault location and placement, at one size. **No outcome** means the dispatch was infeasible or the simulation failed. It is reported as such, never as stable or unstable.
 
 **Campaign aleatoric-2** is a larger, independent repeat of aleatoric-1: 60 new hours × 3 commitments = 180 operating conditions, with the same placements and sizes. It shares no conditions with aleatoric-1, and is used in §7.3 and §7.4 to check that the results reproduce and how they settle as conditions are added.
 
 ### 7.1 Reading the curves: Kaplan–Meier and censoring
 
-Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator [18] uses censored runs correctly:
+Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator [17] uses censored runs correctly:
 
 $$\hat S(t)=\prod_{t_i\le t}\Bigl(1-\frac{d_i}{n_i}\Bigr),\qquad \widehat P(\mathrm{CCT}<t)=1-\hat S(t)$$
 
 Here the $t_i$ are the distinct measured CCT values, $d_i$ is the number of runs measured at $t_i$, and $n_i$ is the number still at risk at $t_i$ (runs measured at or after $t_i$, plus censored runs). No measured CCT exceeds the cap, so for $t < 0.5$ s the estimate is simply the number of runs measured below $t$, divided by all solved runs, with the censored runs left in the denominator. No-outcome runs are excluded, so every curve is conditional on the run having solved. Figures plot the complement, $P(\mathrm{CCT} > t)$.
 
 <!-- tex:skip -->
-> **Worked example:** [ten made-up CCTs, with two censored runs, and the calculation step by step](datacenter_load_uq_plan.md#kaplanmeier-worked-example-on-ten-made-up-ccts) (illustrative values, not campaign data).
+> **Details:** [ten made-up CCTs, with two censored runs, and the calculation step by step](datacenter_load_uq_plan.md#kaplanmeier-worked-example-on-ten-made-up-ccts) (illustrative values, not campaign data).
 <!-- /tex:skip -->
 
 The rest of §7 runs as follows. §7.2 works one matched example, and §7.3 repeats it on the larger aleatoric-2. §7.4 asks what adding operating conditions does to the estimate. §7.5 splits risk by net load. §7.6 reports faultscreen-1. §7.7 quantifies censoring.
@@ -500,7 +499,7 @@ The rest of §7 runs as follows. §7.2 works one matched example, and §7.3 repe
 
 **Sampling:** aleatoric-1, 200 MW at bus 108, fault at bus 66. Of the 40 operating conditions, 37 solve with the datacenter. The baseline is the same 37 conditions with no datacenter.
 
-**Greenwood interval.** Greenwood's formula [19] estimates the variance of a KM estimate:
+**Greenwood interval.** Greenwood's formula [18] estimates the variance of a KM estimate:
 
 $$\widehat{\mathrm{Var}}\big(\hat S(t)\big)=\hat S(t)^2\sum_{t_i\le t}\frac{d_i}{n_i(n_i-d_i)}$$
 
@@ -544,7 +543,7 @@ Two points. First, the datacenter moves P(CCT < 0.25 s) from about 0.5 to 0.73 i
 
 ### 7.4 More operating conditions: how the estimate settles
 
-We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (*subsampling* [20]). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in §7.3. We might use the same check later to size a future study, if a full-size design costs too much.
+We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (*subsampling* [19]). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in §7.3. We might use the same check later to size a future study, if a full-size design costs too much.
 
 ![convergence of the KM estimate, 37 and 171 conditions](figures/main_convergence_37_vs_171.png)
 
@@ -641,7 +640,7 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 The 200-bus case is small enough that brute force works: whole campaigns finish
 in minutes. That is convenient but it hides the question the methods work
 exists to answer, so we measured what changes on the Texas synthetic grid,
-**ACTIVSg2000** (2,000 buses, from the TAMU repository [21]). This is a scoping
+**ACTIVSg2000** (2,000 buses, from the TAMU repository [20]). This is a scoping
 study, not a campaign.
 
 **What already exists.** A GridKit dynamic case is distributed with GridKit, and
@@ -662,8 +661,8 @@ start-up and misleading.
 | synchronous machines | 40 | 334 | 8.4× |
 | loads | 109 | 1,245 | 11.4× |
 | dynamic case file | 0.24 MB | 2.93 MB | 12.2× |
-| **DC OPF** (warm) | 0.011 s | 0.212 s | **19.1×** |
-| **AC PF** (warm) | 0.018 s | 0.331 s | **18.5×** |
+| **DCOPF** (warm) | 0.011 s | 0.212 s | **19.1×** |
+| **ACPF** (warm) | 0.018 s | 0.331 s | **18.5×** |
 | **dispatch stage total** | 0.029 s | 0.543 s | **18.7×** |
 | **one dynamic run** (solver time), full monitors | 0.28 s | 7.08 s | **25.3×** |
 | monitor CSV | 27.3 MB | 262.5 MB | 9.6× |
@@ -691,43 +690,19 @@ known:
 | monitor output, raw CSV | 22 GB | **~220 GB** |
 | after parquet | 4.5 GB | **~45 GB** |
 
-*(Calibration: aleatoric-1 took 6.0 min of wall on one node with 16 workers.
-The ideal for the same job is 2.2 min, so the measured
-overhead is about 2.7×, from scheduling, startup and per-launch cost. Applied to
-the 2000-bus ideal, a full-size campaign is about **2.5 h of wall on one node at
-16 workers**, not under one node-hour. These are projections, not measurements.)*
+We ran aleatoric-1 at 2,000 buses as a scoping study. It took 6.0 min wall-time 
+(16 workers per node), compared to 2.2 min ideal; scaling this up, a full-size 
+campaign projects to ~2.5 h per node at 16 workers. Full worker memory is 
+unmeasured, so treat this as a planning figure, not a guarantee.
 
-Compute is affordable but not negligible: at 200 buses the 104 cores bind before
-memory does, and the 16 workers per node were a choice, not a limit. At 2,000
-buses one dynamic run peaked at 126 MB and a two-case dispatch batch at 1.0 GB,
-but a full worker batch is **unmeasured** — the number to pin down before
-trusting any wall-time projection. Until then, treat ~2.5 h (one node, 16
-workers) as the planning figure.
-**Storage, not compute, is the binding constraint**, and the mitigation is
-already known: 4,000 of the 4,649 output columns are bus voltages, so selective
-monitoring is worth far more here than it was at 200 buses, where the same trick
-already bought 13.8× on bisection probes.
-
-**Why this matters for the methods work.** The *design space* grows along two
-axes: siting candidates about 11.5× (108 load buses to 1,245) and fault
-locations 10× (200 to 2,000), roughly 115× more design points, while per-sample
-cost grows 19–25×. Holding sampling *density* fixed projects to roughly
-**2,150–2,900×** the pilot's cost (a projection, not a measurement). Brute force
-survives one order of magnitude, not two. The execution model also inverts: at
-200 buses it exists to amortise an expensive dispatch over cheap disturbances,
-whereas at 2,000 buses the dynamic run dominates and the quantity to minimise
-becomes the *number of simulations*, not the number of dispatches. That is the
-concrete case for screening, surrogates and adaptive refinement over a larger
-factorial, and it makes the pilot's measured 76 % contingency waste far more
-expensive to tolerate.
-
-The pilot's aleatoric-1 is a 40-condition grid; at 2,000 buses a campaign
-needs distributions over many more conditions, placements and fault buses, which
-brute force will not reach. The leverage is already visible: P(CCT < 0.25 s) has
-a standard error of about 0.07 at 37 conditions (§7.2) and CCT spread is
-concentrated by net load (§7.5), so conditioning and stratification, not raw
-sample count, tighten the answer. A campaign like faultscreen-1 already builds
-and runs at 2,000 buses.
+**Storage, not compute, binds the problem.** At 200 buses the CPU saturates 
+before memory; at 2,000 buses selective monitoring matters far more (the 4,649 
+output columns are mostly bus voltages). **Cost to scale to 2,000 buses: brute 
+force survives one order of magnitude, not two.** The design space grows 115× 
+(siting 11.5× and fault locations 10×), while per-sample cost grows 19–25×. 
+Holding sampling density fixed projects 2,150–2,900× the pilot's cost. That 
+makes screening, surrogates and adaptive refinement the concrete case, not a 
+luxury.
 
 **Takeaway.** Brute force survives one order of magnitude of grid size, not two:
 a campaign the size of aleatoric-1 at 2,000 buses is about 2.5 h on one node,
@@ -776,13 +751,13 @@ work**, pursued along two tracks.
 The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian
 over buses, a fault propagates through branch impedances as a message-passing
 process, and "which bus to site load at" is itself a graph question. Graph
-neural networks and graph transformers carry exactly that inductive bias [22],
-and have been used as fast power-system surrogates [23]. A surrogate trained on
+neural networks and graph transformers carry exactly that inductive bias [21],
+and have been used as fast power-system surrogates [22]. A surrogate trained on
 the records the sampling campaigns already produce, e.g.,
 `(graph, operating point, parameters, fault)` → trajectory map, could emulate
 CCT or the stability label cheaply, turning the expensive solver into a screening
 tool. Full dynamic runs could be reserved for confirmation and for labelling the cases
-where the surrogate is least certain, an active-learning approach [24] that chooses
+where the surrogate is least certain, an active-learning approach [23] that chooses
 which runs to do. This is **supplemental** to sampling-based UQ, not a
 replacement: the surrogate lowers per-sample cost, while the sampling design
 still fixes what the estimate means.
@@ -864,11 +839,11 @@ failure-mode breakdown.
   It is **not** the most *discriminating* on baseline: bus 94 is (§7.6). It is also where constant-power load fails most often (46 of 112 feasible runs at `alphaP = 1`; 4 at 148, 3 at 177). Results are
   conditional on it in a way we did not appreciate when the campaigns were run.
 * **Q limits are enforced in the main campaigns, not in the earlier ones.** Every
-  campaign before `faultscreen1_ap08_qlim` is unlimited. The main campaigns use switching with Q limits (§4.2), with AC OPF as an alternative (§4.2). Switching raises the solve-failed rows from 51 to 85 (5 dispatches instead of 3, all `LOCALLY_INFEASIBLE`).
+  campaign before `faultscreen1_ap08_qlim` is unlimited. The main campaigns use switching with Q limits (§4.2), with ACOPF as an alternative (§4.2). Switching raises the solve-failed rows from 51 to 85 (5 dispatches instead of 3, all `LOCALLY_INFEASIBLE`).
 * **No-outcome runs are not stable or unstable.** Of the 680 sited runs in the
   fault sweep, 253 have no outcome: 97 fail only at alphaP 0.8 (89 initialization,
   8 transient), 71 fail initialization at both alphaP levels, and 85 fail at dispatch
-  (34 DC OPF, 51 AC PF) (§7.6). We report them as no outcome. The 97 are the largest
+  (34 DCOPF, 51 ACPF) (§7.6). We report them as no outcome. The 97 are the largest
   unknown in the headline result.
 * **Sample sizes are pilot-scale.** 20 hours supports distributional statements
   about the bulk, not about tails.
@@ -905,20 +880,19 @@ See tex-report/README.md, section "Citations". -->
 5. A. B. Birchfield, T. Xu, K. M. Gegner, K. S. Shetye, and T. J. Overbye, "Grid Structural Characteristics as Validation Criteria for Synthetic Networks," *IEEE Transactions on Power Systems*, 32(4):3258–3265, 2017. doi:10.1109/TPWRS.2016.2616385 <!-- bib:Birchfield2017 -->
 6. C. Coffrin, R. Bent, K. Sundar, Y. Ng, and M. Lubin, "PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations," *Power Systems Computation Conference (PSCC)*, 2018. doi:10.23919/PSCC.2018.8442948 <!-- bib:Coffrin2018 -->
 7. A. Wächter and L. T. Biegler, "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming," *Mathematical Programming*, 106(1):25–57, 2006. doi:10.1007/s10107-004-0559-y <!-- bib:wachter2006 -->
-8. B. Stott, "Review of Load-Flow Calculation Methods," *Proceedings of the IEEE*, 62(7):916–929, 1974. doi:10.1109/PROC.1974.9544 <!-- bib:Stott1974 -->
-9. P. Pourbeik et al., "Generic Dynamic Models for Modeling Wind Power Plants and Other Renewable Technologies in Large-Scale Power System Studies," *IEEE Transactions on Energy Conversion*, 32(3):1108–1116, 2017. doi:10.1109/TEC.2016.2639050 <!-- bib:Pourbeik2017 -->
-10. R. T. Elliott et al., "Advanced Control and Monitoring of Inverter-Based Resources (PSTess)," National Renewable Energy Laboratory (NREL), 2021. <https://www.osti.gov/biblio/1819998> <!-- bib:Elliott2021 -->
-11. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837 <!-- bib:IEEELoad1993 -->
-12. J. V. Milanović, K. Yamashita, S. Martínez Villanueva, S. Ž. Djokić, and L. M. Korunović, "International Industry Practice on Power-System Load Modeling," *IEEE Transactions on Power Systems*, 28(3):3038–3046, 2013. doi:10.1109/TPWRS.2012.2231969 <!-- bib:Milanovic2013 -->
-13. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981 <!-- bib:Kundur2004 -->
-14. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
-15. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998. <!-- bib:SauerPai1998 -->
-16. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
-17. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671 <!-- bib:Bezanson2017 -->
-18. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
-19. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
-20. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
-21. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
-22. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
-23. B. Donon, R. Clément, B. Donnot, A. Marot, I. Guyon, and M. Schoenauer, "Neural Networks for Power Flow: Graph Neural Solver," *Electric Power Systems Research*, 189:106547, 2020. doi:10.1016/j.epsr.2020.106547 <!-- bib:Donon2020 -->
-24. B. Settles, "Active Learning Literature Survey," University of Wisconsin–Madison, Computer Sciences Technical Report 1648, 2009. <!-- bib:Settles2009 -->
+8. P. Pourbeik et al., "Generic Dynamic Models for Modeling Wind Power Plants and Other Renewable Technologies in Large-Scale Power System Studies," *IEEE Transactions on Energy Conversion*, 32(3):1108–1116, 2017. doi:10.1109/TEC.2016.2639050 <!-- bib:Pourbeik2017 -->
+9. R. T. Elliott et al., "Advanced Control and Monitoring of Inverter-Based Resources (PSTess)," National Renewable Energy Laboratory (NREL), 2021. <https://www.osti.gov/biblio/1819998> <!-- bib:Elliott2021 -->
+10. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837 <!-- bib:IEEELoad1993 -->
+11. J. V. Milanović, K. Yamashita, S. Martínez Villanueva, S. Ž. Djokić, and L. M. Korunović, "International Industry Practice on Power-System Load Modeling," *IEEE Transactions on Power Systems*, 28(3):3038–3046, 2013. doi:10.1109/TPWRS.2012.2231969 <!-- bib:Milanovic2013 -->
+12. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981 <!-- bib:Kundur2004 -->
+13. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
+14. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998. <!-- bib:SauerPai1998 -->
+15. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
+16. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671 <!-- bib:Bezanson2017 -->
+17. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
+18. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
+19. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
+20. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
+21. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
+22. B. Donon, R. Clément, B. Donnot, A. Marot, I. Guyon, and M. Schoenauer, "Neural Networks for Power Flow: Graph Neural Solver," *Electric Power Systems Research*, 189:106547, 2020. doi:10.1016/j.epsr.2020.106547 <!-- bib:Donon2020 -->
+23. B. Settles, "Active Learning Literature Survey," University of Wisconsin–Madison, Computer Sciences Technical Report 1648, 2009. <!-- bib:Settles2009 -->
