@@ -7,13 +7,12 @@
 #pragma once
 
 #include <cmath>
+#include <concepts>
 #include <format>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
 #include <variant>
-
-#include <magic_enum/magic_enum.hpp>
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/Utilities/Enum.hpp>
@@ -63,7 +62,12 @@ namespace GridKit
       }
 
       /// Read an optional real parameter or initial value.
+      // TODO: Unlike `ParametersT`, the initial values enum is not a class-level alias because the
+      // Optimal Power Flow model data does not define initial values yet. Once it does, add
+      // `InitialValues` to `ParameterData`, introduce an `InitialValuesT` alias, and replace this
+      // constrained template with plain `ParametersT` and `InitialValuesT` overloads.
       template <typename KeyT>
+        requires std::same_as<KeyT, ParametersT> || std::same_as<KeyT, typename ModelDataT::InitialValues>
       [[nodiscard]] std::optional<RealT> readReal(KeyT key) const
       {
         const auto* value = find(key);
@@ -133,8 +137,12 @@ namespace GridKit
       }
 
       /// The provided value, or nullptr when the initial value is omitted.
-      template <typename KeyT>
-      const ValueT* find(KeyT key) const
+      // TODO: `InitialValuesT` is a constrained template parameter, not a class-level alias like
+      // `ParametersT`, until the Optimal Power Flow model data supports initial values. Then make
+      // this a plain `find(InitialValuesT)` overload.
+      template <typename InitialValuesT>
+        requires std::same_as<InitialValuesT, typename ModelDataT::InitialValues>
+      const ValueT* find(InitialValuesT key) const
       {
         const auto entry = data_.initial_values.find(key);
         if (entry == data_.initial_values.end())
@@ -164,11 +172,23 @@ namespace GridKit
       }
 
       /// Reject the model data with a message naming the model and parameter.
-      template <typename KeyT>
-      [[noreturn]] void reject(KeyT key, std::string_view reason) const
+      [[noreturn]] void reject(ParametersT key, std::string_view reason) const
       {
-        throw std::invalid_argument(
-            std::format("{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason));
+        reject("parameter", Utilities::enum_name(key), reason);
+      }
+
+      /// Reject the model data with a message naming the model and initial value.
+      template <typename InitialValuesT>
+        requires std::same_as<InitialValuesT, typename ModelDataT::InitialValues>
+      [[noreturn]] void reject(InitialValuesT key, std::string_view reason) const
+      {
+        reject("initial value", Utilities::enum_name(key), reason);
+      }
+
+      /// Reject the model data with a message naming the model, the kind of entry, and its name.
+      [[noreturn]] void reject(std::string_view kind, std::string_view name, std::string_view reason) const
+      {
+        throw std::invalid_argument(std::format("{}: {} '{}' {}", model_, kind, name, reason));
       }
 
       const ModelDataT& data_;
