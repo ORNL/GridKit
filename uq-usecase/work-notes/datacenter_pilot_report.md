@@ -31,10 +31,10 @@ Two deliverables, one study:
 The vehicle is a central interconnection question [3]:
 
 > **Where, and how much, large datacenter load can be added before dynamic
-> security degrades — given that renewable output makes system inertia vary
+> security degrades — given that IBR output makes system inertia vary
 > hour to hour?** [4]
 
-This is a pilot. The grid is small, the contingency set is narrow, and several
+This is a pilot study. The grid is small, the contingency set is narrow, and several
 conclusions are bounded by model validity. The point is to establish the
 machinery and learn where the difficulty lives.
 
@@ -268,7 +268,7 @@ changes only reactive power.
 ### 4.3 Wind becomes negative load
 
 Wind units are removed as synchronous machines (`Genrou`) and re-inserted as a
-**negative load** at their own bus, modelled as constant current. Left as
+**negative load** at their own bus, modeled as constant current. Left as
 synchronous machines, they could contribute **up to 2,766 MW·s** of inertia at
 their ratings (sum over the 6 wind units of inertia constant × rating), whatever
 the wind output, and inertia is what the study varies.
@@ -285,13 +285,13 @@ injection scales with `|V|`, which is constant current.
 
 > **Details:** [wind pipeline, function by function](datacenter_load_uq_plan.md#pipeline-trace-one-wind-unit-one-hour) · [wind: why negative load, not fixed](datacenter_load_uq_plan.md#3-wind-why-negative-load-not-fixed) · [implementation](datacenter_load_uq_plan.md#implementation) · ["net load" is an aggregate, not a per-bus subtraction](datacenter_load_uq_plan.md#net-load-is-an-aggregate-not-a-per-bus-subtraction)
 
-**Why it is acceptable.** Converter-interfaced generation is modelled in
+**Why it is acceptable.** Converter-interfaced generation is modeled in
 positive-sequence transient stability as a controllable current source [8]. The
 Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
 interface is "a controllable current source" [9]. A constant-current
 load is a simple stand-in for that current injection.
 
-> **Implementation note:** The ACTIVSg200 case lacks native renewable energy converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models—specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)—which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
+> **Implementation note:** The ACTIVSg200 case lacks native wind/PV converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models—specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)—which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
 
 ### 4.4 The datacenter
 
@@ -306,9 +306,8 @@ the committed fleet could be too small to serve it or larger than needed.
 
 **It gets its own load device, with its own voltage behaviour.** Load in these
 cases is represented by a **ZIP model** [10], which splits demand into three parts by
-how each responds when voltage sags: a constant-**impedance** part (falls as
-$V^2$), a constant-**current** part (falls as $V$), and a constant-**power**
-part (does not fall at all). The split is written here as P/I/Z percentages.
+how each responds when voltage sags: a constant-**impedance** part (**power proportional to $V^2$**), a constant-**current** part (**power proportional to $V$**), and a constant-**power**
+part (**constant regardless of voltage**). The split is written here as P/I/Z percentages.
 
 The distinction is the physical reason a datacenter is interesting. Ordinary
 constant-impedance load *sheds itself* during a voltage dip and helps the system

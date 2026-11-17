@@ -15,10 +15,10 @@ Two deliverables, one study:
 The vehicle is a central interconnection question \cite{Shehabi2024}:
 
 \begin{quote}
-\textbf{Where, and how much, large datacenter load can be added before dynamic security degrades --- given that renewable output makes system inertia vary hour to hour?} \cite{Milano2018}
+\textbf{Where, and how much, large datacenter load can be added before dynamic security degrades --- given that IBR output makes system inertia vary hour to hour?} \cite{Milano2018}
 \end{quote}
 
-This is a pilot. The grid is small, the contingency set is narrow, and several conclusions are bounded by model validity. The point is to establish the machinery and learn where the difficulty lives.
+This is a pilot study. The grid is small, the contingency set is narrow, and several conclusions are bounded by model validity. The point is to establish the machinery and learn where the difficulty lives.
 
 \subsection{Glossary}
 \label{uqp:2}
@@ -162,16 +162,16 @@ We also tested \ac{acopf}, which enforces Q limits as constraints. It was not ad
 \subsubsection{Wind becomes negative load}
 \label{uqp:4.3}
 
-Wind units are removed as synchronous machines (\texttt{Genrou}) and re-inserted as a \textbf{negative load} at their own bus, modelled as constant current. Left as synchronous machines, they could contribute \textbf{up to 2,766 MW$\cdot$s} of inertia at their ratings (sum over the 6 wind units of inertia constant $\times$ rating), whatever the wind output, and inertia is what the study varies. A constant-power stand-in made the simulation fail at high wind penetration.
+Wind units are removed as synchronous machines (\texttt{Genrou}) and re-inserted as a \textbf{negative load} at their own bus, modeled as constant current. Left as synchronous machines, they could contribute \textbf{up to 2,766 MW$\cdot$s} of inertia at their ratings (sum over the 6 wind units of inertia constant $\times$ rating), whatever the wind output, and inertia is what the study varies. A constant-power stand-in made the simulation fail at high wind penetration.
 
 \textbf{Implementation.} Hourly wind MW is pinned in the \ac{dcopf}, the \ac{acpf} solves its reactive output, and the solved P and Q are written into the negative load. In the dynamic case each wind unit's machine, governor and exciter models are removed and a load is added with \texttt{Pnom = -PG/100} and \texttt{Qnom = -QG/100} (per unit, 100 MVA base), all of it constant current. GridKit treats positive \texttt{Pnom} as consumed, so the negative value injects PG. At the initial voltage this reproduces the power-flow P and Q exactly; after that the injection scales with \texttt{|V|}, which is constant current.
 
-\textbf{Why it is acceptable.} Converter-interfaced generation is modelled in positive-sequence transient stability as a controllable current source \cite{Pourbeik2017}. The Sandia PSTess manual says that, \textit{"as in the WECC REGC\_A model"}, the converter interface is "a controllable current source" \cite{Elliott2021}. A constant-current load is a simple stand-in for that current injection.
+\textbf{Why it is acceptable.} Converter-interfaced generation is modeled in positive-sequence transient stability as a controllable current source \cite{Pourbeik2017}. The Sandia PSTess manual says that, \textit{"as in the WECC REGC\_A model"}, the converter interface is "a controllable current source" \cite{Elliott2021}. A constant-current load is a simple stand-in for that current injection.
 
 \par\vspace{0.4em}
 \noindent\fbox{\parbox[t]{0.98\textwidth}{%
 \setlength{\parskip}{0pt}%
-\textbf{Implementation note:} The ACTIVSg200 case lacks native renewable energy converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models---specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)---which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
+\textbf{Implementation note:} The ACTIVSg200 case lacks native wind/PV converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models---specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)---which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
 }}
 \vspace{0.2em}
 
@@ -182,7 +182,7 @@ A datacenter is represented as \textbf{additional electrical load placed at one 
 
 \textbf{It is added before dispatch, not after.} The load enters the network data that the optimiser sees, so the commitment and the dispatch must produce and deliver the extra power. If it were added after dispatch, neither the commitment nor the OPF would see it: the power flow would have the slack bus supply it, and the committed fleet could be too small to serve it or larger than needed.
 
-\textbf{It gets its own load device, with its own voltage behaviour.} Load in these cases is represented by a \textbf{ZIP model} \cite{IEEELoad1993}, which splits demand into three parts by how each responds when voltage sags: a constant-\textbf{impedance} part (falls as $V^2$), a constant-\textbf{current} part (falls as $V$), and a constant-\textbf{power} part (does not fall at all). The split is written here as P/I/Z percentages.
+\textbf{It gets its own load device, with its own voltage behaviour.} Load in these cases is represented by a \textbf{ZIP model} \cite{IEEELoad1993}, which splits demand into three parts by how each responds when voltage sags: a constant-\textbf{impedance} part (\textbf{power proportional to $V^2$}), a constant-\textbf{current} part (\textbf{power proportional to $V$}), and a constant-\textbf{power} part (\textbf{constant regardless of voltage}). The split is written here as P/I/Z percentages.
 
 The distinction is the physical reason a datacenter is interesting. Ordinary constant-impedance load \textit{sheds itself} during a voltage dip and helps the system recover. Datacenter load is fed through rectifiers and \ac{ups} units and behaves far closer to constant power \cite{Milanovic2013}: it keeps demanding the same megawatts at reduced voltage, which means drawing more current, which depresses voltage further. If the new load were simply folded into the load already at the bus, it would inherit that load's helpful constant-impedance behaviour and the study would measure the wrong thing. So the datacenter gets a \textbf{separate} load device, and the existing load at the bus is left as it was. Every existing load in the case is pure constant impedance.
 
