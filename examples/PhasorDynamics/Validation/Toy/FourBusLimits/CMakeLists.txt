@@ -1,4 +1,5 @@
 gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/FourBusLimits.case.json)
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/FourBusLimits.state.json)
 gridkit_example_add_file(FourBusLimits.solver.json)
 add_subdirectory(reference)
 

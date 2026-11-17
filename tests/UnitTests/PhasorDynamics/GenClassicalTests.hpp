@@ -37,19 +37,21 @@ namespace GridKit
 
       static GenClassicalDataT makeGenClassicalData()
       {
-        using Parameter = typename GenClassicalDataT::Parameters;
-        using Buses     = typename GenClassicalDataT::Buses;
+        using Parameter    = typename GenClassicalDataT::Parameters;
+        using InitialValue = typename GenClassicalDataT::InitialValues;
+        using Buses        = typename GenClassicalDataT::Buses;
 
         GenClassicalDataT data;
         data.device_class               = "GenClassical";
         data.disambiguation_string      = "1";
         data.buses[Buses::bus]          = 1;
-        data.parameters[Parameter::p0]  = RealT{1.0};
-        data.parameters[Parameter::q0]  = RealT{0.0};
         data.parameters[Parameter::H]   = RealT{0.5};
         data.parameters[Parameter::D]   = RealT{0.0};
         data.parameters[Parameter::Ra]  = RealT{0.0};
         data.parameters[Parameter::Xdp] = RealT{0.5};
+
+        data.initial_values[InitialValue::ir] = RealT{1.0};
+        data.initial_values[InitialValue::ii] = RealT{0.0};
 
         return data;
       }
@@ -86,15 +88,17 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        using Parameter = typename GenClassicalDataT::Parameters;
+        using Parameter    = typename GenClassicalDataT::Parameters;
+        using InitialValue = typename GenClassicalDataT::InitialValues;
 
         auto data                       = makeGenClassicalData();
-        data.parameters[Parameter::p0]  = RealT{3.0};
-        data.parameters[Parameter::q0]  = RealT{-1.0};
         data.parameters[Parameter::H]   = RealT{1.0};
         data.parameters[Parameter::D]   = RealT{1.0};
         data.parameters[Parameter::Ra]  = RealT{0.1};
         data.parameters[Parameter::Xdp] = RealT{2.3};
+
+        data.initial_values[InitialValue::ir] = RealT{1.0};
+        data.initial_values[InitialValue::ii] = RealT{2.0};
 
         const std::vector<ScalarT> var_answer = {
             3.0 * std::numbers::pi_v<RealT> / 4.0, // delta
@@ -176,15 +180,17 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        using Parameter = typename GenClassicalDataT::Parameters;
+        using Parameter    = typename GenClassicalDataT::Parameters;
+        using InitialValue = typename GenClassicalDataT::InitialValues;
 
         auto data                       = makeGenClassicalData();
-        data.parameters[Parameter::p0]  = RealT{3.0};
-        data.parameters[Parameter::q0]  = RealT{-1.0};
         data.parameters[Parameter::H]   = RealT{1.0};
         data.parameters[Parameter::D]   = RealT{1.0};
         data.parameters[Parameter::Ra]  = RealT{0.6};
         data.parameters[Parameter::Xdp] = RealT{0.2};
+
+        data.initial_values[InitialValue::ir] = RealT{1.0};
+        data.initial_values[InitialValue::ii] = RealT{2.0};
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 1.0);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
@@ -334,7 +340,7 @@ namespace GridKit
         gen.initialize();
         gen.evaluateResidual();
 
-        // With Ra = 0 the seeded system-base mechanical power equals p0.
+        // With Ra = 0 the seeded system-base mechanical power equals the terminal power.
         success *= isEqual(speed.read(), 0.0, tol_);
         success *= isEqual(pmech.read(), 1.0, tol_);
         success *= isEqual(efd.read(), std::sqrt(RealT{2.0}), tol_);
@@ -360,8 +366,6 @@ namespace GridKit
         using Inputs    = PhasorDynamics::GenClassicalSignalInputs;
 
         auto data                       = makeGenClassicalData();
-        data.parameters[Parameter::p0]  = RealT{1.0};
-        data.parameters[Parameter::q0]  = RealT{1.0};
         data.parameters[Parameter::H]   = RealT{0.5};
         data.parameters[Parameter::D]   = RealT{-1.0};
         data.parameters[Parameter::Ra]  = RealT{0.5};

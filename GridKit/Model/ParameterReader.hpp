@@ -57,13 +57,14 @@ namespace GridKit
        * @param[in] model Model name used in rejection messages.
        */
       ParameterReader(const ModelDataT& data, const char* model)
-        : parameters_(data.parameters),
+        : data_(data),
           model_(model)
       {
       }
 
-      /// Read an optional real parameter.
-      [[nodiscard]] std::optional<RealT> readReal(ParametersT key) const
+      /// Read an optional real parameter or initial value.
+      template <typename KeyT>
+      [[nodiscard]] std::optional<RealT> readReal(KeyT key) const
       {
         const auto* value = find(key);
         if (value == nullptr)
@@ -123,8 +124,20 @@ namespace GridKit
       /// The provided value, or nullptr when the parameter is omitted.
       const ValueT* find(ParametersT key) const
       {
-        const auto entry = parameters_.find(key);
-        if (entry == parameters_.end())
+        const auto entry = data_.parameters.find(key);
+        if (entry == data_.parameters.end())
+        {
+          return nullptr;
+        }
+        return &entry->second;
+      }
+
+      /// The provided value, or nullptr when the initial value is omitted.
+      template <typename KeyT>
+      const ValueT* find(KeyT key) const
+      {
+        const auto entry = data_.initial_values.find(key);
+        if (entry == data_.initial_values.end())
         {
           return nullptr;
         }
@@ -151,14 +164,15 @@ namespace GridKit
       }
 
       /// Reject the model data with a message naming the model and parameter.
-      [[noreturn]] void reject(ParametersT key, std::string_view reason) const
+      template <typename KeyT>
+      [[noreturn]] void reject(KeyT key, std::string_view reason) const
       {
         throw std::invalid_argument(
             std::format("{}: parameter '{}' {}", model_, magic_enum::enum_name(key), reason));
       }
 
-      const ParameterMapT& parameters_;
-      const char*          model_;
+      const ModelDataT& data_;
+      const char*       model_;
     };
   } // namespace Model
 } // namespace GridKit
