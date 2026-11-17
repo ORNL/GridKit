@@ -427,6 +427,7 @@ Resources, measured for aleatoric-2:
   Parquet rather than CSV (5.0× smaller).
 
 ```mermaid
+%%{init: {"fontSize": 22, "themeVariables": {"fontSize": "22px"}, "flowchart": {"nodeSpacing": 12, "rankSpacing": 14, "padding": 4}}}%%
 flowchart LR
     J[SLURM job: 1 node<br/>16 workers x 1 core] --> S[Worker: contiguous slice<br/>aleatoric 45-53 dispatches]
     S --> A[Stage A: one batched Julia pass<br/>170 s mean, 10-17 launches<br/>timing job]

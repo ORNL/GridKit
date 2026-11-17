@@ -1437,17 +1437,17 @@ def _mermaid_width_for(png_source, fallback):
     """Pick an \\includegraphics width fraction from a mermaid PNG's aspect ratio.
 
     Mermaid flowcharts render at a fixed small font, so wide (horizontal) diagrams
-    are illegible when shrunk. Give landscape diagrams the full text width; keep
+    are illegible when shrunk. Give landscape diagrams more width; keep
     portrait/square ones at the caller's smaller default so they don't overflow.
     """
     size = _png_size(str(png_source))
     if not size or not size[1]:
         return fallback
     ratio = size[0] / size[1]
-    if ratio >= 2.0:  # clearly horizontal → use all available width
-        return 1.0
+    if ratio >= 2.0:  # clearly horizontal → use wider width
+        return 0.85
     if ratio >= 1.3:  # mildly landscape
-        return max(fallback, 0.95)
+        return max(fallback, 0.80)
     if ratio < 1.0:  # portrait: keep the height on the page
         return min(fallback, 0.6)
     return fallback  # square → keep the narrower default
@@ -1511,8 +1511,9 @@ def _emit_figure_latex(png_filename, caption_md, width=0.75):
 
     Using plain text rather than \\caption avoids LaTeX auto-numbering, which does
     not match the manual 'Figure 7.2' style used throughout the report.
+    Uses [H] from placeins to anchor figures in their subsections (prevents float deferral).
     """
-    latex = r"\begin{figure}[htb]" + "\n"
+    latex = r"\begin{figure}[H]" + "\n"
     latex += r"  \centering" + "\n"
     latex += (
         r"  \includegraphics[width="
@@ -1592,7 +1593,9 @@ def generate_latex_section_3(
 
         fig_label = generate_figure_label(section_num, caption_text)
 
-        fig_latex = generate_latex_figure_with_mermaid(mermaid_code, caption, fig_label)
+        fig_latex = generate_latex_figure_with_mermaid(
+            mermaid_code, caption, fig_label, width=0.45
+        )
         if fig_latex:  # Only add if figure was successfully found/copied
             latex_output += fig_latex + "\n"
 
@@ -2365,7 +2368,11 @@ def _emit_mermaid_from_caption(caption, section_num):
     caption_text = caption.replace("*", "").strip()
     caption_text = re.sub(r"^Figure\s+[\d.]+\.\s*", "", caption_text)
     fig_label = generate_figure_label(section_num, caption_text)
-    return generate_latex_figure_with_mermaid(None, caption, fig_label, width=0.72)
+    # Section 3 portrait diagrams should be smaller (0.45 fallback); others use 0.65
+    fallback_width = 0.45 if section_num == 3 else 0.65
+    return generate_latex_figure_with_mermaid(
+        None, caption, fig_label, width=fallback_width
+    )
 
 
 def markdown_section_body_to_latex(text, section_num):
@@ -2452,7 +2459,20 @@ def markdown_section_body_to_latex(text, section_num):
             if k < n and lines[k].strip().startswith("*") and "Figure" in lines[k]:
                 caption = lines[k].strip()
                 next_i = k + 1
-            fig = generate_latex_figure_image(path, caption)
+            # Reduce width for specific matplotlib figures
+            basename = Path(path).name
+            width = (
+                0.75
+                if any(
+                    x in basename
+                    for x in [
+                        "main_aleatoric_km_simple",
+                        "main_aleatoric_km_by_netload",
+                    ]
+                )
+                else 0.85
+            )
+            fig = generate_latex_figure_image(path, caption, width=width)
             if fig:
                 out.append(fig)
             i = next_i
