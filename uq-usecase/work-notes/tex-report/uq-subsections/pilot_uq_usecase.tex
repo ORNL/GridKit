@@ -213,7 +213,7 @@ and a run is declared unstable when any machine leaves that collective frame:
 
 
 \[
-\max_{i,\,t} \bigl| \delta_i(t) - \delta_{COI}(t) \bigr| > 180^{\circ}
+\max_{i,\,t} \bigl| \delta_i(t) - \delta_{COI}(t) \bigr| > \pi
 \]
 
 Every symbol maps to a GridKit name or to a derived quantity:
@@ -229,10 +229,10 @@ Every symbol maps to a GridKit name or to a derived quantity:
     $i$ & one of the 26 Genrou machines in ACTIVSg200 & \texttt{Genrou} device \texttt{id}, e.g. \texttt{49\_\allowbreak{}1\_\allowbreak{}genrou} \\
     $H_i$ & inertia constant, in s & \texttt{H} in \texttt{params} of device $i$ in \texttt{case.json} \\
     $S_i$ & machine MVA base & \texttt{mva} in \texttt{params} of device $i$ in \texttt{case.json} \\
-    $\delta_i(t)$ & rotor angle of machine $i$ & Genrou state \texttt{delta} (radians), monitor column \texttt{Genrou\_\allowbreak{}<device id>\_\allowbreak{}delta}, e.g. \texttt{Genrou\_\allowbreak{}49\_\allowbreak{}1\_\allowbreak{}genrou\_\allowbreak{}delta}; converted to degrees \\
+    $\delta_i(t)$ & rotor angle of machine $i$, in radians & Genrou state \texttt{delta}, monitor column \texttt{Genrou\_\allowbreak{}<device id>\_\allowbreak{}delta}, e.g. \texttt{Genrou\_\allowbreak{}49\_\allowbreak{}1\_\allowbreak{}genrou\_\allowbreak{}delta} \\
     $t$ & simulation time, in s & \texttt{t} column of the monitor CSV \\
-    $\delta_{COI}(t)$ & centre-of-inertia angle, in degrees & not a model parameter; computed from the weights $H_i S_i / \sum_j H_j S_j$ (\texttt{\_\allowbreak{}coi\_\allowbreak{}weights}, \texttt{is\_\allowbreak{}unstable} in \texttt{py-utils/campaign.py}) \\
-    $180^{\circ}$ & pole-slip threshold & \texttt{pole\_\allowbreak{}slip\_\allowbreak{}deg} in \texttt{is\_\allowbreak{}unstable}; not a model parameter \\
+    $\delta_{COI}(t)$ & centre-of-inertia angle, in radians & not a model parameter; computed from the weights $H_i S_i / \sum_j H_j S_j$ (\texttt{\_\allowbreak{}coi\_\allowbreak{}weights}, \texttt{is\_\allowbreak{}unstable} in \texttt{py-utils/campaign.py}) \\
+    $\pi$ & pole-slip threshold & \texttt{pole\_\allowbreak{}slip\_\allowbreak{}deg} = 180 (degrees) in \texttt{is\_\allowbreak{}unstable}, applied after \texttt{np.rad2deg}; not a model parameter \\
 \bottomrule
 \end{tabularx}
 \par}
@@ -249,6 +249,15 @@ The bisected variable is the fault duration. The fault is applied at \texttt{t\_
 \end{itemize}
 
 The cap at 0.5 s is deliberate. On power grids, primary protection clears faults in ~0.05--0.10 s, with backup protection clearing in ~0.25--0.50 s. Any fault duration beyond this window is not a contingency that protection schemes permit, so outcomes beyond the cap are \textbf{reported as censored}. The cap can be adjusted if necessary in other context.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figs/uq-pilot/delta_unstable_vs_censored.png}
+  \par\vspace{0.4em}
+  {\small Figure 5.1. Rotor-angle deviation from COI for one unstable sample (top) and one censored sample (bottom), both aleatoric-1 baseline (no datacenter), re-simulated from the stored case files with the campaign's runner, on a shared time axis. Orange: fault on (0.25 s top, 0.5 s bottom). Top: the red trace passes $\pi$ (dotted line), a pole slip, and keeps growing, so the machine loses synchronism. Bottom: the red trace peaks at $0.47\pi$ and never reaches $\pi$, so the system recovers within the 10 s run. Grey: each machine's $\delta_i - \delta_{COI}$. Red: maximum over machines of $|\delta_i - \delta_{COI}|$ (the machine can change). Dashed: $\pm\pi$, the pole-slip threshold.}
+\end{figure}
+
 
 The bisection probes write only the \texttt{delta} channels, not the full monitor set: that cut probe output from 26.25 MB to 1.91 MB per probe (\textbf{13.8$\times$}) with the resulting \ac{cct} \textbf{identical} (0.2891 both ways).
 

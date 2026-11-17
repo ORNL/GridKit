@@ -381,7 +381,7 @@ if necessary in other context.
 
 ![unstable and censored samples, rotor-angle deviation from COI](figures/delta_unstable_vs_censored.png)
 
-*Figure 5.1. Rotor-angle deviation from COI for one unstable sample (top) and one censored sample (bottom), both aleatoric-1 baseline (no datacenter), re-simulated from the stored case files with the campaign's runner, on a shared time axis. Orange: fault on (0.25 s top, 0.5 s bottom). Top: the red trace passes π (dotted line), a pole slip, and keeps growing, so the machine loses synchronism. Bottom: the red trace peaks at 0.47π and never reaches π, so the system recovers within the 10 s run. Grey: each machine's δᵢ − δ_COI. Red: maximum over machines of |δᵢ − δ_COI| (the machine can change). Dashed: ±π, the pole-slip threshold.*
+*Figure 5.1. Rotor-angle deviation from COI for one unstable sample (top) and one censored sample (bottom), both aleatoric-1 baseline (no datacenter), re-simulated from the stored case files with the campaign's runner, on a shared time axis. Orange: fault on (0.25 s top, 0.5 s bottom). Top: the red trace passes $\pi$ (dotted line), a pole slip, and keeps growing, so the machine loses synchronism. Bottom: the red trace peaks at $0.47\pi$ and never reaches $\pi$, so the system recovers within the 10 s run. Grey: each machine's $\delta_i - \delta_{COI}$. Red: maximum over machines of $|\delta_i - \delta_{COI}|$ (the machine can change). Dashed: $\pm\pi$, the pole-slip threshold.*
 
 The bisection probes write only the `delta` channels, not the full monitor set:
 that cut probe output from 26.25 MB to 1.91 MB per probe (**13.8×**) with the
