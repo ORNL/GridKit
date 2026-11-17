@@ -1,0 +1,167 @@
+{
+  "header": {
+    "format_version": 0.2,
+    "format_revision": 0,
+    "case_name": "IEEE39Generator",
+    "case_description": "IEEE39 case generator partition at bus 39",
+    "case_comments": ""
+  },
+  "params": {
+    "freq_base": 60.0,
+    "va_base": 100000000.0
+  },
+  "buses": [
+    {
+      "number": 39,
+      "class": "SignalVoltageIn",
+      "name": "39",
+      "init": {
+        "Vr": 1.014553036142942,
+        "Vi": -0.1777134713972648
+      },
+      "params": {
+        "kv": 1.0
+      },
+      "mon": [
+        "Vm"
+      ],
+      "ports_in": {
+        "vr": 30,
+        "vi": 31
+      },
+      "ports_out": {
+        "ir": 32,
+        "ii": 33
+      }
+    }
+  ],
+  "signals": [
+    {
+      "signal_id": 27,
+      "name": "39_1_efd"
+    },
+    {
+      "signal_id": 28,
+      "name": "39_1_speed"
+    },
+    {
+      "signal_id": 29,
+      "name": "39_1_vs"
+    },
+    {
+      "signal_id": 30,
+      "name": "vr"
+    },
+    {
+      "signal_id": 31,
+      "name": "vi"
+    },
+    {
+      "signal_id": 32,
+      "name": "ir"
+    },
+    {
+      "signal_id": 33,
+      "name": "ii"
+    }
+  ],
+  "devices": [
+    {
+      "class": "Genrou",
+      "id": "39_1_genrou",
+      "ports": {
+        "bus": 39,
+        "efd": 27,
+        "speed": 28
+      },
+      "params": {
+        "p0": 10.0,
+        "q0": 0.7360381484031677,
+        "H": 25.0,
+        "D": 0.0,
+        "Ra": 0.0,
+        "Tdop": 7.0,
+        "Tdopp": 0.05000000074505806,
+        "Tqop": 0.699999988079071,
+        "Tqopp": 0.03500000014901161,
+        "Xd": 0.4000000059604645,
+        "Xdp": 0.11999999731779099,
+        "Xdpp": 0.07999999821186066,
+        "Xq": 0.3799999952316284,
+        "Xqp": 0.1599999964237213,
+        "Xqpp": 0.07999999821186066,
+        "Xl": 0.05999999865889549,
+        "S10": 0.0,
+        "S12": 0.0,
+        "mva": 2000.0
+      },
+      "mon": [
+        "omega"
+      ]
+    },
+    {
+      "class": "Esdc1a",
+      "id": "39_1_esdc1a",
+      "ports": {
+        "bus": 39,
+        "speed": 28,
+        "vs": 29,
+        "efd": 27
+      },
+      "params": {
+        "Tr": 0.009999999776482582,
+        "Ka": 200.0,
+        "Ta": 0.014999999664723873,
+        "Tb": 10.0,
+        "Tc": 1.0,
+        "Vrmax": 5.0,
+        "Vrmin": -5.0,
+        "Ke": 1.0,
+        "Te": 0.009999999776482582,
+        "Kf": 0.0,
+        "Tf1": 0.009999999776482582,
+        "Spdmlt": false,
+        "E1": 0.0,
+        "Se1": 0.0,
+        "E2": 0.0,
+        "Se2": 0.0,
+        "UEL": 2,
+        "exclim": false
+      }
+    },
+    {
+      "class": "Ieeest",
+      "id": "39_1_ieeest",
+      "ports": {
+        "input": 28,
+        "output": 29
+      },
+      "params": {
+        "A1": 0.0,
+        "A2": 0.0,
+        "A3": 0.0,
+        "A4": 0.0,
+        "A5": 0.0,
+        "A6": 0.0,
+        "T1": 5.0,
+        "T2": 0.6000000238418579,
+        "T3": 3.0,
+        "T4": 0.5,
+        "T5": 10.0,
+        "T6": 10.0,
+        "Ks": 1.0,
+        "Lsmin": -0.20000000298023224,
+        "Lsmax": 0.20000000298023224,
+        "Vcl": 0.0,
+        "Vcu": 0.0,
+        "Tdelay": 0.0
+      }
+    }
+  ],
+  "monitors": [
+    {
+      "file_name": "IEEE39Generator.csv",
+      "format": "csv"
+    }
+  ]
+}
