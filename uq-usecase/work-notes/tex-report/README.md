@@ -185,12 +185,33 @@ INCLUDE_FOOTNOTES = True
 
 # Sections to OMIT from the report (the markdown keeps them). Inbound "§N"
 # references to a skipped section are cleaned up automatically.
-SKIP_SECTIONS = {10, 11}   # 10 = GridKit end-user feedback, 11 = Limitations
+SKIP_SECTIONS = {10, 11, 12}   # feedback, limitations, implementation
+
+# "> **Details:** [...](plan.md#...)" link boxes: kept in the markdown, dropped here.
+INCLUDE_DETAILS = False
+
+# Prose terms rendered as \ac{...} (first use spelled out, hyperlinked).
+ACRONYMS = [("DC OPF", r"\ac{dcopf}"), ("AC PF", r"\ac{acpf}"), ("CCT", r"\ac{cct}"), ...]
 ```
+
+**Markdown-only text.** Wrap anything that should stay in the markdown but not
+appear in the report in skip markers:
+
+```markdown
+<!-- tex:skip -->
+Run identifiers in the plan: aleatoric campaign 1 = `aleatoric1_ap08_qlim`, ...
+<!-- /tex:skip -->
+```
+
+**Acronyms.** Every key in `ACRONYMS` must exist in the report's
+`common/acronyms.tex`. Ours that the report lacked (`dcopf`, `acpf`, `cct`, `ups`)
+are in `chapters/uq-subsections/uq_pilot_acronyms.tex`; the local harness loads it,
+and on Overleaf its four `\newacronym` lines go into `common/acronyms.tex`.
+Headings and glossary labels use the plain short form (DCOPF, ACPF) instead.
 
 **Skip / un-skip a section.** Edit `SKIP_SECTIONS` near the top of
 `convert_pilot_report.py`, then re-run the converter. Examples:
-`{10, 11}` drops both; `{10}` brings Limitations back; `set()` keeps everything.
+`{10, 11, 12}` drops all three; `{10, 12}` brings Limitations back; `set()` keeps everything.
 
 **Adjust figure sizes.** Mermaid diagram widths are picked automatically from each
 PNG's aspect ratio in `_mermaid_width_for()` (search for that function):
@@ -203,8 +224,8 @@ return fallback                            # portrait/square   -> caller's defau
 
 To change a size, either tune those thresholds, or change the per-figure default
 width passed by the generators:
-- §4 mermaid diagrams: `generate_latex_section_4(...)` uses `width=0.95`.
-- body (§5–§12) mermaid diagrams: `_emit_mermaid_from_caption(...)` uses `0.72`.
+- mermaid diagrams (all sections): `_emit_mermaid_from_caption(...)` passes `0.72`;
+  wide ones are then widened to full width and portrait ones capped at `0.6`.
 - matplotlib plots (`main_*` KM figures): `generate_latex_figure_image(..., width=0.85)`.
   (These are not aspect-scaled — set their width directly.)
 
@@ -293,13 +314,10 @@ The main SciDAC report lives on Overleaf (`report` document class, plain BibTeX,
 `\bibliography{references.bib}`). The pilot is a self-contained chunk that is
 `\input` into `chapters/uq.tex`, under §9.1 (Modeling Aleatoric Uncertainties).
 
-**Numbering.** The pilot's title is a single *numbered* subsection —
-`\subsection{Pilot Study: Datacenter Load and Transient Security}` — so it gets a
-report ToC entry at `9.1.x` automatically. Every section inside (§2–§12,
-§7.0–§7.7) is a *starred* command with the manual number baked in
-(`\subsubsection*{7.0 ...}`), so LaTeX never renumbers those as `9.1.x.x`; the
-report shows our own numbering, which is exactly what the in-text cross-references
-(`§7.6`, `§4.2`, ...) point at.
+**Numbering.** Every heading is a *numbered* command, so the pilot renders as
+`9.1.1`, `9.1.2`, …, `9.1.7.3` with the report's own numbers. The markdown's manual
+numbers become labels (`§7.6` → `\label{uqp:7.6}`), and in-text references are
+printed as `Section~\ref{uqp:7.6}`, so they always match the printed heading.
 
 ### What to copy
 
@@ -377,6 +395,10 @@ Each run (re)writes a clean, self-contained copy to this folder:
 4. **Packages — nothing to add.** `common/header.tex` already loads `amsmath`,
    `amssymb`, `graphicx`, `booktabs`, `tabularx` (which pulls in `array`),
    `xcolor`, `placeins`, `lmodern`, `microtype`.
+
+   **Acronyms — one-time.** Paste the four `\newacronym` lines from
+   `chapters/uq-subsections/uq_pilot_acronyms.tex` (without the `\ifglsentryexists`
+   guards) into Overleaf's `common/acronyms.tex`. Without them, `\ac{cct}` etc. fail.
 
 5. **Compile.** Overleaf's latexmk runs the BibTeX passes automatically. Locally
    it is the usual four-pass cycle: `pdflatex → bibtex → pdflatex → pdflatex`.

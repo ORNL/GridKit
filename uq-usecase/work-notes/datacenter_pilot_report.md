@@ -47,42 +47,35 @@ Main terms used in our pilot study that follows.
 | Term | Meaning |
 |---|---|
 | **Operating condition** | One (hour, commitment) pair. The hour fixes load and wind; the commitment fixes which thermal units are online. |
-| **Placement** | Where the datacenter sits: none (the baseline), bus 108 or bus 148 in the fault sweep, or one of buses 6, 108, 120 and 148 in the aleatoric campaign. Not a property of the operating condition. |
-| **Scenario** | One operating condition with one placement, e.g. hour 204, commitment 27, datacenter at bus 108. It is the unit each campaign row describes. Each scenario is run against all faults. |
-| **Baseline** | The *no-datacenter* run **for a given operating condition** — not one global reference. Each condition has its own, so `dCCT` compares like with like. |
+| **Placement** | Where the datacenter sits: none (the baseline), or one of buses 6, 108, 120 and 148. Not a property of the operating condition. |
 | **Net load** | Demand minus wind, system-wide. What the thermal fleet must serve. |
-| **CCT** | Critical clearing time: the longest fault the system survives. Larger is safer. |
-| **Fault duration** | How long the fault stays on before it is cleared, in seconds. Stored as `fault_duration_s`. The pilot campaigns run each row at 0.1 s. The CCT search sets its own durations in `[0.05, 0.5]` s (§5). |
-| **h-scale** | Multiplier on every generator's inertia constant `H` in the case. `1.0` is the base case, stored as `h_scale`. All pilot rows use `1.0`. |
-| **Nadir** | The lowest system frequency reached after the fault, taken as the mean bus frequency (a proxy for the centre-of-inertia frequency), after the post-fault blank window. Higher is safer. Recorded, but not the stability test (§11). |
-| **ROCOF** | Rate of change of frequency, `\|d f / dt\|` of that mean bus frequency in Hz/s, maximum after the blank window. Fast change means little inertia to absorb the imbalance. Recorded, but not the stability test (§11). |
-| **The cap** | `cct_max = 0.5 s`, the top of the search. Set at a credible protection time; we do not look past it. |
-| **Censored** | **CCT is at or above the cap** — the system survived the longest fault we consider. The stored `0.5` is a **lower bound, not a measurement**. Censored means *very stable*. |
-| **Uncensored pair** | A (baseline, sited) pair where **both** are measured, so `dCCT` is a number rather than an inequality. |
-| **Hosting capacity** | Largest datacenter MW at a bus that is both deliverable and secure. |
-| **`LOCALLY_INFEASIBLE`** | The OPF cannot serve the load at all. A **result** (deliverability binds), not an error. |
-| **Stage A / B / C** | The stage a parameter binds at: **A** = the dispatch (dispatch, which needs a Julia solve), **B** = the `case.json` edit, **C** = the dynamic re-run. |
-| **ZIP** | Load model shares `alphaZ`/`alphaI`/`alphaP` (constant impedance / current / power), summing to 1. Written `P/I/Z`. The pilot's datacenter mix is `80/20/0` (§4.4). |
-| **Main campaigns** | `aleatoric1_ap08_qlim` and `faultscreen1_ap08_qlim`: DC OPF, then AC PF with PV→PQ switching, datacenter at `P/I/Z = 80/20/0`, alphaP 0.8. The headline numbers are read against these (§7.0). |
+| **CCT** | The CCT is the longest fault the system can survive before a generator loses synchronism. Larger is safer. |
+| **Baseline** | The same operating condition with no datacenter. Each operating condition has its own baseline, so the change in CCT caused by the datacenter is always measured on the same condition. |
+| **Search cap (0.5 s)** | The longest fault duration we test. Protection systems clear real faults well within 0.5 s, so a longer fault is not a realistic event, and we do not search beyond it. |
+| **Censored** | The system survived even the longest fault we test. We then know only that its CCT is at least 0.5 s, not its value. Censored runs are very stable. |
+| **Infeasible dispatch** | With the committed generators, the dispatch optimisation cannot serve the load. This means the extra load cannot be delivered under that commitment: a finding about the system, not a software error. |
+| **No outcome** | A run that produced no CCT: either the dispatch was infeasible or the dynamic simulation failed. Reported separately, never as stable or unstable. |
+| **ZIP load** | A load model that splits demand into constant-impedance (Z), constant-current (I) and constant-power (P) parts, written as P/I/Z percentages. The datacenter uses 80/20/0 (§4.4). |
+| **Campaigns** | Three batches of simulations, all built the same way (§4). Two **aleatoric campaigns** (1 and 2) vary the operating condition and the datacenter's location and size, at one fault location; campaign 2 is a larger, independent repeat of campaign 1. The **fault-screening campaign** varies the fault location instead. §7.0 compares them. |
 | **DC OPF / AC PF** | DC OPF sets *who generates* from active power only (lossless, no voltages, no Q). AC PF takes that dispatch and solves the voltages and reactive power. |
 | **PV bus / PQ bus** | PV: the generator fixes P and voltage magnitude, and Q is whatever holds the voltage. PQ: P and Q are fixed (a load); voltage is a result. |
-| **Q limit** | A generator's maximum (`QMAX`, field-current heating) and minimum (`QMIN`, stator end-region heating) reactive output. |
+| **Q limit** | A generator's maximum and minimum reactive power (Q) output. |
 | **PV→PQ switching** | When a generator's Q leaves its limits, it is fixed at the limit and its bus is solved as PQ. Standard in planning tools; the pipeline's version is in §4.2. |
 
 > **Details:** [physical intuition](datacenter_load_uq_plan.md#physical-intuition) covering faults, inertia, ZIP load during voltage dips, censored runs, etc.
 
 ---
 
-## 3. The system
+## 3. The Illinois synthetic grid (ACTIVSg200)
 
 ACTIVSg200, a synthetic Illinois case [4]: **200 buses, 246 branches, 49 generators**
 (25 coal, 17 natural gas, 6 wind, 1 nuclear). The seed dispatch totals
 **2,178 MW** of demand, which is the annual peak. The dynamic case
-(`ACTIVSg200.case.json`) carries **40 Genrou** machines: 34 thermal and the 6 wind
-units, which the campaign replaces with negative LoadZIP stand-ins (§4.3), leaving
-**34 synchronous machines**. The 9 thermal units offline in the seed `.m`
-(`GEN_STATUS = 0`) have no machine in the case and were not added in these
-experiments. The JSON also carries **109 LoadZIP** loads, before the wind stand-ins are added.
+carries **40 synchronous machines** (34 thermal and the 6 wind units). The
+campaign replaces the wind units with negative-load stand-ins (§4.3), leaving
+**34 synchronous machines**. The 9 thermal units that are offline in the seed
+dispatch have no dynamic model and were not added. The case also carries
+**109 loads**.
 
 Hourly load and wind come from an 8,760-hour dataset for this footprint, so the
 (demand, wind) joint distribution is empirical rather than assumed.
@@ -93,8 +86,10 @@ Hourly load and wind come from an 8,760-hour dataset for this footprint, so the
 
 ### One-time seed building
 
-The shipped case is not used directly. Once per case, it is rebuilt from the two TAMU
-source files, and the rebuild is checked against the shipped `case.json`. That gives two
+The ACTIVSg200 dynamic case distributed with GridKit is not
+used directly. Once per case, we rebuild it from the two TAMU source files, the
+PowerWorld network file (`.aux`) and the dynamics file (`.dyr`), and check the
+rebuild against the distributed case. That gives two
 artifacts. The **base case** supplies every machine's dynamic parameters. The **seed `.m`** supplies the dispatch: which units are online and how much they produce.
 Each condition then overwrites only the dispatch, on a copy of the base case.
 Blue boxes are the one-time build; grey boxes run per condition.
@@ -121,12 +116,12 @@ flowchart TD
 
 *Figure 3.1. One-time seed building (blue) and the per-condition build (grey).*
 
-What we change relative to what ships:
+What we change relative to the distributed case:
 
-* **Dynamics come from the base case, not the shipped file.** The rebuild differs from
-  the shipped file in 14 parameters, all on machine `197_1`. The author's values are kept
-  by overlay, so the base case equals the shipped file.
-* **The dispatch is overwritten per condition.** The `.m` cannot store machine
+* **Dynamics come from the base case.** The rebuild differs from
+  the distributed case in 14 parameters, all on one machine (`197_1`). We keep the
+  distributed values, so the base case equals the distributed case.
+* **The dispatch is overwritten per condition.** The dispatch file cannot store machine
   inertia, so dynamics are always inherited from the base case.
 * **Six wind units become negative load stand-ins** (§4.3), so they carry no inertia.
 
@@ -135,6 +130,12 @@ What we change relative to what ships:
 ---
 
 ## 4. Building one operating condition
+
+Every simulation in this study starts from one operating condition: a sampled
+hour of load and wind, and a commitment of thermal units. *Figure 4.1* shows how
+that condition becomes a CCT. The commitment is chosen (§4.1), the generators
+are dispatched (§4.2), the wind units and the datacenter are added to the
+dynamic model (§4.3, §4.4), and the CCT is found by repeated simulation (§5).
 
 ```mermaid
 %%{init: {"fontSize": 22, "themeVariables": {"fontSize": "22px"}, "flowchart": {"nodeSpacing": 12, "rankSpacing": 14, "padding": 4}}}%%
@@ -149,35 +150,38 @@ flowchart LR
     S --> Q["CCT by bisection<br/>(pole slip vs COI)"]
 ```
 
-*Figure 4.1. Per-condition pipeline, from hour and commitment to CCT. Nadir, ROCOF and Vmin are also recorded but do not set CCT.*
+*Figure 4.1. Per-condition pipeline, from hour and commitment to CCT.*
 
 ### 4.1 Commitment: a feasible band, not an economic optimum
 
-We do **not** solve a unit-commitment MILP. We compute the band of *feasible*
-commitments and sample across it:
+We do **not** solve a unit-commitment problem. Thermal units are ranked in merit
+order: cheapest first by linear cost, with the nuclear unit always on.
+Committing *n* units means switching on the first *n* in that ranking. We
+compute the band of *feasible* values of *n* and sample across it:
 
-* **lower bound** — adequacy (`capacity >= net x 1.10`) and a floor of 8 thermal
-  units, below which the network loses voltage support and the integrator fails
-  to initialise [8];
-* **upper bound** — `sum(PMIN) <= net`, above which the OPF is infeasible.
+* **lower bound**: enough committed capacity to cover net load with a 10%
+  reserve, and at least 8 thermal units. With fewer, the network loses voltage
+  support and the simulation cannot be initialised;
+* **upper bound**: the committed units' combined minimum output must not exceed
+  net load, otherwise the dispatch is infeasible.
 
-At 762 MW net load the band is `[18, 38]`. Both ends are legitimate: at `n = 33`
-the committed minimums total 740 MW, still under the load, so the units simply
-run further down their range.
+At 762 MW net load the band is 18 to 38 units. Both ends are legitimate: with 33
+units the committed minimums total 740 MW, still under the load, so the units
+simply run further down their range.
 
 **How commitment is sampled.** For each sampled hour, the band is computed from
 that hour's own net load (demand minus wind). The campaign then commits at two
-fixed positions in the band, 0.25 and 0.75 of the way from `n_min` to `n_max`,
-rounded to whole units. So each hour gives two operating conditions. This is a
-stratified choice at fixed positions, not a uniform draw from the band and not a
-draw from an assumed distribution. The fault sweep (`faultscreen1_ap08_qlim`, §7.6) uses 10 hours × 2
-commitments = 20 conditions. Its realised positions are 0.22 to 0.28 of the band,
-after rounding to whole units. The aleatoric campaign (`aleatoric1_ap08_qlim`, §7.0) uses
-20 hours × 2 commitments = 40 conditions. Hours are stratified by net-load
-quintile with equal counts per quintile (2 each in the fault sweep, 4 each
-in the aleatoric campaign), so each quintile carries equal weight, matching the empirical
-net-load distribution. The aleatoric campaign's hours were drawn at random (seed 0). In both
-campaigns the datacenter arms reuse the baseline commitment of their hour.
+fixed positions in the band, a quarter and three quarters of the way from its
+lower to its upper end, rounded to whole units. So each hour gives two
+operating conditions. This is a stratified choice at fixed positions, not a
+uniform draw from the band and not a draw from an assumed distribution. The
+fault-screening campaign (§7.6) uses 10 hours × 2 commitments = 20 conditions.
+Aleatoric campaign 1 (§7.0) uses 20 hours × 2 commitments = 40 conditions.
+Hours are stratified by net-load quintile with equal counts per quintile (2 each
+in the fault-screening campaign, 4 each in aleatoric campaign 1), so each
+quintile carries equal weight, matching the empirical net-load distribution.
+In aleatoric campaign 1 the hours were drawn at random. In all campaigns the
+datacenter runs reuse the baseline commitment of their hour.
 
 **Why commitment matters.** A commitment sets which thermal units are online, and
 so the inertia and headroom on the system. A low-load hour can run many units at
@@ -190,19 +194,17 @@ load), the two ends of the band are:
 | n = 23 | **7,512 MW·s** | 33.1 MW |
 | n = 33 | **11,702 MW·s** | 23.1 MW |
 
-They differ by a **factor of 1.56 in inertia at identical load and wind**. The
-n = 33 value is the pre-correction formula value, which the plan
-measured 1.4 % low at hour 6164, so the true ratio is likely slightly higher. That
+They differ by a **factor of 1.56 in inertia at identical load and wind**. That
 is the dominant
 lever on stability at fixed net load. We have real data for the net-load
 distribution but none for how this synthetic system's operators would commit, so
-inventing a commitment PDF would fabricate the very thing that drives the
+inventing a commitment probability distribution would fabricate the very thing that drives the
 answer. Results are reported **conditionally** on commitment and can be
-reweighted later if a real UC distribution appears.
+reweighted later if a real commitment distribution becomes available.
 
-Adding a datacenter does **not** change the commitment. The same `n` units stay
+Adding a datacenter does **not** change the commitment. The same units stay
 online, and only the dispatch is re-solved (DC OPF, then AC PF). If the committed
-fleet cannot serve the added load, the case is recorded as infeasible, not
+fleet cannot serve the added load, the case is recorded as an infeasible dispatch, not
 re-committed. Those failures therefore overstate what an operator could do by
 committing more units.
 
@@ -212,17 +214,15 @@ committing more units.
 
 ### 4.2 Dispatch: DC OPF then AC PF
 
-> **Implementation note:** The dispatch pipeline uses PowerModels.jl for both DC OPF and AC PF solves. As OPF functionality becomes available in GridKit (under development), we can readily substitute it into the pipeline. Maintaining PowerModels.jl as an alternative is beneficial for validation purposes and exploration of various AC OPF relaxation formulations.
-
 Both solves use PowerModels.jl [6] with Ipopt [7]. Per condition:
 
 1. **DC OPF** sets the economic dispatch. It is lossless, so the load is
    inflated by the loss estimate from the previous pass (zero on the first).
-2. **AC PF** solves the real network at that dispatch, giving voltages, Q and
-   the actual losses. The losses feed the next DC OPF.
+2. **AC PF** solves the real network at that dispatch, giving voltages, reactive
+   power and the actual losses. The losses feed the next DC OPF.
 
-*Figure 4.2* shows the loop. With `loss_iters = 1` there is one correction, so
-each condition runs two DC OPFs and two AC PFs.
+*Figure 4.2* shows the loop. With one loss correction, each condition runs two
+DC OPFs and two AC PFs.
 
 ```mermaid
 %%{init: {"fontSize": 18, "themeVariables": {"fontSize": "18px"}, "flowchart": {"nodeSpacing": 24, "rankSpacing": 40, "padding": 4}}}%%
@@ -237,47 +237,48 @@ flowchart LR
 *Figure 4.2. Dispatch loop per condition: DC OPF, AC PF, one loss correction, AC PF. Each AC PF restarts its PV→PQ switching from all units at PV.*
 
 The iteration exists because of a **slack problem**: a power flow leaves one
-generator's P free, so it structurally cannot enforce `PMAX` on the slack, and
-our slack is the nuclear unit `189_1` with **0.0082 MW** of headroom. Without
-re-dispatch it would absorb the entire loss term, and in an hourly loop the
-whole load change. One loss correction reduces the overshoot from 27.05 MW to
-0.34 MW on the worst hour (0.016 % of load), which is why `loss_iters = 1`. A
-second correction reduces it only to 0.005 MW.
+generator's active power free, so it cannot enforce that generator's maximum
+output, and our slack is the nuclear unit, which has only **0.0082 MW** of
+headroom. Without re-dispatch it would absorb the entire loss term, and in an
+hourly loop the whole load change. One loss correction reduces the overshoot
+from 27.05 MW to 0.34 MW on the worst hour (0.016 % of load). A second
+correction reduces it only to 0.005 MW, so one is enough.
 
-**Why we use switching, not AC OPF.** We tested AC OPF as an alternative Q-limit route
-(discussed further below). AC OPF changes dispatch (about 280 MW summed in the pilot),
-so a CCT difference cannot be attributed to Q limits alone. Switching keeps the DC OPF
-dispatch and changes only Q, isolating the Q-limit effect that this report asks about.
-AC OPF stays in the pipeline as the `ac_opf` option for cross-checks.
+**Reactive power limits: PV→PQ switching.** AC power flow does not enforce
+generators' reactive power limits (Q limits) on its own: without mitigation we
+measured 2 to 11 violations per operating condition. We enforce them by PV→PQ
+switching [20]: after solving voltages, any generator outside a Q limit is fixed
+at that limit and its bus switched to PQ, then the power flow is re-solved.
+Fixed generators return to PV if voltage recovers past setpoint (repeated up to
+twice). The DC OPF dispatch is never changed, only reactive power.
+
+We also tested AC OPF, which enforces Q limits as constraints. It was not adopted
+because it also changes the active-power dispatch (about 280 MW summed over the
+pilot), which would mix a dispatch effect into every CCT comparison; switching
+changes only reactive power.
 
 > **Details:** [the dispatch chain](datacenter_load_uq_plan.md#10-the-dispatch-chain) ·
 > [the slack problem](datacenter_load_uq_plan.md#the-slack-problem) ·
 > [the loss-iteration fix, with convergence table](datacenter_load_uq_plan.md#fix) ·
-> [why DC OPF then AC PF, rather than AC OPF](datacenter_load_uq_plan.md#why-dc-opf-then-ac-pf-rather-than-ac-opf)
+> [why DC OPF then AC PF, rather than AC OPF](datacenter_load_uq_plan.md#why-dc-opf-then-ac-pf-rather-than-ac-opf) ·
+> [switching implementation and five-scenario measurements](datacenter_load_uq_plan.md#reactive-limits-in-the-ac-pf-pv-to-pq-switching) · [pipeline code](dc_campaign_pipeline.md#42a-reactive-limits-pv-to-pq-switching) · [AC OPF design and pilot results](datacenter_load_uq_plan.md#ac-opf-as-a-second-q-limit-route-pmjl)
 
-**Reactive limits: PV→PQ switching.** AC power flow does not enforce generator `QMAX`/`QMIN` limits natively (measured: 2 to 11 violations per scenario without mitigation). We enforce them via PV→PQ switching [20]: after solving voltages, any generator exceeding a Q limit is fixed at that limit and its bus switched to PQ, then re-solved. Fixed generators return to PV if voltage recovers past setpoint (repeat up to twice). The DC OPF dispatch is never changed—only Q adjusts. This preserves dispatch so that CCT differences from the unlimited-Q run can be attributed to reactive limits alone. The feature is on by default (`enforce_q_lims`) in the main campaigns but disabled in unlimited-Q studies.
-
-> **Details:** [switching implementation and five-scenario measurements](datacenter_load_uq_plan.md#reactive-limits-in-the-ac-pf-pv-to-pq-switching) · [pipeline code](dc_campaign_pipeline.md#42a-reactive-limits-pv-to-pq-switching) · [Q-limit fold recount](ida_ic_issue.md#105-q-limits-pvpq-outer-loop-q_limit_pfpy)
-
-**AC OPF as a second Q-limit route.** PowerModels.jl's AC OPF enforces Q limits as constraints, replacing DC OPF + AC PF + switching. We built it as an opt-in path (`ac_opf`) but did not adopt it for the main campaigns: AC OPF changes dispatch (∼280 MW summed in the pilot), making it impossible to isolate Q-limit effects from dispatch effects. Switching preserves dispatch and changes only Q (∼0.82 MW loss variation), cleanly answering the report's question. AC OPF remains as a cross-check and can be reported if needed.
-
-> **Details:** [AC OPF design and pilot results](datacenter_load_uq_plan.md#ac-opf-as-a-second-q-limit-route-pmjl)
+> **Implementation note:** The dispatch pipeline uses PowerModels.jl for both DC OPF and AC PF solves. As OPF functionality becomes available in GridKit (under development), we can readily substitute it into the pipeline. Maintaining PowerModels.jl as an alternative is beneficial for validation purposes and exploration of various AC OPF relaxation formulations.
 
 ### 4.3 Wind becomes negative load
 
-> **Implementation note:** The ACTIVSg200 case lacks native renewable energy converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models—specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)—which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
-
-Wind units are removed as `Genrou` machines and re-inserted as a **negative
-`LoadZIP`** at their own bus, with `alphaI = 1` (constant current). Left as
+Wind units are removed as synchronous machines (`Genrou`) and re-inserted as a
+**negative load** at their own bus, modelled as constant current. Left as
 synchronous machines, they could contribute **up to 2,766 MW·s** of inertia at
-their ratings (sum over the 6 wind Genrou units of `H` × `mva`), whatever the wind output, and inertia is what the study varies.
-Constant power made the integrator fail at high wind penetration.
+their ratings (sum over the 6 wind units of inertia constant × rating), whatever
+the wind output, and inertia is what the study varies.
+A constant-power stand-in made the simulation fail at high wind penetration.
 
 **Implementation.** Hourly wind MW is pinned in the DC OPF, the AC power flow
-solves its reactive output, and the solved P and Q are written into the ZIP.
-Stage B rewrites `case.json`: each wind unit's `Genrou`, `Tgov1` and `SexsPti`
-are removed and a `LoadZIP` is added with `Pnom = −PG/100` and
-`Qnom = −QG/100` (per unit, 100 MVA base), `alphaI = 1`, `alphaP = 0`. GridKit
+solves its reactive output, and the solved P and Q are written into the
+negative load. In the dynamic case each wind unit's machine, governor and
+exciter models are removed and a load is added with `Pnom = −PG/100` and
+`Qnom = −QG/100` (per unit, 100 MVA base), all of it constant current. GridKit
 treats positive `Pnom` as consumed, so the negative value injects PG. At the
 initial voltage this reproduces the power-flow P and Q exactly; after that the
 injection scales with `|V|`, which is constant current.
@@ -288,11 +289,11 @@ injection scales with `|V|`, which is constant current.
 positive-sequence transient stability as a controllable current source [15]. The
 Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
 interface is "a controllable current source" [1]. A constant-current
-ZIP is a simple stand-in for that current injection.
+load is a simple stand-in for that current injection.
+
+> **Implementation note:** The ACTIVSg200 case lacks native renewable energy converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models—specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)—which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
 
 ### 4.4 The datacenter
-
-> **Implementation note:** The GridKit team has plans to develop comprehensive dynamic models for datacenter loads. Once implemented and validated, these models will be readily incorporated to replace the quasi-static ZIP approximation and improve system response fidelity.
 
 A datacenter is represented as **additional electrical load placed at one
 bus**. Two things about *how* it is added matter to the answer.
@@ -307,57 +308,31 @@ the committed fleet could be too small to serve it or larger than needed.
 cases is represented by a **ZIP model** [13], which splits demand into three parts by
 how each responds when voltage sags: a constant-**impedance** part (falls as
 $V^2$), a constant-**current** part (falls as $V$), and a constant-**power**
-part (does not fall at all). The split is written here as `P/I/Z` percentages.
+part (does not fall at all). The split is written here as P/I/Z percentages.
 
 The distinction is the physical reason a datacenter is interesting. Ordinary
 constant-impedance load *sheds itself* during a voltage dip and helps the system
-recover. Datacenter load is rectifier- and UPS-fed and behaves far closer to
+recover. Datacenter load is fed through rectifiers and UPS units and behaves far closer to
 constant power [14]: it keeps demanding the same megawatts at reduced voltage, which
 means drawing more current, which depresses voltage further. If the new load
-were simply folded into whatever device already existed at the bus, it would
-inherit the host's helpful constant-impedance behaviour and the study would
-measure the wrong thing. So the datacenter gets a **separate** device, and the
-host device is left as it was.
+were simply folded into the load already at the bus, it would
+inherit that load's helpful constant-impedance behaviour and the study would
+measure the wrong thing. So the datacenter gets a **separate** load device, and the
+existing load at the bus is left as it was. Every existing load in the case is
+pure constant impedance.
 
-**Every load device in the shipped case is constant impedance.** All 109
-`LoadZIP` devices in `ACTIVSg200.case.json` have `alphaI = alphaP = 0`, so
-`alphaZ = 1`. Before any datacenter is added, every host load is pure constant
-impedance.
+**The datacenter mix is P/I/Z = 80/20/0**: 80% constant power and 20% constant
+current, with no constant impedance. The constant-current share represents
+converters that reach their current limit in a deep voltage dip; the split is a
+modelling choice, not a fitted value.
 
-**How the datacenter reaches the model.** The MW is added to the bus's demand in
-the `.m` before dispatch, so the OPF has to serve it. The network build then
-folds all demand at each bus into one `LoadZIP`, host plus datacenter together.
-`split_out_datacenter` subtracts the datacenter's MW and MVAr from that device,
-which restores the original host load, and appends a second device for the
-datacenter. The end state is the original host (N1, `alphaZ = 1`) beside the
-datacenter (N2, `P/I/Z = 80/20/0`). That is the same as adding an N2 device
-beside an untouched N1; the subtraction only undoes the fold. A bus with no load
-has no host to restore, and the datacenter device is the only one.
+**Placement.** The fault-screening campaign (§7.6) places a 200 MW datacenter at
+bus 108 or bus 148. The aleatoric campaigns (§7.0) place it at bus 6, 108, 120 or
+148, at 50, 100, 200, 300 or 400 MW.
 
-> **Details:** [datacenter pipeline, function by function](datacenter_load_uq_plan.md#how-a-datacenter-enters-the-model-pipeline-trace) · [placement selection](datacenter_load_uq_plan.md#placement-selection)
+> **Details:** [datacenter pipeline, function by function](datacenter_load_uq_plan.md#how-a-datacenter-enters-the-model-pipeline-trace) · [placement selection](datacenter_load_uq_plan.md#placement-selection) · [is the 20/80/0 mix defensible?](datacenter_load_uq_plan.md#is-the-20800-mix-defensible) · [alphaP tested as a sensitivity](datacenter_load_uq_plan.md#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22) · [fold hunt summary](datacenter_load_uq_plan.md#fold-hunt-summary-ida-initial-condition-failures-at-high-alphap)
 
-**Placement.** The candidate pool is the 16 load-carrying buses of the `phase3b`
-siting sample. The two main campaigns use subsets of it:
-
-* the fault sweep (`faultscreen1_ap08_qlim`, §7.6): buses 108 and 148, at 200 MW;
-* the aleatoric campaign (`aleatoric1_ap08_qlim`, §7.0): buses 6, 108, 120 and 148, at
-  50, 100, 200, 300 or 400 MW.
-
-**The pilot mix is `P/I/Z = 80/20/0`.** The physically intended model is pure
-constant power, `100/0/0`. It is not simulable at every bus (see
-[§10](#10-gridkit-end-user-feedback)), and folds grow with `alphaP` (hunt
-summary below), so `alphaP` 1.0 fails more initial-condition solves. The campaigns therefore use 80% constant power and 20% constant current, with no constant
-impedance. The 20% constant-current share rests on a plausible but unverified argument: a
-converter-fed load reaches its current limit in a deep dip, and a current-limited converter
-behaves as constant current. The 20% is a choice, not a fitted value. The earlier
-campaigns used `20/80/0`, now a sensitivity case; its effect on CCT is in the
-[plan](datacenter_load_uq_plan.md#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22).
-
-**Hunt summary (IDA initial-condition failures at high `alphaP`).** At high `alphaP`, the datacenter shifts the network-algebraic fold past a bolted fault, creating no-steady-state outcomes that limit where datacenters can be sited.
-
-> **Details:** [fold hunt summary: IDA initial-condition failures at high alphaP](datacenter_load_uq_plan.md#fold-hunt-summary-ida-initial-condition-failures-at-high-alphap) · [IDA initial-condition issue record](ida_ic_issue.md#0-read-first) · [results](ida_ic_issue.md#10-method-and-results) · [hypothesis](ida_ic_issue.md#11-hypothesis-h1-and-what-it-means)
-
-> **Details:** [ZIP coefficients are a first-class lever](datacenter_load_uq_plan.md#4-zip-coefficients-are-a-first-class-lever) · [is the 20/80/0 mix defensible?](datacenter_load_uq_plan.md#is-the-20800-mix-defensible) · [Phase 3: datacenter dimension](datacenter_load_uq_plan.md#phase-3-datacenter-dimension) · [what is sampled, and what is chosen](datacenter_load_uq_plan.md#what-is-sampled-and-what-is-chosen) · [design of the sweep](datacenter_load_uq_plan.md#design-of-the-sweep) · [two limits, and the thermal one binds first](datacenter_load_uq_plan.md#two-limits-and-the-thermal-one-binds-first)
+> **Implementation note:** The GridKit team has plans to develop comprehensive dynamic models for datacenter loads. Once implemented and validated, these models will be readily incorporated to replace the quasi-static ZIP approximation and improve system response fidelity.
 
 ---
 
@@ -420,59 +395,36 @@ resulting CCT **identical** (0.2891 both ways).
 
 ## 6. Parallel execution on Kestrel
 
-> **Implementation note:** The SLURM script (`qlim_campaign.sh`) requests one node
-> with 16 cores (`--nodes=1 --cpus-per-task=16`), splits `conditions.csv` into 16
-> contiguous slices, and launches one worker per slice as a background Python
-> process (`sweep_worker.py --start/--count`) in a plain bash loop, then `wait`s on
-> them. Because the workers are local background
-> processes rather than `srun` job steps, a job runs on a **single node**;
-> The
-> work is embarrassingly parallel — independent slices, one record file per run —
-> multi-node parallelism (e.g. 2 nodes × 16 workers) is currently being implemented via an `srun`-per-node (or MPI) launcher.
-
-The aleatoric campaign ran as one SLURM job [9] on one node: 16 single-core workers, each taking a contiguous slice of `conditions.csv`. A worker solves its stage-A dispatches in one batched Julia pass [10], then runs dynamics for the dispatches that solved. Records are written per run, so a campaign can resume.
+Each campaign ran as one SLURM job [9] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass [10] (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
 
 > **Details:** [wall time for the two main campaigns](datacenter_load_uq_plan.md#wall-time-in-the-two-main-campaigns-measured-2026-11-10) ·
 > [parallel sampling runs](datacenter_load_uq_plan.md#parallel-sampling-runs) ·
 > [storage](datacenter_load_uq_plan.md#storage) ·
 > [execution model](datacenter_load_uq_plan.md#execution-model-one-job-per-worker-julia-batched-inside-it-decided-2026-10-22)
 
-| campaign | design rows | simulated | wall | per worker, mean: stage A / dynamics |
+| campaign | planned runs | simulated | wall time | per worker, mean: dispatch / dynamics |
 |---|---|---|---|---|
-| `aleatoric1_ap08_qlim` | 840 | 484 | 6.0 min | 170 s / 113 s |
-| `aleatoric2_ap08_qlim` | 3,780 | 2,155 | 17.1 min | 297 s / 516 s |
-| `faultscreen1_ap08_qlim` | 1,020 | 935 | ~4.4 min (slowest worker) | 122 s / 92 s |
+| aleatoric campaign 1 | 840 | 484 | 6.0 min | 170 s / 113 s |
+| aleatoric campaign 2 | 3,780 | 2,155 | 17.1 min | 297 s / 516 s |
+| fault-screening campaign | 1,020 | 935 | ~4.4 min (slowest worker) | 122 s / 92 s |
 
-*Simulated* means the dispatch solved and dynamics ran (`ok` plus `sim_failed`). The rest are `LOCALLY_INFEASIBLE` at dispatch.
+*Simulated* counts the runs whose dispatch solved, so that a dynamic simulation
+was attempted (whether or not it completed). For the remaining runs no feasible
+dispatch exists: the committed generators cannot serve the load.
 
-Resources, measured for `aleatoric2`:
+Resources, measured for aleatoric campaign 2:
 
-* **CPU.** Workers were busy 86% of the job (`sacct`: 235 CPU-min over 16 workers). The job
+* **CPU.** Workers were busy 86% of the job (235 CPU-min over 16 workers). The job
   held the whole 104-CPU node and ran 16 workers by choice, so 13% of its CPUs were busy.
 * **Memory.** 0.88 GB per worker (Python and Julia); the node peaked at 13.8 GB.
 * **Load balance.** Worker wall times ranged from 511 s to 1,019 s. Contiguous slices leave
   the mean worker idle about 20% of the job.
-* **Stage A.** 1.3 s per dispatch, against 3.3 s in `aleatoric1`. A working hypothesis is
-  that larger batches amortise Julia launches; this is not isolated.
-* **Storage.** A *design row* is one line of `conditions.csv`: one sampling point, set by its
-  hour, commitment, datacenter bus and size, and fault bus. Its duration and h-scale columns
-  are constant in the pilot campaigns (0.1 s and 1.0, see the glossary). Stage A solves
-  each row once, and a solved row also gets a CCT bisection and a stored time series. The
-  three main campaigns (5,640 design rows) hold 15.9 GB on `/kfs2` and 88 GB of scratch on
-  disk. For `aleatoric`, that is 2.6 MB per design row. Four measures keep it down:
-  * **Bisection probes write `delta` only.** The CCT needs time and the Genrou rotor angle,
-    21 of 441 columns. One bisection went from 210 MB to 15.3 MB (13.8×) with the CCT
-    unchanged, and its wall time from 4.0 s to 2.1 s, on one 200-bus case.
-  * **Parquet with zstd and float32 channels.** One 200-bus run went from 26.3 MB of CSV to
-    5.3 MB (5.0×). Column pruning reads 3 of 467 columns.
-  * **Only `ok` runs keep a series.** Infeasible and `sim_failed` rows keep their record only.
-  * **Records go straight to `/kfs2` at the end of each run**, with no copy step from scratch.
-    Scratch is not `/tmp`, which is RAM on nodes without local disk.
-
-  Details, including the I/O totals, are in the
-  [plan's storage section](datacenter_load_uq_plan.md#pilot-totals-and-what-a-design-row-is).
-  The striping layout is applied to each campaign's directories and verified with `lfs getstripe`.
-  Its speed benefit is a working hypothesis.
+* **Dispatch stage.** 1.3 s per dispatch, against 3.3 s in aleatoric campaign 1. A working
+  hypothesis is that larger batches amortise Julia start-up; this is not isolated.
+* **Storage.** The three campaigns (5,640 planned runs) hold 15.9 GB; in the aleatoric
+  campaigns that is about 2.6 MB per run. Two measures keep it down: the CCT search records only the rotor angles it needs
+  (21 of 441 output columns, 13.8× smaller), and results are stored as compressed
+  Parquet rather than CSV (5.0× smaller).
 
 ```mermaid
 flowchart LR
@@ -485,8 +437,16 @@ flowchart LR
     D --> E
 ```
 
-*Figure 6.1. Per worker, aleatoric means. Fault sweep: stage A 122 s, dynamics 92 s.
-Launch counts from the timing job, not the campaign logs.*
+*Figure 6.1. Per worker, aleatoric means. Fault sweep (fault-screening campaign): dispatch 122 s, dynamics 92 s.
+Launch counts from a separate timing job, not the campaign logs.*
+
+> **Implementation note:** The SLURM script requests one node with 16 cores, splits
+> the campaign's list of runs into 16 contiguous slices, and launches one worker per
+> slice as a background Python process, then waits for them all. Because the workers
+> are local background processes rather than `srun` job steps, a job runs on a
+> single node. The work is embarrassingly parallel (independent slices, one result
+> file per run), and multi-node execution through an `srun`-per-node (or MPI)
+> launcher is being implemented.
 
 ---
 
@@ -501,11 +461,15 @@ Launch counts from the timing job, not the campaign logs.*
 > [Phase 1 go/no-go gate](datacenter_load_uq_plan.md#phase-1-does-the-premise-hold-passed-2026-10-20) ·
 > [`inertia_MWs` undercount bug and its correction](datacenter_load_uq_plan.md#inertia_mws-was-silently-undercounted-bug-fixed-2026-10-22)
 
-### 7.0 Sampling space and the two main campaigns
+### 7.0 Sampling space and the campaigns
 
-Both main campaigns use the operating-condition design of §4.2, where an operating condition is an (hour, commitment) pair. Both use DC OPF dispatch, then AC power flow with PV→PQ switching (§4.2), the datacenter as an 80/20/0 ZIP device added on top of the host load (§4.4), and alphaP 0.8. They differ in what else varies:
+All campaigns use the operating-condition design of §4.1, where an operating condition is an (hour, commitment) pair. All use DC OPF dispatch, then AC power flow with PV→PQ switching (§4.2), and the datacenter as an 80/20/0 ZIP load added beside the existing load at its bus (§4.4). The two main campaigns differ in what else varies:
 
-| | **Aleatoric campaign** `aleatoric1_ap08_qlim` | **Fault campaign** `faultscreen1_ap08_qlim` |
+<!-- tex:skip -->
+Run identifiers in the plan: aleatoric campaign 1 = `aleatoric1_ap08_qlim`, aleatoric campaign 2 = `aleatoric2_ap08_qlim`, fault-screening campaign = `faultscreen1_ap08_qlim`.
+<!-- /tex:skip -->
+
+| | **Aleatoric campaign 1** | **Fault-screening campaign** |
 |---|---|---|
 | purpose | how much operating conditions move CCT | which fault locations and placements matter |
 | hours | 20 (4 per net-load quintile) | 10 (2 per net-load quintile) |
@@ -515,10 +479,12 @@ Both main campaigns use the operating-condition design of §4.2, where an operat
 | datacenter size | 50, 100, 200, 300, 400 MW | 200 MW |
 | runs | 840 = 40 baseline + 800 datacenter | 1,020 = 340 baseline + 680 datacenter |
 | solved | 439 (40 baseline, 399 datacenter) | 767 (340 baseline, 427 datacenter) |
-| no outcome | 401 (45 `sim_failed`, 356 at dispatch) | 253 (168 `sim_failed`, 85 at dispatch) |
+| no outcome | 401 (45 simulation failures, 356 infeasible dispatches) | 253 (168 simulation failures, 85 infeasible dispatches) |
 | datacenter runs censored at the 0.5 s cap | 121 of 399 (30.3%) | 306 of 427 (71.7%) |
 
-The aleatoric campaign varies operating conditions, placement and size, at one fault. The fault campaign varies fault location and placement, at one size. **No outcome** means the run did not dispatch or did not simulate. It is reported as such, never as stable or unstable.
+Aleatoric campaign 1 varies operating conditions, placement and size, at one fault. The fault-screening campaign varies fault location and placement, at one size. **No outcome** means the dispatch was infeasible or the simulation failed. It is reported as such, never as stable or unstable.
+
+**Aleatoric campaign 2** is a larger, independent repeat of aleatoric campaign 1: 60 new hours × 3 commitments = 180 operating conditions, with the same placements and sizes. It shares no conditions with campaign 1, and is used in §7.3 and §7.4 to check that the results reproduce and how they settle as conditions are added.
 
 ### 7.1 Reading the curves: Kaplan–Meier and censoring
 
@@ -528,15 +494,21 @@ $$\hat S(t)=\prod_{t_i\le t}\Bigl(1-\frac{d_i}{n_i}\Bigr),\qquad \widehat P(\mat
 
 Here the $t_i$ are the distinct measured CCT values, $d_i$ is the number of runs measured at $t_i$, and $n_i$ is the number still at risk at $t_i$ (runs measured at or after $t_i$, plus censored runs). No measured CCT exceeds the cap, so for $t < 0.5$ s the estimate is simply the number of runs measured below $t$, divided by all solved runs, with the censored runs left in the denominator. No-outcome runs are excluded, so every curve is conditional on the run having solved. Figures plot the complement, $P(\mathrm{CCT} > t)$.
 
+<!-- tex:skip -->
 > **Worked example:** [ten made-up CCTs, with two censored runs, and the calculation step by step](datacenter_load_uq_plan.md#kaplanmeier-worked-example-on-ten-made-up-ccts) (illustrative values, not campaign data).
+<!-- /tex:skip -->
 
-The rest of §7 runs as follows. §7.2 works one matched example, and §7.3 puts the 37- and 171-condition curves side by side. §7.4 asks what adding operating conditions does to the estimate, using both pools. §7.5 splits risk by net load. §7.6 reports the fault sweep. §7.7 quantifies censoring.
+The rest of §7 runs as follows. §7.2 works one matched example, and §7.3 repeats it on the larger aleatoric campaign 2. §7.4 asks what adding operating conditions does to the estimate. §7.5 splits risk by net load. §7.6 reports the fault-screening campaign. §7.7 quantifies censoring.
 
 ### 7.2 A simple example: one bus, one size, one fault
 
-**Sampling:** `aleatoric1_ap08_qlim`, 200 MW at bus 108, fault at bus 66. Of the 40 operating conditions, 37 solve with the datacenter. The baseline is the same 37 conditions with no datacenter.
+**Sampling:** aleatoric campaign 1, 200 MW at bus 108, fault at bus 66. Of the 40 operating conditions, 37 solve with the datacenter. The baseline is the same 37 conditions with no datacenter.
 
-**Greenwood interval.** Greenwood's formula [22] estimates the variance of a KM estimate: $\widehat{\mathrm{Var}}\big(\hat S(t)\big)=\hat S(t)^2\sum_{t_i\le t}\frac{d_i}{n_i(n_i-d_i)}$, with $d_i$ and $n_i$ as in §7.1. We report $\mathrm{SE}=\sqrt{\widehat{\mathrm{Var}}}$. The 95% interval is $\hat P\pm 1.96\,\mathrm{SE}$, with $\hat P=1-\hat S(t)$ (the plain interval, not log–log).
+**Greenwood interval.** Greenwood's formula [22] estimates the variance of a KM estimate:
+
+$$\widehat{\mathrm{Var}}\big(\hat S(t)\big)=\hat S(t)^2\sum_{t_i\le t}\frac{d_i}{n_i(n_i-d_i)}$$
+
+with $d_i$ and $n_i$ as in §7.1. We report the standard error $\mathrm{SE}=\sqrt{\widehat{\mathrm{Var}}}$. The 95% interval is $\hat P\pm 1.96\,\mathrm{SE}$, with $\hat P=1-\hat S(t)$ (the plain interval, not log–log).
 
 | | no datacenter | 200 MW at bus 108 |
 |---|---|---|
@@ -552,13 +524,13 @@ The rest of §7 runs as follows. §7.2 works one matched example, and §7.3 puts
 
 On these conditions the datacenter shortens CCT: P(CCT < 0.25 s) rises from 0.49 to 0.73. Three of the 40 conditions did not solve with the datacenter, and their baseline CCT is censored. Counting all three as CCT ≥ 0.25 s gives 27 of 40 (0.675). Counting all three as below 0.25 s gives 30 of 40 (0.75). The sign of the effect — that the datacenter shortens CCT — holds either way, but on this sample the size of the shift is uncertain by about 0.07.
 
-> **Working hypothesis for why the datacenter shortens CCT.** The datacenter adds 200 MW to bus 108, on top of the unchanged constant-impedance host load, and 80% of that added load does not fall with voltage. During the fault the added load keeps drawing its power, where a constant-impedance load of the same size would fall, which pushes the generators harder. The alphaP sensitivity does not separate the two. It varied the P/I split with Z at zero, and CCT barely moved. So the presence of non-impedance load, rather than the P/I split within it, is the likely driver. This is not tested here. A run with the same 200 MW at a fixed impedance share would test it.
+**Why the datacenter may shorten CCT (working hypothesis).** The datacenter adds 200 MW to bus 108, beside the unchanged constant-impedance load already there, and 80% of that added load does not fall with voltage. During the fault the added load keeps drawing its power, where a constant-impedance load of the same size would fall, which pushes the generators harder. This is not tested here. A run with the same 200 MW as constant impedance would test it.
 
 **Takeaway.** The cleanest single comparison shows the datacenter measurably shortens CCT — KM median 0.27 → 0.18 s, P(CCT < 0.25 s) 0.49 → 0.73 — and the Greenwood interval shows the shift is real but pinned only to about ±0.07 at 37 conditions. It establishes the matched, censoring-aware KM comparison that the rest of §7 scales up.
 
-### 7.3 The same example at 37 and 171 operating conditions
+### 7.3 The same example in aleatoric campaigns 1 and 2
 
-**Sampling:** bus 108, 200 MW, fault at bus 66, against the matched baseline on the same conditions. Left: `aleatoric1_ap08_qlim`, 37 conditions (the §7.2 sample). Right: `aleatoric2_ap08_qlim`, 171 conditions (60 hours × 3 commitments, of which 171 solve with the datacenter). The two campaigns share no conditions, so they are independent samples.
+**Sampling:** bus 108, 200 MW, fault at bus 66, against the matched baseline on the same conditions. Left: aleatoric campaign 1, 37 conditions (the §7.2 sample). Right: aleatoric campaign 2, 171 conditions (60 hours × 3 commitments, of which 171 solve with the datacenter). The two campaigns share no conditions, so they are independent samples.
 
 | | 37 conditions (§7.2) | 171 conditions |
 |---|---|---|
@@ -568,7 +540,7 @@ On these conditions the datacenter shortens CCT: P(CCT < 0.25 s) rises from 0.49
 
 ![KM curves at 37 and 171 conditions](figures/main_km_37_vs_171.png)
 
-*Figure 7.3. Kaplan–Meier P(CCT > t) at bus 108, 200 MW (orange) against the matched baseline (blue), fault at bus 66. Left: 37 conditions (`aleatoric1`). Right: 171 conditions (`aleatoric2`). Same axes in both panels, curves run to the 0.5 s cap, and the tick at 0.5 s marks the censored share. With 171 conditions the curve has about 4.6 times as many conditions behind each step, so it resolves finer structure and the interval at 0.25 s is narrower.*
+*Figure 7.3. Kaplan–Meier P(CCT > t) at bus 108, 200 MW (orange) against the matched baseline (blue), fault at bus 66. Left: 37 conditions (aleatoric campaign 1). Right: 171 conditions (aleatoric campaign 2). Same axes in both panels, curves run to the 0.5 s cap, and the tick at 0.5 s marks the censored share. With 171 conditions the curve has about 4.6 times as many conditions behind each step, so it resolves finer structure and the interval at 0.25 s is narrower.*
 
 Two points. First, the datacenter moves P(CCT < 0.25 s) from about 0.5 to 0.73 in both campaigns (the two panels). Second, the datacenter-arm interval is 0.132 wide at 171 conditions, against 0.287 at 37, the narrowing expected from the larger sample. The interval describes the procedure: if the study were repeated with new samples of conditions, about 95% of intervals built this way would contain the true P. It does not give a 95% probability that the true value lies in this one. Overlap of two separate intervals is not a test of a difference. The arms are matched on the same conditions, so a difference needs a paired interval, which we have not computed. Nine of the 180 conditions did not solve with the datacenter (8 solve failures, 1 simulation failure) and are excluded from the 171. §7.4 gives a related check on how the estimate settles as conditions are added.
 
@@ -576,11 +548,11 @@ Two points. First, the datacenter moves P(CCT < 0.25 s) from about 0.5 to 0.73 i
 
 ### 7.4 More operating conditions: how the estimate settles
 
-We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each pool (*subsampling* [2]; references and details in the [plan](datacenter_load_uq_plan.md#subsampling-the-term-what-it-is-used-for-and-what-73-showed)). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both pools. This holds for these two pools only, and the check does not give an uncertainty; that is the Greenwood interval in §7.3. The campaign did not need it, because all samples are already used. We might use the same check later as an alternative way to size a future study, if a full-size design costs too much. The plan sets out how.
+We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (*subsampling* [2]). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in §7.3. We might use the same check later to size a future study, if a full-size design costs too much.
 
 ![convergence of the KM estimate, 37 and 171 conditions](figures/main_convergence_37_vs_171.png)
 
-*Figure 7.4. KM estimate of P(CCT < 0.25 s) at bus 108, 200 MW, over random orderings of the 37-condition pool (green) and the 171-condition pool (purple). Line: median over 2,000 orderings. Shading: 5th–95th percentile. Black squares: full-pool estimate with its 95% Greenwood interval. Both medians sit at 0.730–0.733 from about 30–37 conditions onward. This is a check on these two pools only.*
+*Figure 7.4. KM estimate of P(CCT < 0.25 s) at bus 108, 200 MW, over random orderings of the 37 conditions of aleatoric campaign 1 (green) and the 171 of aleatoric campaign 2 (purple). Line: median over 2,000 orderings. Shading: 5th–95th percentile. Black squares: full-campaign estimate with its 95% Greenwood interval. Both medians sit at 0.730–0.733 from about 30–37 conditions onward.*
 
 The spread of CCT across conditions does not shrink with more samples. Adding conditions shrinks the error in the probability; the spread is a property of the conditions, and reducing it needs conditioning on something that explains it, such as net load (§7.5). Within the two highest net-load quintiles every measured CCT lies between 0.177 and 0.191 s, while the lower quintiles range up to 0.49 s.
 
@@ -588,7 +560,7 @@ The spread of CCT across conditions does not shrink with more samples. Adding co
 
 ### 7.5 Risk by net load
 
-**Sampling:** `aleatoric1_ap08_qlim`, datacenter at buses 6, 120, 108 and 148, at 50 to 400 MW, one fault. Hours are split into five net-load quintiles of 4 hours each. Each quintile holds 160 datacenter runs (4 buses × 5 sizes × 4 hours × 2 commitments).
+**Sampling:** aleatoric campaign 1, datacenter at buses 6, 120, 108 and 148, at 50 to 400 MW, one fault. Hours are split into five net-load quintiles of 4 hours each. Each quintile holds 160 datacenter runs (4 buses × 5 sizes × 4 hours × 2 commitments).
 
 | quintile | mean net load (MW) | datacenter runs solved | no outcome | censored | **P(CCT < 0.25 s)** |
 |---|---|---|---|---|---|
@@ -605,33 +577,31 @@ The spread of CCT across conditions does not shrink with more samples. Adding co
 P(CCT < 0.25 s) climbs from 0.07 in the lowest quintile to 1.00 in the two highest, with the step between q1 (mean 1,201 MW) and q2 (mean 1,421 MW). Conditioning on net load therefore accounts for the spread in §7.4.
 
 - **Conditional on solving.** Between 49% and 53% of datacenter runs in each quintile have no outcome. Whether the no-outcome runs would have the same CCT is unknown.
-- **Dispatch failures are spread across quintiles** (68 to 77 each), unlike the fault campaign (§7.6).
+- **Infeasible dispatches are spread across quintiles** (68 to 77 each), unlike the fault-screening campaign (§7.6).
 - **Baseline has only 8 solved runs per quintile**, too few for a quintile estimate. The matched comparison is in §7.2.
 
 **Takeaway.** Net load is the dominant driver: P(CCT < 0.25 s) climbs from 0.07 to 1.00 across the quintiles, with a sharp step between q1 and q2 (means 1,201 and 1,421 MW). This explains the condition-to-condition spread of §7.4 and gives a cheap screen — instability concentrates in the high-net-load hours.
 
-### 7.6 The fault sweep: what it measures and which faults discriminate
+### 7.6 The fault-screening campaign: which faults discriminate
 
-**Sampling:** `faultscreen1_ap08_qlim`, the fault sweep. 10 hours (2 per net-load quintile) × 2 commitments × 17 fault locations. There are 340 baseline runs with no datacenter, all solved, and 680 runs with a 200 MW datacenter at bus 108 or 148.
+**Sampling:** the fault-screening campaign. 10 hours (2 per net-load quintile) × 2 commitments × 17 fault locations. There are 340 baseline runs with no datacenter, all solved, and 680 runs with a 200 MW datacenter at bus 108 or 148.
 
 | | baseline (no datacenter) | datacenter (200 MW) |
 |---|---|---|
 | solved | 340 of 340 | 427 of 680 |
 | censored at 0.5 s | 302 (88.8%) | 306 (71.7%) |
-| no outcome | — | 253: 168 `sim_failed` (97 at alphaP 0.8 only, 71 at both alphaP levels), 85 at dispatch |
+| no outcome | — | 253: 168 simulation failures, 85 infeasible dispatches |
 
 Matched by (hour, commitment, fault), using datacenter runs that solved:
 
 * **Bus 108**, 194 pairs: P(CCT < 0.25 s) is 0.072 with the datacenter and 0.041 without. Censored: 70% and 81%.
 * **Bus 148**, 233 pairs: 0.064 and 0.034. Censored: 73% and 84%.
 * The datacenter is measured where the baseline is censored in 22 pairs (bus 108) and 25 pairs (bus 148). The reverse happens in none.
-* Where both runs are measured, the pairs cover the same 37 conditions at both buses, because the baseline is measured on only 38 conditions. The median ΔCCT is 0 s, 5 of 37 pairs fall with the datacenter, and the largest drop is 0.24 s.
+* Where both runs are measured, the pairs cover the same 37 conditions at both buses, because the baseline is measured on only 38 conditions. The median change in CCT is 0 s, CCT falls with the datacenter in 5 of 37 pairs, and the largest drop is 0.24 s.
 
 Reading: on this campaign the datacenter raises P(CCT < 0.25 s) only slightly, from 0.04 to 0.07 at bus 108 and from 0.03 to 0.06 at bus 148. Most baseline runs are censored (81–84% on these pairs), so the signal is weak. The direction matches §7.2, which uses a different fault and a measured baseline.
 
-> **Working hypothesis for the 97 runs that fail only at alphaP 0.8.** These are datacenter runs that solve at alphaP 0.2 and fail at alphaP 0.8: 89 at initialization and 8 in the transient. The constant-power share may move the fault-on dispatch past a bolted fault, so no post-fault start exists. This is supported on one dispatch (h1879), not established elsewhere, and can be falsified. The predictions, and the breakdown of the 71 shared failures and the 85 dispatch failures, are in the [issue doc §9](ida_ic_issue.md#9-hypothesis-h1-and-what-it-means) and the [plan](datacenter_load_uq_plan.md#main-results-the-two-switched-campaigns-measured-2026-11-10). Report these runs as no outcome.
-
-All 85 dispatch failures fall in q0, the lowest net-load quintile: 85 of its 136 datacenter runs, or 63%. No dispatch failure occurs in q1 to q4. The cause of the q0 concentration has not been checked.
+All 85 infeasible dispatches fall in q0, the lowest net-load quintile: 85 of its 136 datacenter runs, or 63%. None occurs in q1 to q4. The cause of the q0 concentration has not been checked.
 
 Baseline CCT by fault location, for the 20 baseline conditions each:
 
@@ -647,45 +617,46 @@ Baseline CCT by fault location, for the 20 baseline conditions each:
 
 *Figure 7.6. Kaplan–Meier P(CCT > t) for the datacenter at bus 108 (left) and bus 148 (right), each against the baseline on the same matched (hour, commitment, fault) conditions. Baseline in blue, datacenter in orange. The two panels look nearly identical because at 200 MW the bus choice barely moves CCT; they are not the same plot (n = 194 vs 233, with different censored shares).*
 
-Thirteen of 17 fault locations are censored in every baseline condition, so a uniform fault budget spends most of its runs on faults that cannot separate operating conditions. Fault screening should be cheap, followed by concentration on the informative faults; the [plan](datacenter_load_uq_plan.md#main-results-the-two-switched-campaigns-measured-2026-11-10) has the design detail. Bus 66, the fault in the aleatoric campaign, is not the most informative location: bus 94 is. At 200 MW, buses 108 and 148 look alike in this sample (0.072 against 0.064 for P(CCT < 0.25 s)).
+Thirteen of 17 fault locations are censored in every baseline condition, so a uniform fault budget spends most of its runs on faults that cannot separate operating conditions. Fault screening should be cheap, followed by concentration on the informative faults. Bus 66, the fault in the aleatoric campaigns, is not the most informative location: bus 94 is. At 200 MW, buses 108 and 148 look alike in this sample (0.072 against 0.064 for P(CCT < 0.25 s)).
 
 **Takeaway.** Most faults carry no information — 13 of 17 never leave the cap, so a uniform fault budget is mostly wasted — while a few (bus 94) discriminate, and at 200 MW the two placements behave almost identically. Where the datacenter sits matters less than the operating condition and the fault; the practical lesson is to screen contingencies cheaply, then concentrate the budget on the few that separate conditions.
 
 ### 7.7 Censoring: dropping censored runs inflates risk
 
-The KM curves in §7.2–§7.6 keep censored runs in the denominator; this section shows what it costs to drop them instead — the common shortcut. Dropping censored runs from a risk estimate inflates it by a factor that depends only on the censored share, not on the threshold:
+The KM curves in §7.2–§7.6 keep censored runs in the denominator; this section shows what it costs to drop them instead, a common shortcut. Dropping censored runs from a risk estimate inflates it by a factor that depends only on the censored share, not on the threshold:
 
 | campaign | datacenter runs solved | measured | censored share | inflation from dropping censored runs |
 |---|---|---|---|---|
-| `aleatoric1_ap08_qlim` | 399 | 278 | 30.3% | **1.44×** |
-| `faultscreen1_ap08_qlim` | 427 | 121 | 71.7% | **3.53×** |
+| aleatoric campaign 1 | 399 | 278 | 30.3% | **1.44×** |
+| fault-screening campaign | 427 | 121 | 71.7% | **3.53×** |
 
 $$\frac{\hat P_{\text{drop}}}{\hat P_{\text{keep}}} = \frac{N_{\text{solved}}}{N_{\text{measured}}}$$
 
 This follows from §7.1, since censoring sits at one point beyond every measured value. The factor is arithmetic, but it is easy to get wrong by quoting one population's censored share against another's label. The 3.53× corresponds to 71.7% censoring among datacenter runs that solved. It is not the share of the 1,020 planned runs.
 
-**Takeaway.** This is the quantitative reason §7 uses Kaplan–Meier rather than a naive below-threshold share: discarding censored runs would have inflated every risk number here — 1.4× in the aleatoric campaign, 3.5× in the fault sweep. Keeping censored runs is not a refinement; it is the difference between a right and a wrong answer.
+**Takeaway.** This is the quantitative reason §7 uses Kaplan–Meier rather than a naive below-threshold share: discarding censored runs would have inflated every risk number here: 1.4× in aleatoric campaign 1, 3.5× in the fault-screening campaign. Keeping censored runs is not a refinement; it is the difference between a right and a wrong answer.
 
 > **Details:** [`alphaP` tested as a sensitivity](datacenter_load_uq_plan.md#alphap-tested-as-a-sensitivity-it-governs-simulability-not-cct-measured-2026-10-22) · [the feasible-`alphaP` frontier, mapped](datacenter_load_uq_plan.md#the-feasible-alphap-frontier-mapped-afront1-measured-2026-11-02) · [fault location is the missing variable](datacenter_load_uq_plan.md#fault-location-is-the-missing-variable-afront2-measured-2026-11-02) · [`phase3b` siting pilot and earlier campaigns](datacenter_load_uq_plan.md#phase3b-siting-pilot-243-conditions-16-buses-3-hours)
 
 ---
 
-## 8. First look at ACTIVSg2000
+## 8. First look at the Texas synthetic grid (ACTIVSg2000)
 
 The 200-bus case is small enough that brute force works: whole campaigns finish
 in minutes. That is convenient but it hides the question the methods work
-exists to answer, so before pausing we measured what changes at **ACTIVSg2000**
-(2,000 buses, the TAMU synthetic Texas case [5]). This is scoping, not a campaign.
+exists to answer, so we measured what changes on the Texas synthetic grid,
+**ACTIVSg2000** (2,000 buses, from the TAMU repository [5]). This is a scoping
+study, not a campaign.
 
-**What already exists.** A GridKit `case.json` ships with the repo, raw TAMU
-data and processed hourly `demand` / `wind` / **`solar`** profiles are on
-`/projects`. The base case **runs unmodified**: a 10 s simulation with a
-0.15 s fault completes with `rc = 0` at both default and full monitoring.
+**What already exists.** A GridKit dynamic case is distributed with GridKit, and
+raw TAMU data and processed hourly demand, wind and **solar** profiles are
+available. The base case **runs unmodified**: a 10 s simulation with a
+0.15 s fault completes successfully at both default and full monitoring.
 
-**Measured, same settings on both cases.** Stage-A figures are warm per-case
-`solve_time` from one batched Julia process, so the ~6 s launch is amortised
-rather than counted; cold single-shot timings are launch-dominated and
-misleading.
+**Measured, same settings on both cases.** Dispatch-stage figures are warm
+per-case solve times from one batched Julia process, so the ~6 s start-up is
+amortised rather than counted; cold single-shot timings are dominated by
+start-up and misleading.
 
 | quantity | ACTIVSg200 | ACTIVSg2000 | ratio |
 |---|---|---|---|
@@ -693,22 +664,22 @@ misleading.
 | branches | 246 | 3,206 | 13× |
 | devices | 476 | 5,787 | 12.2× |
 | synchronous machines | 40 | 334 | 8.4× |
-| `LoadZIP` | 109 | 1,245 | 11.4× |
-| `case.json` | 0.24 MB | 2.93 MB | 12.2× |
+| loads | 109 | 1,245 | 11.4× |
+| dynamic case file | 0.24 MB | 2.93 MB | 12.2× |
 | **DC OPF** (warm) | 0.011 s | 0.212 s | **19.1×** |
 | **AC PF** (warm) | 0.018 s | 0.331 s | **18.5×** |
-| **stage A total** | 0.029 s | 0.543 s | **18.7×** |
+| **dispatch stage total** | 0.029 s | 0.543 s | **18.7×** |
 | **one dynamic run** (solver time), full monitors | 0.28 s | 7.08 s | **25.3×** |
 | monitor CSV | 27.3 MB | 262.5 MB | 9.6× |
 | monitor columns | 481 | 4,649 | 9.7× |
 
 **The shape of the growth.** Against a 10× increase in buses, data scales
-**linearly** ($\approx N^{1.0}$), stage A as $\approx N^{1.27}$, and the dynamic
+**linearly** ($\approx N^{1.0}$), the dispatch stage as $\approx N^{1.27}$, and the dynamic
 simulation as $\approx N^{1.40}$. So compute grows faster than the network and
 faster than storage, and the dynamic stage — the cheap one at 200 buses — grows
 fastest.
 
-**What that implies for a campaign.** Projecting `aleatoric1` (840 conditions,
+**What that implies for a campaign.** Projecting aleatoric campaign 1 (840 runs,
 one full run plus ~8 bisection probes each, so ~7,560 simulations). Serial
 times use the measured per-run cost; wall times assume the pilot's 16 workers
 per node and scale linearly, which is optimistic until per-worker memory is
@@ -716,15 +687,15 @@ known:
 
 | | ACTIVSg200 | ACTIVSg2000 |
 |---|---|---|
-| per dynamic run (solver time), full monitors, `tmax` 10 s | 0.28 s | **7.08 s** |
-| stage A, all 840 conditions | 24 s | 456 s |
+| per dynamic run (solver time), full monitors, 10 s simulated | 0.28 s | **7.08 s** |
+| dispatch stage, all 840 runs | 24 s | 456 s |
 | **dynamic runs, serial** | **~35 min** | **~14.9 h** |
 | wall on 1 node, 16 workers | ~2.2 min | **~56 min** |
 | wall on 1 node, 32 workers | ~1.1 min | **~28 min** |
 | monitor output, raw CSV | 22 GB | **~220 GB** |
 | after parquet | 4.5 GB | **~45 GB** |
 
-*(Calibration: `aleatoric1` took 6.0 min of wall on one node with 16 workers.
+*(Calibration: aleatoric campaign 1 took 6.0 min of wall on one node with 16 workers.
 The ideal for the same job is 2.2 min, so the measured
 overhead is about 2.7×, from scheduling, startup and per-launch cost. Applied to
 the 2000-bus ideal, a full-size campaign is about **2.5 h of wall on one node at
@@ -732,12 +703,12 @@ the 2000-bus ideal, a full-size campaign is about **2.5 h of wall on one node at
 
 Compute is affordable but not negligible: at 200 buses the 104 cores bind before
 memory does, and the 16 workers per node were a choice, not a limit. At 2,000
-buses one dynamic run peaked at 126 MB and a two-case stage-A batch at 1.0 GB,
+buses one dynamic run peaked at 126 MB and a two-case dispatch batch at 1.0 GB,
 but a full worker batch is **unmeasured** — the number to pin down before
 trusting any wall-time projection. Until then, treat ~2.5 h (one node, 16
 workers) as the planning figure.
 **Storage, not compute, is the binding constraint**, and the mitigation is
-already known: 4,000 of the 4,649 columns are bus `Vr`/`Vi`, so selective
+already known: 4,000 of the 4,649 output columns are bus voltages, so selective
 monitoring is worth far more here than it was at 200 buses, where the same trick
 already bought 13.8× on bisection probes.
 
@@ -754,19 +725,18 @@ concrete case for screening, surrogates and adaptive refinement over a larger
 factorial, and it makes the pilot's measured 76 % contingency waste far more
 expensive to tolerate.
 
-The pilot's aleatoric campaign is a 40-condition grid; at 2,000 buses a campaign
+The pilot's aleatoric campaign 1 is a 40-condition grid; at 2,000 buses a campaign
 needs distributions over many more conditions, placements and fault buses, which
 brute force will not reach. The leverage is already visible: P(CCT < 0.25 s) has
 a standard error of about 0.07 at 37 conditions (§7.2) and CCT spread is
-concentrated by net load (§7.5), so conditioning and stratification — not raw
-sample count — tighten the answer. A `faultscreen`-shaped case already builds
-and runs at 2,000 buses, after one campaign-code blocker was found and fixed
-(see the Details).
+concentrated by net load (§7.5), so conditioning and stratification, not raw
+sample count, tighten the answer. A fault-screening-style campaign already builds
+and runs at 2,000 buses.
 
 **Takeaway.** Brute force survives one order of magnitude of grid size, not two:
-a full `aleatoric1`-scale campaign at 2,000 buses is about 2.5 h on one node,
-storage rather than compute binds, and the dynamic run — nearly free at 200
-buses — becomes the cost to minimise. Scaling the pilot is a methods problem,
+a campaign the size of aleatoric campaign 1 at 2,000 buses is about 2.5 h on one node,
+storage rather than compute binds, and the dynamic run, nearly free at 200
+buses, becomes the cost to minimise. Scaling the pilot is a methods problem,
 not a hardware one, which §9 takes up.
 
 > **Details:** [scaling measurements, the ACTIVSg2000 port, and the positional-id trap](datacenter_load_uq_plan.md#scaling-to-activsg2000-measured-2026-11-02) ·
@@ -775,10 +745,10 @@ not a hardware one, which §9 takes up.
 
 ---
 
-## 9. Where this goes
+## 9. Next steps
 
 The pilot leaves a clear picture of where cost lives and therefore where the
-methods work should go. At 200 buses the expensive part is **stage A**, and the
+methods work should go. At 200 buses the expensive part is the **dispatch stage**, and the
 scientifically interesting dimensions — contingency location, disturbance
 severity, model form — are nearly free once a dispatch exists. At 2,000 buses
 (§8) that asymmetry inverts: the dynamic run dominates, the design space grows by
@@ -803,7 +773,7 @@ measured the levers:
    840 runs is a zero-cost first step.
 4. **Surrogate or warm-started CCT, and early-terminating integration.**
    Neighbouring dispatches have strongly correlated CCT, and pole slip is
-   detectable well before `tmax`, so both the number and the length of
+   detectable well before the end of the simulated window, so both the number and the length of
    simulations can be cut.
 5. **Exploit the conditional-independence structure.** Expensive outer samples
    over operating conditions, cheap inner fan-out over disturbances and model
@@ -823,14 +793,13 @@ oracle and reserving dynamic runs for confirmation and for labelling the cases
 where the surrogate is least certain, an active-learning loop [26] that chooses
 which runs to spend. This is **supplemental** to sampling-based UQ, not a
 replacement: the surrogate lowers per-sample cost, while the sampling design
-still fixes what the estimate means. Our fuller survey of these ideas is in
-`gt_ideas.md`.
+still fixes what the estimate means.
 
 The near-term steps are the cheap ones: a wider contingency screen, a
-paired-censoring treatment of `dCCT`, a variance decomposition of the existing
-runs, a short literature check on datacenter load modelling so §10's constraint
-can be addressed rather than worked around, and porting `CampaignConfig` to
-ACTIVSg2000 (§8). The graph-surrogate track builds on the dataset those
+treatment of censoring in the paired (with and without datacenter) comparison,
+a variance decomposition of the existing runs, a short literature check on
+datacenter load modelling, and running the campaigns on the Texas grid
+(§8). The graph-surrogate track builds on the dataset those
 campaigns are already generating.
 
 > **Details:** [where numerical-methods contributions could be made](datacenter_load_uq_plan.md#where-numerical-methods-contributions-could-be-made)

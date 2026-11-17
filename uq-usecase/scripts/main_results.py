@@ -29,6 +29,13 @@ CAP = 0.5
 THRESH = 0.25
 rng = np.random.default_rng(0)
 
+# Names shown in figures (the report uses these instead of run identifiers).
+DISPLAY = {
+    "aleatoric1_ap08_qlim": "Aleatoric campaign 1",
+    "aleatoric2_ap08_qlim": "Aleatoric campaign 2",
+    "faultscreen1_ap08_qlim": "Fault-screening campaign",
+}
+
 
 def load(name):
     p = ROOT / name / "results.parquet"
@@ -36,7 +43,12 @@ def load(name):
         R = pd.read_parquet(p)
     else:
         # Same table as sweep_collect.py, built in memory (nothing written to the store).
-        R = pd.DataFrame([json.loads(f.read_text()) for f in sorted((ROOT / name / "records").glob("*.json"))])
+        R = pd.DataFrame(
+            [
+                json.loads(f.read_text())
+                for f in sorted((ROOT / name / "records").glob("*.json"))
+            ]
+        )
     R["cens"] = R["cct_censored"].fillna(False).astype(bool)
     return R
 
@@ -67,8 +79,9 @@ def plot_km(ax, times, cens, color, label):
     cens = np.asarray(cens, bool)
     g, s = km(times, ~cens)
     g, s = np.append(g, CAP), np.append(s, s[-1])
-    ax.step(g, s, where="post", color=color,
-            label=f"{label}, {cens.mean():.0%} censored")
+    ax.step(
+        g, s, where="post", color=color, label=f"{label}, {cens.mean():.0%} censored"
+    )
     ax.plot([CAP], [s[-1]], marker="|", ms=12, mew=2, color=color, ls="none")
     ax.set_xlim(0, CAP * 1.04)
     ax.set_ylim(0, 1)
@@ -106,16 +119,25 @@ def sample_space(name, R):
     sited = R[R.dc_bus.notna()]
     print("baseline runs:", len(base), base.status.value_counts().to_dict())
     print("sited runs:", len(sited), sited.status.value_counts().to_dict())
-    print("hours:", R.hour.nunique(), "| bins:", R.groupby("bin").hour.nunique().to_dict())
-    print("faults:", R.fault_bus.nunique(), "| placements:", sorted(R.dc_bus.dropna().unique().astype(int).tolist()))
+    print(
+        "hours:", R.hour.nunique(), "| bins:", R.groupby("bin").hour.nunique().to_dict()
+    )
+    print(
+        "faults:",
+        R.fault_bus.nunique(),
+        "| placements:",
+        sorted(R.dc_bus.dropna().unique().astype(int).tolist()),
+    )
     print("MW levels:", sorted(R.dc_mw.unique().tolist()))
 
 
 def km_summary(label, R):
     ok = R[R.status == "ok"]
     ev = ~ok.cens
-    print(f"{label}: n_ok={len(ok)}, censored={ok.cens.sum()} ({ok.cens.mean():.1%}), "
-          f"P(CCT<{THRESH})={p_below(ok.cct_s, ev):.3f}, KM median={km_median(ok.cct_s, ev)}")
+    print(
+        f"{label}: n_ok={len(ok)}, censored={ok.cens.sum()} ({ok.cens.mean():.1%}), "
+        f"P(CCT<{THRESH})={p_below(ok.cct_s, ev):.3f}, KM median={km_median(ok.cct_s, ev)}"
+    )
 
 
 def aleatoric_block():
@@ -141,7 +163,7 @@ def aleatoric_block():
     ax.axvline(THRESH, ls=":", color="grey")
     ax.set_xlabel("CCT (s)")
     ax.set_ylabel("P(CCT > t)")
-    ax.set_title("aleatoric1_ap08_qlim, fault 66, switching at alphaP 0.8")
+    ax.set_title("Aleatoric campaign 1, fault 66")
     ax.legend(fontsize=8, loc="upper right")
     fig.tight_layout()
     fig.savefig(FIG / "main_aleatoric_km_simple.png", dpi=150)
@@ -153,33 +175,53 @@ def aleatoric_block():
     for i, b in enumerate(sorted(A.bin.unique())):
         s_ = sit_ok[sit_ok.bin == b]
         mean_net = A[A.bin == b].net_mw.mean()
-        plot_km(ax, s_.cct_s, s_.cens, f"C{i}", f"{b}: mean net {mean_net:,.0f} MW, n={len(s_)}")
-        print(f"  {b} mean net load {mean_net:,.1f} MW, net range "
-              f"{A[A.bin == b].net_mw.min():,.1f}-{A[A.bin == b].net_mw.max():,.1f}")
+        plot_km(
+            ax,
+            s_.cct_s,
+            s_.cens,
+            f"C{i}",
+            f"{b}: mean net {mean_net:,.0f} MW, n={len(s_)}",
+        )
+        print(
+            f"  {b} mean net load {mean_net:,.1f} MW, net range "
+            f"{A[A.bin == b].net_mw.min():,.1f}-{A[A.bin == b].net_mw.max():,.1f}"
+        )
     ax.axvline(THRESH, ls=":", color="grey")
     ax.set_xlabel("CCT (s)")
     ax.set_ylabel("P(CCT > t)")
-    ax.set_title("aleatoric1_ap08_qlim, sited runs by net-load quintile")
+    ax.set_title("Aleatoric campaign 1, datacenter runs by net-load quintile")
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(FIG / "main_aleatoric_km_by_netload.png", dpi=150)
     plt.close(fig)
-    print("no-outcome share by quintile:",
-          (A[A.dc_bus.notna()].groupby("bin").status.apply(lambda x: (x != "ok").mean())).round(3).to_dict())
-    print("sited dispatch failures by quintile:",
-          A[A.dc_bus.notna() & (A.status == "solve_failed")].groupby("bin").size().to_dict())
+    print(
+        "no-outcome share by quintile:",
+        (A[A.dc_bus.notna()].groupby("bin").status.apply(lambda x: (x != "ok").mean()))
+        .round(3)
+        .to_dict(),
+    )
+    print(
+        "sited dispatch failures by quintile:",
+        A[A.dc_bus.notna() & (A.status == "solve_failed")]
+        .groupby("bin")
+        .size()
+        .to_dict(),
+    )
     for b in sorted(A.bin.unique()):
         s = sit_ok[sit_ok.bin == b]
         bs = base_ok[base_ok.bin == b]
         sa = A[(A.bin == b) & A.dc_bus.notna()]
-        print(f"  {b}: sited ok {len(s)}/{len(sa)} cens {s.cens.mean():.1%} "
-              f"P(<{THRESH})={p_below(s.cct_s, ~s.cens):.3f} | baseline ok {len(bs)} "
-              f"P(<{THRESH})={p_below(bs.cct_s, ~bs.cens) if len(bs) else np.nan:.3f}")
+        print(
+            f"  {b}: sited ok {len(s)}/{len(sa)} cens {s.cens.mean():.1%} "
+            f"P(<{THRESH})={p_below(s.cct_s, ~s.cens):.3f} | baseline ok {len(bs)} "
+            f"P(<{THRESH})={p_below(bs.cct_s, ~bs.cens) if len(bs) else np.nan:.3f}"
+        )
 
     # Damage at matched conditions: sited minus baseline, same hour, commitment, fault 66
     key = ["hour", "n_commit"]
     bb = A[A.dc_bus.isna()][key + ["cct_s", "cens", "status"]].rename(
-        columns={"cct_s": "cct_base", "cens": "cens_base", "status": "st_base"})
+        columns={"cct_s": "cct_base", "cens": "cens_base", "status": "st_base"}
+    )
     m = A[A.dc_bus.notna()].merge(bb, on=key)
     m = m[(m.status == "ok") & (m.st_base == "ok")]
     m = m[~m.cens & ~m.cens_base]
@@ -201,7 +243,8 @@ def faultscreen_block():
 
     key = ["hour", "n_commit", "fault_bus"]
     base = F[F.dc_bus.isna()][key + ["cct_s", "cens", "status"]].rename(
-        columns={"cct_s": "cct_base", "cens": "cens_base", "status": "st_base"})
+        columns={"cct_s": "cct_base", "cens": "cens_base", "status": "st_base"}
+    )
     fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
     for ax, b in zip(axes, [108, 148]):
         sub = ok[ok.dc_bus == b]
@@ -210,7 +253,7 @@ def faultscreen_block():
         plot_km(ax, sub.cct_s, sub.cens, "C1", f"bus {b}, 200 MW, n={len(sub)}")
         ax.axvline(THRESH, ls=":", color="grey")
         ax.set_xlabel("CCT (s)")
-        ax.set_title(f"faultscreen1_ap08_qlim, bus {b}")
+        ax.set_title(f"Fault-screening campaign, bus {b}")
         ax.legend(fontsize=8)
     axes[0].set_ylabel("P(CCT > t)")
     fig.tight_layout()
@@ -224,15 +267,18 @@ def faultscreen_block():
         n_pairs = len(ok_pair)
         meas = ok_pair[~ok_pair.cens & ~ok_pair.cens_base]
         dcct = meas.cct_s - meas.cct_base
-        print(f"  bus {b}: pairs with both ok {n_pairs}, both measured {len(meas)}, "
-              f"sited-only failed {(m.status != 'ok').sum()}, median dCCT {dcct.median():.4f}, "
-              f"min {dcct.min():.4f}, max {dcct.max():.4f}, "
-              f"fraction dCCT<0 {(dcct < 0).mean():.3f}")
+        print(
+            f"  bus {b}: pairs with both ok {n_pairs}, both measured {len(meas)}, "
+            f"sited-only failed {(m.status != 'ok').sum()}, median dCCT {dcct.median():.4f}, "
+            f"min {dcct.min():.4f}, max {dcct.max():.4f}, "
+            f"fraction dCCT<0 {(dcct < 0).mean():.3f}"
+        )
 
     print("\nper-fault baseline CCT (ok runs):")
     bo = ok[ok.dc_bus.isna()]
-    tab = bo.groupby("fault_bus").agg(n=("cct_s", "size"), median=("cct_s", "median"),
-                                      cens=("cens", "mean"))
+    tab = bo.groupby("fault_bus").agg(
+        n=("cct_s", "size"), median=("cct_s", "median"), cens=("cens", "mean")
+    )
     print(tab.round(3).to_string())
     return F
 
@@ -242,7 +288,9 @@ def pool_108(name):
     R = load(name)
     sample_space(name, R)
     key = ["hour", "n_commit"]
-    dc = R[(R.dc_bus == 108) & (R.dc_mw == 200) & (R.status == "ok")].reset_index(drop=True)
+    dc = R[(R.dc_bus == 108) & (R.dc_mw == 200) & (R.status == "ok")].reset_index(
+        drop=True
+    )
     base = R[R.dc_bus.isna()].merge(dc[key].drop_duplicates(), on=key)
     return dc, base
 
@@ -256,12 +304,14 @@ def km_37_vs_171_block():
         km_summary(f"{name} bus 108, 200 MW", dc)
         for lab, R in [("baseline", base), ("bus 108, 200 MW", dc)]:
             p, se = greenwood(R.cct_s, ~R.cens)
-            print(f"  {lab}: P(CCT<{THRESH})={p:.3f} Greenwood 95% [{p - 1.96 * se:.3f}, {p + 1.96 * se:.3f}]")
+            print(
+                f"  {lab}: P(CCT<{THRESH})={p:.3f} Greenwood 95% [{p - 1.96 * se:.3f}, {p + 1.96 * se:.3f}]"
+            )
         plot_km(ax, base.cct_s, base.cens, "C0", f"baseline, n={len(base)}")
         plot_km(ax, dc.cct_s, dc.cens, "C1", f"bus 108, 200 MW, n={len(dc)}")
         ax.axvline(THRESH, ls=":", color="grey")
         ax.set_xlabel("CCT (s)")
-        ax.set_title(f"{name}, fault 66")
+        ax.set_title(f"{DISPLAY[name]}, fault 66")
         ax.legend(fontsize=8, loc="upper right")
     axes[0].set_ylabel("P(CCT > t)")
     fig.tight_layout()
@@ -280,7 +330,15 @@ def random_orderings(pool, ns, B=2000, seed=0):
     rows = []
     for n in ns:
         v = np.array([p_below(cct[p[:n]], ev[p[:n]]) for p in perms])
-        rows.append((n, np.nanmedian(v), np.nanpercentile(v, 5), np.nanpercentile(v, 95), np.nanstd(v)))
+        rows.append(
+            (
+                n,
+                np.nanmedian(v),
+                np.nanpercentile(v, 5),
+                np.nanpercentile(v, 95),
+                np.nanstd(v),
+            )
+        )
     return np.array(rows)
 
 
@@ -288,24 +346,43 @@ def convergence_block():
     """Figure 7.3: spread of the KM estimate over random orderings, for the 37-condition pool
     (aleatoric1) and the 171-condition pool (aleatoric2), both at bus 108, 200 MW."""
     fig, ax = plt.subplots(figsize=(7, 4.5))
-    specs = [("aleatoric1_ap08_qlim", "C2", [2, 3, 5, 10, 20, 30, 37]),
-             ("aleatoric2_ap08_qlim", "C4", [2, 3, 5, 10, 20, 37, 60, 100, 171])]
+    specs = [
+        ("aleatoric1_ap08_qlim", "C2", [2, 3, 5, 10, 20, 30, 37]),
+        ("aleatoric2_ap08_qlim", "C4", [2, 3, 5, 10, 20, 37, 60, 100, 171]),
+    ]
     for name, color, ns in specs:
         dc, _ = pool_108(name)
         N = len(dc)
         p_full, se_full = greenwood(dc.cct_s, ~dc.cens)
         r = random_orderings(dc, ns)
-        print(f"\nconvergence pool {name}: N={N}, full-pool P={p_full:.3f}, "
-              f"Greenwood SE {se_full:.3f}, 95% [{p_full - 1.96 * se_full:.3f}, {p_full + 1.96 * se_full:.3f}]")
+        print(
+            f"\nconvergence pool {name}: N={N}, full-pool P={p_full:.3f}, "
+            f"Greenwood SE {se_full:.3f}, 95% [{p_full - 1.96 * se_full:.3f}, {p_full + 1.96 * se_full:.3f}]"
+        )
         for n, med, lo, hi, sd in r:
             theory = np.sqrt(p_full * (1 - p_full) / n * (N - n) / (N - 1))
-            print(f"  n={int(n)}: median {med:.3f}, 5-95% [{lo:.3f}, {hi:.3f}] width {hi - lo:.3f}, "
-                  f"sd {sd:.4f} (sampling-without-replacement formula {theory:.4f})")
+            print(
+                f"  n={int(n)}: median {med:.3f}, 5-95% [{lo:.3f}, {hi:.3f}] width {hi - lo:.3f}, "
+                f"sd {sd:.4f} (sampling-without-replacement formula {theory:.4f})"
+            )
         ax.fill_between(r[:, 0], r[:, 2], r[:, 3], color=color, alpha=0.25)
-        ax.plot(r[:, 0], r[:, 1], "o-", color=color, ms=4,
-                label=f"{name.split('_')[0]}, N={N}: median and 5-95% over orderings")
-        ax.errorbar([N], [p_full], yerr=[[1.96 * se_full], [1.96 * se_full]], fmt="s", color="k", capsize=4,
-                    label="Greenwood 95% CI, full pool" if N == 171 else None)
+        ax.plot(
+            r[:, 0],
+            r[:, 1],
+            "o-",
+            color=color,
+            ms=4,
+            label=f"{DISPLAY[name]}, N={N}: median and 5-95% over orderings",
+        )
+        ax.errorbar(
+            [N],
+            [p_full],
+            yerr=[[1.96 * se_full], [1.96 * se_full]],
+            fmt="s",
+            color="k",
+            capsize=4,
+            label="Greenwood 95% CI, full pool" if N == 171 else None,
+        )
     ax.set_xlabel("number of operating conditions (hour x commitment)")
     ax.set_ylabel(f"KM estimate of P(CCT < {THRESH} s)")
     ax.set_ylim(0, 1)
@@ -321,8 +398,10 @@ def inflation(name):
     sited = R[(R.dc_bus.notna()) & (R.status == "ok")]
     n_tot = len(sited)
     n_unc = int((~sited.cens).sum())
-    print(f"{name}: sited ok {n_tot}, uncensored {n_unc}, censored {sited.cens.mean():.1%}, "
-          f"drop/keep inflation {n_tot / n_unc:.2f}")
+    print(
+        f"{name}: sited ok {n_tot}, uncensored {n_unc}, censored {sited.cens.mean():.1%}, "
+        f"drop/keep inflation {n_tot / n_unc:.2f}"
+    )
 
 
 if __name__ == "__main__":

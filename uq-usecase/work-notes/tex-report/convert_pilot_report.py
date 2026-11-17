@@ -63,7 +63,31 @@ REPO_BASE = "https://github.com/ORNL/GridKit"  # GitHub repository base URL
 # Sections to omit from the report (the markdown keeps them; they are just not
 # emitted here). Inbound "§N" cross-references to a skipped section are cleaned up
 # automatically by apply_numbered_headings_and_refs so nothing dangles.
-SKIP_SECTIONS = {10, 11}  # 10 = GridKit end-user feedback, 11 = Limitations
+SKIP_SECTIONS = {
+    10,
+    11,
+    12,
+}  # 10 = GridKit feedback, 11 = Limitations, 12 = Implementation
+
+# "> **Details:** [...](plan.md#...)" boxes link into the working notes; useful in the
+# markdown, noise in the report. Implementation-note boxes are always kept.
+INCLUDE_DETAILS = False
+
+# Prose terms rendered with the report's acronym commands (keys must exist in
+# common/acronyms.tex). Longest/plural forms first. Headings and glossary labels
+# are excluded and use the plain short form instead.
+ACRONYMS = [
+    (r"AC OPFs", r"\acp{acopf}"),
+    (r"AC OPF", r"\ac{acopf}"),
+    (r"DC OPFs", r"\acp{dcopf}"),
+    (r"DC OPF", r"\ac{dcopf}"),
+    (r"AC PFs", r"\acp{acpf}"),
+    (r"AC PF", r"\ac{acpf}"),
+    (r"CCTs", r"\acp{cct}"),
+    (r"CCT", r"\ac{cct}"),
+    (r"UPS", r"\ac{ups}"),
+]
+ACRONYM_PLAIN = {"AC OPF": "ACOPF", "DC OPF": "DCOPF", "AC PF": "ACPF"}
 
 # Phase 3+ options (Mermaid diagrams)
 MERMAID_FORMAT = "png"  # Options: "tikz" (inline, styled), "png" (requires mermaid-cli, creates placeholder if unavailable)
@@ -286,6 +310,14 @@ def markdown_to_latex_text(text):
         if in_quote:
             processed_quote = "\n".join(quote_buffer)
 
+            if processed_quote.lstrip().startswith("**Details") and not INCLUDE_DETAILS:
+                if quote_started:
+                    result_lines.append("\\end{quote}")
+                    quote_started = False
+                quote_buffer = []
+                in_quote = False
+                return
+
             # Boxed note: Details and Implementation-note blockquotes use the fbox
             if (
                 "Details:" in processed_quote
@@ -446,7 +478,9 @@ def markdown_to_latex_text(text):
                 # Keep the manual section number (e.g. "7.0") so "§7.0" references
                 # in the prose resolve to the heading. Use starred (unnumbered)
                 # commands so LaTeX does not add its own conflicting number.
-                htext = markdown_inline_formatting(heading_match.group(2).strip())
+                htext = markdown_inline_formatting(
+                    heading_match.group(2).strip(), acronyms=False
+                )
                 if hashes == "##":
                     result_lines.append(f"\\subsection*{{{htext}}}")
                     result_lines.append(
@@ -681,9 +715,11 @@ def markdown_glossary_to_latex_deflist(table_md):
         if len(row) >= 2:
             term = row[0].strip()
             definition = row[1].strip()
+            for long_form, short in ACRONYM_PLAIN.items():
+                term = term.replace(long_form, short)
 
             # Convert markdown formatting in both term and definition
-            term = markdown_inline_formatting(term)
+            term = markdown_inline_formatting(term, acronyms=False)
             definition = markdown_inline_formatting(definition)
 
             # Use \item[\textbf{term}] for definition list format
@@ -795,7 +831,26 @@ def markdown_table_to_latex_tabular(table_md, float=True, compact=False):
     return latex
 
 
-def markdown_inline_formatting(text):
+def apply_acronyms(text):
+    """Replace prose acronym terms with \\ac{...} (see ACRONYMS); \\Ac{...} at sentence start."""
+
+    def _sub(m, rep):
+        before = text_ref[0][: m.start()].rstrip("*").rstrip()
+        if not before or before[-1] in ".!?:":
+            return rep.replace(r"\ac", r"\Ac", 1)
+        return rep
+
+    text_ref = [text]
+    for term, rep in ACRONYMS:
+        text_ref[0] = re.sub(
+            r"(?<![\w\\{])" + term + r"(?!\w)",
+            lambda m, r=rep: _sub(m, r),
+            text_ref[0],
+        )
+    return text_ref[0]
+
+
+def markdown_inline_formatting(text, acronyms=True):
     """
     Convert inline markdown formatting: **bold**, *italic*, `code`, $math$.
     Escapes Unicode characters FIRST, then backticks, then bold/italic.
@@ -832,6 +887,12 @@ def markdown_inline_formatting(text):
             ("°", "deg"),
         ):
             code = code.replace(u, r)
+
+        # Values and ranges (e.g. `0.5`, `80/20/0`, `[18, 38]`) are not code: no typewriter.
+        if re.fullmatch(r"[\d\s.,/()+\-=%\[\]]+", code):
+            if "[" in code:
+                return "$" + code + "$"
+            return code.replace("%", r"\%")
 
         if INLINE_CODE_FORMAT == "math":
             # Math mode: $code$
@@ -895,6 +956,9 @@ def markdown_inline_formatting(text):
         return link_text
 
     text = re.sub(r"\[([^\]]+?)\]\(([^)]+?)\)", _convert_link, text)
+
+    if acronyms:
+        text = apply_acronyms(text)
 
     # [1], [2], etc. → \cite{BibtexKey} (numeric citations to LaTeX)
     # Convert numeric citations like "[1]" to "\cite{Elliott2021}"
@@ -1397,7 +1461,9 @@ def _mermaid_width_for(png_source, fallback):
         return 1.0
     if ratio >= 1.3:  # mildly landscape
         return max(fallback, 0.95)
-    return fallback  # portrait/square → keep the narrower default
+    if ratio < 1.0:  # portrait: keep the height on the page
+        return min(fallback, 0.6)
+    return fallback  # square → keep the narrower default
 
 
 def generate_latex_figure_with_mermaid(
@@ -1584,7 +1650,7 @@ Main terms used in our pilot study that follows.
     latex_output += "\n"
 
     # Add note box after glossary (if requested)
-    if INCLUDE_FOOTNOTES:
+    if INCLUDE_DETAILS:
         details_latex = format_details_blockquote(footnote_md)
         if details_latex:
             # Create a compact styled details box with minimal spacing
@@ -2479,6 +2545,8 @@ def apply_numbered_headings_and_refs(latex):
             continue
 
         cmd, title = m.group(1), m.group(2)
+        for long_form, short in ACRONYM_PLAIN.items():
+            title = title.replace(long_form, short)
         # Numbered headings add themselves to the ToC, so drop a trailing
         # \addcontentsline line the generators emitted for the starred form.
         drop_acl = i + 1 < len(lines) and lines[i + 1].lstrip().startswith(
@@ -2527,6 +2595,14 @@ def apply_numbered_headings_and_refs(latex):
         lambda mm: r"{\textsection}\ref{uqp:" + mm.group(1) + "}",
         latex,
     )
+
+    # The report writes "Section 3.2", not "§3.2".
+    latex = re.sub(
+        r"\{\\textsection\}(\\ref\{[^}]+\})--\{\\textsection\}(\\ref\{[^}]+\})",
+        r"Sections~\1--\2",
+        latex,
+    )
+    latex = latex.replace(r"{\textsection}\ref{", r"Section~\ref{")
     return latex
 
 
@@ -2558,6 +2634,14 @@ def convert_pilot_report(phase="1"):
         print(f"ERROR: Could not read markdown file: {e}", file=sys.stderr)
         return False
 
+    # Text wrapped in <!-- tex:skip --> ... <!-- /tex:skip --> stays in the markdown only.
+    md_content = re.sub(
+        r"<!--\s*tex:skip\s*-->.*?<!--\s*/tex:skip\s*-->\n?",
+        "",
+        md_content,
+        flags=re.DOTALL,
+    )
+
     # Build LaTeX output progressively
     latex_sections = []
 
@@ -2586,145 +2670,30 @@ def convert_pilot_report(phase="1"):
             print(f"ERROR: Could not process §2: {e}", file=sys.stderr)
             return False
 
-    # Phase 3: Extract §3 (The system) with mermaid diagram (if requested)
+    # §3 onward all go through the generic block converter, so the markdown order
+    # (including where Implementation-note boxes sit) is reproduced exactly.
     if phase_int >= 3:
-        try:
-            text_before, mermaid_code, caption, text_after, details_md = (
-                extract_section_3(md_content)
-            )
-            print(
-                f"✓ Extracted §3 'The system' (text: {len(text_before) + len(text_after)} bytes, diagram: {'yes' if mermaid_code else 'no'})"
-            )
-            latex_3 = generate_latex_section_3(
-                text_before, mermaid_code, caption, text_after, details_md
-            )
-            latex_sections.append(latex_3)
-            print(f"✓ Generated §3 LaTeX ({len(latex_3)} bytes)")
-        except Exception as e:
-            print(f"ERROR: Could not process §3: {e}", file=sys.stderr)
-            return False
-
-    # Phase 4: Extract §4 (Building one operating condition with mermaid)
-    # and §4.1 (Commitment subsection) (if requested)
-    if phase_int >= 4:
-        # First extract and generate §4 (main section with diagram)
-        try:
-            text_before, mermaid_code, caption, text_after = extract_section_4(
-                md_content
-            )
-            print(
-                f"✓ Extracted §4 'Building condition' (diagram: {'yes' if mermaid_code else 'no'})"
-            )
-            latex_4 = generate_latex_section_4(
-                text_before, mermaid_code, caption, text_after
-            )
-            latex_sections.append(latex_4)
-            print(f"✓ Generated §4 LaTeX ({len(latex_4)} bytes)")
-        except Exception as e:
-            print(f"ERROR: Could not process §4: {e}", file=sys.stderr)
-            return False
-
-        # Then extract and generate §4.1 (subsection)
-        try:
-            before_table, table_md, after_table, details_md = extract_section_4_1(
-                md_content
-            )
-            print(
-                f"✓ Extracted §4.1 'Commitment' (text: {len(before_table) + len(after_table)} bytes, table: {'yes' if table_md else 'no'})"
-            )
-            latex_4_1 = generate_latex_section_4_1(
-                before_table, table_md, after_table, details_md
-            )
-            latex_sections.append(latex_4_1)
-            print(f"✓ Generated §4.1 LaTeX ({len(latex_4_1)} bytes)")
-        except Exception as e:
-            print(f"ERROR: Could not process §4.1: {e}", file=sys.stderr)
-            return False
-
-        # Extract and generate §4.2 (Dispatch) (if requested and not excluded)
-        if "4.2" not in EXCLUDE_SECTIONS:
-            try:
-                text_before, mermaid_code, caption, text_after, details_md = (
-                    extract_section_4_2(md_content)
-                )
-                print(
-                    f"✓ Extracted §4.2 'Dispatch' (diagram: {'yes' if mermaid_code else 'no'})"
-                )
-                latex_4_2 = generate_latex_section_4_2(
-                    text_before, mermaid_code, caption, text_after, details_md
-                )
-                latex_sections.append(latex_4_2)
-                print(f"✓ Generated §4.2 LaTeX ({len(latex_4_2)} bytes)")
-            except Exception as e:
-                print(f"ERROR: Could not process §4.2: {e}", file=sys.stderr)
-                return False
-
-        # Extract and generate §4.2a (Reactive limits) (if requested and not excluded)
-        if "4.2a" not in EXCLUDE_SECTIONS:
-            try:
-                text, details_md = extract_section_4_2a(md_content)
-                if text:
-                    print(f"✓ Extracted §4.2a 'Reactive limits' ({len(text)} bytes)")
-                    latex_4_2a = generate_latex_section_4_2a(text, details_md)
-                    latex_sections.append(latex_4_2a)
-                    print(f"✓ Generated §4.2a LaTeX ({len(latex_4_2a)} bytes)")
-            except Exception as e:
-                print(f"ERROR: Could not process §4.2a: {e}", file=sys.stderr)
-                return False
-
-        # Extract and generate §4.2b (AC OPF) (if requested and not excluded)
-        if "4.2b" not in EXCLUDE_SECTIONS:
-            try:
-                text, details_md = extract_section_4_2b(md_content)
-                if text:
-                    print(f"✓ Extracted §4.2b 'AC OPF' ({len(text)} bytes)")
-                    latex_4_2b = generate_latex_section_4_2b(text, details_md)
-                    latex_sections.append(latex_4_2b)
-                    print(f"✓ Generated §4.2b LaTeX ({len(latex_4_2b)} bytes)")
-            except Exception as e:
-                print(f"ERROR: Could not process §4.2b: {e}", file=sys.stderr)
-                return False
-
-        # Extract and generate §4.3 (Wind becomes negative load)
-        if True:
-            try:
-                impl_note, text, details_md = extract_section_4_3(md_content)
-                if text or impl_note:
-                    print(
-                        f"✓ Extracted §4.3 'Wind becomes negative load' ({len(text)} bytes)"
-                    )
-                    latex_4_3 = generate_latex_section_4_3(impl_note, text, details_md)
-                    latex_sections.append(latex_4_3)
-                    print(f"✓ Generated §4.3 LaTeX ({len(latex_4_3)} bytes)")
-            except Exception as e:
-                print(f"ERROR: Could not process §4.3: {e}", file=sys.stderr)
-                return False
-
-        if True:
-            try:
-                impl_note, text = extract_section_4_4(md_content)
-                if text or impl_note:
-                    print(f"✓ Extracted §4.4 'The datacenter' ({len(text)} bytes)")
-                    latex_4_4 = generate_latex_section_4_4(impl_note, text)
-                    latex_sections.append(latex_4_4)
-                    print(f"✓ Generated §4.4 LaTeX ({len(latex_4_4)} bytes)")
-            except Exception as e:
-                print(f"ERROR: Could not process §4.4: {e}", file=sys.stderr)
-                return False
-
-        # Sections 5-12: phase N includes every section with number <= N
+        # Sections 3-12: phase N includes every section with number <= N.
+        # Titles are read from the markdown "## N. Title" line; these are fallbacks.
         section_info = [
+            (3, "The system", "the_system"),
+            (4, "Building one operating condition", "building_condition"),
             (5, "CCT by bisection", "cct_bisection"),
             (6, "Parallel execution on Kestrel", "parallel_kestrel"),
             (7, "Results", "results"),
             (8, "First look at ACTIVSg2000", "first_look_activsg2000"),
-            (9, "Where this goes", "where_this_goes"),
+            (9, "Next steps", "next_steps"),
             (10, "GridKit end-user feedback", "gridkit_feedback"),
             (11, "Limitations", "limitations"),
             (12, "Implementation", "implementation"),
         ]
 
         for sect_num, sect_title, sect_label in section_info:
+            title_m = re.search(
+                rf"^## {sect_num}\.\s+(.+?)\s*$", md_content, re.MULTILINE
+            )
+            if title_m:
+                sect_title = title_m.group(1)
             if sect_num in SKIP_SECTIONS:
                 print(f"⏭  Skipping §{sect_num} '{sect_title}' (in SKIP_SECTIONS)")
                 continue
