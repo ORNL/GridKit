@@ -31,9 +31,9 @@ rng = np.random.default_rng(0)
 
 # Names shown in figures (the report uses these instead of run identifiers).
 DISPLAY = {
-    "aleatoric1_ap08_qlim": "Aleatoric campaign 1",
-    "aleatoric2_ap08_qlim": "Aleatoric campaign 2",
-    "faultscreen1_ap08_qlim": "Fault-screening campaign",
+    "aleatoric1_ap08_qlim": "aleatoric-1",
+    "aleatoric2_ap08_qlim": "aleatoric-2",
+    "faultscreen1_ap08_qlim": "faultscreen-1",
 }
 
 
@@ -163,7 +163,7 @@ def aleatoric_block():
     ax.axvline(THRESH, ls=":", color="grey")
     ax.set_xlabel("CCT (s)")
     ax.set_ylabel("P(CCT > t)")
-    ax.set_title("Aleatoric campaign 1, fault 66")
+    ax.set_title(f"{DISPLAY['aleatoric1_ap08_qlim']}, fault 66")
     ax.legend(fontsize=8, loc="upper right")
     fig.tight_layout()
     fig.savefig(FIG / "main_aleatoric_km_simple.png", dpi=150)
@@ -189,7 +189,9 @@ def aleatoric_block():
     ax.axvline(THRESH, ls=":", color="grey")
     ax.set_xlabel("CCT (s)")
     ax.set_ylabel("P(CCT > t)")
-    ax.set_title("Aleatoric campaign 1, datacenter runs by net-load quintile")
+    ax.set_title(
+        f"{DISPLAY['aleatoric1_ap08_qlim']}, datacenter runs by net-load quintile"
+    )
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(FIG / "main_aleatoric_km_by_netload.png", dpi=150)
@@ -253,7 +255,7 @@ def faultscreen_block():
         plot_km(ax, sub.cct_s, sub.cens, "C1", f"bus {b}, 200 MW, n={len(sub)}")
         ax.axvline(THRESH, ls=":", color="grey")
         ax.set_xlabel("CCT (s)")
-        ax.set_title(f"Fault-screening campaign, bus {b}")
+        ax.set_title(f"{DISPLAY['faultscreen1_ap08_qlim']}, bus {b}")
         ax.legend(fontsize=8)
     axes[0].set_ylabel("P(CCT > t)")
     fig.tight_layout()
