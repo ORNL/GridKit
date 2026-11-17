@@ -1,5 +1,6 @@
 #!/bin/bash
-# Stage and push work-in-progress changes from uq-usecase/ to fork.
+# Stage and push work-in-progress changes from uq-usecase/ to isatkaus/uq-usecase branch.
+# Pushes to origin/isatkaus/uq-usecase on ORNL/GridKit
 # Usage: bash wip.sh "your commit message"
 #        bash wip.sh          (uses default "wip" message)
 #
@@ -43,7 +44,7 @@ git diff --cached --quiet .gitignore 2>/dev/null || true
 git diff --name-only .gitignore | grep -q . && git add .gitignore || true
 
 git commit -m "$MSG"
-git push
+git push origin "$BRANCH"
 
 echo ""
-echo "Pushed to origin/$BRANCH"
+echo "✓ Pushed to origin/$BRANCH"
