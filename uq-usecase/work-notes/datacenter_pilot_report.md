@@ -345,7 +345,7 @@ $$\delta_{COI}(t) = \frac{\sum_i H_i S_i \delta_i(t)}{\sum_i H_i S_i}$$
 
 and a run is declared unstable when any machine leaves that collective frame:
 
-$$\max_{i,\,t} \bigl| \delta_i(t) - \delta_{COI}(t) \bigr| > 180°$$
+$$\max_{i,\,t} \bigl| \delta_i(t) - \delta_{COI}(t) \bigr| > \pi$$
 
 Every symbol maps to a GridKit name or to a derived quantity:
 
@@ -354,10 +354,10 @@ Every symbol maps to a GridKit name or to a derived quantity:
 | $i$ | one of the 26 Genrou machines in ACTIVSg200 | `Genrou` device `id`, e.g. `49_1_genrou` |
 | $H_i$ | inertia constant, in s | `H` in `params` of device $i$ in `case.json` |
 | $S_i$ | machine MVA base | `mva` in `params` of device $i$ in `case.json` |
-| $\delta_i(t)$ | rotor angle of machine $i$ | Genrou state `delta` (radians), monitor column `Genrou_<device id>_delta`, e.g. `Genrou_49_1_genrou_delta`; converted to degrees |
+| $\delta_i(t)$ | rotor angle of machine $i$, in radians | Genrou state `delta`, monitor column `Genrou_<device id>_delta`, e.g. `Genrou_49_1_genrou_delta` |
 | $t$ | simulation time, in s | `t` column of the monitor CSV |
-| $\delta_{COI}(t)$ | centre-of-inertia angle, in degrees | not a model parameter; computed from the weights $H_i S_i / \sum_j H_j S_j$ (`_coi_weights`, `is_unstable` in `py-utils/campaign.py`) |
-| $180°$ | pole-slip threshold | `pole_slip_deg` in `is_unstable`; not a model parameter |
+| $\delta_{COI}(t)$ | centre-of-inertia angle, in radians | not a model parameter; computed from the weights $H_i S_i / \sum_j H_j S_j$ (`_coi_weights`, `is_unstable` in `py-utils/campaign.py`) |
+| $\pi$ | pole-slip threshold | `pole_slip_deg` = 180 (degrees) in `is_unstable`, applied after `np.rad2deg`; not a model parameter |
 
 Measuring against the COI rather than a fixed reference separates "the whole
 system swung" (fine) from "one machine left the group" (not fine).
@@ -378,6 +378,10 @@ in ~0.05–0.10 s, with backup protection clearing in ~0.25–0.50 s. Any fault
 duration beyond this window is not a contingency that protection schemes permit,
 so outcomes beyond the cap are **reported as censored**. The cap can be adjusted
 if necessary in other context.
+
+![unstable and censored samples, rotor-angle deviation from COI](figures/delta_unstable_vs_censored.png)
+
+*Figure 5.1. Rotor-angle deviation from COI for one unstable sample (top) and one censored sample (bottom), both aleatoric-1 baseline (no datacenter), re-simulated from the stored case files with the campaign's runner, on a shared time axis. Orange: fault on (0.25 s top, 0.5 s bottom). Top: the red trace passes π (dotted line), a pole slip, and keeps growing, so the machine loses synchronism. Bottom: the red trace peaks at 0.47π and never reaches π, so the system recovers within the 10 s run. Grey: each machine's δᵢ − δ_COI. Red: maximum over machines of |δᵢ − δ_COI| (the machine can change). Dashed: ±π, the pole-slip threshold.*
 
 The bisection probes write only the `delta` channels, not the full monitor set:
 that cut probe output from 26.25 MB to 1.91 MB per probe (**13.8×**) with the
