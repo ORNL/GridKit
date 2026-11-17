@@ -46,12 +46,12 @@ def fmt_pi(v, _):
     if m == 0:
         return "0"
     if m == 2:
-        return f"{sign}π"
+        return f"{sign}$\\pi$"
     if m == 4:
-        return f"{sign}2π"
+        return f"{sign}$2\\pi$"
     if m == 1:
-        return f"{sign}π/2"
-    return f"{sign}{m}π/2"
+        return f"{sign}$\\pi/2$"
+    return f"{sign}${m}\\pi/2$"
 
 
 def main():
@@ -83,10 +83,10 @@ def main():
         if (mx > PI).any():
             cross = t[np.argmax(mx > PI)]
             ax.axvline(cross, color="tab:red", ls=":", lw=1)
-            ax.text(cross + 0.05, -2.0 * PI, "pole slip: passes π and keeps growing",
+            ax.text(cross + 0.05, -2.0 * PI, "pole slip: passes $\\pi$ and keeps growing",
                     color="tab:red", fontsize=11)
         else:
-            ax.text(1.6, -2.0 * PI, "stays below π: recovers", color="tab:green", fontsize=11)
+            ax.text(1.6, -2.0 * PI, "stays below $\\pi$: recovers", color="tab:green", fontsize=11)
 
     axes[1].set_xlabel("time (s)", fontsize=12)
     fig.tight_layout()
