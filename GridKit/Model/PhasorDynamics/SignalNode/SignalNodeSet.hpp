@@ -7,17 +7,21 @@
 #pragma once
 
 #include <cassert>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     /**
      * @brief Manage a collection of signal nodes specified for a system model
      *
@@ -59,9 +63,17 @@ namespace GridKit
 
       /**
        * @brief Access a SignalNode using its id
+       *
+       * @throws std::runtime_error if no node has this ID
        */
       SignalNodeT* operator[](IdxT signal_id)
       {
+        if (!signal_node_id_map_.contains(signal_id))
+        {
+          Log::error() << "Unknown signal ID " << signal_id << "\n";
+          throw std::runtime_error("SignalNodeSet lookup failed");
+        }
+
         auto* node = signal_node_id_map_.at(signal_id);
         assert(node->signalId() == signal_id);
         return node;
@@ -72,8 +84,13 @@ namespace GridKit
        */
       SignalNodeT* find(IdxT signal_id) const
       {
-        const auto it = signal_node_id_map_.find(signal_id);
-        return it == signal_node_id_map_.end() ? nullptr : it->second;
+        SignalNodeT* node = nullptr;
+        const auto   it   = signal_node_id_map_.find(signal_id);
+        if (it != signal_node_id_map_.end())
+        {
+          node = it->second;
+        }
+        return node;
       }
 
       /**
@@ -82,6 +99,14 @@ namespace GridKit
       SignalNodeT* operator[](const std::string& signal_name)
       {
         return signal_node_name_map_.at(signal_name);
+      }
+
+      /**
+       * @brief Signal nodes in the order they were added
+       */
+      const std::vector<SignalNodeT*>& nodes() const
+      {
+        return signal_nodes_;
       }
 
     private:
