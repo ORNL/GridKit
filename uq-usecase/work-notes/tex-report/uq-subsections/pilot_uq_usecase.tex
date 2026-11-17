@@ -9,13 +9,13 @@ Two deliverables, one study:
 
 \begin{enumerate}
   \item \textbf{Exercise GridKit as an end user} \cite{GridKit2025} on a problem it has not been pointed at before, and report back what works and what does not.
-  \item \textbf{Demonstrate aleatoric UQ by sampling} \cite{DerKiureghian2009} on a dynamics problem, and find out where the sampling cost actually goes --- with a view to much larger grids where brute force stops being an option.
+  \item \textbf{Demonstrate aleatoric UQ by sampling} \cite{DerKiureghian2009} on a dynamics problem, and find out where the sampling cost actually goes: with a view to much larger grids where brute force stops being an option.
 \end{enumerate}
 
 The vehicle is a central interconnection question \cite{Shehabi2024}:
 
 \begin{quote}
-\textbf{Where, and how much, large datacenter load can be added before dynamic security degrades --- given that IBR output makes system inertia vary hour to hour?} \cite{Milano2018}
+\textbf{Where, and how much, large datacenter load can be added before dynamic security degrades: given that IBR output makes system inertia vary hour to hour?} \cite{Milano2018}
 \end{quote}
 
 This is a pilot study. The grid is small, the contingency set is narrow, and several conclusions are bounded by model validity. The point is to establish the machinery and learn where the difficulty lives.
@@ -171,7 +171,7 @@ Wind units are removed as synchronous machines (\texttt{Genrou}) and re-inserted
 \par\vspace{0.4em}
 \noindent\fbox{\parbox[t]{0.98\textwidth}{%
 \setlength{\parskip}{0pt}%
-\textbf{Implementation note:} The ACTIVSg200 case lacks native wind/PV converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models---specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)---which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
+\textbf{Implementation note:} The ACTIVSg200 case lacks native wind/PV converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models, specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control), which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
 }}
 \vspace{0.2em}
 
@@ -255,7 +255,7 @@ The cap at 0.5 s is deliberate. On power grids, primary protection clears faults
   \centering
   \includegraphics[width=0.85\textwidth]{figs/uq-pilot/delta_unstable_vs_censored.png}
   \par\vspace{0.4em}
-  {\small Figure 5.1. Rotor-angle deviation from COI for one unstable sample (top) and one censored sample (bottom), both aleatoric-1 baseline (no datacenter), re-simulated from the stored case files with the campaign's runner, on a shared time axis. Orange: fault on (0.25 s top, 0.5 s bottom). Top: the red trace passes $\pi$ (dotted line), a pole slip, and keeps growing, so the machine loses synchronism. Bottom: the red trace peaks at $0.47\pi$ and never reaches $\pi$, so the system recovers within the 10 s run. Grey: each machine's $\delta_i - \delta_{COI}$. Red: maximum over machines of $|\delta_i - \delta_{COI}|$ (the machine can change). Dashed: $\pm\pi$, the pole-slip threshold.}
+  {\small Figure 5.1. Rotor-angle deviation from COI for one unstable sample (top) and one censored sample (bottom)  from  aleatoric-1 baseline (no datacenter) on a shared time axis. Orange: fault on (0.25 s top, 0.5 s bottom). Top: the red trace passes $\pi$ (dotted line), a pole slip, and keeps growing, so the machine loses synchronism. Bottom: the red trace peaks at $0.47\pi$ and never reaches $\pi$, so the system recovers within the 10 s run. Grey: each machine's $\delta_i - \delta_{COI}$. Red: maximum over machines of $|\delta_i - \delta_{COI}|$ (the machine can change). Dashed: $\pm\pi$, the pole-slip threshold.}
 \end{figure}
 
 
@@ -408,11 +408,11 @@ with $d_i$ and $n_i$ as in Section~\ref{uqp:7.1}. We report the standard error $
 \end{figure}
 
 
-On these conditions the datacenter shortens \ac{cct}: P(\ac{cct} \textless{} 0.25 s) rises from 0.49 to 0.73. Three of the 40 conditions did not solve with the datacenter, and their baseline \ac{cct} is censored. Counting all three as \ac{cct} $\ge$ 0.25 s gives 27 of 40 (0.675). Counting all three as below 0.25 s gives 30 of 40 (0.75). The sign of the effect --- that the datacenter shortens \ac{cct} --- holds either way, but on this sample the size of the shift is uncertain by about 0.07.
+On these conditions the datacenter shortens \ac{cct}: P(\ac{cct} \textless{} 0.25 s) rises from 0.49 to 0.73. Three of the 40 conditions did not solve with the datacenter, and their baseline \ac{cct} is censored. Counting all three as \ac{cct} $\ge$ 0.25 s gives 27 of 40 (0.675). Counting all three as below 0.25 s gives 30 of 40 (0.75). The sign of the effect (that the datacenter shortens \ac{cct}) holds either way, but on this sample the size of the shift is uncertain by about 0.07.
 
 \textbf{Why the datacenter may shorten \ac{cct} (working hypothesis).} The datacenter adds 200 MW to bus 108, beside the unchanged constant-impedance load already there, and 80\% of that added load does not fall with voltage. During the fault the added load keeps drawing its power, where a constant-impedance load of the same size would fall, which pushes the generators harder. This is not tested here. A run with the same 200 MW as constant impedance would test it.
 
-\textbf{Takeaway.} The cleanest single comparison shows the datacenter measurably shortens \ac{cct} --- KM median 0.27 $\to$ 0.18 s, P(\ac{cct} \textless{} 0.25 s) 0.49 $\to$ 0.73 --- and the Greenwood interval shows the shift is real but pinned only to about $\pm$0.07 at 37 conditions. It establishes the matched, censoring-aware KM comparison that the rest of Section~\ref{uqp:7} scales up.
+\textbf{Takeaway.} The cleanest single comparison shows the datacenter measurably shortens \ac{cct}: KM median 0.27 $\to$ 0.18 s, P(\ac{cct} \textless{} 0.25 s) 0.49 $\to$ 0.73; the Greenwood interval shows the shift is real but pinned only to about $\pm$0.07 at 37 conditions. It establishes the matched, censoring-aware KM comparison that the rest of Section~\ref{uqp:7} scales up.
 
 \subsubsection{The same example in aleatoric-1 and aleatoric-2}
 \label{uqp:7.3}
@@ -446,7 +446,7 @@ On these conditions the datacenter shortens \ac{cct}: P(\ac{cct} \textless{} 0.2
 
 Two points. First, the datacenter moves P(\ac{cct} \textless{} 0.25 s) from about 0.5 to 0.73 in both campaigns (the two panels). Second, the datacenter-arm interval is 0.132 wide at 171 conditions, against 0.287 at 37, the narrowing expected from the larger sample. The interval describes the procedure: if the study were repeated with new samples of conditions, about 95\% of intervals built this way would contain the true P. It does not give a 95\% probability that the true value lies in this one. Overlap of two separate intervals is not a test of a difference. The arms are matched on the same conditions, so a difference needs a paired interval, which we have not computed. Nine of the 180 conditions did not solve with the datacenter (8 solve failures, 1 simulation failure) and are excluded from the 171. Section~\ref{uqp:7.4} gives a related check on how the estimate settles as conditions are added.
 
-\textbf{Takeaway.} The same shift appears in a second, independent campaign, and roughly four times as many conditions halve the interval without moving the estimate --- so the datacenter effect is reproducible, and its remaining uncertainty is a matter of sample size, not of which conditions were drawn.
+\textbf{Takeaway.} The same shift appears in a second, independent campaign, and roughly four times as many conditions halve the interval without moving the estimate; so the datacenter effect is reproducible, and its remaining uncertainty is a matter of sample size, not of which conditions were drawn.
 
 \subsubsection{More operating conditions: how the estimate settles}
 \label{uqp:7.4}
@@ -464,7 +464,7 @@ We checked whether the estimate stops moving as conditions are added, by recompu
 
 The spread of \ac{cct} across conditions does not shrink with more samples. Adding conditions shrinks the error in the probability; the spread is a property of the conditions, and reducing it needs conditioning on something that explains it, such as net load (Section~\ref{uqp:7.5}). Within the two highest net-load quintiles every measured \ac{cct} lies between 0.177 and 0.191 s, while the lower quintiles range up to 0.49 s.
 
-\textbf{Takeaway.} The estimate settles by about 30--37 conditions, so a pilot-sized sample already pins the probability; the \textit{spread} of \ac{cct}, though, is a property of the conditions and does not shrink with more draws. Tightening it needs conditioning on a driver --- which Section~\ref{uqp:7.5} does with net load.
+\textbf{Takeaway.} The estimate settles by about 30--37 conditions, so a pilot-sized sample already pins the probability; the \textit{spread} of \ac{cct}, though, is a property of the conditions and does not shrink with more draws. Tightening it needs conditioning on a driver, which Section~\ref{uqp:7.5} does with net load.
 
 \subsubsection{Risk by net load}
 \label{uqp:7.5}
@@ -506,7 +506,7 @@ P(\ac{cct} \textless{} 0.25 s) climbs from 0.07 in the lowest quintile to 1.00 i
   \item \textbf{Baseline has only 8 solved runs per quintile}, too few for a quintile estimate. The matched comparison is in Section~\ref{uqp:7.2}.
 \end{itemize}
 
-\textbf{Takeaway.} Net load is the dominant driver: P(\ac{cct} \textless{} 0.25 s) climbs from 0.07 to 1.00 across the quintiles, with a sharp step between q1 and q2 (means 1,201 and 1,421 MW). This explains the condition-to-condition spread of Section~\ref{uqp:7.4} and gives a cheap screen --- instability concentrates in the high-net-load hours.
+\textbf{Takeaway.} Net load is the dominant driver: P(\ac{cct} \textless{} 0.25 s) climbs from 0.07 to 1.00 across the quintiles, with a sharp step between q1 and q2 (means 1,201 and 1,421 MW). This explains the condition-to-condition spread of Section~\ref{uqp:7.4} and gives a cheap screen: instability concentrates in the high-net-load hours.
 
 \subsubsection{Fault screening (faultscreen-1): which faults discriminate}
 \label{uqp:7.6}
@@ -523,7 +523,7 @@ P(\ac{cct} \textless{} 0.25 s) climbs from 0.07 in the lowest quintile to 1.00 i
 \midrule
     solved & 340 of 340 & 427 of 680 \\
     censored at 0.5 s & 302 (88.8\%) & 306 (71.7\%) \\
-    no outcome & --- & 253: 168 simulation failures, 85 infeasible dispatches \\
+    no outcome & (see note) & 253: 168 simulation failures, 85 infeasible dispatches \\
 \bottomrule
 \end{tabularx}
 \par}
@@ -574,7 +574,7 @@ Baseline \ac{cct} by fault location, for the 20 baseline conditions each:
 
 Thirteen of 17 fault locations are censored in every baseline condition, so a uniform fault budget spends most of its runs on faults that cannot separate operating conditions. Fault screening should be cheap, followed by concentration on the informative faults. Bus 66, the fault in aleatoric-1 and aleatoric-2, is not the most informative location: bus 94 is. At 200 MW, buses 108 and 148 look alike in this sample (0.072 against 0.064 for P(\ac{cct} \textless{} 0.25 s)).
 
-\textbf{Takeaway.} Most faults carry no information --- 13 of 17 never leave the cap, so a uniform fault budget is mostly wasted --- while a few (bus 94) discriminate, and at 200 MW the two placements behave almost identically. Where the datacenter sits matters less than the operating condition and the fault; the practical lesson is to screen contingencies cheaply, then concentrate the budget on the few that separate conditions.
+\textbf{Takeaway.} Most faults carry no information: 13 of 17 never leave the cap, so a uniform fault budget is mostly wasted; while a few (bus 94) discriminate, and at 200 MW the two placements behave almost identically. Where the datacenter sits matters less than the operating condition and the fault; the practical lesson is to screen contingencies cheaply, then concentrate the budget on the few that separate conditions.
 
 \subsubsection{Censoring: dropping censored runs inflates risk}
 \label{uqp:7.7}
@@ -642,7 +642,7 @@ The 200-bus case is small enough that brute force works: whole campaigns finish 
 \vspace{0.25cm}
 
 
-\textbf{The shape of the growth.} Against a 10$\times$ increase in buses, data scales \textbf{linearly} ($\approx N^{1.0}$), the dispatch stage as $\approx N^{1.27}$, and the dynamic simulation as $\approx N^{1.40}$. So compute grows faster than the network and faster than storage, and the dynamic stage --- the cheap one at 200 buses --- grows fastest.
+\textbf{The shape of the growth.} Against a 10$\times$ increase in buses, data scales \textbf{linearly} ($\approx N^{1.0}$), the dispatch stage as $\approx N^{1.27}$, and the dynamic simulation as $\approx N^{1.40}$. So compute grows faster than the network and faster than storage, and the dynamic stage (the cheap one at 200 buses) grows fastest.
 
 \textbf{What that implies for a campaign.} Projecting aleatoric-1 (840 runs, one full run plus ~8 bisection probes each, so ~7,560 simulations). Serial times use the measured per-run cost; wall times assume the pilot's 16 workers per node and scale linearly, which is optimistic until per-worker memory is known:
 
@@ -667,7 +667,7 @@ The 200-bus case is small enough that brute force works: whole campaigns finish 
 \vspace{0.25cm}
 
 
-On the 2,000-bus case we ran only setup and single-run checks: the end-to-end rebuild (331 machines patched, 101 static units converted) with one dynamic run, a faultscreen-shaped micro-campaign of one dispatch and eight fault locations, and single-run and single-batch memory probes. We did not run any aleatoric campaign on the 2,000-bus case. A campaign the size of aleatoric-1 projects to ~2.5 h per node at 16 workers, applying the overhead measured on the 200-bus run. Full worker memory is unmeasured, so treat this as a planning figure, not a guarantee.
+On the 2,000-bus case we ran only setup and single-run checks: the end-to-end rebuild with one dynamic run, a faultscreen-shaped micro-campaign of one dispatch and eight fault locations, and single-run and single-batch memory probes. We did not run any aleatoric campaign on the 2,000-bus case. A campaign the size of aleatoric-1 projects to ~2.5 h per node at 16 workers, applying the overhead measured on the 200-bus run. Full worker memory is unmeasured, so treat this as a planning figure, not a guarantee.
 
 \textbf{Storage, not compute, is the bottleneck.} At 200 buses the CPU saturates before memory; at 2,000 buses selective monitoring matters far more (the 4,649 output columns are mostly bus voltages). \textbf{Cost to scale to 2,000 buses: brute force survives one order of magnitude, not two.} The design space grows 115$\times$ (siting 11.5$\times$ and fault locations 10$\times$), while per-sample cost grows 19--25$\times$. Holding sampling density fixed projects 2,150--2,900$\times$ the pilot's cost. That makes screening, surrogates and adaptive refinement the concrete case, not a luxury.
 
@@ -680,7 +680,7 @@ On the 2,000-bus case we ran only setup and single-run checks: the end-to-end re
 
 The pilot leaves a clear picture of where cost lives and therefore where the methods work should go. At 200 buses the expensive part is the \textbf{dispatch stage}, and interesting dimensions such as contingency location or disturbance severity are nearly free once a dispatch exists. However, at 2,000 buses (Section~\ref{uqp:8}), the dynamic run dominates, the design space grows by two orders of magnitude, and the quantity to minimise becomes the number of dynamic simulations. Making aleatoric UQ affordable at that scale is \textbf{FY27 planned work}, pursued along two tracks.
 
-\textbf{Track 1 --- spend fewer, better-chosen dynamic runs.}
+\textbf{Track 1: spend fewer, better-chosen dynamic runs.}
 
 \begin{enumerate}
   \item \textbf{Screen contingencies cheaply, then concentrate.} 76 \% of a uniform fault budget was wasted here (Section~\ref{uqp:7.6}), with 13 of 17 locations fully censored. On a 2k-bus case the contingency list is the part that explodes and also the part that is free to explore.
@@ -689,7 +689,7 @@ The pilot leaves a clear picture of where cost lives and therefore where the met
   \item \textbf{Surrogate or warm-started \ac{cct}, and early-terminating integration.} Neighbouring dispatches have strongly correlated \ac{cct}, and pole slip is detectable well before the end of the simulated window, so both the number and the length of simulations can be cut.
 \end{enumerate}
 
-\textbf{Track 2 --- a graph surrogate, as an alternative and supplement to sampling.} The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias \cite{Battaglia2018}, and have been used as fast power-system surrogates \cite{Donon2020}. A surrogate trained on the records the sampling campaigns already produce, e.g., \texttt{(graph, operating point, parameters, fault)} $\to$ trajectory map, could emulate \ac{cct} or the stability label cheaply, turning the expensive solver into a screening tool. Full dynamic runs could be reserved for confirmation and for labelling the cases where the surrogate is least certain, an active-learning approach \cite{Settles2009} that chooses which runs to do. This is \textbf{supplemental} to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means.
+\textbf{Track 2: a graph surrogate, as an alternative and supplement to sampling.} The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias \cite{Battaglia2018}, and have been used as fast power-system surrogates \cite{Donon2020}. A surrogate trained on the records the sampling campaigns already produce, e.g., \texttt{(graph, operating point, parameters, fault)} $\to$ trajectory map, could emulate \ac{cct} or the stability label cheaply, turning the expensive solver into a screening tool. Full dynamic runs could be reserved for confirmation and for labelling the cases where the surrogate is least certain, an active-learning approach \cite{Settles2009} that chooses which runs to do. This is \textbf{supplemental} to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means.
 
 The near-term steps are: a wider contingency screen, a treatment of censoring in the paired (with and without datacenter) comparison, a variance decomposition of the existing runs, and running the campaigns on the Texas grid (Section~\ref{uqp:8}). The graph-surrogate track builds on the dataset those campaigns are already generating.
 

@@ -25,13 +25,13 @@ Two deliverables, one study:
 1. **Exercise GridKit as an end user** [1] on a problem it has not been pointed at
    before, and report back what works and what does not.
 2. **Demonstrate aleatoric UQ by sampling** [2] on a dynamics problem, and find out
-   where the sampling cost actually goes — with a view to much larger grids
+   where the sampling cost actually goes: with a view to much larger grids
    where brute force stops being an option.
 
 The vehicle is a central interconnection question [3]:
 
 > **Where, and how much, large datacenter load can be added before dynamic
-> security degrades — given that IBR output makes system inertia vary
+> security degrades: given that IBR output makes system inertia vary
 > hour to hour?** [4]
 
 This is a pilot study. The grid is small, the contingency set is narrow, and several
@@ -291,7 +291,7 @@ Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
 interface is "a controllable current source" [9]. A constant-current
 load is a simple stand-in for that current injection.
 
-> **Implementation note:** The ACTIVSg200 case lacks native wind/PV converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models—specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control)—which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
+> **Implementation note:** The ACTIVSg200 case lacks native wind/PV converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models, specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control), which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
 
 ### 4.4 The datacenter
 
@@ -381,7 +381,7 @@ if necessary in other context.
 
 ![unstable and censored samples, rotor-angle deviation from COI](figures/delta_unstable_vs_censored.png)
 
-*Figure 5.1. Rotor-angle deviation from COI for one unstable sample (top) and one censored sample (bottom), both aleatoric-1 baseline (no datacenter), re-simulated from the stored case files with the campaign's runner, on a shared time axis. Orange: fault on (0.25 s top, 0.5 s bottom). Top: the red trace passes $\pi$ (dotted line), a pole slip, and keeps growing, so the machine loses synchronism. Bottom: the red trace peaks at $0.47\pi$ and never reaches $\pi$, so the system recovers within the 10 s run. Grey: each machine's $\delta_i - \delta_{COI}$. Red: maximum over machines of $|\delta_i - \delta_{COI}|$ (the machine can change). Dashed: $\pm\pi$, the pole-slip threshold.*
+*Figure 5.1. Rotor-angle deviation from COI for one unstable sample (top) and one censored sample (bottom)  from  aleatoric-1 baseline (no datacenter) on a shared time axis. Orange: fault on (0.25 s top, 0.5 s bottom). Top: the red trace passes $\pi$ (dotted line), a pole slip, and keeps growing, so the machine loses synchronism. Bottom: the red trace peaks at $0.47\pi$ and never reaches $\pi$, so the system recovers within the 10 s run. Grey: each machine's $\delta_i - \delta_{COI}$. Red: maximum over machines of $|\delta_i - \delta_{COI}|$ (the machine can change). Dashed: $\pm\pi$, the pole-slip threshold.*
 
 The bisection probes write only the `delta` channels, not the full monitor set:
 that cut probe output from 26.25 MB to 1.91 MB per probe (**13.8×**) with the
@@ -521,11 +521,11 @@ with $d_i$ and $n_i$ as in §7.1. We report the standard error $\mathrm{SE}=\sqr
 
 *Figure 7.2. Kaplan–Meier P(CCT > t) on the same 37 operating conditions, without the datacenter (blue) and with the 200 MW datacenter at bus 108 (orange), fault at bus 66. Curves run to the 0.5 s cap. A censored run is still stable at the cap, so its curve holds at that value, and the tick at 0.5 s marks the censored share.*
 
-On these conditions the datacenter shortens CCT: P(CCT < 0.25 s) rises from 0.49 to 0.73. Three of the 40 conditions did not solve with the datacenter, and their baseline CCT is censored. Counting all three as CCT ≥ 0.25 s gives 27 of 40 (0.675). Counting all three as below 0.25 s gives 30 of 40 (0.75). The sign of the effect — that the datacenter shortens CCT — holds either way, but on this sample the size of the shift is uncertain by about 0.07.
+On these conditions the datacenter shortens CCT: P(CCT < 0.25 s) rises from 0.49 to 0.73. Three of the 40 conditions did not solve with the datacenter, and their baseline CCT is censored. Counting all three as CCT ≥ 0.25 s gives 27 of 40 (0.675). Counting all three as below 0.25 s gives 30 of 40 (0.75). The sign of the effect (that the datacenter shortens CCT) holds either way, but on this sample the size of the shift is uncertain by about 0.07.
 
 **Why the datacenter may shorten CCT (working hypothesis).** The datacenter adds 200 MW to bus 108, beside the unchanged constant-impedance load already there, and 80% of that added load does not fall with voltage. During the fault the added load keeps drawing its power, where a constant-impedance load of the same size would fall, which pushes the generators harder. This is not tested here. A run with the same 200 MW as constant impedance would test it.
 
-**Takeaway.** The cleanest single comparison shows the datacenter measurably shortens CCT — KM median 0.27 → 0.18 s, P(CCT < 0.25 s) 0.49 → 0.73 — and the Greenwood interval shows the shift is real but pinned only to about ±0.07 at 37 conditions. It establishes the matched, censoring-aware KM comparison that the rest of §7 scales up.
+**Takeaway.** The cleanest single comparison shows the datacenter measurably shortens CCT: KM median 0.27 → 0.18 s, P(CCT < 0.25 s) 0.49 → 0.73; the Greenwood interval shows the shift is real but pinned only to about ±0.07 at 37 conditions. It establishes the matched, censoring-aware KM comparison that the rest of §7 scales up.
 
 ### 7.3 The same example in aleatoric-1 and aleatoric-2
 
@@ -543,7 +543,7 @@ On these conditions the datacenter shortens CCT: P(CCT < 0.25 s) rises from 0.49
 
 Two points. First, the datacenter moves P(CCT < 0.25 s) from about 0.5 to 0.73 in both campaigns (the two panels). Second, the datacenter-arm interval is 0.132 wide at 171 conditions, against 0.287 at 37, the narrowing expected from the larger sample. The interval describes the procedure: if the study were repeated with new samples of conditions, about 95% of intervals built this way would contain the true P. It does not give a 95% probability that the true value lies in this one. Overlap of two separate intervals is not a test of a difference. The arms are matched on the same conditions, so a difference needs a paired interval, which we have not computed. Nine of the 180 conditions did not solve with the datacenter (8 solve failures, 1 simulation failure) and are excluded from the 171. §7.4 gives a related check on how the estimate settles as conditions are added.
 
-**Takeaway.** The same shift appears in a second, independent campaign, and roughly four times as many conditions halve the interval without moving the estimate — so the datacenter effect is reproducible, and its remaining uncertainty is a matter of sample size, not of which conditions were drawn.
+**Takeaway.** The same shift appears in a second, independent campaign, and roughly four times as many conditions halve the interval without moving the estimate; so the datacenter effect is reproducible, and its remaining uncertainty is a matter of sample size, not of which conditions were drawn.
 
 ### 7.4 More operating conditions: how the estimate settles
 
@@ -555,7 +555,7 @@ We checked whether the estimate stops moving as conditions are added, by recompu
 
 The spread of CCT across conditions does not shrink with more samples. Adding conditions shrinks the error in the probability; the spread is a property of the conditions, and reducing it needs conditioning on something that explains it, such as net load (§7.5). Within the two highest net-load quintiles every measured CCT lies between 0.177 and 0.191 s, while the lower quintiles range up to 0.49 s.
 
-**Takeaway.** The estimate settles by about 30–37 conditions, so a pilot-sized sample already pins the probability; the *spread* of CCT, though, is a property of the conditions and does not shrink with more draws. Tightening it needs conditioning on a driver — which §7.5 does with net load.
+**Takeaway.** The estimate settles by about 30–37 conditions, so a pilot-sized sample already pins the probability; the *spread* of CCT, though, is a property of the conditions and does not shrink with more draws. Tightening it needs conditioning on a driver, which §7.5 does with net load.
 
 ### 7.5 Risk by net load
 
@@ -579,7 +579,7 @@ P(CCT < 0.25 s) climbs from 0.07 in the lowest quintile to 1.00 in the two highe
 - **Infeasible dispatches are spread across quintiles** (68 to 77 each), unlike faultscreen-1 (§7.6).
 - **Baseline has only 8 solved runs per quintile**, too few for a quintile estimate. The matched comparison is in §7.2.
 
-**Takeaway.** Net load is the dominant driver: P(CCT < 0.25 s) climbs from 0.07 to 1.00 across the quintiles, with a sharp step between q1 and q2 (means 1,201 and 1,421 MW). This explains the condition-to-condition spread of §7.4 and gives a cheap screen — instability concentrates in the high-net-load hours.
+**Takeaway.** Net load is the dominant driver: P(CCT < 0.25 s) climbs from 0.07 to 1.00 across the quintiles, with a sharp step between q1 and q2 (means 1,201 and 1,421 MW). This explains the condition-to-condition spread of §7.4 and gives a cheap screen: instability concentrates in the high-net-load hours.
 
 ### 7.6 Fault screening (faultscreen-1): which faults discriminate
 
@@ -589,7 +589,7 @@ P(CCT < 0.25 s) climbs from 0.07 in the lowest quintile to 1.00 in the two highe
 |---|---|---|
 | solved | 340 of 340 | 427 of 680 |
 | censored at 0.5 s | 302 (88.8%) | 306 (71.7%) |
-| no outcome | — | 253: 168 simulation failures, 85 infeasible dispatches |
+| no outcome | (see note) | 253: 168 simulation failures, 85 infeasible dispatches |
 
 Matched by (hour, commitment, fault), using datacenter runs that solved:
 
@@ -618,7 +618,7 @@ Baseline CCT by fault location, for the 20 baseline conditions each:
 
 Thirteen of 17 fault locations are censored in every baseline condition, so a uniform fault budget spends most of its runs on faults that cannot separate operating conditions. Fault screening should be cheap, followed by concentration on the informative faults. Bus 66, the fault in aleatoric-1 and aleatoric-2, is not the most informative location: bus 94 is. At 200 MW, buses 108 and 148 look alike in this sample (0.072 against 0.064 for P(CCT < 0.25 s)).
 
-**Takeaway.** Most faults carry no information — 13 of 17 never leave the cap, so a uniform fault budget is mostly wasted — while a few (bus 94) discriminate, and at 200 MW the two placements behave almost identically. Where the datacenter sits matters less than the operating condition and the fault; the practical lesson is to screen contingencies cheaply, then concentrate the budget on the few that separate conditions.
+**Takeaway.** Most faults carry no information: 13 of 17 never leave the cap, so a uniform fault budget is mostly wasted; while a few (bus 94) discriminate, and at 200 MW the two placements behave almost identically. Where the datacenter sits matters less than the operating condition and the fault; the practical lesson is to screen contingencies cheaply, then concentrate the budget on the few that separate conditions.
 
 ### 7.7 Censoring: dropping censored runs inflates risk
 
@@ -672,7 +672,7 @@ available. The base case **runs unmodified**: a 10 s simulation with a
 **The shape of the growth.** Against a 10× increase in buses, data scales
 **linearly** ($\approx N^{1.0}$), the dispatch stage as $\approx N^{1.27}$, and the dynamic
 simulation as $\approx N^{1.40}$. So compute grows faster than the network and
-faster than storage, and the dynamic stage — the cheap one at 200 buses — grows
+faster than storage, and the dynamic stage (the cheap one at 200 buses) grows
 fastest.
 
 **What that implies for a campaign.** Projecting aleatoric-1 (840 runs,
@@ -691,7 +691,7 @@ known:
 | monitor output, raw CSV | 22 GB | **~220 GB** |
 | after parquet | 4.5 GB | **~45 GB** |
 
-On the 2,000-bus case we ran only setup and single-run checks: the end-to-end rebuild (331 machines patched, 101 static units converted) with one dynamic run, a faultscreen-shaped micro-campaign of one dispatch and eight fault locations, and single-run and single-batch memory probes. We did not run any aleatoric campaign on the 2,000-bus case. A campaign the size of aleatoric-1 projects to ~2.5 h per node at 16 workers, applying the overhead measured on the 200-bus run. Full worker memory is unmeasured, so treat this as a planning figure, not a guarantee.
+On the 2,000-bus case we ran only setup and single-run checks: the end-to-end rebuild with one dynamic run, a faultscreen-shaped micro-campaign of one dispatch and eight fault locations, and single-run and single-batch memory probes. We did not run any aleatoric campaign on the 2,000-bus case. A campaign the size of aleatoric-1 projects to ~2.5 h per node at 16 workers, applying the overhead measured on the 200-bus run. Full worker memory is unmeasured, so treat this as a planning figure, not a guarantee.
 
 **Storage, not compute, is the bottleneck.** At 200 buses the CPU saturates 
 before memory; at 2,000 buses selective monitoring matters far more (the 4,649 
@@ -725,7 +725,7 @@ two orders of magnitude, and the quantity to minimise becomes the number of dyna
 simulations. Making aleatoric UQ affordable at that scale is **FY27 planned
 work**, pursued along two tracks.
 
-**Track 1 — spend fewer, better-chosen dynamic runs.** 
+**Track 1: spend fewer, better-chosen dynamic runs.** 
 
 1. **Screen contingencies cheaply, then concentrate.** 76 % of a uniform fault
    budget was wasted here (§7.6), with 13 of 17 locations fully censored. On a
@@ -745,7 +745,7 @@ work**, pursued along two tracks.
    simulations can be cut.
 
 
-**Track 2 — a graph surrogate, as an alternative and supplement to sampling.**
+**Track 2: a graph surrogate, as an alternative and supplement to sampling.**
 The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian
 over buses, a fault propagates through branch impedances as a message-passing
 process, and "which bus to site load at" is itself a graph question. Graph
@@ -776,19 +776,19 @@ Findings from using the tool in anger, offered as concrete issues:
 
 | finding | impact |
 |---|---|
-| **`REPCA` cannot do frequency droop** — the regulated bus exposes no frequency signal | No primary frequency response from IBR, so any nadir/ROCOF study with inverters is incomplete |
+| **`REPCA` cannot do frequency droop**: the regulated bus exposes no frequency signal | No primary frequency response from IBR, so any nadir/ROCOF study with inverters is incomplete |
 | **A `BusFault` that closes during the run makes the event-time initial-condition solve fail.** Discriminator at `alphaP` 1.0: an event-closed fault fails `IDACalcIC` at buses 1, 148 and 181 while bus 94 runs; the same open fault with no event passes | At `alphaP` 0.8, 97 sited runs (200 MW) fail that pass at 0.2 (89 initialization, 8 transient) and have no outcome (§7.6). The mechanism is a candidate (IDA initial guess is the pre-fault state), consistent on the one dispatch checked (h1879), not yet confirmed generally. See `ida_ic_issue.md` |
-| **`LoadZIP` has no current limit or undervoltage trip** | Constant-power load — the physically right model for a datacenter — cannot self-limit. This is a modelling gap in its own right; whether it is also the root of the conditioning problem above is **unresolved** |
-| **A fault *at* a constant-power load bus always fails** — 40 of 40 runs, at every `alphaP` including 0.2 | The most interesting contingency for a datacenter study is out of reach |
+| **`LoadZIP` has no current limit or undervoltage trip** | Constant-power load, the physically right model for a datacenter, cannot self-limit. This is a modelling gap in its own right; whether it is also the root of the conditioning problem above is **unresolved** |
+| **A fault *at* a constant-power load bus always fails**: 40 of 40 runs, at every `alphaP` including 0.2 | The most interesting contingency for a datacenter study is out of reach |
 | **Events are `FAULT_ON`/`FAULT_OFF` only** | No generator-trip or load-step contingency, so no true power-imbalance event |
-| **Monitors default to almost nothing** — post-#577 cases carry `"mon": []` on every bus | Nothing PMU-observable is recorded unless explicitly enabled |
+| **Monitors default to almost nothing**: post-#577 cases carry `"mon": []` on every bus | Nothing PMU-observable is recorded unless explicitly enabled |
 
 Also verified, as a portability result: **GridKit built on RHEL 8 runs unchanged
 on RHEL 9**. The binary needs GLIBC ≤ 2.14 and GLIBCXX ≤ 3.4.31 against a
 glibc 2.34 node, all libraries resolve, and `WECC240_validation` passes in
 0.64 s. One real difference: `/lib64/libomp.so` exists on RHEL 8 but not on
 RHEL 9 compute nodes, so the runtime library path must point at the build's own
-LLVM prefix — **scoped to the child process**, because putting it on the job
+LLVM prefix: **scoped to the child process**, because putting it on the job
 environment makes Julia load the wrong SuiteSparse.
 
 > **Details:** [disturbances: what a bus fault can and cannot tell us](datacenter_load_uq_plan.md#8-disturbances-what-a-bus-fault-can-and-cannot-tell-us) ·
@@ -846,19 +846,19 @@ failure-mode breakdown.
 * **Sample sizes are pilot-scale.** 20 hours supports distributional statements
   about the bulk, not about tails.
 * The reference bus remains the nuclear unit `189_1`, which has 0.0082 MW of
-  headroom — a known oddity not yet closed.
+  headroom: a known oddity not yet closed.
 
 > **Details:** [known modelling limitations](datacenter_load_uq_plan.md#12-known-modelling-limitations) ·
 > [open questions](datacenter_load_uq_plan.md#11-open-questions) ·
 > [contingency choice](datacenter_load_uq_plan.md#5-contingency) ·
 > [a self-clearing bus fault is an angular event, not a frequency event](datacenter_load_uq_plan.md#a-self-clearing-bus-fault-is-an-angular-and-voltage-event-not-a-frequency-event) ·
-> [Phase 4: optional model form robustness — wind as a real IBR](datacenter_load_uq_plan.md#phase-4-optional-model-form-robustness-wind-as-a-real-ibr)
+> [Phase 4: optional model form robustness, wind as a real IBR](datacenter_load_uq_plan.md#phase-4-optional-model-form-robustness-wind-as-a-real-ibr)
 
 ---
 
 ## 12. Implementation
 
-The campaign execution infrastructure — including scripts for fault screening, statistical analysis, and scaling studies — is documented in the [dc_campaign_pipeline.md](dc_campaign_pipeline.md) reference manual. Refer to that document for implementation details, function signatures, and usage instructions for the analysis pipeline.
+The campaign execution infrastructure, including scripts for fault screening, statistical analysis, and scaling studies, is documented in the [dc_campaign_pipeline.md](dc_campaign_pipeline.md) reference manual. Refer to that document for implementation details, function signatures, and usage instructions for the analysis pipeline.
 
 ---
 
