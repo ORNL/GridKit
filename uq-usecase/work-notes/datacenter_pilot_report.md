@@ -648,10 +648,7 @@ raw TAMU data and processed hourly demand, wind and **solar** profiles are
 available. The base case **runs unmodified**: a 10 s simulation with a
 0.15 s fault completes successfully at both default and full monitoring.
 
-**Measured, same settings on both cases.** Dispatch-stage figures are warm
-per-case solve times from one batched Julia process, so the ~6 s start-up is
-amortised rather than counted; cold single-shot timings are dominated by
-start-up and misleading.
+**Measured, same settings on both cases.** Dispatch-stage numbers are per-case solver times, measured inside one batched Julia process. The process starts once, so its ~6 s start-up cost is not counted in each solve. Timing a single solve in a fresh process mostly measures start-up, so those numbers would not be useful for projections.
 
 | quantity | ACTIVSg200 | ACTIVSg2000 | ratio |
 |---|---|---|---|
@@ -690,12 +687,9 @@ known:
 | monitor output, raw CSV | 22 GB | **~220 GB** |
 | after parquet | 4.5 GB | **~45 GB** |
 
-We ran aleatoric-1 at 2,000 buses as a scoping study. It took 6.0 min wall-time 
-(16 workers per node), compared to 2.2 min ideal; scaling this up, a full-size 
-campaign projects to ~2.5 h per node at 16 workers. Full worker memory is 
-unmeasured, so treat this as a planning figure, not a guarantee.
+On the 2,000-bus case we ran only setup and single-run checks: the end-to-end rebuild (331 machines patched, 101 static units converted) with one dynamic run, a faultscreen-shaped micro-campaign of one dispatch and eight fault locations, and single-run and single-batch memory probes. We did not run any aleatoric campaign on the 2,000-bus case. A campaign the size of aleatoric-1 projects to ~2.5 h per node at 16 workers, applying the overhead measured on the 200-bus run. Full worker memory is unmeasured, so treat this as a planning figure, not a guarantee.
 
-**Storage, not compute, binds the problem.** At 200 buses the CPU saturates 
+**Storage, not compute, is the bottleneck.** At 200 buses the CPU saturates 
 before memory; at 2,000 buses selective monitoring matters far more (the 4,649 
 output columns are mostly bus voltages). **Cost to scale to 2,000 buses: brute 
 force survives one order of magnitude, not two.** The design space grows 115× 
@@ -705,8 +699,8 @@ makes screening, surrogates and adaptive refinement the concrete case, not a
 luxury.
 
 **Takeaway.** Brute force survives one order of magnitude of grid size, not two:
-a campaign the size of aleatoric-1 at 2,000 buses is about 2.5 h on one node,
-storage rather than compute binds, and the dynamic run, nearly free at 200
+a campaign the size of aleatoric-1 at 2,000 buses is projected at about 2.5 h on one node,
+storage rather than compute is the bottleneck, and the dynamic run, nearly free at 200
 buses, becomes the cost to minimise. Scaling the pilot is a methods problem,
 not a hardware one, which §9 takes up.
 
