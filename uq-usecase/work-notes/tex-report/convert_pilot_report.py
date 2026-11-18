@@ -2768,13 +2768,11 @@ def convert_pilot_report(phase="1"):
     # headings and gives them no number — see apply_numbered_headings_and_refs).
     latex_output = apply_numbered_headings_and_refs(latex_output)
 
-    # Number down to subsubsection for this block and keep subsubsections numbered
-    # for all following sections in the chapter.
+    # Auto-generated content; do not edit by hand.
+    # (Formatting/numbering is managed by the target documents: main.tex, test_uq_pilot.tex)
     latex_output = (
-        "% Auto-generated from datacenter_pilot_report.md — do not edit by hand.\n"
-        "\\setcounter{secnumdepth}{3}% number subsubsections within this block\n\n"
+        "% Auto-generated from datacenter_pilot_report.md — do not edit by hand.\n\n"
         + latex_output
-        + "\n\\setcounter{secnumdepth}{3}% keep subsubsection numbering for following sections\n"
     )
 
     # Note: no \bibliography here. This file is \input into a parent document
