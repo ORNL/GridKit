@@ -265,7 +265,7 @@ The bisection probes write only the \texttt{delta} channels, not the full monito
 \label{uqp:6}
 \label{sec:parallel_kestrel}
 
-Each campaign ran as one SLURM job \cite{Yoo2003} on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass (the \textit{dispatch stage}), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
+Each campaign ran as one SLURM job \cite{KaplanMeier1958} on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass (the \textit{dispatch stage}), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
 
 
 \vspace{0.25cm}
@@ -292,7 +292,7 @@ Resources, measured for aleatoric-2:
   \item \textbf{CPU.} Workers were busy 86\% of the job (235 CPU-min over 16 workers). The job held the whole 104-CPU node and ran 16 workers by choice, so 13\% of its CPUs were busy.
   \item \textbf{Memory.} 0.88 GB per worker (Python and Julia); the node peaked at 13.8 GB.
   \item \textbf{Load balance.} Worker wall times ranged from 511 s to 1,019 s. Contiguous slices leave the mean worker idle about 20\% of the job.
-  \item \textbf{Dispatch stage.} 1.3 s per dispatch, against 3.3 s in aleatoric-1. A working hypothesis is that larger batches amortise Julia start-up; this is not isolated.
+  \item \textbf{Dispatch stage.} 1.3 s per dispatch, against 3.3 s in aleatoric-1. A working hypothesis is that larger batches amortise Julia start-up.
   \item \textbf{Storage.} The three campaigns (5,640 planned runs) hold 15.9 GB; in aleatoric-1 and aleatoric-2 that is about 2.6 MB per run. Two measures keep it down: the \ac{cct} search records only the rotor angles it needs (21 of 441 output columns, 13.8$\times$ smaller), and results are stored as compressed Parquet rather than CSV (5.0$\times$ smaller).
 \end{itemize}
 
@@ -355,7 +355,7 @@ All campaigns use the operating-condition design of Section~\ref{uqp:4.1}, where
 \subsubsection{Reading the curves: Kaplan--Meier and censoring}
 \label{uqp:7.1}
 
-Each curve estimates \textbf{$P(\mathrm{CCT} < t)$}: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is \textit{censored}: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan--Meier (KM) estimator \cite{Yoo2003} uses censored runs correctly:
+Each curve estimates \textbf{$P(\mathrm{CCT} < t)$}: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is \textit{censored}: we know $\mathrm{CCT} \ge 0.5$ s but not its value. The Kaplan--Meier (KM) estimator \cite{KaplanMeier1958} uses censored runs correctly:
 
 
 \[
@@ -407,16 +407,16 @@ with $d_i$ and $n_i$ as in Section~\ref{uqp:7.1}. We report the standard error $
 \end{figure}
 
 
-On these conditions the datacenter shortens \ac{cct}: P(\ac{cct} \textless{} 0.25 s) rises from 0.49 to 0.73. Three of the 40 conditions did not solve with the datacenter, and their baseline \ac{cct} is censored. Counting all three as \ac{cct} $\ge$ 0.25 s gives 27 of 40 (0.675). Counting all three as below 0.25 s gives 30 of 40 (0.75). The sign of the effect (that the datacenter shortens \ac{cct}) holds either way, but on this sample the size of the shift is uncertain by about 0.07.
+Across the 37 matched conditions where both arms solve, the datacenter raises the share of runs with \ac{cct} under 0.25 s from 0.49 (18 of 37) to 0.73 (27 of 37). Three conditions did not solve with the datacenter, so we dropped the same three from the baseline.
 
-\textbf{Why the datacenter may shorten \ac{cct} (working hypothesis).} The datacenter adds 200 MW to bus 108, beside the unchanged constant-impedance load already there, and 80\% of that added load does not fall with voltage. During the fault the added load keeps drawing its power, where a constant-impedance load of the same size would fall, which pushes the generators harder. This is not tested here. A run with the same 200 MW as constant impedance would test it.
+\textbf{Why the datacenter may shorten \ac{cct} (working hypothesis).} The datacenter adds 200 MW to bus 108, beside the unchanged constant-impedance load already there, and 80\% of that added load does not fall with voltage. During the fault the added load keeps drawing its power, where a constant-impedance load of the same size would fall, which pushes the generators harder.
 
-\textbf{Takeaway.} The cleanest single comparison shows the datacenter measurably shortens \ac{cct}: KM median 0.27 $\to$ 0.18 s, P(\ac{cct} \textless{} 0.25 s) 0.49 $\to$ 0.73; the Greenwood interval shows the shift is real but pinned only to about $\pm$0.07 at 37 conditions. It establishes the matched, censoring-aware KM comparison that the rest of Section~\ref{uqp:7} scales up.
+\textbf{Takeaway.} The matched comparison shows the datacenter raises P(\ac{cct} \textless{} 0.25 s) and lowers the KM median \ac{cct} from 0.27 to 0.18 s. The 95\% Greenwood intervals are 0.325--0.648 for the baseline (half-width 0.16) and 0.587--0.873 for the datacenter (half-width 0.14). They overlap, so this comparison alone does not test a difference; a paired interval is needed (Section~\ref{uqp:7.3}). It is the starting point that Section~\ref{uqp:7.3} and Section~\ref{uqp:7.4} build on with 171 conditions and a convergence check.
 
 \subsubsection{The same example in aleatoric-1 and aleatoric-2}
 \label{uqp:7.3}
 
-\textbf{Sampling:} bus 108, 200 MW, fault at bus 66, against the matched baseline on the same conditions. Left: aleatoric-1, 37 conditions (the Section~\ref{uqp:7.2} sample). Right: aleatoric-2, 171 conditions (60 hours $\times$ 3 commitments, of which 171 solve with the datacenter). The two campaigns share no conditions, so they are independent samples.
+Below, tables and figures show replication of the Section~\ref{uqp:7.2} comparison across two independent campaigns. \textbf{Sampling:} bus 108, 200 MW, fault at bus 66, each compared against the baseline on the same operating conditions. On the left, aleatoric-1 has 37 matched conditions (the Section~\ref{uqp:7.2} sample). On the right, aleatoric-2 has 180 operating conditions (60 hours $\times$ 3 commitments). Nine of the 180 datacenter runs have no outcome, so, as in aleatoric-1, those conditions are dropped from both arms, leaving 171 matched conditions. The two campaigns have no operating conditions in common, so the second campaign adds new conditions rather than repeating the first.
 
 
 \vspace{0.25cm}
@@ -443,14 +443,14 @@ On these conditions the datacenter shortens \ac{cct}: P(\ac{cct} \textless{} 0.2
 \end{figure}
 
 
-Two points. First, the datacenter moves P(\ac{cct} \textless{} 0.25 s) from about 0.5 to 0.73 in both campaigns (the two panels). Second, the datacenter-arm interval is 0.132 wide at 171 conditions, against 0.287 at 37, the narrowing expected from the larger sample. The interval describes the procedure: if the study were repeated with new samples of conditions, about 95\% of intervals built this way would contain the true P. It does not give a 95\% probability that the true value lies in this one. Overlap of two separate intervals is not a test of a difference. The arms are matched on the same conditions, so a difference needs a paired interval, which we have not computed. Nine of the 180 conditions did not solve with the datacenter (8 solve failures, 1 simulation failure) and are excluded from the 171. Section~\ref{uqp:7.4} gives a related check on how the estimate settles as conditions are added.
+Both campaigns show the same shift. At 171 conditions, P(\ac{cct} \textless{} 0.25 s) rises from 0.515 to 0.731, and at 37 it rises from 0.49 to 0.73. Nine of the 180 conditions have no outcome with the datacenter, so they are dropped from both arms, leaving 171. The datacenter's 95\% Greenwood interval narrows from 0.29 to 0.13 wide as conditions are added. That interval is a property of the method, not of this one study: across repeated studies, about 95\% of intervals built this way would contain the true value. Because the arms are matched, the direct test is paired by condition: at 171 conditions the datacenter raises P(\ac{cct} \textless{} 0.25 s) by 0.22 (95\% CI 0.15 to 0.28), and no condition moves the other way.
 
-\textbf{Takeaway.} The same shift appears in a second, independent campaign, and roughly four times as many conditions halve the interval without moving the estimate; so the datacenter effect is reproducible, and its remaining uncertainty is a matter of sample size, not of which conditions were drawn.
+\textbf{Takeaway.} A second campaign, with no conditions in common with the first, shows the same shift: at 37 and at 171 conditions the datacenter raises P(\ac{cct} \textless{} 0.25 s) by about 0.22 to 0.24 on matched conditions. The larger campaign narrows the interval by about half and barely moves the estimates. The effect holds across these two samples, but both use one placement and one fault, so they do not show how it varies with other buses, sizes or faults.
 
 \subsubsection{More operating conditions: how the estimate settles}
 \label{uqp:7.4}
 
-We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (\textit{subsampling} \cite{KaplanMeier1958}). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730--0.733 from about 30--37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in Section~\ref{uqp:7.3}. We might use the same check later to size a future study, if a full-size design costs too much.
+We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (\textit{subsampling} \cite{PolitisRomano1994}). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730--0.733 from about 30--37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in Section~\ref{uqp:7.3}. We might use the same check later to size a future study, if a full-size design costs too much.
 
 
 \begin{figure}[H]
@@ -461,14 +461,12 @@ We checked whether the estimate stops moving as conditions are added, by recompu
 \end{figure}
 
 
-The spread of \ac{cct} across conditions does not shrink with more samples. Adding conditions shrinks the error in the probability; the spread is a property of the conditions, and reducing it needs conditioning on something that explains it, such as net load (Section~\ref{uqp:7.5}). Within the two highest net-load quintiles every measured \ac{cct} lies between 0.177 and 0.191 s, while the lower quintiles range up to 0.49 s.
-
-\textbf{Takeaway.} The estimate settles by about 30--37 conditions, so a pilot-sized sample already pins the probability; the \textit{spread} of \ac{cct}, though, is a property of the conditions and does not shrink with more draws. Tightening it needs conditioning on a driver, which Section~\ref{uqp:7.5} does with net load.
+\textbf{Takeaway.} The estimate settles by about 30--37 conditions, so a pilot-sized sample already pins the probability. The spread of \ac{cct} across conditions is a property of the conditions and does not shrink with more draws. Net load explains it (Section~\ref{uqp:7.5}).
 
 \subsubsection{Risk by net load}
 \label{uqp:7.5}
 
-\textbf{Sampling:} aleatoric-1, datacenter at buses 6, 120, 108 and 148, at 50 to 400 MW, one fault. Hours are split into five net-load quintiles of 4 hours each. Each quintile holds 160 datacenter runs (4 buses $\times$ 5 sizes $\times$ 4 hours $\times$ 2 commitments).
+\textbf{Sampling:} In aleatoric-1, the datacenter is placed at buses 6, 120, 108 and 148, at five sizes from 50 to 400 MW, with one fault at bus 66. The 20 sampled hours are split into five net-load quintiles of four hours each, and each hour is run with two commitments. Each quintile therefore holds 160 datacenter runs: 4 buses, 5 sizes, 4 hours and 2 commitments.
 
 
 \vspace{0.25cm}
@@ -609,7 +607,7 @@ This follows from Section~\ref{uqp:7.1}, since censoring sits at one point beyon
 \label{uqp:8}
 \label{sec:first_look_activsg2000}
 
-The 200-bus case is small enough that brute force works: whole campaigns finish in minutes. That is convenient but it hides the question the methods work exists to answer, so we measured what changes on the Texas synthetic grid, \textbf{ACTIVSg2000} (2,000 buses, from the TAMU repository \cite{Greenwood1926}). This is a scoping study, not a campaign.
+The 200-bus case is small enough that brute force works: whole campaigns finish in minutes. That is convenient but it hides the question the methods work exists to answer, so we measured what changes on the Texas synthetic grid, \textbf{ACTIVSg2000} (2,000 buses, from the TAMU repository \cite{PolitisRomano1994}). This is a scoping study, not a campaign.
 
 \textbf{What already exists.} A GridKit dynamic case is distributed with GridKit, and raw TAMU data and processed hourly demand, wind and \textbf{solar} profiles are available. The base case \textbf{runs unmodified}: a 10 s simulation with a 0.15 s fault completes successfully at both default and full monitoring.
 
@@ -688,7 +686,7 @@ The pilot leaves a clear picture of where cost lives and therefore where the met
   \item \textbf{Surrogate or warm-started \ac{cct}, and early-terminating integration.} Neighbouring dispatches have strongly correlated \ac{cct}, and pole slip is detectable well before the end of the simulated window, so both the number and the length of simulations can be cut.
 \end{enumerate}
 
-\textbf{Track 2: a graph surrogate, as an alternative and supplement to sampling.} The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias \cite{PolitisRomano1994}, and have been used as fast power-system surrogates \cite{TAMUrepo}. A surrogate trained on the records the sampling campaigns already produce, e.g., \texttt{(graph, operating point, parameters, fault)} $\to$ trajectory map, could emulate \ac{cct} or the stability label cheaply, turning the expensive solver into a screening tool. Full dynamic runs could be reserved for confirmation and for labelling the cases where the surrogate is least certain, an active-learning approach \cite{Battaglia2018} that chooses which runs to do. This is \textbf{supplemental} to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means.
+\textbf{Track 2: a graph surrogate, as an alternative and supplement to sampling.} The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias \cite{Yoo2003}, and have been used as fast power-system surrogates \cite{Greenwood1926}. A surrogate trained on the records the sampling campaigns already produce, e.g., \texttt{(graph, operating point, parameters, fault)} $\to$ trajectory map, could emulate \ac{cct} or the stability label cheaply, turning the expensive solver into a screening tool. Full dynamic runs could be reserved for confirmation and for labelling the cases where the surrogate is least certain, an active-learning approach \cite{TAMUrepo} that chooses which runs to do. This is \textbf{supplemental} to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means.
 
 The near-term steps are: a wider contingency screen, a treatment of censoring in the paired (with and without datacenter) comparison, a variance decomposition of the existing runs, and running the campaigns on the Texas grid (Section~\ref{uqp:8}). The graph-surrogate track builds on the dataset those campaigns are already generating.
 

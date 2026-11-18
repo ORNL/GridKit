@@ -419,7 +419,7 @@ Resources, measured for aleatoric-2:
 * **Load balance.** Worker wall times ranged from 511 s to 1,019 s. Contiguous slices leave
   the mean worker idle about 20% of the job.
 * **Dispatch stage.** 1.3 s per dispatch, against 3.3 s in aleatoric-1. A working
-  hypothesis is that larger batches amortise Julia start-up; this is not isolated.
+  hypothesis is that larger batches amortise Julia start-up.
 * **Storage.** The three campaigns (5,640 planned runs) hold 15.9 GB; in aleatoric-1
   and aleatoric-2 that is about 2.6 MB per run. Two measures keep it down: the CCT search records only the rotor angles it needs
   (21 of 441 output columns, 13.8× smaller), and results are stored as compressed
@@ -483,7 +483,7 @@ All campaigns use the operating-condition design of §4.1, where an operating co
 
 ### 7.1 Reading the curves: Kaplan–Meier and censoring
 
-Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator [16] uses censored runs correctly:
+Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s but not its value. The Kaplan–Meier (KM) estimator [16] uses censored runs correctly:
 
 $$\hat S(t)=\prod_{t_i\le t}\Bigl(1-\frac{d_i}{n_i}\Bigr),\qquad \widehat P(\mathrm{CCT}<t)=1-\hat S(t)$$
 
@@ -517,15 +517,15 @@ with $d_i$ and $n_i$ as in §7.1. We report the standard error $\mathrm{SE}=\sqr
 
 *Figure 7.2. Kaplan–Meier P(CCT > t) on the same 37 operating conditions, without the datacenter (blue) and with the 200 MW datacenter at bus 108 (orange), fault at bus 66. Curves run to the 0.5 s cap. A censored run is still stable at the cap, so its curve holds at that value, and the tick at 0.5 s marks the censored share.*
 
-On these conditions the datacenter shortens CCT: P(CCT < 0.25 s) rises from 0.49 to 0.73. Three of the 40 conditions did not solve with the datacenter, and their baseline CCT is censored. Counting all three as CCT ≥ 0.25 s gives 27 of 40 (0.675). Counting all three as below 0.25 s gives 30 of 40 (0.75). The sign of the effect (that the datacenter shortens CCT) holds either way, but on this sample the size of the shift is uncertain by about 0.07.
+Across the 37 matched conditions where both arms solve, the datacenter raises the share of runs with CCT under 0.25 s from 0.49 (18 of 37) to 0.73 (27 of 37). Three conditions did not solve with the datacenter, so we dropped the same three from the baseline.
 
-**Why the datacenter may shorten CCT (working hypothesis).** The datacenter adds 200 MW to bus 108, beside the unchanged constant-impedance load already there, and 80% of that added load does not fall with voltage. During the fault the added load keeps drawing its power, where a constant-impedance load of the same size would fall, which pushes the generators harder. This is not tested here. A run with the same 200 MW as constant impedance would test it.
+**Why the datacenter may shorten CCT (working hypothesis).** The datacenter adds 200 MW to bus 108, beside the unchanged constant-impedance load already there, and 80% of that added load does not fall with voltage. During the fault the added load keeps drawing its power, where a constant-impedance load of the same size would fall, which pushes the generators harder.
 
-**Takeaway.** The cleanest single comparison shows the datacenter measurably shortens CCT: KM median 0.27 → 0.18 s, P(CCT < 0.25 s) 0.49 → 0.73; the Greenwood interval shows the shift is real but pinned only to about ±0.07 at 37 conditions. It establishes the matched, censoring-aware KM comparison that the rest of §7 scales up.
+**Takeaway.** The matched comparison shows the datacenter raises P(CCT < 0.25 s) and lowers the KM median CCT from 0.27 to 0.18 s. The 95% Greenwood intervals are 0.325–0.648 for the baseline (half-width 0.16) and 0.587–0.873 for the datacenter (half-width 0.14). They overlap, so this comparison alone does not test a difference; a paired interval is needed (§7.3). It is the starting point that §7.3 and §7.4 build on with 171 conditions and a convergence check.
 
 ### 7.3 The same example in aleatoric-1 and aleatoric-2
 
-**Sampling:** bus 108, 200 MW, fault at bus 66, against the matched baseline on the same conditions. Left: aleatoric-1, 37 conditions (the §7.2 sample). Right: aleatoric-2, 171 conditions (60 hours × 3 commitments, of which 171 solve with the datacenter). The two campaigns share no conditions, so they are independent samples.
+Below, tables and figures show replication of the §7.2 comparison across two independent campaigns. **Sampling:** bus 108, 200 MW, fault at bus 66, each compared against the baseline on the same operating conditions. On the left, aleatoric-1 has 37 matched conditions (the §7.2 sample). On the right, aleatoric-2 has 180 operating conditions (60 hours × 3 commitments). Nine of the 180 datacenter runs have no outcome, so, as in aleatoric-1, those conditions are dropped from both arms, leaving 171 matched conditions. The two campaigns have no operating conditions in common, so the second campaign adds new conditions rather than repeating the first.
 
 | | 37 conditions (§7.2) | 171 conditions |
 |---|---|---|
@@ -537,9 +537,9 @@ On these conditions the datacenter shortens CCT: P(CCT < 0.25 s) rises from 0.49
 
 *Figure 7.3. Kaplan–Meier P(CCT > t) at bus 108, 200 MW (orange) against the matched baseline (blue), fault at bus 66. Left: 37 conditions (aleatoric-1). Right: 171 conditions (aleatoric-2). Same axes in both panels, curves run to the 0.5 s cap, and the tick at 0.5 s marks the censored share. With 171 conditions the curve has about 4.6 times as many conditions behind each step, so it resolves finer structure and the interval at 0.25 s is narrower.*
 
-Two points. First, the datacenter moves P(CCT < 0.25 s) from about 0.5 to 0.73 in both campaigns (the two panels). Second, the datacenter-arm interval is 0.132 wide at 171 conditions, against 0.287 at 37, the narrowing expected from the larger sample. The interval describes the procedure: if the study were repeated with new samples of conditions, about 95% of intervals built this way would contain the true P. It does not give a 95% probability that the true value lies in this one. Overlap of two separate intervals is not a test of a difference. The arms are matched on the same conditions, so a difference needs a paired interval, which we have not computed. Nine of the 180 conditions did not solve with the datacenter (8 solve failures, 1 simulation failure) and are excluded from the 171. §7.4 gives a related check on how the estimate settles as conditions are added.
+Both campaigns show the same shift. At 171 conditions, P(CCT < 0.25 s) rises from 0.515 to 0.731, and at 37 it rises from 0.49 to 0.73. Nine of the 180 conditions have no outcome with the datacenter, so they are dropped from both arms, leaving 171. The datacenter's 95% Greenwood interval narrows from 0.29 to 0.13 wide as conditions are added. That interval is a property of the method, not of this one study: across repeated studies, about 95% of intervals built this way would contain the true value. Because the arms are matched, the direct test is paired by condition: at 171 conditions the datacenter raises P(CCT < 0.25 s) by 0.22 (95% CI 0.15 to 0.28), and no condition moves the other way.
 
-**Takeaway.** The same shift appears in a second, independent campaign, and roughly four times as many conditions halve the interval without moving the estimate; so the datacenter effect is reproducible, and its remaining uncertainty is a matter of sample size, not of which conditions were drawn.
+**Takeaway.** A second campaign, with no conditions in common with the first, shows the same shift: at 37 and at 171 conditions the datacenter raises P(CCT < 0.25 s) by about 0.22 to 0.24 on matched conditions. The larger campaign narrows the interval by about half and barely moves the estimates. The effect holds across these two samples, but both use one placement and one fault, so they do not show how it varies with other buses, sizes or faults.
 
 ### 7.4 More operating conditions: how the estimate settles
 
@@ -549,13 +549,12 @@ We checked whether the estimate stops moving as conditions are added, by recompu
 
 *Figure 7.4. KM estimate of P(CCT < 0.25 s) at bus 108, 200 MW, over random orderings of the 37 conditions of aleatoric-1 (green) and the 171 of aleatoric-2 (purple). Line: median over 2,000 orderings. Shading: 5th–95th percentile. Black squares: full-campaign estimate with its 95% Greenwood interval. Both medians sit at 0.730–0.733 from about 30–37 conditions onward.*
 
-The spread of CCT across conditions does not shrink with more samples. Adding conditions shrinks the error in the probability; the spread is a property of the conditions, and reducing it needs conditioning on something that explains it, such as net load (§7.5). Within the two highest net-load quintiles every measured CCT lies between 0.177 and 0.191 s, while the lower quintiles range up to 0.49 s.
 
-**Takeaway.** The estimate settles by about 30–37 conditions, so a pilot-sized sample already pins the probability; the *spread* of CCT, though, is a property of the conditions and does not shrink with more draws. Tightening it needs conditioning on a driver, which §7.5 does with net load.
+**Takeaway.** The estimate settles by about 30–37 conditions, so a pilot-sized sample already pins the probability. The spread of CCT across conditions is a property of the conditions and does not shrink with more draws. Net load explains it (§7.5).
 
 ### 7.5 Risk by net load
 
-**Sampling:** aleatoric-1, datacenter at buses 6, 120, 108 and 148, at 50 to 400 MW, one fault. Hours are split into five net-load quintiles of 4 hours each. Each quintile holds 160 datacenter runs (4 buses × 5 sizes × 4 hours × 2 commitments).
+**Sampling:** In aleatoric-1, the datacenter is placed at buses 6, 120, 108 and 148, at five sizes from 50 to 400 MW, with one fault at bus 66. The 20 sampled hours are split into five net-load quintiles of four hours each, and each hour is run with two commitments. Each quintile therefore holds 160 datacenter runs: 4 buses, 5 sizes, 4 hours and 2 commitments.
 
 | quintile | mean net load (MW) | datacenter runs solved | no outcome | censored | **P(CCT < 0.25 s)** |
 |---|---|---|---|---|---|
@@ -640,7 +639,7 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 The 200-bus case is small enough that brute force works: whole campaigns finish
 in minutes. That is convenient but it hides the question the methods work
 exists to answer, so we measured what changes on the Texas synthetic grid,
-**ACTIVSg2000** (2,000 buses, from the TAMU repository [18]). This is a scoping
+**ACTIVSg2000** (2,000 buses, from the TAMU repository [17]). This is a scoping
 study, not a campaign.
 
 **What already exists.** A GridKit dynamic case is distributed with GridKit, and
@@ -745,13 +744,13 @@ work**, pursued along two tracks.
 The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian
 over buses, a fault propagates through branch impedances as a message-passing
 process, and "which bus to site load at" is itself a graph question. Graph
-neural networks and graph transformers carry exactly that inductive bias [19],
-and have been used as fast power-system surrogates [20]. A surrogate trained on
+neural networks and graph transformers carry exactly that inductive bias [18],
+and have been used as fast power-system surrogates [19]. A surrogate trained on
 the records the sampling campaigns already produce, e.g.,
 `(graph, operating point, parameters, fault)` → trajectory map, could emulate
 CCT or the stability label cheaply, turning the expensive solver into a screening
 tool. Full dynamic runs could be reserved for confirmation and for labelling the cases
-where the surrogate is least certain, an active-learning approach [21] that chooses
+where the surrogate is least certain, an active-learning approach [20] that chooses
 which runs to do. This is **supplemental** to sampling-based UQ, not a
 replacement: the surrogate lowers per-sample cost, while the sampling design
 still fixes what the estimate means.
@@ -882,9 +881,8 @@ See tex-report/README.md, section "Citations". -->
 13. G. E. Colón-Reyes, R. Dye, C. Tomlin, and D. Callaway, "Effects of Dynamic Power Electronic Load Models on Power Systems Analysis Using ZIP-E Loads," arXiv:2407.12715, 2024. doi:10.48550/arXiv.2407.12715 <!-- bib:colon2024effects -->
 14. North American Electric Reliability Corporation (NERC), "Large Loads Task Force (LLTF) Reference Guide: Data Center Load Modeling Practices," 2024. <!-- bib:nerc2024lltf -->
 15. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
-16. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
-17. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
-18. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
-19. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
+16. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
+17. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
+18. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
+19. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
 20. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
-21. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
