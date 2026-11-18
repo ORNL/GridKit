@@ -394,7 +394,7 @@ that cut probe output from 26.25 MB to 1.91 MB per probe (**13.8×**).
 
 ## 6. Parallel execution on Kestrel
 
-Each campaign ran as one SLURM job [16] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
+Each campaign ran as one SLURM job [18] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
 
 > **Details:** [wall time for the two main campaigns](datacenter_load_uq_plan.md#wall-time-in-the-two-main-campaigns-measured-2026-11-10) ·
 > [parallel sampling runs](datacenter_load_uq_plan.md#parallel-sampling-runs) ·
@@ -499,7 +499,7 @@ The rest of §7 runs as follows. §7.2 works one matched example, and §7.3 repe
 
 **Sampling:** aleatoric-1, 200 MW at bus 108, fault at bus 66. Of the 40 operating conditions, 37 solve with the datacenter. The baseline is the same 37 conditions with no datacenter.
 
-**Greenwood interval.** Greenwood's formula [6] estimates the variance of a KM estimate:
+**Greenwood interval.** Greenwood's formula [19] estimates the variance of a KM estimate:
 
 $$\widehat{\mathrm{Var}}\big(\hat S(t)\big)=\hat S(t)^2\sum_{t_i\le t}\frac{d_i}{n_i(n_i-d_i)}$$
 
@@ -638,7 +638,7 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 The 200-bus case is small enough that brute force works: whole campaigns finish
 in minutes. That is convenient but it hides the question the methods work
 exists to answer, so we measured what changes on the Texas synthetic grid,
-**ACTIVSg2000** (2,000 buses, from the TAMU repository [17]). This is a scoping
+**ACTIVSg2000** (2,000 buses, from the TAMU repository [20]). This is a scoping
 study, not a campaign.
 
 **What already exists.** A GridKit dynamic case is distributed with GridKit, and
@@ -743,13 +743,13 @@ work**, pursued along two tracks.
 The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian
 over buses, a fault propagates through branch impedances as a message-passing
 process, and "which bus to site load at" is itself a graph question. Graph
-neural networks and graph transformers carry exactly that inductive bias [18],
-and have been used as fast power-system surrogates [19]. A surrogate trained on
+neural networks and graph transformers carry exactly that inductive bias,
+and have been used as fast power-system surrogates. A surrogate trained on
 the records the sampling campaigns already produce, e.g.,
 `(graph, operating point, parameters, fault)` → trajectory map, could emulate
 CCT or the stability label cheaply, turning the expensive solver into a screening
 tool. Full dynamic runs could be reserved for confirmation and for labelling the cases
-where the surrogate is least certain, an active-learning approach [20] that chooses
+where the surrogate is least certain, an active-learning approach that chooses
 which runs to do. This is **supplemental** to sampling-based UQ, not a
 replacement: the surrogate lowers per-sample cost, while the sampling design
 still fixes what the estimate means.
@@ -874,7 +874,7 @@ See tex-report/README.md, section "Citations". -->
 7. C. Coffrin, R. Bent, K. Sundar, Y. Ng, and M. Lubin, "PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations," *Power Systems Computation Conference (PSCC)*, 2018. doi:10.23919/PSCC.2018.8442948 <!-- bib:Coffrin2018 -->
 8. A. Wächter and L. T. Biegler, "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming," *Mathematical Programming*, 106(1):25–57, 2006. doi:10.1007/s10107-004-0559-y <!-- bib:wachter2006 -->
 9. P. Pourbeik et al., "Generic Dynamic Models for Modeling Wind Power Plants and Other Renewable Technologies in Large-Scale Power System Studies," *IEEE Transactions on Energy Conversion*, 32(3):1108–1116, 2017. doi:10.1109/TEC.2016.2639050 <!-- bib:Pourbeik2017 -->
-10. R. T. Elliott et al., "Advanced Control and Monitoring of Inverter-Based Resources (PSTess)," National Renewable Energy Laboratory (NREL), 2021. <https://www.osti.gov/biblio/1819998> <!-- bib:Elliott2021 -->
+10. R. T. Elliott, D. J. Trudnowski, H. Choi, and T. Nguyen, *The Power and Energy Storage Systems Toolbox–PSTess (V1.0)*, Sandia National Laboratories (SNL-NM), Albuquerque, NM, 2021. doi:10.2172/1819998 <!-- bib:Elliott2021 -->
 11. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837 <!-- bib:IEEELoad1993 -->
 12. North American Electric Reliability Corporation (NERC), "Load Modeling Working Group (LMWG) Meeting Materials: Data Center Load Modeling Technical Reference," July 2026. <https://www.nerc.com/globalassets/who-we-are/standing-committees/rstc/lmwg/20260714_lmwg-meeting-materials.pdf> <!-- bib:nerc2026lmwg -->
 13. G. E. Colón-Reyes, R. Dye, C. Tomlin, and D. Callaway, "Effects of Dynamic Power Electronic Load Models on Power Systems Analysis Using ZIP-E Loads," arXiv:2407.12715, 2024. doi:10.48550/arXiv.2407.12715 <!-- bib:colon2024effects -->
