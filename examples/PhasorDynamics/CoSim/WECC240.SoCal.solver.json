@@ -1,0 +1,16 @@
+{
+    "system_model_file": "partition/WECC240.SoCal.case.json",
+    "state_file": "WECC240.state.json",
+    "output_file": "WECC240.SoCal.omega.csv",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 0.0, "type": "connect", "bus": 1201, "address": "tcp://127.0.0.1:8810" },
+        { "time": 0.0, "type": "connect", "bus": 1301, "address": "tcp://127.0.0.1:8811" },
+        { "time": 0.0, "type": "connect", "bus": 1401, "address": "tcp://127.0.0.1:8812" },
+        { "time": 0.0, "type": "connect", "bus": 2404, "address": "tcp://127.0.0.1:8813" }
+    ],
+    "reference_file": "reference/WECC240.SoCal.ref.csv",
+    "error_type": "absolute",
+    "error_tolerance": 7e-5
+}

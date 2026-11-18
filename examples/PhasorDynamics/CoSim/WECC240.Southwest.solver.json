@@ -1,0 +1,21 @@
+{
+    "system_model_file": "partition/WECC240.Southwest.case.json",
+    "state_file": "WECC240.state.json",
+    "output_file": "WECC240.Southwest.omega.csv",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 0.0, "type": "connect", "bus": 1201, "address": "tcp://127.0.0.1:8810" },
+        { "time": 0.0, "type": "connect", "bus": 1301, "address": "tcp://127.0.0.1:8811" },
+        { "time": 0.0, "type": "connect", "bus": 1401, "address": "tcp://127.0.0.1:8812" },
+        { "time": 0.0, "type": "connect", "bus": 4003, "address": "tcp://127.0.0.1:8815" },
+        { "time": 0.0, "type": "connect", "bus": 4005, "address": "tcp://127.0.0.1:8816" },
+        { "time": 0.0, "type": "connect", "bus": 4008, "address": "tcp://127.0.0.1:8817" },
+        { "time": 0.0, "type": "connect", "bus": 4102, "address": "tcp://127.0.0.1:8818" },
+        { "time": 0.0, "type": "connect", "bus": 4103, "address": "tcp://127.0.0.1:8819" },
+        { "time": 0.0, "type": "connect", "bus": 6402, "address": "tcp://127.0.0.1:8820" }
+    ],
+    "reference_file": "reference/WECC240.Southwest.ref.csv",
+    "error_type": "absolute",
+    "error_tolerance": 7e-5
+}

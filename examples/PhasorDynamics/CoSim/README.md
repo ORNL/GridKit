@@ -25,3 +25,21 @@ $sim IEEE39.B.solver.json
 ```
 
 Each process writes its own output and error against the reference obtained from the monolithic solution.
+
+## WECC240
+
+The [WECC240 partition](../Partitions/WECC240/WECC240.partition.json) divides the case
+into four regions. Each region compares its generator speeds against the
+[monolithic simulation](WECC240.monolithic.solver.json) for a fault at bus 4004 (GRIZZLY).
+
+From the same directory, run the monolithic case and then start one process per region.
+
+```shell
+$sim WECC240.monolithic.solver.json
+
+$sim WECC240.SoCal.solver.json &
+$sim WECC240.NorCal.solver.json &
+$sim WECC240.Southwest.solver.json &
+$sim WECC240.Northwest.solver.json
+wait
+```

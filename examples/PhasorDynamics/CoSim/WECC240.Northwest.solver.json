@@ -1,0 +1,20 @@
+{
+    "system_model_file": "partition/WECC240.Northwest.case.json",
+    "state_file": "WECC240.state.json",
+    "output_file": "WECC240.Northwest.omega.csv",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 0.0, "type": "connect", "bus": 4001, "address": "tcp://127.0.0.1:8814" },
+        { "time": 0.0, "type": "connect", "bus": 4003, "address": "tcp://127.0.0.1:8815" },
+        { "time": 0.0, "type": "connect", "bus": 4005, "address": "tcp://127.0.0.1:8816" },
+        { "time": 0.0, "type": "connect", "bus": 4008, "address": "tcp://127.0.0.1:8817" },
+        { "time": 0.0, "type": "connect", "bus": 4102, "address": "tcp://127.0.0.1:8818" },
+        { "time": 0.0, "type": "connect", "bus": 4103, "address": "tcp://127.0.0.1:8819" },
+        { "time": 1.0, "type": "fault_on", "bus": 4004, "R": 0.0, "X": 0.01 },
+        { "time": 1.15, "type": "fault_off", "bus": 4004 }
+    ],
+    "reference_file": "reference/WECC240.Northwest.ref.csv",
+    "error_type": "absolute",
+    "error_tolerance": 7e-5
+}
