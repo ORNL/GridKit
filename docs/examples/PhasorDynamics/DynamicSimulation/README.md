@@ -5,7 +5,9 @@
 :titlesonly:
 :hidden:
 
+ThreeBusBasic <Toy/ThreeBusBasic/README>
 ThreeBusConstantSource <Toy/ThreeBusConstantSource/README>
+PostgreSQL <PostgreSQL/README>
 ACTIVSg10k <ACTIVSg10k/README>
 ```
 

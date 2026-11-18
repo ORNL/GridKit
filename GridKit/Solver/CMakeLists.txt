@@ -4,6 +4,8 @@
 #    - Slaven Peles <slaven.peles@pnnl.gov>
 #]]
 
+install(FILES SundialsException.hpp DESTINATION include/GridKit/Solver)
+
 if(TARGET SUNDIALS::kinsol)
   add_subdirectory(SteadyState)
 endif()

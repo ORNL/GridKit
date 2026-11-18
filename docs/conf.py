@@ -1,4 +1,5 @@
 from pathlib import Path
+from xml.etree import ElementTree
 
 from exhale import utils as exhale_utils
 
@@ -6,6 +7,22 @@ project = "GridKit"
 author = "GridKit Developers"
 
 docs_dir = Path(__file__).parent.resolve()
+
+for xml_path in (docs_dir / "xml").glob("*.xml"):
+    tree = ElementTree.parse(xml_path)
+    occurrences = {}
+    changed = False
+    for member in tree.iter("memberdef"):
+        member_id = member.get("id")
+        if member_id is None:
+            continue
+        occurrence = occurrences.get(member_id, 0)
+        occurrences[member_id] = occurrence + 1
+        if occurrence:
+            member.set("id", f"{member_id}_overload_{occurrence}")
+            changed = True
+    if changed:
+        tree.write(xml_path, encoding="utf-8", xml_declaration=True)
 
 extensions = ["breathe", "exhale", "myst_parser", "sphinx_design"]
 
