@@ -253,8 +253,7 @@ enforce generators' reactive power limits (Q limits) by default. We enforce them
 switching: after solving voltages, any generator outside a Q limit is fixed
 at that limit and its bus switched to PQ, then the power flow is re-solved.
 Fixed generators return to PV if voltage recovers past setpoint (repeated up to
-twice). A switched unit's active output is kept at its bus as a fixed injection, so the bus
-balance is unchanged. In a five-point check at hour 204 (commitments
+twice). In a five-point check at hour 204 (commitments
 27 and 38, datacenter at buses 108 and 148 at 200 MW, plus one point without a datacenter),
 the default ACPF left 2 to 11 generators outside their Q limits, while our switching brought all of
 them within their limits.
@@ -276,15 +275,15 @@ keeps the DCOPF active dispatch.
 
 Wind units are removed as synchronous machines (`Genrou`) and re-inserted as a
 **negative load** at their own bus, modeled as constant current. Left as
-synchronous machines, they could contribute **up to 2,766 MW·s** of inertia at
-their ratings (sum over the 6 wind units of inertia constant × rating), whatever
-the wind output, and inertia is what the study varies.
+synchronous machines, these six units would add a fixed **2,766 MW·s** of inertia
+(sum of inertia constant × rating over the six, from the case), independent of their
+output. Real inverter-based wind provides no such inertia.
 A constant-power stand-in made the simulation fail at high wind penetration.
 
 **Implementation.** Hourly wind MW is pinned in the DCOPF, the ACPF
 solves its reactive output, and the solved P and Q are written into the
 negative load. In the dynamic case each wind unit's machine, governor and
-exciter models are removed and a load is added with `Pnom = −PG/100` and
+exciter models are removed and a ZIP load is added with `Pnom = −PG/100` and
 `Qnom = −QG/100` (per unit, 100 MVA base), all of it constant current. GridKit
 treats positive `Pnom` as consumed, so the negative value injects PG. At the
 initial voltage this reproduces the power-flow P and Q exactly; after that the
