@@ -2499,7 +2499,7 @@ Q limits, and the higher-MW results should be re-read under switching.
 
 **Measured results** *(moved here from the pilot report §4.2a)*
 
-**What we measured** *(5 scenarios, hour 204, alphaP 0.8, datacenter at 200 MW
+**What we measured** *(5 scenarios, hour 204, datacenter at 200 MW
 where sited)*:
 
 | scenario | units with Q violations, unlimited | units fixed at a limit | vmin unlimited → switched (pu) | losses change (MW) |

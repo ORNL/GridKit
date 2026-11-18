@@ -249,17 +249,20 @@ from 27.05 MW to 0.34 MW on the worst hour (0.016 % of load). A second
 correction reduces it only to 0.005 MW, so one is enough.
 
 **Reactive power limits: PV→PQ switching.** PowerModels.jl's ACPF does not
-enforce generators' reactive power limits (Q limits) by default: without mitigation we
-measured 2 to 11 violations per operating condition. We enforce them by PV→PQ
+enforce generators' reactive power limits (Q limits) by default. We enforce them by PV→PQ
 switching: after solving voltages, any generator outside a Q limit is fixed
 at that limit and its bus switched to PQ, then the power flow is re-solved.
 Fixed generators return to PV if voltage recovers past setpoint (repeated up to
-twice). The DCOPF dispatch is never changed, only reactive power.
+twice). A switched unit's active output is kept at its bus as a fixed injection, so the bus
+balance is unchanged. In a five-point check at hour 204 (commitments
+27 and 38, datacenter at buses 108 and 148 at 200 MW, plus one point without a datacenter),
+the default ACPF left 2 to 11 generators outside their Q limits, while our switching brought all of
+them within their limits.
 
 We also tested ACOPF, which enforces Q limits as constraints. It was not adopted
 because it also changes the active-power dispatch (about 280 MW summed over the
 pilot), which would mix a dispatch effect into every CCT comparison; switching
-changes only reactive power.
+keeps the DCOPF active dispatch.
 
 > **Details:** [the dispatch chain](datacenter_load_uq_plan.md#10-the-dispatch-chain) ·
 > [the slack problem](datacenter_load_uq_plan.md#the-slack-problem) ·
