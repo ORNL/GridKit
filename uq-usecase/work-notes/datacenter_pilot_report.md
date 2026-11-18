@@ -69,16 +69,16 @@ Main terms used in our pilot study that follows.
 ## 3. The Illinois synthetic grid (ACTIVSg200)
 
 ACTIVSg200, a synthetic Illinois case [5]: **200 buses, 246 branches, 49 generators**
-(25 coal, 17 natural gas, 6 wind, 1 nuclear). The seed dispatch totals
-**2,178 MW** of demand, which is the annual peak. The dynamic case
-carries **40 synchronous machines** (34 thermal and the 6 wind units). The
-campaign replaces the wind units with negative-load stand-ins (§4.3), leaving
-**34 synchronous machines**. The 9 thermal units that are offline in the seed
-dispatch have no dynamic model and were not added. The case also carries
-**109 loads**.
+(43 thermal: 25 coal, 17 natural gas, 1 nuclear; and 6 wind). The default GridKit
+`case.json` has **40 synchronous machines** (34 thermal units with status on in
+the `.aux` and the 6 wind units). The campaign replaces the wind units with
+negative-load stand-ins (§4.3). However, all 43 thermal units have dynamic models in the
+`.dyr`, so the 9 with status off in the `.aux` can be committed in a sampled
+case. Each sampled case contains only its committed thermal units as `Genrou`
+machines. The case also carries **109 loads**.
 
-Hourly load and wind come from an 8,760-hour dataset for this footprint, so the
-(demand, wind) joint distribution is empirical rather than assumed.
+Hourly load and wind are synthetic one-year series for this case, so the
+(demand, wind) joint distribution is taken from them rather than assumed.
 
 > **Details:** [where the wind timeseries came from](datacenter_load_uq_plan.md#where-the-wind-timeseries-came-from-and-what-it-looks-like) ·
 > [the operating-condition space](datacenter_load_uq_plan.md#6-the-operating-condition-space) ·
@@ -86,7 +86,7 @@ Hourly load and wind come from an 8,760-hour dataset for this footprint, so the
 
 ### One-time seed building
 
-The ACTIVSg200 dynamic case distributed with GridKit is not
+The ACTIVSg200 `case.json` distributed with GridKit is not
 used directly. Once per case, we rebuild it from the two TAMU source files, the
 PowerWorld network file (`.aux`) and the dynamics file (`.dyr`), and check the
 rebuild against the distributed case. That gives two
@@ -177,11 +177,13 @@ operating conditions. This is a stratified choice at fixed positions, not a
 uniform draw from the band and not a draw from an assumed distribution. The
 faultscreen-1 (§7.6) uses 10 hours × 2 commitments = 20 conditions.
 Campaign aleatoric-1 (§7.0) uses 20 hours × 2 commitments = 40 conditions.
-Hours are stratified by net-load quintile with equal counts per quintile (2 each
-in faultscreen-1, 4 each in aleatoric-1), so each
-quintile carries equal weight, matching the empirical net-load distribution.
-In aleatoric-1 the hours were drawn at random. In all campaigns the
-datacenter runs reuse the baseline commitment of their hour.
+Hours are stratified by net-load quintile: the 8,760 hours are split into five
+equal-count bins of net load, and hours are drawn at random without replacement
+from each bin, with equal counts per bin (2 each in faultscreen-1, 4 each in
+aleatoric-1). Each quintile therefore holds 20% of the year's hours, so equal
+counts give each quintile its population share. Hours within a quintile are not
+weighted. In all campaigns the datacenter runs reuse the baseline commitment of
+their hour.
 
 **Why commitment matters.** A commitment sets which thermal units are online, and
 so the inertia and headroom on the system. A low-load hour can run many units at
@@ -196,8 +198,10 @@ load), the two ends of the band are:
 
 They differ by a **factor of 1.56 in inertia at identical load and wind**. That
 is the dominant
-lever on stability at fixed net load. We have real data for the net-load
-distribution but none for how this synthetic system's operators would commit, so
+lever on stability at fixed net load. We have a synthetic one-year hourly load
+series for ACTIVSg200 (from the TAMU repository, like the `.dyr` and `.m` files)
+and a synthetic wind series, which together give the net-load distribution. We
+have no data for how this synthetic system's operators would commit, so
 inventing a commitment probability distribution would fabricate the very thing that drives the
 answer. Results are reported **conditionally** on commitment and can be
 reweighted later if a real commitment distribution becomes available.
@@ -244,8 +248,8 @@ hourly loop the whole load change. One loss correction reduces the overshoot
 from 27.05 MW to 0.34 MW on the worst hour (0.016 % of load). A second
 correction reduces it only to 0.005 MW, so one is enough.
 
-**Reactive power limits: PV→PQ switching.** ACPF does not enforce
-generators' reactive power limits (Q limits) on its own: without mitigation we
+**Reactive power limits: PV→PQ switching.** PowerModels.jl's ACPF does not
+enforce generators' reactive power limits (Q limits) by default: without mitigation we
 measured 2 to 11 violations per operating condition. We enforce them by PV→PQ
 switching: after solving voltages, any generator outside a Q limit is fixed
 at that limit and its bus switched to PQ, then the power flow is re-solved.
@@ -351,13 +355,13 @@ Every symbol maps to a GridKit name or to a derived quantity:
 
 | Symbol | Meaning | GridKit name, and where it is read |
 |---|---|---|
-| $i$ | one of the 26 Genrou machines in ACTIVSg200 | `Genrou` device `id`, e.g. `49_1_genrou` |
+| $i$ | one committed synchronous machine in the sample | `Genrou` device `id`, e.g. `49_1_genrou` |
 | $H_i$ | inertia constant, in s | `H` in `params` of device $i$ in `case.json` |
 | $S_i$ | machine MVA base | `mva` in `params` of device $i$ in `case.json` |
 | $\delta_i(t)$ | rotor angle of machine $i$, in radians | Genrou state `delta`, monitor column `Genrou_<device id>_delta`, e.g. `Genrou_49_1_genrou_delta` |
 | $t$ | simulation time, in s | `t` column of the monitor CSV |
 | $\delta_{COI}(t)$ | centre-of-inertia angle, in radians | not a model parameter; computed from the weights $H_i S_i / \sum_j H_j S_j$ (`_coi_weights`, `is_unstable` in `py-utils/campaign.py`) |
-| $\pi$ | pole-slip threshold | `pole_slip_deg` = 180 (degrees) in `is_unstable`, applied after `np.rad2deg`; not a model parameter |
+| $\pi$ | pole-slip threshold | used in `is_unstable` |
 
 Measuring against the COI rather than a fixed reference separates "the whole
 system swung" (fine) from "one machine left the group" (not fine).
