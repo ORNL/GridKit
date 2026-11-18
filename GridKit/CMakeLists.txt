@@ -25,6 +25,11 @@ install(FILES ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/LICENSE
 # General Utilities and File IO
 add_subdirectory(Utilities)
 
+if(GRIDKIT_ENABLE_ZMQ)
+  # Co-simulation support
+  add_subdirectory(CoSim)
+endif()
+
 # Memory management utilities
 add_subdirectory(MemoryUtilities)
 
