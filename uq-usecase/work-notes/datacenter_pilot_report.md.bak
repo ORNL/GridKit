@@ -315,7 +315,7 @@ how each responds when voltage sags: a constant-**impedance** part (**power prop
 part (**constant regardless of voltage**). The split is written here as P/I/Z percentages.
 
 The distinction is the physical reason a datacenter is interesting. Ordinary
-constant-impedance load *sheds itself* during a voltage dip and helps the system
+constant-impedance load sheds itself during a voltage dip and helps the system
 recover. Because data center IT racks interface with the grid through double-conversion uninterruptible power supplies (UPS) and active power factor correction (PFC) converters, the power electronics act as a buffer that maintains constant power draw across nominal and post-fault voltage variations, making a predominantly constant-power ($\alpha_P$) representation appropriate within a ZIP load framework [11, 12]. This behavior causes the datacenter to keep demanding the same megawatts at reduced voltage, which
 means drawing more current, which depresses voltage further. If the new load
 were simply folded into the load already at the bus, it would
@@ -339,8 +339,8 @@ bus 108 or bus 148. Campaigns aleatoric-1 and aleatoric-2 (§7.0) place it at bu
 ## 5. CCT by bisection
 
 Critical clearing time is found by bisecting fault duration in `[0.05, 0.5]` s,
-with a stability test of **pole slip relative to the centre of inertia** [12], [13]. The
-centre of inertia [14] is the inertia-weighted average rotor angle of the fleet,
+with a stability test of **pole slip relative to the centre of inertia**. The
+centre of inertia [15] is the inertia-weighted average rotor angle of the fleet,
 
 $$\delta_{COI}(t) = \frac{\sum_i H_i S_i \delta_i(t)}{\sum_i H_i S_i}$$
 
@@ -884,7 +884,7 @@ See tex-report/README.md, section "Citations". -->
 10. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837 <!-- bib:IEEELoad1993 -->
 11. North American Electric Reliability Corporation (NERC), "Load Modeling Working Group (LMWG) Meeting Materials: Data Center Load Modeling Technical Reference," July 2026. <https://www.nerc.com/globalassets/who-we-are/standing-committees/rstc/lmwg/20260714_lmwg-meeting-materials.pdf> <!-- bib:nerc2026lmwg -->
 12. G. E. Colón-Reyes, R. Dye, C. Tomlin, and D. Callaway, "Effects of Dynamic Power Electronic Load Models on Power Systems Analysis Using ZIP-E Loads," arXiv:2407.12715, 2024. doi:10.48550/arXiv.2407.12715 <!-- bib:colon2024effects -->
-13. North American Electric Reliability Corporation (NERC), "Load Modeling Leading Task Force (LLTF) Reference Guide: Data Center Load Modeling Practices," 2024. <!-- bib:nerc2024lltf -->
+13. North American Electric Reliability Corporation (NERC), "Large Loads Task Force (LLTF) Reference Guide: Data Center Load Modeling Practices," 2024. <!-- bib:nerc2024lltf -->
 14. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981 <!-- bib:Kundur2004 -->
 15. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
 16. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998. <!-- bib:SauerPai1998 -->
@@ -895,5 +895,3 @@ See tex-report/README.md, section "Citations". -->
 21. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
 22. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
 23. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
-24. B. Donon, R. Clément, B. Donnot, A. Marot, I. Guyon, and M. Schoenauer, "Neural Networks for Power Flow: Graph Neural Solver," *Electric Power Systems Research*, 189:106547, 2020. doi:10.1016/j.epsr.2020.106547 <!-- bib:Donon2020 -->
-25. B. Settles, "Active Learning Literature Survey," University of Wisconsin–Madison, Computer Sciences Technical Report 1648, 2009. <!-- bib:Settles2009 -->

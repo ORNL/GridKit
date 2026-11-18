@@ -339,7 +339,7 @@ bus 108 or bus 148. Campaigns aleatoric-1 and aleatoric-2 (§7.0) place it at bu
 ## 5. CCT by bisection
 
 Critical clearing time is found by bisecting fault duration in `[0.05, 0.5]` s,
-with a stability test of **pole slip relative to the centre of inertia** [12], [13]. The
+with a stability test of **pole slip relative to the centre of inertia**. The
 centre of inertia [14] is the inertia-weighted average rotor angle of the fleet,
 
 $$\delta_{COI}(t) = \frac{\sum_i H_i S_i \delta_i(t)}{\sum_i H_i S_i}$$
@@ -367,11 +367,11 @@ The bisected variable is the fault duration. The fault is applied at `t_on` =
 1.0 s and cleared at `t_off` = `t_on` + duration, in the `fault_on` and
 `fault_off` events of `solver.json`.
 
-* **2 simulations** is the early-exit path: stable at the bottom, still stable at
-  the top, return censored. If the bottom probe (0.05 s) is already unstable, the
+* **2 simulations** is the early-exit path: if stable at the bottom and still stable at
+  the top, we return censored. If the bottom probe (0.05 s) is already unstable, the
   search stops with no CCT (NaN) after one simulation.
-* **8 simulations** means the boundary was inside the bracket. The reported CCT
-  is the last stable duration tried, so it sits within the 0.01 s tolerance below
+* **8 simulations** means the boundary was inside the `[0.05, 0.5]` bracket. The reported CCT
+  is the last stable duration we tried, so it sits within the 0.01 s tolerance below
   the boundary.
 
 The cap at 0.5 s is deliberate. On power grids, primary protection clears faults
@@ -399,7 +399,7 @@ resulting CCT **identical** (0.2891 both ways).
 
 ## 6. Parallel execution on Kestrel
 
-Each campaign ran as one SLURM job [15] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass [16] (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
+Each campaign ran as one SLURM job [14] on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass [15] (the *dispatch stage*), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
 
 > **Details:** [wall time for the two main campaigns](datacenter_load_uq_plan.md#wall-time-in-the-two-main-campaigns-measured-2026-11-10) ·
 > [parallel sampling runs](datacenter_load_uq_plan.md#parallel-sampling-runs) ·
@@ -488,7 +488,7 @@ All campaigns use the operating-condition design of §4.1, where an operating co
 
 ### 7.1 Reading the curves: Kaplan–Meier and censoring
 
-Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator [17] uses censored runs correctly:
+Each curve estimates **$P(\mathrm{CCT} < t)$**: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable. A run still stable at the 0.5 s simulation cap is *censored*: we know $\mathrm{CCT} \ge 0.5$ s, not its value. The Kaplan–Meier (KM) estimator [16] uses censored runs correctly:
 
 $$\hat S(t)=\prod_{t_i\le t}\Bigl(1-\frac{d_i}{n_i}\Bigr),\qquad \widehat P(\mathrm{CCT}<t)=1-\hat S(t)$$
 
@@ -504,7 +504,7 @@ The rest of §7 runs as follows. §7.2 works one matched example, and §7.3 repe
 
 **Sampling:** aleatoric-1, 200 MW at bus 108, fault at bus 66. Of the 40 operating conditions, 37 solve with the datacenter. The baseline is the same 37 conditions with no datacenter.
 
-**Greenwood interval.** Greenwood's formula [18] estimates the variance of a KM estimate:
+**Greenwood interval.** Greenwood's formula [17] estimates the variance of a KM estimate:
 
 $$\widehat{\mathrm{Var}}\big(\hat S(t)\big)=\hat S(t)^2\sum_{t_i\le t}\frac{d_i}{n_i(n_i-d_i)}$$
 
@@ -548,7 +548,7 @@ Two points. First, the datacenter moves P(CCT < 0.25 s) from about 0.5 to 0.73 i
 
 ### 7.4 More operating conditions: how the estimate settles
 
-We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (*subsampling* [19]). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in §7.3. We might use the same check later to size a future study, if a full-size design costs too much.
+We checked whether the estimate stops moving as conditions are added, by recomputing it on random subsets of each campaign's conditions (*subsampling* [18]). For bus 108, 200 MW, the median over 2,000 random orderings settles at 0.730–0.733 from about 30–37 conditions in both campaigns. This holds for these two campaigns only, and the check does not give an uncertainty; that is the Greenwood interval in §7.3. We might use the same check later to size a future study, if a full-size design costs too much.
 
 ![convergence of the KM estimate, 37 and 171 conditions](figures/main_convergence_37_vs_171.png)
 
@@ -645,7 +645,7 @@ This follows from §7.1, since censoring sits at one point beyond every measured
 The 200-bus case is small enough that brute force works: whole campaigns finish
 in minutes. That is convenient but it hides the question the methods work
 exists to answer, so we measured what changes on the Texas synthetic grid,
-**ACTIVSg2000** (2,000 buses, from the TAMU repository [20]). This is a scoping
+**ACTIVSg2000** (2,000 buses, from the TAMU repository [19]). This is a scoping
 study, not a campaign.
 
 **What already exists.** A GridKit dynamic case is distributed with GridKit, and
@@ -750,13 +750,13 @@ work**, pursued along two tracks.
 The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian
 over buses, a fault propagates through branch impedances as a message-passing
 process, and "which bus to site load at" is itself a graph question. Graph
-neural networks and graph transformers carry exactly that inductive bias [21],
-and have been used as fast power-system surrogates [22]. A surrogate trained on
+neural networks and graph transformers carry exactly that inductive bias [20],
+and have been used as fast power-system surrogates [21]. A surrogate trained on
 the records the sampling campaigns already produce, e.g.,
 `(graph, operating point, parameters, fault)` → trajectory map, could emulate
 CCT or the stability label cheaply, turning the expensive solver into a screening
 tool. Full dynamic runs could be reserved for confirmation and for labelling the cases
-where the surrogate is least certain, an active-learning approach [23] that chooses
+where the surrogate is least certain, an active-learning approach [22] that chooses
 which runs to do. This is **supplemental** to sampling-based UQ, not a
 replacement: the surrogate lowers per-sample cost, while the sampling design
 still fixes what the estimate means.
@@ -884,14 +884,13 @@ See tex-report/README.md, section "Citations". -->
 10. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837 <!-- bib:IEEELoad1993 -->
 11. North American Electric Reliability Corporation (NERC), "Load Modeling Working Group (LMWG) Meeting Materials: Data Center Load Modeling Technical Reference," July 2026. <https://www.nerc.com/globalassets/who-we-are/standing-committees/rstc/lmwg/20260714_lmwg-meeting-materials.pdf> <!-- bib:nerc2026lmwg -->
 12. G. E. Colón-Reyes, R. Dye, C. Tomlin, and D. Callaway, "Effects of Dynamic Power Electronic Load Models on Power Systems Analysis Using ZIP-E Loads," arXiv:2407.12715, 2024. doi:10.48550/arXiv.2407.12715 <!-- bib:colon2024effects -->
-13. North American Electric Reliability Corporation (NERC), "Load Modeling Leading Task Force (LLTF) Reference Guide: Data Center Load Modeling Practices," 2024. <!-- bib:nerc2024lltf -->
-14. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981 <!-- bib:Kundur2004 -->
-15. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
-16. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998. <!-- bib:SauerPai1998 -->
-17. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
-18. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671 <!-- bib:Bezanson2017 -->
-19. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
-20. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
-21. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
-22. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
-23. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
+13. North American Electric Reliability Corporation (NERC), "Large Loads Task Force (LLTF) Reference Guide: Data Center Load Modeling Practices," 2024. <!-- bib:nerc2024lltf -->
+14. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
+15. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998. <!-- bib:SauerPai1998 -->
+16. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
+17. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671 <!-- bib:Bezanson2017 -->
+18. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
+19. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
+20. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
+21. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
+22. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
