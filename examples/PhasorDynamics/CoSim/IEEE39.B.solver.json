@@ -1,0 +1,12 @@
+{
+    "system_model_file": "partition/IEEE39.B.case.json",
+    "output_file": "IEEE39.B.omega.csv",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 0.0, "type": "connect", "bus": 39, "address": "tcp://127.0.0.1:8801" }
+    ],
+    "reference_file": "reference/IEEE39.B.ref.csv",
+    "error_type": "absolute",
+    "error_tolerance": 7e-5
+}

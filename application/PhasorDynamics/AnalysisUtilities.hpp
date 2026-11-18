@@ -58,6 +58,17 @@ namespace GridKit
     };
 
     /**
+     * @brief Link from an interface bus of the system to a co-simulation peer
+     */
+    struct Connection
+    {
+      /// Interface bus
+      std::size_t bus;
+      /// Endpoint of the link, such as tcp://127.0.0.1:8801
+      std::string address;
+    };
+
+    /**
      * @brief Data defined in JSON file for parameterized study
      */
     struct StudyData
@@ -84,6 +95,8 @@ namespace GridKit
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
       /// set of system events
       std::vector<SystemEvent>                       events;
+      /// links to co-simulation peers
+      std::vector<Connection>                        connections;
       /// path to output file
       fs::path                                       output_file;
       /// table layout of the output file
@@ -148,6 +161,13 @@ namespace GridKit
 
       for (auto& raw_event : j.at("events"))
       {
+        if (raw_event.at("type") == "connect")
+        {
+          c.connections.push_back({raw_event.at("bus").get<std::size_t>(),
+                                   raw_event.at("address").get<std::string>()});
+          continue;
+        }
+
         auto& event = c.events.emplace_back();
         raw_event.at("time").get_to(event.time);
         event.bus    = raw_event.value("bus", INVALID_INDEX<std::size_t>);
