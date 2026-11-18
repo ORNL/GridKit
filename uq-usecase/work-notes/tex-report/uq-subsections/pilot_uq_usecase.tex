@@ -127,7 +127,7 @@ Adding a datacenter does \textbf{not} change the commitment. The same units stay
 \subsubsection{Dispatch: DCOPF then ACPF}
 \label{uqp:4.2}
 
-Both solves use PowerModels.jl \cite{Coffrin2018} with Ipopt \cite{wachter2006}. Per condition:
+Both solves use the Julia \cite{Bezanson2017} package PowerModels.jl \cite{Coffrin2018} with Ipopt \cite{wachter2006}. Per condition:
 
 \begin{enumerate}
   \item \textbf{\Ac{dcopf}} sets the economic dispatch. It is lossless, so the load is inflated by the loss estimate from the previous pass (zero on the first).
@@ -243,11 +243,11 @@ Measuring against the COI rather than a fixed reference separates "the whole sys
 The bisected variable is the fault duration. The fault is applied at \texttt{t\_\allowbreak{}on} = 1.0 s and cleared at \texttt{t\_\allowbreak{}off} = \texttt{t\_\allowbreak{}on} + duration, in the \texttt{fault\_\allowbreak{}on} and \texttt{fault\_\allowbreak{}off} events of \texttt{solver.json}.
 
 \begin{itemize}
-  \item \textbf{2 simulations} is the early-exit path: if stable at the bottom and still stable at the top, we return censored. If the bottom probe (0.05 s) is already unstable, the search stops with no \ac{cct} (NaN) after one simulation.
-  \item \textbf{8 simulations} means the boundary was inside the $[0.05, 0.5]$ bracket. The reported \ac{cct} is the last stable duration we tried, so it sits within the 0.01 s tolerance below the boundary.
+  \item \textbf{Censored early exit case (2 simulations)}: if stable at the bottom and still stable at the top, we return censored. If the bottom probe (0.05 s) is already unstable, the search stops with no \ac{cct} (NaN) after one simulation.
+  \item \textbf{Typical case (e.g., 8 simulations)}: the boundary was inside the $[0.05, 0.5]$ bracket. Bisection halves the bracket on each probe until the width is less than \texttt{tol=0.01}, and the reported \ac{cct} is the last stable duration probed.
 \end{itemize}
 
-The cap at 0.5 s is deliberate. On power grids, primary protection clears faults in ~0.05--0.10 s, with backup protection clearing in ~0.25--0.50 s. Any fault duration beyond this window is not a contingency that protection schemes permit, so outcomes beyond the cap are \textbf{reported as censored}. The cap can be adjusted if necessary in other context.
+The \ac{cct} cap at 0.5 s is deliberate. On power grids, primary protection clears faults in ~0.05-0.10 s, with backup protection clearing in ~0.25-0.50 s \cite{Kundur1994}. Any fault duration beyond this window is not a contingency that protection schemes permit, so outcomes beyond the cap are reported as censored. The cap can be adjusted if necessary in other context.
 
 
 \begin{figure}[H]
@@ -258,14 +258,14 @@ The cap at 0.5 s is deliberate. On power grids, primary protection clears faults
 \end{figure}
 
 
-The bisection probes write only the \texttt{delta} channels, not the full monitor set: that cut probe output from 26.25 MB to 1.91 MB per probe (\textbf{13.8$\times$}) with the resulting \ac{cct} \textbf{identical} (0.2891 both ways).
+The bisection probes write only the \texttt{delta} channels, not the full monitor set: that cut probe output from 26.25 MB to 1.91 MB per probe (\textbf{13.8$\times$}).
 
 
 \subsection{Parallel execution on Kestrel}
 \label{uqp:6}
 \label{sec:parallel_kestrel}
 
-Each campaign ran as one SLURM job \cite{Kundur1994} on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass \cite{SauerPai1998} (the \textit{dispatch stage}), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
+Each campaign ran as one SLURM job \cite{Yoo2003} on one node: 16 single-core workers, each taking a contiguous slice of the campaign's list of runs. A worker first solves the dispatches for its slice in one batched Julia pass (the \textit{dispatch stage}), then runs the dynamic simulations for the dispatches that solved. Results are written per run, so a campaign can resume.
 
 
 \vspace{0.25cm}
