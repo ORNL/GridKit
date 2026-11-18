@@ -278,7 +278,6 @@ Wind units are removed as synchronous machines (`Genrou`) and re-inserted as a
 synchronous machines, these six units would add a fixed **2,766 MW·s** of inertia
 (sum of inertia constant × rating over the six, from the case), independent of their
 output. Real inverter-based wind provides no such inertia.
-A constant-power stand-in made the simulation fail at high wind penetration.
 
 **Implementation.** Hourly wind MW is pinned in the DCOPF, the ACPF
 solves its reactive output, and the solved P and Q are written into the
@@ -297,12 +296,12 @@ Sandia PSTess manual says that, *"as in the WECC REGC_A model"*, the converter
 interface is "a controllable current source" [9]. A constant-current
 load is a simple stand-in for that current injection.
 
-> **Implementation note:** The ACTIVSg200 case lacks native wind/PV converter controls models for wind and photovoltaic units. GridKit implements comprehensive IBR models, specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control), which have been implemented and unit-tested in the codebase. Substituting these proper RECC models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
+> **Implementation note:** The default ACTIVSg200 case lacks native wind/PV converter controls models for wind and photovoltaic units. However, GridKit includes comprehensive IBR models, specifically REGCA (converter control), REECB (reactive power and volt/var support), and REPCA (plant control), which are unit-tested in the codebase and already appear in the WECC case. Substituting these proper IBR models for the current constant-current stand-in is straightforward and will be readily incorporated in future campaigns to improve fidelity of inverter-based resource dynamics.
 
 ### 4.4 The datacenter
 
 A datacenter is represented as **additional electrical load placed at one
-bus**. Two things about *how* it is added matter to the answer.
+bus**. Two things about how it is added matter to the study design.
 
 **It is added before dispatch, not after.** The load enters the network data
 that the optimiser sees, so the commitment and the dispatch must produce and
@@ -316,20 +315,16 @@ how each responds when voltage sags: a constant-**impedance** part (**power prop
 part (**constant regardless of voltage**). The split is written here as P/I/Z percentages.
 
 The distinction is the physical reason a datacenter is interesting. Ordinary
-constant-impedance load *sheds itself* during a voltage dip and helps the system
-recover. Datacenter load is fed through rectifiers and UPS units and behaves far closer to
-constant power [11]: it keeps demanding the same megawatts at reduced voltage, which
+constant-impedance load sheds itself during a voltage dip and helps the system
+recover. Because data center IT racks interface with the grid through double-conversion uninterruptible power supplies (UPS) and active power factor correction (PFC) converters, the power electronics act as a buffer that maintains constant power draw across nominal and post-fault voltage variations, making a predominantly constant-power ($\alpha_P$) representation appropriate within a ZIP load framework [11, 12]. This behavior causes the datacenter to keep demanding the same megawatts at reduced voltage, which
 means drawing more current, which depresses voltage further. If the new load
 were simply folded into the load already at the bus, it would
 inherit that load's helpful constant-impedance behaviour and the study would
 measure the wrong thing. So the datacenter gets a **separate** load device, and the
-existing load at the bus is left as it was. Every existing load in the case is
+existing load at the bus is left as it was. Every existing load in the default case is
 pure constant impedance.
 
-**The datacenter mix is P/I/Z = 80/20/0**: 80% constant power and 20% constant
-current, with no constant impedance. The constant-current share represents
-converters that reach their current limit in a deep voltage dip; the split is a
-modelling choice, not a fitted value.
+**Our modeled datacenter mix is P/I/Z = 80/20/0**: To account for non-IT facility overhead, such as motor-based cooling systems (chillers, pumps, and fans) that exhibit voltage-dependent, constant-current-like behavior, we assign $\alpha_I = 0.2$ alongside the dominant IT constant-power share of $\alpha_P = 0.8$ ($\alpha_Z = 0$), consistent with utility data center modeling splits of 60% to 90% IT constant power and 10% to 40% cooling load [13].
 
 **Placement.** Campaign faultscreen-1 (§7.6) places a 200 MW datacenter at
 bus 108 or bus 148. Campaigns aleatoric-1 and aleatoric-2 (§7.0) place it at bus 6, 108, 120 or
@@ -887,16 +882,16 @@ See tex-report/README.md, section "Citations". -->
 8. P. Pourbeik et al., "Generic Dynamic Models for Modeling Wind Power Plants and Other Renewable Technologies in Large-Scale Power System Studies," *IEEE Transactions on Energy Conversion*, 32(3):1108–1116, 2017. doi:10.1109/TEC.2016.2639050 <!-- bib:Pourbeik2017 -->
 9. R. T. Elliott et al., "Advanced Control and Monitoring of Inverter-Based Resources (PSTess)," National Renewable Energy Laboratory (NREL), 2021. <https://www.osti.gov/biblio/1819998> <!-- bib:Elliott2021 -->
 10. IEEE Task Force on Load Representation for Dynamic Performance, "Load Representation for Dynamic Performance Analysis," *IEEE Transactions on Power Systems*, 8(2):472–482, 1993. doi:10.1109/59.260837 <!-- bib:IEEELoad1993 -->
-11. J. V. Milanović, K. Yamashita, S. Martínez Villanueva, S. Ž. Djokić, and L. M. Korunović, "International Industry Practice on Power-System Load Modeling," *IEEE Transactions on Power Systems*, 28(3):3038–3046, 2013. doi:10.1109/TPWRS.2012.2231969 <!-- bib:Milanovic2013 -->
-12. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981 <!-- bib:Kundur2004 -->
-13. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
-14. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998. <!-- bib:SauerPai1998 -->
-15. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
-16. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671 <!-- bib:Bezanson2017 -->
-17. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
-18. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
-19. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
-20. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
-21. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
-22. B. Donon, R. Clément, B. Donnot, A. Marot, I. Guyon, and M. Schoenauer, "Neural Networks for Power Flow: Graph Neural Solver," *Electric Power Systems Research*, 189:106547, 2020. doi:10.1016/j.epsr.2020.106547 <!-- bib:Donon2020 -->
-23. B. Settles, "Active Learning Literature Survey," University of Wisconsin–Madison, Computer Sciences Technical Report 1648, 2009. <!-- bib:Settles2009 -->
+11. North American Electric Reliability Corporation (NERC), "Load Modeling Working Group (LMWG) Meeting Materials: Data Center Load Modeling Technical Reference," July 2026. <https://www.nerc.com/globalassets/who-we-are/standing-committees/rstc/lmwg/20260714_lmwg-meeting-materials.pdf> <!-- bib:nerc2026lmwg -->
+12. G. E. Colón-Reyes, R. Dye, C. Tomlin, and D. Callaway, "Effects of Dynamic Power Electronic Load Models on Power Systems Analysis Using ZIP-E Loads," arXiv:2407.12715, 2024. doi:10.48550/arXiv.2407.12715 <!-- bib:colon2024effects -->
+13. North American Electric Reliability Corporation (NERC), "Load Modeling Leading Task Force (LLTF) Reference Guide: Data Center Load Modeling Practices," 2024. <!-- bib:nerc2024lltf -->
+14. P. Kundur et al., "Definition and Classification of Power System Stability," *IEEE Transactions on Power Systems*, 19(3):1387–1401, 2004. doi:10.1109/TPWRS.2004.825981 <!-- bib:Kundur2004 -->
+15. P. Kundur, *Power System Stability and Control*, McGraw-Hill, 1994. <!-- bib:Kundur1994 -->
+16. P. W. Sauer and M. A. Pai, *Power System Dynamics and Stability*, Prentice Hall, 1998. <!-- bib:SauerPai1998 -->
+17. A. B. Yoo, M. A. Jette, and M. Grondona, "SLURM: Simple Linux Utility for Resource Management," *Job Scheduling Strategies for Parallel Processing (JSSPP)*, 44–60, 2003. doi:10.1007/10968987_3 <!-- bib:Yoo2003 -->
+18. J. Bezanson, A. Edelman, S. Karpinski, and V. B. Shah, "Julia: A Fresh Approach to Numerical Computing," *SIAM Review*, 59(1):65–98, 2017. doi:10.1137/141000671 <!-- bib:Bezanson2017 -->
+19. E. L. Kaplan and P. Meier, "Nonparametric Estimation from Incomplete Observations," *Journal of the American Statistical Association*, 53(282):457–481, 1958. doi:10.1080/01621459.1958.10501452 <!-- bib:KaplanMeier1958 -->
+20. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
+21. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
+22. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
+23. P. W. Battaglia et al., "Relational Inductive Biases, Deep Learning, and Graph Networks," arXiv:1806.01261, 2018. <!-- bib:Battaglia2018 -->
