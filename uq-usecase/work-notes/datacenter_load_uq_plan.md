@@ -4586,7 +4586,7 @@ zone and load per bus are the available proxies. Both proxies are already in the
 2. **Stratify by net-load quintile.** The pilot already shows the spread is
    concentrated across quintiles: within the two highest quintiles every measured
    CCT lies in 0.177–0.191 s, while the lowest quintiles reach 0.49 s
-   ([§7.3–7.4](datacenter_pilot_report.md#73-more-operating-conditions-how-the-estimate-settles)).
+   ([§7.3–7.4](datacenter_pilot_report.md#74-more-operating-conditions-how-the-estimate-settles)).
    A stratified estimator's variance is Σ wₕ² sₕ² / nₕ, which is smaller than
    iid when the between-stratum spread is large. The test is to compare stratified
    and iid SE on the existing 840 runs.

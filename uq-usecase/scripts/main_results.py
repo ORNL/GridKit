@@ -345,7 +345,7 @@ def random_orderings(pool, ns, B=2000, seed=0):
 
 
 def convergence_block():
-    """Figure 7.3: spread of the KM estimate over random orderings, for the 37-condition pool
+    """Figure 7.4: spread of the KM estimate over random orderings, for the 37-condition pool
     (aleatoric1) and the 171-condition pool (aleatoric2), both at bus 108, 200 MW."""
     fig, ax = plt.subplots(figsize=(7, 4.5))
     specs = [
