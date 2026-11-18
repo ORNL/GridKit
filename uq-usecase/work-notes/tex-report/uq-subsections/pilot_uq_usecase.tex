@@ -48,13 +48,13 @@ Main terms used in our pilot study that follows.
 \label{uqp:3}
 \label{sec:the_system}
 
-ACTIVSg200, a synthetic Illinois case \cite{Birchfield2017}: \textbf{200 buses, 246 branches, 49 generators} (25 coal, 17 natural gas, 6 wind, 1 nuclear). The seed dispatch totals \textbf{2,178 MW} of demand, which is the annual peak. The dynamic case carries \textbf{40 synchronous machines} (34 thermal and the 6 wind units). The campaign replaces the wind units with negative-load stand-ins (Section~\ref{uqp:4.3}), leaving \textbf{34 synchronous machines}. The 9 thermal units that are offline in the seed dispatch have no dynamic model and were not added. The case also carries \textbf{109 loads}.
+ACTIVSg200, a synthetic Illinois case \cite{Birchfield2017}: \textbf{200 buses, 246 branches, 49 generators} (43 thermal: 25 coal, 17 natural gas, 1 nuclear; and 6 wind). The default GridKit \texttt{case.json} has \textbf{40 synchronous machines} (34 thermal units with status on in the \texttt{.aux} and the 6 wind units). The campaign replaces the wind units with negative-load stand-ins (Section~\ref{uqp:4.3}). However, all 43 thermal units have dynamic models in the \texttt{.dyr}, so the 9 with status off in the \texttt{.aux} can be committed in a sampled case. Each sampled case contains only its committed thermal units as \texttt{Genrou} machines. The case also carries \textbf{109 loads}.
 
-Hourly load and wind come from an 8,760-hour dataset for this footprint, so the (demand, wind) joint distribution is empirical rather than assumed.
+Hourly load and wind are synthetic one-year series for this case, so the (demand, wind) joint distribution is taken from them rather than assumed.
 
 \subsubsection{One-time seed building}
 
-The ACTIVSg200 dynamic case distributed with GridKit is not used directly. Once per case, we rebuild it from the two TAMU source files, the PowerWorld network file (\texttt{.aux}) and the dynamics file (\texttt{.dyr}), and check the rebuild against the distributed case. That gives two artifacts. The \textbf{base case} supplies every machine's dynamic parameters. The \textbf{seed \texttt{.m}} supplies the dispatch: which units are online and how much they produce. Each condition then overwrites only the dispatch, on a copy of the base case. Blue boxes are the one-time build; grey boxes run per condition.
+The ACTIVSg200 \texttt{case.json} distributed with GridKit is not used directly. Once per case, we rebuild it from the two TAMU source files, the PowerWorld network file (\texttt{.aux}) and the dynamics file (\texttt{.dyr}), and check the rebuild against the distributed case. That gives two artifacts. The \textbf{base case} supplies every machine's dynamic parameters. The \textbf{seed \texttt{.m}} supplies the dispatch: which units are online and how much they produce. Each condition then overwrites only the dispatch, on a copy of the base case. Blue boxes are the one-time build; grey boxes run per condition.
 
 
 \begin{figure}[H]
@@ -101,7 +101,7 @@ We do \textbf{not} solve a unit-commitment problem. Thermal units are ranked in 
 
 At 762 MW net load the band is 18 to 38 units. Both ends are legitimate: with 33 units the committed minimums total 740 MW, still under the load, so the units simply run further down their range.
 
-\textbf{How commitment is sampled.} For each sampled hour, the band is computed from that hour's own net load (demand minus wind). The campaign then commits at two fixed positions in the band, a quarter and three quarters of the way from its lower to its upper end, rounded to whole units. So each hour gives two operating conditions. This is a stratified choice at fixed positions, not a uniform draw from the band and not a draw from an assumed distribution. The faultscreen-1 (Section~\ref{uqp:7.6}) uses 10 hours $\times$ 2 commitments = 20 conditions. Campaign aleatoric-1 (Section~\ref{uqp:7.0}) uses 20 hours $\times$ 2 commitments = 40 conditions. Hours are stratified by net-load quintile with equal counts per quintile (2 each in faultscreen-1, 4 each in aleatoric-1), so each quintile carries equal weight, matching the empirical net-load distribution. In aleatoric-1 the hours were drawn at random. In all campaigns the datacenter runs reuse the baseline commitment of their hour.
+\textbf{How commitment is sampled.} For each sampled hour, the band is computed from that hour's own net load (demand minus wind). The campaign then commits at two fixed positions in the band, a quarter and three quarters of the way from its lower to its upper end, rounded to whole units. So each hour gives two operating conditions. This is a stratified choice at fixed positions, not a uniform draw from the band and not a draw from an assumed distribution. The faultscreen-1 (Section~\ref{uqp:7.6}) uses 10 hours $\times$ 2 commitments = 20 conditions. Campaign aleatoric-1 (Section~\ref{uqp:7.0}) uses 20 hours $\times$ 2 commitments = 40 conditions. Hours are stratified by net-load quintile: the 8,760 hours are split into five equal-count bins of net load, and hours are drawn at random without replacement from each bin, with equal counts per bin (2 each in faultscreen-1, 4 each in aleatoric-1). Each quintile therefore holds 20\% of the year's hours, so equal counts give each quintile its population share. Hours within a quintile are not weighted. In all campaigns the datacenter runs reuse the baseline commitment of their hour.
 
 \textbf{Why commitment matters.} A commitment sets which thermal units are online, and so the inertia and headroom on the system. A low-load hour can run many units at part load, carrying more inertia, or run few, carrying less. Both are feasible, and a single committed point would hide that spread. At hour 4779 (762 MW net load), the two ends of the band are:
 
@@ -121,7 +121,7 @@ At 762 MW net load the band is 18 to 38 units. Both ends are legitimate: with 33
 \vspace{0.25cm}
 
 
-They differ by a \textbf{factor of 1.56 in inertia at identical load and wind}. That is the dominant lever on stability at fixed net load. We have real data for the net-load distribution but none for how this synthetic system's operators would commit, so inventing a commitment probability distribution would fabricate the very thing that drives the answer. Results are reported \textbf{conditionally} on commitment and can be reweighted later if a real commitment distribution becomes available.
+They differ by a \textbf{factor of 1.56 in inertia at identical load and wind}. That is the dominant lever on stability at fixed net load. We have a synthetic one-year hourly load series for ACTIVSg200 (from the TAMU repository, like the \texttt{.dyr} and \texttt{.m} files) and a synthetic wind series, which together give the net-load distribution. We have no data for how this synthetic system's operators would commit, so inventing a commitment probability distribution would fabricate the very thing that drives the answer. Results are reported \textbf{conditionally} on commitment and can be reweighted later if a real commitment distribution becomes available.
 
 Adding a datacenter does \textbf{not} change the commitment. The same units stay online, and only the dispatch is re-solved (\ac{dcopf}, then \ac{acpf}). If the committed fleet cannot serve the added load, the case is recorded as an infeasible dispatch, not re-committed. Those failures therefore overstate what an operator could do by committing more units.
 
@@ -148,7 +148,7 @@ Both solves use PowerModels.jl \cite{Coffrin2018} with Ipopt \cite{wachter2006}.
 
 The iteration exists because of a \textbf{slack problem}: a power flow leaves one generator's active power free, so it cannot enforce that generator's maximum output, and our slack is the nuclear unit, which has only \textbf{0.0082 MW} of headroom. Without re-dispatch it would absorb the entire loss term, and in an hourly loop the whole load change. One loss correction reduces the overshoot from 27.05 MW to 0.34 MW on the worst hour (0.016 \% of load). A second correction reduces it only to 0.005 MW, so one is enough.
 
-\textbf{Reactive power limits: PV$\to$PQ switching.} \ac{acpf} does not enforce generators' reactive power limits (Q limits) on its own: without mitigation we measured 2 to 11 violations per operating condition. We enforce them by PV$\to$PQ switching: after solving voltages, any generator outside a Q limit is fixed at that limit and its bus switched to PQ, then the power flow is re-solved. Fixed generators return to PV if voltage recovers past setpoint (repeated up to twice). The \ac{dcopf} dispatch is never changed, only reactive power.
+\textbf{Reactive power limits: PV$\to$PQ switching.} PowerModels.jl's \ac{acpf} does not enforce generators' reactive power limits (Q limits) by default: without mitigation we measured 2 to 11 violations per operating condition. We enforce them by PV$\to$PQ switching: after solving voltages, any generator outside a Q limit is fixed at that limit and its bus switched to PQ, then the power flow is re-solved. Fixed generators return to PV if voltage recovers past setpoint (repeated up to twice). The \ac{dcopf} dispatch is never changed, only reactive power.
 
 We also tested \ac{acopf}, which enforces Q limits as constraints. It was not adopted because it also changes the active-power dispatch (about 280 MW summed over the pilot), which would mix a dispatch effect into every \ac{cct} comparison; switching changes only reactive power.
 
@@ -226,13 +226,13 @@ Every symbol maps to a GridKit name or to a derived quantity:
 \toprule
     Symbol & Meaning & GridKit name, and where it is read \\
 \midrule
-    $i$ & one of the 26 Genrou machines in ACTIVSg200 & \texttt{Genrou} device \texttt{id}, e.g. \texttt{49\_\allowbreak{}1\_\allowbreak{}genrou} \\
+    $i$ & one committed synchronous machine in the sample & \texttt{Genrou} device \texttt{id}, e.g. \texttt{49\_\allowbreak{}1\_\allowbreak{}genrou} \\
     $H_i$ & inertia constant, in s & \texttt{H} in \texttt{params} of device $i$ in \texttt{case.json} \\
     $S_i$ & machine MVA base & \texttt{mva} in \texttt{params} of device $i$ in \texttt{case.json} \\
     $\delta_i(t)$ & rotor angle of machine $i$, in radians & Genrou state \texttt{delta}, monitor column \texttt{Genrou\_\allowbreak{}<device id>\_\allowbreak{}delta}, e.g. \texttt{Genrou\_\allowbreak{}49\_\allowbreak{}1\_\allowbreak{}genrou\_\allowbreak{}delta} \\
     $t$ & simulation time, in s & \texttt{t} column of the monitor CSV \\
     $\delta_{COI}(t)$ & centre-of-inertia angle, in radians & not a model parameter; computed from the weights $H_i S_i / \sum_j H_j S_j$ (\texttt{\_\allowbreak{}coi\_\allowbreak{}weights}, \texttt{is\_\allowbreak{}unstable} in \texttt{py-utils/campaign.py}) \\
-    $\pi$ & pole-slip threshold & \texttt{pole\_\allowbreak{}slip\_\allowbreak{}deg} = 180 (degrees) in \texttt{is\_\allowbreak{}unstable}, applied after \texttt{np.rad2deg}; not a model parameter \\
+    $\pi$ & pole-slip threshold & used in \texttt{is\_\allowbreak{}unstable} \\
 \bottomrule
 \end{tabularx}
 \par}
@@ -695,4 +695,4 @@ The near-term steps are: a wider contingency screen, a treatment of censoring in
 
 
 
-\setcounter{secnumdepth}{2}% restore report default
+\setcounter{secnumdepth}{3}% keep subsubsection numbering for following sections
