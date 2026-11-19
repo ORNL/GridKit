@@ -14,7 +14,7 @@ Verification: both panels are replays of the stored `case.json` and `solver.json
 
 *Figure 2. For each fault bus, the fraction of runs that lose synchronism before the 0.5 s cap, by net-load quintile from q0 (lowest) to q4 (highest). Left: no datacenter. Right: 100 MW datacenter at bus 108. Each point is the share of about 20 runs per quintile. Buses 66, 68, 94 and 181 rise from near zero at low net load to near one at high net load, which means they separate conditions. The other 13 buses stay at or near zero in every quintile (at most 0.07), so they do not separate the conditions.*
 
-Verification: computed from `faultscreen2_ap08_qlim/results.parquet`, ok runs with a CCT (3,166 of 3,400). A run loses synchronism when `cct_censored` is false. Sim-failed runs are excluded from each point's denominator. Figure 2 replaces the earlier per-condition plot of faultscreen-1. That file stays in `test_figs/` for reference.
+Verification: computed from `faultscreen2_ap08_qlim/results.parquet`, ok runs with a CCT (3,166 of 3,400). A run loses synchronism when `cct_censored` is false. Sim-failed runs are excluded from each point's denominator. Figure 2 replaces the earlier per-condition plot of faultscreen-1. That file stays in `test_figs/` for reference. Regenerate from the repo root with `python scripts/plot_faultscreen2_lost_by_quintile.py --out work-notes/test_figs/faultscreen2_lost_by_quintile_all.png` (see `dc_campaign_pipeline.md`).
 
 ## Figure 3: which faults separate the highest net-load quintile (faultscreen-2)
 

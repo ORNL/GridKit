@@ -587,7 +587,7 @@ Before spending runs on a full campaign, we need to know which faults can tell o
 
 ![Fraction of runs losing synchronism before the cap, by net-load quintile, for 17 fault buses](figures/main_faultscreen2_lost_by_quintile.png)
 
-*Figure 7.6. Share of runs that lose synchronism before the 0.5 s cap, by net-load quintile (q0 lowest, q4 highest), for each of 17 fault buses. Left: no datacenter. Right: 100 MW datacenter at bus 108. Each point is 20 runs without the datacenter and 6 to 20 with it (simulation failures removed).*
+*Figure 7.6. faultscreen-2: four faults change with net load, and 13 do not. Share of runs that lose synchronism before the 0.5 s cap, by net-load quintile (q0 lowest, q4 highest), for each of 17 fault buses. Left: no datacenter. Right: 100 MW datacenter at bus 108. Each point is 20 runs without the datacenter and 6 to 20 with it (simulation failures removed).*
 
 As shown in Figure 7.6, each line is one fault bus, and each point is the share of its runs that lose synchronism before the cap, in one net-load quintile. A fault separates conditions when that share changes across quintiles. Four buses (66, 68, 94 and 181) separate conditions, because they lose synchronism more often at high net load. The other 13 buses stay flat at zero, because every run stays censored past the cap. A flat line means the fault tells us nothing about separation. It does not mean the fault has no effect.
 
@@ -662,9 +662,10 @@ We ran only setup checks, single-run checks and memory probes on the 2,000-bus c
 ## 9. Next steps
 
 The pilot leaves a clear picture of where cost lives and therefore where the
-methods work should go. At 200 buses the expensive part is the **dispatch stage**, and
-interesting dimensions such as contingency location or disturbance
-severity are nearly free once a dispatch exists. However, at 2,000 buses
+methods work should go. At 200 buses the expensive part is the **dispatch stage**. Once a
+dispatch exists, the other dimensions are cheaper to explore: contingency location,
+load placement and size, and the aleatoric samples. Each still needs its own dynamic
+run, so they are cheap relative to the dispatch. However, at 2,000 buses
 (§8), the dynamic run dominates, the design space grows by
 two orders of magnitude, and the quantity to minimise becomes the number of dynamic
 simulations. Making aleatoric UQ affordable at that scale is **FY27 planned
@@ -672,26 +673,25 @@ work**, pursued along two tracks.
 
 **Track 1: spend fewer, better-chosen dynamic runs.** 
 
-1. **Screen contingencies cheaply, then concentrate.** Here 13 of 17 fault
+1. **Screen contingencies cheaply, then concentrate.** As faultscreen-2 showed, 13 of 17 fault
    locations were censored in every baseline run, and four separated conditions (§7.6). On a
-   2k-bus case the contingency list is the part that explodes and also the part
-   that is free to explore.
-2. **Treat censoring as information.** Both "survived beyond the cap" and
-   "no outcome" are results, and at high censoring they are most of the dataset.
-   A cheap 1–2 run classifier that detects the censored case before committing to
-   an 8-run CCT bisection would remove most of the cost.
-3. **Condition and stratify, rather than only adding samples.** CCT spread follows
-   net load (§7.5), so stratified or importance sampling on
-   net load cuts variance at fixed cost; a variance decomposition of the existing
-   840 runs is a zero-cost first step.
-4. **Surrogate or warm-started CCT, and early-terminating integration.**
-   Neighbouring dispatches have strongly correlated CCT, and pole slip is
-   detectable well before the end of the simulated window, so both the number and the length of
-   simulations can be cut.
+   2,000-bus case the contingency list grows with the grid, and each fault still needs its own
+   dynamic run, so screening it is where cost can be cut.
+2. **Reduce the cost of each CCT search.** A censored run already needs only two simulations,
+   so the cost sits in the bisection for measured runs. Neighbouring dispatches have strongly
+   correlated CCT, so starting the search from one could cut the bisection steps. Pole slip is
+   also detectable well before the end of the simulated window, so early termination could
+   shorten each run. Both would lower the cost, provided early termination is checked against
+   full runs.
+3. **Condition and stratify, rather than only adding samples.** In aleatoric-1, censoring falls
+   from 83% in the lowest net-load quintile to 0% in the top two (§7.5). In faultscreen-2, fault
+   location explains more than half of the variance. A variance decomposition of pre-screen runs
+   could rank the candidate factors: fault location, net load, and datacenter placement and size.
+   Stratified or importance sampling on the top-ranked factors could then cut variance at fixed cost.
 
 
 **Track 2: a graph surrogate, as an alternative and supplement to sampling.**
-The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias, and have been used as fast power-system surrogates [21]. A surrogate trained on the records the sampling campaigns already produce, e.g., (graph, operating point, parameters, fault) → trajectory map, could emulate CCT or the stability label cheaply, turning the expensive solver into a screening tool [22]. Full dynamic runs could be reserved for confirmation and for labelling the cases where the surrogate is least certain, an active-learning approach that chooses which runs to do. This is **supplemental** to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means [23].
+The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias, and have been used as fast power-system surrogates [21]. A surrogate trained on the records the sampling campaigns already produce, e.g., (graph, operating point, parameters, fault) → trajectory map, could emulate CCT or the stability label cheaply, turning the expensive solver into a screening tool [22]. Full dynamic runs would still confirm results and cover the cases where the surrogate is least certain, and active learning would choose which runs to add next. This is **supplemental** to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means [23].
 
 The near-term steps are: a wider contingency screen, a
 treatment of censoring in the paired (with and without datacenter) comparison,
