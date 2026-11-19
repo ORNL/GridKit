@@ -730,19 +730,7 @@ work**, pursued along two tracks.
 
 
 **Track 2: a graph surrogate, as an alternative and supplement to sampling.**
-The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian
-over buses, a fault propagates through branch impedances as a message-passing
-process, and "which bus to site load at" is itself a graph question. Graph
-neural networks and graph transformers carry exactly that inductive bias,
-and have been used as fast power-system surrogates. A surrogate trained on
-the records the sampling campaigns already produce, e.g.,
-`(graph, operating point, parameters, fault)` → trajectory map, could emulate
-CCT or the stability label cheaply, turning the expensive solver into a screening
-tool. Full dynamic runs could be reserved for confirmation and for labelling the cases
-where the surrogate is least certain, an active-learning approach that chooses
-which runs to do. This is **supplemental** to sampling-based UQ, not a
-replacement: the surrogate lowers per-sample cost, while the sampling design
-still fixes what the estimate means.
+The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias, and have been used as fast power-system surrogates [21]. A surrogate trained on the records the sampling campaigns already produce, e.g., (graph, operating point, parameters, fault) → trajectory map, could emulate CCT or the stability label cheaply, turning the expensive solver into a screening tool [22]. Full dynamic runs could be reserved for confirmation and for labelling the cases where the surrogate is least certain, an active-learning approach that chooses which runs to do. This is **supplemental** to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means [23].
 
 The near-term steps are: a wider contingency screen, a
 treatment of censoring in the paired (with and without datacenter) comparison,
@@ -875,3 +863,6 @@ See tex-report/README.md, section "Citations". -->
 18. M. Greenwood, "The Natural Duration of Cancer," *Reports on Public Health and Medical Subjects*, 33:1–26, 1926. <!-- bib:Greenwood1926 -->
 19. D. N. Politis and J. P. Romano, "Large Sample Confidence Regions Based on Subsamples Under Minimal Assumptions," *Annals of Statistics*, 22(4):2031–2050, 1994. doi:10.1214/aos/1176325754 <!-- bib:PolitisRomano1994 -->
 20. Texas A&M University, "Electric Grid Test Case Repository" (ACTIVSg200, ACTIVSg2000). <https://electricgrids.engr.tamu.edu> <!-- bib:TAMUrepo -->
+21. Z. Wang et al., "Transient Stability Assessment of Power Systems Based on Transformer and Graph Attention Network," *IEEE International Conference on Power and Energy Systems*, 2026. <https://ieee.org> <!-- bib:tsagat2026 -->
+22. H. Li et al., "Critical Clearing Time Prediction for Power Systems Based on a Temporal Graph Convolutional Neural Network," *IEEE 2nd International Conference on Power and Integrated Energy Systems (ICPIES)*, 2026. <https://ieee.org> <!-- bib:tgcn2026cct -->
+23. Y. Zhang, P. M. Karve, and S. Mahadevan, "Operational Risk Quantification of Power Grids Using Graph Neural Network Surrogates," *Reliability Engineering & System Safety*, 256:110726, 2025. doi:10.1016/j.ress.2024.110726 <!-- bib:zhang2025risk -->
