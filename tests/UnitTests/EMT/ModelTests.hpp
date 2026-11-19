@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <memory>
+#include <numbers>
 #include <span>
 #include <sstream>
 #include <stdexcept>
@@ -449,6 +450,181 @@ namespace GridKit
                                             { Probe{}.setLayoutTwice(); });
         success *= throws<std::invalid_argument>([]
                                                  { Probe{}.absentSubmodel(); });
+
+        return success.report(__func__);
+      }
+
+      /// Unit source behind a unit conductance on a single-phase bus, at time zero
+      TestOutcome voltageSource()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "VoltageSource", "id": "VS1", "terminals": {"bus": 1},
+                       "params": {"N": 1, "E": [1.0], "phi": [0.0], "omega": 1.0, "Y": {"D": [[1.0]]}}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [1.0]}},
+          "devices": {"VS1": {"u": [0.5], "i": [0.125]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto& source = system->device("VS1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {0.125});
+        success *= rowsEqual(source.getResidual(EMT::VoltageSourceInternalVariables::u), {std::numbers::sqrt2_v<RealT> - 1.5});
+        success *= rowsEqual(source.getResidual(EMT::VoltageSourceInternalVariables::i), {0.375});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        // The admittance has the dimensions of the source
+        auto misshaped                               = nlohmann::json::parse(CASE);
+        misshaped["devices"][0]["params"]["Y"]["D"]  = {{1.0, 0.0}, {0.0, 1.0}};
+        success                                     *= makeSystem(misshaped.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// Series resistance 1 and shunt conductance 0.5 between single-phase buses
+      TestOutcome lineLumped()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "LineLumped", "id": "L1", "terminals": {"bus1": 1, "bus2": 2},
+                       "params": {"N": 1, "K": 1, "conductors": [1], "dx": 2.0, "Zp": {"D": [[0.5]]}, "Yp": {"D": [[0.25]]}}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [2.0]}, "2": {"v": [1.0]}},
+          "devices": {"L1": {"i12": [0.5]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto& line = system->device<EMT::LineLumped<RealT, IdxT>>("L1");
+
+        // Half of the shunt conductance, 0.25, draws from each bus
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-1.0});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.25});
+        success *= rowsEqual(line.getResidual(EMT::LineLumpedInternalVariables::i12), {-0.5});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        // The shunt currents are the outputs of the shunt operators
+        auto& y1  = line.submodel(EMT::LineLumpedSubmodels::y1);
+        auto& y2  = line.submodel(EMT::LineLumpedSubmodels::y2);
+        success  *= y1.evaluateOutputs() == 0 && y2.evaluateOutputs() == 0;
+        success  *= rowsEqual(y1.getOutput(EMT::VectorFitOutputs::y), {-0.5});
+        success  *= rowsEqual(y2.getOutput(EMT::VectorFitOutputs::y), {-0.25});
+
+        // A line without a shunt admittance has no shunt operators
+        auto series = nlohmann::json::parse(CASE);
+        series["devices"][0]["params"].erase("Yp");
+        const auto series_system = makeSystem(series.dump().c_str(), STATE);
+
+        success *= series_system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        success *= series_system->size() == 3;
+        success *= series_system->evaluateResidual() == 0;
+        success *= rowsEqual(series_system->bus("1").getResidual(EMT::BusInternalVariables::v), {-0.5});
+        success *= rowsEqual(series_system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.5});
+        success *= jacobianMatchesResidual(*series_system, ZERO<RealT>, ALPHA, kTol);
+        success *= rejected(series.dump().c_str(), R"({"devices": {"L1": {"y1": {"w": []}}}})");
+
+        return success.report(__func__);
+      }
+
+      /// Two conductors on one phase, each of series resistance 1 and shunt conductance 0.5
+      TestOutcome bundledLineLumped()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "LineLumped", "id": "L1", "terminals": {"bus1": 1, "bus2": 2},
+                       "params": {"N": 1, "K": 2, "conductors": [1, 1], "dx": 2.0,
+                                  "Zp": {"D": [[0.5, 0.0], [0.0, 0.5]]}, "Yp": {"D": [[0.25, 0.0], [0.0, 0.25]]}}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [2.0]}, "2": {"v": [1.0]}},
+          "devices": {"L1": {"i12": [0.5, 0.25]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto& line = system->device("L1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-1.75});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.25});
+        success *= rowsEqual(line.getResidual(EMT::LineLumpedInternalVariables::i12), {-0.5, -0.75});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// A line whose conductors or operators do not match its phase and conductor counts fails verification
+      TestOutcome invalidLineLumped()
+      {
+        TestStatus success = true;
+
+        static constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "LineLumped", "id": "L1", "terminals": {"bus1": 1, "bus2": 2},
+                       "params": {"N": 1, "K": 1, "conductors": [1], "dx": 2.0, "Zp": {"D": [[0.5]]}, "Yp": {"D": [[0.25]]}}}]
+        })";
+
+        const auto invalid = [](auto change)
+        {
+          auto line = nlohmann::json::parse(CASE);
+          change(line["devices"][0]["params"]);
+          return makeSystem(line.dump().c_str(), "{}") == nullptr;
+        };
+
+        success *= makeSystem(CASE, "{}") != nullptr;
+        success *= invalid([](auto& params)
+                           { params["conductors"] = {2}; });
+        success *= invalid([](auto& params)
+                           { params["conductors"] = {1, 1}; });
+        success *= invalid([](auto& params)
+                           { params["Zp"]["D"] = {{0.5, 0.0}, {0.0, 0.5}}; });
+        success *= invalid([](auto& params)
+                           { params["Yp"]["D"] = {{0.25, 0.0}, {0.0, 0.25}}; });
 
         return success.report(__func__);
       }

@@ -22,6 +22,10 @@ int main()
   result += test.variableReference();
   result += test.outputReference();
   result += test.layout();
+  result += test.voltageSource();
+  result += test.lineLumped();
+  result += test.bundledLineLumped();
+  result += test.invalidLineLumped();
 
   return result.summary();
 }
