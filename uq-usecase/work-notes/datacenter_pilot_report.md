@@ -554,7 +554,7 @@ We checked whether the estimate stops moving as conditions are added, by recompu
 
 ### 7.5 Risk by net load
 
-**Sampling:** In aleatoric-1, the datacenter is placed at buses 6, 120, 108 and 148, at five sizes from 50 to 400 MW, with one fault at bus 66. The 20 sampled hours are split into five net-load quintiles of four hours each, and each hour is run with two commitments. Each quintile therefore holds 160 datacenter runs: 4 buses, 5 sizes, 4 hours and 2 commitments.
+**Sampling:** In aleatoric-1, the datacenter is placed at buses 6, 120, 108 and 148, at 5 sizes from 50 to 400 MW, with 1 fault at bus 66. The 20 hours form 5 net-load quintiles of 4 hours each. Each quintile has 160 datacenter runs: 4 hours × 2 commitments × 4 buses × 5 sizes.
 
 | quintile | mean net load, no datacenter (MW) | datacenter runs solved | no outcome | censored | **P(CCT < 0.25 s)** |
 |---|---|---|---|---|---|
@@ -568,33 +568,25 @@ We checked whether the estimate stops moving as conditions are added, by recompu
 
 *Figure 7.5. Kaplan–Meier P(CCT > t) by net-load quintile, datacenter runs only (all buses and sizes), fault 66.*
 
-P(CCT < 0.25 s) climbs from 0.07 in the lowest quintile to 1.00 in the two highest. The largest step is between q1, with a mean net load of 1,001 MW, and q2, at 1,221 MW. The spread in CCT follows the same split: every solved datacenter run in the two highest quintiles has CCT between 0.177 and 0.191 s, while the two lowest quintiles reach the 0.5 s cap.
+P(CCT < 0.25 s) climbs from 0.07 in the lowest quintile to 1.00 in the two highest. The largest step is between q1 (1,001 MW) and q2 (1,221 MW). Every solved run in q3 and q4 has CCT between 0.177 and 0.191 s, while most runs in q0 and q1 are censored at the 0.5 s cap (83% and 72%).
 
-- **Conditional on solving.** Between 49% and 53% of datacenter runs in each quintile have no outcome, so each P value is conditional on a run having an outcome. The no-outcome runs may have a different CCT, and we do not know whether they do.
-- **Baseline.** The baseline has eight runs per quintile (four hours × two commitments), and all eight solve. Their P values are 0, 0, 0.25, 1.00 and 1.00. That is too few for a quintile estimate, but it is consistent with net load driving CCT even without the datacenter.
+- **Conditional on solving.** Between 49% and 53% of datacenter runs in each quintile have no outcome, so each P value is conditional on solving. The no-outcome runs may have a different CCT, and the data cannot say whether they do.
 
-**Takeaway.** Net load is the dominant driver: P(CCT < 0.25 s) climbs from 0.07 to 1.00 across the quintiles, with the sharpest step between q1 (1,001 MW) and q2 (1,221 MW). Instability concentrates in the high-net-load hours, so net load is a useful first screen.
+**Takeaway.** Risk rises with net load. P(CCT < 0.25 s) goes from 0.07 in q0 to 1.00 in q3 and q4, with the sharpest step between q1 and q2. The high-net-load quintiles are where to focus. This holds for aleatoric-1 with one fault, and for runs that solved.
 
-### 7.6 Fault screening (faultscreen-1): which faults discriminate
+### 7.6 Fault screening (faultscreen-1): which faults tell operating conditions apart
 
-**Sampling:** faultscreen-1. 10 hours (2 per net-load quintile) × 2 commitments × 17 fault locations. There are 340 baseline runs with no datacenter, all solved, and 680 runs with a 200 MW datacenter at bus 108 or 148.
+Before spending runs on a full campaign, we need to know which faults can tell operating conditions apart. A fault that every condition stays stable through past the 0.5 s cap looks the same everywhere, so it cannot separate them. This section samples 17 fault locations from the 200-bus grid, spread across hop distances from bus 66, and tests each on a small set of operating conditions to see which ones separate them.
+
+**Sampling:** The faultscreen-1 campaign covers 10 hours (two in each net-load quintile), two commitments per hour, and 17 fault locations. That gives 340 baseline runs with no datacenter and 680 runs with a 200 MW datacenter at bus 108 or bus 148.
 
 | | baseline (no datacenter) | datacenter (200 MW) |
 |---|---|---|
 | solved | 340 of 340 | 427 of 680 |
 | censored at 0.5 s | 302 (88.8%) | 306 (71.7%) |
-| no outcome | (see note) | 253: 168 simulation failures, 34 dispatch failures, 51 power-flow failures |
+| no outcome | 0 | 253: 168 simulation failures, 34 dispatch failures, 51 power-flow failures |
 
-Matched by (hour, commitment, fault), using datacenter runs that solved:
-
-* **Bus 108**, 194 pairs: P(CCT < 0.25 s) is 0.072 with the datacenter and 0.041 without. Censored: 70% and 81%.
-* **Bus 148**, 233 pairs: 0.064 and 0.034. Censored: 73% and 84%.
-* The datacenter is measured where the baseline is censored in 22 pairs (bus 108) and 25 pairs (bus 148). The reverse happens in none.
-* Where both runs are measured, the pairs cover the same 37 conditions at both buses, because the baseline is measured on only 38 conditions. The median change in CCT is 0 s, CCT falls with the datacenter in 5 of 37 pairs, and the largest drop is 0.24 s.
-
-Reading: on this campaign the datacenter raises P(CCT < 0.25 s) only slightly, from 0.04 to 0.07 at bus 108 and from 0.03 to 0.06 at bus 148. Most baseline runs are censored (81–84% on these pairs), so the signal is weak. The direction matches §7.2, which uses a different fault and a measured baseline.
-
-All 85 dispatch and power-flow failures (34 DCOPF, 51 ACPF) fall in q0, the lowest net-load quintile: 85 of its 136 datacenter runs, or 63%. None occurs in q1 to q4. The cause of the q0 concentration has not been checked.
+**Reading.** On matched (hour, commitment, fault) pairs where the datacenter run solved, the datacenter raises P(CCT < 0.25 s) only slightly: from 0.041 to 0.072 at bus 108 (194 pairs) and from 0.034 to 0.064 at bus 148 (233 pairs). Most matched baseline runs are censored (81–84%), so the signal is weak. Bus 108 and bus 148 give nearly the same result.
 
 Baseline CCT by fault location, for the 20 baseline conditions each:
 
@@ -608,11 +600,9 @@ Baseline CCT by fault location, for the 20 baseline conditions each:
 
 ![KM by placement, matched baseline](figures/main_faultscreen_km.png)
 
-*Figure 7.6. Kaplan–Meier P(CCT > t) for the datacenter at bus 108 (left) and bus 148 (right), each against the baseline on the same matched (hour, commitment, fault) conditions. Baseline in blue, datacenter in orange. The two panels look nearly identical because at 200 MW the bus choice barely moves CCT; they are not the same plot (n = 194 vs 233, with different censored shares).*
+*Figure 7.6.* Kaplan–Meier P(CCT > t) on matched (hour, commitment, fault) conditions: baseline (blue) against the datacenter at bus 108 (left) and bus 148 (right) (orange).
 
-Thirteen of 17 fault locations are censored in every baseline condition, so a uniform fault budget spends most of its runs on faults that cannot separate operating conditions. Fault screening should be cheap, followed by concentration on the informative faults. Bus 66, the fault in aleatoric-1 and aleatoric-2, is not the most informative location: bus 94 is. At 200 MW, buses 108 and 148 look alike in this sample (0.072 against 0.064 for P(CCT < 0.25 s)).
-
-**Takeaway.** Most faults carry no information: 13 of 17 never leave the cap, so a uniform fault budget is mostly wasted; while a few (bus 94) discriminate, and at 200 MW the two placements behave almost identically. Where the datacenter sits matters less than the operating condition and the fault; the practical lesson is to screen contingencies cheaply, then concentrate the budget on the few that separate conditions.
+**Takeaway.** Most faults tell us little: 13 of 17 are censored in every baseline condition, so an even budget would mostly be spent there. Bus 94 gives the most measured runs (13 of 20 baseline conditions, against 9 for bus 66). Datacenter placement at bus 108 or 148 matters little here, and the fault choice matters more. Screen faults cheaply, then focus the budget on the few that separate conditions.
 
 ### 7.7 Censoring: dropping censored runs inflates risk
 
