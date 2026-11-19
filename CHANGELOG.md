@@ -34,6 +34,7 @@
 - Added the EMT `VoltageSource` and `LineLumped` models.
 - Added Enzyme Jacobians for fixed-layout EMT models and the EMT `Pll` and `Pmu` operators.
 - Added the EMT `Switch` model.
+- Added the `TransientSimulation` application with events that set state values, and the ThreeBusBasic EMT example.
 
 ## v0.2
 

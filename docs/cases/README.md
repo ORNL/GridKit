@@ -1,5 +1,28 @@
 # Cases
 
+## EMT
+
+::::{grid} 1 1 2 2
+:gutter: 3
+
+:::{grid-item-card} Toy Cases
+:link: EMT/Toy/README
+:link-type: doc
+:class-card: gk-card
+
+Small cases for EMT component studies.
+:::
+
+::::
+
+```{toctree}
+:maxdepth: 1
+:titlesonly:
+:hidden:
+
+Toy Cases <EMT/Toy/README>
+```
+
 ## OptimalPowerFlow
 
 ::::{grid} 1 1 2 2

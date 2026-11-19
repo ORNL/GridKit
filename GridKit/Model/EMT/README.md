@@ -31,7 +31,7 @@ and reusable operators in instantaneous phase coordinates.
   monitor.
 - An input that the case leaves out is held. It reads a held signal, a
   variable with residual $0 = -\mathrm{d}s/\mathrm{d}t$, whose value the
-  state gives.
+  state gives and an event changes.
 - A monitor is an internal variable or an output.
 - Equation headings follow the assembled DAE row classification; connected
   models may add derivative terms to a residual that contains none locally.
