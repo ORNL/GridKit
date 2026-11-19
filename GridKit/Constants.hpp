@@ -35,4 +35,8 @@ namespace GridKit
   /// SI prefix kilo
   template <typename RealT>
   inline constexpr RealT KILO = 1.0e3;
+
+  /// SI prefix mega
+  template <typename RealT>
+  inline constexpr RealT MEGA = 1.0e6;
 } // namespace GridKit

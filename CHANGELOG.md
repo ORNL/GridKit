@@ -36,6 +36,7 @@
 - Added the EMT `Switch` model.
 - Added the `TransientSimulation` application with events that set state values, and the ThreeBusBasic EMT example.
 - Added the EMT `LoadRLC`, `Transformer` and `Machine` models.
+- Added the EMT `Regca` model and the `Park` operator.
 
 ## v0.2
 

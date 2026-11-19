@@ -40,6 +40,8 @@ int main()
   result += test.machineCurrentReference();
   result += test.pll();
   result += test.pllFrequencyReference();
+  result += test.regca();
+  result += test.park();
 
   return result.summary();
 }

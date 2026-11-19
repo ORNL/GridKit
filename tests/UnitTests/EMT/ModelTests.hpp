@@ -1208,6 +1208,121 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Regca at a terminal voltage of 0.75 and angle zero, with orders of 0.5 that its ceiling and its rate limit hold back
+      TestOutcome regca()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 1.0}}],
+          "devices": [{"class": "Regca", "id": "GEN", "terminals": {"bus": 1},
+                       "params": {"V": 1.0, "mva": 1.0e-6, "Tg": 0.5, "TM": 0.5, "Rqmax": 0.25, "Rqmin": -0.25, "Rpmax": 10.0,
+                                  "IL1": 1.0, "VL0": 0.5, "VL1": 1.0, "VA0": 0.25, "VA1": 1.25, "Vhvmax": 1.25, "Khv": 2.0,
+                                  "Qmin": -1.0}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"GEN": {
+          "il": [0.75], "ip": [0.25], "iq": [0.125], "i": [0.5, -0.25, -0.25],
+          "vt": [0.75], "ipcmd": [0.5], "iqcmd": [0.5]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using RegcaT    = EMT::Regca<RealT, IdxT>;
+        using Variables = EMT::RegcaInternalVariables;
+
+        constexpr RealT REL_TOL = 1.0e-3;
+
+        // Peak phase current at the rating, and the reactive current on phases b and c at angle zero
+        const RealT peak       = std::sqrt(TWO<RealT> / THREE<RealT>);
+        const RealT quadrature = HALF<RealT> * std::numbers::sqrt3_v<RealT> * 0.125;
+
+        auto& converter = system->device<RegcaT>("GEN");
+
+        // The ceiling falls toward 0.5 and lets 0.375 of the active order through. The reactive current would rise at
+        // 0.75 and is held to its rate limit.
+        success *= system->size() == 13;
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(converter.getResidual(Variables::il), {-0.5});
+        success *= rowsEqual(converter.getResidual(Variables::ip), {0.25});
+        success *= rowsEqual(converter.getResidual(Variables::iq), {0.25});
+        success *= rowsEqual(converter.getResidual(Variables::i),
+                             {-0.5 + peak * 0.25, 0.25 + peak * (-0.125 - quadrature), 0.25 + peak * (-0.125 + quadrature)});
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {0.5, -0.25, -0.25});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        // The currents into the grid take the tolerance of the system power base at the base voltage of the bus
+        constexpr IdxT I  = 6;
+        success          *= system->setAbsoluteTolerance(REL_TOL) == 0;
+        success          *= rowsEqual(std::span<const RealT>{system->absoluteTolerance().getData() + I, 3}, {1.0, 1.0, 1.0});
+
+        // A rate limit of zero is none
+        auto free                              = nlohmann::json::parse(CASE);
+        free["devices"][0]["params"]["Rqmax"]  = 0.0;
+        const auto unlimited                   = makeSystem(free.dump().c_str(), STATE);
+        success                               *= unlimited != nullptr && unlimited->evaluateResidual() == 0;
+        if (success)
+        {
+          success *= rowsEqual(unlimited->device<RegcaT>("GEN").getResidual(Variables::iq), {0.75});
+        }
+
+        auto invalid                              = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"]["Rqmin"]  = 1.0;
+        success                                  *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// A bus at (0, 1, -1) has q-axis voltage 2/sqrt(3) at angle zero, and coordinates (3, 4) on a base of 5 have direction (0.6, 0.8)
+      TestOutcome park()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 1.0}}],
+          "devices": [{"class": "Park", "id": "PK1", "inputs": {"abc": 1}, "params": {"base": 5.0}}]
+        })";
+
+        const auto system = makeSystem(CASE, R"({"buses": {"1": {"v": [0.0, 1.0, -1.0]}}})");
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT VQ = TWO<RealT> / std::numbers::sqrt3_v<RealT>;
+
+        // Coordinates up to 4 raise the round-off of the difference, which passes at 1e-10 and not at 1e-11
+        constexpr RealT PARK_TOL = 1.0e-10;
+
+        using ParkT = EMT::Park<RealT, IdxT>;
+
+        auto& transform = system->device<ParkT>("PK1");
+
+        // With no coordinates yet, the direction is the d axis
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(transform.getResidual(EMT::ParkInternalVariables::dq), {0.0, VQ});
+        success *= rowsEqual(transform.getResidual(EMT::ParkInternalVariables::axis), {1.0, 0.0});
+
+        const auto dq  = transform.y(EMT::ParkInternalVariables::dq);
+        dq[0]          = 3.0;
+        dq[1]          = 4.0;
+        success       *= system->evaluateResidual() == 0;
+        success       *= rowsEqual(transform.getResidual(EMT::ParkInternalVariables::dq), {-3.0, VQ - 4.0});
+        success       *= rowsEqual(transform.getResidual(EMT::ParkInternalVariables::axis), {0.6, 0.8});
+        success       *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, PARK_TOL);
+
+        return success.report(__func__);
+      }
+
     private:
       /// Machine of unit ratings on a three-phase bus, with its field voltage and mechanical power held
       static constexpr const char* MACHINE_CASE = R"({
