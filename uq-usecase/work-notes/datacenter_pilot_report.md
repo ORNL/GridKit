@@ -612,18 +612,11 @@ For aleatoric-2, dropping the censored runs inflates the risk by 1.40 times belo
 
 ## 8. First look at the Texas synthetic grid (ACTIVSg2000)
 
-The 200-bus case is small enough that brute force works: whole campaigns finish
-in minutes. That is convenient but it hides the question the methods work
-exists to answer, so we measured what changes on the Texas synthetic grid,
-**ACTIVSg2000** (2,000 buses, from the TAMU repository [20]). This is a scoping
-study, not a campaign.
+We ran a small profiling test on the Texas synthetic grid, **ACTIVSg2000** (2,000 buses, from the TAMU repository [20]). The question is how cost grows with grid size, and whether brute-force sampling still works for our campaigns. It is a scoping test, not a campaign.
 
-**What already exists.** A GridKit dynamic case is distributed with GridKit, and
-raw TAMU data and processed hourly demand, wind and **solar** profiles are
-available. The base case **runs unmodified**: a 10 s simulation with a
-0.15 s fault completes successfully at both default and full monitoring.
+The GridKit base case runs unmodified on the 2,000-bus grid: a 10 s simulation with a 0.15 s fault completes at default and full monitoring.
 
-**Measured, same settings on both cases.** Dispatch-stage numbers are per-case solver times, measured inside one batched Julia process. The process starts once, so its ~6 s start-up cost is not counted in each solve. Timing a single solve in a fresh process mostly measures start-up, so those numbers would not be useful for projections.
+Dispatch times are solver times inside one batched Julia process. The ~6 s start-up is not counted, because a single solve in a fresh process mostly measures start-up.
 
 | quantity | ACTIVSg200 | ACTIVSg2000 | ratio |
 |---|---|---|---|
@@ -640,17 +633,9 @@ available. The base case **runs unmodified**: a 10 s simulation with a
 | monitor CSV | 27.3 MB | 262.5 MB | 9.6× |
 | monitor columns | 481 | 4,649 | 9.7× |
 
-**The shape of the growth.** Against a 10× increase in buses, data scales
-**linearly** ($\approx N^{1.0}$), the dispatch stage as $\approx N^{1.27}$, and the dynamic
-simulation as $\approx N^{1.40}$. So compute grows faster than the network and
-faster than storage, and the dynamic stage (the cheap one at 200 buses) grows
-fastest.
+**Growth with size.** With 10× the buses, output data grows about linearly ($N^{1.0}$), the dispatch stage about $N^{1.27}$, and the dynamic run about $N^{1.40}$. Compute grows faster than storage, and the dynamic run grows fastest.
 
-**What that implies for a campaign.** Projecting aleatoric-1 (840 runs,
-one full run plus ~8 bisection probes each, so ~7,560 simulations). Serial
-times use the measured per-run cost; wall times assume the pilot's 16 workers
-per node and scale linearly, which is optimistic until per-worker memory is
-known:
+**Projection for aleatoric-1.** The campaign has 840 runs, about 7,560 simulations (one full run and about eight bisection probes each). Wall times assume the pilot's 16 workers per node and scale linearly.
 
 | | ACTIVSg200 | ACTIVSg2000 |
 |---|---|---|
@@ -662,22 +647,11 @@ known:
 | monitor output, raw CSV | 22 GB | **~220 GB** |
 | after parquet | 4.5 GB | **~45 GB** |
 
-On the 2,000-bus case we ran only setup and single-run checks: the end-to-end rebuild with one dynamic run, a faultscreen-shaped micro-campaign of one dispatch and eight fault locations, and single-run and single-batch memory probes. We did not run any aleatoric campaign on the 2,000-bus case. A campaign the size of aleatoric-1 projects to ~2.5 h per node at 16 workers, applying the overhead measured on the 200-bus run. Full worker memory is unmeasured, so treat this as a planning figure, not a guarantee.
+The 200-bus campaign ran 2.7× slower than its ideal split over 16 workers (6.0 min against 2.2 min). Applying that to the 2,000-bus figure gives about **2.5 h** on one node. Worker memory is not measured yet, so treat this as a planning figure.
 
-**Storage, not compute, is the bottleneck.** At 200 buses the CPU saturates 
-before memory; at 2,000 buses selective monitoring matters far more (the 4,649 
-output columns are mostly bus voltages). **Cost to scale to 2,000 buses: brute 
-force survives one order of magnitude, not two.** The design space grows 115× 
-(siting 11.5× and fault locations 10×), while per-sample cost grows 19–25×. 
-Holding sampling density fixed projects 2,150–2,900× the pilot's cost. That 
-makes screening, surrogates and adaptive refinement the concrete case, not a 
-luxury.
+We ran only setup checks, single-run checks and memory probes on the 2,000-bus case, plus a micro-campaign of one dispatch and eight fault locations. We did not run an aleatoric campaign there.
 
-**Takeaway.** Brute force survives one order of magnitude of grid size, not two:
-a campaign the size of aleatoric-1 at 2,000 buses is projected at about 2.5 h on one node,
-storage rather than compute is the bottleneck, and the dynamic run, nearly free at 200
-buses, becomes the cost to minimise. Scaling the pilot is a methods problem,
-not a hardware one, which §9 takes up.
+**Takeaway.** Brute force survives one order of magnitude of grid size, not two. The design space grows 115× (siting 11.5× and fault locations 10×), while cost per run grows about 19–25×. At the same sampling density, serial compute time (solver CPU time for the dispatch and dynamic runs) grows about 2,150 to 2,910×. Storage grows with the grid and can become the bottleneck: the raw monitor output for aleatoric-1 is projected at about 220 GB, from 262.5 MB for each of its 840 full monitored runs. At this size, screening and surrogate models are the practical way to cover the design space, and §9 discusses them briefly.
 
 > **Details:** [scaling measurements, the ACTIVSg2000 port, and the positional-id trap](datacenter_load_uq_plan.md#scaling-to-activsg2000-measured-2026-11-02) ·
 > [sampling at scale and the sampling dimensions](datacenter_load_uq_plan.md#sampling-at-scale-aleatoric-uq-beyond-the-pilot-recommendations-2026-11-11-aleatoric2-run-to-measure-cost) ·
