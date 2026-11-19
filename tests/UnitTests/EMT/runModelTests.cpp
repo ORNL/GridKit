@@ -12,6 +12,8 @@ int main()
   GridKit::Testing::ModelTests     test;
 
   result += test.loadZ();
+  result += test.loadRLC();
+  result += test.invalidLoadRLC();
   result += test.conjugatePoles();
   result += test.invalidVectorFit();
   result += test.invalidInput();
@@ -32,6 +34,10 @@ int main()
   result += test.openSwitch();
   result += test.switchWaitsForZero();
   result += test.sharedCommand();
+  result += test.machine();
+  result += test.machineIronLoss();
+  result += test.transformer();
+  result += test.machineCurrentReference();
   result += test.pll();
   result += test.pllFrequencyReference();
 

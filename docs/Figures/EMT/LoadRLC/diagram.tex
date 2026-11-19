@@ -1,0 +1,37 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+
+% ================= Parallel branches =================
+\node[vblock] (R) at (-1.9, -0.1) {$R_n$};
+\node[vblock] (L) at (0, -0.1) {$L_n$};
+\node[vblock] (C) at (1.9, -0.1) {$C_n$};
+\coordinate (terminal) at (0, 1.6);
+\coordinate (return) at (0, -1.8);
+\draw[semithick] (R.north) |- (terminal) -| (C.north);
+\draw[semithick] (terminal) -- (L.north);
+\draw[semithick] (R.south) |- (return) -| (C.south);
+\draw[semithick] (L.south) -- (return);
+
+% ================= Inductor current =================
+\draw[->, semithick] (0.3, -1.72) -- (0.3, -1.30);
+\node[sig, anchor=west] at (0.35, -1.51) {$i_{l,n}$};
+
+% ================= Terminal voltage and current =================
+\node[signal, label={[sig]above:$v_n$}] (vport) at (-3.6, 1.6) {};
+\draw[->, line] (-1.9, 1.6) -- (-4.75, 1.6);
+\node[sig, anchor=east] at (-5.0, 1.6) {$i_n$};
+
+% ================= Ground reference =================
+\draw[semithick] (return) -- (0, -2.3);
+\draw[semithick] (-0.35, -2.30) -- (0.35, -2.30);
+\draw[semithick] (-0.22, -2.45) -- (0.22, -2.45);
+\draw[semithick] (-0.09, -2.60) -- (0.09, -2.60);
+
+% ================= Model enclosure =================
+\draw[enclosure] (-2.95, -3.0) rectangle (2.95, 2.2);
+
+\end{tikzpicture}
+\end{document}

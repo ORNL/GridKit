@@ -70,6 +70,90 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// All eight combinations of R, L and C on one bus
+      TestOutcome loadRLC()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 8, "kv": 1.0}}],
+          "devices": [{"class": "LoadRLC", "id": "LD1", "terminals": {"bus": 1},
+                       "params": {"N": 8, "R": [2, 4, null, null, 5, null, 2, null],
+                                          "L": [3, null, null, 2, 4, null, null, 6],
+                                          "C": [null, null, null, null, 2, 3, 4, 5]}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [2, 4, 6, 8, 10, 12, 14, 16]}},
+          "devices": {"LD1": {"i_l": [1, -4, -1, 2]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT REL_TOL = 1.0e-3;
+
+        // Voltages up to 16 raise the round-off of the difference, which passes at 1e-10 and not at 1e-11
+        constexpr RealT LOAD_TOL = 1.0e-10;
+
+        auto& load = system->device<EMT::LoadRLC<RealT, IdxT>>("LD1");
+
+        // One inductor current for each of the four phases with an inductor
+        success *= system->size() == 12;
+        success *= load.yp().setToConst(0.5) == 0;
+        success *= system->bus("1").yp().setToConst(0.25) == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(load.getResidual(EMT::LoadRLCInternalVariables::i_l), {3.5, 9.0, 12.0, 19.0});
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {0.0, -1.0, 0.0, -4.0, -3.5, -0.75, -8.0, 0.75});
+        success *= load.evaluateOutputs() == 0;
+        success *= rowsEqual(load.getOutput(EMT::LoadRLCOutputs::i), {0.0, -1.0, 0.0, -4.0, -3.5, -0.75, -8.0, 0.75});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, LOAD_TOL);
+
+        success *= system->setAbsoluteTolerance(REL_TOL) == 0;
+        success *= rowsEqual(load.absoluteTolerance(EMT::LoadRLCInternalVariables::i_l), {1.0, 1.0, 1.0, 1.0});
+
+        return success.report(__func__);
+      }
+
+      /// A load whose arrays do not have N entries, or hold an entry that is not positive, fails verification
+      TestOutcome invalidLoadRLC()
+      {
+        TestStatus success = true;
+
+        static constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "LoadRLC", "id": "LD1", "terminals": {"bus": 1}, "params": {"N": 1, "R": [2.0]}}]
+        })";
+
+        const auto invalid = [](auto change)
+        {
+          auto load = nlohmann::json::parse(CASE);
+          change(load["devices"][0]["params"]);
+          return makeSystem(load.dump().c_str(), "{}") == nullptr;
+        };
+
+        success *= makeSystem(CASE, "{}") != nullptr;
+        success *= invalid([](auto& params)
+                           { params["R"] = {2.0, 2.0}; });
+        success *= invalid([](auto& params)
+                           { params["L"] = nlohmann::json::array(); });
+        success *= invalid([](auto& params)
+                           { params["R"] = {0.0}; });
+        success *= invalid([](auto& params)
+                           { params["L"] = {-1.0}; });
+        success *= invalid([](auto& params)
+                           { params["C"] = {0.0}; });
+
+        return success.report(__func__);
+      }
+
       /// Load of impedance 2 + (1 + 0.5j)/(s + 1 - 2j) + (1 - 0.5j)/(s + 1 + 2j) on a single-phase bus
       TestOutcome conjugatePoles()
       {
@@ -854,6 +938,202 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Wye to delta transformer of unit ratings with winding 1 saturated on phase a
+      TestOutcome transformer()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                    {"number": 2, "class": "Bus", "params": {"N": 3, "kv": 0.001}}],
+          "devices": [{"class": "Transformer", "id": "T1", "terminals": {"bus1": 1, "bus2": 2},
+                       "params": {"S": 1.0, "V1": 1.0, "V2": 1.0, "f": 60.0, "R": 0.5, "X": 0.5, "I0": 0.5, "P0": 0.1, "tap": 1.1, "split": 0.35,
+                                  "P2": [[1.0, 0.0, -1.0], [-1.0, 1.0, 0.0], [0.0, -1.0, 1.0]]}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [1.0, 0.0, 0.0]}, "2": {"v": [0.0, 0.0, 0.0]}},
+          "devices": {"T1": {"i12": [0.5, 0.0, 0.0], "psi1": [2.0, 0.0, 0.0]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::TransformerInternalVariables;
+        using Outputs   = EMT::TransformerOutputs;
+
+        auto& transformer = system->device<EMT::Transformer<RealT, IdxT>>("T1");
+
+        // The curvature of the saturation ramp raises the error of the difference, which passes at 1e-10 and not at 1e-11
+        constexpr RealT TRANSFORMER_TOL = 1.0e-10;
+
+        const RealT PEAK   = std::sqrt(TWO<RealT> / THREE<RealT>);
+        const RealT DELTA  = std::numbers::sqrt2_v<RealT> / THREE<RealT>;
+        success           *= transformer.evaluateOutputs() == 0;
+        const RealT e1     = transformer.getOutput(Outputs::e1)[0];
+        const RealT e2     = transformer.getOutput(Outputs::e2)[0];
+        const RealT im1    = transformer.getOutput(Outputs::im1)[0];
+        const RealT im2    = transformer.getOutput(Outputs::im2)[0];
+        const RealT iw1    = transformer.getOutput(Outputs::iw1)[0];
+        const RealT iw2    = transformer.getOutput(Outputs::iw2)[0];
+
+        // Winding equations of phase a, with half of R in each winding and the core split 0.35 to 0.65.
+        // Winding 1 is past its knee at 1.2, where the slope changes from 1/Lm to 1/Lsat = 1.
+        const RealT INV_LM  = std::sqrt(0.5 * 0.5 - 0.1 * 0.1);
+        const RealT g1      = 2.0 * INV_LM + (ONE<RealT> - INV_LM) * 0.8;
+        success            *= system->size() == 15;
+        success            *= isEqual(e1, ONE<RealT> / PEAK - 0.25 * iw1);
+        success            *= isEqual(e2, -1.1 * 0.25 * iw2);
+        success            *= isEqual(im2, 0.65 * 0.1 * e2);
+        success            *= isEqual(iw1, im1 + 0.5);
+        success            *= isEqual(iw2, 1.1 * (im2 - 0.5));
+        success            *= isEqual(im1, 0.35 * (g1 + 0.1 * e1));
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-PEAK * iw1, 0.0, 0.0});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {-DELTA * iw2, DELTA * iw2, 0.0});
+        success *= rowsEqual(transformer.getResidual(Variables::i12), {e2 - e1, 0.0, 0.0});
+        success *= rowsEqual(transformer.getResidual(Variables::psi1), {-e1, 0.0, 0.0});
+        success *= rowsEqual(transformer.getResidual(Variables::psi2), {-e2, 0.0, 0.0});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, TRANSFORMER_TOL);
+
+        return success.report(__func__);
+      }
+
+      /// Machine of unit ratings at angle zero and synchronous speed on a dead bus, saturated on both axes
+      TestOutcome machine()
+      {
+        TestStatus success = true;
+
+        const auto system = makeSystem(MACHINE_CASE, MACHINE_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        const RealT OMEGA_BASE = TWO<RealT> * std::numbers::pi_v<RealT> * 60.0;
+        const RealT PEAK       = std::sqrt(TWO<RealT> / THREE<RealT>);
+        const RealT QUADRATURE = 0.2 * std::numbers::sqrt3_v<RealT>;
+
+        using Variables = EMT::MachineInternalVariables;
+        using Outputs   = EMT::MachineOutputs;
+
+        auto& machine = system->device<EMT::Machine<RealT, IdxT>>("M1");
+
+        // The saturation function of an axis is (|psia| - 0.8)^2, so the magnetizing inductances are divided by
+        // 1.04 at air-gap flux 1.0 in d and by 1.25 at -1.3 in q.
+        // The air-gap fluxes are then 2 (0.9 + 1.4 + 0.96) / 6.52 = 1.0 and -2 (1.5 + 1.5 + 1.7125) / 7.25 = -1.3.
+        success *= system->size() == 16;
+        success *= machine.evaluateOutputs() == 0;
+        success *= rowsEqual(machine.getOutput(Outputs::id), {0.2});
+        success *= rowsEqual(machine.getOutput(Outputs::iq), {0.4});
+        success *= rowsEqual(machine.getOutput(Outputs::i0), {0.0});
+        success *= rowsEqual(machine.getOutput(Outputs::ifd), {0.8});
+        success *= rowsEqual(machine.getOutput(Outputs::i1d), {-0.08});
+        success *= rowsEqual(machine.getOutput(Outputs::i1q), {-0.4});
+        success *= rowsEqual(machine.getOutput(Outputs::i2q), {-0.825});
+        success *= rowsEqual(machine.getOutput(Outputs::te), {0.66});
+        success *= rowsEqual(machine.getOutput(Outputs::is), {0.2, -0.1 + QUADRATURE, -0.1 - QUADRATURE});
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v),
+                             {0.2 * PEAK, (-0.1 + QUADRATURE) * PEAK, (-0.1 - QUADRATURE) * PEAK});
+        success *= rowsEqual(machine.getResidual(Variables::theta), {-OMEGA_BASE});
+        success *= rowsEqual(machine.getResidual(Variables::omega), {-0.34});
+        success *= rowsEqual(machine.getResidual(Variables::psid), {1.5});
+        success *= rowsEqual(machine.getResidual(Variables::psiq), {0.9});
+        success *= rowsEqual(machine.getResidual(Variables::psi0), {0.0});
+        success *= rowsEqual(machine.getResidual(Variables::psifd), {-0.1});
+        success *= rowsEqual(machine.getResidual(Variables::psi1d), {-0.08});
+        success *= rowsEqual(machine.getResidual(Variables::psi1q), {-0.4});
+        success *= rowsEqual(machine.getResidual(Variables::psi2q), {-0.825});
+        success *= rowsEqual(machine.getResidual(Variables::psiad), {0.0});
+        success *= rowsEqual(machine.getResidual(Variables::psiaq), {0.0});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, MACHINE_TOL);
+
+        return success.report(__func__);
+      }
+
+      /// The iron-loss resistance of a machine draws the bus voltage over it from the stator currents
+      TestOutcome machineIronLoss()
+      {
+        TestStatus success = true;
+
+        auto data                           = nlohmann::json::parse(MACHINE_CASE);
+        auto state                          = nlohmann::json::parse(MACHINE_STATE);
+        data["devices"][0]["params"]["Rfe"] = 2.0;
+        state["buses"]["1"]["v"]            = {1.0, -0.5, -0.5};
+        const auto system                   = makeSystem(data.dump().c_str(), state.dump().c_str());
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        const RealT PEAK       = std::sqrt(TWO<RealT> / THREE<RealT>);
+        const RealT QUADRATURE = 0.2 * std::numbers::sqrt3_v<RealT>;
+
+        // The conductance of a phase is S / (Rfe V^2) = 0.5 S
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v),
+                             {0.2 * PEAK - 0.5, (-0.1 + QUADRATURE) * PEAK + 0.25, (-0.1 - QUADRATURE) * PEAK + 0.25});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, MACHINE_TOL);
+
+        return success.report(__func__);
+      }
+
+      /// A Pll reads the stator currents of a machine, an output, through the signal that follows it
+      TestOutcome machineCurrentReference()
+      {
+        TestStatus success = true;
+
+        auto read = nlohmann::json::parse(MACHINE_CASE);
+        read["devices"].push_back(nlohmann::json::parse(
+            R"({"class": "Pll", "id": "PLL1", "inputs": {"v": "M1.is"}, "params": {"Kp": 0.5, "Ki": 0.25}})"));
+        const auto system = makeSystem(read.dump().c_str(), MACHINE_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT REL_TOL = 1.0e-3;
+
+        const RealT QUADRATURE = 0.2 * std::numbers::sqrt3_v<RealT>;
+
+        // Three bus voltages, eleven machine and two Pll variables, the two held inputs, and the three signals of `is`.
+        // The other outputs of the machine add no variable.
+        constexpr IdxT SIGNAL  = 18;
+        success               *= system->size() == 21;
+
+        // The signals start at zero, so their residuals are the stator currents
+        success *= system->evaluateResidual() == 0;
+        const std::span<const RealT> signal{system->getResidual().getData() + SIGNAL, 3};
+        success *= rowsEqual(signal, {0.2, -0.1 + QUADRATURE, -0.1 - QUADRATURE});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, MACHINE_TOL);
+
+        // A signal takes the tolerance of the output it follows, here the relative tolerance
+        success *= system->setAbsoluteTolerance(REL_TOL) == 0;
+        const std::span<const RealT> tol{system->absoluteTolerance().getData() + SIGNAL, 3};
+        success *= rowsEqual(tol, {REL_TOL, REL_TOL, REL_TOL});
+
+        // An input fits the output it reads
+        read["devices"][1]["inputs"]["v"]  = "M1.te";
+        success                           *= rejected(read.dump().c_str(), "{}");
+
+        return success.report(__func__);
+      }
+
       /// Pll at angle zero on a three-phase bus at (0, 1, -1), whose q-axis voltage is 2/sqrt(3)
       TestOutcome pll()
       {
@@ -929,6 +1209,23 @@ namespace GridKit
       }
 
     private:
+      /// Machine of unit ratings on a three-phase bus, with its field voltage and mechanical power held
+      static constexpr const char* MACHINE_CASE = R"({
+        "params": {"freq_base": 60.0, "va_base": 1.0e6},
+        "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 0.001}}],
+        "devices": [{"class": "Machine", "id": "M1", "terminals": {"bus": 1},
+                     "params": {"S": 1.0, "V": 1.0, "f": 60.0, "H": 2.0, "Ll": 0.5, "Lmd": 2.0, "Lmq": 1.0,
+                                "Rfd": 0.5, "Llfd": 0.5, "R1d": 1.0, "Ll1d": 0.5, "R1q": 1.0, "Ll1q": 0.5,
+                                "R2q": 1.0, "Ll2q": 0.5, "S10": 0.04, "S12": 0.16}}]
+      })";
+
+      /// Angle zero and synchronous speed on a dead bus, with stator currents 0.2 and 0.4 in d and q
+      static constexpr const char* MACHINE_STATE = R"({
+        "buses": {"1": {"v": [0.0, 0.0, 0.0]}},
+        "devices": {"M1": {"omega": [1.0], "psid": [0.9], "psiq": [-1.5], "psifd": [1.4], "psi1d": [0.96],
+                           "psi1q": [-1.5], "psi2q": [-1.7125], "psiad": [1.0], "psiaq": [-1.3], "efd": [2.0], "pm": [1.0]}}
+      })";
+
       /// Switch between two single-phase buses, with its command left open
       static constexpr const char* SWITCH_CASE = R"({
         "params": {"freq_base": 60.0, "va_base": 1.0e6},
@@ -979,6 +1276,9 @@ namespace GridKit
 
       static constexpr RealT ALPHA = 0.5;
       static constexpr RealT kTol  = 1.0e-11;
+
+      /// The frequency base of a machine raises the round-off of the difference, which passes at 1e-8 and not at 1e-9
+      static constexpr RealT MACHINE_TOL = 1.0e-8;
 
       /// System of the case at the state, or none if it cannot be allocated
       static std::unique_ptr<SystemT> makeSystem(const char* case_json, const char* state_json)

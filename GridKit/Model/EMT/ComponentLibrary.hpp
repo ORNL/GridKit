@@ -10,9 +10,12 @@
 
 #include <GridKit/Model/EMT/Bus/Bus.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
+#include <GridKit/Model/EMT/Component/Load/LoadRLC/LoadRLC.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/EMT/Component/Source/Machine/Machine.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
+#include <GridKit/Model/EMT/Component/Transformer/Transformer.hpp>
 #include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFit.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Pll/Pll.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Pmu/Pmu.hpp>
@@ -30,11 +33,14 @@ namespace GridKit
       {
         visit(std::type_identity<Bus<ScalarT, IdxT>>{});
         visit(std::type_identity<LineLumped<ScalarT, IdxT>>{});
+        visit(std::type_identity<LoadRLC<ScalarT, IdxT>>{});
         visit(std::type_identity<LoadZ<ScalarT, IdxT>>{});
+        visit(std::type_identity<Machine<ScalarT, IdxT>>{});
         visit(std::type_identity<Pll<ScalarT, IdxT>>{});
         visit(std::type_identity<Pmu<ScalarT, IdxT>>{});
         visit(std::type_identity<Signal<ScalarT, IdxT>>{});
         visit(std::type_identity<Switch<ScalarT, IdxT>>{});
+        visit(std::type_identity<Transformer<ScalarT, IdxT>>{});
         visit(std::type_identity<VectorFit<ScalarT, IdxT>>{});
         visit(std::type_identity<VoltageSource<ScalarT, IdxT>>{});
       }
