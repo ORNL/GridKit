@@ -42,6 +42,16 @@ int main()
   result += test.pllFrequencyReference();
   result += test.regca();
   result += test.park();
+  result += test.tgov1();
+  result += test.gastPti();
+  result += test.hygov();
+  result += test.sexsPti();
+  result += test.ieeet1();
+  result += test.esdc1a();
+  result += test.ieeest();
+  result += test.reecb();
+  result += test.repca();
+  result += test.machineControls();
 
   return result.summary();
 }

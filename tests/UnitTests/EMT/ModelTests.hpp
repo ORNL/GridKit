@@ -20,6 +20,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/EMT/ComponentImpl.hpp>
 #include <GridKit/Model/EMT/StateJSONParser.hpp>
 #include <GridKit/Model/EMT/SystemModel.hpp>
@@ -1323,6 +1324,508 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// A valve at 0.5 opens toward a reference of 0.375 less a speed deviation of 0.125 over a droop of 0.25
+      TestOutcome tgov1()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "Tgov1", "id": "GOV",
+                       "params": {"Trate": 2.0, "S": 1.0e6, "R": 0.25, "T1": 0.5, "T2": 1.0, "T3": 2.0, "Dt": 2.0}}]
+        })";
+
+        const auto system = makeSystem(
+            CASE, R"({"devices": {"GOV": {"PTX": [0.25], "PV": [0.5], "PM": [0.75], "omega": [1.125], "pref": [0.375]}}})");
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::Tgov1InternalVariables;
+
+        auto& governor = system->device("GOV");
+
+        // The machine rating is half the turbine rating
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(governor.getResidual(Variables::PTX), {0.125});
+        success *= rowsEqual(governor.getResidual(Variables::PV), {Math::antiwindup(0.5, 0.5, 0.0, 1.0) / 0.5});
+        success *= rowsEqual(governor.getResidual(Variables::PM), {-0.375});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        auto invalid                          = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"]["R"]  = 0.0;
+        success                              *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// A fuel demand of 0.375 is the lower of the load and temperature demands, with a reference of 1.5 on twice the turbine rating
+      TestOutcome gastPti()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "GastPti", "id": "GOV",
+                       "params": {"Trate": 2.0, "S": 1.0e6, "R": 0.25, "T1": 0.5, "T2": 0.25, "T3": 2.0,
+                                  "At": 1.0, "Kt": 2.0, "Dturb": 2.0}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"GOV": {
+          "XVALVE": [0.25], "XFLOW": [0.5], "XTEMP": [0.75], "VLOAD": [0.375], "VTEMP": [2.0], "VLV": [0.5], "PMECH": [0.75],
+          "omega": [1.125], "pref": [1.5]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::GastPtiInternalVariables;
+
+        auto& governor = system->device("GOV");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(governor.getResidual(Variables::XVALVE), {Math::antiwindup(0.25, 0.25, 0.0, 1.0) / 0.5});
+        success *= rowsEqual(governor.getResidual(Variables::XFLOW), {-1.0});
+        success *= rowsEqual(governor.getResidual(Variables::XTEMP), {-0.125});
+        success *= rowsEqual(governor.getResidual(Variables::VLOAD), {-0.03125});
+        success *= rowsEqual(governor.getResidual(Variables::VTEMP), {-0.5});
+        success *= rowsEqual(governor.getResidual(Variables::VLV), {-0.5 + Math::min(0.375, 2.0)});
+        success *= rowsEqual(governor.getResidual(Variables::PMECH), {-0.125});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        auto invalid                          = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"]["R"]  = 0.0;
+        success                              *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// A head of 0.75 under a dam head of 1 accelerates the flow, and a flow of 0.5 at a gate power of 0.5 lowers the head
+      TestOutcome hygov()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "Hygov", "id": "GOV",
+                       "params": {"Trate": 2.0, "S": 1.0e6, "Rperm": 0.5, "Rtemp": 0.5, "Tr": 2.0, "Tf": 0.5, "Tg": 0.5,
+                                  "Velm": 0.25, "Tw": 2.0, "At": 2.0, "Dturb": 0.5, "Qnl": 0.125, "Tn": 0.5, "Tnp": 1.0}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"GOV": {
+          "XN": [0.25], "XF": [0.25], "C": [0.5], "G": [0.25], "Q": [0.5], "OMEGADB": [0.125], "EF": [0.5], "FC": [0.125],
+          "RC": [0.125], "PGV": [0.5], "H": [0.75], "PMECH": [0.5], "omega": [1.125], "pref": [1.0], "paux": [0.5]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::HygovInternalVariables;
+
+        auto& governor = system->device("GOV");
+
+        // The references add to 0.75 on the turbine rating, and the speed lead-lag output is 0.1875
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(governor.getResidual(Variables::XN), {-0.125});
+        success *= rowsEqual(governor.getResidual(Variables::XF), {0.5});
+        success *= rowsEqual(governor.getResidual(Variables::C), {Math::antiwindup(0.5, 0.125, 0.0, 1.0)});
+        success *= rowsEqual(governor.getResidual(Variables::G), {0.5});
+        success *= rowsEqual(governor.getResidual(Variables::Q), {0.125});
+        success *= rowsEqual(governor.getResidual(Variables::EF), {-0.1875});
+        success *= rowsEqual(governor.getResidual(Variables::FC), {0.5625});
+        success *= rowsEqual(governor.getResidual(Variables::H), {-0.0625});
+        success *= rowsEqual(governor.getResidual(Variables::PMECH), {0.296875});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        auto invalid                            = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"]["db2"]  = 0.125;
+        success                                *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// A terminal voltage of 1.25 against a reference of 1.5 and three added signals leaves a voltage error residual of 0.203125
+      TestOutcome sexsPti()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "SexsPti", "id": "EX",
+                       "params": {"V": 2.0, "K": 8.0, "Ta": 1.0, "Tb": 2.0, "Te": 0.5, "Efdmin": -4.0, "Efdmax": 4.0}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"EX": {
+          "VR": [0.25], "EFD": [1.0], "VTR": [0.125],
+          "vt": [2.5], "vref": [1.5], "vs": [0.0625], "vuel": [0.03125], "voel": [-0.015625]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::SexsPtiInternalVariables;
+
+        auto& exciter = system->device("EX");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(exciter.getResidual(Variables::VR), {-0.1875});
+        success *= rowsEqual(exciter.getResidual(Variables::EFD), {Math::antiwindup(1.0, -3.0, -4.0, 4.0)});
+        success *= rowsEqual(exciter.getResidual(Variables::VTR), {0.203125});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        auto invalid = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"].erase("Tb");
+        success *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// Saturation points (1, 0) and (2, 0.5) begin the saturation at 1 with unit gain, and speed 1.125 raises a field voltage of 1.5
+      TestOutcome ieeet1()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "Ieeet1", "id": "EX",
+                       "params": {"V": 2.0, "Tr": 0.5, "Ka": 8.0, "Ta": 0.5, "Ke": 0.5, "Te": 0.5, "Kf": 0.125, "Tf": 2.0,
+                                  "Vrmin": -4.0, "Vrmax": 4.0, "E1": 1.0, "Se1": 0.0, "E2": 2.0, "Se2": 0.5,
+                                  "Ispdlim": 1.0}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"EX": {
+          "VTS": [1.0], "VR": [1.0], "EFDP": [1.5], "VFX": [0.25], "VTR": [0.25], "VF": [0.0625], "VE": [0.125],
+          "EFD": [1.25], "KSAT": [0.5],
+          "vt": [2.5], "omega": [1.125], "vref": [1.5], "vs": [0.0625], "vuel": [0.03125], "voel": [-0.015625]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::Ieeet1InternalVariables;
+
+        auto& exciter = system->device("EX");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(exciter.getResidual(Variables::VTS), {0.5});
+        success *= rowsEqual(exciter.getResidual(Variables::VR), {Math::antiwindup(1.0, 2.0, -4.0, 4.0)});
+        success *= rowsEqual(exciter.getResidual(Variables::EFDP), {0.25});
+        success *= rowsEqual(exciter.getResidual(Variables::VFX), {0.03125});
+        success *= rowsEqual(exciter.getResidual(Variables::VTR), {0.265625});
+        success *= rowsEqual(exciter.getResidual(Variables::VF), {-0.4375});
+        success *= rowsEqual(exciter.getResidual(Variables::VE), {0.375});
+        success *= rowsEqual(exciter.getResidual(Variables::EFD), {0.4375});
+        success *= rowsEqual(exciter.getResidual(Variables::KSAT), {-0.5 + Math::qramp(0.5)});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        auto invalid                           = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"]["Ke"]  = 0.0;
+        success                               *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// With `UEL` 2 the limiter signal adds to the voltage error and the lead-lag output passes the gate
+      TestOutcome esdc1a()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "Esdc1a", "id": "EX",
+                       "params": {"V": 2.0, "Tr": 0.5, "Ka": 8.0, "Ta": 0.5, "Tb": 2.0, "Tc": 1.0, "Vrmin": -4.0,
+                                  "Vrmax": 4.0, "Ke": 0.5, "Te": 0.5, "Kf": 0.25, "Tf1": 2.0, "Spdmlt": true, "E1": 1.0,
+                                  "Se1": 0.0, "E2": 2.0, "Se2": 0.5, "UEL": 2, "exclim": false}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"EX": {
+          "EFDP": [1.5], "VC": [1.0], "VR": [1.0], "VF": [0.0625], "XLL": [0.125], "EV": [0.25], "VLL": [0.125],
+          "VHV": [0.25], "SE": [0.5], "VFE": [0.75], "EFD": [1.25],
+          "vt": [2.5], "omega": [1.125], "vref": [1.5], "vs": [0.0625], "vuel": [0.03125]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::Esdc1aInternalVariables;
+
+        auto& exciter = system->device("EX");
+
+        // The field-voltage state rises at (1 - 0.75) / 0.5 without its lower limit
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(exciter.getResidual(Variables::EFDP), {0.5});
+        success *= rowsEqual(exciter.getResidual(Variables::VC), {0.5});
+        success *= rowsEqual(exciter.getResidual(Variables::VR), {Math::antiwindup(1.0, 1.0, -4.0, 4.0) / 0.5});
+        success *= rowsEqual(exciter.getResidual(Variables::VF), {0.03125});
+        success *= rowsEqual(exciter.getResidual(Variables::XLL), {0.0625});
+        success *= rowsEqual(exciter.getResidual(Variables::EV), {0.28125});
+        success *= rowsEqual(exciter.getResidual(Variables::VLL), {0.0625});
+        success *= rowsEqual(exciter.getResidual(Variables::VHV), {-0.125});
+        success *= rowsEqual(exciter.getResidual(Variables::SE), {-0.5 + Math::qramp(0.5)});
+        success *= rowsEqual(exciter.getResidual(Variables::VFE), {0.5});
+        success *= rowsEqual(exciter.getResidual(Variables::EFD), {0.4375});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        auto invalid                            = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"]["UEL"]  = 4;
+        success                                *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// A second-order notch filter 1 + 0.5 s + 0.25 s^2 with input 0.5, two lead-lags, a washout and limits of 0.125
+      TestOutcome ieeest()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "Ieeest", "id": "PSS",
+                       "params": {"A1": 0.5, "A2": 0.25, "A5": 1.0, "A6": 0.5, "T1": 1.0, "T2": 2.0, "T3": 1.0, "T4": 2.0,
+                                  "T5": 2.0, "T6": 4.0, "Ks": 2.0, "Lsmin": -0.125, "Lsmax": 0.125}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"PSS": {
+          "X1": [0.25], "X2": [0.125], "X5": [0.25], "X6": [0.125], "X7": [0.0625], "V4": [0.5], "V5": [0.3125],
+          "V6": [0.25], "V7": [0.0625], "VSS": [0.03125], "u": [0.5]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::IeeestInternalVariables;
+
+        auto& stabilizer = system->device("PSS");
+
+        // The second derivative of the filtered signal is (0.5 - 0.25 - 0.5 * 0.125) / 0.25
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(stabilizer.getResidual(Variables::X1), {0.125});
+        success *= rowsEqual(stabilizer.getResidual(Variables::X2), {0.75});
+        success *= rowsEqual(stabilizer.getResidual(Variables::X3), {0.0});
+        success *= rowsEqual(stabilizer.getResidual(Variables::X4), {0.0});
+        success *= rowsEqual(stabilizer.getResidual(Variables::X5), {0.25});
+        success *= rowsEqual(stabilizer.getResidual(Variables::X6), {0.1875});
+        success *= rowsEqual(stabilizer.getResidual(Variables::X7), {0.1875});
+        success *= rowsEqual(stabilizer.getResidual(Variables::V4), {0.25});
+        success *= rowsEqual(stabilizer.getResidual(Variables::V5), {0.125});
+        success *= rowsEqual(stabilizer.getResidual(Variables::V6), {-0.0625});
+        success *= rowsEqual(stabilizer.getResidual(Variables::V7), {0.5});
+        success *= rowsEqual(stabilizer.getResidual(Variables::VSS), {-0.03125 + Math::clamp(0.0625, -0.125, 0.125)});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        auto invalid                               = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"]["Tdelay"]  = 0.125;
+        success                                   *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// A terminal voltage of 1, within the voltage band, with an active power of 0.5625 and a reactive power of -0.28125
+      TestOutcome reecb()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 2.0},
+          "buses": [],
+          "devices": [{"class": "Reecb", "id": "REEC",
+                       "params": {"V": 1.0, "mva": 1.0e-6, "Vref0": 1.0, "Trv": 0.5, "Tp": 0.5, "Tiq": 0.5, "Tpord": 0.5,
+                                  "Imax": 1.0}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"REEC": {
+          "VMEAS": [0.75], "PMEAS": [0.25], "QV": [0.25], "PORD": [0.5], "VSAFE": [0.75], "SDIP": [1.0],
+          "IQV": [0.125], "QREF": [0.125], "EQ": [0.125], "VPIQ": [1.0], "RPORD": [0.25], "ILCAP": [0.75],
+          "IQMAX": [0.875], "IPMAX": [0.5], "IQRAW": [0.25], "IQCMD": [0.5], "IPCMD": [0.5],
+          "qext": [0.125], "pref": [0.375]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using ReecbT    = EMT::Reecb<RealT, IdxT>;
+        using Variables = EMT::ReecbInternalVariables;
+
+        auto& control = system->device<ReecbT>("REEC");
+
+        system->held(control, EMT::ReecbInputs::vt)[0] = ONE<RealT>;
+        system->held(control, EMT::ReecbInputs::p)[0]  = 0.5625;
+        system->held(control, EMT::ReecbInputs::q)[0]  = -0.28125;
+
+        const auto near = [&control](Variables variable, RealT value)
+        { return isEqual(control.getResidual(variable)[0], value, kTol); };
+
+        // The system power base is twice the device rating, and the reactive current has priority
+        success *= system->evaluateResidual() == 0;
+        success *= near(Variables::VMEAS, 0.5);
+        success *= near(Variables::PMEAS, 0.625);
+        success *= near(Variables::QREF, 0.125);
+        success *= near(Variables::EQ, 0.28125);
+        success *= near(Variables::IQMAX, 0.125);
+        success *= near(Variables::IPMAX, 0.25);
+        success *= near(Variables::IQRAW, 0.125);
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, PLANT_TOL);
+
+        auto invalid = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"].erase("Vref0");
+        success *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// A line drop of 1.28 + j 0.96 turns a unit voltage with powers (0.5, -0.25) into a compensated voltage of magnitude 1
+      TestOutcome repca()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 2.0},
+          "buses": [],
+          "devices": [{"class": "Repca", "id": "PLANT",
+                       "params": {"V": 1.0, "mva": 1.0e-6, "VcompFlag": false, "Freqflag": true, "Tfltr": 0.5, "Tfv": 2.0,
+                                  "Tft": 1.0, "Tp": 0.5, "Tlag": 2.0, "Kc": 0.5, "Rc": 1.28, "Xc": 0.96}}]
+        })";
+
+        constexpr const char* STATE = R"({"devices": {"PLANT": {
+          "VMEAS": [0.75], "QMEAS": [-0.5], "XQPI": [0.125], "XQLAG": [0.25], "PMEAS": [0.25], "XPPI": [0.25],
+          "PREF": [0.5], "VLDC": [0.75], "VDROOP": [0.5], "VCTRL": [0.375], "SFRZ": [1.0], "ERQ": [0.125],
+          "ERQDB": [0.125], "ERQLIM": [0.125], "QPI": [0.75], "QEXT": [0.1875], "EP": [0.125], "EPLIM": [0.125],
+          "PPI": [1.0], "PEXT": [0.125],
+          "vref": [1.0], "pref": [0.25], "freqref": [1.0]}}})";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using RepcaT    = EMT::Repca<RealT, IdxT>;
+        using Variables = EMT::RepcaInternalVariables;
+
+        auto& plant = system->device<RepcaT>("PLANT");
+
+        system->held(plant, EMT::RepcaInputs::v)[0]     = ONE<RealT>;
+        system->held(plant, EMT::RepcaInputs::p)[0]     = 0.5;
+        system->held(plant, EMT::RepcaInputs::q)[0]     = -0.25;
+        system->held(plant, EMT::RepcaInputs::omega)[0] = TWO<RealT> * std::numbers::pi_v<RealT> * 60.0;
+
+        const auto near = [&plant](Variables variable, RealT value)
+        { return isEqual(plant.getResidual(variable)[0], value, kTol); };
+
+        // The powers are 0.5 and -0.25, the frequency is at its reference, and the commands are on twice the device rating
+        success *= system->evaluateResidual() == 0;
+        success *= near(Variables::VMEAS, -0.75);
+        success *= near(Variables::QMEAS, 0.5);
+        success *= near(Variables::XQLAG, 0.25);
+        success *= near(Variables::PMEAS, 0.5);
+        success *= near(Variables::PREF, 0.25);
+        success *= near(Variables::VLDC, 0.25);
+        success *= near(Variables::VDROOP, 0.375);
+        success *= near(Variables::VCTRL, 0.125);
+        success *= near(Variables::ERQ, 0.125);
+        success *= near(Variables::QEXT, 0.25);
+        success *= near(Variables::EF, 0.0);
+        success *= near(Variables::EP, 0.125);
+        success *= near(Variables::PEXT, 0.25);
+
+        // The quotient in the line drop raises the truncation of the difference, which passes at 1e-9 and not at 1e-10
+        constexpr RealT REPCA_TOL  = 1.0e-9;
+        success                   *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, REPCA_TOL);
+
+        auto invalid                             = nlohmann::json::parse(CASE);
+        invalid["devices"][0]["params"]["Qmin"]  = 2.0;
+        success                                 *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
+      /// A machine reads its field voltage and mechanical power from an exciter and a governor, and the exciter the voltage of a Pmu
+      TestOutcome machineControls()
+      {
+        TestStatus success = true;
+
+        auto read                    = nlohmann::json::parse(MACHINE_CASE);
+        read["devices"][0]["inputs"] = {{"efd", "EX.EFD"}, {"pm", "GOV.PM"}};
+        read["devices"].push_back(nlohmann::json::parse(
+            R"({"class": "Tgov1", "id": "GOV", "inputs": {"omega": "M1.omega"}, "params": {"Trate": 1.0e-6, "S": 1.0}})"));
+        read["devices"].push_back(nlohmann::json::parse(
+            R"({"class": "SexsPti", "id": "EX", "inputs": {"vt": "PMU.vrms"},
+                "params": {"V": 1.0, "K": 8.0, "Ta": 1.0, "Tb": 2.0, "Te": 0.5, "Efdmin": -4.0, "Efdmax": 4.0}})"));
+        read["devices"].push_back(nlohmann::json::parse(
+            R"({"class": "Pmu", "id": "PMU", "inputs": {"v": 1}, "params": {"pll": {"Kp": 0.5, "Ki": 0.25}}})"));
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [0.0, 1.0, -1.0]}},
+          "devices": {"M1": {"omega": [1.0], "psid": [0.9], "psiq": [-1.5], "psifd": [1.4], "psi1d": [0.96],
+                             "psi1q": [-1.5], "psi2q": [-1.7125], "psiad": [1.0], "psiaq": [-1.3]},
+                      "GOV": {"PTX": [0.5], "PV": [0.5], "PM": [1.0]},
+                      "EX": {"EFD": [2.0], "vref": [1.5]},
+                      "PMU": {"vms": [2.0]}}
+        })";
+
+        const auto system = makeSystem(read.dump().c_str(), STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        // Three bus voltages, eleven machine, three governor, three exciter, three Pmu and two Pll variables, eight held
+        // inputs, and the signal of `vrms`
+        constexpr IdxT SIGNAL  = 33;
+        success               *= system->size() == 34;
+
+        // The machine accelerates as with a held mechanical power of 1, and the signal starts at zero
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->device("M1").getResidual(EMT::MachineInternalVariables::omega), {-0.34});
+        const std::span<const RealT> signal{system->getResidual().getData() + SIGNAL, 1};
+        success *= rowsEqual(signal, {std::numbers::sqrt2_v<RealT>});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, MACHINE_TOL);
+
+        return success.report(__func__);
+      }
+
     private:
       /// Machine of unit ratings on a three-phase bus, with its field voltage and mechanical power held
       static constexpr const char* MACHINE_CASE = R"({
@@ -1394,6 +1897,9 @@ namespace GridKit
 
       /// The frequency base of a machine raises the round-off of the difference, which passes at 1e-8 and not at 1e-9
       static constexpr RealT MACHINE_TOL = 1.0e-8;
+
+      /// The per-unit bases of Reecb raise the round-off of the difference, which passes at 1e-10 and not at 1e-11
+      static constexpr RealT PLANT_TOL = 1.0e-10;
 
       /// System of the case at the state, or none if it cannot be allocated
       static std::unique_ptr<SystemT> makeSystem(const char* case_json, const char* state_json)

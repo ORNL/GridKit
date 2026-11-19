@@ -1,3 +1,4 @@
+add_subdirectory(Controller)
 add_subdirectory(Converter)
 add_subdirectory(Line)
 add_subdirectory(Load)

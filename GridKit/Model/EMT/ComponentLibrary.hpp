@@ -9,6 +9,15 @@
 #include <type_traits>
 
 #include <GridKit/Model/EMT/Bus/Bus.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Esdc1a/Esdc1a.hpp>
+#include <GridKit/Model/EMT/Component/Controller/GastPti/GastPti.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Hygov/Hygov.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Ieeest/Ieeest.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Ieeet1/Ieeet1.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Reecb/Reecb.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Repca/Repca.hpp>
+#include <GridKit/Model/EMT/Component/Controller/SexsPti/SexsPti.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/EMT/Component/Converter/Regca/Regca.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadRLC/LoadRLC.hpp>
@@ -34,6 +43,11 @@ namespace GridKit
       static void forEach(VisitorT&& visit)
       {
         visit(std::type_identity<Bus<ScalarT, IdxT>>{});
+        visit(std::type_identity<Esdc1a<ScalarT, IdxT>>{});
+        visit(std::type_identity<GastPti<ScalarT, IdxT>>{});
+        visit(std::type_identity<Hygov<ScalarT, IdxT>>{});
+        visit(std::type_identity<Ieeest<ScalarT, IdxT>>{});
+        visit(std::type_identity<Ieeet1<ScalarT, IdxT>>{});
         visit(std::type_identity<LineLumped<ScalarT, IdxT>>{});
         visit(std::type_identity<LoadRLC<ScalarT, IdxT>>{});
         visit(std::type_identity<LoadZ<ScalarT, IdxT>>{});
@@ -41,9 +55,13 @@ namespace GridKit
         visit(std::type_identity<Park<ScalarT, IdxT>>{});
         visit(std::type_identity<Pll<ScalarT, IdxT>>{});
         visit(std::type_identity<Pmu<ScalarT, IdxT>>{});
+        visit(std::type_identity<Reecb<ScalarT, IdxT>>{});
         visit(std::type_identity<Regca<ScalarT, IdxT>>{});
+        visit(std::type_identity<Repca<ScalarT, IdxT>>{});
+        visit(std::type_identity<SexsPti<ScalarT, IdxT>>{});
         visit(std::type_identity<Signal<ScalarT, IdxT>>{});
         visit(std::type_identity<Switch<ScalarT, IdxT>>{});
+        visit(std::type_identity<Tgov1<ScalarT, IdxT>>{});
         visit(std::type_identity<Transformer<ScalarT, IdxT>>{});
         visit(std::type_identity<VectorFit<ScalarT, IdxT>>{});
         visit(std::type_identity<VoltageSource<ScalarT, IdxT>>{});

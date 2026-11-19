@@ -37,6 +37,7 @@
 - Added the `TransientSimulation` application with events that set state values, and the ThreeBusBasic EMT example.
 - Added the EMT `LoadRLC`, `Transformer` and `Machine` models.
 - Added the EMT `Regca` model and the `Park` operator.
+- Added the EMT `Esdc1a`, `GastPti`, `Hygov`, `Ieeest`, `Ieeet1`, `Reecb`, `Repca`, `SexsPti` and `Tgov1` controller models.
 
 ## v0.2
 
