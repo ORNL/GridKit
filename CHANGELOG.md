@@ -33,6 +33,7 @@
 - Added the EMT model family with `Bus`, `LoadZ` and the `VectorFit` and `Signal` operators, and `Testing::jacobianMatchesResidual`.
 - Added the EMT `VoltageSource` and `LineLumped` models.
 - Added Enzyme Jacobians for fixed-layout EMT models and the EMT `Pll` and `Pmu` operators.
+- Added the EMT `Switch` model.
 
 ## v0.2
 

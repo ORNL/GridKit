@@ -72,6 +72,7 @@ namespace AnalysisManager
       int getStepCount(RealT tf, RealT dt) const;
 
       int runSimulation(RealT tf, RealT dt_monitor = 0, std::optional<StepCallback> step_callback = {});
+
       int runSimulationStep(RealT                       tf,
                             RealT                       dt_monitor,
                             int                         step,
@@ -156,6 +157,8 @@ namespace AnalysisManager
       IdaStats getStats() const;
 
     private:
+      static int Roots(RealT t, N_Vector yy, N_Vector yp, RealT* roots, void* user_data);
+
       static int Residual(RealT    t,
                           N_Vector yy,
                           N_Vector yp,
@@ -198,6 +201,7 @@ namespace AnalysisManager
       RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
       int   getIDAConsistentICType() const;
       void  updateModelState(RealT t);
+      int   restart(RealT t0, bool findConsistent, RealT first_step = 0);
 
     private:
       static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
@@ -210,6 +214,7 @@ namespace AnalysisManager
       SUNLinearSolver linearSolverB_{};
 
       RealT t_init_{};
+      RealT time_{}; ///< Time that the last integration reached
 
       N_Vector yy_{};  ///< Solution vector
       N_Vector yp_{};  ///< Solution derivatives vector

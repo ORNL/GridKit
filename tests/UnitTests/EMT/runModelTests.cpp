@@ -28,6 +28,10 @@ int main()
   result += test.lineLumped();
   result += test.bundledLineLumped();
   result += test.invalidLineLumped();
+  result += test.closedSwitch();
+  result += test.openSwitch();
+  result += test.switchWaitsForZero();
+  result += test.sharedCommand();
   result += test.pll();
   result += test.pllFrequencyReference();
 

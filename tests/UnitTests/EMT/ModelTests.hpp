@@ -733,6 +733,127 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// A closed switch joins the voltages of its single-phase buses
+      TestOutcome closedSwitch()
+      {
+        TestStatus success = true;
+
+        const auto system = makeSystem(SWITCH_CASE, R"({
+          "buses": {"1": {"v": [2.0]}, "2": {"v": [1.0]}},
+          "devices": {"S1": {"i12": [0.5]}}
+        })");
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-0.5});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.5});
+        success *= rowsEqual(system->device("S1").getResidual(EMT::SwitchInternalVariables::i12), {-1.0});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// An open switch blocks the current between its single-phase buses
+      TestOutcome openSwitch()
+      {
+        TestStatus success = true;
+
+        const auto system = makeSystem(SWITCH_CASE, R"({
+          "buses": {"1": {"v": [2.0]}, "2": {"v": [1.0]}},
+          "devices": {"S1": {"open": [1.0]}}
+        })");
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        system->device("S1").y(EMT::SwitchInternalVariables::i12)[0] = 0.5;
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-0.5});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {0.5});
+        success *= rowsEqual(system->device("S1").getResidual(EMT::SwitchInternalVariables::i12), {0.5});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// A value written to `open` waits while the contact carries current, and is set when the current crosses zero
+      TestOutcome switchWaitsForZero()
+      {
+        TestStatus success = true;
+
+        const auto system = makeSystem(SWITCH_CASE, R"({
+          "devices": {"S1": {"i12": [0.5], "open": [1.0]}}
+        })");
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto&      contact = system->device<EMT::Switch<RealT, IdxT>>("S1");
+        const auto open    = system->held(contact, EMT::SwitchInputs::open);
+
+        RealT current  = ZERO<RealT>;
+        success       *= open[0] == ZERO<RealT>;
+        success       *= system->sizeRoots() == 1;
+        success       *= system->evaluateRoots(system->y().getData(), &current) == 0;
+        success       *= current == 0.5;
+
+        system->applyRoots({true});
+        success *= open[0] == ONE<RealT>;
+        success *= contact.y(EMT::SwitchInternalVariables::i12)[0] == ZERO<RealT>;
+        success *= system->sizeRoots() == 0;
+
+        return success.report(__func__);
+      }
+
+      /// Two switches read one command, a held signal that the case declares after them
+      TestOutcome sharedCommand()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                    {"number": 3, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+          "devices": [{"class": "Switch", "id": "S1", "terminals": {"bus1": 1, "bus2": 2}, "inputs": {"open": "K1.s"}, "params": {"N": 1}},
+                      {"class": "Switch", "id": "S2", "terminals": {"bus1": 2, "bus2": 3}, "inputs": {"open": "K1.s"}, "params": {"N": 1}},
+                      {"class": "Signal", "id": "K1", "params": {"N": 1, "held": true}}]
+        })";
+
+        const auto system = makeSystem(CASE, R"({
+          "buses": {"1": {"v": [3.0]}, "2": {"v": [2.0]}, "3": {"v": [1.0]}},
+          "devices": {"S1": {"i12": [0.5]}, "S2": {"i12": [0.25]}, "K1": {"s": [1.0]}}
+        })");
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        // Three bus voltages, two switch currents and the command, which both switches read in place.
+        // The command is 1, so both switches are open.
+        success *= system->size() == 6;
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->device("S1").getResidual(EMT::SwitchInternalVariables::i12), {0.5});
+        success *= rowsEqual(system->device("S2").getResidual(EMT::SwitchInternalVariables::i12), {0.25});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
       /// Pll at angle zero on a three-phase bus at (0, 1, -1), whose q-axis voltage is 2/sqrt(3)
       TestOutcome pll()
       {
@@ -808,6 +929,14 @@ namespace GridKit
       }
 
     private:
+      /// Switch between two single-phase buses, with its command left open
+      static constexpr const char* SWITCH_CASE = R"({
+        "params": {"freq_base": 60.0, "va_base": 1.0e6},
+        "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 1.0}},
+                  {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}}],
+        "devices": [{"class": "Switch", "id": "S1", "terminals": {"bus1": 1, "bus2": 2}, "params": {"N": 1}}]
+      })";
+
       /// Pll on a three-phase bus
       static constexpr const char* PLL_CASE = R"({
         "params": {"freq_base": 60.0, "va_base": 1.0e6},

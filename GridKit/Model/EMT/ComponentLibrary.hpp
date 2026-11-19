@@ -12,6 +12,7 @@
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
+#include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
 #include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFit.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Pll/Pll.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Pmu/Pmu.hpp>
@@ -33,6 +34,7 @@ namespace GridKit
         visit(std::type_identity<Pll<ScalarT, IdxT>>{});
         visit(std::type_identity<Pmu<ScalarT, IdxT>>{});
         visit(std::type_identity<Signal<ScalarT, IdxT>>{});
+        visit(std::type_identity<Switch<ScalarT, IdxT>>{});
         visit(std::type_identity<VectorFit<ScalarT, IdxT>>{});
         visit(std::type_identity<VoltageSource<ScalarT, IdxT>>{});
       }

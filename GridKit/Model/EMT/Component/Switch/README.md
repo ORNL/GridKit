@@ -2,9 +2,11 @@
 
 `Switch` represents an ideal $N$-phase EMT switch between two buses. Series
 current $\mathbf{i}_{12}$ is directed from terminal 1 to terminal 2. The
-required Boolean input `open` operates all phases: `true` is open and
-`false` is closed. The switch contains no energy storage; switching
-transients arise from the connected EMT network.
+input `open` operates each phase: 1 is open and 0 is closed. A contact changes
+state when its current is zero, so a value written to `open` takes effect on a
+phase at the next zero of that phase's current. The switch
+contains no energy storage; switching transients arise from the connected EMT
+network.
 
 ## Block Diagram
 
@@ -32,11 +34,9 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}_1$ | `v1` | Input | [V] | Terminal 1 bus voltage | $\mathbf{v}_1 \in \mathbb{R}^N$
-$\mathbf{v}_2$ | `v2` | Input | [V] | Terminal 2 bus voltage | $\mathbf{v}_2 \in \mathbb{R}^N$
-$\mathrm{open}$ | `open` | Input | [-] | Ganged switch command | Required Boolean; `true` open, `false` closed
-$\mathbf{i}_1$ | `i1` | Output | [A] | Current injection at terminal 1 | $\mathbf{i}_1 \in \mathbb{R}^N$
-$\mathbf{i}_2$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathbf{i}_2 \in \mathbb{R}^N$
+$\mathbf{v}_1$, $\mathbf{i}_1$ | `bus1` | Terminal | [V], [A] | Terminal 1 bus voltage and current injection | $\mathbf{v}_1, \mathbf{i}_1 \in \mathbb{R}^N$
+$\mathbf{v}_2$, $\mathbf{i}_2$ | `bus2` | Terminal | [V], [A] | Terminal 2 bus voltage and current injection | $\mathbf{v}_2, \mathbf{i}_2 \in \mathbb{R}^N$
+$\mathrm{open}$ | `open` | Input | [-] | Command by phase | $N$ entries, 1 open and 0 closed
 
 ## Submodels
 
@@ -72,6 +72,7 @@ Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}_1$ | [V] | Terminal 1 voltage owned by EMT bus | $\mathbf{v}_1 \in \mathbb{R}^N$
 $\mathbf{v}_2$ | [V] | Terminal 2 voltage owned by EMT bus | $\mathbf{v}_2 \in \mathbb{R}^N$
+$\mathrm{open}$ | [-] | Command by phase | Held signal unless the case connects the input
 
 #### Algebraic
 
@@ -87,11 +88,10 @@ None.
 
 #### Algebraic
 
+An open contact carries no current and a closed contact no voltage.
+
 ```math
-\begin{cases}
-\mathbf{i}_{12} = \mathbf{0}, & \text{open}\\
-\mathbf{v}_2-\mathbf{v}_1 = \mathbf{0}, & \text{closed}
-\end{cases}
+0 = \mathrm{open}_n\,i_{12,n} + (1-\mathrm{open}_n)(v_{2,n}-v_{1,n})
 ```
 
 ### External Equations
@@ -105,12 +105,10 @@ None.
 
 ## Initialization
 
-The `open` command is applied at $t_0$ before enforcing the algebraic
-equations. The switch has no additional model-specific initialization.
+None.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`open` | [-] | Switch command | Boolean; `true` open, `false` closed
 `i12` | [A] | Series current from terminal 1 to terminal 2 | $\mathbf{i}_{12} \in \mathbb{R}^N$

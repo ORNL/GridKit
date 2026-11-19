@@ -27,7 +27,7 @@ namespace GridKit
 
     /// Internal variables, held inputs and submodels of `model` by enumerator name
     template <typename ScalarT, typename IdxT, typename ModelT>
-    void applyEntries(const json& entries, const SystemModel<ScalarT, IdxT>& system, ModelT& model)
+    void applyEntries(const json& entries, SystemModel<ScalarT, IdxT>& system, ModelT& model)
     {
       using RealT = typename ScalarTraits<ScalarT>::RealT;
 
@@ -45,18 +45,15 @@ namespace GridKit
           }
         }
 
-        auto       y     = std::span<ScalarT>{};
-        const auto input = Utilities::enum_cast<typename ModelT::InputsT>(name);
+        const auto values = value.template get<std::vector<RealT>>();
+        const auto input  = Utilities::enum_cast<typename ModelT::InputsT>(name);
         if (input.has_value())
         {
-          y = system.held(model, input.value());
-        }
-        else
-        {
-          y = model.y(Utilities::enumKey<typename ModelT::InternalVariablesT>(name, "variable", model.id()));
+          system.set(model, input.value(), values);
+          continue;
         }
 
-        const auto values = value.template get<std::vector<RealT>>();
+        const auto y = model.y(Utilities::enumKey<typename ModelT::InternalVariablesT>(name, "variable", model.id()));
         if (values.size() != y.size())
         {
           throw std::invalid_argument(std::format("{}: '{}' needs {} values", model.id(), name, y.size()));

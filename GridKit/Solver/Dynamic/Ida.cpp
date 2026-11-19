@@ -231,13 +231,38 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
     {
+      t_init_ = t0;
+      return restart(t0, findConsistent);
+    }
+
+    /**
+     * @brief Restart the integration at `t0` from the solution vectors.
+     *
+     * The monitor output times keep their origin, so a restart within a
+     * simulation does not move them.
+     *
+     * @param[in] t0 Time of the restart.
+     * @param[in] findConsistent Whether IDA computes consistent initial conditions.
+     * @param[in] first_step First step of the integration, or 0 for the one IDA chooses.
+     * @return The status of the last IDA call.
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::restart(RealT t0, bool findConsistent, RealT first_step)
+    {
       int retval = 0;
 
-      t_init_ = t0;
+      time_ = t0;
 
       // Need to reinitialize IDA to set to get correct initial conditions
       retval = IDAReInit(solver_, t0, yy_, yp_);
       checkOutput(retval, "IDAReInit");
+
+      retval = IDASetInitStep(solver_, first_step);
+      checkOutput(retval, "IDASetInitStep");
+
+      // The roots of the model may change between restarts
+      retval = IDARootInit(solver_, static_cast<int>(model_->sizeRoots()), Roots);
+      checkOutput(retval, "IDARootInit");
 
       // Find a consistent set of initial conditions for DAE
       if (findConsistent)
@@ -340,6 +365,29 @@ namespace AnalysisManager
       for (int i = 1; i <= nsteps; i++)
       {
         retval = runSimulationStep(tf, dt_monitor, i, nsteps, step_callback);
+
+        // The model is told the roots that stopped the integration
+        while (retval == IDA_ROOT_RETURN)
+        {
+          std::vector<int> found(static_cast<size_t>(model_->sizeRoots()));
+          checkOutput(IDAGetRootInfo(solver_, found.data()), "IDAGetRootInfo");
+          updateModelState(time_);
+          model_->applyRoots({found.begin(), found.end()});
+          copyVec(model_->y(), yy_);
+          copyVec(model_->yp(), yp_);
+
+          // Nothing jumps at a root, so the integration goes on from that state with its last step.
+          // The step IDA would choose is small enough to turn the error of the interpolated state
+          // into voltages that stop the Newton iteration.
+          RealT step;
+          checkOutput(IDAGetLastStep(solver_, &step), "IDAGetLastStep");
+          restart(time_, false, step);
+          if (time_ == getMonitorTime(tf, dt_monitor, i, nsteps))
+          {
+            break;
+          }
+          retval = runSimulationStep(tf, dt_monitor, i, nsteps, step_callback);
+        }
       }
 
       updateModelState(tf);
@@ -355,6 +403,7 @@ namespace AnalysisManager
       RealT       tret;
       auto        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
       checkOutput(retval, "IDASolve");
+      time_ = tret;
 
       if (callback.has_value() || model_->monitoring())
       {
@@ -737,6 +786,14 @@ namespace AnalysisManager
      * @tparam ScalarT
      * @tparam IdxT
      */
+    /// The values of the model that stop the integration when they cross zero
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::Roots(RealT, N_Vector yy, N_Vector, RealT* roots, void* user_data)
+    {
+      auto* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      return model->evaluateRoots(N_VGetArrayPointer(yy), roots);
+    }
+
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Residual(RealT tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
