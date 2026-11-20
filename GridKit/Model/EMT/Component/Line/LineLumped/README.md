@@ -57,10 +57,8 @@ P_{\phi,nk} =
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}_1$ | `v1` | Input | [V] | Terminal 1 bus voltage | $\mathbf{v}_1 \in \mathbb{R}^N$
-$\mathbf{v}_2$ | `v2` | Input | [V] | Terminal 2 bus voltage | $\mathbf{v}_2 \in \mathbb{R}^N$
-$\mathbf{i}_1$ | `i1` | Output | [A] | Current injection at terminal 1 | $\mathbf{i}_1 \in \mathbb{R}^N$
-$\mathbf{i}_2$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathbf{i}_2 \in \mathbb{R}^N$
+$\mathbf{v}_1$, $\mathbf{i}_1$ | `bus1` | Terminal | [V], [A] | Terminal 1 bus voltage and current injection | $\mathbf{v}_1, \mathbf{i}_1 \in \mathbb{R}^N$
+$\mathbf{v}_2$, $\mathbf{i}_2$ | `bus2` | Terminal | [V], [A] | Terminal 2 bus voltage and current injection | $\mathbf{v}_2, \mathbf{i}_2 \in \mathbb{R}^N$
 
 ## Submodels
 
@@ -71,9 +69,11 @@ $\mathbf{y}_1$ | Per-unit-length shunt admittance at terminal 1 | [VectorFit](..
 $\mathbf{y}_2$ | Per-unit-length shunt admittance at terminal 2 | [VectorFit](../../../Operators/Rational/VectorFit/README.md) | $KQ_{\mathbf{y}}$ | `Yp` | $\mathbb{R}^K$ | $\mathbb{R}^K$
 
 `Yp` provides one coefficient set; the two terminal instances maintain
-independent states.
+independent states. A line without `Yp` has no shunt admittances.
 
 ### Submodel Validation
+
+Each submodel is $K$ by $K$.
 
 ```math
 \mathrm{rank}(\mathbf{E}^{\mathbf{z}}) = K
@@ -81,7 +81,8 @@ independent states.
 
 ### Submodel Wiring
 
-None.
+$\mathbf{y}_1$ and $\mathbf{y}_2$ read the conductor voltages at their
+terminals and add their shunt currents to the bus current balances.
 
 ## Model Variables
 
@@ -95,10 +96,7 @@ $\mathbf{i}_{12}$ | [A] | Series current from terminal 1 to terminal 2 | $\mathb
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{i}_1^\mathrm{sh}$ | [A] | Shunt current at terminal 1 | $\mathbf{i}_1^\mathrm{sh} \in \mathbb{R}^K$
-$\mathbf{i}_2^\mathrm{sh}$ | [A] | Shunt current at terminal 2 | $\mathbf{i}_2^\mathrm{sh} \in \mathbb{R}^K$
+None.
 
 ### External Variables
 
@@ -126,29 +124,24 @@ None.
 
 #### Algebraic
 
-```math
-\begin{aligned}
-0 &= \Delta x\,\mathbf{y}_1[\mathbf{P}_\phi^\mathsf T\mathbf{v}_1]
-  + 2\mathbf{i}_1^\mathrm{sh} \\
-0 &= \Delta x\,\mathbf{y}_2[\mathbf{P}_\phi^\mathsf T\mathbf{v}_2]
-  + 2\mathbf{i}_2^\mathrm{sh}
-\end{aligned}
-```
+None.
 
 ### External Equations
+
+Each shunt carries half of the line admittance.
 
 ```math
 \begin{aligned}
 \mathbf{i}_1 &\leftarrow
-  \mathbf{P}_\phi(
-    \mathbf{i}_1^\mathrm{sh}
-    - \mathbf{i}_{12}
-  ) \\
+  -\mathbf{P}_\phi\left(
+    \mathbf{i}_{12}
+    + \dfrac{\Delta x}{2}\,\mathbf{y}_1[\mathbf{P}_\phi^\mathsf T\mathbf{v}_1]
+  \right) \\
 \mathbf{i}_2 &\leftarrow
-  \mathbf{P}_\phi(
-    \mathbf{i}_2^\mathrm{sh}
-    + \mathbf{i}_{12}
-  )
+  \mathbf{P}_\phi\left(
+    \mathbf{i}_{12}
+    - \dfrac{\Delta x}{2}\,\mathbf{y}_2[\mathbf{P}_\phi^\mathsf T\mathbf{v}_2]
+  \right)
 \end{aligned}
 ```
 
@@ -161,5 +154,5 @@ None.
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `i12` | [A] | Series current from terminal 1 to terminal 2 | $\mathbf{i}_{12} \in \mathbb{R}^K$
-`i_sh1` | [A] | Shunt current at terminal 1 | $\mathbf{i}_1^\mathrm{sh} \in \mathbb{R}^K$
-`i_sh2` | [A] | Shunt current at terminal 2 | $\mathbf{i}_2^\mathrm{sh} \in \mathbb{R}^K$
+`y1.y` | [A] | Shunt current of each conductor at terminal 1 | Output of $\mathbf{y}_1$, with `Yp`
+`y2.y` | [A] | Shunt current of each conductor at terminal 2 | Output of $\mathbf{y}_2$, with `Yp`

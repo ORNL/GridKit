@@ -31,6 +31,7 @@
 - Removed the GenClassical `p0`/`q0` parameters in favor of the state `ir`/`ii`.
 - Verify bus numbers, signal IDs, device IDs per class, and subsystem IDs in PhasorDynamics inputs.
 - Added the EMT model family with `Bus`, `LoadZ` and the `VectorFit` and `Signal` operators, and `Testing::jacobianMatchesResidual`.
+- Added the EMT `VoltageSource` and `LineLumped` models.
 
 ## v0.2
 

@@ -53,5 +53,40 @@ namespace GridKit
                                              Parameter{Parameters::poles, &VectorFitData::poles},
                                              Parameter{Parameters::residues, &VectorFitData::residues}};
     };
+
+    /// `data` with `D`, `E` and the residues multiplied by `factor`
+    template <typename RealT, typename IdxT>
+    VectorFitData<RealT, IdxT> scaled(VectorFitData<RealT, IdxT> data, RealT factor)
+    {
+      for (Matrix<RealT>* matrix : {&data.D, &data.E})
+      {
+        for (auto& row : *matrix)
+        {
+          for (RealT& value : row)
+          {
+            value *= factor;
+          }
+        }
+      }
+      for (auto& row : data.residues)
+      {
+        for (auto& entry : row)
+        {
+          for (Pair<RealT>& residue : entry)
+          {
+            residue[0] *= factor;
+            residue[1] *= factor;
+          }
+        }
+      }
+      return data;
+    }
+
+    /// True if the case gives no `D`, `E` or residues
+    template <typename RealT, typename IdxT>
+    bool omitted(const VectorFitData<RealT, IdxT>& data)
+    {
+      return data.D.empty() && data.E.empty() && data.residues.empty();
+    }
   } // namespace EMT
 } // namespace GridKit
