@@ -1,0 +1,13 @@
+{
+  "system_model_file": "../../../cases/EMT/Hawaii/Hawaii.case.json",
+  "state_file": "../../../cases/EMT/Hawaii/Hawaii.state.json",
+  "output_file": "hawaii.csv",
+  "dt_monitor": 0.00027777777777778,
+  "tmax": 10.0,
+  "rel_tol": 5e-3,
+  "max_steps": 10000,
+  "events": [
+    {"time": 1, "devices": {"fault_switch": {"open": [0.0, 0.0, 0.0]}, "discharge_switch": {"open": [1.0, 1.0, 1.0]}}},
+    {"time": 1.15, "devices": {"discharge_switch": {"open": [0.0, 0.0, 0.0]}, "fault_switch": {"open": [1.0, 1.0, 1.0]}}}
+  ]
+}
