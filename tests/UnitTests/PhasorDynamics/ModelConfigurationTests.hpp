@@ -115,6 +115,41 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome initialValueReader()
+      {
+        TestStatus success = true;
+
+        using StateT = PhasorDynamics::ComponentData<RealT,
+                                                     IdxT,
+                                                     Utilities::EmptyEnum,
+                                                     Utilities::EmptyEnum,
+                                                     Utilities::EmptyEnum,
+                                                     Utilities::EmptyEnum,
+                                                     Utilities::EmptyEnum,
+                                                     Params>;
+
+        StateT data;
+        data.initial_values = {{Params::real, static_cast<RealT>(0.5)},
+                               {Params::text, std::string("2")}};
+
+        const Model::InitialValueReader reader(data, "Test");
+
+        success *= !reader.readReal(Params::omitted).has_value();
+        success *= (reader.readReal(Params::real) == static_cast<RealT>(0.5));
+
+        try
+        {
+          static_cast<void>(reader.readReal(Params::text));
+          success = false;
+        }
+        catch (const std::invalid_argument& error)
+        {
+          success *= (std::string_view(error.what()) == "Test: initial value 'text' must be numeric");
+        }
+
+        return success.report(__func__);
+      }
+
       /// Checks record only failed conditions, prefixed by the model name.
       TestOutcome configurationChecks()
       {

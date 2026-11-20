@@ -6,6 +6,7 @@ int main()
   GridKit::Testing::ModelConfigurationTests<double, size_t> test;
 
   result += test.parameterReader();
+  result += test.initialValueReader();
   result += test.configurationChecks();
 
   return result.summary();
