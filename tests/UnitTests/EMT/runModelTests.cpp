@@ -21,11 +21,15 @@ int main()
   result += test.heldInput();
   result += test.variableReference();
   result += test.outputReference();
+  result += test.pmu();
+  result += test.pmuReference();
   result += test.layout();
   result += test.voltageSource();
   result += test.lineLumped();
   result += test.bundledLineLumped();
   result += test.invalidLineLumped();
+  result += test.pll();
+  result += test.pllFrequencyReference();
 
   return result.summary();
 }

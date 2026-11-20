@@ -5,6 +5,8 @@
 :titlesonly:
 :hidden:
 
+Pll <Pll/README>
+Pmu <Pmu/README>
 Signal <Signal/README>
 ```
 

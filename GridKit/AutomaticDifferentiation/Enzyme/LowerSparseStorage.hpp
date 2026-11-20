@@ -282,6 +282,38 @@ namespace GridKit
         row /= sizeof(ScalarT);
         return (ScalarT) (row == col);
       }
+
+      /**
+       * @brief Enzyme identity load scaled by `scale`
+       *
+       * @tparam ScalarT - scalar data type
+       * @tparam IdxT - matrix index data type
+       */
+      template <typename ScalarT, typename IdxT>
+      [[gnu::always_inline]] static ScalarT scaled_ident_load(IdxT row, IdxT col, ScalarT scale)
+      {
+        row /= sizeof(ScalarT);
+        // A selection, since a product with the comparison lets LLVM merge equal derivatives of a row
+        // into a sum of comparisons that the sparsity solver cannot lower
+        ScalarT seed{0};
+        if (row == col)
+        {
+          seed = scale;
+        }
+        return seed;
+      }
+
+      /**
+       * @brief Enzyme scaled identity store
+       *
+       * @tparam ScalarT - scalar data type
+       * @tparam IdxT - matrix index data type
+       */
+      template <typename ScalarT, typename IdxT>
+      [[gnu::always_inline]] static void scaled_ident_store(ScalarT, IdxT, IdxT, ScalarT)
+      {
+        assert(0 && "should never store");
+      }
     } // namespace Sparse
   } // namespace Enzyme
 } // namespace GridKit
