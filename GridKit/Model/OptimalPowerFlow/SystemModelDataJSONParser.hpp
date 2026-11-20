@@ -21,18 +21,6 @@ namespace GridKit
   {
     using json = nlohmann::json;
 
-    /// Enumerator named `key`, or throw naming its `kind` and `owner`
-    template <Utilities::SizedEnum EnumT>
-    EnumT enumKey(const std::string& key, std::string_view kind, std::string_view owner)
-    {
-      const auto value = Utilities::enum_cast<EnumT>(key);
-      if (!value)
-      {
-        throw std::invalid_argument(std::format("{}: unknown {} '{}'", owner, kind, key));
-      }
-      return *value;
-    }
-
     /// Value of each entry of `params`, typed as in the input file
     template <typename Parameters, typename RealT, typename IdxT>
     ParameterMap<Parameters, RealT, IdxT> readParameters(const json& params, std::string_view owner)
@@ -40,7 +28,7 @@ namespace GridKit
       ParameterMap<Parameters, RealT, IdxT> parameters;
       for (const auto& [key, value] : params.items())
       {
-        const auto parameter = enumKey<Parameters>(key, "parameter", owner);
+        const auto parameter = Utilities::enumKey<Parameters>(key, "parameter", owner);
         if (value.is_boolean())
         {
           parameters[parameter] = value.get<bool>();
@@ -75,7 +63,7 @@ namespace GridKit
       device.parameters = readParameters<Parameters, RealT, IdxT>(j.at("params"), device.id);
       for (const auto& [key, value] : j.at("ports").items())
       {
-        value.get_to(device.ports[enumKey<Ports>(key, "port", device.id)]);
+        value.get_to(device.ports[Utilities::enumKey<Ports>(key, "port", device.id)]);
       }
     }
 

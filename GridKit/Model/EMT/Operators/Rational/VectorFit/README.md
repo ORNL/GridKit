@@ -30,7 +30,8 @@ Figure 1: VectorFit model
 ## Model Parameters
 
 For output dimension $N$, input dimension $K$, pole count $Q$, input units
-$[u]$, and output units $[y]$:
+$[u]$, and output units $[y]$, where $N$ and $K$ are the dimensions of the
+first of $\mathbf{D}$, $\mathbf{E}$ and $\mathbf{R}$ that is given:
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
@@ -88,8 +89,11 @@ p_{q+1} &= p_q^{\ast},
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | $[y]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^N$
+$\mathbf{u}$ | `u` | Input | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{y}$ | `y` | Output | $[y]$ | Output vector | $\mathbf{y} \in \mathbb{R}^N$
+
+As a device of a case, the input reads what the case names, and the output is
+added to the current balance of the bus that the case names.
 
 ## Submodels
 
@@ -126,13 +130,13 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{u}$ | $[u]$ | Input vector | Differential-input configuration, $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{u}$ | $[u]$ | Input vector | Algebraic-input configuration, $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$, $\mathbf{E} = \mathbf{0}$
 
 ## Model Equations
 
@@ -179,4 +183,8 @@ None.
 
 ## Monitors
 
-None.
+Monitor | Units | Description | Note
+------- | ----- | ----------- | ----
+`w` | $\mathrm{s}[u]$ | Real memory states | $\mathbf{w}_q \in \mathbb{R}^K$, $q \in \mathcal{Q}_\mathrm{r} \cup \mathcal{Q}_\mathrm{c}$
+`v` | $\mathrm{s}[u]$ | Imaginary memory states | $\mathbf{v}_q \in \mathbb{R}^K$, $q \in \mathcal{Q}_\mathrm{c}$
+`y` | $[y]$ | Output vector | Output, $\mathbf{y} \in \mathbb{R}^N$

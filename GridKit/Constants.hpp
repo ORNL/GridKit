@@ -31,4 +31,8 @@ namespace GridKit
 
   template <typename RealT>
   inline constexpr RealT MINUS_ONE = -1.0;
+
+  /// SI prefix kilo
+  template <typename RealT>
+  inline constexpr RealT KILO = 1.0e3;
 } // namespace GridKit

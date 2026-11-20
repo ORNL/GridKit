@@ -29,8 +29,7 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}$ | `v` | Input | [V] | Bus voltage at load port | $\mathbf{v} \in \mathbb{R}^N$
-$\mathbf{i}$ | `i` | Output | [A] | Current injection at load port | $\mathbf{i} \in \mathbb{R}^N$
+$\mathbf{v}$, $\mathbf{i}$ | `bus` | Terminal | [V], [A] | Reads the bus voltage and injects the load current | $\mathbf{v}, \mathbf{i} \in \mathbb{R}^N$
 
 ## Submodels
 
@@ -40,8 +39,9 @@ $\mathbf{z}$ | Impedance | [VectorFit](../../../Operators/Rational/VectorFit/REA
 
 ### Submodel Validation
 
-The current is differential when $\mathbf{E}^{\mathbf{z}}$ is nonsingular and
-algebraic when $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$.
+The impedance is $N$ by $N$. The current is differential when
+$\mathbf{E}^{\mathbf{z}}$ is nonsingular and algebraic when
+$\mathbf{E}^{\mathbf{z}}=\mathbf{0}$.
 
 ```math
 \mathbf{E}^{\mathbf{z}}=\mathbf{0}

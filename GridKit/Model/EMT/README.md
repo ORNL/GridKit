@@ -21,8 +21,18 @@ and reusable operators in instantaneous phase coordinates.
   Each scalar internal variable corresponds to one local residual row;
   external variables are owned elsewhere. Submodel-owned variables are not
   repeated by the parent.
-- Wiring introduces aliases or derived signals, not DAE variables or residual
-  rows. Ports and monitors may expose either without changing ownership.
+- A terminal connects a model to a bus: the model reads the bus voltage and
+  adds its current to the current balance of the bus.
+- An input reads a variable. An output is a value that a model computes; it
+  is added to the residual of the variable it is connected to.
+- An input that names an output reads a signal that follows it, a variable
+  with residual $0 = -s + y$ to which the model adds its output $y$.
+- An output that no input reads and no case connects is evaluated only for a
+  monitor.
+- An input that the case leaves out is held. It reads a held signal, a
+  variable with residual $0 = -\mathrm{d}s/\mathrm{d}t$, whose value the
+  state gives.
+- A monitor is an internal variable or an output.
 - Equation headings follow the assembled DAE row classification; connected
   models may add derivative terms to a residual that contains none locally.
 
@@ -30,6 +40,10 @@ and reusable operators in instantaneous phase coordinates.
 
 Bus voltage is algebraic unless a connected model contributes a voltage
 derivative to the bus current-balance.
+
+A held input and an input that names an output each read a
+[Signal](Operators/Reference/Signal/README.md). The system adds one for each
+kind.
 
 ## Initialization
 
@@ -43,6 +57,7 @@ that require additional history document that requirement locally.
 
 ## Contents
 
+- [Input Format](INPUT_FORMAT.md)
 - [Bus](Bus/README.md)
 - [Components](Component/README.md)
 - [Operators](Operators/README.md)

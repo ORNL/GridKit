@@ -6,6 +6,7 @@
 :hidden:
 
 Rational <Rational/README>
+Reference <Reference/README>
 Shift <Shift/README>
 ```
 
