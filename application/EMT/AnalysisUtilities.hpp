@@ -42,6 +42,7 @@ namespace GridKit
       double                                         dt_fixed;  ///< Zero for adaptive steps
       std::size_t                                    max_steps; ///< Steps between outputs
       int                                            max_order;
+      bool                                           suppress_algebraic_errors; ///< Leave the algebraic variables out of the error test
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
       std::vector<json>                              events; ///< State values to set, each at its `time`
       fs::path                                       output_file;
@@ -50,7 +51,7 @@ namespace GridKit
       json                                           state; ///< Instantaneous values at t0
     };
 
-    inline constexpr double DEFAULT_SOLVER_REL_TOL = 1.0e-5;
+    inline constexpr double DEFAULT_SOLVER_REL_TOL = 1.0e-2;
 
     /// IDA counts steps in `long`, so no limit
     inline constexpr std::size_t UNLIMITED_STEPS = std::numeric_limits<long>::max();
@@ -63,12 +64,13 @@ namespace GridKit
       c.state_file = j.value("state_file", fs::path{});
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
-      c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
-      c.abs_tol            = j.value("abs_tol", 0.0);
-      c.dt_fixed           = j.value("dt_fixed", 0.0);
-      c.max_steps          = j.value("max_steps", UNLIMITED_STEPS);
-      c.max_order          = j.value("max_order", 5);
-      c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
+      c.rel_tol                   = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
+      c.abs_tol                   = j.value("abs_tol", 0.0);
+      c.dt_fixed                  = j.value("dt_fixed", 0.0);
+      c.max_steps                 = j.value("max_steps", UNLIMITED_STEPS);
+      c.max_order                 = j.value("max_order", 2);
+      c.suppress_algebraic_errors = j.value("suppress_algebraic_errors", true);
+      c.consistent_ic_type        = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
 
       c.events = j.value("events", std::vector<json>{});
 

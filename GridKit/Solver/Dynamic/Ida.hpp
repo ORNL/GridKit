@@ -4,10 +4,12 @@
 #include <exception>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <optional>
 
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_context.h>
+#include <sundials/sundials_nonlinearsolver.h>
 #include <sunlinsol/sunlinsol_dense.h>  /* access to dense linear solver        */
 #include <sunmatrix/sunmatrix_sparse.h> /* access to sparse SUNMatrix           */
 
@@ -147,6 +149,8 @@ namespace AnalysisManager
       void setBackwardQuadratureTolerance(ScalarT rel_tol,
                                           ScalarT abs_tol_override = 0);
       void setSuppressAlgebraicErrors(bool suppress);
+      void setJacobianUpdateThreshold(RealT threshold);
+      void setStopTime(RealT time);
       void setBackwardSuppressAlgebraicErrors(bool suppress);
       void setConsistentICType(IdaConsistentICType consistent_ic_type);
       void setMaxSteps(IdxT maxSteps) override;
@@ -211,6 +215,31 @@ namespace AnalysisManager
       SUNMatrix       JacobianMat_{};
       SUNMatrix       JacobianMatB_{};
       SUNLinearSolver linearSolver_{};
+
+      /// Newton iteration that converges on its first update when that update is within tolerance,
+      /// and that refreshes its matrix at the age at which matrices fail to converge and on the step
+      /// that ends on the stop time
+      struct NewtonSolver
+      {
+        SUNNonlinearSolver solver{};
+        sunrealtype        first_norm{};
+        sunrealtype        norm{};
+        sunrealtype        matrix_time{};                                             ///< Time of the Newton matrix
+        sunrealtype        matrix_life{std::numeric_limits<sunrealtype>::infinity()}; ///< Age at which a matrix is refreshed
+        sunrealtype        stop_time{std::numeric_limits<sunrealtype>::infinity()};   ///< Time the integration stops at
+
+        static int solve(SUNNonlinearSolver solver, N_Vector y0, N_Vector y, N_Vector weights, sunrealtype tol, sunbooleantype setup, void* mem);
+
+        static int convergenceTest(SUNNonlinearSolver solver, N_Vector y, N_Vector delta, sunrealtype tol, N_Vector weights, void* data);
+
+        static SUNErrCode getUpdateNorm(sunrealtype* norm, void* data)
+        {
+          *norm = static_cast<NewtonSolver*>(data)->norm;
+          return SUN_SUCCESS;
+        }
+      };
+
+      NewtonSolver    newton_solver_;
       SUNLinearSolver linearSolverB_{};
 
       RealT t_init_{};

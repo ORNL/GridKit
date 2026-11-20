@@ -20,6 +20,9 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
+/// Relative change of the BDF coefficient at which the Newton matrix is refreshed
+static constexpr real_type JACOBIAN_UPDATE_THRESHOLD = 0.1;
+
 int runApplication(int argc, const char* argv[])
 {
   Log::raiseVerbosity(Log::SUMMARY);
@@ -39,6 +42,8 @@ int runApplication(int argc, const char* argv[])
   ida.setFixedStep(study.dt_fixed);
   ida.setMaxSteps(study.max_steps);
   ida.setMaxOrder(study.max_order);
+  ida.setSuppressAlgebraicErrors(study.suppress_algebraic_errors);
+  ida.setJacobianUpdateThreshold(JACOBIAN_UPDATE_THRESHOLD);
   ida.setConsistentICType(study.consistent_ic_type);
   if (ida.configureSimulation() != 0 || ida.initializeSimulation(0.0) != 0)
   {
@@ -52,6 +57,9 @@ int runApplication(int argc, const char* argv[])
   while (event != study.events.cend())
   {
     const auto time = event->at("time").get<real_type>();
+
+    // A step ends at the event, since an interpolated state does not satisfy the constraints
+    ida.setStopTime(time);
     ida.runSimulation(time, study.dt_monitor);
     do
     {

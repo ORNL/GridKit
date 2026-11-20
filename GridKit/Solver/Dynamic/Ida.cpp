@@ -10,6 +10,7 @@
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
+#include <sunnonlinsol/sunnonlinsol_newton.h>
 
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -48,6 +49,132 @@ namespace AnalysisManager
       deleteSimulation();
       deleteBackwardSimulation();
       SUNContext_Free(&context_);
+    }
+
+    /**
+     * @brief Newton solve that refreshes its matrix before the matrix is too old to converge.
+     *
+     * IDA refreshes the Newton matrix when the step size changes or after an
+     * iteration fails. A matrix that varies in time, as that of a rotating
+     * machine in phase coordinates, then fails at about the same age every
+     * time, and each failure costs the iterations before it. The matrix is
+     * therefore refreshed once it reaches `matrix_life`. That life starts at
+     * the age of the first matrix that fails, shrinks when a matrix fails
+     * before reaching it, and grows when a refresh is followed by convergence,
+     * so it follows the age at which matrices fail.
+     *
+     * The step that ends on the stop time is also solved with a current matrix.
+     * A restart begins from that state, and the error a kept matrix leaves in
+     * its algebraic values is one a restart cannot absorb.
+     *
+     * @param[in] setup Whether IDA asks for a refresh.
+     * @param[in] mem IDA memory.
+     * @return The status of the Newton solve.
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::NewtonSolver::solve(SUNNonlinearSolver solver, N_Vector y0, N_Vector y, N_Vector weights, sunrealtype tol, sunbooleantype setup, void* mem)
+    {
+      // A refresh costs several failed iterations, so the life shrinks faster than it grows
+      static constexpr sunrealtype SHRINK = 0.9;
+      static constexpr sunrealtype GROWTH = 1.02;
+
+      // The distance from the stop time within which IDA takes a step to have reached it
+      static constexpr sunrealtype STOP_ROUNDOFF = 100 * std::numeric_limits<sunrealtype>::epsilon();
+
+      auto& newton = *static_cast<NewtonSolver*>(static_cast<SUNNonlinearSolverContent_Newton>(solver->content)->ctest_data);
+
+      sunrealtype time;
+      sunrealtype step;
+      long int    fails_before;
+      long int    fails_after;
+      if (IDAGetCurrentTime(mem, &time) != IDA_SUCCESS || IDAGetCurrentStep(mem, &step) != IDA_SUCCESS || SUNNonlinSolGetNumConvFails(solver, &fails_before) != SUN_SUCCESS)
+      {
+        return SUN_ERR_OP_FAIL;
+      }
+
+      const sunrealtype age     = time - newton.matrix_time;
+      const bool        aged    = !setup && age >= newton.matrix_life;
+      const bool        landing = std::abs(time - newton.stop_time) <= STOP_ROUNDOFF * (std::abs(time) + std::abs(step));
+      if (aged || landing)
+      {
+        setup = SUNTRUE;
+      }
+
+      const int status = SUNNonlinSolSolve_Newton(solver, y0, y, weights, tol, setup, mem);
+      if (SUNNonlinSolGetNumConvFails(solver, &fails_after) != SUN_SUCCESS)
+      {
+        return SUN_ERR_OP_FAIL;
+      }
+
+      // A matrix that is kept and fails is refreshed by the solve
+      const bool failed = fails_after > fails_before;
+      if (failed && !setup)
+      {
+        if (std::isfinite(newton.matrix_life))
+        {
+          newton.matrix_life *= SHRINK;
+        }
+        else
+        {
+          newton.matrix_life = age;
+        }
+      }
+      if (aged && !failed)
+      {
+        newton.matrix_life *= GROWTH;
+      }
+      if (failed || setup)
+      {
+        newton.matrix_time = time;
+      }
+      return status;
+    }
+
+    /**
+     * @brief Convergence test of the Newton iteration from the rate of its updates.
+     *
+     * The first update converges when its norm is within the tolerance, so a
+     * linear step takes one iteration. A later update converges when the
+     * error that the rate predicts is within the tolerance, and an iteration
+     * whose rate exceeds 0.9 fails so that the step is retried.
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::NewtonSolver::convergenceTest(SUNNonlinearSolver solver, N_Vector, N_Vector delta, sunrealtype tol, N_Vector weights, void* data)
+    {
+      static constexpr sunrealtype MAX_RATE = 0.9;
+
+      int iteration;
+      if (SUNNonlinSolGetCurIter(solver, &iteration) != SUN_SUCCESS)
+      {
+        return SUN_ERR_OP_FAIL;
+      }
+
+      auto& newton = *static_cast<NewtonSolver*>(data);
+      newton.norm  = N_VWrmsNorm(delta, weights);
+      if (!std::isfinite(newton.norm))
+      {
+        return SUN_NLS_CONV_RECVR;
+      }
+      if (iteration == 0)
+      {
+        newton.first_norm = newton.norm;
+        if (newton.norm <= tol)
+        {
+          return SUN_SUCCESS;
+        }
+        return SUN_NLS_CONTINUE;
+      }
+
+      const auto rate = std::pow(newton.norm / newton.first_norm, sunrealtype{1} / iteration);
+      if (rate > MAX_RATE)
+      {
+        return SUN_NLS_CONV_RECVR;
+      }
+      if (rate * newton.norm <= (1 - rate) * tol)
+      {
+        return SUN_SUCCESS;
+      }
+      return SUN_NLS_CONTINUE;
     }
 
     /**
@@ -97,6 +224,20 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetId");
 
       setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, max_order_, suppress_alg_);
+
+      // Without the algebraic variables in the error test, the Newton iteration alone bounds their error
+      if (time_step_ == 0 && suppress_alg_)
+      {
+        auto& newton  = newton_solver_;
+        newton.solver = SUNNonlinSol_Newton(yy_, context_);
+        checkAllocation(newton.solver, "SUNNonlinSol_Newton");
+        checkOutput(IDASetNonlinearSolver(solver_, newton.solver), "IDASetNonlinearSolver");
+        checkOutput(SUNNonlinSolSetConvTestFn(newton.solver, NewtonSolver::convergenceTest, &newton),
+                    "SUNNonlinSolSetConvTestFn");
+        checkOutput(SUNNonlinSolSetGetUpdateNormFn(newton.solver, NewtonSolver::getUpdateNorm, &newton),
+                    "SUNNonlinSolSetGetUpdateNormFn");
+        newton.solver->ops->solve = NewtonSolver::solve;
+      }
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -442,6 +583,7 @@ namespace AnalysisManager
       SUNLinSolFree(linearSolver_);
       SUNMatDestroy(JacobianMat_);
       IDAFree(&solver_);
+      SUNNonlinSolFree(newton_solver_.solver);
       return 0;
     }
 
@@ -1263,6 +1405,21 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setSuppressAlgebraicErrors(bool suppress)
     {
       suppress_alg_ = suppress;
+    }
+
+    /// Time that the next integration reaches with a step, not by interpolation
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setStopTime(RealT time)
+    {
+      checkOutput(IDASetStopTime(solver_, time), "IDASetStopTime");
+      newton_solver_.stop_time = time;
+    }
+
+    /// Relative change of the BDF coefficient at which IDA refreshes the Newton matrix
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setJacobianUpdateThreshold(RealT threshold)
+    {
+      checkOutput(IDASetDeltaCjLSetup(solver_, threshold), "IDASetDeltaCjLSetup");
     }
 
     /**
