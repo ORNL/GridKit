@@ -242,12 +242,37 @@ namespace AnalysisManager
       // Find a consistent set of initial conditions for DAE
       if (findConsistent)
       {
+        // IDACalcIC stalls on relative error weights taken at its initial guess
+        const bool zero_rel_tol = time_step_ == 0 && abs_tol_override_ > 0;
+        if (zero_rel_tol)
+        {
+          // Refresh the Jacobian every Newton iteration
+          static constexpr int MAX_NUM_ITERS_IC = 1;
+          static constexpr int MAX_NUM_JACS_IC  = 50;
+
+          retval = IDASStolerances(solver_, 0.0, abs_tol_override_);
+          checkOutput(retval, "IDASStolerances");
+          retval = IDASetMaxNumItersIC(solver_, MAX_NUM_ITERS_IC);
+          checkOutput(retval, "IDASetMaxNumItersIC");
+          retval = IDASetMaxNumJacsIC(solver_, MAX_NUM_JACS_IC);
+          checkOutput(retval, "IDASetMaxNumJacsIC");
+        }
+
         const int consistentICType = getIDAConsistentICType();
         retval                     = IDACalcIC(solver_, consistentICType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
         checkOutput(retval, "IDAGetConsistentIC");
+
+        // Restore the relative tolerance and recompute the error weights
+        if (zero_rel_tol)
+        {
+          retval = IDASStolerances(solver_, rel_tol_, abs_tol_override_);
+          checkOutput(retval, "IDASStolerances");
+          retval = IDAReInit(solver_, t0, yy_, yp_);
+          checkOutput(retval, "IDAReInit");
+        }
 
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());
