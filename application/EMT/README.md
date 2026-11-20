@@ -17,6 +17,8 @@
   `events`                      | Array of [events](#events)
   `output_file`                 | Path to output (CSV) file (optional)
   `output_layout`               | One of { "wide", "long" } (default: "wide")
+  `reference_file`              | Path to a reference (CSV) file of monitored columns at monitor times, compared with the wide `output_file` (optional)
+  `error_tolerance`             | Highest allowable total relative error against `reference_file` (default: 1.0e-4)
 
 [^1]: See [EMT input format](../../GridKit/Model/EMT/INPUT_FORMAT.md)
 

@@ -6,7 +6,7 @@
 
 | Example | Description |
 | --- | --- |
-| [ThreeBusBasic](Toy/ThreeBusBasic/README.md) | Line energization. |
+| [Validation](Validation/README.md) | Studies of each EMT case. |
 
 ## LineDistributed
 

@@ -5,7 +5,7 @@
 :titlesonly:
 :hidden:
 
-ThreeBusBasic <Toy/ThreeBusBasic/README>
+Validation <Validation/README>
 ```
 
 ```{include} ../../../examples/EMT/README.md

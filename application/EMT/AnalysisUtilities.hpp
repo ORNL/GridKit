@@ -6,11 +6,13 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <limits>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -20,6 +22,9 @@
 
 #include <GridKit/Model/EMT/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Testing/AggregateErrors.hpp>
+#include <GridKit/Testing/CSV.hpp>
+#include <GridKit/Testing/Tokenizer.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -46,12 +51,18 @@ namespace GridKit
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
       std::vector<json>                              events; ///< State values to set, each at its `time`
       fs::path                                       output_file;
+      fs::path                                       reference_file; ///< Empty for no comparison
+      double                                         error_tol;      ///< Bound on the total relative error against the reference
       ::GridKit::Model::VariableMonitorLayout        output_layout;
       SystemModelData<>                              model_data;
       json                                           state; ///< Instantaneous values at t0
     };
 
-    inline constexpr double DEFAULT_SOLVER_REL_TOL = 1.0e-2;
+    inline constexpr double DEFAULT_SOLVER_REL_TOL   = 1.0e-2;
+    inline constexpr double DEFAULT_VERIFICATION_TOL = 1.0e-4;
+
+    /// Largest difference between a reference time and the time of the monitor row it is compared with
+    inline constexpr double REFERENCE_TIME_TOL = 1.0e-9;
 
     /// IDA counts steps in `long`, so no limit
     inline constexpr std::size_t UNLIMITED_STEPS = std::numeric_limits<long>::max();
@@ -74,7 +85,9 @@ namespace GridKit
 
       c.events = j.value("events", std::vector<json>{});
 
-      c.output_file = j.value("output_file", fs::path{});
+      c.output_file    = j.value("output_file", fs::path{});
+      c.reference_file = j.value("reference_file", fs::path{});
+      c.error_tol      = j.value("error_tolerance", DEFAULT_VERIFICATION_TOL);
 
       using OutputLayout = ::GridKit::Model::VariableMonitorLayout;
       c.output_layout    = OutputLayout::WIDE;
@@ -90,7 +103,7 @@ namespace GridKit
       }
     }
 
-    /// The case and state paths are relative to the study file
+    /// The case, state and reference paths are relative to the study file
     inline StudyData parseStudyData(const fs::path& file_path)
     {
       std::ifstream stream(file_path);
@@ -122,6 +135,11 @@ namespace GridKit
         data.state = json::parse(state);
       }
 
+      if (!data.reference_file.empty() && !data.reference_file.is_absolute())
+      {
+        data.reference_file = loc / data.reference_file;
+      }
+
       if (!data.output_file.empty())
       {
         data.model_data.monitor_sink.emplace_back(::GridKit::Model::VariableMonitorFormat::CSV,
@@ -147,6 +165,82 @@ namespace GridKit
                             appName);
         exit(1);
       }
+    }
+
+    /**
+     * @brief Compare the monitor output with the reference file.
+     *
+     * The reference holds monitored columns, found by name, at monitor times.
+     * It is compared with the first monitor row at each of its times, since an
+     * event or a current zero adds rows at its own time.
+     *
+     * @param[in] study Study with a wide CSV output file.
+     * @return Whether the total relative error is below the tolerance of the
+     *         study, or a pass when the study has no reference.
+     *
+     * @throws std::runtime_error if a reference column or time is not in the output.
+     */
+    inline Testing::TestStatus checkErrors(const StudyData& study)
+    {
+      auto status = Testing::TestStatus{"monitor file vs reference file"};
+      if (study.output_file.empty() || study.reference_file.empty())
+      {
+        return status;
+      }
+
+      auto output    = Testing::checkOpenFile(study.output_file.string());
+      auto reference = Testing::checkOpenFile(study.reference_file.string());
+
+      std::string line;
+      std::getline(output, line);
+      const auto monitored = Testing::Tokenizer<>(line, ',')();
+      std::getline(reference, line);
+      const auto labels = Testing::Tokenizer<>(line, ',')();
+
+      // Column of the monitor output for each reference column, the time first
+      std::vector<std::size_t> columns{0};
+      for (const auto& label : std::span{labels}.subspan(1))
+      {
+        const auto found = std::ranges::find(monitored, label);
+        if (found == monitored.end())
+        {
+          throw std::runtime_error(std::format("Reference column {} is not monitored", label));
+        }
+        columns.push_back(static_cast<std::size_t>(found - monitored.begin()));
+      }
+
+      auto errors = Testing::makeErrorSet(Testing::ErrorType::RELATIVE, std::span{labels}.subspan(1));
+      while (std::getline(reference, line))
+      {
+        const Testing::OutputAtTime expected(Testing::Tokenizer<double>(line, ',')());
+
+        std::vector<double> row;
+        do
+        {
+          if (!std::getline(output, line))
+          {
+            throw std::runtime_error(std::format("No monitor output at reference time {}", expected.t));
+          }
+          row = Testing::Tokenizer<double>(line, ',')();
+        } while (row.front() < expected.t - REFERENCE_TIME_TOL);
+        if (row.front() > expected.t + REFERENCE_TIME_TOL)
+        {
+          throw std::runtime_error(std::format("No monitor output at reference time {}", expected.t));
+        }
+
+        std::vector<double> values;
+        for (const auto column : columns)
+        {
+          values.push_back(row[column]);
+        }
+        errors->push(Testing::OutputAtTime(values), expected);
+      }
+      errors->wrap();
+      errors->display();
+
+      status *= errors->total_error.max_value < study.error_tol;
+      status.report();
+      return status;
     }
   } // namespace EMT
 } // namespace GridKit

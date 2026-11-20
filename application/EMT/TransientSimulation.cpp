@@ -79,8 +79,10 @@ int runApplication(int argc, const char* argv[])
 
   sys.stopMonitor();
 
+  GridKit::Testing::TestStatus status = checkErrors(study);
+
   Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
-  return 0;
+  return status.get();
 }
 
 int main(int argc, const char* argv[])

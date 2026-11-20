@@ -1,3 +1,3 @@
 if(GRIDKIT_ENABLE_ENZYME)
-  add_subdirectory(Toy)
+  add_subdirectory(Validation)
 endif()

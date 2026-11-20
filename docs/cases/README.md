@@ -13,6 +13,24 @@
 Small cases for EMT component studies.
 :::
 
+:::{grid-item-card} ACTIVSg200
+:link: EMT/ACTIVSg200/README
+:link-type: doc
+:class-card: gk-card
+:::
+
+:::{grid-item-card} Hawaii
+:link: EMT/Hawaii/README
+:link-type: doc
+:class-card: gk-card
+:::
+
+:::{grid-item-card} WECC240
+:link: EMT/WECC240/README
+:link-type: doc
+:class-card: gk-card
+:::
+
 ::::
 
 ```{toctree}
@@ -21,6 +39,9 @@ Small cases for EMT component studies.
 :hidden:
 
 Toy Cases <EMT/Toy/README>
+ACTIVSg200 <EMT/ACTIVSg200/README>
+Hawaii <EMT/Hawaii/README>
+WECC240 <EMT/WECC240/README>
 ```
 
 ## OptimalPowerFlow
