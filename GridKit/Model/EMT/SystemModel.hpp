@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cassert>
 #include <format>
 #include <map>
 #include <memory>
@@ -79,6 +81,84 @@ namespace GridKit
       ComponentT& bus(const std::string& number) const;
       ComponentT& device(const std::string& id) const;
 
+      /// The variables that the waiting values wait for
+      IdxT sizeRoots() override
+      {
+        return waiting_.size();
+      }
+
+      int evaluateRoots(const ScalarT* y, RealT* roots) override
+      {
+        for (IdxT k = 0; k < waiting_.size(); ++k)
+        {
+          roots[k] = y[waiting_[k].variable];
+        }
+        return 0;
+      }
+
+      /// Set the waiting values whose variables crossed zero. Such a variable is at its root, so it is zero
+      void applyRoots(const std::vector<bool>& crossed) override
+      {
+        std::vector<Waiting> kept;
+        for (size_t k = 0; k < waiting_.size(); ++k)
+        {
+          if (crossed[k])
+          {
+            *waiting_[k].held                  = waiting_[k].value;
+            y_.getData()[waiting_[k].variable] = ZERO<RealT>;
+          }
+          else
+          {
+            kept.push_back(waiting_[k]);
+          }
+        }
+        waiting_ = std::move(kept);
+      }
+
+      /**
+       * @brief Set held `input` of `model`.
+       *
+       * An input with a `ZERO_CROSSING` in the model is set entry by entry,
+       * each when the same entry of that variable is zero: now if it is, and
+       * otherwise when it crosses zero, which `applyRoots` reports.
+       *
+       * @throws std::invalid_argument if `values` does not have the size of the input.
+       */
+      template <typename ModelT>
+      void set(ModelT& model, typename ModelT::InputsT input, const std::vector<RealT>& values)
+      {
+        const std::span<ScalarT> y = held(model, input);
+        if (values.size() != y.size())
+        {
+          throw std::invalid_argument(std::format("{}: '{}' needs {} values", model.id(), Utilities::enum_name(input), y.size()));
+        }
+        if constexpr (requires { ModelT::ZERO_CROSSING; })
+        {
+          if (input == ModelT::ZERO_CROSSING.input)
+          {
+            const ComponentT&        owner   = model;
+            const std::span<ScalarT> current = model.y(ModelT::ZERO_CROSSING.variable);
+            const IdxT*              index   = owner.variable_indices_.getData() + owner.local(ModelT::ZERO_CROSSING.variable);
+            assert(current.size() == y.size());
+            for (size_t k = 0; k < values.size(); ++k)
+            {
+              std::erase_if(waiting_, [&](const Waiting& waiting)
+                            { return waiting.held == &y[k]; });
+              if (current[k] == ZERO<RealT>)
+              {
+                y[k] = values[k];
+              }
+              else if (y[k] != values[k])
+              {
+                waiting_.push_back({&y[k], values[k], index[k]});
+              }
+            }
+            return;
+          }
+        }
+        std::ranges::copy(values, y.begin());
+      }
+
       /// @throw std::invalid_argument if device `id` is not a `ModelT`
       template <typename ModelT>
       ModelT& device(const std::string& id) const
@@ -141,6 +221,16 @@ namespace GridKit
       ComponentT*              held_{nullptr};    ///< Held signals that the inputs the case leaves out read
       ComponentT*              signals_{nullptr}; ///< Signals that the inputs that name an output read
       std::vector<Connection*> held_inputs_;      ///< Inputs that the case leaves out
+
+      /// A written value that waits for a variable to cross zero
+      struct Waiting
+      {
+        ScalarT* held; ///< Held signal that takes the value
+        RealT    value;
+        IdxT     variable; ///< System variable that crosses zero
+      };
+
+      std::vector<Waiting> waiting_;
 
       /// By reference: an output that inputs read, and those inputs
       std::map<std::string, std::pair<Connection*, std::vector<Connection*>>> signal_inputs_;

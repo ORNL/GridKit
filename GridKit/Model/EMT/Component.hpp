@@ -47,6 +47,17 @@ namespace GridKit
         && ModelT::NUM_INPUT_VARIABLES.size() == Utilities::enum_size<typename ModelT::InputsT>()
         && ModelT::NUM_OUTPUT_VARIABLES.size() == Utilities::enum_size<typename ModelT::OutputsT>();
 
+    /// A value written to held `input` takes effect on an entry when the same entry of `variable` is zero
+    template <Utilities::SizedEnum InputT, Utilities::SizedEnum VariableT>
+    struct ZeroCrossing
+    {
+      InputT    input;
+      VariableT variable;
+    };
+
+    template <Utilities::SizedEnum InputT, Utilities::SizedEnum VariableT>
+    ZeroCrossing(InputT, VariableT) -> ZeroCrossing<InputT, VariableT>;
+
     /**
      * @brief EMT component, which views its blocks of the system vectors
      *

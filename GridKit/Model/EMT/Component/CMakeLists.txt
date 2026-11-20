@@ -1,3 +1,7 @@
+add_subdirectory(Controller)
+add_subdirectory(Converter)
 add_subdirectory(Line)
 add_subdirectory(Load)
 add_subdirectory(Source)
+add_subdirectory(Switch)
+add_subdirectory(Transformer)

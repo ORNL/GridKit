@@ -33,6 +33,11 @@
 - Added the EMT model family with `Bus`, `LoadZ` and the `VectorFit` and `Signal` operators, and `Testing::jacobianMatchesResidual`.
 - Added the EMT `VoltageSource` and `LineLumped` models.
 - Added Enzyme Jacobians for fixed-layout EMT models and the EMT `Pll` and `Pmu` operators.
+- Added the EMT `Switch` model.
+- Added the `TransientSimulation` application with events that set state values, and the ThreeBusBasic EMT example.
+- Added the EMT `LoadRLC`, `Transformer` and `Machine` models.
+- Added the EMT `Regca` model and the `Park` operator.
+- Added the EMT `Esdc1a`, `GastPti`, `Hygov`, `Ieeest`, `Ieeet1`, `Reecb`, `Repca`, `SexsPti` and `Tgov1` controller models.
 
 ## v0.2
 

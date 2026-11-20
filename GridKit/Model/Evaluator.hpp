@@ -96,6 +96,23 @@ namespace GridKit
        */
       virtual IdxT nnz()  = 0;
 
+      /// How many values stop the integration when they cross zero
+      virtual IdxT sizeRoots()
+      {
+        return 0;
+      }
+
+      /// Write those values of the solution `y` to `roots`
+      virtual int evaluateRoots(const ScalarT*, RealT*)
+      {
+        return 0;
+      }
+
+      /// Told which of those values crossed zero where the integration stopped
+      virtual void applyRoots(const std::vector<bool>&)
+      {
+      }
+
       /**
        * @brief Is there something to monitor? Defaults to `false`
        */

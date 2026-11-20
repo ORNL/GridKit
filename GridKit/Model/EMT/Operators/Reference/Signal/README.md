@@ -1,10 +1,11 @@
 # Signal Model
 
 `Signal` holds $N$ signals $\mathbf{s}$ that models read at their inputs. A
-held signal keeps the value that the state gives. A signal that is not held
-follows an output: the model that computes the output adds it to the residual
-of $\mathbf{s}$. The system adds one `Signal` for the inputs that a case
-leaves out, and one for the outputs that inputs read.
+held signal keeps the value that the state gives, until an event changes it.
+A signal that is not held follows an output: the model that computes the
+output adds it to the residual of $\mathbf{s}$. The system adds one `Signal`
+for the inputs that a case leaves out, and one for the outputs that inputs
+read.
 
 ## Block Diagram
 
