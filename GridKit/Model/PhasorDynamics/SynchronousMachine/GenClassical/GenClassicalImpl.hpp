@@ -50,10 +50,11 @@ namespace GridKit
       using Parameter    = typename ModelDataT::Parameters;
       using InitialValue = typename ModelDataT::InitialValues;
 
-      const Model::ParameterReader reader(data, "GenClassical");
+      const Model::ParameterReader    reader(data, "GenClassical");
+      const Model::InitialValueReader initial(data, "GenClassical");
 
-      ir_       = reader.readReal(InitialValue::ir).value_or(ir_);
-      ii_       = reader.readReal(InitialValue::ii).value_or(ii_);
+      ir_       = initial.readReal(InitialValue::ir).value_or(ir_);
+      ii_       = initial.readReal(InitialValue::ii).value_or(ii_);
       H_        = reader.readReal(Parameter::H).value_or(H_);
       D_        = reader.readReal(Parameter::D).value_or(D_);
       Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);

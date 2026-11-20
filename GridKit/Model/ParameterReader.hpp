@@ -1,16 +1,17 @@
 /**
  * @file ParameterReader.hpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Typed parameter loading from model data containers.
+ * @brief Typed parameter and initial value loading from model data containers.
  */
 
 #pragma once
 
 #include <cmath>
-#include <concepts>
 #include <format>
+#include <map>
 #include <optional>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <variant>
 
@@ -32,42 +33,51 @@ namespace GridKit
         }
         && Utilities::SizedEnum<typename T::Parameters>;
 
+    /// Model data container with a map from each initial value to its value
+    template <typename T>
+    concept InitialValueData =
+        requires(const T& data) {
+          typename T::RealT;
+          typename T::IdxT;
+          typename T::InitialValues;
+          data.initial_values;
+        }
+        && Utilities::SizedEnum<typename T::InitialValues>;
+
     /**
-     * @brief Reads typed parameters out of a model data container.
+     * @brief Reads typed values out of one map of a model data container.
      *
      * A read method returns the provided value or std::nullopt when the
-     * parameter is omitted. The model chooses a default or requires a value.
+     * entry is omitted. The model chooses a default or requires a value.
      * Invalid values are rejected with std::invalid_argument naming the
-     * model and parameter. Real parameters accept integer values and must
+     * model and entry. Real entries accept integer values and must
      * be finite.
      *
-     * @tparam ModelDataT A model data container satisfying ParameterData.
+     * @tparam KeyT Enumeration over the entries of the map.
+     * @tparam RealT Real value type.
+     * @tparam IdxT Integer value type.
      */
-    template <ParameterData ModelDataT>
-    class ParameterReader
+    template <Utilities::SizedEnum KeyT, typename RealT, typename IdxT>
+    class DataReader
     {
-    public:
-      using RealT       = typename ModelDataT::RealT;
-      using IdxT        = typename ModelDataT::IdxT;
-      using ParametersT = typename ModelDataT::Parameters;
+    private:
+      using ValueT = std::variant<std::string, bool, RealT, IdxT>;
+      using MapT   = std::map<KeyT, ValueT>;
 
+    public:
       /**
-       * @param[in] data Model data container to read from.
+       * @param[in] values Map to read from.
        * @param[in] model Model name used in rejection messages.
+       * @param[in] kind Kind of entry used in rejection messages.
        */
-      ParameterReader(const ModelDataT& data, const char* model)
-        : data_(data),
-          model_(model)
+      DataReader(const MapT& values, const char* model, const char* kind)
+        : values_(values),
+          model_(model),
+          kind_(kind)
       {
       }
 
       /// Read an optional real parameter or initial value.
-      // TODO: Unlike `ParametersT`, the initial values enum is not a class-level alias because the
-      // Optimal Power Flow model data does not define initial values yet. Once it does, add
-      // `InitialValues` to `ParameterData`, introduce an `InitialValuesT` alias, and replace this
-      // constrained template with plain `ParametersT` and `InitialValuesT` overloads.
-      template <typename KeyT>
-        requires std::same_as<KeyT, ParametersT> || std::same_as<KeyT, typename ModelDataT::InitialValues>
       [[nodiscard]] std::optional<RealT> readReal(KeyT key) const
       {
         const auto* value = find(key);
@@ -98,8 +108,8 @@ namespace GridKit
         return real;
       }
 
-      /// Read an optional non-negative real parameter.
-      [[nodiscard]] std::optional<RealT> readNonNegative(ParametersT key) const
+      /// Read an optional non-negative real value.
+      [[nodiscard]] std::optional<RealT> readNonNegative(KeyT key) const
       {
         auto value = readReal(key);
         if (value && *value < ZERO<RealT>)
@@ -109,52 +119,33 @@ namespace GridKit
         return value;
       }
 
-      /// Read an optional boolean parameter.
-      [[nodiscard]] std::optional<bool> readBool(ParametersT key) const
+      /// Read an optional boolean value.
+      [[nodiscard]] std::optional<bool> readBool(KeyT key) const
       {
         return readExact<bool>(key, "must be boolean");
       }
 
-      /// Read an optional integer parameter.
-      [[nodiscard]] std::optional<IdxT> readInteger(ParametersT key) const
+      /// Read an optional integer value.
+      [[nodiscard]] std::optional<IdxT> readInteger(KeyT key) const
       {
         return readExact<IdxT>(key, "must be an integer");
       }
 
     private:
-      using ParameterMapT = decltype(ModelDataT::parameters);
-      using ValueT        = typename ParameterMapT::mapped_type;
-
-      /// The provided value, or nullptr when the parameter is omitted.
-      const ValueT* find(ParametersT key) const
+      /// The provided value, or nullptr when the entry is omitted.
+      const ValueT* find(KeyT key) const
       {
-        const auto entry = data_.parameters.find(key);
-        if (entry == data_.parameters.end())
+        const auto entry = values_.find(key);
+        if (entry == values_.end())
         {
           return nullptr;
         }
         return &entry->second;
       }
 
-      /// The provided value, or nullptr when the initial value is omitted.
-      // TODO: `InitialValuesT` is a constrained template parameter, not a class-level alias like
-      // `ParametersT`, until the Optimal Power Flow model data supports initial values. Then make
-      // this a plain `find(InitialValuesT)` overload.
-      template <typename InitialValuesT>
-        requires std::same_as<InitialValuesT, typename ModelDataT::InitialValues>
-      const ValueT* find(InitialValuesT key) const
-      {
-        const auto entry = data_.initial_values.find(key);
-        if (entry == data_.initial_values.end())
-        {
-          return nullptr;
-        }
-        return &entry->second;
-      }
-
-      /// Read an optional parameter that must hold exactly a T.
+      /// Read an optional entry that must hold exactly a T.
       template <typename T>
-      [[nodiscard]] std::optional<T> readExact(ParametersT key, std::string_view reason) const
+      [[nodiscard]] std::optional<T> readExact(KeyT key, std::string_view reason) const
       {
         const auto* value = find(key);
         if (value == nullptr)
@@ -171,28 +162,56 @@ namespace GridKit
         return *exact_value;
       }
 
-      /// Reject the model data with a message naming the model and parameter.
-      [[noreturn]] void reject(ParametersT key, std::string_view reason) const
+      /// Reject the model data with a message naming the model and the entry.
+      [[noreturn]] void reject(KeyT key, std::string_view reason) const
       {
-        reject("parameter", Utilities::enum_name(key), reason);
+        throw std::invalid_argument(
+            std::format("{}: {} '{}' {}", model_, kind_, Utilities::enum_name(key), reason));
       }
 
-      /// Reject the model data with a message naming the model and initial value.
-      template <typename InitialValuesT>
-        requires std::same_as<InitialValuesT, typename ModelDataT::InitialValues>
-      [[noreturn]] void reject(InitialValuesT key, std::string_view reason) const
-      {
-        reject("initial value", Utilities::enum_name(key), reason);
-      }
+      const MapT& values_;
+      const char* model_;
+      const char* kind_;
+    };
 
-      /// Reject the model data with a message naming the model, the kind of entry, and its name.
-      [[noreturn]] void reject(std::string_view kind, std::string_view name, std::string_view reason) const
+    /**
+     * @brief Reads typed parameters out of a model data container.
+     *
+     * @tparam ModelDataT A model data container satisfying ParameterData.
+     */
+    template <ParameterData ModelDataT>
+    class ParameterReader
+      : public DataReader<typename ModelDataT::Parameters, typename ModelDataT::RealT, typename ModelDataT::IdxT>
+    {
+    public:
+      /**
+       * @param[in] data Model data container to read from.
+       * @param[in] model Model name used in rejection messages.
+       */
+      ParameterReader(const ModelDataT& data, const char* model)
+        : ParameterReader::DataReader(data.parameters, model, "parameter")
       {
-        throw std::invalid_argument(std::format("{}: {} '{}' {}", model_, kind, name, reason));
       }
+    };
 
-      const ModelDataT& data_;
-      const char*       model_;
+    /**
+     * @brief Reads typed initial values out of a model data container.
+     *
+     * @tparam ModelDataT A model data container satisfying InitialValueData.
+     */
+    template <InitialValueData ModelDataT>
+    class InitialValueReader
+      : public DataReader<typename ModelDataT::InitialValues, typename ModelDataT::RealT, typename ModelDataT::IdxT>
+    {
+    public:
+      /**
+       * @param[in] data Model data container to read from.
+       * @param[in] model Model name used in rejection messages.
+       */
+      InitialValueReader(const ModelDataT& data, const char* model)
+        : InitialValueReader::DataReader(data.initial_values, model, "initial value")
+      {
+      }
     };
   } // namespace Model
 } // namespace GridKit
