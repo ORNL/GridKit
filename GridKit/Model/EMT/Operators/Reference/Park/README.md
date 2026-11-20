@@ -33,7 +33,9 @@ $\theta$ | `theta` | Input | [rad] | Angle of the d axis from the axis of phase 
 $\mathbf{u}_\mathrm{dq}$ | `dq` | Output | $[u]$ | Input in rotating coordinates | Internal variable
 $(c, s)$ | `axis` | Output | [-] | Unit direction of the input in rotating coordinates | Internal variable
 
-The angle may come from [Pll](../Pll/README.md).
+The angle may come from [Pll](../Pll/README.md). The direction can drive
+input `axis` of
+[CurrentControl](../../../Component/Controller/CurrentControl/README.md).
 
 ## Submodels
 

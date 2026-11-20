@@ -7,10 +7,12 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <format>
 #include <initializer_list>
+#include <limits>
 #include <memory>
 #include <numbers>
 #include <span>
@@ -22,6 +24,7 @@
 
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/EMT/ComponentImpl.hpp>
+#include <GridKit/Model/EMT/Operators/Modulation/PWM/PwmImpl.hpp>
 #include <GridKit/Model/EMT/StateJSONParser.hpp>
 #include <GridKit/Model/EMT/SystemModel.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>
@@ -1209,6 +1212,233 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// The mean of each switching function over a carrier period is its duty ratio, for smooth and sharp edges
+      TestOutcome pwmMean()
+      {
+        TestStatus success = true;
+
+        constexpr IdxT SAMPLES = 400;
+
+        const std::array<RealT, 3> m{0.5, -0.25, 0.0};
+        for (const RealT fc : {1000.0, 10.0})
+        {
+          EMT::PwmData<RealT, IdxT> data;
+          data.N         = 3;
+          data.fc        = fc;
+          data.injection = false;
+          const EMT::Pwm<RealT, IdxT> pwm(data);
+
+          success *= pwm.verify().passed();
+
+          std::array<RealT, 3> mean{};
+          for (IdxT k = 0; k < SAMPLES; ++k)
+          {
+            std::array<RealT, 3> s{};
+            pwm.switching(m.data(), static_cast<RealT>(k) / (static_cast<RealT>(SAMPLES) * fc), s.data());
+            for (IdxT n = 0; n < 3; ++n)
+            {
+              mean[n] += s[n] / static_cast<RealT>(SAMPLES);
+            }
+          }
+
+          // Rounding accumulates over the samples
+          const RealT                tol = static_cast<RealT>(SAMPLES) * std::numeric_limits<RealT>::epsilon();
+          const std::array<RealT, 3> duty{0.75, 0.375, 0.5};
+          for (IdxT n = 0; n < 3; ++n)
+          {
+            success *= isEqual(mean[n], duty[n], tol);
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /// The smoothing scale times the carrier period selects how the switching functions are evaluated
+      TestOutcome pwmSeries()
+      {
+        TestStatus success = true;
+
+        const auto series = [](RealT mu)
+        {
+          EMT::PwmData<RealT, IdxT> data;
+          data.N  = 3;
+          data.fc = 1000.0;
+          data.mu = mu;
+          return EMT::Pwm<RealT, IdxT>(data).series();
+        };
+
+        success *= series(240.0) == EMT::PwmSeries::duty;
+        success *= series(1000.0) == EMT::PwmSeries::harmonics;
+        success *= series(50000.0) == EMT::PwmSeries::pulses;
+
+        return success.report(__func__);
+      }
+
+      /// Bridge at angle zero and modulation (0.5, 0) between DC terminals at 4 and 0, with duty ratios (0.75, 0.375, 0.375)
+      TestOutcome bridge()
+      {
+        TestStatus success = true;
+
+        const auto system = makeSystem(BRIDGE_CASE, BRIDGE_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT TWO_THIRDS = TWO<RealT> / THREE<RealT>;
+
+        // The DC voltage of 4 raises the round-off of the difference, which passes at 1e-10 and not at 1e-11
+        constexpr RealT BRIDGE_TOL = 1.0e-10;
+
+        auto& converter = system->device("BR1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {0.5, 0.0, 0.0});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {-0.75});
+        success *= rowsEqual(system->bus("3").getResidual(EMT::BusInternalVariables::v), {-0.25});
+        success *= rowsEqual(converter.getResidual(EMT::BridgeInternalVariables::i), {0.0, -1.5, -1.5});
+        success *= rowsEqual(converter.getResidual(EMT::BridgeInternalVariables::vo), {-0.5, 0.0, 0.0});
+        success *= rowsEqual(converter.getResidual(EMT::BridgeInternalVariables::ig), {-0.5, 0.0, 0.0});
+        success *= rowsEqual(converter.getResidual(EMT::BridgeInternalVariables::idq), {TWO_THIRDS, 0.0});
+        success *= rowsEqual(converter.getResidual(EMT::BridgeInternalVariables::vodq), {TWO<RealT> * TWO_THIRDS, 0.0});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, BRIDGE_TOL);
+
+        return success.report(__func__);
+      }
+
+      /// The Jacobian of a bridge matches its residual for carrier harmonics and for resolved pulses, away from a carrier edge
+      TestOutcome bridgeSwitching()
+      {
+        TestStatus success = true;
+
+        // A quarter of a carrier period after its start
+        constexpr RealT TIME = 2.5e-4;
+
+        // The resolved edges raise the error of the difference, which passes at 1e-9 and not at 1e-10
+        constexpr RealT SWITCHING_TOL = 1.0e-9;
+
+        for (const RealT mu : {1000.0, 50000.0})
+        {
+          auto switching                                 = nlohmann::json::parse(BRIDGE_CASE);
+          switching["devices"][0]["params"]["pwm"]["mu"] = mu;
+          const auto system                              = makeSystem(switching.dump().c_str(), BRIDGE_STATE);
+
+          success *= system != nullptr && jacobianMatchesResidual(*system, TIME, ALPHA, SWITCHING_TOL);
+        }
+
+        return success.report(__func__);
+      }
+
+      /// A 1 A peak rating and axis (0.6, 0.8) project the orders (0.6, 0.8) to (1, 0) A
+      TestOutcome currentControl()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 1, "kv": 0.01}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 0.01}}],
+          "devices": [{"class": "CurrentControl", "id": "CC1", "inputs": {"vpos": 1, "vneg": 2},
+                       "params": {"V": 816.496580927726, "mva": 0.001, "Kp": 2.0, "Ki": 4.0, "L": 0.5}}]
+        })";
+
+        // The voltages, the frequency, the direction and the orders are held inputs
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [10.0]}, "2": {"v": [0.0]}},
+          "devices": {"CC1": {"xdq": [0.0, 0.0], "mdq": [0.5, 0.0], "vdq": [1.0, 0.0], "omega": [2.0],
+                              "axis": [0.6, 0.8], "ip": [0.6], "iq": [0.8]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        // The DC voltage of 10 raises the round-off of the difference, which passes at 1e-10 and not at 1e-11
+        constexpr RealT CONTROL_TOL = 1.0e-10;
+
+        auto& control = system->device("CC1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(control.getResidual(EMT::CurrentControlInternalVariables::xdq), {4.0, 0.0});
+        success *= rowsEqual(control.getResidual(EMT::CurrentControlInternalVariables::mdq), {0.1, 0.0});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, CONTROL_TOL);
+
+        return success.report(__func__);
+      }
+
+      /// A reactive-current order of 0.3 is reduced by twice the voltage above 1.1, and one below the bound passes through
+      TestOutcome hvrcm()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "HVRCM", "id": "HV1", "params": {"Vhvmax": 1.1, "Khv": 2.0, "Qmin": -0.5}}]
+        })";
+
+        const auto system = makeSystem(CASE, R"({"devices": {"HV1": {"vt": [1.2], "iqcmd": [0.3]}}})");
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using HvrcmT = EMT::HVRCM<RealT, IdxT>;
+
+        auto& management = system->device<HvrcmT>("HV1");
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(management.getResidual(EMT::HVRCMInternalVariables::iq), {0.3 - 2.0 * Math::ramp(1.2 - 1.1)});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        system->held(management, EMT::HVRCMInputs::iqcmd)[0]  = -0.8;
+        success                                              *= system->evaluateResidual() == 0;
+        success                                              *= rowsEqual(management.getResidual(EMT::HVRCMInternalVariables::iq), {-0.8});
+
+        return success.report(__func__);
+      }
+
+      /// At voltage 0.5 a ceiling of 0.4 recovers toward its target and limits an order of 0.9 to the available current
+      TestOutcome lvrt()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [],
+          "devices": [{"class": "LVRT", "id": "LV1",
+                       "params": {"TM": 0.5, "VL0": 0.2, "VL1": 0.8, "IL1": 1.2, "Rpmax": 1.0, "VA0": 0.1, "VA1": 0.6}}]
+        })";
+
+        const auto system = makeSystem(CASE, R"({"devices": {"LV1": {"il": [0.4], "vt": [0.5], "ipcmd": [0.9]}}})");
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        auto& limit = system->device("LV1");
+
+        const RealT target    = Math::linseg(0.5, 0.2, 0.8, 1.2);
+        const RealT available = 0.4 * Math::linseg(0.5, 0.1, 0.6, 1.0);
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(limit.getResidual(EMT::LVRTInternalVariables::il), {(target - 0.4) / 0.5});
+        success *= rowsEqual(limit.getResidual(EMT::LVRTInternalVariables::ip), {available});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
       /// Regca at a terminal voltage of 0.75 and angle zero, with orders of 0.5 that its ceiling and its rate limit hold back
       TestOutcome regca()
       {
@@ -1320,6 +1550,52 @@ namespace GridKit
         success       *= rowsEqual(transform.getResidual(EMT::ParkInternalVariables::dq), {-3.0, VQ - 4.0});
         success       *= rowsEqual(transform.getResidual(EMT::ParkInternalVariables::axis), {0.6, 0.8});
         success       *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, PARK_TOL);
+
+        return success.report(__func__);
+      }
+
+      /// A converter whose control and bridge read each other and a Pll: variables in place, the frequency through a signal
+      TestOutcome converter()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e4},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 0.4}},
+                    {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 0.4}},
+                    {"number": 3, "class": "Bus", "params": {"N": 1, "kv": 0.4}}],
+          "devices": [{"class": "CurrentControl", "id": "CC1",
+                       "inputs": {"vpos": 2, "vneg": 3, "vdq": "BR1.vodq", "idq": "BR1.idq", "omega": "PLL1.omega"},
+                       "params": {"V": 400.0, "mva": 0.01, "Kp": 4.0, "Ki": 100.0, "L": 0.002}},
+                      {"class": "Bridge", "id": "BR1", "terminals": {"bus": 1, "vpos": 2, "vneg": 3},
+                       "inputs": {"theta": "PLL1.theta", "mdq": "CC1.mdq"},
+                       "params": {"N": 3, "Rs": 0.05, "Ls": 0.002, "C": 2.0e-5, "Rg": 0.02, "Lg": 0.0005, "pwm": {"N": 3, "fc": 10000.0}}},
+                      {"class": "Pll", "id": "PLL1", "inputs": {"v": 1}, "params": {"Kp": 0.5, "Ki": 20.0}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [320.0, -160.0, -160.0]}, "2": {"v": [400.0]}, "3": {"v": [-400.0]}},
+          "devices": {"CC1": {"mdq": [0.8, 0.0], "axis": [1.0, 0.0], "ip": [1.0]},
+                      "BR1": {"i": [8.0, -4.0, -4.0], "vo": [320.0, -160.0, -160.0], "ig": [8.0, -4.0, -4.0],
+                              "idq": [8.0, 0.0], "vodq": [320.0, 0.0]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        // Voltages of 400 and the frequency base raise the round-off of the difference, which passes at 1e-8 and not at 1e-9
+        constexpr RealT CONVERTER_TOL = 1.0e-8;
+
+        // Five bus voltages, four control, thirteen bridge and two Pll variables,
+        // the four held inputs `axis`, `ip` and `iq`, and the signal of the frequency
+        success *= system->size() == 29;
+        success *= system->evaluateResidual() == 0;
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, CONVERTER_TOL);
 
         return success.report(__func__);
       }
@@ -1827,6 +2103,23 @@ namespace GridKit
       }
 
     private:
+      /// Bridge of unit filter parameters between a three-phase bus and DC terminals, with its angle and modulation held
+      static constexpr const char* BRIDGE_CASE = R"({
+        "params": {"freq_base": 60.0, "va_base": 1.0e6},
+        "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                  {"number": 2, "class": "Bus", "params": {"N": 1, "kv": 0.004}},
+                  {"number": 3, "class": "Bus", "params": {"N": 1, "kv": 0.004}}],
+        "devices": [{"class": "Bridge", "id": "BR1", "terminals": {"bus": 1, "vpos": 2, "vneg": 3},
+                     "params": {"N": 3, "Rs": 1.0, "Ls": 1.0, "C": 1.0, "Rg": 1.0, "Lg": 1.0,
+                                "pwm": {"N": 3, "fc": 1000.0, "injection": false}}}]
+      })";
+
+      /// Angle zero and modulation (0.5, 0) between DC terminals at 4 and 0
+      static constexpr const char* BRIDGE_STATE = R"({
+        "buses": {"1": {"v": [1.0, 0.0, 0.0]}, "2": {"v": [4.0]}, "3": {"v": [0.0]}},
+        "devices": {"BR1": {"i": [1.0, 0.0, 0.0], "vo": [2.0, 0.0, 0.0], "ig": [0.5, 0.0, 0.0], "mdq": [0.5, 0.0]}}
+      })";
+
       /// Machine of unit ratings on a three-phase bus, with its field voltage and mechanical power held
       static constexpr const char* MACHINE_CASE = R"({
         "params": {"freq_base": 60.0, "va_base": 1.0e6},

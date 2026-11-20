@@ -38,6 +38,7 @@
 - Added the EMT `LoadRLC`, `Transformer` and `Machine` models.
 - Added the EMT `Regca` model and the `Park` operator.
 - Added the EMT `Esdc1a`, `GastPti`, `Hygov`, `Ieeest`, `Ieeet1`, `Reecb`, `Repca`, `SexsPti` and `Tgov1` controller models.
+- Added the EMT `Bridge`, `CurrentControl`, `HVRCM` and `LVRT` models and the `PWM` operator.
 
 ## v0.2
 

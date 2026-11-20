@@ -9,15 +9,19 @@
 #include <type_traits>
 
 #include <GridKit/Model/EMT/Bus/Bus.hpp>
+#include <GridKit/Model/EMT/Component/Controller/CurrentControl/CurrentControl.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Esdc1a/Esdc1a.hpp>
 #include <GridKit/Model/EMT/Component/Controller/GastPti/GastPti.hpp>
+#include <GridKit/Model/EMT/Component/Controller/HVRCM/HVRCM.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Hygov/Hygov.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Ieeest/Ieeest.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Ieeet1/Ieeet1.hpp>
+#include <GridKit/Model/EMT/Component/Controller/LVRT/LVRT.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Reecb/Reecb.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Repca/Repca.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SexsPti/SexsPti.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Tgov1/Tgov1.hpp>
+#include <GridKit/Model/EMT/Component/Converter/Bridge/Bridge.hpp>
 #include <GridKit/Model/EMT/Component/Converter/Regca/Regca.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadRLC/LoadRLC.hpp>
@@ -42,12 +46,16 @@ namespace GridKit
       template <typename VisitorT>
       static void forEach(VisitorT&& visit)
       {
+        visit(std::type_identity<Bridge<ScalarT, IdxT>>{});
         visit(std::type_identity<Bus<ScalarT, IdxT>>{});
+        visit(std::type_identity<CurrentControl<ScalarT, IdxT>>{});
         visit(std::type_identity<Esdc1a<ScalarT, IdxT>>{});
         visit(std::type_identity<GastPti<ScalarT, IdxT>>{});
+        visit(std::type_identity<HVRCM<ScalarT, IdxT>>{});
         visit(std::type_identity<Hygov<ScalarT, IdxT>>{});
         visit(std::type_identity<Ieeest<ScalarT, IdxT>>{});
         visit(std::type_identity<Ieeet1<ScalarT, IdxT>>{});
+        visit(std::type_identity<LVRT<ScalarT, IdxT>>{});
         visit(std::type_identity<LineLumped<ScalarT, IdxT>>{});
         visit(std::type_identity<LoadRLC<ScalarT, IdxT>>{});
         visit(std::type_identity<LoadZ<ScalarT, IdxT>>{});

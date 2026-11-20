@@ -40,8 +40,16 @@ int main()
   result += test.machineCurrentReference();
   result += test.pll();
   result += test.pllFrequencyReference();
+  result += test.pwmMean();
+  result += test.pwmSeries();
+  result += test.bridge();
+  result += test.bridgeSwitching();
+  result += test.currentControl();
+  result += test.hvrcm();
+  result += test.lvrt();
   result += test.regca();
   result += test.park();
+  result += test.converter();
   result += test.tgov1();
   result += test.gastPti();
   result += test.hygov();
