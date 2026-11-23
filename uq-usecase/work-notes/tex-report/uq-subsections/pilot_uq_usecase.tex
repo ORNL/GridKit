@@ -36,7 +36,7 @@ Main terms used in our pilot study that follows.
   \item[\textbf{Infeasible dispatch}] With the committed generators, the dispatch optimisation cannot serve the load. This means the extra load cannot be delivered under that commitment: a finding about the system, not a software error. Power-flow (\ac{acpf}) failures are a separate case and are not infeasible dispatches.
   \item[\textbf{No outcome}] A run that produced no \ac{cct}: the \ac{dcopf} dispatch, the \ac{acpf} power flow or the dynamic simulation failed. Reported separately, never as stable or unstable.
   \item[\textbf{ZIP load}] A load model that splits demand into constant-impedance (Z), constant-current (I) and constant-power (P) parts, written as P/I/Z percentages. The datacenter uses 80/20/0 (Section~\ref{uqp:4.4}).
-  \item[\textbf{Campaigns}] Three batches of simulations, all built the same way (Section~\ref{uqp:4}). Two aleatoric campaigns, \textbf{aleatoric-1} and \textbf{aleatoric-2}, vary the operating condition and the datacenter's location and size, at one fault location; aleatoric-2 is a larger, independent repeat of aleatoric-1. The fault-screening campaign, \textbf{faultscreen-1}, varies the fault location instead. Section~\ref{uqp:7.0} compares them.
+  \item[\textbf{Campaigns}] Three batches of simulations, all built the same way (Section~\ref{uqp:4}). Two aleatoric campaigns, \textbf{aleatoric-1} and \textbf{aleatoric-2}, vary the operating condition and the datacenter's location and size, at one fault location; aleatoric-2 is a larger, independent repeat of aleatoric-1. The fault-screening campaign, \textbf{faultscreen-2}, varies the fault location and the net-load quintile, with and without a 100 MW datacenter at bus 108. Section~\ref{uqp:7.0} compares them.
   \item[\textbf{DCOPF / ACPF}] \Ac{dcopf} sets \textit{who generates} from active power only (lossless, no voltages, no Q). \Ac{acpf} takes that dispatch and solves the voltages and reactive power.
   \item[\textbf{PV bus / PQ bus}] PV: the generator fixes P and voltage magnitude, and Q is whatever holds the voltage. PQ: P and Q are fixed (a load); voltage is a result.
   \item[\textbf{Q limit}] A generator's maximum and minimum reactive power (Q) output.
@@ -100,7 +100,7 @@ We do \textbf{not} solve a unit-commitment problem. Thermal units are ranked in 
 
 At 762 MW net load the band is 18 to 38 units. Both ends are legitimate: with 33 units the committed minimums total 740 MW, still under the load, so the units simply run further down their range.
 
-\textbf{How commitment is sampled.} For each sampled hour, the band is computed from that hour's own net load (demand minus wind). The campaign then commits at two fixed positions in the band, a quarter and three quarters of the way from its lower to its upper end, rounded to whole units. So each hour gives two operating conditions. This is a stratified choice at fixed positions, not a uniform draw from the band and not a draw from an assumed distribution. The faultscreen-1 (Section~\ref{uqp:7.6}) uses 10 hours $\times$ 2 commitments = 20 conditions. Campaign aleatoric-1 (Section~\ref{uqp:7.0}) uses 20 hours $\times$ 2 commitments = 40 conditions. Hours are stratified by net-load quintile: the 8,760 hours are split into five equal-count bins of net load, and hours are drawn at random without replacement from each bin, with equal counts per bin (2 each in faultscreen-1, 4 each in aleatoric-1). Each quintile therefore holds 20\% of the year's hours, so equal counts give each quintile its population share. Hours within a quintile are not weighted. In all campaigns the datacenter runs reuse the baseline commitment of their hour.
+\textbf{How commitment is sampled.} For each sampled hour, the band is computed from that hour's own net load (demand minus wind). The campaign then commits at two fixed positions in the band, a quarter and three quarters of the way from its lower to its upper end, rounded to whole units. So each hour gives two operating conditions. This is a stratified choice at fixed positions, not a uniform draw from the band and not a draw from an assumed distribution. The faultscreen-2 (Section~\ref{uqp:7.6}) uses 10 hours per quintile $\times$ 2 commitments = 100 conditions, each run at all 17 fault locations. Campaign aleatoric-1 (Section~\ref{uqp:7.0}) uses 20 hours $\times$ 2 commitments = 40 conditions. Hours are stratified by net-load quintile: the 8,760 hours are split into five equal-count bins of net load, and hours are drawn at random without replacement from each bin, with equal counts per bin (10 each in faultscreen-2, 4 each in aleatoric-1). Each quintile therefore holds 20\% of the year's hours, so equal counts give each quintile its population share. Hours within a quintile are not weighted. In all campaigns the datacenter runs reuse the baseline commitment of their hour.
 
 \textbf{Why commitment matters.} A commitment sets which thermal units are online, and so the inertia and headroom on the system. A low-load hour can run many units at part load, carrying more inertia, or run few, carrying less. Both are feasible, and a single committed point would hide that spread. At hour 4779 (762 MW net load), the two ends of the band are:
 
@@ -187,7 +187,7 @@ The distinction is the physical reason a datacenter is interesting. Ordinary con
 
 \textbf{Our modeled datacenter mix is P/I/Z = 80/20/0}: To account for non-IT facility overhead, such as motor-based cooling systems (chillers, pumps, and fans) that exhibit voltage-dependent, constant-current-like behavior, we assign $\alpha_I = 0.2$ alongside the dominant IT constant-power share of $\alpha_P = 0.8$ ($\alpha_Z = 0$), consistent with utility data center modeling splits of 60\% to 90\% IT constant power and 10\% to 40\% cooling load \cite{nerc2024lltf}.
 
-\textbf{Placement.} Campaign faultscreen-1 (Section~\ref{uqp:7.6}) places a 200 MW datacenter at bus 108 or bus 148. Campaigns aleatoric-1 and aleatoric-2 (Section~\ref{uqp:7.0}) place it at bus 6, 108, 120 or 148, at 50, 100, 200, 300 or 400 MW.
+\textbf{Placement.} Campaign faultscreen-2 (Section~\ref{uqp:7.6}) places a 100 MW datacenter at bus 108 only. Campaigns aleatoric-1 and aleatoric-2 (Section~\ref{uqp:7.0}) place it at bus 6, 108, 120 or 148, at 50, 100, 200, 300 or 400 MW.
 
 \par\vspace{0.4em}
 \noindent\fbox{\parbox[t]{0.98\textwidth}{%
@@ -277,14 +277,14 @@ Each campaign ran as one SLURM job \cite{Yoo2003} on one node: 16 single-core wo
 \midrule
     aleatoric-1 & 840 & 484 & 6.0 min & 170 s / 113 s \\
     aleatoric-2 & 3,780 & 2,155 & 17.1 min & 297 s / 516 s \\
-    faultscreen-1 & 1,020 & 935 & ~4.4 min (slowest worker) & 122 s / 92 s \\
+    faultscreen-2 & 3,400 & 3,400 & ~26 min (slowest worker) & 154 s / 966 s \\
 \bottomrule
 \end{tabularx}
 \par}
 \vspace{0.25cm}
 
 
-\textit{Simulated} counts the runs whose dispatch and power flow solved, so that a dynamic simulation was attempted (whether or not it completed). For the remaining runs the dispatch or the power flow failed, so no simulation was run.
+\textit{Simulated} counts the runs whose dispatch and power flow solved, so that a dynamic simulation was attempted (whether or not it completed). For the remaining runs the dispatch or the power flow failed, so no simulation was run. For faultscreen-2, dynamics is the worker total minus the batched dispatch stage.
 
 Resources, measured for aleatoric-2:
 
@@ -295,14 +295,6 @@ Resources, measured for aleatoric-2:
   \item \textbf{Dispatch stage.} 1.3 s per dispatch, against 3.3 s in aleatoric-1. A working hypothesis is that larger batches amortise Julia start-up.
   \item \textbf{Storage.} The three campaigns (5,640 planned runs) hold 15.9 GB; in aleatoric-1 and aleatoric-2 that is about 2.6 MB per run. Two measures keep it down: the \ac{cct} search records only the rotor angles it needs (21 of 441 output columns, 13.8$\times$ smaller), and results are stored as compressed Parquet rather than CSV (5.0$\times$ smaller).
 \end{itemize}
-
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.85\textwidth]{figs/uq-pilot/fig_6_per_worker_aleatoric_means_fault_sweep.png}
-  \par\vspace{0.4em}
-  {\small Figure 6.1. Per worker, aleatoric means. Fault sweep (faultscreen-1): dispatch 122 s, dynamics 92 s.}
-\end{figure}
 
 
 Launch counts from a separate timing job, not the campaign logs.*
@@ -330,25 +322,25 @@ All campaigns use the operating-condition design of Section~\ref{uqp:4.1}, where
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
 \toprule
-     & \textbf{aleatoric-1} & \textbf{faultscreen-1} \\
+     & \textbf{aleatoric-1} & \textbf{faultscreen-2} \\
 \midrule
-    purpose & how much operating conditions move \ac{cct} & which fault locations and placements matter \\
-    hours & 20 (4 per net-load quintile) & 10 (2 per net-load quintile) \\
-    operating conditions (hour, commitment) & 40 & 20 \\
+    purpose & how much operating conditions move \ac{cct} & which fault locations separate operating conditions \\
+    hours & 20 (4 per net-load quintile) & 50 (10 per net-load quintile) \\
+    operating conditions (hour, commitment) & 40 & 100 (20 per quintile) \\
     fault locations & 1 (bus 66) & 17 \\
-    placements & none, or bus 6, 120, 108, 148 & none, or bus 108, 148 \\
-    datacenter size & 50, 100, 200, 300, 400 MW & 200 MW \\
-    runs & 840 = 40 baseline + 800 datacenter & 1,020 = 340 baseline + 680 datacenter \\
-    solved & 439 (40 baseline, 399 datacenter) & 767 (340 baseline, 427 datacenter) \\
-    no outcome & 401 (45 simulation failures, 242 dispatch failures, 114 power-flow failures) & 253 (168 simulation failures, 34 dispatch failures, 51 power-flow failures) \\
-    datacenter runs censored at the 0.5 s cap & 121 of 399 (30.3\%) & 306 of 427 (71.7\%) \\
+    placements & none, or bus 6, 120, 108, 148 & none, or bus 108 \\
+    datacenter size & 50, 100, 200, 300, 400 MW & 100 MW \\
+    runs & 840 = 40 baseline + 800 datacenter & 3,400 = 1,700 baseline + 1,700 datacenter \\
+    solved & 439 (40 baseline, 399 datacenter) & 3,170 (1,700 baseline, 1,470 datacenter; 4 of these have no \ac{cct}) \\
+    no outcome & 401 (45 simulation failures, 242 dispatch failures, 114 power-flow failures) & 230 (all simulation failures; 100 with the fault at bus 108) \\
+    datacenter runs censored at the 0.5 s cap & 121 of 399 (30.3\%) & 1,206 of 1,466 (82.3\%) \\
 \bottomrule
 \end{tabularx}
 \par}
 \vspace{0.25cm}
 
 
-\textbf{Campaign aleatoric-1} varies operating conditions, placement and size, at one fault. Campaign faultscreen-1 varies fault location and placement, at one size. \textbf{No outcome} means the dispatch, the power flow or the simulation failed. It is reported as such, never as stable or unstable.
+\textbf{Campaign aleatoric-1} varies operating conditions, placement and size, at one fault. Campaign faultscreen-2 varies fault location and net-load quintile, with and without one datacenter size at bus 108. \textbf{No outcome} means the dispatch, the power flow or the simulation failed. It is reported as such, never as stable or unstable.
 
 \textbf{Campaign aleatoric-2} is a larger, independent repeat of aleatoric-1: 60 new hours $\times$ 3 commitments = 180 operating conditions, with the same placements and sizes. It shares no conditions with aleatoric-1, and is used in Section~\ref{uqp:7.3} and Section~\ref{uqp:7.4} to check that the results reproduce and how they settle as conditions are added.
 
@@ -364,7 +356,7 @@ Each curve estimates \textbf{$P(\mathrm{CCT} < t)$}: the share of operating cond
 
 Here the $t_i$ are the distinct measured \ac{cct} values, $d_i$ is the number of runs measured at $t_i$, and $n_i$ is the number still at risk at $t_i$ (runs measured at or after $t_i$, plus censored runs). No measured \ac{cct} exceeds the cap, so for $t < 0.5$ s the estimate is simply the number of runs measured below $t$, divided by all solved runs, with the censored runs left in the denominator. No-outcome runs are excluded, so every curve is conditional on the run having an outcome. Figures plot the complement, $P(\mathrm{CCT} > t)$.
 
-The rest of Section~\ref{uqp:7} runs as follows. Section~\ref{uqp:7.2} works one matched example, and Section~\ref{uqp:7.3} repeats it on the larger aleatoric-2. Section~\ref{uqp:7.4} asks what adding operating conditions does to the estimate. Section~\ref{uqp:7.5} splits risk by net load. Section~\ref{uqp:7.6} reports faultscreen-1. Section~\ref{uqp:7.7} quantifies censoring.
+The rest of Section~\ref{uqp:7} runs as follows. Section~\ref{uqp:7.2} works one matched example, and Section~\ref{uqp:7.3} repeats it on the larger aleatoric-2. Section~\ref{uqp:7.4} asks what adding operating conditions does to the estimate. Section~\ref{uqp:7.5} splits risk by net load. Section~\ref{uqp:7.6} reports faultscreen-2, which faults separate operating conditions. Section~\ref{uqp:7.7} quantifies censoring.
 
 \subsubsection{A simple example: one bus, one size, one fault}
 \label{uqp:7.2}
@@ -503,47 +495,24 @@ P(\ac{cct} \textless{} 0.25 s) climbs from 0.07 in the lowest quintile to 1.00 i
 
 \textbf{Takeaway.} Risk rises with net load. P(\ac{cct} \textless{} 0.25 s) goes from 0.07 in q0 to 1.00 in q3 and q4, with the sharpest step between q1 and q2. The high-net-load quintiles are where to focus. This holds for aleatoric-1 with one fault, and for runs that solved.
 
-\subsubsection{Fault screening (faultscreen-1): which faults tell operating conditions apart}
+\subsubsection{Fault screening (faultscreen-2): which faults separate operating conditions}
 \label{uqp:7.6}
 
-Before spending runs on a full campaign, we need to know which faults can tell operating conditions apart. A fault that every condition stays stable through past the 0.5 s cap looks the same everywhere, so it cannot separate them. This section samples 17 fault locations from the 200-bus grid, spread across hop distances from bus 66, and tests each on a small set of operating conditions to see which ones separate them.
+Before spending runs on a full campaign, we need to know which faults can tell operating conditions apart. A fault that every condition stays stable through past the 0.5 s cap looks the same everywhere, so it cannot separate them. This section samples 17 fault locations from the 200-bus grid, spread across hop distances from bus 66, on a small set of operating conditions, to find the ones that can.
 
-\textbf{Sampling:} The faultscreen-1 campaign covers 10 hours (two in each net-load quintile), two commitments per hour, and 17 fault locations. That gives 340 baseline runs with no datacenter and 680 runs with a 200 MW datacenter at bus 108 or bus 148.
-
-
-\vspace{0.25cm}
-{\centering\small
-\renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
-\toprule
-     & baseline (no datacenter) & datacenter (200 MW) \\
-\midrule
-    solved & 340 of 340 & 427 of 680 \\
-    censored at 0.5 s & 302 (88.8\%) & 306 (71.7\%) \\
-    no outcome & 0 & 253: 168 simulation failures, 34 dispatch failures, 51 power-flow failures \\
-\bottomrule
-\end{tabularx}
-\par}
-\vspace{0.25cm}
-
-
-\textbf{Reading.} On matched (hour, commitment, fault) pairs where the datacenter run solved, the datacenter raises P(\ac{cct} \textless{} 0.25 s) only slightly: from 0.041 to 0.072 at bus 108 (194 pairs) and from 0.034 to 0.064 at bus 148 (233 pairs). Most matched baseline runs are censored (81--84\%), so the signal is weak. Bus 108 and bus 148 give nearly the same result.
-
-Baseline \ac{cct} by fault location, for the 20 baseline conditions each:
+\textbf{Sampling:} faultscreen-2 uses 10 hours per net-load quintile, two commitments per hour (fractions 0.25 and 0.75), so 20 operating conditions per quintile. Each fault runs with no datacenter and with a 100 MW datacenter at bus 108, on the same conditions.
 
 
 \vspace{0.25cm}
 {\centering\small
 \renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
 \toprule
-    fault bus & median baseline \ac{cct} & censored & measured of 20 \\
+     & no datacenter & 100 MW at bus 108 \\
 \midrule
-    \textbf{94} & \textbf{0.37 s} & \textbf{35\%} & \textbf{13} \\
-    66 & 0.5 s (cap) & 55\% & 9 \\
-    68 & 0.5 s (cap) & 60\% & 8 \\
-    181 & 0.5 s (cap) & 60\% & 8 \\
-    other 13 & 0.5 s (cap) & 100\% & 0 \\
+    runs (17 faults $\times$ 100 conditions) & 1,700 & 1,700 \\
+    simulation failed & 0 & 230 (100 with the fault at bus 108, where the datacenter sits) \\
+    with a \ac{cct} value & 1,700 & 1,466 (4 solved runs have no \ac{cct} and are excluded) \\
 \bottomrule
 \end{tabularx}
 \par}
@@ -552,53 +521,51 @@ Baseline \ac{cct} by fault location, for the 20 baseline conditions each:
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.85\textwidth]{figs/uq-pilot/main_faultscreen_km.png}
+  \includegraphics[width=0.85\textwidth]{figs/uq-pilot/main_faultscreen2_lost_by_quintile.png}
   \par\vspace{0.4em}
-  {\small Figure 7.6. Kaplan--Meier P(\ac{cct} \textgreater{} t) on matched (hour, commitment, fault) conditions: baseline (blue) against the datacenter at bus 108 (left) and bus 148 (right) (orange).}
+  {\small Figure 7.6. faultscreen-2: four faults change with net load, and 13 do not. Share of runs that lose synchronism before the 0.5 s cap, by net-load quintile (q0 lowest, q4 highest), for each of 17 fault buses. Left: no datacenter. Right: 100 MW datacenter at bus 108. Each point is 20 runs without the datacenter and 6 to 20 with it (simulation failures removed).}
 \end{figure}
 
 
-\textbf{Takeaway.} Most faults tell us little: 13 of 17 are censored in every baseline condition, so an even budget would mostly be spent there. Bus 94 gives the most measured runs (13 of 20 baseline conditions, against 9 for bus 66). Datacenter placement at bus 108 or 148 matters little here, and the fault choice matters more. Screen faults cheaply, then focus the budget on the few that separate conditions.
+As shown in Figure 7.6, each line is one fault bus, and each point is the share of its runs that lose synchronism before the cap, in one net-load quintile. A fault separates conditions when that share changes across quintiles. Four buses (66, 68, 94 and 181) separate conditions, because they lose synchronism more often at high net load. The other 13 buses stay flat at zero, because every run stays censored past the cap. A flat line means the fault tells us nothing about separation. It does not mean the fault has no effect.
+
+With the datacenter, the same four lines start higher. Bus 94 at q0 goes from 1 of 20 runs to 7 of 20. The quintiles are set by net load without the datacenter, so this may partly reflect the extra 100 MW. One datacenter size at one bus cannot tell the two effects apart.
+
+\textbf{Takeaway.} Four of 17 faults separate operating conditions: buses 66, 68, 94 and 181. For example, bus 66 separates because its outcome changes with net load. These four are the candidates for a future net-load campaign. The screen has limits: one datacenter size and placement, and one 0.5 s cap, so the list may change with other settings. The 230 datacenter simulation failures are not yet explained.
 
 \subsubsection{Censoring: dropping censored runs inflates risk}
 \label{uqp:7.7}
 
-The KM curves in Sections~\ref{uqp:7.2}--\ref{uqp:7.6} keep censored runs in the denominator; this section shows what it costs to drop them instead, a common shortcut. Dropping censored runs from a risk estimate inflates it by a factor that depends only on the censored share, not on the threshold:
+The KM curves in Sections~\ref{uqp:7.2}--\ref{uqp:7.5} and the shares in Section~\ref{uqp:7.6} keep censored runs in the denominator. A simple threshold that drops them gives a different answer. Every measured \ac{cct} is below the 0.5 s cap, so at the cap the dropped-run share is 100\%. Below the cap, dropping censored runs inflates the estimated risk, P(\ac{cct} \textless{} t). We call the ratio of the two estimates risk inflation. It equals one divided by one minus the censored share:
 
 
 \vspace{0.25cm}
 {\centering\small
 \renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
 \toprule
-    campaign & datacenter runs solved & measured & censored share & inflation from dropping censored runs \\
+    campaign & datacenter runs with a \ac{cct} value & censored at the cap & risk inflation \\
 \midrule
-    aleatoric-1 & 399 & 278 & 30.3\% & \textbf{1.44$\times$} \\
-    faultscreen-1 & 427 & 121 & 71.7\% & \textbf{3.53$\times$} \\
+    aleatoric-1 & 399 & 30.3\% & \textbf{1.44$\times$} \\
+    aleatoric-2 & 1,777 & 28.7\% & \textbf{1.40$\times$} \\
 \bottomrule
 \end{tabularx}
 \par}
 \vspace{0.25cm}
 
 
-\[
-\frac{\hat P_{\text{drop}}}{\hat P_{\text{keep}}} = \frac{N_{\text{solved}}}{N_{\text{measured}}}
-\]
-
-This follows from Section~\ref{uqp:7.1}, since censoring sits at one point beyond every measured value. The factor is arithmetic, but it is easy to get wrong by quoting one population's censored share against another's label. The 3.53$\times$ corresponds to 71.7\% censoring among datacenter runs that solved. It is not the share of the 1,020 planned runs.
-
-\textbf{Takeaway.} This is the quantitative reason Section~\ref{uqp:7} uses Kaplan--Meier rather than a naive below-threshold share: discarding censored runs would have inflated every risk number here: 1.4$\times$ in aleatoric-1, 3.5$\times$ in faultscreen-1. Keeping censored runs is not a refinement; it is the difference between a right and a wrong answer.
+For aleatoric-2, dropping the censored runs inflates the risk by 1.40 times below the cap. The KM curves for aleatoric-2 are in Section~\ref{uqp:7.3}.
 
 
 \subsection{First look at the Texas synthetic grid (ACTIVSg2000)}
 \label{uqp:8}
 \label{sec:first_look_activsg2000}
 
-The 200-bus case is small enough that brute force works: whole campaigns finish in minutes. That is convenient but it hides the question the methods work exists to answer, so we measured what changes on the Texas synthetic grid, \textbf{ACTIVSg2000} (2,000 buses, from the TAMU repository \cite{TAMUrepo}). This is a scoping study, not a campaign.
+We ran a small profiling test on the Texas synthetic grid, \textbf{ACTIVSg2000} (2,000 buses, from the TAMU repository \cite{TAMUrepo}). The question is how cost grows with grid size, and whether brute-force sampling still works for our campaigns. It is a scoping test, not a campaign.
 
-\textbf{What already exists.} A GridKit dynamic case is distributed with GridKit, and raw TAMU data and processed hourly demand, wind and \textbf{solar} profiles are available. The base case \textbf{runs unmodified}: a 10 s simulation with a 0.15 s fault completes successfully at both default and full monitoring.
+The GridKit base case runs unmodified on the 2,000-bus grid: a 10 s simulation with a 0.15 s fault completes at default and full monitoring.
 
-\textbf{Measured, same settings on both cases.} Dispatch-stage numbers are per-case solver times, measured inside one batched Julia process. The process starts once, so its ~6 s start-up cost is not counted in each solve. Timing a single solve in a fresh process mostly measures start-up, so those numbers would not be useful for projections.
+Dispatch times are solver times inside one batched Julia process. The ~6 s start-up is not counted, because a single solve in a fresh process mostly measures start-up.
 
 
 \vspace{0.25cm}
@@ -626,9 +593,9 @@ The 200-bus case is small enough that brute force works: whole campaigns finish 
 \vspace{0.25cm}
 
 
-\textbf{The shape of the growth.} Against a 10$\times$ increase in buses, data scales \textbf{linearly} ($\approx N^{1.0}$), the dispatch stage as $\approx N^{1.27}$, and the dynamic simulation as $\approx N^{1.40}$. So compute grows faster than the network and faster than storage, and the dynamic stage (the cheap one at 200 buses) grows fastest.
+\textbf{Growth with size.} With 10$\times$ the buses, output data grows about linearly ($N^{1.0}$), the dispatch stage about $N^{1.27}$, and the dynamic run about $N^{1.40}$. Compute grows faster than storage, and the dynamic run grows fastest.
 
-\textbf{What that implies for a campaign.} Projecting aleatoric-1 (840 runs, one full run plus ~8 bisection probes each, so ~7,560 simulations). Serial times use the measured per-run cost; wall times assume the pilot's 16 workers per node and scale linearly, which is optimistic until per-worker memory is known:
+\textbf{Projection for aleatoric-1.} The campaign has 840 runs, about 7,560 simulations (one full run and about eight bisection probes each). Wall times assume the pilot's 16 workers per node and scale linearly.
 
 
 \vspace{0.25cm}
@@ -651,29 +618,28 @@ The 200-bus case is small enough that brute force works: whole campaigns finish 
 \vspace{0.25cm}
 
 
-On the 2,000-bus case we ran only setup and single-run checks: the end-to-end rebuild with one dynamic run, a faultscreen-shaped micro-campaign of one dispatch and eight fault locations, and single-run and single-batch memory probes. We did not run any aleatoric campaign on the 2,000-bus case. A campaign the size of aleatoric-1 projects to ~2.5 h per node at 16 workers, applying the overhead measured on the 200-bus run. Full worker memory is unmeasured, so treat this as a planning figure, not a guarantee.
+The 200-bus campaign ran 2.7$\times$ slower than its ideal split over 16 workers (6.0 min against 2.2 min). Applying that to the 2,000-bus figure gives about \textbf{2.5 h} on one node. Worker memory is not measured yet, so treat this as a planning figure.
 
-\textbf{Storage, not compute, is the bottleneck.} At 200 buses the CPU saturates before memory; at 2,000 buses selective monitoring matters far more (the 4,649 output columns are mostly bus voltages). \textbf{Cost to scale to 2,000 buses: brute force survives one order of magnitude, not two.} The design space grows 115$\times$ (siting 11.5$\times$ and fault locations 10$\times$), while per-sample cost grows 19--25$\times$. Holding sampling density fixed projects 2,150--2,900$\times$ the pilot's cost. That makes screening, surrogates and adaptive refinement the concrete case, not a luxury.
+We ran only setup checks, single-run checks and memory probes on the 2,000-bus case, plus a micro-campaign of one dispatch and eight fault locations. We did not run an aleatoric campaign there.
 
-\textbf{Takeaway.} Brute force survives one order of magnitude of grid size, not two: a campaign the size of aleatoric-1 at 2,000 buses is projected at about 2.5 h on one node, storage rather than compute is the bottleneck, and the dynamic run, nearly free at 200 buses, becomes the cost to minimise. Scaling the pilot is a methods problem, not a hardware one, which Section~\ref{uqp:9} takes up.
+\textbf{Takeaway.} Brute force survives one order of magnitude of grid size, not two. The design space grows 115$\times$ (siting 11.5$\times$ and fault locations 10$\times$), while cost per run grows about 19--25$\times$. At the same sampling density, serial compute time (solver CPU time for the dispatch and dynamic runs) grows about 2,150 to 2,910$\times$. Storage grows with the grid and can become the bottleneck: the raw monitor output for aleatoric-1 is projected at about 220 GB, from 262.5 MB for each of its 840 full monitored runs. At this size, screening and surrogate models are the practical way to cover the design space, and Section~\ref{uqp:9} discusses them briefly.
 
 
 \subsection{Next steps}
 \label{uqp:9}
 \label{sec:next_steps}
 
-The pilot leaves a clear picture of where cost lives and therefore where the methods work should go. At 200 buses the expensive part is the \textbf{dispatch stage}, and interesting dimensions such as contingency location or disturbance severity are nearly free once a dispatch exists. However, at 2,000 buses (Section~\ref{uqp:8}), the dynamic run dominates, the design space grows by two orders of magnitude, and the quantity to minimise becomes the number of dynamic simulations. Making aleatoric UQ affordable at that scale is \textbf{FY27 planned work}, pursued along two tracks.
+The pilot leaves a clear picture of where cost lives and therefore where the methods work should go. At 200 buses the expensive part is the \textbf{dispatch stage}. Once a dispatch exists, the other dimensions are cheaper to explore: contingency location, load placement and size, and the aleatoric samples. Each still needs its own dynamic run, so they are cheap relative to the dispatch. However, at 2,000 buses (Section~\ref{uqp:8}), the dynamic run dominates, the design space grows by two orders of magnitude, and the quantity to minimise becomes the number of dynamic simulations. Making aleatoric UQ affordable at that scale is \textbf{FY27 planned work}, pursued along two tracks.
 
 \textbf{Track 1: spend fewer, better-chosen dynamic runs.}
 
 \begin{enumerate}
-  \item \textbf{Screen contingencies cheaply, then concentrate.} 76 \% of a uniform fault budget was wasted here (Section~\ref{uqp:7.6}), with 13 of 17 locations fully censored. On a 2k-bus case the contingency list is the part that explodes and also the part that is free to explore.
-  \item \textbf{Treat censoring as information.} Both "survived beyond the cap" and "no outcome" are results, and at high censoring they are most of the dataset. A cheap 1--2 run classifier that detects the censored case before committing to an 8-run \ac{cct} bisection would remove most of the cost.
-  \item \textbf{Condition and stratify, rather than only adding samples.} \ac{cct} spread follows net load (Section~\ref{uqp:7.5}), so stratified or importance sampling on net load cuts variance at fixed cost; a variance decomposition of the existing 840 runs is a zero-cost first step.
-  \item \textbf{Surrogate or warm-started \ac{cct}, and early-terminating integration.} Neighbouring dispatches have strongly correlated \ac{cct}, and pole slip is detectable well before the end of the simulated window, so both the number and the length of simulations can be cut.
+  \item \textbf{Screen contingencies cheaply, then concentrate.} As faultscreen-2 showed, 13 of 17 fault locations were censored in every baseline run, and four separated conditions (Section~\ref{uqp:7.6}). On a 2,000-bus case the contingency list grows with the grid, and each fault still needs its own dynamic run, so screening it is where cost can be cut.
+  \item \textbf{Reduce the cost of each \ac{cct} search.} A censored run already needs only two simulations, so the cost sits in the bisection for measured runs. Neighbouring dispatches have strongly correlated \ac{cct}, so starting the search from one could cut the bisection steps. Pole slip is also detectable well before the end of the simulated window, so early termination could shorten each run. Both would lower the cost, provided early termination is checked against full runs.
+  \item \textbf{Condition and stratify, rather than only adding samples.} In aleatoric-1, censoring falls from 83\% in the lowest net-load quintile to 0\% in the top two (Section~\ref{uqp:7.5}). In faultscreen-2, fault location explains more than half of the variance. A variance decomposition of pre-screen runs could rank the candidate factors: fault location, net load, and datacenter placement and size. Stratified or importance sampling on the top-ranked factors could then cut variance at fixed cost.
 \end{enumerate}
 
-\textbf{Track 2: a graph surrogate, as an alternative and supplement to sampling.} The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias, and have been used as fast power-system surrogates \cite{tsagat2026}. A surrogate trained on the records the sampling campaigns already produce, e.g., (graph, operating point, parameters, fault) $\to$ trajectory map, could emulate \ac{cct} or the stability label cheaply, turning the expensive solver into a screening tool \cite{tgcn2026cct}. Full dynamic runs could be reserved for confirmation and for labelling the cases where the surrogate is least certain, an active-learning approach that chooses which runs to do. This is \textbf{supplemental} to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means \cite{zhang2025risk}.
+\textbf{Track 2: a graph surrogate, as an alternative and supplement to sampling.} The grid is intrinsically a graph: the admittance matrix is a weighted Laplacian over buses, a fault propagates through branch impedances as a message-passing process, and "which bus to site load at" is itself a graph question. Graph neural networks and graph transformers carry exactly that inductive bias, and have been used as fast power-system surrogates \cite{tsagat2026}. A surrogate trained on the records the sampling campaigns already produce, e.g., (graph, operating point, parameters, fault) $\to$ trajectory map, could emulate \ac{cct} or the stability label cheaply, turning the expensive solver into a screening tool \cite{tgcn2026cct}. Full dynamic runs would still confirm results and cover the cases where the surrogate is least certain, and active learning would choose which runs to add next. This is \textbf{supplemental} to sampling-based UQ, not a replacement: the surrogate lowers per-sample cost, while the sampling design still fixes what the estimate means \cite{zhang2025risk}.
 
 The near-term steps are: a wider contingency screen, a treatment of censoring in the paired (with and without datacenter) comparison, a variance decomposition of the existing runs, and running the campaigns on the Texas grid (Section~\ref{uqp:8}). The graph-surrogate track builds on the dataset those campaigns are already generating.
 
