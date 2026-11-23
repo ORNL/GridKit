@@ -1,0 +1,18 @@
+{
+  "Simulator": [
+    {
+      "executableName": "Simulink",
+      "hold": "false",
+      "co_sim_enable": "true"
+    }
+  ],
+  "cosim": [
+    {
+      "sync_enable": "true",
+      "outputs": "39_vr,39_vi",
+      "inputs": "39_ir,39_ii",
+      "address": "tcp://127.0.0.1:5556"
+    }
+  ],
+  "Endpoints": []
+}

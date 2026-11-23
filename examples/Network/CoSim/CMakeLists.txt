@@ -8,6 +8,7 @@ gridkit_example_add_file(ThreeBusCoSimClient.case.json)
 gridkit_example_add_file(ThreeBusCoSimServer.case.json)
 gridkit_example_add_file(IEEE39Generator.case.json)
 gridkit_example_add_file(IEEE39Grid.case.json)
+gridkit_example_add_file(IEEE39Arcade.input.json)
 gridkit_example_add_file(run_cosim.sh)
 
 add_executable(CoSimClient CoSimClient.cpp)
@@ -30,6 +31,15 @@ foreach(_target CoSimClient CoSimServer)
   target_include_directories(${_target}
                              PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/single_include)
 endforeach()
+
+if(UNIX)
+  find_package(Threads REQUIRED)
+  target_compile_definitions(CoSimClient PRIVATE GRIDKIT_COSIM_ARCADE)
+  target_link_libraries(CoSimClient PRIVATE Threads::Threads)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_libraries(CoSimClient PRIVATE rt)
+  endif()
+endif()
 
 add_test(
   NAME CoSimExample

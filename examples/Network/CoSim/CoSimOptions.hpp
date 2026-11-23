@@ -33,10 +33,13 @@ namespace GridKit
            .nargs = 2},
           {.name     = {"--time-step"},
            .help     = "Communication step in seconds (these must match across client/server)",
-           .defaults = 1.0 / 16.0 / 60.0},
+           .defaults = "0.0010416666666666667"},
           {.name     = {"--final-time"},
            .help     = "Final simulation time in seconds (default: 1s)",
            .defaults = 1.0},
+          {.name     = {"--transport"},
+           .help     = "Transport: zmq (default) or arcade (Unix client)",
+           .defaults = "zmq"},
           {.name     = {"--endpoint"},
            .help     = "ZeroMQ address to bind (server) or connect (client)",
            .defaults = "tcp://127.0.0.1:5556"},
@@ -47,7 +50,7 @@ namespace GridKit
            .help  = "JSON output keys (default: BUS_ir/BUS_ii on server, BUS_vr/BUS_vi on client)",
            .nargs = 2},
           {.name     = {"--timeout-ms"},
-           .help     = "Maximum wait for a peer message in milliseconds",
+           .help     = "Maximum wait for a peer message or ARCADE update in milliseconds",
            .defaults = 10000}};
     }
 

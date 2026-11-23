@@ -1,8 +1,13 @@
 #!/usr/bin/env sh
 
 set -eu
-readonly _cosim_dir=$(dirname "$(realpath "$0")")
-cd "${_cosim_dir}"
+cd "$(dirname "$0")"
+
+_transport=${3:-zmq}
+case "$_transport" in
+    zmq|arcade) ;;
+    *) echo "Transport must be zmq or arcade" >&2; exit 2 ;;
+esac
 
 case "${1:-three-bus}" in
     three-bus)
@@ -14,19 +19,16 @@ case "${1:-three-bus}" in
         _dt=0.0010416666666666667
         ;;
     ieee39)
-        _server=IEEE39Generator.case.json
-        _client=IEEE39Grid.case.json
+        # The generator owns the bus 39 voltage. Its subtransient impedance is
+        # smaller than the grid Thevenin impedance, which the exchange requires.
+        _server=IEEE39Grid.case.json
+        _client=IEEE39Generator.case.json
         _server_bus=39 _client_bus=39
         _vr=30 _vi=31 _ir=32 _ii=33
         _srv_vr=30 _srv_vi=31 _srv_ir=32 _srv_ii=33
-        # determined through experimentation as a timestep with small amounts
-        # of error but there are more options. time steps smaller than about
-        # 7.93ms appear to fail uniformly. those above intermittently fail
-        # but are more likely to pass. time steps near 7.93ms fail with
-        # large amounts of error.
-        _dt=0.125
+        _dt=0.0010416666666666667
         ;;
-    *) echo "Usage: $0 [three-bus|ieee39] [bus|signals]" >&2; exit 2 ;;
+    *) echo "Usage: $0 [three-bus|ieee39] [bus|signals] [zmq|arcade]" >&2; exit 2 ;;
 esac
 
 case "${2:-bus}" in
@@ -44,6 +46,6 @@ if [ "$_output_mode" = --output-bus ]; then
 else
     set -- --output-signals "$_vr" "$_vi" --input-signals "$_ir" "$_ii"
 fi
-./CoSimClient "$_client" "$@" --input-tags "${_server_bus}_ir" "${_server_bus}_ii" --output-tags "${_client_bus}_vr" "${_client_bus}_vi" --time-step "$_dt"
+./CoSimClient "$_client" "$@" --input-tags "${_server_bus}_ir" "${_server_bus}_ii" --output-tags "${_client_bus}_vr" "${_client_bus}_vi" --time-step "$_dt" --transport "$_transport"
 wait "$_srv_pid"
 trap - EXIT HUP INT TERM

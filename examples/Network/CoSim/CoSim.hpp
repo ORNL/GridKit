@@ -1,10 +1,13 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
 #include <cmath>
-#include <functional>
-#include <iostream>
+#include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <utility>
 
 #include <nlohmann/json.hpp>
@@ -15,6 +18,9 @@
 
 #include "CoSimOptions.hpp"
 #include <zmq.hpp>
+#ifdef GRIDKIT_COSIM_ARCADE
+#include "ArcadeClient.hpp"
+#endif
 
 namespace GridKit
 {
@@ -73,6 +79,25 @@ namespace GridKit
           throw std::invalid_argument(
               "Time step, final time, and timeout must be finite and positive");
         }
+        if (tf / dt >= std::numeric_limits<int>::max())
+        {
+          throw std::invalid_argument("Too many co-simulation steps");
+        }
+        const auto transport = args["transport"]();
+        if (transport != "zmq" && transport != "arcade")
+        {
+          throw std::invalid_argument("Expected --transport zmq or arcade");
+        }
+        if (server && transport == "arcade")
+        {
+          throw std::invalid_argument("ARCADE uses CoSimClient for shared memory and CoSimServer for ZeroMQ");
+        }
+#ifndef GRIDKIT_COSIM_ARCADE
+        if (transport == "arcade")
+        {
+          throw std::invalid_argument("ARCADE transport requires Unix");
+        }
+#endif
         const auto [in_real, in_imag]   = tagNames(args, "input-tags", server);
         const auto [out_real, out_imag] = tagNames(args, "output-tags", !server);
         if (in_real.empty() || in_imag.empty() || out_real.empty() || out_imag.empty()
@@ -96,78 +121,106 @@ namespace GridKit
         IdxT    real_index{INVALID_INDEX<IdxT>}, imag_index{INVALID_INDEX<IdxT>};
         real_input->link(&real, &real_index);
         imag_input->link(&imag, &imag_index);
-        zmq::context_t context;
-        zmq::socket_t  socket(context, server ? zmq::socket_type::rep : zmq::socket_type::req);
-        socket.set(zmq::sockopt::linger, 0);
-        socket.set(zmq::sockopt::rcvtimeo, timeout);
-        socket.set(zmq::sockopt::sndtimeo, timeout);
-        if (server)
+#ifdef GRIDKIT_COSIM_ARCADE
+        std::optional<ArcadeClient> arcade;
+        if (transport == "arcade")
         {
-          socket.bind(args["endpoint"]());
+          arcade.emplace(std::array{in_real, in_imag},
+                         std::array{out_real, out_imag},
+                         dt,
+                         timeout);
         }
-        else
+#endif
+        std::optional<zmq::context_t> context;
+        std::optional<zmq::socket_t>  socket;
+        if (transport == "zmq")
         {
-          socket.connect(args["endpoint"]());
+          context.emplace();
+          socket.emplace(*context, server ? zmq::socket_type::rep : zmq::socket_type::req);
+          socket->set(zmq::sockopt::linger, server ? timeout : 0);
+          socket->set(zmq::sockopt::rcvtimeo, timeout);
+          socket->set(zmq::sockopt::sndtimeo, timeout);
+          if (server)
+          {
+            socket->bind(args["endpoint"]());
+          }
+          else
+          {
+            socket->connect(args["endpoint"]());
+          }
         }
-        auto send = [&]()
+        auto send = [&](double time)
         {
+#ifdef GRIDKIT_COSIM_ARCADE
+          if (arcade)
+          {
+            arcade->send(output(), time);
+            return;
+          }
+#else
+          (void) time;
+#endif
           const auto message = encode(output(), out_real, out_imag);
-          if (!socket.send(zmq::buffer(message), zmq::send_flags::none))
+          if (!socket->send(zmq::buffer(message), zmq::send_flags::none))
           {
             throw std::runtime_error("Co-simulation send timed out");
           }
         };
-        auto receive = [&]()
+        auto receive = [&]([[maybe_unused]] double time)
         {
+#ifdef GRIDKIT_COSIM_ARCADE
+          if (arcade)
+          {
+            std::tie(real, imag) = arcade->receive(time);
+            return;
+          }
+#endif
           zmq::message_t message;
-          if (!socket.recv(message, zmq::recv_flags::none))
+          if (!socket->recv(message, zmq::recv_flags::none))
           {
             throw std::runtime_error("Co-simulation receive timed out");
           }
-
-          const auto values = decode(message.to_string(), in_real, in_imag);
-          real              = values.first;
-          imag              = values.second;
+          std::tie(real, imag) = decode(message.to_string(), in_real, in_imag);
         };
         if (server)
         {
-          receive();
+          receive(0.0);
         }
         sys.allocate();
         AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida(&sys);
         ida.setTolerance(server ? 1.0e-5 : 1.0e-7, server ? 1.0e-7 : 1.0e-9);
         ida.configureSimulation();
-        const auto steps = ida.getStepCount(tf, dt);
+        const auto steps = std::max(1, ida.getStepCount(tf, dt));
 
+        ida.initializeSimulation(0.0, server);
+        sys.evaluateResidual();
+#ifdef GRIDKIT_COSIM_ARCADE
+        if (arcade)
+        {
+          arcade->start(output());
+        }
+#endif
+        send(0.0);
         if (!server)
         {
-          ida.initializeSimulation(0.0, false);
+          receive(0.0);
         }
-        for (int step = 0; step <= steps; ++step)
+        for (int step = 0; step < steps; ++step)
         {
-          if (server && step > 0)
+          const auto t      = step * dt;
+          const auto target = step + 1 == steps ? tf : (step + 1) * dt;
+          if (server)
           {
-            receive();
+            receive(target);
           }
-          if (step == 0)
-          {
-            if (server)
-            {
-              ida.initializeSimulation(0.0);
-            }
-          }
-          else
-          {
-            const auto t      = std::fma(static_cast<double>(step - 1), dt, 0.0);
-            const auto target = step == steps ? tf : std::fma(static_cast<double>(step), dt, 0.0);
-            ida.initializeSimulation(t);
-            ida.runSimulationStep(target, dt, 1, 1);
-          }
-          sys.evaluateResidual();
-          send();
+          ida.initializeSimulation(t, true, false);
+          ida.runSimulationStep(target, target - t, 1, 1, [&](double time)
+                                {
+                                 sys.evaluateResidual();
+                                 send(time); });
           if (!server)
           {
-            receive();
+            receive(target);
           }
         }
         return 0;
