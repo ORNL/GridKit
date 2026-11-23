@@ -1941,3 +1941,238 @@ def parse_json_genrou_names(genrou_names):
             # Already an int
             bus_ids.append(int(name))
     return bus_ids
+
+
+def plot_grid_datacenter(
+    case_data: MatpowerCaseData,
+    map_style: str = "carto-positron",
+    zoom: float | None = None,
+    center: tuple[float, float] | None = None,
+    n_hover_points: int = 10,
+    show_loading: bool = False,
+    show_gen_connectors: bool = False,
+    marker_scale: float = 1.0,
+) -> go.Figure:
+    """Datacenter-focused geo plot: branches, loads (PD-sized buses), IBR (blue) vs Thermal gens.
+
+    Simplified visualization for datacenter pilot study slides:
+    - Topology: gray branches (no colorbar)
+    - Loads: buses sized by PD (no colorbar)
+    - Generators: only two categories
+      * IBR (wind): blue markers
+      * Thermal (all other types): dark gray markers
+    - No loading percentage colorbars
+    - No legend entries for load or line loading
+
+    Parameters
+    ----------
+    case_data:
+        MATPOWER case data with geographic coordinates and genfuel information.
+    map_style:
+        Plotly mapbox style (default: "carto-positron").
+    zoom:
+        Map zoom level. If None, auto-calculated based on grid size.
+    center:
+        Map center (lat, lon). If None, auto-calculated from bus positions.
+    n_hover_points:
+        Number of hover points interpolated along each branch.
+    show_loading:
+        If True, color branches by loading_pct. Default False for clean appearance.
+    show_gen_connectors:
+        If True, draw light connector lines from generators to bus locations.
+    marker_scale:
+        Global marker size multiplier.
+
+    Returns
+    -------
+    go.Figure
+        Plotly figure ready for display or PowerPoint export.
+    """
+
+    required_bus_cols = ["lat", "lon", "PD", "BUS_I"]
+    missing_bus_cols = [c for c in required_bus_cols if c not in case_data.bus.columns]
+    if missing_bus_cols:
+        raise ValueError(f"Missing required bus columns: {missing_bus_cols}")
+
+    required_branch_cols = [
+        "from_lat",
+        "from_lon",
+        "to_lat",
+        "to_lon",
+        "F_BUS",
+        "T_BUS",
+    ]
+    missing_branch_cols = [
+        c for c in required_branch_cols if c not in case_data.branch.columns
+    ]
+    if missing_branch_cols:
+        raise ValueError(f"Missing required branch columns: {missing_branch_cols}")
+
+    required_gen_cols = ["lat", "lon", "GEN_BUS"]
+    missing_gen_cols = [c for c in required_gen_cols if c not in case_data.gen.columns]
+    if missing_gen_cols:
+        raise ValueError(f"Missing required gen columns: {missing_gen_cols}")
+
+    fig = go.Figure()
+
+    # --- Branches (uniform gray, no loading coloring) ---
+    lat_vals = _branch_lat_array(case_data.branch, n_hover_points)
+    lon_vals = _branch_lon_array(case_data.branch, n_hover_points)
+    hover_vals = _branch_hover_array(case_data.branch, n_hover_points)
+    fig.add_trace(
+        go.Scattermap(
+            mode="lines",
+            lat=lat_vals,
+            lon=lon_vals,
+            hovertext=hover_vals,
+            hoverinfo="text",
+            line=dict(color="rgba(80, 80, 80, 0.45)", width=1.5),
+            showlegend=False,
+        )
+    )
+
+    # --- Buses (sized by PD, no colorbar) ---
+    bus_sizes = (
+        (np.sqrt(case_data.bus["PD"].clip(lower=0.01).values) * 2.2 + 3) * marker_scale
+    ).tolist()
+    has_bus_name = "bus_name" in case_data.bus.columns
+    bus_hover = [
+        (
+            f"<b>BUS_I: {row.BUS_I}</b><br>"
+            + (f"{row.bus_name}<br>" if has_bus_name else "")
+            + f"PD: {row.PD:.2f} MW"
+        )
+        for row in case_data.bus.itertuples()
+    ]
+    fig.add_trace(
+        go.Scattermap(
+            name="Loads (PD)",
+            mode="markers",
+            lat=case_data.bus["lat"].tolist(),
+            lon=case_data.bus["lon"].tolist(),
+            hovertext=bus_hover,
+            hoverinfo="text",
+            marker=dict(
+                size=bus_sizes,
+                color="#333333",  # dark grey for loads
+                opacity=0.70,
+            ),
+            showlegend=True,
+        )
+    )
+
+    # --- Generator fan-out connectors (optional) ---
+    if show_gen_connectors:
+        gen_conn_lat, gen_conn_lon, gen_conn_hover = _build_gen_connector_line_arrays(
+            case_data.gen
+        )
+        if gen_conn_lat:
+            fig.add_trace(
+                go.Scattermap(
+                    mode="lines",
+                    lat=gen_conn_lat,
+                    lon=gen_conn_lon,
+                    hoverinfo="none",
+                    line=dict(color="rgba(60, 60, 60, 0.35)", width=1.0),
+                    showlegend=False,
+                )
+            )
+
+    # --- Generators: separate only by IBR (wind) vs Thermal ---
+    if case_data.genfuel is not None and len(case_data.genfuel) == len(case_data.gen):
+        gen_plot_df = case_data.gen.copy()
+        gen_plot_df["genfuel"] = case_data.genfuel.values
+
+        # IBR generators (wind): blue
+        ibr_mask = gen_plot_df["genfuel"] == "wind"
+        if ibr_mask.any():
+            ibr_df = gen_plot_df[ibr_mask]
+            gen_sizes = (
+                (np.sqrt(ibr_df["PG"].clip(lower=0.01).values) * 1.8 + 4) * marker_scale
+                if "PG" in ibr_df.columns
+                else np.full(len(ibr_df), 6.0 * marker_scale)
+            )
+            gen_hover = [
+                f"<b>IBR (Wind)</b><br>GEN_BUS: {row.GEN_BUS}<br>PG: {row.PG:.2f} MW"
+                for row in ibr_df.itertuples()
+            ]
+            fig.add_trace(
+                go.Scattermap(
+                    name="IBR (Wind)",
+                    mode="markers",
+                    lat=ibr_df["lat"].tolist(),
+                    lon=ibr_df["lon"].tolist(),
+                    hovertext=gen_hover,
+                    hoverinfo="text",
+                    marker=dict(size=gen_sizes.tolist(), color="#1f77b4", opacity=0.9),
+                    showlegend=True,
+                )
+            )
+
+        # Thermal generators (all others): brown
+        thermal_mask = gen_plot_df["genfuel"] != "wind"
+        if thermal_mask.any():
+            thermal_df = gen_plot_df[thermal_mask]
+            gen_sizes = (
+                (np.sqrt(thermal_df["PG"].clip(lower=0.01).values) * 1.8 + 4)
+                * marker_scale
+                if "PG" in thermal_df.columns
+                else np.full(len(thermal_df), 6.0 * marker_scale)
+            )
+            gen_hover = [
+                f"<b>Thermal Gens</b><br>GEN_BUS: {row.GEN_BUS}<br>Fuel: {row.genfuel}<br>PG: {row.PG:.2f} MW"
+                for row in thermal_df.itertuples()
+            ]
+            fig.add_trace(
+                go.Scattermap(
+                    name="Thermal Gens",
+                    mode="markers",
+                    lat=thermal_df["lat"].tolist(),
+                    lon=thermal_df["lon"].tolist(),
+                    hovertext=gen_hover,
+                    hoverinfo="text",
+                    marker=dict(size=gen_sizes.tolist(), color="#8B4513", opacity=0.85),
+                    showlegend=True,
+                )
+            )
+    else:
+        # Fallback: all generators in one color (brown)
+        fig.add_trace(
+            go.Scattermap(
+                name="Generators",
+                mode="markers",
+                lat=case_data.gen["lat"].tolist(),
+                lon=case_data.gen["lon"].tolist(),
+                hovertext=[
+                    f"GEN_BUS: {row.GEN_BUS}<br>PG: {row.PG:.2f} MW"
+                    for row in case_data.gen.itertuples()
+                ],
+                hoverinfo="text",
+                marker=dict(size=6 * marker_scale, color="#8B4513", opacity=0.85),
+                showlegend=True,
+            )
+        )
+
+    center_lon = float(case_data.bus["lon"].mean())
+    center_lat = float(case_data.bus["lat"].mean())
+
+    # Use provided center if given; otherwise auto-calculate
+    if center is not None:
+        center_lat, center_lon = center
+
+    if zoom is None:
+        zoom = 7 if len(case_data.bus) <= 400 else 5
+
+    fig.update_layout(
+        # title=f"{case_data.case_name}: Datacenter Pilot Study — Grid Topology & Generator Mix",  # optional
+        map={
+            "style": map_style,
+            "center": {"lon": center_lon, "lat": center_lat},
+            "zoom": zoom,
+        },
+        legend={"orientation": "v", "y": 1.0, "x": 1.0, "itemsizing": "constant"},
+        margin=dict(r=120),
+        height=650,
+        width=920,
+    )
+    return fig
