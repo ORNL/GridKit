@@ -31,7 +31,7 @@ namespace GridKit::PhasorDynamics::Governor
       FSR,
       PM,
       ERROR,
-      MEMORY,
+      MEMORY, // Fuel-command memory deviation from initial_fsr_.
       FSRN,
       FSRT,
       COUNT
@@ -77,6 +77,7 @@ namespace GridKit::PhasorDynamics::Governor
     std::unique_ptr<MonitorT>   monitor_;
     RealT                       pmwset_set_{};
     RealT                       pref_set_{};
+    RealT                       initial_fsr_{};
 
     RealT                    mva_{};
     RealT                    Trate_{};

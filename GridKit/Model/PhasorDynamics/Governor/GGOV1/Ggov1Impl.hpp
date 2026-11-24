@@ -171,13 +171,14 @@ namespace GridKit::PhasorDynamics::Governor
     { return a - positive(a - b); };
     const auto limited = [&](T x)
     { return Vmin_ + positive(x - Vmin_) - positive(x - Vmax_); };
-    f[DEMAND]     = limited(minimum(y[FSRN], minimum(y[FSRT], T{Fsrtmax_}))) - y[DEMAND];
-    // The acceleration controller compares demand with the previous fuel command.
-    const T accel = Ka_ * Aset_ - acceleration_gain_ * (speed - y[SPEED]);
-    const T order = y[DEMAND] - (Ka_ > 0) * positive(y[DEMAND] - y[MEMORY] - Tfsr_ * accel);
-    f[FSR]        = limited(order) - y[FSR];
-    f[MEMORY]     = y[FSR] - y[MEMORY] - Tfsr_ * yp[MEMORY];
-    f[PM]         = Kturb_ * (turbine - Wfnl_) - std::max(Dm_, RealT{0}) * speed - this->toComponentBase(y[PM]);
+    f[DEMAND]      = limited(minimum(y[FSRN], minimum(y[FSRT], T{Fsrtmax_}))) - y[DEMAND];
+    // The acceleration controller compares demand with the lagged fuel command.
+    const T memory = initial_fsr_ + y[MEMORY];
+    const T accel  = Ka_ * Aset_ - acceleration_gain_ * (speed - y[SPEED]);
+    const T order  = y[DEMAND] - (Ka_ > 0) * positive(y[DEMAND] - memory - Tfsr_ * accel);
+    f[FSR]         = limited(order) - y[FSR];
+    f[MEMORY]      = y[FSR] - memory - Tfsr_ * yp[MEMORY];
+    f[PM]          = Kturb_ * (turbine - Wfnl_) - std::max(Dm_, RealT{0}) * speed - this->toComponentBase(y[PM]);
     return 0;
   }
 
@@ -209,8 +210,10 @@ namespace GridKit::PhasorDynamics::Governor
     const RealT error_offset = invertControl(governor_error, RealT{0}, Minerr_ - Db_ - 1, Maxerr_ + Db_ + 1);
     y[PE]                    = pe;
     y[VALVE]                 = valve;
-    y[FSR] = y[FSRN] = y[DEMAND] = y[MEMORY] = fsr;
-    y[XI]                                    = fsr;
+    initial_fsr_             = fsr;
+    y[MEMORY]                = 0;
+    y[FSR] = y[FSRN] = y[DEMAND] = fsr;
+    y[XI]                        = fsr;
     y[TEMP] = y[LOAD] = exhaust;
     y[TURB]           = fuel;
     y[SPEED]          = speed;
