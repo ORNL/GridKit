@@ -31,6 +31,7 @@ namespace GridKit
       MEMORY,
       FSRN,
       FSRT,
+      MEMORY_DEV, ///< Differential fuel-memory deviation from the initial MEMORY.
     };
 
     /// General turbine governor
@@ -48,7 +49,7 @@ namespace GridKit
       using OutputsT           = Utilities::EmptyEnum;
 
       static constexpr std::string_view                                             CLASS_NAME = "Ggov1";
-      static constexpr std::array<IdxT, Utilities::enum_size<InternalVariablesT>()> NUM_INTERNAL_VARIABLES{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+      static constexpr std::array<IdxT, Utilities::enum_size<InternalVariablesT>()> NUM_INTERNAL_VARIABLES{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
       static constexpr std::array<IdxT, 0>                                          NUM_TERMINAL_VARIABLES{};
       static constexpr std::array<IdxT, Utilities::enum_size<InputsT>()>            NUM_INPUT_VARIABLES{1, 1, 1, 1, 1};
       static constexpr std::array<IdxT, 0>                                          NUM_OUTPUT_VARIABLES{};
@@ -56,6 +57,7 @@ namespace GridKit
       explicit Ggov1(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
+      int                        initialize() override;
       int                        tagDifferentiable() override;
       int                        evaluateResidual() override;
       int                        evaluateJacobian() override;
@@ -83,6 +85,7 @@ namespace GridKit
         MEMORY,
         FSRN,
         FSRT,
+        MEMORY_DEV,
       };
 
       enum : size_t
@@ -95,6 +98,7 @@ namespace GridKit
       };
 
       ModelDataT data_;
+      RealT      initial_memory_{};
       RealT      inv_rating_{}, to_machine_{};
       RealT      governor_tracking_, load_tracking_, temperature_gain_, turbine_gain_, acceleration_gain_, derivative_gain_;
     };

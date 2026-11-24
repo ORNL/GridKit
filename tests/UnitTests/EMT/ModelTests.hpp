@@ -1946,19 +1946,37 @@ namespace GridKit
           success  *= isEqual(st4.getResidual(EMT::Esst4bInternalVariables::EFD)[0], 2 * vb, kTol);
           success  *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, 1e-7);
         }
-        success    *= system->evaluateResidual() == 0;
-        success    *= rowsEqual(system->device("G1").getResidual(EMT::Ieeeg1InternalVariables::PM), {0.5});
-        success    *= rowsEqual(system->device("G1").getResidual(EMT::Ieeeg1InternalVariables::PM_LP), {0.25});
-        success    *= rowsEqual(system->device("GG").getResidual(EMT::Ggov1InternalVariables::PE), {0.25});
-        success    *= rowsEqual(system->device("GG").getResidual(EMT::Ggov1InternalVariables::PM), {0.8});
-        // A constant fuel command stays at the valve ceiling with acceleration control enabled.
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->device("G1").getResidual(EMT::Ieeeg1InternalVariables::PM), {0.5});
+        success *= rowsEqual(system->device("G1").getResidual(EMT::Ieeeg1InternalVariables::PM_LP), {0.25});
+
         using Fuel  = EMT::Ggov1InternalVariables;
         auto& gg    = system->device("GG");
-        for (auto variable : {Fuel::FSRN, Fuel::FSRT, Fuel::DEMAND, Fuel::MEMORY, Fuel::FSR})
-        {
-          gg.y(variable)[0] = 2;
-        }
+        success    *= system->initialize() == 0;
+        success    *= system->evaluateResidual() == 0;
+        success    *= rowsEqual(gg.getResidual(Fuel::PE), {0.25});
+        success    *= rowsEqual(gg.getResidual(Fuel::PM), {0.8});
+        success    *= rowsEqual(gg.y(Fuel::MEMORY), {0.9});
+        success    *= rowsEqual(gg.y(Fuel::MEMORY_DEV), {0.0});
+        success    *= rowsEqual(gg.getResidual(Fuel::MEMORY_DEV), {0.0});
+
+        // With demand above the acceleration order, fuel memory rises at Ka * Aset.
+        gg.y(Fuel::DEMAND)[0]                                  = 1.0;
+        gg.y(Fuel::FSR)[0]                                     = 0.9002;
+        gg.yp().getData()[static_cast<IdxT>(Fuel::MEMORY_DEV)] = 0.2;
+
         success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(gg.getResidual(Fuel::FSR), {0.0});
+        success *= rowsEqual(gg.getResidual(Fuel::MEMORY), {0.0});
+
+        // An event sets physical memory at the valve ceiling, with the same initial reference.
+        system->updateTime(1.0, ALPHA);
+        EMT::applyState(nlohmann::json::parse(R"({"devices":{"GG":{"FSRN":[2],"FSRT":[2],"DEMAND":[2],"MEMORY":[2],"FSR":[2]}}})"), *system);
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(gg.y(Fuel::MEMORY_DEV), {1.1});
+        success *= rowsEqual(gg.getResidual(Fuel::MEMORY_DEV), {0.0});
+        success *= rowsEqual(gg.getResidual(Fuel::MEMORY), {0.0});
         success *= rowsEqual(gg.getResidual(Fuel::DEMAND), {0.0});
         success *= rowsEqual(gg.getResidual(Fuel::FSR), {0.0});
         return success.report(__func__);

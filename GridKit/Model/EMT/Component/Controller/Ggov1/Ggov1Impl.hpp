@@ -52,6 +52,20 @@ namespace GridKit
     }
 
     template <typename ScalarT, typename IdxT>
+    int Ggov1<ScalarT, IdxT>::initialize()
+    {
+      auto* y  = this->y_.getData();
+      auto* yp = this->yp_.getData();
+      if (this->time() == 0)
+      {
+        initial_memory_ = y[MEMORY];
+      }
+      y[MEMORY_DEV]  = y[MEMORY] - initial_memory_;
+      yp[MEMORY_DEV] = yp[MEMORY];
+      return 0;
+    }
+
+    template <typename ScalarT, typename IdxT>
     template <typename T>
     [[gnu::always_inline]] void
     Ggov1<ScalarT, IdxT>::internalResidual(const T* y, const T* yp, const T* w, const T*, T* f) const
@@ -87,11 +101,12 @@ namespace GridKit
       const auto limited = [&](T x)
       { return d.Vmin + positive(x - d.Vmin) - positive(x - d.Vmax); };
       f[DEMAND]     = limited(minimum(y[FSRN], minimum(y[FSRT], d.Fsrtmax))) - y[DEMAND];
-      // The acceleration controller compares demand with the previous fuel command.
+      // The acceleration controller compares demand with the lagged fuel command.
       const T accel = d.Ka * d.Aset - acceleration_gain_ * (speed - y[SPEED]);
       const T order = y[DEMAND] - (d.Ka > 0) * positive(y[DEMAND] - y[MEMORY] - d.Tfsr * accel);
       f[FSR]        = limited(order) - y[FSR];
-      f[MEMORY]     = y[FSR] - y[MEMORY] - d.Tfsr * yp[MEMORY];
+      f[MEMORY]     = y[FSR] - y[MEMORY] - d.Tfsr * yp[MEMORY_DEV];
+      f[MEMORY_DEV] = initial_memory_ + y[MEMORY_DEV] - y[MEMORY];
       f[PM]         = to_machine_ * (d.Kturb * (turbine - d.Wfnl) - std::max(d.Dm, RealT{0}) * speed) - y[PM];
     }
   } // namespace EMT

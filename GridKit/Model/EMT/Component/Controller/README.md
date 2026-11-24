@@ -17,7 +17,9 @@ summed limiter signal with zero as its neutral value.
 For the governors, `S` is the machine rating in VA. Zero `Trate` selects
 that rating. GGOV1 uses the 1 ms fuel-command memory `Tfsr` from gridparse
 in its acceleration selector and requires zero engine transport delay
-`Teng`. IEEEG1 uses two six-point valve arrays, `Gv` and `Pgv`. All
+`Teng`. State files and events set the physical fuel command memory in
+`MEMORY`. The governor integrates `MEMORY_DEV`, its deviation from the
+initial `MEMORY`. IEEEG1 uses two six-point valve arrays, `Gv` and `Pgv`. All
 zeros select a straight line. Hawaii uses zero hysteresis `Eps` and
 backlash `db2`, the settings supported here.
 
