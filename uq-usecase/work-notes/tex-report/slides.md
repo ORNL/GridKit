@@ -137,6 +137,7 @@ $$\max_{i,t} |\delta_i(t) - \delta_{COI}(t)| > \pi$$
 | **Datacenter** | 4 buses, 5 sizes | 4 buses, 5 sizes | 1 bus, 1 size |
 | **Total runs** | 840 | 3,780 | 3,400 |
 | **Runs with CCT** | 439 (52%) | 2,155 (57%) | 3,170 (93%) |
+| **No outcome** | 401 (356 dispatch/PF, 45 sim) | 1,625 (1,428 dispatch/PF, 197 sim) | 230 (all simulation) |
 
 *Caption: Campaign scale and design dimensions. [slide7_table.png]*
 
