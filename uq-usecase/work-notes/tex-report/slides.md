@@ -2,9 +2,7 @@
 
 ---
 
-## Highlight Slide: Overview
-
-**Title:** Datacenter Load and Transient Security: An Aleatoric UQ Pilot on GridKit
+## Slide 0: Datacenter Load and Transient Security: An Aleatoric UQ Pilot on GridKit
 
 **Central Question:**
 Where, and how much, large datacenter load can be added to the Illinois grid before dynamic security degrades, given that IBR output makes system inertia vary hour to hour?
@@ -52,9 +50,11 @@ How much large constant-power datacenter load can be safely added to a meshed gr
 | **Net load** | Demand minus wind, system-wide. What the thermal fleet must serve. |
 | **Critical Clearing Time (CCT)** | Longest fault duration system survives before generator loses synchronism. Larger is safer. |
 | **Censored** | System survived the longest fault tested (0.5 s cap). We know CCT ≥ 0.5 s but not its value. |
-| **ZIP load** | Load model splitting demand into constant-impedance (Z), constant-current (I), and constant-power (P) parts. Datacenter uses 80/20/0; wind stand-ins use 0/100/0 (pure constant-current, models controllable current source). |
+| **ZIP load** | Load model splitting demand into constant-impedance (Z), constant-current (I), and constant-power (P) parts. Datacenter uses P/I/Z: 80/20/0; wind stand-ins use 0/100/0 (pure constant-current, models controllable current source). |
 | **No outcome** | A run with no CCT value: DCOPF dispatch, ACPF power flow, or dynamic simulation failed. Reported separately, never as stable or unstable. |
 | **Placement** | Where the datacenter sits: none (baseline), or one of buses 6, 108, 120, 148. |
+
+*Caption: Glossary of key terms: operating condition, baseline, net load, CCT, censored, ZIP load, no outcome, placement. [slide2_table.png]*
 
 ---
 
@@ -62,7 +62,7 @@ How much large constant-power datacenter load can be safely added to a meshed gr
 
 **Grid Characteristics:**
 - **200 buses, 246 branches, 49 generators** (43 thermal: 25 coal, 17 gas, 1 nuclear; 6 wind IBR)
-- **40 synchronous machines** (34 thermal with dynamic models online, 6 wind units, 9 offline thermal units can be committed)
+- **40 synchronous machines** (34 thermal with dynamic models online, 6 wind units, 9 offline thermal units can be committed) — from GridKit's default case.json
 - **109 loads** across the network
 - Hourly load and wind are synthetic one-year series (TAMU repository)
 
@@ -70,7 +70,7 @@ How much large constant-power datacenter load can be safely added to a meshed gr
 
 ![ACTIVSg200: 200-bus Illinois synthetic grid topology showing branches (gray), loads (dark grey, sized by MW), IBR/wind generators (blue), and thermal generators (brown).](uq-subsections/figs/uq-pilot/ACTIVSg200_slides_topology_loads_ibr.png)
 
-*Figure 3.1. ACTIVSg200 (200-bus Illinois synthetic grid): topology, loads, and generator mix.*
+*Caption: ACTIVSg200 (200-bus Illinois synthetic grid): topology, loads, and generator mix. [ACTIVSg200_slides_topology_loads_ibr.png]*
 
 ---
 
@@ -90,64 +90,87 @@ How much large constant-power datacenter load can be safely added to a meshed gr
 ## Slide 5: Operating Condition Dynamics
 
 **• Wind as Negative Load**
-- IBR provide no synchronous inertia; model as controllable current source (WECC/Sandia standard).
-- Hourly wind MW pinned in DCOPF; ACPF solves reactive output Q. Wind injection scales with |V|, correct for constant-current control.
+- Default ACTIVSg200 case comes with wind units as GENROU synchronous machines; we remove them and use a constant-current ZIP stand-in instead.
+- Left as synchronous machines, these 6 wind units would add a fixed **2,766 MW·s** of inertia.
+- Hourly wind MW is fixed in the DCOPF, P and Q from ACPF are written into the negative ZIP load stand-in at wind bus.
 
-**• The Datacenter**
-- Added as load at one bus before dispatch; OPF sees and must supply it. ZIP model 80/20/0: 80% constant-power, 20% constant-current, 0% impedance.
-- Constant-power load keeps drawing during faults, depressing voltage further → destabilizing. Placement: faultscreen-2 at bus 108 (100 MW); aleatoric-1/2 at buses 6, 108, 120, 148 (50–400 MW).
+**• The Datacenter ZIP**
+- Datacenter is represented as **additional electrical load placed at one bus**.
+- We use ZIP model: 80% constant-power (IT), 20% constant-current (motor-based cooling).
 
 ---
 
 ## Slide 6: Critical Clearing Time by Bisection
 
 **• Stability Criterion: Centre of Inertia (COI) Pole Slip**
-- Pole slip measured relative to inertia-weighted average rotor angle: $\delta_{COI}(t) = \frac{\sum_i H_i S_i \delta_i(t)}{\sum_i H_i S_i}$
-- Run unstable when: $\max_{i,t} |\delta_i(t) - \delta_{COI}(t)| > \pi$ (any machine leaves collective inertial frame).
+- Pole slip measured relative to inertia-weighted average rotor angle:
+
+$$\delta_{COI}(t) = \frac{\sum_i H_i S_i \delta_i(t)}{\sum_i H_i S_i}$$
+
+- Run unstable when (any machine leaves collective inertial frame):
+
+$$\max_{i,t} |\delta_i(t) - \delta_{COI}(t)| > \pi$$
 
 **• CCT Search: Bisection [0.05, 0.5] s**
-- Fault applied at $t_{on} = 1.0$ s, cleared at $t_{off} = 1.0 + \text{duration}$. Tolerance 0.01 s, typically 8 simulations per run.
-- Censored run: stable at 0.5 s cap → reported as CCT ≥ 0.5 s. Efficiency: record only 21 of 441 rotor angles → 13.8× storage reduction.
+- Fault applied at $t_{on} = 1.0$ s, cleared at $t_{off} = 1.0 + \text{duration}$; bisection tolerance 0.01 s.
+- Censored run: stable at 0.5 s cap, reported as CCT ≥ 0.5 s.
+
+![Unstable (top) vs censored (bottom) rotor-angle deviation from COI.](uq-subsections/figs/uq-pilot/delta_unstable_vs_censored.png)
+
+*Caption: Unstable sample: red trace passes π (pole slip). Censored sample: peaks at 0.47π, recovers. [delta_unstable_vs_censored.png]*
 
 ---
 
 ## Slide 7: Sampling Space and Three Campaigns
 
-**• Campaign Design: Stratified by Net-Load Quintile**
-- Three independent campaigns built identically, varying fault (1 vs 17), datacenter buses (1 vs 4), sizes (single vs range). Each hour commits at two positions: quarter and three-quarter of feasible band.
-- Stratification: 8,760 hours split into 5 equal-count bins by net load; hours drawn randomly within quintiles. Each quintile represents 20% of year's hours.
-
-**• Campaign Scale**
+**• Campaign Design**
+- Three independent campaigns built varying fault, datacenter buses, and sizes.
+- Stratification: 8,760 hours split into 5 equal-count bins by net load; hours drawn randomly within quintiles.
+- Per-Condition Sequence: Hour → UC draw → Datacenter added → DCOPF + ACPF → CCT by bisection.
+- Datacenter Sizes: in aleatoric-1 and -2: 50, 100, 200, 300, 400 MW. in faultscreen-2: 100 MW only.
 
 | Dimension | **aleatoric-1** | **aleatoric-2** | **faultscreen-2** |
 |---|---|---|---|
 | **Hours** | 20 (4 per quintile) | 60 (12 per quintile) | 50 (10 per quintile) |
 | **Conditions** | 40 | 180 | 100 |
 | **Faults** | 1 (bus 66) | 1 (bus 66) | 17 locations |
+| **Datacenter** | 4 buses, 5 sizes | 4 buses, 5 sizes | 1 bus, 1 size |
 | **Total runs** | 840 | 3,780 | 3,400 |
 | **Runs with CCT** | 439 (52%) | 2,155 (57%) | 3,170 (93%) |
+
+*Caption: Campaign scale and design dimensions. [slide7_table.png]*
+
+**Notes:**
+- UC is fixed based on baseline net load; not re-committed for added datacenter. This enables matched-pair comparison across sizes, but means larger loads may exceed committed capacity (dispatch failures recorded as "no outcome").
+- Results are conditional on this UC sampling strategy. Applying real UC distributions is future work.
 
 ---
 
 ## Slide 8: Reading the Curves — Kaplan–Meier and Censoring
 
 **• Kaplan–Meier Estimator with Censoring**
-- Handles censored runs (stable at 0.5 s cap, true CCT unknown): $\hat S(t)=\prod_{t_i\le t}\left(1-\frac{d_i}{n_i}\right)$, where $n_i$ = at-risk count (measured at or after $t_i$, plus censored).
-- 95% CI from Greenwood variance: $P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$. Censored runs kept in denominator → valid inference.
+- Each KM curve estimates $P(\text{CCT}<t)$: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable (correctly handles censored runs).
+
+$$1 - P(\text{CCT}<t) = P(\text{CCT}>t) = \hat S(t) = \prod_{t_i\le t}\left(1-\frac{d_i}{n_i}\right)$$
+
+- 95% CI from Greenwood variance:
+
+$$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 
 **• Example: 200 MW at Bus 108, Fault at Bus 66 (37 Conditions)**
 - Datacenter raises failure risk: baseline P(CCT < 0.25 s) = 0.49 → 0.73 with 200 MW. Median CCT drops from 0.27 s to 0.18 s.
-- 95% Greenwood CI overlap at n=37; paired test at n=171 shows significant shift.
+
+![KM curves: baseline (blue) vs 200 MW at bus 108 (orange), 37 conditions.](uq-subsections/figs/uq-pilot/main_aleatoric_km_simple.png)
+
+*Caption: Kaplan–Meier P(CCT > t) on the same 37 operating conditions, without the datacenter (blue) and with 200 MW at bus 108 (orange). [main_aleatoric_km_simple.png]*
 
 ---
 
 ## Slide 9: Risk by Net Load
 
 **• Risk Concentrates in High Net-Load Quintiles**
-- aleatoric-1 data: all datacenter runs, 1 fault (bus 66). Risk sharp step between q1 (1,001 MW net load, P=0.16) and q2 (1,221 MW, P=0.73).
-- At low net load, inertia high (many units at part load) → censored at 0.5 s. At high net load, fewer units carry more load → lower inertia, faster CCT.
-
-**• Takeaway:** Risk is conditional on runs that solved; focus on high-net-load scenarios.
+- Risk is conditional on runs that solved.
+- Focus on high net-load scenarios.
 
 | Net-load quintile | Mean load (MW) | Runs solved | Censored | **P(CCT < 0.25 s)** |
 |---|---|---|---|---|
@@ -156,52 +179,69 @@ How much large constant-power datacenter load can be safely added to a meshed gr
 | q2 | 1,221 | 82 of 160 | 0% | 0.73 |
 | q3–q4 | 1,477–1,660 | 160 of 160 | 0% | 1.00 |
 
+*Caption: Failure risk concentrates in high net-load quintiles. [slide9_table.png]*
+
+![KM P(CCT > t) by net-load quintile.](uq-subsections/figs/uq-pilot/main_aleatoric_km_by_netload.png)
+
+*Caption: Kaplan–Meier P(CCT > t) by net-load quintile, all datacenter configurations. [main_aleatoric_km_by_netload.png]*
+
 ---
 
 ## Slide 10: Fault Screening — Which Faults Separate Operating Conditions
 
-**• Fault Screening Results (faultscreen-2: 50 hours × 2 commitments = 100 conditions, 17 faults)**
-- 4 separating faults (buses 66, 68, 94, 181): outcome changes with net load. 13 flat faults: censored everywhere, cannot separate conditions.
-- Separating faults show rising curve in failure share vs quintile; flat faults show no discrimination.
+**• Fault Screening Results (100 conditions, 17 faults screened)**
+- Before spending runs on a full campaign, we need to know which faults can tell operating conditions apart.
+- A fault that every condition stays stable through past the 0.5 s cap looks the same everywhere, so it cannot separate them.
+- 4 separating faults (buses 66, 68, 94, 181): outcome changes with net load, rising curve in failure share vs quintile. 13 flat faults: censored everywhere, cannot separate conditions.
+- Screening should precede future aleatoric campaigns: identifies active faults early, reducing full campaign cost and variance.
 
-**• Implications for 2000-Bus Scale**
-- Contingency list grows ~115× (siting 11.5× × faults 10×). Screening cost grows 19–25× per run. Fault location explains >50% of variance.
-- Need adaptive pre-screen to identify discriminating faults before full campaign; enables graph-based surrogate to reduce 2000-bus sampling cost.
+![Fault screening by quintile: 4 separating faults, 13 flat.](uq-subsections/figs/uq-pilot/main_faultscreen2_lost_by_quintile.png)
+
+*Caption: faultscreen-2: four faults change with net load, thirteen do not. [main_faultscreen2_lost_by_quintile.png]*
 
 ---
 
 ## Slide 11: Scaling to Texas — ACTIVSg2000
 
-**• Per-Run Scaling (10× buses, TAMU repository)**
-- DCOPF, ACPF: 19.1×, 18.5× cost growth ($N^{1.27}$). Dynamic simulation: 25.3× growth ($N^{1.40}$). Storage: 9.6× for monitors (raw CSV, $N^{0.98}$).
-- Brute force survives one order of magnitude of grid size, not two.
+**• Initial Profiling Test**
+- We ran an initial small profiling test on the Texas synthetic grid, **ACTIVSg2000** (2,000 buses, TAMU repository).
+- The design space grows 115× (siting 11.5× and fault locations 10×), while cost per run grows about 19–25×.
+- At the same sampling density, serial compute time (solver CPU time for the dispatch and dynamic runs) grows about 2,500×.
+- Storage: the raw monitor output is projected ~1,000× larger relative to the 840 full monitored runs of aleatoric-1.
 
-**• Projected aleatoric-1 on Texas (840 runs, ~7,560 simulations)**
-- Serial: ~35 min (ACTIVSg200) → ~14.9 h (ACTIVSg2000). Parallel (16 workers, 1 node): ~2.2 min ideal → ~56 min ideal; actual (2.7× overhead): ~2.5 h.
-- Monitor storage: 22 GB → ~220 GB. Solution: Screening + surrogate models + adaptive sampling for next phase.
+| Resource | ACTIVSg200 | ACTIVSg2000 |
+|---|---|---|
+| Dispatch stage (all 840 runs) | 24 s | 456 s |
+| Dynamic runs, serial | ~35 min | ~14.9 h |
+| Wall time, 1 node, 16 workers | ~2.2 min (ideal) | ~56 min (ideal) |
+| Wall time, 1 node, 16 workers (actual 2.7× overhead) | ~6 min | **~2.5 h** |
+| Monitor output (raw CSV) | 22 GB | ~220 GB |
 
----
-
-## Slide 12: Next Steps — FY27 Tracks
-
-**• Track 1: Spend Fewer, Better-Chosen Dynamic Runs**
-- Screen contingencies cheaply (faultscreen-2 showed 13 of 17 censored everywhere). Reduce CCT search cost: start bisection from neighbouring dispatch (CCT correlated) or early termination detection (pole slip detectable before simulated window end).
-- Stratified/importance sampling on top-ranked factors (fault location >50% variance, net load, placement) rather than uniform sampling.
-
-**• Track 2: Graph Neural Network Surrogate (Supplemental to Sampling)**
-- Trained on existing pilot runs: (graph, operating point, parameters, fault) → trajectory map. Emulates CCT/stability label cheaply.
-- Full runs confirm results and cover surrogate's uncertain regions; active learning chooses next runs. Surrogate lowers per-sample cost and enables adaptive refinement while sampling defines design space coverage (aleatoric vs epistemic).
+*Caption: Projected aleatoric-1 on Texas (840 runs, ~7,560 simulations). [slide11_table.png]*
 
 ---
 
-## Slide 13: GridKit End-User Findings
+## Slide 12: Parallel Execution on NLR HPC Cluster
 
-**• Critical Modeling Gaps**
-- REPCA cannot do frequency droop → no primary frequency response from IBR. BusFault closing at event-on causes IDA fail (97 runs at alphaP 0.8; Newton method conditioning degrades with constant-power load).
-- Fault at constant-power load always fails (40 of 40 runs); most interesting contingency for datacenter is unreachable. LoadZIP has no current limit → constant-power load cannot self-limit.
+**• Two-Stage Worker Pipeline and Storage**
+- Parallel launch implemented within nodes and workers (CPU cores). For aleatoric campaigns, we ran on one node with 16 workers (one per core); each worker takes a contiguous slice of runs.
+- Stage 1: Batched dispatch (DCOPF + ACPF solved together per worker). Stage 2: Dynamics and CCT bisection (only for runs with feasible dispatch).
+- Pilot campaigns (5,640 planned runs) occupy 15.9 GB; 2.6 MB per run. Compressed Parquet storage (5.0×) + selective output columns (13.8×) keep size manageable.
 
-**• Operational Limitations**
-- Events are FAULT_ON/FAULT_OFF only (no generator trip, load step, true power-imbalance event). Monitors default to empty; post-#577 cases carry `"mon": []` on every bus unless explicitly enabled.
-- GridKit portability: built on RHEL 8, runs unchanged on RHEL 9 (GLIBC ≤ 2.14, GLIBCXX ≤ 3.4.31 required; WECC240_validation passes in 0.64 s).
+| Campaign | Planned | Simulated | Wall Time | Per Worker |
+|---|---|---|---|---|
+| aleatoric-1 | 840 | 484 | 6.0 min | 170 s dispatch / 113 s dynamics |
+| aleatoric-2 | 3,780 | 2,155 | 17.1 min | 297 s dispatch / 516 s dynamics |
+| faultscreen-2 | 3,400 | 3,400 | ~26 min | 154 s dispatch / 966 s dynamics |
+
+*Caption: Measured resource usage and wall time for three campaigns. [slide12_table.png]*
+
+---
+
+## Slide 13: Next Steps
+
+- Conclude 200-bus datacenter placement campaign with expanded aleatoric sampling, comprehensive fault pre-screening, and investigation of no-outcome conditions.
+- Expand sampling framework from 200-bus to 2000-bus grid: stratified/importance sampling on top-ranked factors.
+- Graph NN surrogates for adaptive sampling guidance: leverage grid topology to identify high-impact parameter regions.
 
 ---
