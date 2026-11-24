@@ -164,6 +164,7 @@ $P_{\mathrm{meas}}$ | [p.u.] | Filtered electrical power          | State 2 in F
 $x_{\mathrm{PIQ}}$  | [p.u.] | Reactive-power PI controller state | State 3 in Fig. 1; Source label: `PIQ`
 $x_{\mathrm{PIV}}$  | [p.u.] | Voltage PI controller state        | State 4 in Fig. 1; Source label: `PIV`
 $Q_V$               | [p.u.] | Reactive-current command lag state | State 5 in Fig. 1; Source label: `Q_V`
+$P_{\mathrm{ramp}}$ | [p.u.] | Rate-limited active-power reference | Tracks the speed-adjusted reference with $T_{\mathrm{track}}=1$ ms
 $P_{\mathrm{ord}}$  | [p.u.] | Filtered active-power order        | State 6 in Fig. 1; Source label: `Pord`
 
 #### Algebraic
@@ -179,8 +180,7 @@ $Q_{\mathrm{ref}}$              | [p.u.] | Selected reactive-power reference   |
 $e_Q$                           | [p.u.] | Reactive-power control error        | Limited $Q_{\mathrm{ref}}$ minus $Q_{\mathrm{gen}}$
 $V_{\mathrm{PIQ}}$              | [p.u.] | Reactive-power control PI output    | Limited by $V^{\min}$ and $V^{\max}$
 $e_{\mathrm{PIV}}$              | [p.u.] | Voltage-control PI error            | Selected voltage-control signal minus $V_{\mathrm{meas}}$
-$f_{\mathrm{pord}}$             | [p.u./s] | Active-power order derivative before ramp-rate limiting | Feeds $r_{\mathrm{pord}}$
-$r_{\mathrm{pord}}$             | [p.u./s] | Ramp-rate-limited active-power order derivative | Feeds $P_{\mathrm{ord}}$ anti-windup
+$r_{\mathrm{pord}}$             | [p.u./s] | Power-order lag rate | Feeds $P_{\mathrm{ord}}$ anti-windup
 $I_{\mathrm{q}}^{\mathrm{circ}}$ | [p.u.] | Reactive-current limit from converter current circle | Converter base; nonnegative algebraic branch
 $I_{\mathrm{p}}^{\mathrm{circ}}$ | [p.u.] | Active-current limit from converter current circle | Converter base; nonnegative algebraic branch
 $I_{\mathrm{q}}^{\max}$         | [p.u.] | Final reactive-current upper limit  | Converter base; updated by VDL1 and current-limit logic
@@ -227,6 +227,8 @@ For readability, define:
 
 #### Differential
 
+The ramp equation uses the active-power reference $P_{\mathrm{ref}}$ on the converter MVA base.
+
 ```math
 \begin{aligned}
   0 &= -T_{\mathrm{rv}}\dot V_{\mathrm{meas}} - V_{\mathrm{meas}} + V_T \\
@@ -253,6 +255,9 @@ For readability, define:
     -T_{\mathrm{iq}}\dot Q_V
     - (1 - s_{\mathrm{dip}})Q_V
     + (1 - s_{\mathrm{dip}})Q_{\mathrm{ref}}/V_{\mathrm{meas}}^{\mathrm{safe}} \\
+  0 &= -\dot P_{\mathrm{ramp}} +
+    \min\!\left(R_P^{\max}, \max\!\left(R_P^{\min},
+    \frac{(1+s_P\omega)P_{\mathrm{ref}}-P_{\mathrm{ramp}}}{T_{\mathrm{track}}}\right)\right) \\
   0 &=
     -\dot P_{\mathrm{ord}}
     + (1 - s_{\mathrm{dip}})
@@ -280,8 +285,7 @@ For readability, define:
   0 &= -e_Q + \text{clamp}(Q_\mathrm{ref}; Q^{\min}, Q^{\max}) - Q_\mathrm{gen} \\
   0 &= -V_\mathrm{PIQ} + \text{clamp}(K_\mathrm{qp} e_Q + x_\mathrm{PIQ}; V^{\min}, V^{\max}) \\
   0 &= -e_\mathrm{PIV} + s_V V_\mathrm{PIQ} + s_V^\mathrm{off}(Q_\mathrm{ext} + V_\mathrm{ref1}) - V_\mathrm{meas} \\
-  0 &= -T_\mathrm{pord} r_\mathrm{pord} + P_\mathrm{ramp} - P_\mathrm{ord} \\
-  0 &= -\dot P_\mathrm{ramp} + \operatorname{clamp}((1+s_P\omega)P_\mathrm{ref}-P_\mathrm{ramp}+\dot P_\mathrm{ramp};R_P^{\min},R_P^{\max})
+  0 &= -T_\mathrm{pord} r_\mathrm{pord} + P_\mathrm{ramp} - P_\mathrm{ord}
 \end{aligned}
 ```
 
@@ -339,7 +343,8 @@ Then evaluate the upstream algebraic chain:
   Q_{\mathrm{ref}} &\leftarrow s_{\mathrm{pf}} P_{\mathrm{meas}}\tan(\phi_{\mathrm{pf}}^{\mathrm{ref}}) + s_{\mathrm{pf}}^{\mathrm{off}} Q_{\mathrm{ext}} \\
   e_Q &\leftarrow \text{clamp}(Q_{\mathrm{ref}}; Q^{\min}, Q^{\max}) - Q_{\mathrm{gen}} \\
   Q_V &\leftarrow \dfrac{Q_{\mathrm{ref}}}{V_{\mathrm{meas}}^{\mathrm{safe}}} \\
-  P_{\mathrm{ord}} &\leftarrow (1+s_P\omega)P_{\mathrm{ref}}
+  P_{\mathrm{ramp}} &\leftarrow (1+s_P\omega)P_{\mathrm{ref}} \\
+  P_{\mathrm{ord}} &\leftarrow P_{\mathrm{ramp}}
 \end{aligned}
 ```
 

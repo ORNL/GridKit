@@ -1982,7 +1982,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// With Q priority, a clearing dip latches the active-current limit until Thld2 expires.
+      /// REECA ramps the active reference and holds the active-current limit after a dip.
       TestOutcome reecaRecovery()
       {
         TestStatus success = true;
@@ -1998,6 +1998,15 @@ namespace GridKit
         using Variables  = EMT::ReecaInternalVariables;
         auto& controller = system->device("A");
         system->initialize();
+        success         *= system->tagDifferentiable() == 0;
+        success         *= system->tag()[static_cast<IdxT>(Variables::PREF_RATE)];
+        const auto pref  = system->held(controller, EMT::ReecaInputs::pref);
+        for (const auto& [reference, rate] : {std::pair{0.45, 4.0}, {0.35, -4.0}, {0.401, 1.0}, {0.4, 0.0}})
+        {
+          pref[0]  = reference;
+          success *= system->evaluateResidual() == 0;
+          success *= isEqual(controller.getResidual(Variables::PREF_RATE)[0], rate, kTol);
+        }
         success *= system->sizeRoots() == 4;
         success *= system->applyRootEvents(1.0, std::array{-1, 0, 0, 0});
         success *= system->applyRootEvents(1.25, std::array{1, 0, 0, 0});

@@ -152,13 +152,13 @@ namespace GridKit::PhasorDynamics::Controller
   template <class ScalarT, class IdxT>
   int Reeca<ScalarT, IdxT>::tagDifferentiable()
   {
-    this->tag_[VMEAS] = Trv_ > 0;
-    this->tag_[PMEAS] = Tp_ > 0;
-    this->tag_[XPIQ]  = true;
-    this->tag_[XPIV]  = true;
-    this->tag_[QV]    = Tiq_ > 0;
-    // The projected reference is algebraic while it tracks its input.
-    this->tag_[PORD]  = true;
+    this->tag_[VMEAS]     = Trv_ > 0;
+    this->tag_[PMEAS]     = Tp_ > 0;
+    this->tag_[XPIQ]      = true;
+    this->tag_[XPIV]      = true;
+    this->tag_[QV]        = Tiq_ > 0;
+    this->tag_[PREF_RATE] = true;
+    this->tag_[PORD]      = true;
     return 0;
   }
 
@@ -193,7 +193,9 @@ namespace GridKit::PhasorDynamics::Controller
     const T ipmax    = ip_table - !Pqflag_ * positiveDifference(ip_table, y[ILCAP]);
     const T iq       = QFlag_ * Math::clamp(iqpi, -y[IQMAX], y[IQMAX]) + !QFlag_ * y[QV]
                  + dip_ * y[IQV] + hold_q_ * ((Thld_ < 0) * y[IQV] + (Thld_ > 0) * Iqfrz_);
-    const RealT run = ONE<RealT> - dip_;
+    const RealT     run = ONE<RealT> - dip_;
+    constexpr RealT tracking_time{1.0e-3};
+    const T         tracking_rate = (pref - y[PREF_RATE]) / tracking_time;
 
     f[VSAFE] = Math::max(y[VMEAS], RealT{0.01}) - y[VSAFE];
     f[EQ]    = wanted - this->toComponentBase(signal(Input::qgen)) - y[EQ];
@@ -207,7 +209,7 @@ namespace GridKit::PhasorDynamics::Controller
     f[XPIQ]      = (QFlag_ && VFlag_) * run * Math::antiwindup(vpi, Kqi_ * y[EQ], Vmin_, Vmax_) - yp[XPIQ];
     f[XPIV]      = QFlag_ * run * Math::antiwindup(iqpi, Kvi_ * y[EPIV], -y[IQMAX], y[IQMAX]) - yp[XPIV];
     f[QV]        = (ONE<RealT> - (Tiq_ > 0) * dip_) * (wanted / y[VSAFE] - y[QV]) - Tiq_ * yp[QV];
-    f[PREF_RATE] = std::clamp(pref - y[PREF_RATE] + yp[PREF_RATE], T{dPmin_}, T{dPmax_}) - yp[PREF_RATE];
+    f[PREF_RATE] = std::clamp(tracking_rate, T{dPmin_}, T{dPmax_}) - yp[PREF_RATE];
     f[PORD]      = run * Math::antiwindup(y[PORD], (y[PREF_RATE] - y[PORD]) / Tpord_, Pmin_, Pmax_) - yp[PORD];
     f[IQV]       = Math::clamp(kqv_ * Math::deadband2(reference_voltage_ - y[VMEAS], dbd1_, dbd2_), Iql1_, Iqh1_) - y[IQV];
     f[IPMAX]     = (ONE<RealT> - hold_p_) * ipmax + hold_p_ * held_ipmax_ - y[IPMAX];

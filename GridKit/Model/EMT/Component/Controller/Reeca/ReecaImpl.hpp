@@ -167,7 +167,9 @@ namespace GridKit
       const T ipmax    = ip_table - !d.Pqflag * std::fdim(ip_table, y[ILCAP]);
       const T iq       = d.QFlag * Math::clamp(iqpi, -y[IQMAX], y[IQMAX]) + !d.QFlag * y[QV]
                    + dip_ * y[IQV] + hold_q_ * ((d.Thld < 0) * y[IQV] + (d.Thld > 0) * d.Iqfrz);
-      const RealT run = ONE<RealT> - dip_;
+      const RealT     run = ONE<RealT> - dip_;
+      constexpr RealT tracking_time{1.0e-3};
+      const T         tracking_rate = (pref - y[PREF_RATE]) / tracking_time;
 
       f[VSAFE] = Math::max(y[VMEAS], RealT{0.01}) - y[VSAFE];
       f[EQ]    = wanted - w[Q_IN] / base - y[EQ];
@@ -181,7 +183,7 @@ namespace GridKit
       f[XPIQ]      = (d.QFlag && d.VFlag) * run * Math::antiwindup(vpi, d.Kqi * y[EQ], d.Vmin, d.Vmax) - yp[XPIQ];
       f[XPIV]      = d.QFlag * run * Math::antiwindup(iqpi, d.Kvi * y[EPIV], -y[IQMAX], y[IQMAX]) - yp[XPIV];
       f[QV]        = (ONE<RealT> - (d.Tiq > 0) * dip_) * (wanted / y[VSAFE] - y[QV]) - d.Tiq * yp[QV];
-      f[PREF_RATE] = std::clamp(pref - y[PREF_RATE] + yp[PREF_RATE], T{d.dPmin}, T{d.dPmax}) - yp[PREF_RATE];
+      f[PREF_RATE] = std::clamp(tracking_rate, T{d.dPmin}, T{d.dPmax}) - yp[PREF_RATE];
       f[PORD]      = run * Math::antiwindup(y[PORD], (y[PREF_RATE] - y[PORD]) / d.Tpord, d.Pmin, d.Pmax) - yp[PORD];
       f[IQV]       = Math::clamp(d.kqv * Math::deadband2(reference_voltage_ - y[VMEAS], d.dbd1, d.dbd2), d.Iql1, d.Iqh1) - y[IQV];
       f[IPMAX]     = (ONE<RealT> - hold_p_) * ipmax + hold_p_ * held_ipmax_ - y[IPMAX];
