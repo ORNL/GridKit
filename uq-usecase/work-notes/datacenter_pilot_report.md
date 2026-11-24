@@ -461,24 +461,24 @@ Launch counts from a separate timing job, not the campaign logs.*
 
 ### 7.0 Sampling space and the campaigns
 
-All campaigns use the operating-condition design of §4.1, where an operating condition is an (hour, commitment) pair. All use DCOPF dispatch, then ACPF with PV→PQ switching (§4.2), and the datacenter as an 80/20/0 ZIP load added beside the existing load at its bus (§4.4). The two main campaigns differ in what else varies:
+All campaigns use the operating-condition design of §4.1, where an operating condition is an (hour, commitment) pair. All use DCOPF dispatch, then ACPF with PV→PQ switching (§4.2), and the datacenter as an 80/20/0 ZIP load added beside the existing load at its bus (§4.4). The three main campaigns differ in what else varies:
 
-| | **aleatoric-1** | **faultscreen-2** |
-|---|---|---|
-| purpose | how much operating conditions move CCT | which fault locations separate operating conditions |
-| hours | 20 (4 per net-load quintile) | 50 (10 per net-load quintile) |
-| operating conditions (hour, commitment) | 40 | 100 (20 per quintile) |
-| fault locations | 1 (bus 66) | 17 |
-| placements | none, or bus 6, 120, 108, 148 | none, or bus 108 |
-| datacenter size | 50, 100, 200, 300, 400 MW | 100 MW |
-| runs | 840 = 40 baseline + 800 datacenter | 3,400 = 1,700 baseline + 1,700 datacenter |
-| solved | 439 (40 baseline, 399 datacenter) | 3,170 (1,700 baseline, 1,470 datacenter; 4 of these have no CCT) |
-| no outcome | 401 (45 simulation failures, 242 dispatch failures, 114 power-flow failures) | 230 (all simulation failures; 100 with the fault at bus 108) |
-| datacenter runs censored at the 0.5 s cap | 121 of 399 (30.3%) | 1,206 of 1,466 (82.3%) |
+| | **aleatoric-1** | **aleatoric-2** | **faultscreen-2** |
+|---|---|---|---|
+| purpose | how much operating conditions move CCT | larger, independent repeat of aleatoric-1 | which fault locations separate operating conditions |
+| hours | 20 (4 per net-load quintile) | 60 (new hours, independent) | 50 (10 per net-load quintile) |
+| operating conditions (hour, commitment) | 40 | 180 | 100 (20 per quintile) |
+| fault locations | 1 (bus 66) | 1 (bus 66) | 17 |
+| placements | none, or bus 6, 120, 108, 148 | none, or bus 6, 120, 108, 148 | none, or bus 108 |
+| datacenter size | 50, 100, 200, 300, 400 MW | 50, 100, 200, 300, 400 MW | 100 MW |
+| runs | 840 = 40 baseline + 800 datacenter | 3,780 = 180 baseline + 3,600 datacenter | 3,400 = 1,700 baseline + 1,700 datacenter |
+| solved | 439 (40 baseline, 399 datacenter) | 2,155 (180 baseline, 1,975 datacenter) | 3,170 (1,700 baseline, 1,470 datacenter; 4 of these have no CCT) |
+| no outcome | 401 (45 simulation failures, 242 dispatch failures, 114 power-flow failures) | 1,625 (197 simulation failures, 1,428 dispatch/power-flow failures) | 230 (all simulation failures; 100 with the fault at bus 108) |
+| datacenter runs censored at the 0.5 s cap | 121 of 399 (30.3%) | 510 of 1,778 (28.7%) | 1,206 of 1,466 (82.3%) |
 
-**Campaign aleatoric-1** varies operating conditions, placement and size, at one fault. Campaign faultscreen-2 varies fault location and net-load quintile, with and without one datacenter size at bus 108. **No outcome** means the dispatch, the power flow or the simulation failed. It is reported as such, never as stable or unstable.
+**Campaign aleatoric-1** varies operating conditions, placement and size, at one fault. **Campaign aleatoric-2** is a larger, independent repeat of aleatoric-1: 60 new hours × 3 commitments = 180 operating conditions, with the same placements and sizes. It shares no conditions with aleatoric-1, and is used in §7.3 and §7.4 to check that the results reproduce and how they settle as conditions are added. **Campaign faultscreen-2** varies fault location and net-load quintile, with and without one datacenter size at bus 108. 
 
-**Campaign aleatoric-2** is a larger, independent repeat of aleatoric-1: 60 new hours × 3 commitments = 180 operating conditions, with the same placements and sizes. It shares no conditions with aleatoric-1, and is used in §7.3 and §7.4 to check that the results reproduce and how they settle as conditions are added.
+**No outcome** means the dispatch, the power flow or the simulation failed. It is reported as such, never as stable or unstable.
 
 ### 7.1 Reading the curves: Kaplan–Meier and censoring
 
