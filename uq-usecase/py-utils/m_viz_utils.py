@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from io import StringIO
 from pathlib import Path
 import re
@@ -2176,3 +2176,89 @@ def plot_grid_datacenter(
         width=920,
     )
     return fig
+
+
+@dataclass
+class HourlyProfiles:
+    """Hourly bus demand (MW) and wind output (MW) from a GridKit profile folder.
+
+    The hour index is the 0-based row number of demand.csv and wind.csv.
+    """
+
+    timestamps: pd.Series  # DateTime string per hour
+    demand_mw: pd.DataFrame  # index: hour; columns: BUS_I (int)
+    wind_mw: pd.DataFrame  # index: hour; columns: gen row (0-based, .m order)
+
+    @property
+    def n_hours(self) -> int:
+        return len(self.timestamps)
+
+
+def load_hourly_profiles(profile_dir: str | Path) -> HourlyProfiles:
+    """Read demand.csv (busN columns) and wind.csv (genN columns).
+
+    Rows are aligned by position. The DateTime labels can differ between the two
+    files (DST handling), so the labels are taken from demand.csv only.
+    """
+    profile_dir = Path(profile_dir)
+    dem = pd.read_csv(profile_dir / "demand.csv")
+    wnd = pd.read_csv(profile_dir / "wind.csv")
+    if len(dem) != len(wnd):
+        raise ValueError(f"demand.csv ({len(dem)} rows) and wind.csv ({len(wnd)} rows) differ")
+
+    demand = dem.drop(columns="DateTime")
+    demand.columns = [int(c.removeprefix("bus")) for c in demand.columns]
+    wind = wnd.drop(columns="DateTime")
+    # genN is the N-th mpc.gen row (1-based); stored as the 0-based row
+    wind.columns = [int(c.removeprefix("gen")) - 1 for c in wind.columns]
+    return HourlyProfiles(timestamps=dem["DateTime"], demand_mw=demand, wind_mw=wind)
+
+
+def resolve_hour(profiles: HourlyProfiles, hour: int | str) -> int:
+    """Hour index from a 0-based index or an exact DateTime string."""
+    if isinstance(hour, str):
+        hits = np.flatnonzero(profiles.timestamps.to_numpy() == hour)
+        if hits.size == 0:
+            raise ValueError(f"timestamp {hour!r} not found in profiles")
+        return int(hits[0])
+    h = int(hour)
+    if not 0 <= h < profiles.n_hours:
+        raise ValueError(f"hour {h} outside 0..{profiles.n_hours - 1}")
+    return h
+
+
+def hour_snapshot(
+    case_data: MatpowerCaseData, profiles: HourlyProfiles, hour: int | str
+) -> MatpowerCaseData:
+    """Copy of case_data with bus PD and wind PG set to one hour.
+
+    Buses without a demand column keep their base PD. Only the gen rows named in
+    wind.csv change PG; thermal dispatch stays at the base case.
+    """
+    h = resolve_hour(profiles, hour)
+
+    bus = case_data.bus.copy()
+    demand_now = profiles.demand_mw.iloc[h]
+    bus["PD"] = bus["BUS_I"].astype(int).map(demand_now).fillna(bus["PD"])
+
+    gen = case_data.gen.copy()
+    gen_rows = (
+        gen["gen_row"].to_numpy()
+        if "gen_row" in gen.columns
+        else np.arange(len(gen))
+    )
+    wind_now = profiles.wind_mw.iloc[h]
+    missing = np.setdiff1d(wind_now.index.to_numpy(), gen_rows)
+    if missing.size:
+        raise ValueError(f"wind.csv units not in case gen table: {missing.tolist()}")
+    is_wind = np.isin(gen_rows, wind_now.index.to_numpy())
+    if case_data.genfuel is not None:
+        fuels = np.asarray(case_data.genfuel, dtype=object)[gen_rows[is_wind]]
+        if any(str(f).lower() != "wind" for f in fuels):
+            raise ValueError("wind.csv maps to a gen row whose genfuel is not wind")
+
+    pg = gen["PG"].to_numpy(dtype=float).copy()
+    pg[is_wind] = wind_now.loc[gen_rows[is_wind]].to_numpy()
+    gen["PG"] = pg
+
+    return replace(case_data, bus=bus, gen=gen)
