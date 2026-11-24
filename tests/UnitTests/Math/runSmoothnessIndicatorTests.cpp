@@ -16,6 +16,7 @@ int main()
   result += test.minMax();
   result += test.antiWindupIndicator();
   result += test.antiWindup();
+  result += test.boundedAntiWindup();
 
   return result.summary();
 }

@@ -345,6 +345,47 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      TestOutcome boundedAntiWindup()
+      {
+        TestStatus success = true;
+
+        const RealT   lower = 0.0;
+        const RealT   upper = 1.0;
+        const ScalarT drive = scalar(0.25);
+        const ScalarT weak  = scalar(HALF<RealT> / Math::MU<RealT>);
+
+        // The outward drive is exactly zero at and beyond either stop.
+        success *= (Math::boundedAntiwindup(scalar(lower), -weak, lower, upper) == 0);
+        success *= (Math::boundedAntiwindup(scalar(upper), weak, lower, upper) == 0);
+        success *= (Math::boundedAntiwindup(scalar(lower) - weak, -drive, lower, upper) == 0);
+        success *= (Math::boundedAntiwindup(scalar(upper) + weak, drive, lower, upper) == 0);
+        success *= (Math::boundedAntiwindup(scalar(lower), drive, lower, lower) == 0);
+        success *= (Math::boundedAntiwindup(scalar(lower), -drive, lower, lower) == 0);
+
+        // Both directions pass in the interior. Reversals at the stops are
+        // attenuated only inside the drive transition for this travel span.
+        success                 *= (Math::boundedAntiwindup(scalar(0.5), weak, lower, upper) == weak);
+        success                 *= (Math::boundedAntiwindup(scalar(0.5), -weak, lower, upper) == -weak);
+        success                 *= (Math::boundedAntiwindup(scalar(lower), drive, lower, upper) == drive);
+        success                 *= (Math::boundedAntiwindup(scalar(upper), -drive, lower, upper) == -drive);
+        const ScalarT half_weak  = weak * HALF<RealT>;
+        success                 *= within(Math::boundedAntiwindup(scalar(lower), weak, lower, upper),
+                          half_weak,
+                          scalar(kRoundoffTolerance));
+        success                 *= within(Math::boundedAntiwindup(scalar(upper), -weak, lower, upper),
+                          -half_weak,
+                          scalar(kRoundoffTolerance));
+
+        // Sparsity is traced at equilibrium, where the position derivative is zero.
+        using Variable      = GridKit::DependencyTracking::Variable;
+        const auto at_rest  = Math::boundedAntiwindup(Variable{0.5, 0}, Variable{0.0, 1}, lower, upper);
+        success            *= (at_rest.getValue() == 0);
+        success            *= at_rest.getDependencies().contains(0);
+        success            *= at_rest.getDependencies().contains(1);
+
+        return success.report(__func__);
+      }
     };
 
   } // namespace Testing

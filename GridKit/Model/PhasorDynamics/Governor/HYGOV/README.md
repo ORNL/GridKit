@@ -176,7 +176,7 @@ $P^\mathrm{aux}$ | [p.u.] | Auxiliary power input       | Optional signal port `
 
 ## Model Equations
 
-Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`](../../../../CommonMath.md#clamp), [`deadband1`](../../../../CommonMath.md#type-i-deadband), [`linseg`](../../../../CommonMath.md#linear-segment).
+Smooth functions: [`boundedAntiwindup`](../../../../CommonMath.md#bounded-antiwindup), [`clamp`](../../../../CommonMath.md#clamp), [`deadband1`](../../../../CommonMath.md#type-i-deadband), [`linseg`](../../../../CommonMath.md#linear-segment).
 
 ### Internal Equations
 
@@ -198,7 +198,7 @@ dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ are resolved during initialization.
       (e_f - x_\mathrm{f}) \\
   0 &=
     -\dot{c}
-    + \text{antiwindup}
+    + \text{boundedAntiwindup}
       (c, r_c;\, G_{\mathrm{resp}}^{\min},
         G_{\mathrm{resp}}^{\max}) \\
   0 &=

@@ -139,7 +139,7 @@ namespace GridKit
 
       f[XN]      = -yp[XN] + (y[OMEGADB] - y[XN]) / Tnp_;
       f[XF]      = -yp[XF] + (y[EF] - y[XF]) / Tf_;
-      f[C]       = -yp[C] + Math::antiwindup(y[C], y[RC], Gmin_, Gmax_);
+      f[C]       = -yp[C] + Math::boundedAntiwindup(y[C], y[RC], Gmin_, Gmax_);
       f[G]       = -yp[G] + (y[C] - y[G]) / Tg_;
       f[Q]       = -yp[Q] + (Hdam_ - y[H]) / Tw_;
       f[OMEGADB] = -y[OMEGADB] + Math::deadband1(omega, -db1_, db1_);

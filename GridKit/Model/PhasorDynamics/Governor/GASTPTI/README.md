@@ -114,7 +114,7 @@ $P^\mathrm{ref}$ | [p.u.] | Active-power/load reference | Optional `pref`; syste
 
 ## Model Equations
 
-Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`min`](../../../../CommonMath.md#minimum).
+Smooth functions: [`boundedAntiwindup`](../../../../CommonMath.md#bounded-antiwindup), [`min`](../../../../CommonMath.md#minimum).
 
 ### Internal Equations
 
@@ -129,7 +129,7 @@ $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
   0 &=
     -\dot{x}_V
     + \dfrac{s^{\mathrm{valve}}}{T_1}
-      \text{antiwindup}\!(
+      \text{boundedAntiwindup}\!(
         x_V,V-x_V;
         V_{\mathrm{resp}}^{\min},V_{\mathrm{resp}}^{\max}
       ) \\

@@ -147,7 +147,7 @@ $P_{\mathrm{aux}}$              | [p.u.] | Auxiliary power input          | Sour
 
 ## Model Equations
 
-Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`](../../../../CommonMath.md#clamp), [`deadband1`](../../../../CommonMath.md#type-i-deadband), [`deadband2`](../../../../CommonMath.md#type-ii-deadband), [`linseg`](../../../../CommonMath.md#linear-segment).
+Smooth functions: [`boundedAntiwindup`](../../../../CommonMath.md#bounded-antiwindup), [`clamp`](../../../../CommonMath.md#clamp), [`deadband1`](../../../../CommonMath.md#type-i-deadband), [`deadband2`](../../../../CommonMath.md#type-ii-deadband), [`linseg`](../../../../CommonMath.md#linear-segment).
 
 ### Internal Equations
 
@@ -158,7 +158,7 @@ Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`
   0 &= -T_1\dot x_{\mathrm{LL}} - x_{\mathrm{LL}} + K\omega_{\mathrm{db}} \\
   0 &=
     -\dot P_{\mathrm{GV}}
-    + \text{antiwindup}\!(
+    + \text{boundedAntiwindup}\!(
         P_{\mathrm{GV}},
         r_G;
         P^{\min},

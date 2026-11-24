@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 
@@ -391,6 +392,39 @@ namespace GridKit
         const RealT   limit_max)
     {
       return indicator(x, f, limit_min, limit_max) * f;
+    }
+
+    /**
+     * @brief Smooth conditional integration for a gate or valve with fixed travel limits.
+     *
+     * At either stop the outward drive is blocked. The transition attenuates
+     * a reversing drive with magnitude below 1/MU.
+     *
+     * @param[in] x - Gate or valve position
+     * @param[in] drive - Signed drive before position limiting
+     * @param[in] lower - Lower travel limit
+     * @param[in] upper - Upper travel limit
+     * @return Position-limited drive
+     */
+    template <class ScalarT, class RealT>
+    __attribute__((always_inline)) inline ScalarT boundedAntiwindup(
+        const ScalarT x,
+        const ScalarT drive,
+        const RealT   lower,
+        const RealT   upper)
+    {
+      assert(lower <= upper);
+      const auto gate = [](const ScalarT value)
+      {
+        const ScalarT z        = MU<RealT> * value;
+        const ScalarT positive = HALF<RealT> * z + HALF<RealT> * std::abs(z);
+        // Clip to [0, 1] while retaining the input in the dependency graph.
+        const ScalarT t        = positive / std::max(ScalarT{1}, positive);
+        return t * t * t * (RealT{10} + t * (RealT{6} * t - RealT{15}));
+      };
+      const ScalarT above_lower = gate(x - lower);
+      const ScalarT below_upper = gate(upper - x);
+      return drive * (above_lower * below_upper + above_lower * (ONE<RealT> - below_upper) * gate(-drive) + below_upper * (ONE<RealT> - above_lower) * gate(drive));
     }
   } // namespace Math
 } // namespace GridKit

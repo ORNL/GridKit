@@ -550,7 +550,7 @@ namespace GridKit
         const ScalarT pref  = this->toComponentBase(ws[PREF]);
 
         const ScalarT valve_target =
-            Math::antiwindup(xvalve, vlv - xvalve, Vmin_response_, Vmax_response_);
+            Math::boundedAntiwindup(xvalve, vlv - xvalve, Vmin_response_, Vmax_response_);
 
         f[XVALVE] = -xvalve_dot + s_valve_ * valve_target / T1_;
         f[XFLOW]  = -xflow_dot + (-xflow + xvalve) / T2_;

@@ -144,6 +144,7 @@ We implement an approximation to $\text{ReQU}$ using the logistic function.
 | Inside | `inside` | Interior pulse indicator |
 | Outside | `outside` | Outside-band indicator |
 | Antiwindup | `antiwindup` | Anti-windup limited derivative |
+| Bounded Antiwindup | `boundedAntiwindup` | Gate or valve drive with fixed travel limits |
 
 ### Maximum
 
@@ -364,3 +365,22 @@ The limits satisfy $\ell\le u$.
     &\approx \phi(x,f)\,f
 \end{aligned}
 ```
+
+### Bounded Antiwindup
+
+For a gate or valve position $x$ with travel limits $\ell\le u$, the outward
+drive is zero at either stop. The $C^2$ transition uses the shared scale $\mu$.
+
+```math
+\begin{aligned}
+  t(z) &= \min(1,\max(0,\mu z)) \\
+  g(z) &= t(z)^3\left(10-15t(z)+6t(z)^2\right) \\
+  a &= g(x-\ell), \qquad b = g(u-x) \\
+  \text{boundedAntiwindup}(x,f;\ell,u)
+    &= f\left[ab+a(1-b)g(-f)+b(1-a)g(f)\right]
+\end{aligned}
+```
+
+At least $1/\mu$ inside both stops, the full drive passes. For a travel span
+of at least $1/\mu$, a reversing drive at a stop passes in full when
+$|f|\ge 1/\mu$ and is attenuated by $g(|f|)$ below that threshold.

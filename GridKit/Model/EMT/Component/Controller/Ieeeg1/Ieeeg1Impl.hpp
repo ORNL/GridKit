@@ -68,7 +68,7 @@ namespace GridKit
         flow += slope_[k] * (Math::ramp(y[VALVE] - d.Gv[k]) - Math::ramp(y[VALVE] - d.Gv[k + 1]));
       }
       f[SPEED]     = speed - y[SPEED] - d.T1 * yp[SPEED];
-      f[VALVE]     = Math::antiwindup(y[VALVE], Math::clamp(rate, d.Uc, d.Uo), d.Pmin, d.Pmax) - yp[VALVE];
+      f[VALVE]     = Math::boundedAntiwindup(y[VALVE], Math::clamp(rate, d.Uc, d.Uo), d.Pmin, d.Pmax) - yp[VALVE];
       f[BOWL]      = flow - y[BOWL] - d.T4 * yp[BOWL];
       f[REHEAT]    = y[BOWL] - y[REHEAT] - d.T5 * yp[REHEAT];
       f[CROSSOVER] = y[REHEAT] - y[CROSSOVER] - d.T6 * yp[CROSSOVER];

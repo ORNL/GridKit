@@ -89,7 +89,7 @@ namespace GridKit
       const T omega = w[OMEGA] - ONE<RealT>;
       const T pref  = system_to_turbine * w[PREF];
 
-      f[XVALVE] = -yp[XVALVE] + valve_on_ * Math::antiwindup(y[XVALVE], y[VLV] - y[XVALVE], Vmin_, Vmax_) / T1_;
+      f[XVALVE] = -yp[XVALVE] + valve_on_ * Math::boundedAntiwindup(y[XVALVE], y[VLV] - y[XVALVE], Vmin_, Vmax_) / T1_;
       f[XFLOW]  = -yp[XFLOW] + (-y[XFLOW] + y[XVALVE]) / T2_;
       f[XTEMP]  = -yp[XTEMP] + (-y[XTEMP] + y[XFLOW]) / T3_;
       f[VLOAD]  = -omega + R_ * (pref - y[VLOAD]);

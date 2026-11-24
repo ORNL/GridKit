@@ -7,6 +7,7 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <variant>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -472,7 +473,6 @@ namespace GridKit
         // limits as well as state, derivatives, and pref.
         constexpr RealT over_rated_pmech    = 0.6;
         constexpr RealT valve_time_constant = 0.35;
-        constexpr RealT boundary_weight     = 0.5;
         constexpr RealT boundary_command    = 0.25;
 
         auto reinitialize_data                   = makeResidualData();
@@ -502,11 +502,18 @@ namespace GridKit
                   {Internal::VLV, upper_boundary + boundary_command}});
         setDerivative(reinitialize.gastpti, {{Internal::XVALVE, 0.0}});
         success *= (reinitialize.evaluate() == 0);
-        const RealT expected_boundary_response =
-            boundary_weight * boundary_command / valve_time_constant;
         success *= residualsMatch(reinitialize.gastpti,
-                                  {{Internal::XVALVE, expected_boundary_response}},
-                                  "failed reinitialization preserves effective limits");
+                                  {{Internal::XVALVE, ZERO<RealT>}},
+                                  "failed reinitialization preserves the effective stop");
+
+        const auto  configured_max = std::get<RealT>(reinitialize_data.parameters.at(Params::Vmax));
+        const RealT inside         = HALF<RealT> * (configured_max + upper_boundary);
+        setState(reinitialize.gastpti,
+                 {{Internal::XVALVE, inside}, {Internal::VLV, inside + boundary_command}});
+        success *= (reinitialize.evaluate() == 0);
+        success *= residualsMatch(reinitialize.gastpti,
+                                  {{Internal::XVALVE, boundary_command / valve_time_constant}},
+                                  "failed reinitialization preserves travel above configured Vmax");
 
         struct EqualLimitTemperatureCase
         {
@@ -713,7 +720,6 @@ namespace GridKit
         // Normal response expands both sides of the configured interval to
         // admit the initialized flow. The derived boundary must be used thereafter.
         constexpr RealT valve_time_constant = 0.35;
-        constexpr RealT boundary_weight     = 0.5;
         constexpr RealT command_magnitude   = 0.25;
         constexpr RealT over_rated_pmech    = 0.6;
 
@@ -750,10 +756,17 @@ namespace GridKit
                         {{Internal::XVALVE, ZERO<RealT>}});
           success *= (response.evaluate() == 0);
 
-          const RealT expected =
-              boundary_weight * test_case.command / valve_time_constant;
           success *= residualsMatch(response.gastpti,
-                                    {{Internal::XVALVE, expected}},
+                                    {{Internal::XVALVE, ZERO<RealT>}},
+                                    test_case.label);
+
+          const auto  limit  = test_case.command > 0 ? Params::Vmax : Params::Vmin;
+          const RealT inside = HALF<RealT> * (boundary + std::get<RealT>(response_data.parameters.at(limit)));
+          setState(response.gastpti,
+                   {{Internal::XVALVE, inside}, {Internal::VLV, inside + test_case.command}});
+          success *= (response.evaluate() == 0);
+          success *= residualsMatch(response.gastpti,
+                                    {{Internal::XVALVE, test_case.command / valve_time_constant}},
                                     test_case.label);
         }
         Log::setVerbosity(previous_verbosity);

@@ -609,7 +609,7 @@ namespace GridKit
 
         f[XN]      = -xn_dot + (omegadb - xn) / Tnp_;
         f[XF]      = -xf_dot + (ef - xf) / Tf_;
-        f[C]       = -c_dot + Math::antiwindup(c, rc, Gmin_response_, Gmax_response_);
+        f[C]       = -c_dot + Math::boundedAntiwindup(c, rc, Gmin_response_, Gmax_response_);
         f[G]       = -g_dot + (c - g) / Tg_;
         f[Q]       = -q_dot + (Hdam_eff_ - head) / Tw_;
         f[OMEGADB] = -omegadb + Math::deadband1(omega, -db1_, db1_);

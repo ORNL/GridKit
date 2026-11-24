@@ -162,7 +162,7 @@ namespace GridKit::PhasorDynamics::Governor
     const T rate      = (this->toComponentBase(signal(Input::pref) + signal(Input::paux)) - lead - y[VALVE]) / T3_;
     const T flow      = valveFlow(y[VALVE]);
     f[SPEED]          = speed - y[SPEED] - T1_ * yp[SPEED];
-    f[VALVE]          = Math::antiwindup(y[VALVE], Math::clamp(rate, Uc_, Uo_), Pmin_, Pmax_) - yp[VALVE];
+    f[VALVE]          = Math::boundedAntiwindup(y[VALVE], Math::clamp(rate, Uc_, Uo_), Pmin_, Pmax_) - yp[VALVE];
     f[BOWL]           = flow - y[BOWL] - T4_ * yp[BOWL];
     f[REHEAT]         = y[BOWL] - y[REHEAT] - T5_ * yp[REHEAT];
     f[CROSSOVER]      = y[REHEAT] - y[CROSSOVER] - T6_ * yp[CROSSOVER];

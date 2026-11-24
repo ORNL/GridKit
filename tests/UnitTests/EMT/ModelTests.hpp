@@ -1590,7 +1590,7 @@ namespace GridKit
         auto& governor = system->device("GOV");
 
         success *= system->evaluateResidual() == 0;
-        success *= rowsEqual(governor.getResidual(Variables::XVALVE), {Math::antiwindup(0.25, 0.25, 0.0, 1.0) / 0.5});
+        success *= rowsEqual(governor.getResidual(Variables::XVALVE), {0.5});
         success *= rowsEqual(governor.getResidual(Variables::XFLOW), {-1.0});
         success *= rowsEqual(governor.getResidual(Variables::XTEMP), {-0.125});
         success *= rowsEqual(governor.getResidual(Variables::VLOAD), {-0.03125});
@@ -1639,7 +1639,7 @@ namespace GridKit
         success *= system->evaluateResidual() == 0;
         success *= rowsEqual(governor.getResidual(Variables::XN), {-0.125});
         success *= rowsEqual(governor.getResidual(Variables::XF), {0.5});
-        success *= rowsEqual(governor.getResidual(Variables::C), {Math::antiwindup(0.5, 0.125, 0.0, 1.0)});
+        success *= rowsEqual(governor.getResidual(Variables::C), {0.125});
         success *= rowsEqual(governor.getResidual(Variables::G), {0.5});
         success *= rowsEqual(governor.getResidual(Variables::Q), {0.125});
         success *= rowsEqual(governor.getResidual(Variables::EF), {-0.1875});
