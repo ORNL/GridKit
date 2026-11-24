@@ -1,5 +1,5 @@
 /**
- * @file ParameterReader.hpp
+ * @file DataReader.hpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @brief Typed parameter and initial value loading from model data containers.
  */

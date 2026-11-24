@@ -8,9 +8,9 @@
 #include <format>
 #include <type_traits>
 
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Bus/Bus.hpp>
 #include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
-#include <GridKit/Model/ParameterReader.hpp>
 
 namespace GridKit
 {

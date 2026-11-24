@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-#include <GridKit/Model/ParameterReader.hpp>
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
@@ -50,16 +50,16 @@ namespace GridKit
       using Parameter    = typename ModelDataT::Parameters;
       using InitialValue = typename ModelDataT::InitialValues;
 
-      const Model::ParameterReader    reader(data, "GenClassical");
-      const Model::InitialValueReader initial(data, "GenClassical");
+      const Model::ParameterReader    parameters(data, "GenClassical");
+      const Model::InitialValueReader initial_values(data, "GenClassical");
 
-      ir_       = initial.readReal(InitialValue::ir).value_or(ir_);
-      ii_       = initial.readReal(InitialValue::ii).value_or(ii_);
-      H_        = reader.readReal(Parameter::H).value_or(H_);
-      D_        = reader.readReal(Parameter::D).value_or(D_);
-      Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);
-      Xdp_      = reader.readReal(Parameter::Xdp).value_or(Xdp_);
-      mva_base_ = reader.readReal(Parameter::mva).value_or(mva_base_);
+      ir_       = initial_values.readReal(InitialValue::ir).value_or(ir_);
+      ii_       = initial_values.readReal(InitialValue::ii).value_or(ii_);
+      H_        = parameters.readReal(Parameter::H).value_or(H_);
+      D_        = parameters.readReal(Parameter::D).value_or(D_);
+      Ra_       = parameters.readReal(Parameter::Ra).value_or(Ra_);
+      Xdp_      = parameters.readReal(Parameter::Xdp).value_or(Xdp_);
+      mva_base_ = parameters.readReal(Parameter::mva).value_or(mva_base_);
     }
 
     template <typename scalar_type, typename index_type>
