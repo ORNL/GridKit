@@ -37,6 +37,9 @@ int main()
   result += test.machine();
   result += test.machineIronLoss();
   result += test.transformer();
+  result += test.transformerPhase();
+  result += test.transformerThreeWinding();
+  result += test.invalidTransformerThreeWinding();
   result += test.machineCurrentReference();
   result += test.pll();
   result += test.pllFrequencyReference();
@@ -49,6 +52,8 @@ int main()
   result += test.ieeet1();
   result += test.esdc1a();
   result += test.ieeest();
+  result += test.hawaiiMachineControls();
+  result += test.reecaRecovery();
   result += test.reecb();
   result += test.repca();
   result += test.machineControls();

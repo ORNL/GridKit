@@ -116,7 +116,7 @@ namespace GridKit
         FREQREF,
       };
 
-      static constexpr RealT TIME_CONSTANT_MINIMUM{1.0e-3}; ///< Floor of `Tfltr`, `Tfv`, `Tp` and `Tlag` [s]
+      static constexpr RealT TIME_CONSTANT_MINIMUM{1.0e-3}; ///< Floor of `Tfv` and `Tlag` [s]
       static constexpr RealT V_MINIMUM{0.01};               ///< Floor of the voltage that divides [p.u.]
 
       template <typename T>

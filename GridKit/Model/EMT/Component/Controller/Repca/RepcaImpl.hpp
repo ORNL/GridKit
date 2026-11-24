@@ -32,7 +32,7 @@ namespace GridKit
     Repca<scalar_type, index_type>::Repca(const ModelDataT& data)
       : ComponentT(std::type_identity<Repca>{}),
         mva_(data.mva),
-        Tfltr_(std::max(data.Tfltr, TIME_CONSTANT_MINIMUM)),
+        Tfltr_(data.Tfltr),
         Vfrz_(data.Vfrz),
         Rc_(data.Rc),
         Xc_(data.Xc),
@@ -47,7 +47,7 @@ namespace GridKit
         Qmin_(data.Qmin),
         Tft_(data.Tft),
         Tfv_(std::max(data.Tfv, TIME_CONSTANT_MINIMUM)),
-        Tp_(std::max(data.Tp, TIME_CONSTANT_MINIMUM)),
+        Tp_(data.Tp),
         fdbd1_(data.fdbd1),
         fdbd2_(data.fdbd2),
         Ddn_(data.Ddn),
@@ -101,6 +101,7 @@ namespace GridKit
     {
       Model::ConfigurationChecks checks("Repca");
       checks.check(V_ > ZERO<RealT> && mva_ > ZERO<RealT>, "V and mva must be positive");
+      checks.check(Tfltr_ >= ZERO<RealT> && Tp_ >= ZERO<RealT>, "Tfltr and Tp must be nonnegative");
       checks.check(Kp_ >= ZERO<RealT>, "Kp must be nonnegative");
       checks.check(Kpg_ >= ZERO<RealT>, "Kpg must be nonnegative");
       checks.check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_, "dbdlow <= 0 <= dbdupper is required");
@@ -166,11 +167,11 @@ namespace GridKit
       const T p_pi_rate = p_feedback_gain_ * (y[PPI] - Math::clamp(y[XPPI], Pmin_, Pmax_))
                           + Math::antiwindup(y[XPPI], p_integral_gain_ * y[EPLIM], Pmin_, Pmax_);
 
-      f[VMEAS]  = -yp[VMEAS] + (y[VCTRL] - y[VMEAS]) / Tfltr_;
-      f[QMEAS]  = -yp[QMEAS] + (q - y[QMEAS]) / Tfltr_;
+      f[VMEAS]  = y[VCTRL] - y[VMEAS] - Tfltr_ * yp[VMEAS];
+      f[QMEAS]  = q - y[QMEAS] - Tfltr_ * yp[QMEAS];
       f[XQPI]   = -yp[XQPI] + sfrz * q_pi_rate;
       f[XQLAG]  = -yp[XQLAG] + (y[QPI] - y[XQLAG]) / Tfv_;
-      f[PMEAS]  = -yp[PMEAS] + (p - y[PMEAS]) / Tp_;
+      f[PMEAS]  = p - y[PMEAS] - Tp_ * yp[PMEAS];
       f[XPPI]   = -yp[XPPI] + p_pi_rate;
       f[PREF]   = -yp[PREF] + (y[PPI] - y[PREF]) / Tlag_;
       f[VLDC]   = -y[VLDC] + vldc;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -111,6 +112,19 @@ namespace GridKit
       /// Told which of those values crossed zero where the integration stopped
       virtual void applyRoots(const std::vector<bool>&)
       {
+      }
+
+      /// Time-dependent roots and signed crossings, for models with timed controls.
+      virtual int evaluateRootsAt(RealT, const ScalarT* y, RealT* roots)
+      {
+        return evaluateRoots(y, roots);
+      }
+
+      /// Return true when the event changes an algebraic constraint.
+      virtual bool applyRootEvents(RealT, std::span<const int> crossed)
+      {
+        applyRoots({crossed.begin(), crossed.end()});
+        return false;
       }
 
       /**

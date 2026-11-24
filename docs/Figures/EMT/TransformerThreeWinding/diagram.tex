@@ -1,0 +1,83 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[american]{circuitikz}
+\input{../diagram-style.tex}
+\standaloneenv{circuitikz}
+
+\begin{document}
+\begin{circuitikz}[emt diagram]
+\ctikzset{bipoles/length=1.05cm}
+
+% The two leakage loops as the star equivalent that they share a leg of.
+\coordinate (e1) at (2.0,3.0);
+\coordinate (star) at (7.2,3.0);
+\coordinate (e2) at (12.4,3.0);
+\coordinate (e3) at (7.2,-2.0);
+\draw[semithick] (e1) to[R,l=$R_{31}{-}R_3$] ++(2.6,0)
+  to[L,l=$X_{31}{-}X_3$] (star);
+\draw[semithick] (star) to[L,l=$X_{23}{-}X_3$] ++(2.6,0)
+  to[R,l=$R_{23}{-}R_3$] (e2);
+\draw[semithick] (star) to[R,l=$R_3$] ++(0,-2.5)
+  to[L,l=$X_3$] (e3);
+\draw[->, line] (3.3,4.1) -- (5.9,4.1)
+  node[sig, midway, above] {$\mathbf{i}_{13}$};
+\draw[->, line] (11.1,4.1) -- (8.5,4.1)
+  node[sig, midway, above] {$\mathbf{i}_{23}$};
+
+% Each node carries a third of the core: a loss conductance and a saturable inductance.
+\foreach \x/\y/\e in {2.0/3.0/1,12.4/3.0/2,7.2/-2.0/3} {
+  \draw[semithick] (\x,\y) to[short, i>_=$\mathbf{i}_{\mathrm{m}\e}$] (\x,\y-1.0);
+  \draw[semithick] (\x,\y-1.0) -- ++(-0.75,0)
+    to[R] ++(0,-2.4)
+    -- (\x,\y-3.4);
+  \draw[semithick] (\x,\y-1.0) -- ++(0.75,0)
+    to[L] ++(0,-2.4)
+    -- (\x,\y-3.4) -- (\x,\y-3.8);
+  \node[sig, anchor=north east] at (\x-0.2,\y-3.48) {$\beta G_\mathrm{c}$};
+  \node[sig, anchor=north west] at (\x+0.2,\y-3.48) {$\beta\,g(\boldsymbol{\psi}_\e)$};
+  \node[signal] at (\x,\y-1.0) {};
+  \node[signal] at (\x,\y-3.4) {};
+  \node[ground] at (\x,\y-3.8) {};
+}
+\node[signal, label={[sig]above:$\mathbf{e}_1$}] at (e1) {};
+\node[signal, label={[sig]above:$\mathbf{e}_2$}] at (e2) {};
+\node[signal, label={[sig]above left:$\mathbf{e}_3$}] at (e3) {};
+\node[signal] at (star) {};
+
+% Ideal off-nominal ratio of windings 2 and 3.
+\node[transformer core, anchor=A1] (tap2) at (13.6,3.0) {};
+\node[transformer core, anchor=A1] (tap3) at (9.4,-2.0) {};
+\draw[semithick] (e2) -- (tap2.A1);
+\draw[semithick] (e3) -- (tap3.A1);
+\foreach \t in {tap2,tap3} {
+  \node[sig, above] at (\t.north) {$\tau:1$};
+  \draw[semithick] (\t.A2) -- ++(0,-0.4) node[ground] {};
+  \draw[semithick] (\t.B2) -- ++(0,-0.4) node[ground] {};
+}
+
+% Connection maps between the bus terminals and the windings.
+\coordinate (w1) at (0.4,3.0);
+\coordinate (w2) at ($(tap2.B1)+(1.6,0)$);
+\coordinate (w3) at ($(tap3.B1)+(1.6,0)$);
+\node[block, minimum width=1.3cm, left=0.9cm of w1] (P1) {$\mathbf{P}_1$};
+\node[block, minimum width=1.3cm, right=0.9cm of w2] (P2) {$\mathbf{P}_2$};
+\node[block, minimum width=1.3cm] (P3) at (P2 |- w3) {$\mathbf{P}_3$};
+\draw[semithick] (P1.east) to[short, i=$\mathbf{i}_{\mathrm{w}1}$] (w1) -- (e1);
+\draw[semithick] (P2.west) to[short, i=$\mathbf{i}_{\mathrm{w}2}$] (w2) -- (tap2.B1);
+\draw[semithick] (P3.west) to[short, i=$\mathbf{i}_{\mathrm{w}3}$] ($(P3.west)+(-1.6,0)$) -- (tap3.B1);
+
+% Bus terminals and outward current injections.
+\node[signal, label={[sig]above:$\mathbf{v}_1$}] (b1) at ($(P1.west)+(-1.0,0)$) {};
+\node[signal, label={[sig]above:$\mathbf{v}_2$}] (b2) at ($(P2.east)+(1.0,0)$) {};
+\node[signal, label={[sig]above:$\mathbf{v}_3$}] (b3) at ($(P3.east)+(1.0,0)$) {};
+\draw[semithick] (b1) -- (P1.west);
+\draw[semithick] (P2.east) -- (b2);
+\draw[semithick] (P3.east) -- (b3);
+\draw[->, line] (b1) -- ++(-1.0,0) node[sig, left] {$\mathbf{i}_1$};
+\draw[->, line] (b2) -- ++(1.0,0) node[sig, right] {$\mathbf{i}_2$};
+\draw[->, line] (b3) -- ++(1.0,0) node[sig, right] {$\mathbf{i}_3$};
+
+\coordinate (top) at (0,4.9);
+\coordinate (bottom) at (0,-6.9);
+\draw[enclosure] ($(P1.west |- bottom)+(-0.35,0)$) rectangle ($(P2.east |- top)+(0.35,0)$);
+\end{circuitikz}
+\end{document}

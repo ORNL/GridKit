@@ -36,18 +36,19 @@ namespace GridKit
       V,      ///< \f$V\f$ Rated line-to-line RMS voltage [V]
       mva,    ///< \f$S\f$ Three-phase device rating [MVA]
       Tg,     ///< \f$T_g\f$ Time constant of the currents [s]
-      TM,     ///< \f$T_M\f$ Time constant of the current ceiling [s]
+      sL,     ///< Enable the low-voltage power logic
+      TM,     ///< \f$T_M\f$ Terminal-voltage sensing time constant [s]
       Rqmax,  ///< \f$R_q^{\max}\f$ Upper rate limit of the reactive current, none when zero [p.u./s]
       Rqmin,  ///< \f$R_q^{\min}\f$ Lower rate limit of the reactive current, none when zero [p.u./s]
-      Rpmax,  ///< \f$R_p^{\max}\f$ Maximum recovery rate of the ceiling [p.u./s]
-      IL1,    ///< \f$I_{L1}\f$ Full ceiling target [p.u.]
+      Rpmax,  ///< \f$R_p^{\max}\f$ Maximum recovery rate of the active current [p.u./s]
+      IL1,    ///< \f$I_{L1}\f$ Active-current ceiling at the breakpoint [p.u.]
       VL0,    ///< \f$V_{L0}\f$ Voltage at which the ceiling target is zero [p.u.]
       VL1,    ///< \f$V_{L1}\f$ Voltage at which the ceiling target is full [p.u.]
-      VA0,    ///< \f$V_{A0}\f$ Voltage at which no current is available [p.u.]
-      VA1,    ///< \f$V_{A1}\f$ Voltage at which the whole ceiling is available [p.u.]
+      VA0,    ///< \f$V_{A0}\f$ Voltage at which active-current injection is zero [p.u.]
+      VA1,    ///< \f$V_{A1}\f$ Voltage at which full active current is injected [p.u.]
       Vhvmax, ///< \f$V_\mathrm{hv}^{\max}\f$ Voltage above which reactive current is absorbed [p.u.]
-      Khv,    ///< \f$K_\mathrm{hv}\f$ Gain of the voltage response [p.u.]
-      Qmin,   ///< \f$Q^{\min}\f$ Lower bound of the reduced order [p.u.]
+      Khv,    ///< \f$K_\mathrm{hv}\f$ EMT high-voltage reactive-current gain [p.u.]
+      Qmin,   ///< \f$Q^{\min}\f$ Minimum injected reactive current [p.u.]
     };
 
     /// Data of a `Regca`
@@ -59,6 +60,7 @@ namespace GridKit
       RealT V{ZERO<RealT>};
       RealT mva{ZERO<RealT>};
       RealT Tg{ZERO<RealT>};
+      bool  sL{true};
       RealT TM{ZERO<RealT>};
       RealT Rqmax{ZERO<RealT>};
       RealT Rqmin{ZERO<RealT>};
@@ -75,6 +77,7 @@ namespace GridKit
       static constexpr std::tuple PARAMETERS{Parameter{Parameters::V, &RegcaData::V},
                                              Parameter{Parameters::mva, &RegcaData::mva},
                                              Parameter{Parameters::Tg, &RegcaData::Tg},
+                                             Parameter{Parameters::sL, &RegcaData::sL},
                                              Parameter{Parameters::TM, &RegcaData::TM},
                                              Parameter{Parameters::Rqmax, &RegcaData::Rqmax},
                                              Parameter{Parameters::Rqmin, &RegcaData::Rqmin},

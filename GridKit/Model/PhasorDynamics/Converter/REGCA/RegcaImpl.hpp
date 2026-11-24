@@ -15,6 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/RegcaLimits.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -560,7 +561,7 @@ namespace GridKit
         // At Q0 = 0 both corrections vanish, leaving fq unrestricted.
         const ScalarT iq_rate = fq + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
                                 + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
-        const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);
+        const ScalarT fp_limited = Model::rrpwr(ip, fp, Rpmax_);
 
         // The LVPL ceiling moves with sensed voltage. Its rate is the exact
         // chain rule (inside() is the linseg slope mask and ramp' = sigmoid);
@@ -575,7 +576,7 @@ namespace GridKit
         f[VM] = -vm_dot + vm_rate;
         f[IQ] = -iq_dot + iq_rate;
         f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
-                + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
+                + use_lvpl_ * Model::awmax(ip, fp_limited, il, il_rate);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;

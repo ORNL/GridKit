@@ -16,6 +16,7 @@ install(
         Evaluator.hpp
         OptimizationEvaluator.hpp
         ParameterReader.hpp
+        RegcaLimits.hpp
         VariableMonitor.hpp
         VariableMonitorController.hpp
   DESTINATION include/GridKit/Model)

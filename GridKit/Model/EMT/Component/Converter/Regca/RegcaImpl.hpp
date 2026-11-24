@@ -13,6 +13,7 @@
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/EMT/Component/Converter/Regca/Regca.hpp>
 #include <GridKit/Model/EMT/ComponentImpl.hpp>
+#include <GridKit/Model/RegcaLimits.hpp>
 
 namespace GridKit
 {
@@ -21,7 +22,7 @@ namespace GridKit
     /**
      * @brief Construct a converter, its rate-limit selections and its peak current.
      *
-     * Layout: internal variables `il`, `ip` and `iq` of size 1 and `i` of
+     * Layout: internal variables `vmeas`, `ip` and `iq` of size 1 and `i` of
      * size 3, terminal `bus` of size 3, and inputs `vt`, `theta`, `ipcmd` and
      * `iqcmd` of size 1. `verify` reports invalid data.
      */
@@ -42,20 +43,45 @@ namespace GridKit
         VA1_(data.VA1),
         Vhvmax_(data.Vhvmax),
         Khv_(data.Khv),
-        Qmin_(data.Qmin)
+        Qmin_(data.Qmin),
+        lvpl_(data.sL && data.IL1 >= ZERO<RealT>)
     {
-      if (Rqmax_ > ZERO<RealT>)
-      {
-        rq_max_on_ = ONE<RealT>;
-      }
-      if (Rqmin_ < ZERO<RealT>)
-      {
-        rq_min_on_ = ONE<RealT>;
-      }
       if (V_ > ZERO<RealT>)
       {
         current_peak_ = std::sqrt(TWO<RealT> / THREE<RealT>) * MEGA<RealT> * mva_ / V_;
       }
+    }
+
+    template <typename scalar_type, typename index_type>
+    int Regca<scalar_type, index_type>::initialize()
+    {
+      if (this->time() == ZERO<RealT>)
+      {
+        const auto* y   = this->y_.getData();
+        const RealT iq0 = std::max(Qmin_, y[IQ] - Khv_ * std::max(ZERO<RealT>, y[VM] - Vhvmax_));
+        rq_max_on_      = iq0 > ZERO<RealT> && Rqmax_ > ZERO<RealT>;
+        rq_min_on_      = iq0 < ZERO<RealT> && Rqmin_ < ZERO<RealT>;
+      }
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    int Regca<scalar_type, index_type>::evaluateRootsAt(RealT, const scalar_type* y, RealT* roots)
+    {
+      roots[0] = y[VM] - VL1_;
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    bool Regca<scalar_type, index_type>::applyRootEvents(RealT, std::span<const int> crossed)
+    {
+      auto& ip = this->y_.getData()[IP];
+      if (crossed[0] < 0 && ip > IL1_)
+      {
+        ip = IL1_;
+        return true;
+      }
+      return false;
     }
 
     /**
@@ -69,14 +95,12 @@ namespace GridKit
     {
       Model::ConfigurationChecks checks("Regca");
       checks.check(V_ > ZERO<RealT> && mva_ > ZERO<RealT> && std::isfinite(current_peak_), "V and mva must be positive");
-      checks.check(Tg_ > ZERO<RealT> && TM_ > ZERO<RealT>, "Tg and TM must be positive");
-      checks.check(Rqmax_ >= ZERO<RealT> && Rqmin_ <= ZERO<RealT>, "Rqmin <= 0 <= Rqmax is required");
-      checks.check(VL0_ >= ZERO<RealT> && VL1_ > VL0_, "VL0 must be nonnegative and below VL1");
+      checks.check(Tg_ > ZERO<RealT> && TM_ >= ZERO<RealT>, "Tg must be positive and TM nonnegative");
+      checks.check(!lvpl_ || (VL0_ >= ZERO<RealT> && VL1_ > VL0_), "VL0 must be nonnegative and below VL1");
       checks.check(VA0_ >= ZERO<RealT> && VA1_ > VA0_, "VA0 must be nonnegative and below VA1");
-      checks.check(IL1_ > ZERO<RealT> && Rpmax_ > ZERO<RealT>, "IL1 and Rpmax must be positive");
+      checks.check(Rpmax_ >= ZERO<RealT>, "Rpmax must be nonnegative");
       checks.check(Vhvmax_ > ZERO<RealT>, "Vhvmax must be positive");
-      checks.check(Khv_ >= ZERO<RealT>, "Khv must be nonnegative");
-      checks.check(Qmin_ <= ZERO<RealT>, "Qmin must be nonpositive");
+      checks.check(Khv_ >= ZERO<RealT> && Qmin_ <= ZERO<RealT>, "Khv must be nonnegative and Qmin nonpositive");
       return checks;
     }
 
@@ -94,21 +118,15 @@ namespace GridKit
     {
       const RealT v_base = this->externalTolerance(this->terminalOffset(RegcaTerminals::bus)) / rel_tol;
 
-      this->absoluteTolerance(RegcaInternalVariables::il)[0] = rel_tol;
-      this->absoluteTolerance(RegcaInternalVariables::ip)[0] = rel_tol;
-      this->absoluteTolerance(RegcaInternalVariables::iq)[0] = rel_tol;
+      this->absoluteTolerance(RegcaInternalVariables::vmeas)[0] = rel_tol;
+      this->absoluteTolerance(RegcaInternalVariables::ip)[0]    = rel_tol;
+      this->absoluteTolerance(RegcaInternalVariables::iq)[0]    = rel_tol;
       std::ranges::fill(this->absoluteTolerance(RegcaInternalVariables::i), rel_tol * this->va_system_base_ / v_base);
       return 0;
     }
 
     /**
-     * @brief Write the residuals of the current ceiling, of the active and
-     *        reactive currents and of the currents into the grid.
-     *
-     * The active-current order is limited at low terminal voltage and the
-     * reactive-current order reduced at high terminal voltage. Each current
-     * follows its order with the time constant `Tg`, the reactive current
-     * within its rate limits.
+     * @brief Converter current states and their algebraic network limits.
      */
     template <typename scalar_type, typename index_type>
     template <typename T>
@@ -117,26 +135,27 @@ namespace GridKit
     {
       const T vt = w[VT] / V_;
 
-      const T target    = Math::linseg(vt, VL0_, VL1_, IL1_);
-      const T available = y[IL] * Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-      const T ip_order  = w[IP_CMD] - std::fdim(w[IP_CMD], available);
+      const T fp   = (w[IP_CMD] - y[IP]) / Tg_;
+      const T fq   = (w[IQ_CMD] - y[IQ]) / Tg_;
+      const T rate = Model::rrpwr(y[IP], fp, Rpmax_);
+      const T ip   = y[IP] * Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+      const T iq   = std::max(T{Qmin_}, y[IQ] - Khv_ * std::fdim(vt, Vhvmax_));
 
-      const T absorbed = Khv_ * Math::ramp(vt - Vhvmax_);
-      const T floor    = std::min(w[IQ_CMD], T{Qmin_});
-      const T iq_order = floor + std::fdim(w[IQ_CMD] - floor, absorbed);
-      const T iq_rate  = (iq_order - y[IQ]) / Tg_;
-
-      f[IL] = -yp[IL] + std::min((target - y[IL]) / TM_, T{Rpmax_});
-      f[IP] = -yp[IP] + (ip_order - y[IP]) / Tg_;
-      f[IQ] = -yp[IQ] + iq_rate + rq_max_on_ * (std::min(iq_rate, T{Rqmax_}) - iq_rate)
-              + rq_min_on_ * (std::max(iq_rate, T{Rqmin_}) - iq_rate);
+      f[VM]                    = vt - y[VM] - TM_ * yp[VM];
+      const RealT slope        = lvpl_ ? IL1_ / (VL1_ - VL0_) : ZERO<RealT>;
+      const T     ceiling      = slope * Math::ramp(y[VM] - VL0_);
+      const T     ceiling_rate = slope * Math::sigmoid(y[VM] - VL0_) * yp[VM];
+      const T     limited      = Model::awmax(y[IP], rate, ceiling, ceiling_rate);
+      f[IP]                    = -yp[IP] + rate + lvpl_ * (y[VM] <= VL1_) * (limited - rate);
+      f[IQ]                    = fq - yp[IQ] + rq_max_on_ * (std::min(fq, T{Rqmax_}) - fq)
+              + rq_min_on_ * (std::max(fq, T{Rqmin_}) - fq);
 
 #pragma clang loop unroll(full)
       for (size_t n = 0; n < PHASES; ++n)
       {
         const T angle = w[THETA] + GAMMA[n];
 
-        f[I + n] = -y[I + n] + current_peak_ * (y[IP] * std::cos(angle) + y[IQ] * std::sin(angle));
+        f[I + n] = -y[I + n] + current_peak_ * (ip * std::cos(angle) + iq * std::sin(angle));
       }
     }
 

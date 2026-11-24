@@ -36,15 +36,18 @@ namespace GridKit
     /// Outputs of a `Machine`, in per unit and of size 1 unless noted
     enum class MachineOutputs : size_t
     {
-      id,  ///< \f$i_d\f$ d-axis stator current
-      iq,  ///< \f$i_q\f$ q-axis stator current
-      i0,  ///< \f$i_0\f$ Zero-sequence stator current
-      ifd, ///< \f$i_\mathrm{fd}\f$ Field current
-      i1d, ///< \f$i_\mathrm{1d}\f$ d-axis damper current
-      i1q, ///< \f$i_\mathrm{1q}\f$ q-axis damper 1 current
-      i2q, ///< \f$i_\mathrm{2q}\f$ q-axis damper 2 current
-      te,  ///< \f$T_e\f$ Electrical torque
-      is,  ///< \f$\mathbf{i}_s\f$ Instantaneous stator currents, size 3
+      id,      ///< \f$i_d\f$ d-axis stator current
+      iq,      ///< \f$i_q\f$ q-axis stator current
+      i0,      ///< \f$i_0\f$ Zero-sequence stator current
+      ifd,     ///< \f$i_\mathrm{fd}\f$ Field current
+      i1d,     ///< \f$i_\mathrm{1d}\f$ d-axis damper current
+      i1q,     ///< \f$i_\mathrm{1q}\f$ q-axis damper 1 current
+      i2q,     ///< \f$i_\mathrm{2q}\f$ q-axis damper 2 current
+      te,      ///< \f$T_e\f$ Electrical torque
+      is,      ///< \f$\mathbf{i}_s\f$ Instantaneous stator currents, size 3
+      i,       ///< Net currents injected into the bus, phases a, b, c [A]
+      p,       ///< Instantaneous three-phase terminal power injected into the grid [W]
+      ifd_exc, ///< Field current on the exciter base [p.u.]
     };
 
     /// Three-phase round-rotor synchronous machine in phase coordinates
@@ -69,12 +72,13 @@ namespace GridKit
       static constexpr std::array<IdxT, Utilities::enum_size<MachineInternalVariables>()> NUM_INTERNAL_VARIABLES{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
       static constexpr std::array<IdxT, Utilities::enum_size<MachineTerminals>()>         NUM_TERMINAL_VARIABLES{PHASES};
       static constexpr std::array<IdxT, Utilities::enum_size<MachineInputs>()>            NUM_INPUT_VARIABLES{1, 1};
-      static constexpr std::array<IdxT, Utilities::enum_size<MachineOutputs>()>           NUM_OUTPUT_VARIABLES{1, 1, 1, 1, 1, 1, 1, 1, PHASES};
+      static constexpr std::array<IdxT, Utilities::enum_size<MachineOutputs>()>           NUM_OUTPUT_VARIABLES{1, 1, 1, 1, 1, 1, 1, 1, PHASES, PHASES, 1, 1};
 
       explicit Machine(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
       int                        tagDifferentiable() override;
+      int                        setAbsoluteTolerance(RealT rel_tol) override;
 
       int evaluateResidual() override;
       int evaluateOutputs() override;

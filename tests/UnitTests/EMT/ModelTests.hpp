@@ -1007,6 +1007,169 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// A phase shift of a third of a cycle moves phase a of winding 1 to phase b of its bus
+      TestOutcome transformerPhase()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                    {"number": 2, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                    {"number": 3, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                    {"number": 4, "class": "Bus", "params": {"N": 3, "kv": 0.001}}],
+          "devices": [{"class": "Transformer", "id": "T1", "terminals": {"bus1": 1, "bus2": 2},
+                       "params": {"S": 1.0, "V1": 1.0, "V2": 1.0, "f": 60.0, "R": 0.5, "X": 0.5, "I0": 0.5, "P0": 0.1}},
+                      {"class": "Transformer", "id": "T2", "terminals": {"bus1": 3, "bus2": 4},
+                       "params": {"S": 1.0, "V1": 1.0, "V2": 1.0, "f": 60.0, "R": 0.5, "X": 0.5, "I0": 0.5, "P0": 0.1}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [1.0, 0.0, 0.0]}, "3": {"v": [0.0, 1.0, 0.0]}},
+          "devices": {"T1": {"i12": [0.5, 0.0, 0.0], "psi1": [2.0, 0.0, 0.0]},
+                      "T2": {"i12": [0.5, 0.0, 0.0], "psi1": [2.0, 0.0, 0.0]}}
+        })";
+
+        auto data                             = nlohmann::json::parse(CASE);
+        data["devices"][1]["params"]["phase"] = TWO<RealT> * std::numbers::pi_v<RealT> / THREE<RealT>;
+        const auto system                     = makeSystem(data.dump().c_str(), STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Outputs = EMT::TransformerOutputs;
+
+        auto& direct  = system->device<EMT::Transformer<RealT, IdxT>>("T1");
+        auto& shifted = system->device<EMT::Transformer<RealT, IdxT>>("T2");
+
+        // The rotation holds a third of a cycle to rounding, which passes at 1e-15 and not at 1e-16
+        constexpr RealT PHASE_TOL = 1.0e-15;
+
+        const auto rowsNear = [](std::span<const RealT> rows, std::initializer_list<RealT> expected)
+        {
+          return std::ranges::equal(rows, expected, [](RealT row, RealT value)
+                                    { return isEqual(row, value, PHASE_TOL); });
+        };
+
+        const RealT PEAK  = std::sqrt(TWO<RealT> / THREE<RealT>);
+        success          *= direct.evaluateOutputs() == 0;
+        success          *= shifted.evaluateOutputs() == 0;
+        const RealT e1    = direct.getOutput(Outputs::e1)[0];
+        const RealT iw1   = direct.getOutput(Outputs::iw1)[0];
+
+        success *= rowsNear(shifted.getOutput(Outputs::e1), {e1, 0.0, 0.0});
+        success *= rowsNear(shifted.getOutput(Outputs::iw1), {iw1, 0.0, 0.0});
+
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-PEAK * iw1, 0.0, 0.0});
+        success *= rowsNear(system->bus("3").getResidual(EMT::BusInternalVariables::v), {0.0, -PEAK * iw1, 0.0});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// Three-winding transformer of unit ratings with a delta winding 3 and winding 1 saturated on phase a
+      TestOutcome transformerThreeWinding()
+      {
+        TestStatus success = true;
+
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                    {"number": 2, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                    {"number": 3, "class": "Bus", "params": {"N": 3, "kv": 0.001}}],
+          "devices": [{"class": "TransformerThreeWinding", "id": "T1", "terminals": {"bus1": 1, "bus2": 2, "bus3": 3},
+                       "params": {"S": 1.0, "V1": 1.0, "V2": 1.0, "V3": 1.0, "f": 60.0, "tap": 1.1,
+                                  "R12": 0.5, "R23": 0.75, "R31": 1.0, "X12": 0.5, "X23": 1.0, "X31": 2.0,
+                                  "I0": 0.5, "P0": 0.1, "Lsat": 1.0,
+                                  "P3": [[1.0, 0.0, -1.0], [-1.0, 1.0, 0.0], [0.0, -1.0, 1.0]]}}]
+        })";
+
+        constexpr const char* STATE = R"({
+          "buses": {"1": {"v": [1.0, 0.0, 0.0]}, "2": {"v": [0.5, 0.0, 0.0]}},
+          "devices": {"T1": {"i13": [0.5, 0.0, 0.0], "i23": [0.25, 0.0, 0.0], "psi1": [2.0, 0.0, 0.0]}}
+        })";
+
+        const auto system = makeSystem(CASE, STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        using Variables = EMT::TransformerThreeWindingInternalVariables;
+        using Outputs   = EMT::TransformerThreeWindingOutputs;
+
+        auto& transformer = system->device<EMT::TransformerThreeWinding<RealT, IdxT>>("T1");
+
+        const RealT PEAK   = std::sqrt(TWO<RealT> / THREE<RealT>);
+        const RealT DELTA  = std::numbers::sqrt2_v<RealT> / THREE<RealT>;
+        const RealT OMEGA  = TWO<RealT> * std::numbers::pi_v<RealT> * 60.0;
+        const RealT THIRD  = ONE<RealT> / THREE<RealT>;
+        success           *= transformer.evaluateOutputs() == 0;
+        const RealT e1     = transformer.getOutput(Outputs::e1)[0];
+        const RealT e2     = transformer.getOutput(Outputs::e2)[0];
+        const RealT im1    = transformer.getOutput(Outputs::im1)[0];
+        const RealT im2    = transformer.getOutput(Outputs::im2)[0];
+        const RealT iw1    = transformer.getOutput(Outputs::iw1)[0];
+        const RealT iw2    = transformer.getOutput(Outputs::iw2)[0];
+
+        // Winding equations of phase a, with a third of the core at each node and windings 2 and 3 behind the tap.
+        // Node 1 is past its knee at 1.2, where the slope changes from 1/Lm to 1/Lsat = 1.
+        const RealT INV_LM  = std::sqrt(0.5 * 0.5 - 0.1 * 0.1);
+        const RealT g1      = 2.0 * INV_LM + (ONE<RealT> - INV_LM) * 0.8;
+        success            *= system->size() == 24;
+        success            *= isEqual(e1, ONE<RealT> / PEAK);
+        success            *= isEqual(e2, 1.1 * 0.5 / PEAK);
+        success            *= isEqual(im1, THIRD * (g1 + 0.1 * e1));
+        success            *= isEqual(im2, THIRD * 0.1 * e2);
+        success            *= isEqual(iw1, 0.5 + im1);
+        success            *= isEqual(iw2, 1.1 * (0.25 + im2));
+        success            *= rowsEqual(transformer.getOutput(Outputs::e3), {0.0, 0.0, 0.0});
+        success            *= rowsEqual(transformer.getOutput(Outputs::im3), {0.0, 0.0, 0.0});
+        success            *= rowsEqual(transformer.getOutput(Outputs::iw3), {-0.825, 0.0, 0.0});
+
+        // The two loops share R3 = 0.625 and X3 = 1.25, the winding 3 leg of the star equivalent, whose winding 2 leg is negative
+        success *= transformer.yp().setToConst(0.5) == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {-PEAK * iw1, 0.0, 0.0});
+        success *= rowsEqual(system->bus("2").getResidual(EMT::BusInternalVariables::v), {-PEAK * iw2, 0.0, 0.0});
+        success *= rowsEqual(system->bus("3").getResidual(EMT::BusInternalVariables::v), {DELTA * 0.825, -DELTA * 0.825, 0.0});
+        success *= rowsEqual(transformer.getResidual(Variables::i13), {1.625 / OMEGA + 0.65625 - e1, 1.625 / OMEGA, 1.625 / OMEGA});
+        success *= rowsEqual(transformer.getResidual(Variables::i23), {1.125 / OMEGA + 0.5 - e2, 1.125 / OMEGA, 1.125 / OMEGA});
+        success *= rowsEqual(transformer.getResidual(Variables::psi1), {0.5 / OMEGA - e1, 0.5 / OMEGA, 0.5 / OMEGA});
+        success *= rowsEqual(transformer.getResidual(Variables::psi2), {0.5 / OMEGA - e2, 0.5 / OMEGA, 0.5 / OMEGA});
+        success *= rowsEqual(transformer.getResidual(Variables::psi3), {0.5 / OMEGA, 0.5 / OMEGA, 0.5 / OMEGA});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
+
+        return success.report(__func__);
+      }
+
+      /// A three-winding transformer whose short-circuit reactances give an indefinite leakage matrix fails verification
+      TestOutcome invalidTransformerThreeWinding()
+      {
+        TestStatus success = true;
+
+        // Windings 3 and 1 are further apart than the other two pairs allow: (sqrt(0.5) + sqrt(1))^2 = 2.914
+        constexpr const char* CASE = R"({
+          "params": {"freq_base": 60.0, "va_base": 1.0e6},
+          "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                    {"number": 2, "class": "Bus", "params": {"N": 3, "kv": 0.001}},
+                    {"number": 3, "class": "Bus", "params": {"N": 3, "kv": 0.001}}],
+          "devices": [{"class": "TransformerThreeWinding", "id": "T1", "terminals": {"bus1": 1, "bus2": 2, "bus3": 3},
+                       "params": {"S": 1.0, "V1": 1.0, "V2": 1.0, "V3": 1.0, "f": 60.0,
+                                  "X12": 0.5, "X23": 1.0, "X31": 3.0, "I0": 0.5, "P0": 0.1, "Lsat": 1.0}}]
+        })";
+
+        success *= makeSystem(CASE, "{}") == nullptr;
+
+        return success.report(__func__);
+      }
+
       /// Machine of unit ratings at angle zero and synchronous speed on a dead bus, saturated on both axes
       TestOutcome machine()
       {
@@ -1209,7 +1372,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Regca at a terminal voltage of 0.75 and angle zero, with orders of 0.5 that its ceiling and its rate limit hold back
+      /// REGCA limits its active-current state and scales the injection independently at low voltage.
       TestOutcome regca()
       {
         TestStatus success = true;
@@ -1224,7 +1387,7 @@ namespace GridKit
         })";
 
         constexpr const char* STATE = R"({"devices": {"GEN": {
-          "il": [0.75], "ip": [0.25], "iq": [0.125], "i": [0.5, -0.25, -0.25],
+          "vmeas": [0.75], "ip": [0.25], "iq": [0.125], "i": [0.5, -0.25, -0.25],
           "vt": [0.75], "ipcmd": [0.5], "iqcmd": [0.5]}}})";
 
         const auto system = makeSystem(CASE, STATE);
@@ -1246,15 +1409,15 @@ namespace GridKit
 
         auto& converter = system->device<RegcaT>("GEN");
 
-        // The ceiling falls toward 0.5 and lets 0.375 of the active order through. The reactive current would rise at
-        // 0.75 and is held to its rate limit.
+        // The current state is below its ceiling. The terminal voltage halves the injected active current.
+        success *= system->initialize() == 0;
         success *= system->size() == 13;
         success *= system->evaluateResidual() == 0;
-        success *= rowsEqual(converter.getResidual(Variables::il), {-0.5});
-        success *= rowsEqual(converter.getResidual(Variables::ip), {0.25});
+        success *= rowsEqual(converter.getResidual(Variables::vmeas), {0.0});
+        success *= rowsEqual(converter.getResidual(Variables::ip), {0.5});
         success *= rowsEqual(converter.getResidual(Variables::iq), {0.25});
         success *= rowsEqual(converter.getResidual(Variables::i),
-                             {-0.5 + peak * 0.25, 0.25 + peak * (-0.125 - quadrature), 0.25 + peak * (-0.125 + quadrature)});
+                             {-0.5 + peak * 0.125, 0.25 + peak * (-0.0625 - quadrature), 0.25 + peak * (-0.0625 + quadrature)});
         success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {0.5, -0.25, -0.25});
         success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, kTol);
 
@@ -1262,6 +1425,40 @@ namespace GridKit
         constexpr IdxT I  = 6;
         success          *= system->setAbsoluteTolerance(REL_TOL) == 0;
         success          *= rowsEqual(std::span<const RealT>{system->absoluteTolerance().getData() + I, 3}, {1.0, 1.0, 1.0});
+
+        // The voltage gain acts on injection even with LVPL off. At zero Ip both recovery directions are limited.
+        auto bypass                              = nlohmann::json::parse(CASE);
+        bypass["devices"][0]["params"]["sL"]     = false;
+        bypass["devices"][0]["params"]["Rpmax"]  = 0.2;
+        const auto off                           = makeSystem(bypass.dump().c_str(), STATE);
+        success                                 *= off != nullptr;
+        if (off)
+        {
+          auto& gen               = off->device<RegcaT>("GEN");
+          gen.y(Variables::ip)[0] = 0;
+          for (const RealT sign : {-1.0, 1.0})
+          {
+            off->held(gen, EMT::RegcaInputs::ipcmd)[0]  = sign;
+            success                                    *= off->evaluateResidual() == 0;
+            success                                    *= rowsEqual(gen.getResidual(Variables::ip), {sign * 0.2});
+          }
+          gen.y(Variables::ip)[0]                  = 0.8;
+          off->held(gen, EMT::RegcaInputs::vt)[0]  = 0.0;
+          success                                 *= off->evaluateResidual() == 0;
+          success                                 *= rowsEqual(gen.getResidual(Variables::i).first(1), {-0.5});
+        }
+
+        // Crossing down into LVPL captures a current above the breakpoint ceiling.
+        converter.y(Variables::ip)[0]  = 1.2;
+        success                       *= converter.applyRootEvents(0, std::array{-1});
+        success                       *= converter.y(Variables::ip)[0] == 1.0;
+
+        // A falling voltage pulls the active-current state along its moving ceiling.
+        converter.y(Variables::ip)[0]                        = 0.7;
+        converter.yp().getData()[0]                          = -0.25;
+        system->held(converter, EMT::RegcaInputs::ipcmd)[0]  = 0.9;
+        success                                             *= system->evaluateResidual() == 0;
+        success                                             *= rowsEqual(converter.getResidual(Variables::ip), {-0.5});
 
         // A rate limit of zero is none
         auto free                              = nlohmann::json::parse(CASE);
@@ -1274,7 +1471,7 @@ namespace GridKit
         }
 
         auto invalid                              = nlohmann::json::parse(CASE);
-        invalid["devices"][0]["params"]["Rqmin"]  = 1.0;
+        invalid["devices"][0]["params"]["Rpmax"]  = -1.0;
         success                                  *= makeSystem(invalid.dump().c_str(), "{}") == nullptr;
 
         return success.report(__func__);
@@ -1531,7 +1728,7 @@ namespace GridKit
         auto& exciter = system->device("EX");
 
         success *= system->evaluateResidual() == 0;
-        success *= rowsEqual(exciter.getResidual(Variables::VTS), {0.5});
+        success *= rowsEqual(exciter.getResidual(Variables::VTS), {0.25});
         success *= rowsEqual(exciter.getResidual(Variables::VR), {Math::antiwindup(1.0, 2.0, -4.0, 4.0)});
         success *= rowsEqual(exciter.getResidual(Variables::EFDP), {0.25});
         success *= rowsEqual(exciter.getResidual(Variables::VFX), {0.03125});
@@ -1711,6 +1908,98 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// The loaded field ceilings and the two steam shafts use their own bases.
+      TestOutcome hawaiiMachineControls()
+      {
+        TestStatus            success = true;
+        constexpr const char* CASE    = R"({
+          "params": {"freq_base": 60, "va_base": 1e6}, "buses": [],
+          "devices": [
+            {"class":"Exst1Pti","id":"ST1","params":{"V":1,"Ka":2,"Vimin":-2,"Vimax":2,"Vrmin":-2,"Vrmax":2,"Kc":0.5}},
+            {"class":"Esst1a","id":"ST1A","params":{"V":1,"Ka":2,"Vimin":-2,"Vimax":2,"Vrmin":-2,"Vrmax":2,"Vamin":-3,"Vamax":3,"Kc":0.5}},
+            {"class":"Esst4b","id":"ST4","params":{"V":1,"S":1,"Kp":1,"Kc":1,"Vbmax":4,"Vrmin":-4,"Vrmax":4,"Vmmin":-4,"Vmmax":4}},
+            {"class":"Ieeeg1","id":"G1","params":{"S":1e6,"Trate":2,"T3":1,"Uc":-1,"Uo":1,"Pmax":2,"K1":0.5,"K2":0.25}},
+            {"class":"Ggov1","id":"GG","params":{"S":1e6,"Tact":1,"Kturb":2,"Wfnl":0.1,"Vmax":2,"Fsrtmax":2,"Rclose":-1,"Ropen":1,"Ka":10,"Ta":0.06,"Aset":0.02}}
+          ]})";
+        const auto            system  = makeSystem(CASE, R"({"devices":{
+          "ST1":{"vt":[1],"VA":[3],"ifd":[1]}, "ST1A":{"vt":[1],"REG":[3],"ifd":[1],"voel":[4]},
+          "ST4":{"v":[0.816496580927726,-0.408248290463863,-0.408248290463863],"ifd":[0.25],"XVM":[2],"voel":[4]},
+          "G1":{"omega":[1],"BOWL":[0.5]}, "GG":{"omega":[1],"TURB":[0.5],"p":[250000],"FSRN":[0.7],"FSRT":[0.8],"DEMAND":[0.7],"MEMORY":[0.9]}
+        }})");
+        if (!system)
+        {
+          return TestStatus(false).report(__func__);
+        }
+        success          *= system->evaluateResidual() == 0;
+        success          *= rowsEqual(system->device("ST1").getResidual(EMT::Exst1PtiInternalVariables::EFD), {1.5});
+        success          *= rowsEqual(system->device("ST1A").getResidual(EMT::Esst1aInternalVariables::EFD), {1.5});
+        auto&      st4    = system->device("ST4");
+        const auto field  = system->held(st4, EMT::Esst4bInputs::ifd);
+        // Unit bridge voltage, with all three rectifier conduction ranges and cutoff.
+        for (const auto& [load, vb] : {std::pair{0.25, 1 - 0.25 / std::sqrt(3.0)},
+                                       std::pair{0.5, std::sqrt(0.5)},
+                                       std::pair{0.875, 0.125 * std::sqrt(3.0)},
+                                       std::pair{1.125, 0.0}})
+        {
+          field[0]  = load;
+          success  *= system->evaluateResidual() == 0;
+          success  *= isEqual(st4.getResidual(EMT::Esst4bInternalVariables::EFD)[0], 2 * vb, kTol);
+          success  *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, 1e-7);
+        }
+        success    *= system->evaluateResidual() == 0;
+        success    *= rowsEqual(system->device("G1").getResidual(EMT::Ieeeg1InternalVariables::PM), {0.5});
+        success    *= rowsEqual(system->device("G1").getResidual(EMT::Ieeeg1InternalVariables::PM_LP), {0.25});
+        success    *= rowsEqual(system->device("GG").getResidual(EMT::Ggov1InternalVariables::PE), {0.25});
+        success    *= rowsEqual(system->device("GG").getResidual(EMT::Ggov1InternalVariables::PM), {0.8});
+        // A constant fuel command stays at the valve ceiling with acceleration control enabled.
+        using Fuel  = EMT::Ggov1InternalVariables;
+        auto& gg    = system->device("GG");
+        for (auto variable : {Fuel::FSRN, Fuel::FSRT, Fuel::DEMAND, Fuel::MEMORY, Fuel::FSR})
+        {
+          gg.y(variable)[0] = 2;
+        }
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(gg.getResidual(Fuel::DEMAND), {0.0});
+        success *= rowsEqual(gg.getResidual(Fuel::FSR), {0.0});
+        return success.report(__func__);
+      }
+
+      /// With Q priority, a clearing dip latches the active-current limit until Thld2 expires.
+      TestOutcome reecaRecovery()
+      {
+        TestStatus success = true;
+        const auto system  = makeSystem(R"({
+          "params":{"freq_base":60,"va_base":1e6},"buses":[],
+          "devices":[{"class":"Reeca","id":"A","params":{"V":10,"mva":1,"Vdip":0.85,"Vup":1.15,
+                   "Imax":1.5,"Thld2":0.5,"Tpord":0.02,"dPmax":4,"dPmin":-4,"Pmax":2,"Qmin":-1,"Qmax":1}}]})",
+                                       R"({"devices":{"A":{"vt":[10],"VTERM":[1],"VMEAS":[1],"VSAFE":[1],"PORD":[0.4],"PREF_RATE":[0.4],"pref":[0.4],"IQMAX":[1.5],"IPMAX":[0.5],"ILCAP":[1.0]}}})");
+        if (!system)
+        {
+          return TestStatus(false).report(__func__);
+        }
+        using Variables  = EMT::ReecaInternalVariables;
+        auto& controller = system->device("A");
+        system->initialize();
+        success *= system->sizeRoots() == 4;
+        success *= system->applyRootEvents(1.0, std::array{-1, 0, 0, 0});
+        success *= system->applyRootEvents(1.25, std::array{1, 0, 0, 0});
+        std::array<RealT, 4> roots{};
+        success                           *= system->evaluateRootsAt(1.5, system->y().getData(), roots.data()) == 0;
+        success                           *= isEqual(roots[2], -0.25);
+        success                           *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, 1e-7);
+        success                           *= system->evaluateResidual() == 0;
+        success                           *= rowsEqual(controller.getResidual(Variables::IPMAX), {0.0});
+        success                           *= system->applyRootEvents(1.75, std::array{0, 0, 1, 0});
+        success                           *= system->evaluateResidual() == 0;
+        success                           *= rowsEqual(controller.getResidual(Variables::IPMAX), {0.5});
+        // A neighboring controller can report the shared bus crossing first.
+        controller.y(Variables::VTERM)[0]  = std::nextafter(1.15, 0.0);
+        controller.yp().getData()[0]       = 1.0;
+        success                           *= system->applyRootEvents(2.0, std::array{0, 0, 0, 0});
+        success                           *= !system->applyRootEvents(2.0, std::array{0, 0, 0, 0});
+        return success.report(__func__);
+      }
+
       /// A line drop of 1.28 + j 0.96 turns a unit voltage with powers (0.5, -0.25) into a compensated voltage of magnitude 1
       TestOutcome repca()
       {
@@ -1754,10 +2043,10 @@ namespace GridKit
 
         // The powers are 0.5 and -0.25, the frequency is at its reference, and the commands are on twice the device rating
         success *= system->evaluateResidual() == 0;
-        success *= near(Variables::VMEAS, -0.75);
-        success *= near(Variables::QMEAS, 0.5);
+        success *= near(Variables::VMEAS, -0.375);
+        success *= near(Variables::QMEAS, 0.25);
         success *= near(Variables::XQLAG, 0.25);
-        success *= near(Variables::PMEAS, 0.5);
+        success *= near(Variables::PMEAS, 0.25);
         success *= near(Variables::PREF, 0.25);
         success *= near(Variables::VLDC, 0.25);
         success *= near(Variables::VDROOP, 0.375);

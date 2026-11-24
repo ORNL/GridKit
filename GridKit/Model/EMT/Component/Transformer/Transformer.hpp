@@ -142,6 +142,7 @@ namespace GridKit
       [[gnu::always_inline]] WindingValues<T> windingValues(const Winding& winding, T u, T psi, T series) const;
 
       static bool  connectionMap(const Matrix<RealT>& matrix, MapT& map);
+      static void  shiftPhase(MapT& map, RealT angle);
       static RealT windingVoltage(const MapT& map, RealT V);
 
       IdxT          N_{PHASES};
@@ -152,6 +153,7 @@ namespace GridKit
       Matrix<RealT> P1_;
       Matrix<RealT> P2_;
       RealT         tap_{ONE<RealT>};
+      RealT         phase_{ZERO<RealT>};
       RealT         R_{ZERO<RealT>};
       RealT         X_{ZERO<RealT>};
       RealT         I0_{ZERO<RealT>};

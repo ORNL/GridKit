@@ -39,6 +39,7 @@ namespace GridKit
         P1_(data.P1),
         P2_(data.P2),
         tap_(data.tap),
+        phase_(data.phase),
         R_(data.R),
         X_(data.X),
         I0_(data.I0),
@@ -55,6 +56,12 @@ namespace GridKit
       // An invalid map is replaced by the identity, which `verify` reports
       connectionMap(P1_, w1_.P);
       connectionMap(P2_, w2_.P);
+
+      // A map without a phase shift keeps its exact entries
+      if (phase_ != ZERO<RealT>)
+      {
+        shiftPhase(w1_.P, phase_);
+      }
 
       omega_b_ = TWO<RealT> * std::numbers::pi_v<RealT> * f_b_;
       Rw_      = HALF<RealT> * R_;
@@ -179,6 +186,35 @@ namespace GridKit
         }
       }
       return true;
+    }
+
+    /**
+     * @brief Rotate the bus side of a connection map about the zero-sequence axis.
+     *
+     * @param[in,out] map Row-major connection map of the terminal.
+     * @param[in] angle Angle by which the positive-sequence voltage of the bus
+     *                  leads that of the winding.
+     */
+    template <typename scalar_type, typename index_type>
+    void Transformer<scalar_type, index_type>::shiftPhase(MapT& map, RealT angle)
+    {
+      constexpr RealT                     SHIFT = TWO<RealT> * std::numbers::pi_v<RealT> / THREE<RealT>;
+      constexpr std::array<RealT, PHASES> GAMMA{ZERO<RealT>, -SHIFT, SHIFT};
+
+      const MapT winding = map;
+      for (size_t m = 0; m < PHASES; ++m)
+      {
+        for (size_t n = 0; n < PHASES; ++n)
+        {
+          RealT entry = ZERO<RealT>;
+          for (size_t k = 0; k < PHASES; ++k)
+          {
+            const RealT rotation  = (ONE<RealT> + TWO<RealT> * std::cos(angle + GAMMA[m] - GAMMA[k])) / THREE<RealT>;
+            entry                += rotation * winding[PHASES * k + n];
+          }
+          map[PHASES * m + n] = entry;
+        }
+      }
     }
 
     /**

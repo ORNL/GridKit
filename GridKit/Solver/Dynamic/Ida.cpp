@@ -513,16 +513,18 @@ namespace AnalysisManager
           std::vector<int> found(static_cast<size_t>(model_->sizeRoots()));
           checkOutput(IDAGetRootInfo(solver_, found.data()), "IDAGetRootInfo");
           updateModelState(time_);
-          model_->applyRoots({found.begin(), found.end()});
+          const bool changed = model_->applyRootEvents(time_, found);
           copyVec(model_->y(), yy_);
           copyVec(model_->yp(), yp_);
 
-          // Nothing jumps at a root, so the integration goes on from that state with its last step.
-          // The step IDA would choose is small enough to turn the error of the interpolated state
-          // into voltages that stop the Newton iteration.
-          RealT step;
-          checkOutput(IDAGetLastStep(solver_, &step), "IDAGetLastStep");
-          restart(time_, false, step);
+          // A switch opens at current zero. Continue with the last step there.
+          // A control discontinuity needs consistent algebraic values and derivatives.
+          RealT step = 0;
+          if (!changed)
+          {
+            checkOutput(IDAGetLastStep(solver_, &step), "IDAGetLastStep");
+          }
+          restart(time_, changed, step);
           if (time_ == getMonitorTime(tf, dt_monitor, i, nsteps))
           {
             break;
@@ -930,10 +932,10 @@ namespace AnalysisManager
      */
     /// The values of the model that stop the integration when they cross zero
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Roots(RealT, N_Vector yy, N_Vector, RealT* roots, void* user_data)
+    int Ida<ScalarT, IdxT>::Roots(RealT t, N_Vector yy, N_Vector, RealT* roots, void* user_data)
     {
       auto* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
-      return model->evaluateRoots(N_VGetArrayPointer(yy), roots);
+      return model->evaluateRootsAt(t, N_VGetArrayPointer(yy), roots);
     }
 
     template <class ScalarT, typename IdxT>

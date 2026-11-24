@@ -81,17 +81,32 @@ namespace GridKit
       ComponentT& bus(const std::string& number) const;
       ComponentT& device(const std::string& id) const;
 
-      /// The variables that the waiting values wait for
+      /// Current-zero crossings of waiting switches and roots of component controls
       IdxT sizeRoots() override
       {
-        return waiting_.size();
+        return waiting_.size() + component_root_count_;
       }
 
       int evaluateRoots(const ScalarT* y, RealT* roots) override
       {
+        return evaluateRootsAt(this->time(), y, roots);
+      }
+
+      int evaluateRootsAt(RealT t, const ScalarT* y, RealT* roots) override
+      {
         for (IdxT k = 0; k < waiting_.size(); ++k)
         {
           roots[k] = y[waiting_[k].variable];
+        }
+        roots += waiting_.size();
+        for (ComponentT* component : root_components_)
+        {
+          const IdxT first = component->variable_indices_.getData()[0];
+          if (const int status = component->evaluateRootsAt(t, y + first, roots); status != 0)
+          {
+            return status;
+          }
+          roots += component->sizeRoots();
         }
         return 0;
       }
@@ -113,6 +128,21 @@ namespace GridKit
           }
         }
         waiting_ = std::move(kept);
+      }
+
+      bool applyRootEvents(RealT t, std::span<const int> crossed) override
+      {
+        const auto switches = crossed.first(waiting_.size());
+        crossed             = crossed.subspan(waiting_.size());
+        applyRoots({switches.begin(), switches.end()});
+        bool changed = false;
+        for (ComponentT* component : root_components_)
+        {
+          const auto found  = crossed.first(component->sizeRoots());
+          changed          |= component->applyRootEvents(t, found);
+          crossed           = crossed.subspan(found.size());
+        }
+        return changed;
       }
 
       /**
@@ -230,7 +260,9 @@ namespace GridKit
         IdxT     variable; ///< System variable that crosses zero
       };
 
-      std::vector<Waiting> waiting_;
+      std::vector<Waiting>     waiting_;
+      std::vector<ComponentT*> root_components_;
+      IdxT                     component_root_count_{0};
 
       /// By reference: an output that inputs read, and those inputs
       std::map<std::string, std::pair<Connection*, std::vector<Connection*>>> signal_inputs_;

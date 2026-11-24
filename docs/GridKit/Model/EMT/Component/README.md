@@ -10,6 +10,7 @@ Load <Load/README>
 Source <Source/README>
 Switch <Switch/README>
 Transformer <Transformer/README>
+TransformerThreeWinding <TransformerThreeWinding/README>
 ```
 
 ```{include} ../../../../../GridKit/Model/EMT/Component/README.md

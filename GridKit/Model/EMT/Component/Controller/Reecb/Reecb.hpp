@@ -8,7 +8,6 @@
 
 #include <array>
 #include <cstddef>
-#include <limits>
 #include <string_view>
 
 #include <GridKit/CommonMath.hpp>
@@ -119,20 +118,11 @@ namespace GridKit
       static constexpr RealT TIME_CONSTANT_MINIMUM{1.0e-3}; ///< Floor of `Trv`, `Tp`, `Tiq` and `Tpord` [s]
       static constexpr RealT VMEAS_MINIMUM{0.01};           ///< Floor of the measured voltage that divides [p.u.]
 
-      /// Width of the knee of the current circle
-      static constexpr RealT CURRENT_CIRCLE_KNEE = 100.0 * std::numeric_limits<RealT>::epsilon() / Math::MU<RealT>;
-
       template <typename T>
       [[gnu::always_inline]] static T aslew(T rate, RealT lower, RealT upper);
 
       template <typename T>
       [[gnu::always_inline]] static T awband(T state, T rate, T band);
-
-      template <typename T>
-      [[gnu::always_inline]] static T sqrtramp(T x);
-
-      template <typename T>
-      [[gnu::always_inline]] static T circleSquare(RealT limit, T high);
 
       RealT Trv_{ZERO<RealT>};
       RealT Tp_{ZERO<RealT>};

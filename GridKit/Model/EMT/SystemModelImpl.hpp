@@ -415,6 +415,11 @@ namespace GridKit
     void SystemModel<scalar_type, index_type>::addBlocks(ComponentT& component)
     {
       blocks_.push_back(&component);
+      if (const auto count = component.sizeRoots(); count != 0)
+      {
+        root_components_.push_back(&component);
+        component_root_count_ += count;
+      }
       for (const auto& submodel : component.submodels_)
       {
         if (submodel)
@@ -522,8 +527,7 @@ namespace GridKit
     /**
      * @brief Mark the values and derivatives that the state has set.
      *
-     * The initial values come from the state, so no component initializes
-     * itself.
+     * Components initialize their discrete modes from the supplied state.
      *
      * @return 0.
      *
@@ -532,6 +536,13 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
+      for (ComponentT* component : blocks_)
+      {
+        if (const int status = component->initialize(); status != 0)
+        {
+          return status;
+        }
+      }
       y_.setDataUpdated();
       yp_.setDataUpdated();
       return 0;

@@ -13,6 +13,7 @@
 #include <cmath>
 
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/Model/EMT/Component/Controller/CurrentCircle.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Reecb/Reecb.hpp>
 #include <GridKit/Model/EMT/ComponentImpl.hpp>
 
@@ -149,47 +150,6 @@ namespace GridKit
     }
 
     /**
-     * @brief Square root where positive and zero elsewhere, with a finite slope at zero.
-     *
-     * @tparam T Scalar type of the kernel.
-     * @param[in] x Argument.
-     * @return The smooth square root.
-     */
-    template <typename scalar_type, typename index_type>
-    template <typename T>
-    [[gnu::always_inline]] T Reecb<scalar_type, index_type>::sqrtramp(T x)
-    {
-      const RealT root_width = ONE<RealT> / Math::MU<RealT>;
-      const RealT knee       = CURRENT_CIRCLE_KNEE;
-
-      const T absolute    = std::abs(x);
-      const T normalizer  = absolute + knee;
-      const T scaled_x    = absolute / normalizer;
-      const T scaled_knee = knee / normalizer;
-      const T magnitude   = normalizer * std::sqrt(scaled_x * scaled_x + scaled_knee * scaled_knee);
-      const T half_sum    = HALF<RealT> * magnitude + HALF<RealT> * absolute;
-      const T conjugate   = QUARTER<RealT> * knee * (knee / half_sum);
-      const T hinged      = HALF<RealT> * x + HALF<RealT> * absolute + conjugate;
-      // Dividing by the root keeps a large finite circle from overflowing
-      return hinged / std::sqrt(hinged + root_width * root_width);
-    }
-
-    /**
-     * @brief Difference of the squares of a limit and of a current, in factored form.
-     *
-     * @tparam T Scalar type of the kernel.
-     * @param[in] limit Current limit.
-     * @param[in] high Current of the axis with priority.
-     * @return `limit`^2 - `high`^2.
-     */
-    template <typename scalar_type, typename index_type>
-    template <typename T>
-    [[gnu::always_inline]] T Reecb<scalar_type, index_type>::circleSquare(RealT limit, T high)
-    {
-      return ((HALF<RealT> * limit - HALF<RealT> * high) * (HALF<RealT> * limit + HALF<RealT> * high)) * FOUR<RealT>;
-    }
-
-    /**
      * @brief Write the residuals of the measurements, of the reactive and
      * active paths and of the current commands.
      *
@@ -230,7 +190,7 @@ namespace GridKit
       f[VPIQ]   = -y[VPIQ] + Math::clamp(q_pi, Vmin_, Vmax_);
       f[EPIV]   = -y[EPIV] + q_pi_on_ * y[VPIQ] + v_ref_on_ * Math::clamp(w[QEXT], Vmin_, Vmax_) - q_on_ * y[VMEAS];
       f[RPORD]  = -y[RPORD] + aslew(fpord, dPmin_, dPmax_);
-      f[ILCAP]  = -y[ILCAP] + sqrtramp(circleSquare(Imax_, high));
+      f[ILCAP]  = -y[ILCAP] + currentCircle(Imax_, high);
       f[IQMAX]  = -y[IQMAX] + pq_on_ * y[ILCAP] + pq_off_ * Imax_;
       f[IPMAX]  = -y[IPMAX] + pq_on_ * Imax_ + pq_off_ * y[ILCAP];
       f[IQBASE] = -y[IQBASE] + Math::clamp(v_pi, -y[IQMAX], y[IQMAX]);

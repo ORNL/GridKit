@@ -47,3 +47,7 @@ and submodels nested by symbol. Omitted values are zero.
   "devices": {"LD1": {"i": [-0.5], "z": {"w": [0.25]}}, "Y1": {"u": [1.0]}}
 }
 ```
+
+REGCA stores its filtered terminal voltage in `vmeas` (pu). To migrate an
+older equilibrium file, replace `il` with `vmeas` initialized to terminal
+line-to-line RMS voltage divided by the converter's rated voltage.

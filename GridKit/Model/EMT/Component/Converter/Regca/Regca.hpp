@@ -21,10 +21,10 @@ namespace GridKit
     /// Internal variables of a `Regca`
     enum class RegcaInternalVariables : size_t
     {
-      il, ///< \f$i_l\f$ Recovering active-current ceiling [p.u.]
-      ip, ///< \f$i_p\f$ Active current [p.u.]
-      iq, ///< \f$i_q\f$ Reactive current [p.u.]
-      i,  ///< \f$\mathbf{i}\f$ Currents into the grid, size 3 [A]
+      vmeas, ///< Filtered terminal voltage [p.u.]
+      ip,    ///< \f$i_p\f$ Active current [p.u.]
+      iq,    ///< \f$i_q\f$ Reactive current [p.u.]
+      i,     ///< \f$\mathbf{i}\f$ Currents into the grid, size 3 [A]
     };
 
     /// Converter as a current source that follows limited current orders
@@ -54,8 +54,17 @@ namespace GridKit
       explicit Regca(const ModelDataT& data);
 
       Model::ConfigurationChecks verify() const override;
+      int                        initialize() override;
       int                        setAbsoluteTolerance(RealT rel_tol) override;
       int                        tagDifferentiable() override;
+
+      IdxT sizeRoots() override
+      {
+        return lvpl_ ? 1 : 0;
+      }
+
+      int  evaluateRootsAt(RealT, const scalar_type* y, RealT* roots) override;
+      bool applyRootEvents(RealT, std::span<const int> crossed) override;
 
       int evaluateResidual() override;
       int evaluateJacobian() override;
@@ -70,7 +79,7 @@ namespace GridKit
       // Offsets of the internal variables, in RegcaInternalVariables order
       enum : size_t
       {
-        IL = 0,
+        VM = 0,
         IP,
         IQ,
         I,
@@ -104,8 +113,9 @@ namespace GridKit
       RealT VA0_{ZERO<RealT>};
       RealT VA1_{ZERO<RealT>};
       RealT Vhvmax_{ZERO<RealT>};
-      RealT Khv_{ZERO<RealT>};
-      RealT Qmin_{ZERO<RealT>};
+      RealT Khv_;
+      RealT Qmin_;
+      bool  lvpl_;
 
       RealT rq_max_on_{ZERO<RealT>};    ///< One with an upper rate limit of the reactive current
       RealT rq_min_on_{ZERO<RealT>};    ///< One with a lower rate limit of the reactive current

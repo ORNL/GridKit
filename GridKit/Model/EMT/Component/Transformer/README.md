@@ -31,6 +31,7 @@ $f_\mathrm{b}$ | [Hz] | `f` | Rated frequency | Required, positive
 $\mathbf{P}_1$ | [-] | `P1` | Terminal 1 connection map | Default $\mathbf{I}_N$
 $\mathbf{P}_2$ | [-] | `P2` | Terminal 2 connection map | Default $\mathbf{I}_N$
 $\tau$ | [p.u.] | `tap` | Off-nominal ratio on winding 1 | Default $1$
+$\theta$ | [rad] | `phase` | Phase shift of winding 1 | Default $0$
 $R$ | [p.u.] | `R` | Short-circuit resistance | Nonnegative
 $X$ | [p.u.] | `X` | Short-circuit reactance | Required, positive
 $I_0$ | [p.u.] | `I0` | No-load current at rated voltage | Required, positive
@@ -78,6 +79,16 @@ G_\mathrm{c} &= P_0 / S_\mathrm{b} \\
 I_\mathrm{m} &= \sqrt{I_0^2 - G_\mathrm{c}^2} \\
 L_\mathrm{m} &= 1 / I_\mathrm{m} \\
 \beta_1 = \beta, \qquad \beta_2 &= 1 - \beta
+\end{aligned}
+```
+
+A phase shift rotates the terminal 1 connection map, so that the
+positive-sequence voltage of bus 1 leads that of winding 1 by $\theta$:
+
+```math
+\begin{aligned}
+\Theta_{nk} &= \dfrac{1}{3}\left(1 + 2\cos(\theta + \gamma_n - \gamma_k)\right) \\
+\mathbf{P}_1 &\leftarrow \boldsymbol{\Theta}\,\mathbf{P}_1
 \end{aligned}
 ```
 

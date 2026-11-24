@@ -30,7 +30,7 @@ namespace GridKit
     Ieeet1<scalar_type, index_type>::Ieeet1(const ModelDataT& data)
       : ComponentT(std::type_identity<Ieeet1>{}),
         V_(data.V),
-        Tr_(std::max(data.Tr, TIME_CONSTANT_MINIMUM)),
+        Tr_(data.Tr),
         Ka_(data.Ka),
         Ta_(std::max(data.Ta, TIME_CONSTANT_MINIMUM)),
         Ke_(data.Ke),
@@ -79,6 +79,7 @@ namespace GridKit
     {
       Model::ConfigurationChecks checks("Ieeet1");
       checks.check(V_ > ZERO<RealT>, "V must be positive");
+      checks.check(Tr_ >= ZERO<RealT>, "Tr must be nonnegative");
       checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
       checks.check(Ke_ != ZERO<RealT>, "Ke must be nonzero: a value from the operating point is not supported");
       checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
@@ -107,7 +108,7 @@ namespace GridKit
       const T vt    = w[VT] / V_;
       const T omega = w[OMEGA] - ONE<RealT>;
 
-      f[VTS]  = -yp[VTS] + (vt - y[VTS]) / Tr_;
+      f[VTS]  = vt - y[VTS] - Tr_ * yp[VTS];
       f[VR]   = -yp[VR] + Math::antiwindup(y[VR], (-y[VR] + Ka_ * y[VTR]) / Ta_, Vrmin_, Vrmax_);
       f[EFDP] = -yp[EFDP] + (y[VR] - y[VE] - Ke_ * y[EFDP]) / Te_;
       f[VFX]  = -yp[VFX] + y[VF] / Tf_;

@@ -111,6 +111,9 @@ $i_d$ | `id` | Output | [p.u.] | d-axis stator current | Positive out of the mac
 $i_q$ | `iq` | Output | [p.u.] | q-axis stator current | Positive out of the machine
 $i_0$ | `i0` | Output | [p.u.] | Zero-sequence stator current |
 $i_\mathrm{fd}$ | `ifd` | Output | [p.u.] | Field current |
+$L_{md} i_{fd}$ | `ifd_exc` | Output | [p.u.] | Field current on the exciter base | Scalar
+$i_{abc}$ | `i` | Output | [A] | Terminal current injected into the grid, including iron loss | Three phases
+$P$ | `p` | Output | [W] | Sum of the three terminal voltage-current products | Scalar
 $i_\mathrm{1d}$ | `i1d` | Output | [p.u.] | d-axis damper current |
 $i_\mathrm{1q}$ | `i1q` | Output | [p.u.] | q-axis damper 1 current |
 $i_\mathrm{2q}$ | `i2q` | Output | [p.u.] | q-axis damper 2 current |

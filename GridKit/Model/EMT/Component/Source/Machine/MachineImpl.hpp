@@ -26,8 +26,7 @@ namespace GridKit
      * @brief Construct a machine and its per-unit bases.
      *
      * Layout: eleven internal variables of size 1, terminal `bus` of size 3,
-     * inputs `efd` and `pm` of size 1, and eight outputs of size 1 before
-     * output `is` of size 3. `verify` reports invalid data.
+     * inputs `efd` and `pm` of size 1, and scalar and three-phase outputs. `verify` reports invalid data.
      */
     template <typename scalar_type, typename index_type>
     Machine<scalar_type, index_type>::Machine(const ModelDataT& data)
@@ -119,6 +118,14 @@ namespace GridKit
       checks.check(S10_ >= ZERO<RealT> && S12_ >= ZERO<RealT>, "S10 and S12 must be nonnegative");
       checks.check(Rfe_ >= ZERO<RealT>, "Rfe must be nonnegative");
       return checks;
+    }
+
+    template <typename scalar_type, typename index_type>
+    int Machine<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    {
+      std::ranges::fill(this->outputTolerance(OutputsT::i), rel_tol * Ipk_);
+      this->outputTolerance(OutputsT::p)[0] = rel_tol * S_;
+      return ComponentT::setAbsoluteTolerance(rel_tol);
     }
 
     /**
@@ -230,17 +237,33 @@ namespace GridKit
     /**
      * @brief Write winding quantity `output`.
      *
-     * The winding values are in MachineOutputs order, and only `is`, the
-     * last, has more than one entry.
+     * The terminal currents and power include the iron-loss branch.
      */
     template <typename scalar_type, typename index_type>
     template <typename T>
     [[gnu::always_inline]] void
-    Machine<scalar_type, index_type>::output(OutputsT output, const T* y, const T*, const T*, const T*, T* f) const
+    Machine<scalar_type, index_type>::output(OutputsT output, const T* y, const T* yp, const T* w, const T* wp, T* f) const
     {
+      if (output == OutputsT::i)
+      {
+        externalResidual(y, yp, w, wp, f);
+        return;
+      }
+      if (output == OutputsT::p)
+      {
+        T current[PHASES];
+        externalResidual(y, yp, w, wp, current);
+        f[0] = w[BUS] * current[0] + w[BUS + 1] * current[1] + w[BUS + 2] * current[2];
+        return;
+      }
       const auto a = windingValues(y);
       const auto k = static_cast<size_t>(output);
 
+      if (output == OutputsT::ifd_exc)
+      {
+        f[0] = Lmd_ * a[IFD];
+        return;
+      }
       f[0] = a[k];
       if (output == MachineOutputs::is)
       {

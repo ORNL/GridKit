@@ -10,10 +10,16 @@
 
 #include <GridKit/Model/EMT/Bus/Bus.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Esdc1a/Esdc1a.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Esst1a/Esst1a.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Esst4b/Esst4b.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Exst1Pti/Exst1Pti.hpp>
 #include <GridKit/Model/EMT/Component/Controller/GastPti/GastPti.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Ggov1/Ggov1.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Hygov/Hygov.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Ieeeg1/Ieeeg1.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Ieeest/Ieeest.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Ieeet1/Ieeet1.hpp>
+#include <GridKit/Model/EMT/Component/Controller/Reeca/Reeca.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Reecb/Reecb.hpp>
 #include <GridKit/Model/EMT/Component/Controller/Repca/Repca.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SexsPti/SexsPti.hpp>
@@ -26,6 +32,7 @@
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
 #include <GridKit/Model/EMT/Component/Transformer/Transformer.hpp>
+#include <GridKit/Model/EMT/Component/TransformerThreeWinding/TransformerThreeWinding.hpp>
 #include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFit.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Park/Park.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Pll/Pll.hpp>
@@ -44,8 +51,13 @@ namespace GridKit
       {
         visit(std::type_identity<Bus<ScalarT, IdxT>>{});
         visit(std::type_identity<Esdc1a<ScalarT, IdxT>>{});
+        visit(std::type_identity<Esst1a<ScalarT, IdxT>>{});
+        visit(std::type_identity<Esst4b<ScalarT, IdxT>>{});
+        visit(std::type_identity<Exst1Pti<ScalarT, IdxT>>{});
         visit(std::type_identity<GastPti<ScalarT, IdxT>>{});
+        visit(std::type_identity<Ggov1<ScalarT, IdxT>>{});
         visit(std::type_identity<Hygov<ScalarT, IdxT>>{});
+        visit(std::type_identity<Ieeeg1<ScalarT, IdxT>>{});
         visit(std::type_identity<Ieeest<ScalarT, IdxT>>{});
         visit(std::type_identity<Ieeet1<ScalarT, IdxT>>{});
         visit(std::type_identity<LineLumped<ScalarT, IdxT>>{});
@@ -55,6 +67,7 @@ namespace GridKit
         visit(std::type_identity<Park<ScalarT, IdxT>>{});
         visit(std::type_identity<Pll<ScalarT, IdxT>>{});
         visit(std::type_identity<Pmu<ScalarT, IdxT>>{});
+        visit(std::type_identity<Reeca<ScalarT, IdxT>>{});
         visit(std::type_identity<Reecb<ScalarT, IdxT>>{});
         visit(std::type_identity<Regca<ScalarT, IdxT>>{});
         visit(std::type_identity<Repca<ScalarT, IdxT>>{});
@@ -63,6 +76,7 @@ namespace GridKit
         visit(std::type_identity<Switch<ScalarT, IdxT>>{});
         visit(std::type_identity<Tgov1<ScalarT, IdxT>>{});
         visit(std::type_identity<Transformer<ScalarT, IdxT>>{});
+        visit(std::type_identity<TransformerThreeWinding<ScalarT, IdxT>>{});
         visit(std::type_identity<VectorFit<ScalarT, IdxT>>{});
         visit(std::type_identity<VoltageSource<ScalarT, IdxT>>{});
       }
