@@ -6,13 +6,11 @@ proportional/integral regulator with exciter-output feedback, low-value
 over-excitation limiter gating, and potential- or compound-source rectifier
 scaling.
 
-> [!WARNING]
-> Initialization does not yet invert the smooth gates and limits used by the
-> model equations.
+Initialization uses the field voltage supplied by the machine and inverts the two regulator characteristics at the initial bridge voltage.
 
 ## Notes
 
-- Internal voltage and current signals are on model base unless otherwise stated.
+- The bus supplies the terminal voltage. The `mva` parameter sets the machine base for compound excitation. The optional `vcomp` input overrides the sensed voltage magnitude.
 - The rectifier loading block $F_{\mathrm{ex}}=f(I_N)$ is the source
   controlled-rectifier loading curve from Fig. 1; it is not a CommonMath helper.
 
@@ -34,16 +32,16 @@ $V_R^{\min}$      | [p.u.]   | `Vrmin`     | Minimum outer regulator output     
 $T_A$             | [s]      | `Ta`        | Regulator lag time constant                           | 0.0           | if zero, $V_A$ is algebraic
 $K_{\mathrm{pm}}$ | [p.u.]   | `Kpm`       | Inner regulator proportional gain                     | 1.0           | Source label: `KPM`
 $K_{\mathrm{im}}$ | [p.u./s] | `Kim`       | Inner regulator integral gain                         | 0.0           | Source label: `KIM`
-$V_M^{\max}$      | [p.u.]   | `VmMax`     | Maximum inner regulator output                        | 1.0           | Source label: `VMMAX`
-$V_M^{\min}$      | [p.u.]   | `VmMin`     | Minimum inner regulator output                        | 0.0           | Source label: `VMMIN`
+$V_M^{\max}$      | [p.u.]   | `Vmmax`     | Maximum inner regulator output                        | 1.0           | Source label: `VMMAX`
+$V_M^{\min}$      | [p.u.]   | `Vmmin`     | Minimum inner regulator output                        | 0.0           | Source label: `VMMIN`
 $K_G$             | [p.u.]   | `Kg`        | Exciter-output feedback gain into inner regulator     | 0.0           | Source label: `KG`
 $K_P$             | [p.u.]   | `Kp`        | Potential-source voltage coefficient magnitude        | 0.0           | Source label: `KP`
 $K_I$             | [p.u.]   | `Ki`        | Potential-source current coefficient                  | 0.0           | Source label: `KI`
-$V_B^{\max}$      | [p.u.]   | `VbMax`     | Maximum rectifier source multiplier                   | 999.0         | Source label: `VBMAX`
+$V_B^{\max}$      | [p.u.]   | `Vbmax`     | Maximum rectifier source multiplier                   | 999.0         | Source label: `VBMAX`
 $K_C$             | [p.u.]   | `Kc`        | Rectifier loading current coefficient                 | 0.0           | forms $I_N$
 $X_L$             | [p.u.]   | `Xl`        | Source reactance term in potential-source calculation | 0.0           | Source label: `XL`
-$\theta_P$        | [deg]    | `ThetaPDeg` | Potential-source coefficient angle                    | 0.0           | Source label: `thetaP`; forms $K_P^r$ and $K_P^i$
-$V_G^{\max}$      | [p.u.]   | `VgMax`     | Maximum exciter-output feedback signal                | 999.0         | Source label: `VGMAX`; ceiling on $K_G E_{\mathrm{fd}}$
+$\theta_P$        | [deg]    | `ThetaP` | Potential-source coefficient angle                    | 0.0           | Source label: `thetaP`; forms $K_P^r$ and $K_P^i$
+$V_G^{\max}$      | [p.u.]   | `Vgmax`     | Maximum exciter-output feedback signal                | 999.0         | Source label: `VGMAX`; ceiling on $K_G E_{\mathrm{fd}}$
 
 ### Parameter Validation
 
@@ -80,10 +78,9 @@ Name    | Port   | Init | Description
 `vuel`  | Input  | TBD  | Under-excitation limiter input $V_{\mathrm{uel}}$
 `vs`    | Input  | TBD  | Stabilizer input signal $V_S$
 `voel`  | Input  | TBD  | Over-excitation limiter input $V_{\mathrm{oel}}$
-`vr`    | Input  | TBD  | Terminal-voltage real component $V_r$
-`vi`    | Input  | TBD  | Terminal-voltage imaginary component $V_i$
-`ir`    | Input  | TBD  | Terminal-current real component $I_r$
-`ii`    | Input  | TBD  | Terminal-current imaginary component $I_i$
+`bus`   | Bus    | Known | Terminal bus supplying both voltage components
+`ir`    | Input  | TBD  | Terminal-current real component $I_r$ on the system base
+`ii`    | Input  | TBD  | Terminal-current imaginary component $I_i$ on the system base
 `ifd`   | Input  | TBD  | Machine field current $I_{\mathrm{fd}}$
 `efd`   | Output | TBD  | Field-voltage output $E_{\mathrm{fd}}$
 
@@ -247,13 +244,3 @@ these closed-form equations.
 Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
-`vm`            | [p.u.] | Inner regulator output              | $V_M$
-`vc`            | [p.u.] | Sensed compensated voltage          | $V_C$
-`va`            | [p.u.] | Lagged outer-regulator output       | $V_A$
-`vr`            | [p.u.] | Outer regulator output              | $V_R$
-`vg`            | [p.u.] | Exciter-output feedback signal      | $V_G$
-`vlv`           | [p.u.] | Low-value gate output               | $V_{\mathrm{lv}}$
-`ve`            | [p.u.] | Potential-source voltage magnitude  | $V_E$
-`vb`            | [p.u.] | Rectifier source multiplier         | $V_B$
-`in`            | [p.u.] | Normalized exciter loading current  | $I_N$
-`fex`           | [p.u.] | Rectifier loading factor            | $F_{\mathrm{ex}}$

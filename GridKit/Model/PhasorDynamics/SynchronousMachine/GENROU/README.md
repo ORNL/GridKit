@@ -72,6 +72,9 @@ Name    | Port   | Init    | Description
 `pmech` | Input  | Unknown | Mechanical-power input; held constant when unconnected
 `efd`   | Input  | Unknown | Field-voltage input; held constant when unconnected
 `speed` | Output | Known   | Machine speed-deviation output
+`ifd`   | Output | Known   | Field current on the exciter base
+`ir`, `ii` | Output | Known | Rectangular terminal current injected into the grid on the system base
+`pe`    | Output | Known   | Terminal active power on the system base
 
 ## Model Variables
 

@@ -205,7 +205,7 @@ namespace AnalysisManager
       RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
       int   getIDAConsistentICType() const;
       void  updateModelState(RealT t);
-      int   restart(RealT t0, bool findConsistent, RealT first_step = 0);
+      int   restart(RealT t0, bool findConsistent, RealT first_step = 0, const ScalarT* previous = nullptr);
 
     private:
       static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;

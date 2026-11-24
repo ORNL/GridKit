@@ -258,6 +258,15 @@ namespace GridKit
         return 0.0;
       }
 
+      /// Keep the unit seed opaque to LLVM before Enzyme extracts the column pattern.
+      /// A literal one lets LLVM merge equal partials into sums of index comparisons.
+      template <typename ScalarT>
+      ScalarT identitySeed()
+      {
+        static const volatile ScalarT unit{1};
+        return unit;
+      }
+
       /**
        * @brief Enzyme identity store
        *

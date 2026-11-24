@@ -120,6 +120,12 @@ namespace GridKit
         return evaluateRoots(y, roots);
       }
 
+      /// Update modes after a scheduled discontinuity, using the state before the jump.
+      virtual bool synchronizeRootEvents(RealT, const ScalarT*)
+      {
+        return false;
+      }
+
       /// Return true when the event changes an algebraic constraint.
       virtual bool applyRootEvents(RealT, std::span<const int> crossed)
       {

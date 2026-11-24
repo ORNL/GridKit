@@ -212,6 +212,28 @@ namespace GridKit
         reecb->getPorts().connect(reecbdata, signal_nodes_);
       }
 
+      for (const auto& device : data.ieeeg1)
+      {
+        auto* model = new Ieeeg1<ScalarT, IdxT>(device);
+        addComponent(model, device.label());
+        model->getPorts().connect(device, signal_nodes_);
+      }
+
+      for (const auto& device : data.ggov1)
+      {
+        auto* model = new Ggov1<ScalarT, IdxT>(device);
+        addComponent(model, device.label());
+        model->getPorts().connect(device, signal_nodes_);
+      }
+
+      for (const auto& device : data.reeca)
+      {
+        auto  bus   = device.buses.find(ReecaBuses::bus);
+        auto* model = new Reeca<ScalarT, IdxT>(bus == device.buses.end() ? nullptr : getBus(bus->second), device);
+        addComponent(model, device.label());
+        model->getPorts().connect(device, signal_nodes_);
+      }
+
       // Add Tgov1 governors
       for (const auto& govdata : data.gov)
       {
@@ -288,6 +310,30 @@ namespace GridKit
         addComponent(exciter, excitedata.label());
 
         exciter->getPorts().connect(excitedata, signal_nodes_);
+      }
+
+      for (const auto& device : data.exst1pti)
+      {
+        auto  bus   = device.buses.find(Exst1PtiBuses::bus);
+        auto* model = new Exst1Pti<ScalarT, IdxT>(bus == device.buses.end() ? nullptr : getBus(bus->second), device);
+        addComponent(model, device.label());
+        model->getPorts().connect(device, signal_nodes_);
+      }
+
+      for (const auto& device : data.esst1a)
+      {
+        auto  bus   = device.buses.find(Esst1aBuses::bus);
+        auto* model = new Esst1a<ScalarT, IdxT>(bus == device.buses.end() ? nullptr : getBus(bus->second), device);
+        addComponent(model, device.label());
+        model->getPorts().connect(device, signal_nodes_);
+      }
+
+      for (const auto& device : data.esst4b)
+      {
+        auto  bus   = device.buses.find(Esst4bBuses::bus);
+        auto* model = new Esst4b<ScalarT, IdxT>(bus == device.buses.end() ? nullptr : getBus(bus->second), device);
+        addComponent(model, device.label());
+        model->getPorts().connect(device, signal_nodes_);
       }
 
       // Add REPCA plant controllers after the signal producers they read at
@@ -469,6 +515,40 @@ namespace GridKit
       return 0;
     }
 
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateRootsAt(RealT t, const ScalarT* y, RealT* roots)
+    {
+      for (auto* component : root_components_)
+      {
+        if (int status = component->evaluateRootsAt(t, y + (component->getVariableIndex(0) - offset_), roots); status != 0)
+          return status;
+        roots += component->sizeRoots();
+      }
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    bool SystemModel<scalar_type, index_type>::applyRootEvents(RealT t, std::span<const int> crossed)
+    {
+      bool changed = false;
+      for (auto* component : root_components_)
+      {
+        const auto count  = static_cast<size_t>(component->sizeRoots());
+        changed          |= component->applyRootEvents(t, crossed.first(count));
+        crossed           = crossed.subspan(count);
+      }
+      return changed;
+    }
+
+    template <typename scalar_type, typename index_type>
+    bool SystemModel<scalar_type, index_type>::synchronizeRootEvents(RealT t, const ScalarT* previous)
+    {
+      bool changed = false;
+      for (auto* component : root_components_)
+        changed |= component->synchronizeRootEvents(t, previous + (component->getVariableIndex(0) - offset_));
+      return changed;
+    }
+
     /**
      * @brief Set and return the size of this system, including subsystems
      */
@@ -477,6 +557,8 @@ namespace GridKit
     SystemModel<scalar_type, index_type>::computeSize()
     {
       size_ = 0;
+      root_components_.clear();
+      root_count_ = 0;
 
       for (const auto& bus : buses_)
       {
@@ -486,11 +568,18 @@ namespace GridKit
       for (const auto& component : components_)
       {
         size_ += component->size();
+        if (auto count = component->sizeRoots(); count != 0)
+        {
+          root_components_.push_back(component);
+          root_count_ += count;
+        }
       }
 
       for (const auto& subsystem : subsystems_)
       {
-        size_ += subsystem->computeSize();
+        size_       += subsystem->computeSize();
+        root_count_ += subsystem->root_count_;
+        root_components_.insert(root_components_.end(), subsystem->root_components_.begin(), subsystem->root_components_.end());
       }
 
       return size_;

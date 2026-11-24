@@ -90,12 +90,13 @@ namespace GridKit
       Genrou(BusT* bus, const ModelDataT& data);
       ~Genrou();
 
-      int setGridKitComponentID(IdxT) override final;
-      int allocate() override final;
-      int initialize() override final;
-      int tagDifferentiable() override final;
-      int setAbsoluteTolerance(RealT) override final;
-      int evaluateResidual() override final;
+      int  setGridKitComponentID(IdxT) override final;
+      IdxT size() override;
+      int  allocate() override final;
+      int  initialize() override final;
+      int  tagDifferentiable() override final;
+      int  setAbsoluteTolerance(RealT) override final;
+      int  evaluateResidual() override final;
 
       Model::ConfigurationChecks verify() const override final;
       int                        setSignalIndices() override final;
@@ -143,6 +144,15 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      enum : IdxT
+      {
+        IFD = 17,
+        IR_OUT,
+        II_OUT,
+        PE_OUT,
+        MEASUREMENT_SIZE
+      };
+
       /* Identification */
       BusT* bus_;
       IdxT  bus_id_{0};

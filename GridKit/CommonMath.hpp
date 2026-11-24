@@ -357,12 +357,13 @@ namespace GridKit
     {
       assert(limit_min <= limit_max);
 
+      using ValueT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       ScalarT above_min = above(x, limit_min);
       ScalarT below_max = below(x, limit_max);
 
-      return above_min * below_max +                  //
-             (ONE<RealT> - below_max) * sigmoid(-f) + //
-             (ONE<RealT> - above_min) * sigmoid(f);
+      return above_min * below_max +                   //
+             (ONE<ValueT> - below_max) * sigmoid(-f) + //
+             (ONE<ValueT> - above_min) * sigmoid(f);
     }
 
     /**

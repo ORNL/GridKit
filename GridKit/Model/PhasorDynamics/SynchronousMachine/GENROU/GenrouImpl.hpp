@@ -111,12 +111,21 @@ namespace GridKit
       return 0;
     }
 
+    template <typename scalar_type, typename index_type>
+    auto Genrou<scalar_type, index_type>::size() -> IdxT
+    {
+      using Out               = GenrouSignalOutputs;
+      const bool measurements = ports_.out[Out::ifd] || ports_.out[Out::ir] || ports_.out[Out::ii] || ports_.out[Out::pe];
+      return size_            = measurements ? MEASUREMENT_SIZE : 17;
+    }
+
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::allocate()
     {
+      this->size();
       if (!allocated_)
       {
         this->allocateVectors(size_);
@@ -147,6 +156,13 @@ namespace GridKit
       if (auto speed_port = ports_.out.template port<GenrouSignalOutputs::speed>())
       {
         speed_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
+      }
+
+      using Out = GenrouSignalOutputs;
+      for (auto [output, row] : {std::pair{Out::ifd, IFD}, std::pair{Out::ir, IR_OUT}, std::pair{Out::ii, II_OUT}, std::pair{Out::pe, PE_OUT}})
+      {
+        if (auto& port = ports_.out[output]; port)
+          port.link(y_.getData() + row, &this->getVariableIndex(row));
       }
 
       allocated_ = true;
@@ -250,6 +266,13 @@ namespace GridKit
       }
 
       efd_set_ = static_cast<RealT>(Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat);
+      if (size_ == MEASUREMENT_SIZE)
+      {
+        y[IFD]    = efd_set_;
+        y[IR_OUT] = this->toSystemBase(ir);
+        y[II_OUT] = this->toSystemBase(ii);
+        y[PE_OUT] = this->toSystemBase(vr * ir + vi * ii);
+      }
       if (auto efd_port = ports_.in.template port<GenrouSignalInputs::efd>())
       {
         efd_port.writeValue(efd_set_);
@@ -354,12 +377,13 @@ namespace GridKit
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
       /* 6 Genrou differential equations */
-      f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
-      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
-      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
-      f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f[4] = psiqp_dot - (ONE<RealT> / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
-      f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
+      f[0]              = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
+      f[1]              = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
+      const ScalarT ifd = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
+      f[2]              = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - ifd);
+      f[3]              = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
+      f[4]              = psiqp_dot - (ONE<RealT> / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
+      f[5]              = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
       /* 11 Genrou algebraic equations */
       f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
@@ -374,6 +398,13 @@ namespace GridKit
       f[15] = ir - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
       f[16] = ii - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
 
+      if (size_ == MEASUREMENT_SIZE)
+      {
+        f[IFD]    = y[IFD] - ifd;
+        f[IR_OUT] = y[IR_OUT] - this->toSystemBase(ir);
+        f[II_OUT] = y[II_OUT] - this->toSystemBase(ii);
+        f[PE_OUT] = y[PE_OUT] - this->toSystemBase(vr * ir + vi * ii);
+      }
       return 0;
     }
 

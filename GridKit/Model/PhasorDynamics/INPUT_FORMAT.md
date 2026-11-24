@@ -150,11 +150,17 @@ are specified:
   [Gensal](SynchronousMachine/GENSAL/README.md) | 5th order salient-pole machine model
   [GenClassical](SynchronousMachine/GenClassical/README.md) | the classical machine model
   [Regca](Converter/REGCA/README.md) | WECC REGCA renewable generator/converter model
+  [Reeca](Controller/REECA/README.md) | WECC renewable electrical control with post-dip current holds
   [Reecb](Controller/REECB/README.md) | WECC REECB renewable electrical-control model
   [Repca](Controller/REPCA/README.md) | the REPCA renewable plant-control model
   [GastPti](Governor/GASTPTI/README.md) | the GASTPTI gas turbine-governor model
+  [Ggov1](Governor/GGOV1/README.md) | General turbine-governor
+  [Ieeeg1](Governor/IEEEG1/README.md) | Steam turbine-governor with two shaft outputs
   [Tgov1](Governor/Tgov1/README.md) | the TGOV1 governor model
   [Hygov](Governor/HYGOV/README.md) | the HYGOV hydro turbine-governor model
+  [Esst1a](Exciter/ESST1A/README.md) | Static excitation system
+  [Esst4b](Exciter/ESST4B/README.md) | Compound-source static excitation system
+  [Exst1Pti](Exciter/EXST1-PTI/README.md) | PTI static excitation system
   [Ieeet1](Exciter/IEEET1/README.md) | the IEEET1 exciter model
   [Esdc1a](Exciter/ESDC1A/README.md) | the ESDC1A exciter model
   [SexsPti](Exciter/SEXS-PTI/README.md) | the SEXS-PTI simplified exciter model

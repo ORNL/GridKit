@@ -76,7 +76,7 @@ namespace GridKit
         return 0;
       }
 
-      IdxT size() override final
+      IdxT size() override
       {
         return size_;
       }

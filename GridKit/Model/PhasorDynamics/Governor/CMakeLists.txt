@@ -6,3 +6,5 @@
 add_subdirectory(Tgov1)
 add_subdirectory(GASTPTI)
 add_subdirectory(HYGOV)
+add_subdirectory(IEEEG1)
+add_subdirectory(GGOV1)

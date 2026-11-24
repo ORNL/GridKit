@@ -53,6 +53,10 @@ namespace GridKit
     enum class GenrouSignalOutputs : size_t
     {
       speed, ///< Unique ID of the signal receiving speed deviation
+      ifd,   ///< Exciter-base field current
+      ir,    ///< Real terminal current injected into the bus on system base
+      ii,    ///< Imaginary terminal current injected into the bus on system base
+      pe,    ///< Terminal active power injected into the bus on system base
     };
 
     /// Variables able to be monitored for a Genrou generator model

@@ -160,6 +160,30 @@ namespace GridKit
           raw_component.get_to(repca);
           sm.repca.push_back(repca);
         }
+        else if (kind == "Ieeeg1")
+        {
+          sm.ieeeg1.push_back(raw_component.get<typename SystemModelData<RealT, IdxT>::Ieeeg1DataT>());
+        }
+        else if (kind == "Ggov1")
+        {
+          sm.ggov1.push_back(raw_component.get<typename SystemModelData<RealT, IdxT>::Ggov1DataT>());
+        }
+        else if (kind == "Exst1Pti")
+        {
+          sm.exst1pti.push_back(raw_component.get<typename SystemModelData<RealT, IdxT>::Exst1PtiDataT>());
+        }
+        else if (kind == "Esst1a")
+        {
+          sm.esst1a.push_back(raw_component.get<typename SystemModelData<RealT, IdxT>::Esst1aDataT>());
+        }
+        else if (kind == "Esst4b")
+        {
+          sm.esst4b.push_back(raw_component.get<typename SystemModelData<RealT, IdxT>::Esst4bDataT>());
+        }
+        else if (kind == "Reeca")
+        {
+          sm.reeca.push_back(raw_component.get<typename SystemModelData<RealT, IdxT>::ReecaDataT>());
+        }
         else if (kind == "Tgov1")
         {
           typename SystemModelData<RealT, IdxT>::Tgov1DataT gov;
@@ -317,6 +341,12 @@ namespace GridKit
       applyDeviceState(devices, sm.genclassical);
       applyDeviceState(devices, sm.loadz);
       applyDeviceState(devices, sm.loadzip);
+      applyDeviceState(devices, sm.ieeeg1);
+      applyDeviceState(devices, sm.ggov1);
+      applyDeviceState(devices, sm.exst1pti);
+      applyDeviceState(devices, sm.esst1a);
+      applyDeviceState(devices, sm.esst4b);
+      applyDeviceState(devices, sm.reeca);
       applyDeviceState(devices, sm.gov);
       applyDeviceState(devices, sm.esdc1a);
       applyDeviceState(devices, sm.gastpti);

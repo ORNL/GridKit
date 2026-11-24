@@ -93,7 +93,16 @@ namespace GridKit
       int setGridKitComponentID(IdxT component_id) override;
 
       int allocate() override;
-      int initialize() override;
+
+      IdxT sizeRoots() override
+      {
+        return root_count_;
+      }
+
+      int  evaluateRootsAt(RealT t, const ScalarT* y, RealT* roots) override;
+      bool applyRootEvents(RealT t, std::span<const int> crossed) override;
+      bool synchronizeRootEvents(RealT t, const ScalarT* previous) override;
+      int  initialize() override;
 
       Model::ConfigurationChecks verify() const override;
       int                        setSignalIndices() override;
@@ -160,10 +169,12 @@ namespace GridKit
       std::map<IdxT, BusT*> external_buses_;         ///< Parent's buses by bus_id, not owned
       std::vector<BusT*>    ordered_external_buses_; ///< External buses in construction order, not owned
 
-      std::string id_;                  ///< Subsystem ID from the input data, empty if none
-      IdxT        offset_{0};           ///< Global index of this system's first variable
-      bool        is_subsystem_{false}; ///< Allocated and bound by a parent system
-      bool        owns_components_{false};
+      std::string              id_; ///< Subsystem ID from the input data, empty if none
+      std::vector<ComponentT*> root_components_;
+      IdxT                     root_count_{};
+      IdxT                     offset_{0};           ///< Global index of this system's first variable
+      bool                     is_subsystem_{false}; ///< Allocated and bound by a parent system
+      bool                     owns_components_{false};
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

@@ -13,6 +13,7 @@ add_subdirectory(OptimalPowerFlow)
 
 install(
   FILES ConfigurationChecks.hpp
+        CurrentCircle.hpp
         Evaluator.hpp
         OptimizationEvaluator.hpp
         ParameterReader.hpp

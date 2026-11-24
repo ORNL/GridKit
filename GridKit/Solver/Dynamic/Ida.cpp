@@ -373,7 +373,12 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
     {
       t_init_ = t0;
-      return restart(t0, findConsistent);
+      if (!findConsistent || model_->sizeRoots() == 0)
+        return restart(t0, findConsistent);
+
+      const auto*                y = N_VGetArrayPointer(yy_);
+      const std::vector<ScalarT> previous(y, y + N_VGetLength(yy_));
+      return restart(t0, true, 0, previous.data());
     }
 
     /**
@@ -385,10 +390,11 @@ namespace AnalysisManager
      * @param[in] t0 Time of the restart.
      * @param[in] findConsistent Whether IDA computes consistent initial conditions.
      * @param[in] first_step First step of the integration, or 0 for the one IDA chooses.
+     * @param[in] previous State before a scheduled discontinuity, when present.
      * @return The status of the last IDA call.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::restart(RealT t0, bool findConsistent, RealT first_step)
+    int Ida<ScalarT, IdxT>::restart(RealT t0, bool findConsistent, RealT first_step, const ScalarT* previous)
     {
       int retval = 0;
 
@@ -417,6 +423,10 @@ namespace AnalysisManager
 
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());
+
+        // Re-solve a changed control constraint before publishing the event state.
+        if (previous && model_->synchronizeRootEvents(t0, previous))
+          return restart(t0, true, first_step);
       }
 
       if (model_->monitoring())

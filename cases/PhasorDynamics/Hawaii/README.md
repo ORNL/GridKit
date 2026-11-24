@@ -8,14 +8,14 @@ Figure 1: One-line diagram of the synthetic Hawaii case.[^1]
 
 ## Development
 
-Unimplemented models:
+The distributed validation case uses TGOV1, IEEET1, and REECB. The source system also uses these controls.
 
-- `ESST1A`
+- [ESST1A](../../../GridKit/Model/PhasorDynamics/Exciter/ESST1A/README.md)
 - [ESST4B](../../../GridKit/Model/PhasorDynamics/Exciter/ESST4B/README.md)
-- `EXST1_PTI`
+- [EXST1-PTI](../../../GridKit/Model/PhasorDynamics/Exciter/EXST1-PTI/README.md)
 - [GGOV1](../../../GridKit/Model/PhasorDynamics/Governor/GGOV1/README.md)
 - [IEEEG1](../../../GridKit/Model/PhasorDynamics/Governor/IEEEG1/README.md)
-- `REECA1`
+- [REECA](../../../GridKit/Model/PhasorDynamics/Controller/REECA/README.md)
 
 This case was validated against PowerWorld. The comparison results are provided [here](../../../examples/PhasorDynamics/Validation/Hawaii/README.md).
 

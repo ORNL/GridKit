@@ -112,6 +112,7 @@ namespace GridKit
          * @param[out] cols - Column indices
          * @param[out] vals - Values
          * @param[out] nnz - Number of nonzeros
+         * @param[in] seed - Nonzero scale of the identity seed, normalized in the result.
          */
         static void eval(ModelT*        model,
                          const size_t   n_res,
@@ -125,20 +126,22 @@ namespace GridKit
                          IdxT*          rows,
                          IdxT*          cols,
                          RealT*         vals,
-                         IdxT&          nnz)
+                         IdxT&          nnz,
+                         RealT          seed = 1.0)
         {
           if (n_res > 0 && n_var > 0)
           {
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
-                                                           (void*) ident_store<ScalarT, IdxT>,
-                                                           var_i);
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) scaled_ident_load<ScalarT, IdxT>,
+                                                           (void*) scaled_ident_store<ScalarT, IdxT>,
+                                                           var_i,
+                                                           seed);
               ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
                                                              (void*) sparse_store<ScalarT, IdxT>,
                                                              var_i,
-                                                             1.0, // value scaling
+                                                             1.0 / seed, // normalize the direction
                                                              res_indices,
                                                              var_indices,
                                                              rows,

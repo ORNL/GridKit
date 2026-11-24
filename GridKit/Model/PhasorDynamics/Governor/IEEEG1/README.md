@@ -7,8 +7,8 @@ low-pressure mechanical-power outputs.
 
 ## Notes
 
-- Input and output powers are on the turbine-rating base when `Trate > 0`;
-  otherwise the connected machine MVA base is used.
+- Power ports use the system base. Internal power uses `Trate` in MW when positive and the specified machine `mva` when `Trate = 0`.
+- An all-zero valve table gives unit gain. The supported model uses `Eps = db2 = 0`.
 - The dashed `dbL/dbH` speed deadband block is only for IEEEG1D. IEEEG1 uses
   the Type 1 no-offset `db1` block documented with CommonMath `deadband1`.
 
@@ -239,8 +239,3 @@ Monitor         | Units  | Description                           | Note
 `pmech_hp`      | [p.u.] | High-pressure mechanical-power output | $P_\mathrm{m}^{\mathrm{HP}}$
 `pmech_lp`      | [p.u.] | Low-pressure mechanical-power output  | $P_\mathrm{m}^{\mathrm{LP}}$
 `pgv`           | [p.u.] | Governor output                       | State 1
-`leadlag`       | [p.u.] | Governor lead–lag state               | State 2
-`bowl`          | [p.u.] | Turbine bowl state                    | State 3
-`reheater`      | [p.u.] | Reheater state                        | State 4
-`crossover`     | [p.u.] | Crossover state                       | State 5
-`double_reheat` | [p.u.] | Double-reheat state                   | State 6

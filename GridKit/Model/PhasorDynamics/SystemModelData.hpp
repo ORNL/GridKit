@@ -8,14 +8,20 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECA/ReecaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/ESST1A/Esst1aData.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/ESST4B/Esst4bData.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/EXST1-PTI/Exst1PtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/GGOV1/Ggov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/IEEEG1/Ieeeg1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
@@ -47,6 +53,12 @@ namespace GridKit
       using RegcaDataT        = Converter::RegcaData<RealT, IdxT>;
       using ReecbDataT        = Controller::ReecbData<RealT, IdxT>;
       using RepcaDataT        = Controller::RepcaData<RealT, IdxT>;
+      using Ieeeg1DataT       = Governor::Ieeeg1Data<RealT, IdxT>;
+      using Ggov1DataT        = Governor::Ggov1Data<RealT, IdxT>;
+      using Exst1PtiDataT     = Exciter::Exst1PtiData<RealT, IdxT>;
+      using Esst1aDataT       = Exciter::Esst1aData<RealT, IdxT>;
+      using Esst4bDataT       = Exciter::Esst4bData<RealT, IdxT>;
+      using ReecaDataT        = Controller::ReecaData<RealT, IdxT>;
       using Tgov1DataT        = Governor::Tgov1Data<RealT, IdxT>;
       using Esdc1aDataT       = Exciter::Esdc1aData<RealT, IdxT>;
       using GastPtiDataT      = Governor::GastPtiData<RealT, IdxT>;
@@ -101,16 +113,22 @@ namespace GridKit
       /// - Convert string to enum
       /// - Associate component type to its corresponding enum
       /// - Consolidate components to allow writing to them using the enum as the argument
-      std::vector<BusDataT>          bus;             ///< Buses within the model
-      std::vector<BranchDataT>       branch;          ///< Branches within the model
-      std::vector<RegcaDataT>        regca;           ///< REGCA converter instances within the model
-      std::vector<ReecbDataT>        reecb;           ///< REECB electrical controllers within the model
-      std::vector<RepcaDataT>        repca;           ///< REPCA plant controllers within the model
-      std::vector<GenrouDataT>       genrou;          ///< GENROU instances within the model
-      std::vector<GensalDataT>       gensal;          ///< GENSAL instances within the model
-      std::vector<GenClassicalDataT> genclassical;    ///< Classical generator instances within the model
-      std::vector<LoadZDataT>        loadz;           ///< LoadZ instances within the model
-      std::vector<LoadZIPDataT>      loadzip;         ///< LoadZIP instances within the model
+      std::vector<BusDataT>          bus;          ///< Buses within the model
+      std::vector<BranchDataT>       branch;       ///< Branches within the model
+      std::vector<RegcaDataT>        regca;        ///< REGCA converter instances within the model
+      std::vector<ReecbDataT>        reecb;        ///< REECB electrical controllers within the model
+      std::vector<RepcaDataT>        repca;        ///< REPCA plant controllers within the model
+      std::vector<GenrouDataT>       genrou;       ///< GENROU instances within the model
+      std::vector<GensalDataT>       gensal;       ///< GENSAL instances within the model
+      std::vector<GenClassicalDataT> genclassical; ///< Classical generator instances within the model
+      std::vector<LoadZDataT>        loadz;        ///< LoadZ instances within the model
+      std::vector<LoadZIPDataT>      loadzip;      ///< LoadZIP instances within the model
+      std::vector<Ieeeg1DataT>       ieeeg1;
+      std::vector<Ggov1DataT>        ggov1;
+      std::vector<Exst1PtiDataT>     exst1pti;
+      std::vector<Esst1aDataT>       esst1a;
+      std::vector<Esst4bDataT>       esst4b;
+      std::vector<ReecaDataT>        reeca;
       std::vector<Tgov1DataT>        gov;             ///< Governors within the model
       std::vector<Esdc1aDataT>       esdc1a;          ///< ESDC1A exciters within the model
       std::vector<GastPtiDataT>      gastpti;         ///< GASTPTI governors within the model

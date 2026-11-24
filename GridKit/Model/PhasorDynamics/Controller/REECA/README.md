@@ -2,12 +2,7 @@
 
 REECA is a WECC renewable energy electrical control model for inverter-coupled resources. In GridKit it is represented as a signal-control model that computes active- and reactive-current commands.
 
-> [!WARNING]
-> Post-dip reactive-current injection and active-current limit holds require
-> timer/history states that are not modeled. $T_{\mathrm{hld}}$ and
-> $T_{\mathrm{hld2}}$ must be zero: $I_{\mathrm{qinj}}^{\mathrm{frz}}$ is unused,
-> and $I_{\mathrm{p}}^{\max}$ is recalculated from VDL2 and current-circle logic
-> at each residual evaluation instead of held after voltage recovery.
+At voltage recovery, `Thld2` holds the last active-current limit for the specified time. A positive `Thld` holds `Iqfrz` as the extra reactive-current injection. A negative `Thld` continues voltage-dependent injection for `abs(Thld)` seconds. A new dip resets both timers.
 
 ## Notes
 
@@ -24,57 +19,57 @@ Figure 1: REECA block diagram. Figure courtesy of [PowerWorld](https://www.power
 
 Symbol                             | Units    | JSON | Description                                                          | Typical Value | Note
 -----------------------------------|----------|------|----------------------------------------------------------------------|---------------|---------------------------------------------------------------------------
-$S^{\mathrm{base}}$                | [MVA]    | TBD  | REECA model power base                                               | TBD           | Source label: `MVABase`
-$s_{\mathrm{pf}}$                  | [binary] | TBD  | Power-factor control flag                                            | TBD           | Source label: `PfFlag`; 1 = power-factor control, 0 = Q control
-$s_V$                              | [binary] | TBD  | Voltage-control mode flag                                            | TBD           | Source label: `VFlag`; 1 = Q control, 0 = voltage control
-$s_Q$                              | [binary] | TBD  | Reactive-power control flag                                          | TBD           | Source label: `QFlag`; 1 = voltage/Q control, 0 = constant pf or Q control
-$s_P$                              | [binary] | TBD  | Active-power reference speed-multiplier flag                         | TBD           | Source label: `Pflag`; 1 = multiply by generator speed
-$s_\mathrm{PQ}$                           | [binary] | TBD  | P/Q priority flag for converter current limit                        | TBD           | Source label: `Pqflag`; 0 = Q priority, 1 = P priority
-$T_{\mathrm{rv}}$                  | [s]      | TBD  | Voltage-measurement filter time constant                             | TBD           | Source label: `Trv`; if zero, $V_{\mathrm{meas}}$ is algebraic
-$T_{\mathrm{p}}$                   | [s]      | TBD  | Electrical-power measurement filter time constant                    | TBD           | Source label: `Tp`; if zero, $P_{\mathrm{meas}}$ is algebraic
-$V_{\mathrm{ref0}}$                | [p.u.]   | TBD  | Outer-loop voltage reference                                         | TBD           | Source label: `Vref0`; initialized to terminal voltage if omitted
-$V_{\mathrm{dip}}$                 | [p.u.]   | TBD  | Low-voltage threshold for reactive-current injection logic           | TBD           | Source label: `Vdip`
-$V_{\mathrm{up}}$                  | [p.u.]   | TBD  | High-voltage threshold for reactive-current injection logic          | TBD           | Source label: `Vup`
-$D_{\mathrm{bd1}}$                 | [p.u.]   | TBD  | Overvoltage deadband for voltage-error response                      | TBD           | Source label: `dbd1`
-$D_{\mathrm{bd2}}$                 | [p.u.]   | TBD  | Undervoltage deadband for voltage-error response                     | TBD           | Source label: `dbd2`
-$K_{\mathrm{qv}}$                  | [p.u.]   | TBD  | Reactive-current injection gain during voltage dip/overvoltage logic | TBD           | Source label: `kqv`
-$I_{\mathrm{qinj}}^{\min}$         | [p.u.]   | TBD  | Minimum reactive-current injection limit                             | TBD           | Source label: `Iql1`
-$I_{\mathrm{qinj}}^{\max}$         | [p.u.]   | TBD  | Maximum reactive-current injection limit                             | TBD           | Source label: `Iqh1`
-$I_{\mathrm{qinj}}^{\mathrm{frz}}$ | [p.u.]   | TBD  | Held reactive-current injection value after voltage dip              | TBD           | Source label: `Iqfrz`; unused when $T_{\mathrm{hld}} = 0$
-$T_{\mathrm{hld}}$                 | [s]      | TBD  | Reactive-current injection hold time after voltage dip clears        | TBD           | Source label: `Thld`; required to be zero in this version
-$Q^{\max}$                         | [p.u.]   | TBD  | Maximum reactive-power control limit                                 | TBD           | Source label: `Qmax`
-$Q^{\min}$                         | [p.u.]   | TBD  | Minimum reactive-power control limit                                 | TBD           | Source label: `Qmin`
-$K_{\mathrm{qp}}$                  | [p.u.]   | TBD  | Reactive-power control proportional gain                             | TBD           | Source label: `Kqp`
-$K_{\mathrm{qi}}$                  | [p.u./s] | TBD  | Reactive-power control integral gain                                 | TBD           | Source label: `Kqi`
-$V^{\max}$                         | [p.u.]   | TBD  | Maximum voltage-control limit                                        | TBD           | Source label: `Vmax`
-$V^{\min}$                         | [p.u.]   | TBD  | Minimum voltage-control limit                                        | TBD           | Source label: `Vmin`
-$V_{\mathrm{ref1}}$                | [p.u.]   | TBD  | Inner-loop voltage-control reference/bias                            | 0             | Source label: `Vref1`
-$K_{\mathrm{vp}}$                  | [p.u.]   | TBD  | Voltage-control proportional gain                                    | TBD           | Source label: `Kvp`
-$K_{\mathrm{vi}}$                  | [p.u./s] | TBD  | Voltage-control integral gain                                        | TBD           | Source label: `Kvi`
-$T_{\mathrm{iq}}$                  | [s]      | TBD  | Reactive-current command lag time constant                           | TBD           | Source label: `Tiq`
-$T_{\mathrm{pord}}$                | [s]      | TBD  | Active-power order filter time constant                              | TBD           | Source label: `Tpord`
-$R_P^{\max}$                       | [p.u./s] | TBD  | Positive active-power order ramp-rate limit                          | TBD           | Source label: `dPmax`
-$R_P^{\min}$                       | [p.u./s] | TBD  | Negative active-power order ramp-rate limit                          | TBD           | Source label: `dPmin`
-$P^{\max}$                         | [p.u.]   | TBD  | Maximum active-power order limit                                     | TBD           | Source label: `Pmax`
-$P^{\min}$                         | [p.u.]   | TBD  | Minimum active-power order limit                                     | TBD           | Source label: `Pmin`
-$I^{\max}$                         | [p.u.]   | TBD  | Maximum total converter current                                      | TBD           | Source label: `Imax`
-$V_{\mathrm{q},1}$                 | [p.u.]   | TBD  | VDL1 voltage point 1                                                 | TBD           | Source label: `vq1`
-$I_{\mathrm{q},1}^{\max}$          | [p.u.]   | TBD  | VDL1 reactive-current limit point 1                                  | TBD           | Source label: `lq1`
-$V_{\mathrm{q},2}$                 | [p.u.]   | TBD  | VDL1 voltage point 2                                                 | TBD           | Source label: `vq2`
-$I_{\mathrm{q},2}^{\max}$          | [p.u.]   | TBD  | VDL1 reactive-current limit point 2                                  | TBD           | Source label: `lq2`
-$V_{\mathrm{q},3}$                 | [p.u.]   | TBD  | VDL1 voltage point 3                                                 | TBD           | Source label: `vq3`
-$I_{\mathrm{q},3}^{\max}$          | [p.u.]   | TBD  | VDL1 reactive-current limit point 3                                  | TBD           | Source label: `lq3`
-$V_{\mathrm{q},4}$                 | [p.u.]   | TBD  | VDL1 voltage point 4                                                 | TBD           | Source label: `vq4`
-$I_{\mathrm{q},4}^{\max}$          | [p.u.]   | TBD  | VDL1 reactive-current limit point 4                                  | TBD           | Source label: `lq4`
-$V_{\mathrm{p},1}$                 | [p.u.]   | TBD  | VDL2 voltage point 1                                                 | TBD           | Source label: `vp1`
-$I_{\mathrm{p},1}^{\max}$          | [p.u.]   | TBD  | VDL2 active-current limit point 1                                    | TBD           | Source label: `lp1`
-$V_{\mathrm{p},2}$                 | [p.u.]   | TBD  | VDL2 voltage point 2                                                 | TBD           | Source label: `vp2`
-$I_{\mathrm{p},2}^{\max}$          | [p.u.]   | TBD  | VDL2 active-current limit point 2                                    | TBD           | Source label: `lp2`
-$V_{\mathrm{p},3}$                 | [p.u.]   | TBD  | VDL2 voltage point 3                                                 | TBD           | Source label: `vp3`
-$I_{\mathrm{p},3}^{\max}$          | [p.u.]   | TBD  | VDL2 active-current limit point 3                                    | TBD           | Source label: `lp3`
-$V_{\mathrm{p},4}$                 | [p.u.]   | TBD  | VDL2 voltage point 4                                                 | TBD           | Source label: `vp4`
-$I_{\mathrm{p},4}^{\max}$          | [p.u.]   | TBD  | VDL2 active-current limit point 4                                    | TBD           | Source label: `lp4`
-$T_{\mathrm{hld2}}$                | [s]      | TBD  | Active-current limit hold time after voltage dip clears              | TBD           | Source label: `Thld2`; required to be zero in this version
+$S^{\mathrm{base}}$                | [MVA]    | `MVABase`  | REECA model power base                                               | TBD           | Source label: `MVABase`
+$s_{\mathrm{pf}}$                  | [binary] | `PfFlag`  | Power-factor control flag                                            | TBD           | Source label: `PfFlag`; 1 = power-factor control, 0 = Q control
+$s_V$                              | [binary] | `VFlag`  | Voltage-control mode flag                                            | TBD           | Source label: `VFlag`; 1 = Q control, 0 = voltage control
+$s_Q$                              | [binary] | `QFlag`  | Reactive-power control flag                                          | TBD           | Source label: `QFlag`; 1 = voltage/Q control, 0 = constant pf or Q control
+$s_P$                              | [binary] | `Pflag`  | Active-power reference speed-multiplier flag                         | TBD           | Source label: `Pflag`; 1 = multiply by generator speed
+$s_\mathrm{PQ}$                           | [binary] | `Pqflag`  | P/Q priority flag for converter current limit                        | TBD           | Source label: `Pqflag`; 0 = Q priority, 1 = P priority
+$T_{\mathrm{rv}}$                  | [s]      | `Trv`  | Voltage-measurement filter time constant                             | TBD           | Source label: `Trv`; if zero, $V_{\mathrm{meas}}$ is algebraic
+$T_{\mathrm{p}}$                   | [s]      | `Tp`  | Electrical-power measurement filter time constant                    | TBD           | Source label: `Tp`; if zero, $P_{\mathrm{meas}}$ is algebraic
+$V_{\mathrm{ref0}}$                | [p.u.]   | `Vref0`  | Outer-loop voltage reference                                         | TBD           | Source label: `Vref0`; initialized to terminal voltage if omitted
+$V_{\mathrm{dip}}$                 | [p.u.]   | `Vdip`  | Low-voltage threshold for reactive-current injection logic           | TBD           | Source label: `Vdip`
+$V_{\mathrm{up}}$                  | [p.u.]   | `Vup`  | High-voltage threshold for reactive-current injection logic          | TBD           | Source label: `Vup`
+$D_{\mathrm{bd1}}$                 | [p.u.]   | `dbd1`  | Overvoltage deadband for voltage-error response                      | TBD           | Source label: `dbd1`
+$D_{\mathrm{bd2}}$                 | [p.u.]   | `dbd2`  | Undervoltage deadband for voltage-error response                     | TBD           | Source label: `dbd2`
+$K_{\mathrm{qv}}$                  | [p.u.]   | `kqv`  | Reactive-current injection gain during voltage dip/overvoltage logic | TBD           | Source label: `kqv`
+$I_{\mathrm{qinj}}^{\min}$         | [p.u.]   | `Iql1`  | Minimum reactive-current injection limit                             | TBD           | Source label: `Iql1`
+$I_{\mathrm{qinj}}^{\max}$         | [p.u.]   | `Iqh1`  | Maximum reactive-current injection limit                             | TBD           | Source label: `Iqh1`
+$I_{\mathrm{qinj}}^{\mathrm{frz}}$ | [p.u.]   | `Iqfrz`  | Held reactive-current injection value after voltage dip              | TBD           | Source label: `Iqfrz`; unused when $T_{\mathrm{hld}} = 0$
+$T_{\mathrm{hld}}$                 | [s]      | `Thld`  | Reactive-current injection hold time after voltage dip clears        | TBD           | Source label: `Thld`
+$Q^{\max}$                         | [p.u.]   | `Qmax`  | Maximum reactive-power control limit                                 | TBD           | Source label: `Qmax`
+$Q^{\min}$                         | [p.u.]   | `Qmin`  | Minimum reactive-power control limit                                 | TBD           | Source label: `Qmin`
+$K_{\mathrm{qp}}$                  | [p.u.]   | `Kqp`  | Reactive-power control proportional gain                             | TBD           | Source label: `Kqp`
+$K_{\mathrm{qi}}$                  | [p.u./s] | `Kqi`  | Reactive-power control integral gain                                 | TBD           | Source label: `Kqi`
+$V^{\max}$                         | [p.u.]   | `Vmax`  | Maximum voltage-control limit                                        | TBD           | Source label: `Vmax`
+$V^{\min}$                         | [p.u.]   | `Vmin`  | Minimum voltage-control limit                                        | TBD           | Source label: `Vmin`
+$V_{\mathrm{ref1}}$                | [p.u.]   | `Vref1`  | Inner-loop voltage-control reference/bias                            | 0             | Source label: `Vref1`
+$K_{\mathrm{vp}}$                  | [p.u.]   | `Kvp`  | Voltage-control proportional gain                                    | TBD           | Source label: `Kvp`
+$K_{\mathrm{vi}}$                  | [p.u./s] | `Kvi`  | Voltage-control integral gain                                        | TBD           | Source label: `Kvi`
+$T_{\mathrm{iq}}$                  | [s]      | `Tiq`  | Reactive-current command lag time constant                           | TBD           | Source label: `Tiq`
+$T_{\mathrm{pord}}$                | [s]      | `Tpord`  | Active-power order filter time constant                              | TBD           | Source label: `Tpord`
+$R_P^{\max}$                       | [p.u./s] | `dPmax`  | Positive active-power order ramp-rate limit                          | TBD           | Source label: `dPmax`
+$R_P^{\min}$                       | [p.u./s] | `dPmin`  | Negative active-power order ramp-rate limit                          | TBD           | Source label: `dPmin`
+$P^{\max}$                         | [p.u.]   | `Pmax`  | Maximum active-power order limit                                     | TBD           | Source label: `Pmax`
+$P^{\min}$                         | [p.u.]   | `Pmin`  | Minimum active-power order limit                                     | TBD           | Source label: `Pmin`
+$I^{\max}$                         | [p.u.]   | `Imax`  | Maximum total converter current                                      | TBD           | Source label: `Imax`
+$V_{\mathrm{q},1}$                 | [p.u.]   | `vq1`  | VDL1 voltage point 1                                                 | TBD           | Source label: `vq1`
+$I_{\mathrm{q},1}^{\max}$          | [p.u.]   | `lq1`  | VDL1 reactive-current limit point 1                                  | TBD           | Source label: `lq1`
+$V_{\mathrm{q},2}$                 | [p.u.]   | `vq2`  | VDL1 voltage point 2                                                 | TBD           | Source label: `vq2`
+$I_{\mathrm{q},2}^{\max}$          | [p.u.]   | `lq2`  | VDL1 reactive-current limit point 2                                  | TBD           | Source label: `lq2`
+$V_{\mathrm{q},3}$                 | [p.u.]   | `vq3`  | VDL1 voltage point 3                                                 | TBD           | Source label: `vq3`
+$I_{\mathrm{q},3}^{\max}$          | [p.u.]   | `lq3`  | VDL1 reactive-current limit point 3                                  | TBD           | Source label: `lq3`
+$V_{\mathrm{q},4}$                 | [p.u.]   | `vq4`  | VDL1 voltage point 4                                                 | TBD           | Source label: `vq4`
+$I_{\mathrm{q},4}^{\max}$          | [p.u.]   | `lq4`  | VDL1 reactive-current limit point 4                                  | TBD           | Source label: `lq4`
+$V_{\mathrm{p},1}$                 | [p.u.]   | `vp1`  | VDL2 voltage point 1                                                 | TBD           | Source label: `vp1`
+$I_{\mathrm{p},1}^{\max}$          | [p.u.]   | `lp1`  | VDL2 active-current limit point 1                                    | TBD           | Source label: `lp1`
+$V_{\mathrm{p},2}$                 | [p.u.]   | `vp2`  | VDL2 voltage point 2                                                 | TBD           | Source label: `vp2`
+$I_{\mathrm{p},2}^{\max}$          | [p.u.]   | `lp2`  | VDL2 active-current limit point 2                                    | TBD           | Source label: `lp2`
+$V_{\mathrm{p},3}$                 | [p.u.]   | `vp3`  | VDL2 voltage point 3                                                 | TBD           | Source label: `vp3`
+$I_{\mathrm{p},3}^{\max}$          | [p.u.]   | `lp3`  | VDL2 active-current limit point 3                                    | TBD           | Source label: `lp3`
+$V_{\mathrm{p},4}$                 | [p.u.]   | `vp4`  | VDL2 voltage point 4                                                 | TBD           | Source label: `vp4`
+$I_{\mathrm{p},4}^{\max}$          | [p.u.]   | `lp4`  | VDL2 active-current limit point 4                                    | TBD           | Source label: `lp4`
+$T_{\mathrm{hld2}}$                | [s]      | `Thld2`  | Active-current limit hold time after voltage dip clears              | TBD           | Source label: `Thld2`
 
 JSON parameter names are not yet specified.
 
@@ -90,13 +85,13 @@ A valid REECA parameter set must satisfy the following conditions:
   &0 \le V_{\mathrm{dip}} < V_{\mathrm{up}} \\
   &D_{\mathrm{bd1}} \le 0 \le D_{\mathrm{bd2}} \\
   &I_{\mathrm{qinj}}^{\min} \le I_{\mathrm{qinj}}^{\max} \\
-  &T_{\mathrm{hld}} = T_{\mathrm{hld2}} = 0 \\
+  &T_{\mathrm{hld2}} \ge 0 \\
   &Q^{\min} \le Q^{\max} \\
   &V^{\min} \le V^{\max} \\
-  &T_{\mathrm{iq}}, T_{\mathrm{pord}} > 0 \\
+  &T_{\mathrm{iq}} \ge 0,\quad T_{\mathrm{pord}} > 0 \\
   &R_P^{\min} < 0 < R_P^{\max} \\
   &P^{\min} \le P^{\max} \\
-  &I^{\max} \ge 0 \\
+  &I^{\max} > 0 \\
   &0 \le V_{\mathrm{q},1} < V_{\mathrm{q},2} < V_{\mathrm{q},3} < V_{\mathrm{q},4} \\
   &I_{\mathrm{q},k}^{\max} \ge 0\ \text{for } k=1,\ldots,4 \\
   &0 \le V_{\mathrm{p},1} < V_{\mathrm{p},2} < V_{\mathrm{p},3} < V_{\mathrm{p},4} \\
@@ -276,7 +271,7 @@ For readability, define:
 \begin{aligned}
   0 &= -V_T^2 + V_\mathrm r^2 + V_\mathrm i^2 \\
   0 &= -V_\mathrm{meas}^\mathrm{safe} + \max(V_\mathrm{meas}, 0.01) \\
-  0 &= -s_\mathrm{dip} + \text{outside}(V_T; V_\mathrm{dip}, V_\mathrm{up}) \\
+  0 &= -s_\mathrm{dip} + \mathbf{1}_{V_T<V_\mathrm{dip}\,\lor\,V_T>V_\mathrm{up}} \\
   0 &= -V_\mathrm{err} + \text{deadband2}(V_\mathrm{ref0} - V_\mathrm{meas}; D_\mathrm{bd1}, D_\mathrm{bd2}) \\
   0 &= -I_\mathrm{qv} + \text{clamp}(K_\mathrm{qv} V_\mathrm{err}; I_\mathrm{qinj}^{\min}, I_\mathrm{qinj}^{\max}) \\
   0 &= -Q_\mathrm{ref}
@@ -284,9 +279,9 @@ For readability, define:
        + s_\mathrm{pf}^\mathrm{off} Q_\mathrm{ext} \\
   0 &= -e_Q + \text{clamp}(Q_\mathrm{ref}; Q^{\min}, Q^{\max}) - Q_\mathrm{gen} \\
   0 &= -V_\mathrm{PIQ} + \text{clamp}(K_\mathrm{qp} e_Q + x_\mathrm{PIQ}; V^{\min}, V^{\max}) \\
-  0 &= -e_\mathrm{PIV} + s_V V_\mathrm{PIQ} + s_V^\mathrm{off}(Q_\mathrm{ref} + V_\mathrm{ref1}) - V_\mathrm{meas} \\
-  0 &= -T_\mathrm{pord} f_\mathrm{pord} + (1 + s_P\omega)P_\mathrm{ref} - P_\mathrm{ord} \\
-  0 &= -r_\mathrm{pord} + \text{clamp}(f_\mathrm{pord}; R_P^{\min}, R_P^{\max})
+  0 &= -e_\mathrm{PIV} + s_V V_\mathrm{PIQ} + s_V^\mathrm{off}(Q_\mathrm{ext} + V_\mathrm{ref1}) - V_\mathrm{meas} \\
+  0 &= -T_\mathrm{pord} r_\mathrm{pord} + P_\mathrm{ramp} - P_\mathrm{ord} \\
+  0 &= -\dot P_\mathrm{ramp} + \operatorname{clamp}((1+s_P\omega)P_\mathrm{ref}-P_\mathrm{ramp}+\dot P_\mathrm{ramp};R_P^{\min},R_P^{\max})
 \end{aligned}
 ```
 
@@ -384,24 +379,14 @@ After $I_{\mathrm{q}}^{\max}$ and $I_{\mathrm{qbase}}$ are known, initialize the
 x_{\mathrm{PIV}} \leftarrow I_{\mathrm{qbase}} - K_{\mathrm{vp}} e_{\mathrm{PIV}}
 ```
 
-The current-circle variables use the nonnegative branch of the squared algebraic residuals; initialization must reject negative radicands. A standard steady-state initialization assumes $s_{\mathrm{dip}}=0$. If initialized during voltage-dip or overvoltage logic, $Q_V$, $P_{\mathrm{ord}}$, and the PI histories are not uniquely determined without the unsupported hold-timer histories, so the implementation should solve a saturation-consistent state or reject the start.
+Initialization requires terminal voltage strictly between `Vdip` and `Vup`. Current and power signal ports use the system base.
 
 ## Monitors
 
 Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
-`iqcmd`         | [p.u.] | Reactive-current command output     | Converter base
-`ipcmd`         | [p.u.] | Active-current command output       | Converter base
-`vmeas`         | [p.u.] | Filtered terminal voltage           |
-`pmeas`         | [p.u.] | Filtered electrical power           |
-`piq`           | [p.u.] | Reactive-power PI controller state  |
-`piv`           | [p.u.] | Voltage PI controller state         |
-`qv`            | [p.u.] | Reactive-current command lag state  |
-`pord`          | [p.u.] | Filtered active-power order         |
-`qref`          | [p.u.] | Selected reactive-power reference   |
-`sdip`          | [binary] | Voltage-dip/overvoltage freeze indicator |
-`iqmax`         | [p.u.] | Final reactive-current upper limit  | Converter base
+`iqcmd`         | [p.u.] | Reactive-current command output     | System base
+`ipcmd`         | [p.u.] | Active-current command output       | System base
 `ipmax`         | [p.u.] | Final active-current upper limit    | Converter base
-`iqv`           | [p.u.] | Reactive-current injection candidate | Converter base
-`vqctrl`        | [p.u.] | Reactive-power control PI output    |
-`iqbase`        | [p.u.] | Base reactive-current command       | Converter base
+`vt` | [p.u.] | Terminal voltage magnitude |
+`iqinj` | [p.u.] | Voltage-dependent reactive-current injection candidate | Converter base

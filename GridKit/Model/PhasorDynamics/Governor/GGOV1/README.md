@@ -5,17 +5,13 @@ speed/load reference selection, proportional/integral/derivative governor
 control, load limiting, acceleration limiting, temperature limiting, actuator
 rate limits, turbine lag/lead dynamics, and optional diesel damping.
 
-> [!WARNING]
-> The damping, fuel-flow, PID, limiter, temperature, and transport-delay paths
-> remain incomplete or unverified. The initialization below does not yet
-> establish a consistent steady state for the smooth selector paths.
+The power ports use the system base. Internal power uses positive `Trate` or the specified machine `mva`. Set `Teng` to zero. The acceleration limiter uses a first-order fuel-command memory with time constant `Tfsr` (default 0.001 s).
 
 ## Notes
 
 - Internal control, valve-stroke, and turbine-power quantities are on the
   GGOV1 component base unless otherwise stated.
-- The dashed speed deadband block and `Db` source field are only for GGOV1D.
-  GGOV1 uses the speed input directly.
+- `Db` sets the deadband on the governor error.
 - The source diagram notes that `Rup` and `Rdown` inputs are not implemented in
   Simulator; the equations below do not use those source fields.
 
@@ -71,7 +67,7 @@ A valid GGOV1 parameter set must satisfy the following conditions:
 ```math
 \begin{aligned}
   P^{\mathrm{rate}} &\ge 0,\quad R \gt 0,\quad K_\mathrm{turb} \gt 0 \\
-  I_R &\in \{-2,-1,1\},\quad s_\mathrm{flag} \in \{0,1\}
+  I_R &\in \{-2,-1,0,1\},\quad s_\mathrm{flag} \in \{0,1\}
 \end{aligned}
 ```
 
@@ -118,7 +114,6 @@ Name       | Port   | Init | Description
 `paux`     | Input  | TBD  | Auxiliary power input
 `pmwset`   | Input  | TBD  | Supervisory MW setpoint
 `pelec`    | Input  | TBD  | Electrical active power
-`ldref`    | Input  | TBD  | Load reference
 `speed`    | Input  | TBD  | Machine speed deviation
 `pmech`    | Output | TBD  | Mechanical-power output
 
@@ -211,13 +206,14 @@ Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`
 ```math
 \begin{aligned}
   0 &= -P_\mathrm{mwref} + x_\mathrm{mw} + P_\mathrm{ref} + P_\mathrm{aux} \\
-  0 &= -R y_R
+  0 &= -y_R
        + \begin{cases}
-          \omega & I_R = 1 \\
-          P_\mathrm{elec}^{\mathrm{meas}} & I_R = -1 \\
-          x_\mathrm{act} & I_R = -2
+          0 & I_R = 0 \\
+          P_\mathrm{elec}^{\mathrm{meas}} & I_R = 1 \\
+          x_\mathrm{act} & I_R = -1 \\
+          f_\mathrm{sr} & I_R = -2
        \end{cases} \\
-  0 &= -e_G + \text{clamp}(P_\mathrm{mwref} - y_R;\ e^{\min},\ e^{\max}) \\
+  0 &= -e_G + \text{clamp}(P_\mathrm{mwref} - \omega - R y_R;\ e^{\min},\ e^{\max}) \\
   0 &= -f_\mathrm{pid} + K_\mathrm{pgov}e_G + K_\mathrm{dgov}(e_G - x_D) + x_I \\
   0 &= -f_\mathrm{srn} + \text{clamp}(f_\mathrm{pid}; V^{\min}, V^{\max}) \\
   0 &= -f_\mathrm{sra} + \text{clamp}(A_\mathrm{set} - K_A x_\mathrm{acc}; V^{\min}, V^{\max}) \\
@@ -283,13 +279,13 @@ Initialize the limiter and control states:
        - \dfrac{L_{\mathrm{dref}}+P_{\mathrm{aux}}}{K_\mathrm{turb}}
        - W_\mathrm{fnl} \\
   x_{\mathrm{mw}} &\leftarrow 0 \\
-  y_R &\leftarrow \dfrac{1}{R}
+  y_R &\leftarrow
        \begin{cases}
-          \omega & I_R = 1 \\
-          P_{\mathrm{elec}}^{\mathrm{meas}} & I_R = -1 \\
+          0 & I_R = 0 \\
+          P_{\mathrm{elec}}^{\mathrm{meas}} & I_R = 1 \\
           x_{\mathrm{act}} & I_R = -2
        \end{cases} \\
-  P_{\mathrm{mwref}} &\leftarrow f_{\mathrm{pid}} + y_R \\
+  P_{\mathrm{mwref}} &\leftarrow \omega + R y_R \\
   P_{\mathrm{ref}} &\leftarrow P_{\mathrm{mwref}} - P_{\mathrm{aux}} - x_{\mathrm{mw}}
 \end{aligned}
 ```
@@ -303,17 +299,4 @@ and $K_\mathrm{turb}\ne 0$.
 Monitor         | Units  | Description                          | Note
 ----------------|--------|--------------------------------------|------------------------
 `pmech`         | [p.u.] | Mechanical-power output              | $P_\mathrm{m}$
-`pelec_meas`    | [p.u.] | Measured electrical power            | State 1
-`xd`            | [p.u.] | Governor differential-control state  | State 2
-`xi`            | [p.u.] | Governor integral-control state      | State 3
 `valve`         | [p.u.] | Turbine actuator or valve stroke     | State 4
-`turbine_ll`    | [p.u.] | Turbine lead–lag state               | State 5
-`load_limiter`  | [p.u.] | Turbine load-limiter state           | State 6
-`load_int`      | [p.u.] | Turbine load integral-control state  | State 7
-`mw_control`    | [p.u.] | Supervisory load-control state       | State 8
-`accel_control` | [p.u.] | Acceleration-control state           | State 9
-`temp_ll`       | [p.u.] | Temperature-detection lead–lag state | State 10
-`fsrn`          | [p.u.] | Normal governor request              | Low-value select input
-`fsra`          | [p.u.] | Acceleration-control request         | Low-value select input
-`fsrt`          | [p.u.] | Temperature/load request             | Low-value select input
-`fsr`           | [p.u.] | Selected governor request            | Low-value select output
