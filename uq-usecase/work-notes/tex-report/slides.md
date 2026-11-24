@@ -41,7 +41,7 @@ How much large constant-power datacenter load can be safely added to a meshed gr
 
 ---
 
-## Slide 2: Glossary — Key Terms
+## Slide 2: Glossary: Key Terms
 
 | Term | Meaning |
 |---|---|
@@ -141,12 +141,13 @@ $$\max_{i,t} |\delta_i(t) - \delta_{COI}(t)| > \pi$$
 *Caption: Campaign scale and design dimensions. [slide7_table.png]*
 
 **Notes:**
-- UC is fixed based on baseline net load; not re-committed for added datacenter. This enables matched-pair comparison across sizes, but means larger loads may exceed committed capacity (dispatch failures recorded as "no outcome").
+- UC is fixed based on baseline net load; not re-committed for added datacenter. This enables matched-pair comparison across datacenter sizes and operating conditions, isolating the datacenter effect from UC variability. Larger loads may exceed committed capacity (dispatch failures recorded as "no outcome").
+- Mean net load in highest quintile (q4) is ~1,660 MW; 400 MW is ~24% of that.
 - Results are conditional on this UC sampling strategy. Applying real UC distributions is future work.
 
 ---
 
-## Slide 8: Reading the Curves — Kaplan–Meier and Censoring
+## Slide 8: Reading the Curves: Kaplan–Meier and Censoring
 
 **• Kaplan–Meier Estimator with Censoring**
 - Each KM curve estimates $P(\text{CCT}<t)$: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable (correctly handles censored runs).
@@ -169,8 +170,7 @@ $$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 ## Slide 9: Risk by Net Load
 
 **• Risk Concentrates in High Net-Load Quintiles**
-- Risk is conditional on runs that solved.
-- Focus on high net-load scenarios.
+- Risk is conditional on runs that solved; focus on high net-load scenarios where instability dominates.
 
 | Net-load quintile | Mean load (MW) | Runs solved | Censored | **P(CCT < 0.25 s)** |
 |---|---|---|---|---|
@@ -187,27 +187,29 @@ $$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 
 ---
 
-## Slide 10: Fault Screening — Which Faults Separate Operating Conditions
+## Slide 10: Fault Screening: Which Faults Separate Operating Conditions
 
 **• Fault Screening Results (100 conditions, 17 faults screened)**
 - Before spending runs on a full campaign, we need to know which faults can tell operating conditions apart.
-- A fault that every condition stays stable through past the 0.5 s cap looks the same everywhere, so it cannot separate them.
 - 4 separating faults (buses 66, 68, 94, 181): outcome changes with net load, rising curve in failure share vs quintile. 13 flat faults: censored everywhere, cannot separate conditions.
-- Screening should precede future aleatoric campaigns: identifies active faults early, reducing full campaign cost and variance.
 
 ![Fault screening by quintile: 4 separating faults, 13 flat.](uq-subsections/figs/uq-pilot/main_faultscreen2_lost_by_quintile.png)
 
 *Caption: faultscreen-2: four faults change with net load, thirteen do not. [main_faultscreen2_lost_by_quintile.png]*
 
+**Notes:**
+- A fault that every condition stays stable through past the 0.5 s cap looks the same everywhere, so it cannot separate them.
+- Screening should precede future aleatoric campaigns: identifies active faults early, reducing full campaign cost and variance.
+
 ---
 
-## Slide 11: Scaling to Texas — ACTIVSg2000
+## Slide 11: Scaling to Texas: ACTIVSg2000
 
 **• Initial Profiling Test**
-- We ran an initial small profiling test on the Texas synthetic grid, **ACTIVSg2000** (2,000 buses, TAMU repository).
+- We ran an initial small profiling test on the 2000-bus Texas synthetic grid, **ACTIVSg2000**.
 - The design space grows 115× (siting 11.5× and fault locations 10×), while cost per run grows about 19–25×.
 - At the same sampling density, serial compute time (solver CPU time for the dispatch and dynamic runs) grows about 2,500×.
-- Storage: the raw monitor output is projected ~1,000× larger relative to the 840 full monitored runs of aleatoric-1.
+- Storage per run grows ~10×. For a full aleatoric-1 campaign at the same sampling density (115× more samples): ~1,000× total storage.
 
 | Resource | ACTIVSg200 | ACTIVSg2000 |
 |---|---|---|
@@ -216,6 +218,7 @@ $$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 | Wall time, 1 node, 16 workers | ~2.2 min (ideal) | ~56 min (ideal) |
 | Wall time, 1 node, 16 workers (actual 2.7× overhead) | ~6 min | **~2.5 h** |
 | Monitor output (raw CSV) | 22 GB | ~220 GB |
+| Monitor output at same sampling density (115× design space) | — | ~1,000× (~22 TB) |
 
 *Caption: Projected aleatoric-1 on Texas (840 runs, ~7,560 simulations). [slide11_table.png]*
 
