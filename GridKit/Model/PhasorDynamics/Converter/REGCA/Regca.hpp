@@ -204,9 +204,11 @@ namespace GridKit
 
         BusT* bus_{nullptr};
 
+        // Initial terminal current on system base
+        RealT ir_{0};
+        RealT ii_{0};
+
         // Input parameters
-        RealT p0_{0};
-        RealT q0_{0};
         RealT mva_base_{0};
         RealT Tg_{0};
         RealT TM_{0};

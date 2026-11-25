@@ -85,4 +85,3 @@ Each model's `<Model>InitialValues` enum lists the state entries it accepts. A m
 
 - `Bus`: the case `init` voltages `Vr`/`Vi` move to the state file.
 - `Branch`: the state `tap`/`phase` replace the case parameters.
-- `REGCA`, `GENROU`, `GENSAL`, `GenClassical`: the state `ir`/`ii` replace the `p0`/`q0` parameters.

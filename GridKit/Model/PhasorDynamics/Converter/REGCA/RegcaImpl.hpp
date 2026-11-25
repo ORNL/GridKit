@@ -164,7 +164,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Read parameters from the model data.
+       * @brief Read parameters and initial values from the model data.
        *
        * Every parameter keeps its default when omitted. Invalid values throw
        * std::invalid_argument. Integer JSON values are accepted for real
@@ -175,25 +175,27 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        using Params = typename ModelDataT::Parameters;
+        using Params       = typename ModelDataT::Parameters;
+        using InitialValue = typename ModelDataT::InitialValues;
 
-        const Model::ParameterReader reader(data, "Regca");
+        const Model::ParameterReader    parameters(data, "Regca");
+        const Model::InitialValueReader initial_values(data, "Regca");
 
-        p0_       = reader.readReal(Params::p0).value_or(p0_);
-        q0_       = reader.readReal(Params::q0).value_or(q0_);
-        mva_base_ = reader.readReal(Params::mva).value_or(mva_base_);
-        Tg_       = reader.readNonNegative(Params::Tg).value_or(Tg_);
-        TM_       = reader.readNonNegative(Params::TM).value_or(TM_);
-        Rqmax_    = reader.readReal(Params::Rqmax).value_or(Rqmax_);
-        Rqmin_    = reader.readReal(Params::Rqmin).value_or(Rqmin_);
-        Rpmax_    = reader.readReal(Params::Rpmax).value_or(Rpmax_);
-        sL_       = reader.readBool(Params::sL).value_or(sL_);
-        IL1_      = reader.readReal(Params::IL1).value_or(IL1_);
-        VL0_      = reader.readReal(Params::VL0).value_or(VL0_);
-        VL1_      = reader.readReal(Params::VL1).value_or(VL1_);
-        VA0_      = reader.readReal(Params::VA0).value_or(VA0_);
-        VA1_      = reader.readReal(Params::VA1).value_or(VA1_);
-        Vhvmax_   = reader.readReal(Params::Vhvmax).value_or(Vhvmax_);
+        ir_       = initial_values.readReal(InitialValue::ir).value_or(ir_);
+        ii_       = initial_values.readReal(InitialValue::ii).value_or(ii_);
+        mva_base_ = parameters.readReal(Params::mva).value_or(mva_base_);
+        Tg_       = parameters.readNonNegative(Params::Tg).value_or(Tg_);
+        TM_       = parameters.readNonNegative(Params::TM).value_or(TM_);
+        Rqmax_    = parameters.readReal(Params::Rqmax).value_or(Rqmax_);
+        Rqmin_    = parameters.readReal(Params::Rqmin).value_or(Rqmin_);
+        Rpmax_    = parameters.readReal(Params::Rpmax).value_or(Rpmax_);
+        sL_       = parameters.readBool(Params::sL).value_or(sL_);
+        IL1_      = parameters.readReal(Params::IL1).value_or(IL1_);
+        VL0_      = parameters.readReal(Params::VL0).value_or(VL0_);
+        VL1_      = parameters.readReal(Params::VL1).value_or(VL1_);
+        VA0_      = parameters.readReal(Params::VA0).value_or(VA0_);
+        VA1_      = parameters.readReal(Params::VA1).value_or(VA1_);
+        Vhvmax_   = parameters.readReal(Params::Vhvmax).value_or(Vhvmax_);
 
         setDerivedParameters();
       }
@@ -358,16 +360,16 @@ namespace GridKit
       }
 
       /**
-       * @brief Initialize REGCA from the power-flow operating point.
+       * @brief Initialize REGCA from the state.
        *
        * Resolves the internal states and current-command setpoints from the
-       * initialized terminal-bus voltage and system-base P0/Q0 injections, then
+       * initialized terminal-bus voltage and the state terminal current, then
        * publishes the resolved commands to attached ports.
        *
        * @pre allocate() has completed, verify() reports no errors, and the
        *      terminal bus has been initialized.
-       * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with LVPL enabled
-       *      \f$I_{p,0} \le I_{L,0}\f$.
+       * @pre \f$V_{A1} \le V_T < V_\mathrm{hv}^{\max}\f$, and with LVPL enabled
+       *      \f$I_p \le I_L\f$.
        * @post All internal derivatives are zero. Unattached command ports retain
        *       the resolved setpoints as constant commands.
        * @return Zero on success; nonzero when the operating point is rejected.
@@ -409,41 +411,44 @@ namespace GridKit
           return 1;
         }
 
-        // P0 is a system-base power-flow injection. Resolve the component-base
-        // active current through the LVACM network-interface gain.
-        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT ip0   = this->toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
-        const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_)
-                            + KL_ * Math::ramp(vt - VL1_);
+        const ScalarT ir = static_cast<ScalarT>(ir_);
+        const ScalarT ii = static_cast<ScalarT>(ii_);
+        const ScalarT p  = vr * ir + vi * ii;
+        const ScalarT q  = vi * ir - vr * ii;
 
-        if (sL_ && ip0 > il0)
+        // Resolve the component-base active current through the LVACM
+        // network-interface gain.
+        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT ip    = this->toComponentBase(p / vt) / lvacm;
+        const ScalarT il    = Math::linseg(vt, VL0_, VL1_, IL1_)
+                           + KL_ * Math::ramp(vt - VL1_);
+
+        if (sL_ && ip > il)
         {
           Log::error() << "Regca: initial active current exceeds the LVPL ceiling\n";
           return 1;
         }
-        const ScalarT ipcmd0 = ip0;
+        const ScalarT ipcmd = ip;
 
-        // Invert the HVRCM ceiling and preserve the requested Q0.
-        const RealT   margin   = Vhvmax_ - static_cast<RealT>(vt);
-        const ScalarT iqextra0 = static_cast<ScalarT>(margin - iramp(margin));
-        const ScalarT qnet0    = this->toComponentBase(static_cast<ScalarT>(q0_) / vt);
-        const ScalarT iqcmd0   = qnet0 + iqextra0;
-        const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
-        const ScalarT ii0      = (-vr * qnet0 + vi * ip0 * lvacm) / vt;
+        // Invert the HVRCM ceiling and preserve Q.
+        const RealT   margin  = Vhvmax_ - static_cast<RealT>(vt);
+        const ScalarT iqextra = static_cast<ScalarT>(margin - iramp(margin));
+        const ScalarT qnet    = this->toComponentBase(q / vt);
+        const ScalarT iqcmd   = qnet + iqextra;
 
         y[VM]      = vt;
         y[VT]      = vt;
-        y[IP]      = ip0;
-        y[IQ]      = iqcmd0;
-        y[IQEXTRA] = iqextra0;
-        y[IL]      = il0;
-        y[IR]      = this->toSystemBase(ir0);
-        y[II]      = this->toSystemBase(ii0);
-        y[PBR]     = vr * y[IR] + vi * y[II];
-        y[QBR]     = vi * y[IR] - vr * y[II];
+        y[IP]      = ip;
+        y[IQ]      = iqcmd;
+        y[IQEXTRA] = iqextra;
+        y[IL]      = il;
+        y[IR]      = ir;
+        y[II]      = ii;
+        y[PBR]     = p;
+        y[QBR]     = q;
 
-        ipcmd_set_ = static_cast<RealT>(this->toSystemBase(ipcmd0));
-        iqcmd_set_ = static_cast<RealT>(this->toSystemBase(iqcmd0));
+        ipcmd_set_ = static_cast<RealT>(this->toSystemBase(ipcmd));
+        iqcmd_set_ = static_cast<RealT>(this->toSystemBase(iqcmd));
 
         // Publish the resolved system-base commands for downstream controller
         // initialization. Unattached ports retain these values as constant
