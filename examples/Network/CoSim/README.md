@@ -1,16 +1,36 @@
-# Co-simulation example
+# Two-sided phasor dynamics co-simulation
 
-The client and server exchange voltage and current over ZeroMQ on TCP port
-8800. The interface buses connect directly to signal nodes in the case files:
+This may be built with the following command:
 
-- The client uses `BusSignalVoltageOut` (JSON class `SignalVoltageOut`). It
-  sends voltage on signals 1 and 2 (`vr`, `vi`) and receives current on
-  signals 3 and 4 (`ir`, `ii`).
-- The server uses `BusSignalVoltageIn` (JSON class `SignalVoltageIn`). It
-  receives voltage on signals 3 and 4 (`vr`, `vi`) and sends the accumulated
-  current injections on signals 1 and 2 (`ir`, `ii`).
+```sh
+nix develop
+cmake -S . -B build-cosim -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DGridKit_ENABLE_SUNDIALS=ON -DGridKit_ENABLE_ZMQ=ON -DGridKit_ENABLE_ENZYME=ON
+cmake --build build-cosim --target CoSimClient CoSimServer
+cd build-cosim/examples/Network/CoSim
+```
 
-Note that this example code is temporary and meant simply as an initial
-step towards implementing multi-instance co-simulation with GridKit. It
-will be generalized into an application that can be used for other
-co-simulation cases.
+## Direct ZeroMQ exchange
+
+```sh
+bash run_cosim.sh three-bus
+bash run_cosim.sh ieee39
+bash run_cosim.sh ieee39 signals
+```
+
+The cilent and server exchange flat JSON objects over ZeroMQ. The client sends
+bus voltage and the server returns accumulated bus current injections. Use
+the same `--time-step` and `--final-time` on both peers when launching them
+by hand. A `SignalVoltageOut` interface bus is used for the client and a
+`SignalVoltageIn` interface bus is used on the server. Use `--output-bus`
+to specify the interface bus for either the client or server.
+
+## ARCADE usage
+
+`CoSimClient` may alternately communicate over the
+[ARCADE](https://github.com/sandialabs/ARCADE) semaphore protocol, with
+`CoSimServer` communicating over ZeroMQ to the broker. To run ARCADE,
+first copy the `IEEE39Arcade.input.json` to `input.json`. Then, run the
+`DataBroker` executable. Once the broker reports that the external simulator
+can start, run `bash run_cosim.sh ieee39 bus arcade` to use the broker
+for communication between both sides of the simulation.

@@ -67,7 +67,7 @@ namespace AnalysisManager
 #endif
       int configureLinearSolverDense();
       int getDefaultInitialCondition();
-      int initializeSimulation(RealT t0, bool findConsistent = true);
+      int initializeSimulation(RealT t0, bool findConsistent = true, bool printInitial = true);
 
       int getStepCount(RealT tf, RealT dt) const;
 

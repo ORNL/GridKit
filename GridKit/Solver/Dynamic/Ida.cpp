@@ -229,7 +229,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
+    int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent, bool printInitial)
     {
       int retval = 0;
 
@@ -253,7 +253,7 @@ namespace AnalysisManager
         copyVec(yp_, model_->yp());
       }
 
-      if (model_->monitoring())
+      if (printInitial && model_->monitoring())
       {
         updateModelState(t0);
         model_->printMonitoredVariables();
