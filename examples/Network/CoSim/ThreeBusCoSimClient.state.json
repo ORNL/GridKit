@@ -1,0 +1,27 @@
+{
+    "header": {
+        "format_version": 0.2,
+        "format_revision": 0,
+        "description": "Initial operating point of the ThreeBusCoSimClient case"
+    },
+    "buses": {
+        "1": {
+            "Vr": 1.06,
+            "Vi": 0.0
+        },
+        "2": {
+            "Vr": 1.0599558398065716,
+            "Vi": -0.009675621941024773
+        },
+        "3": {
+            "Vr": 0.9610827543495831,
+            "Vi": -0.13122476630506485
+        }
+    },
+    "devices": {
+        "genrou_2_1": {
+            "ir": 0.4723318850980517,
+            "ii": 0.06727628885191374
+        }
+    }
+}

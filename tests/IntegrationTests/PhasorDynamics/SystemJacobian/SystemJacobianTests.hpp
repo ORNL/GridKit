@@ -84,6 +84,14 @@ namespace GridKit
         {
           auto data = PhasorDynamics::parseSystemModelData(case_file);
 
+          // Initial state from the sibling state file, where the case has one
+          std::filesystem::path state_file = case_file;
+          state_file.replace_extension().replace_extension(".state.json");
+          if (std::filesystem::exists(state_file))
+          {
+            PhasorDynamics::applyState(state_file, data);
+          }
+
           // No monitor output
           data.monitor_sink.clear();
 
