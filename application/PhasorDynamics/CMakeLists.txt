@@ -9,6 +9,11 @@ target_include_directories(
   DynamicSimulation
   PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
+if(GRIDKIT_ENABLE_ZMQ)
+  target_link_libraries(DynamicSimulation PUBLIC cppzmq)
+  target_compile_definitions(DynamicSimulation PRIVATE GRIDKIT_ENABLE_ZMQ)
+endif()
+
 add_executable(ContingencyAnalysis ContingencyAnalysis.cpp)
 target_link_libraries(
   ContingencyAnalysis
