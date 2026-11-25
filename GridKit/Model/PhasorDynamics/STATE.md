@@ -49,9 +49,7 @@ EMT bus entries give instantaneous phase voltages. Device entries give currents.
 
 ```json
 "2533":{
-    "va": 0.9289638822595822,
-    "vb": -0.39534548980249884,
-    "vc": -0.39534548980249884
+    "v": [0.9289638822595822, -0.39534548980249884, -0.39534548980249884]
 }
 ```
 

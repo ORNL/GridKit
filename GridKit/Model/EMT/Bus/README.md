@@ -17,11 +17,15 @@ Figure 1: Bus model
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $N$ | [-] | `N` | Number of phases | Required, positive integer
+$V^\mathrm{base}$ | [kV] | `kv` | Base voltage | Required, positive
 
 ### Parameter Validation
 
 ```math
-N \in \mathbb{Z}_{>0}
+\begin{aligned}
+N &\in \mathbb{Z}_{>0} \\
+V^\mathrm{base} &\in \mathbb{R}_{>0}
+\end{aligned}
 ```
 
 ### Model Derived Parameters
@@ -32,8 +36,7 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{i}_d$ | `i` | Input | [A] | Current from connected device $d$ | One port per $d \in \mathcal{D}$, $\mathbf{i}_d \in \mathbb{R}^N$
-$\mathbf{v}$ | `v` | Output | [V] | Bus voltage supplied to connected devices | $\mathbf{v} \in \mathbb{R}^N$
+$\mathbf{v}$ | `v` | Output | [V] | Bus voltage | Internal variable
 
 ## Submodels
 
