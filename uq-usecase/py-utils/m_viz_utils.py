@@ -1952,6 +1952,7 @@ def plot_grid_datacenter(
     show_loading: bool = False,
     show_gen_connectors: bool = False,
     marker_scale: float = 1.0,
+    offline_size: float | None = None,
 ) -> go.Figure:
     """Datacenter-focused geo plot: branches, loads (PD-sized buses), IBR (blue) vs Thermal gens.
 
@@ -1982,6 +1983,9 @@ def plot_grid_datacenter(
         If True, draw light connector lines from generators to bus locations.
     marker_scale:
         Global marker size multiplier.
+    offline_size:
+        If set, thermal gens with GEN_STATUS 0 are drawn at this marker size in grey.
+        None (default) keeps every thermal gen at its PG-based size.
 
     Returns
     -------
@@ -2119,6 +2123,11 @@ def plot_grid_datacenter(
                 if "PG" in thermal_df.columns
                 else np.full(len(thermal_df), 6.0 * marker_scale)
             )
+            offline = np.zeros(len(thermal_df), dtype=bool)
+            if offline_size is not None and "GEN_STATUS" in thermal_df.columns:
+                offline = thermal_df["GEN_STATUS"].to_numpy() == 0
+                gen_sizes = np.where(offline, offline_size, gen_sizes)
+            gen_colors = np.where(offline, "#B0B0B0", "#8B4513").tolist()
             gen_hover = [
                 f"<b>Thermal Gens</b><br>GEN_BUS: {row.GEN_BUS}<br>Fuel: {row.genfuel}<br>PG: {row.PG:.2f} MW"
                 for row in thermal_df.itertuples()
@@ -2131,7 +2140,7 @@ def plot_grid_datacenter(
                     lon=thermal_df["lon"].tolist(),
                     hovertext=gen_hover,
                     hoverinfo="text",
-                    marker=dict(size=gen_sizes.tolist(), color="#8B4513", opacity=0.85),
+                    marker=dict(size=gen_sizes.tolist(), color=gen_colors, opacity=0.85),
                     showlegend=True,
                 )
             )
@@ -2225,6 +2234,31 @@ def resolve_hour(profiles: HourlyProfiles, hour: int | str) -> int:
     if not 0 <= h < profiles.n_hours:
         raise ValueError(f"hour {h} outside 0..{profiles.n_hours - 1}")
     return h
+
+
+def apply_dispatch(case_data: MatpowerCaseData, dispatch: pd.DataFrame) -> MatpowerCaseData:
+    """Copy of case_data with thermal PG and GEN_STATUS taken from one AC dispatch table.
+
+    ``dispatch`` is a campaign ``dispatch/<op>.parquet`` table keyed by ``gen_idx``
+    (the gen_row of the case). Wind rows keep their PG and status from case_data.
+    """
+    if case_data.genfuel is None:
+        raise ValueError("apply_dispatch needs genfuel to separate thermal from wind")
+    if not bool(dispatch["ac_solved"].all()):
+        raise ValueError("dispatch has AC-unsettled rows; pick another operating point")
+
+    gen = case_data.gen.copy()
+    rows = gen["gen_row"].to_numpy() if "gen_row" in gen.columns else np.arange(len(gen))
+    d = dispatch.set_index("gen_idx").loc[rows]
+    if not np.array_equal(d["bus"].to_numpy(), gen["GEN_BUS"].to_numpy()):
+        raise ValueError("dispatch bus column does not match the case gen table")
+
+    thermal = np.asarray(case_data.genfuel, dtype=object) != "wind"
+    pg = gen["PG"].to_numpy(dtype=float).copy()
+    pg[thermal] = d["pg_ac"].to_numpy(dtype=float)[thermal]
+    gen["PG"] = pg
+    gen["GEN_STATUS"] = np.where(thermal, d["status_ac"].to_numpy(dtype=float), gen["GEN_STATUS"].to_numpy(dtype=float))
+    return replace(case_data, gen=gen)
 
 
 def hour_snapshot(

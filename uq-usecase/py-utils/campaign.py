@@ -53,6 +53,7 @@ __all__ = [
     "is_unstable",
     "find_cct",
     "write_timeseries",
+    "save_dispatch",
     "persist",
     "add_datacenter",
     "split_out_datacenter",
@@ -115,7 +116,7 @@ STORE_ROOT = Path("/kfs2/projects/scidac/scidac-data/gridkit-campaigns")
 # on 9 OST objects; these put it on 2.
 _LAYOUT_SCRATCH = "-E 2M -S 1M -c 1 -p flash -E -1 -S 4M -c 1 -p flash"
 _LAYOUT_SERIES = "-E 2M -S 1M -c 1 -p disk -E -1 -S 4M -c 1 -p disk"
-# records/ holds only ~2 KB json, so Data-on-MDT keeps it off the OSTs entirely.
+# records/ and dispatch/ hold only a few KB per file, so Data-on-MDT keeps them off the OSTs.
 # Safe ONLY because nothing large lives here: on a mixed directory every file
 # over 256K would also burn 256K of MDT for no benefit.
 _LAYOUT_RECORDS = "-E 256K -L mdt -E -1 -S 1M -c 1 -p disk"
@@ -145,6 +146,7 @@ def prepare_storage(scratch: Path, store: Path) -> dict:
         "scratch": _setstripe(Path(scratch), _LAYOUT_SCRATCH),
         "series": _setstripe(Path(store) / "series", _LAYOUT_SERIES),
         "records": _setstripe(Path(store) / "records", _LAYOUT_RECORDS),
+        "dispatch": _setstripe(Path(store) / "dispatch", _LAYOUT_RECORDS),
     }
 
 
@@ -960,6 +962,44 @@ def _jsonable(v):
     return v
 
 
+def save_dispatch(scratch: Path, store: Path, tag: str) -> Path | None:
+    """Copy an operating point's generator dispatch from scratch to the store."""
+    op = tag.split("__")[0]
+    point = next(
+        (d for d in (Path(scratch) / op, Path(scratch) / tag) if (d / "dc.m").exists()),
+        None,
+    )
+    if point is None:
+        return None
+    out = Path(store) / "dispatch" / f"{op}.parquet"
+    if out.exists():
+        return out
+    dc = aux_to_m.m_to_frames(point / "dc.m")
+    g = dc["gen"]
+    df = pd.DataFrame(
+        {
+            "gen_idx": np.arange(len(g)),
+            "bus": g["GEN_BUS"].astype(int).to_numpy(),
+            "status_dc": g["GEN_STATUS"].astype(int).to_numpy(),
+            "pg_dc": g["PG"].to_numpy(),
+            "pmin": g["PMIN"].to_numpy(),
+            "pmax": g["PMAX"].to_numpy(),
+        }
+    )
+    if "genfuel" in dc:
+        df["fuel"] = dc["genfuel"]
+    # The AC columns are NaN when the AC PF did not settle.
+    ac = aux_to_m.m_to_frames(point / "ac.m")["gen"] if (point / "ac.m").exists() else None
+    df["ac_solved"] = ac is not None
+    for col, src in (("status_ac", "GEN_STATUS"), ("pg_ac", "PG"), ("qg_ac", "QG")):
+        df[col] = ac[src].to_numpy() if ac is not None else np.nan
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.parent / f"{out.name}.{os.getpid()}.tmp"
+    df.to_parquet(tmp, index=False)
+    os.replace(tmp, out)
+    return out
+
+
 def persist(cfg: CampaignConfig, tag: str, rec: dict, csv=None) -> dict:
     """Write the durable artifacts for one condition to `cfg.store`.
 
@@ -973,6 +1013,8 @@ def persist(cfg: CampaignConfig, tag: str, rec: dict, csv=None) -> dict:
         series = cfg.store / "series" / f"{tag}.parquet"
         rec["series_rows"] = write_timeseries(csv, series)
         rec["series"] = str(series)
+
+    save_dispatch(cfg.scratch, cfg.store, tag)
 
     record = cfg.store / "records" / f"{tag}.json"
     record.parent.mkdir(parents=True, exist_ok=True)

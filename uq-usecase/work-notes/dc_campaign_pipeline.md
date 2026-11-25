@@ -58,6 +58,7 @@ directories.
 |---|---|---|
 | **durable results** | `/kfs2/projects/scidac/scidac-data/gridkit-campaigns/<name>/` | kept, **not backed up** |
 | per-condition records | `<campaign>/records/<tag>.json` | source of truth |
+| per-operating-point dispatch | `<campaign>/dispatch/<op tag>.parquet` | a few KB; one file per operating point, shared by its disturbances (§4.5) |
 | monitor timeseries | `<campaign>/series/<tag>.parquet` | |
 | collected tables | `<campaign>/{results.parquet,results.csv,frontier.csv}` | |
 | sbatch logs | `<campaign>/slurm/` | |
@@ -66,7 +67,7 @@ directories.
 
 Campaigns run so far: `phase3b`, `aleatoric1`, `faultscreen1`, `afront1`,
 `afront2`, `afront3`, `cct_check`, `cct181`, `faultscreen1_ap1`,
-`aleatoric1_ap1`, `faultscreen1_ap08`, `aleatoric1_ap08`.
+`aleatoric1_ap1`, `faultscreen1_ap08`, `aleatoric1_ap08`. The `aleatoric1_ap08_qlim` and `aleatoric2_ap08_qlim` campaigns have `dispatch/` backfilled from scratch (§4.5).
 
 **Never put campaign data in `/tmp`** on these nodes: it is tmpfs, i.e. RAM.
 
@@ -90,6 +91,7 @@ Do **not** export it globally: that makes Julia load the wrong SuiteSparse.
 | `py-utils/campaign.py` | 1277 | **the pipeline.** Config, stages, QoI, CCT, storage, PV→PQ Q-limit switching (§4.2a) |
 | `py-utils/m_to_case_utils.py` | 868 | `.aux`/`.dyr`/`.m` → `case.json`; device construction |
 | `py-utils/aux_to_m.py` | 381 | `.aux` ↔ MATPOWER `.m` frames |
+| `py-utils/extract_dispatch.py` | — | Backfills `store/dispatch/` for a finished campaign from scratch, then verifies it against the records (§4.5). `python extract_dispatch.py <campaign>` |
 | `py-utils/perturb.py` | 327 | frame-level edits: load scaling, commitment, gen output |
 | `py-utils/pm_utils.py` | 400 | PowerModels.jl driver (incl. batch mode) |
 | `py-utils/solver_utils.py` | 351 | `solver.json`: faults, monitors, events |
@@ -352,11 +354,35 @@ one solved case across many disturbances.
 | function | does |
 |---|---|
 | `write_timeseries(csv, out)` | → parquet (zstd, float32); drops duplicate `t` **once** |
-| `persist(cfg, tag, rec, csv)` | `store/records/<tag>.json` + `store/series/<tag>.parquet` |
-| `prepare_storage(scratch, store)` | creates trees, applies Lustre layouts |
+| `persist(cfg, tag, rec, csv)` | `store/records/<tag>.json` + `store/series/<tag>.parquet`; calls `save_dispatch` first |
+| `save_dispatch(scratch, store, tag)` | copies one operating point's dispatch to `store/dispatch/<op>.parquet`; returns None when no `dc.m` exists |
+| `prepare_storage(scratch, store)` | creates trees (including `dispatch/`), applies Lustre layouts |
 
 Failed conditions are persisted too — infeasibility is a result, and a record on
 disk is how resume works.
+
+**Dispatch file.** `store/dispatch/<op tag>.parquet` has one row per generator, in
+`dc.m` order:
+
+| column | meaning |
+|---|---|
+| `gen_idx`, `bus` | row in `dc.m`, and its bus |
+| `status_dc`, `pg_dc`, `pmin`, `pmax` | DC OPF commitment and dispatch |
+| `fuel` | from `genfuel`, when present |
+| `ac_solved` | whether `ac.m` exists |
+| `status_ac`, `pg_ac`, `qg_ac` | final AC state; NaN when the AC PF did not settle |
+
+The file is keyed by operating point (the tag before `__`), because disturbances
+share one solved state. It is written only when `dc.m` exists, so a DC OPF failure
+leaves none. It is written to a PID-named temp file and then `os.replace`d, so two
+workers on the same point cannot leave a partial file.
+
+Campaigns that ran before this have no dispatch in the store. Backfill with
+`python py-utils/extract_dispatch.py <campaign>` while the scratch workdirs still
+exist. The script also checks each `ok` point: summed AC generation must equal the
+recorded `demand_mw` + `losses_mw`, and DC and AC commitment must agree. On
+`aleatoric1_ap08_qlim` and `aleatoric2_ap08_qlim` the residual was at most 0.005 MW
+and there were no mismatches.
 
 ---
 
@@ -398,6 +424,7 @@ Each of these has already caused a real failure here.
 | **Event duplicate timestamps** | two rows at the same `t`; `np.gradient` → `inf` | `drop_duplicates(subset="t")`, done once at parquet write |
 | **`dc_alpha_p` on `cct_check` records** | `cct_check.py` sets `alphaP` by editing the case dict, so the record field `dc_alpha_p` stays at the config default for both arms (0.2 when `cct_check` ran; 0.8 now); the true value is in `alpha_p_dc` | read `alpha_p_dc` for `cct_check` / `cct181`; `dc_alpha_p` for the `highp_rerun` campaigns |
 | **`;;` at the end of gen rows in `ac.m`** | the base `ac.m` of `faultscreen1_ap1` has `;;` on gen rows; PowerModels fails with `matrix parsing error, inconsistent number of items in each row` on every case | `build_case` in `pm_fault_check.py` replaces `;;` with `;` before writing |
+| **Dispatch only on scratch** | the store kept no dispatch, and scratch is purged after 28 idle days, so it was at risk of being lost | `persist` calls `save_dispatch`; older campaigns need `extract_dispatch.py` while scratch exists |
 | **Docstring before `using` in a `.jl` script** | Julia errors `LoadError: cannot document the following expression: using PowerModels`; the Python caller raises `RuntimeError` with that text | write the header as `#` comments (as in `ida_pvpq.jl`) |
 | **ZIP mix is `alphaI = 1 − alphaP`, so `alphaZ` is always 0** | `split_out_datacenter` callers in `campaign.py` hard-code `alpha_i=1.0 - cfg.dc_alpha_p`; `dc_alpha_p` 0.8 gives 80/20/0, 0.7 gives 70/30/0, and 70/20/10 is not reachable | needs a new `dc_alpha_i` parameter (not yet added); `alphaZ = 1 − alphaI − alphaP` is derived in GridKit `LoadZIP` |
 | **16 workers started together race on `seed.m`** | `faultscreen1_ap08` worker 9 crashed at `CampaignConfig` init with `FileNotFoundError: seed.m` while other workers were starting; 43 conditions were missing | rerun the crashed worker alone with its `--start`/`--count` (existing records are skipped); check `records` count against `conditions.csv` after every `highp_rerun.sh` job |
@@ -438,6 +465,11 @@ Cheapest first. All are things that have actually caught bugs here.
    2026-11-09: 0 violations at all points with limits, and 952 of 952 control rows
    violate (max 16 Mvar). Finally confirm the record count equals `conditions.csv`
    and that `slurm/*.log` has no `Traceback`.
+9. **Dispatch** (when `save_dispatch` or the dispatch layout is touched): run
+   `python py-utils/extract_dispatch.py <campaign>` on a campaign whose scratch
+   still exists. Expect 0 missing dispatch files, 0 DC/AC status mismatches, and a
+   residual near 0. Known-good 2026-11-25 on `aleatoric1_ap08_qlim` and
+   `aleatoric2_ap08_qlim`: 616 and 2792 files, residual at most 0.005 MW.
 
 ---
 
