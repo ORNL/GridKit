@@ -9,9 +9,9 @@
 #include <cmath>
 #include <type_traits>
 
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/OptimalPowerFlow/Branch/Branch.hpp>
 #include <GridKit/Model/OptimalPowerFlow/ComponentImpl.hpp>
-#include <GridKit/Model/ParameterReader.hpp>
 
 namespace GridKit
 {

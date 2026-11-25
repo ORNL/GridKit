@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <atomic>
 
-#include <GridKit/Model/ParameterReader.hpp>
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>

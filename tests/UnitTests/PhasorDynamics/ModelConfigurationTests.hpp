@@ -8,7 +8,7 @@
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/ConfigurationChecks.hpp>
-#include <GridKit/Model/ParameterReader.hpp>
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Enum.hpp>

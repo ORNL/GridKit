@@ -10,7 +10,7 @@
 #include <atomic>
 #include <format>
 
-#include <GridKit/Model/ParameterReader.hpp>
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>

@@ -12,9 +12,9 @@ add_subdirectory(OptimalPowerFlow)
 
 install(
   FILES ConfigurationChecks.hpp
+        DataReader.hpp
         Evaluator.hpp
         OptimizationEvaluator.hpp
-        ParameterReader.hpp
         VariableMonitor.hpp
         VariableMonitorController.hpp
   DESTINATION include/GridKit/Model)

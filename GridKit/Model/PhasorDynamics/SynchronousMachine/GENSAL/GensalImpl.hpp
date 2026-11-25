@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include <GridKit/Model/ParameterReader.hpp>
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>

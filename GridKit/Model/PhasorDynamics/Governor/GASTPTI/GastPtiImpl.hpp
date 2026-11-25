@@ -11,7 +11,7 @@
 #include <cassert>
 #include <format>
 
-#include <GridKit/Model/ParameterReader.hpp>
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
