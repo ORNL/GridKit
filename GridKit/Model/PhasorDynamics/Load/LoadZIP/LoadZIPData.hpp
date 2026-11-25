@@ -10,8 +10,6 @@ namespace GridKit
     /// Parameters for a loadZIP
     enum class LoadZIPParameters : size_t
     {
-      Pnom,   ///< Nominal real power
-      Qnom,   ///< Nominal reactive power
       alphaI, ///< Fraction of load represented as constant current
       alphaP, ///< Fraction of load represented as constant power
     };
@@ -45,8 +43,8 @@ namespace GridKit
     /// Initial values supported for a loadZIP
     enum class LoadZIPInitialValues : size_t
     {
-      ir,         ///< Initial real terminal current into the bus on system base
-      ii,         ///< Initial imaginary terminal current into the bus on system base
+      ir,         ///< Initial real terminal current into the bus on system base; defaults to zero
+      ii,         ///< Initial imaginary terminal current into the bus on system base; defaults to zero
       in_service, ///< Initial service status; defaults to true
     };
 

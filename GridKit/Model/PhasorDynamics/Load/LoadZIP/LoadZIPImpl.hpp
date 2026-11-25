@@ -36,14 +36,16 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
+      using Parameter    = typename ModelDataT::Parameters;
+      using InitialValue = typename ModelDataT::InitialValues;
 
-      const Model::ParameterReader reader(data, "LoadZIP");
+      const Model::ParameterReader    parameters(data, "LoadZIP");
+      const Model::InitialValueReader initial_values(data, "LoadZIP");
 
-      Pnom_   = reader.readReal(Parameter::Pnom).value_or(Pnom_);
-      Qnom_   = reader.readReal(Parameter::Qnom).value_or(Qnom_);
-      alphaI_ = reader.readReal(Parameter::alphaI).value_or(alphaI_);
-      alphaP_ = reader.readReal(Parameter::alphaP).value_or(alphaP_);
+      ir_     = initial_values.readReal(InitialValue::ir).value_or(ir_);
+      ii_     = initial_values.readReal(InitialValue::ii).value_or(ii_);
+      alphaI_ = parameters.readReal(Parameter::alphaI).value_or(alphaI_);
+      alphaP_ = parameters.readReal(Parameter::alphaP).value_or(alphaP_);
 
       setDerivedParams();
     }
@@ -101,24 +103,21 @@ namespace GridKit
       const ScalarT vr = Vr();
       const ScalarT vi = Vi();
 
-      // The nominal dispatch, initialized bus voltage, and ZIP anchor are one
-      // initial condition, so derive them together on every reset. Anchoring
-      // at the initialized voltage makes the dispatch exact there for any
-      // load fractions.
       const RealT vm0 = static_cast<RealT>(std::sqrt(vr * vr + vi * vi));
       if (!(vm0 > RealT{0}) || !std::isfinite(vm0))
       {
         return 1;
       }
       Vnom_ = vm0;
-      setDerivedParams();
+
+      G_ = -(static_cast<RealT>(vr) * ir_ + static_cast<RealT>(vi) * ii_) / (Vnom_ * Vnom_);
+      B_ = (static_cast<RealT>(vi) * ir_ - static_cast<RealT>(vr) * ii_) / (Vnom_ * Vnom_);
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      // The ZIP factor is one at the anchor voltage
-      y[0]  = -G_ * vr - B_ * vi;
-      y[1]  = -G_ * vi + B_ * vr;
+      y[0]  = ir_;
+      y[1]  = ii_;
       yp[0] = 0.0;
       yp[1] = 0.0;
       y_.setDataUpdated();
@@ -230,8 +229,8 @@ namespace GridKit
       const ScalarT V     = std::sqrt(V2);
       const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
 
-      f[0] = Ir + (G_ * Vr + B_ * Vi) * zip;
-      f[1] = Ii + (G_ * Vi - B_ * Vr) * zip;
+      f[0] = Ir + (G_ * Vr - B_ * Vi) * zip;
+      f[1] = Ii + (G_ * Vi + B_ * Vr) * zip;
 
       return 0;
     }
@@ -243,10 +242,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::setDerivedParams()
     {
-      const RealT Vnom2 = Vnom_ * Vnom_;
-
-      G_      = Pnom_ / Vnom2;
-      B_      = Qnom_ / Vnom2;
       alphaZ_ = ONE<RealT> - alphaI_ - alphaP_;
     }
 
