@@ -160,8 +160,8 @@ namespace GridKit
       RealT* J_vals_buffer_{nullptr};
 
     private:
-      ScalarT Vr0_{0.0};
-      ScalarT Vi0_{0.0};
+      ScalarT Vr_{0.0};
+      ScalarT Vi_{0.0};
 
       /* Fault admittance */
       RealT fault_g_{0.0};

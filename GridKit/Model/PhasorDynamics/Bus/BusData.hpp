@@ -53,8 +53,8 @@ namespace GridKit
     /// Initial values for a bus
     enum class BusInitialValues : size_t
     {
-      Vr, ///< Initial value for the real bus voltage
-      Vi, ///< Initial value for the imaginary bus voltage
+      Vr, ///< Initial value for the real bus voltage; defaults to one
+      Vi, ///< Initial value for the imaginary bus voltage; defaults to zero
     };
 
     /**
@@ -79,10 +79,6 @@ namespace GridKit
       using IdxT  = index_type;
 
       std::string name; ///< A name given to this bus
-
-      // TODO: these should become parameters
-      RealT Vr0{1.0}; ///< Initial value for the real bus voltage
-      RealT Vi0{0.0}; ///< Initial value for the imaginary bus voltage
 
       IdxT bus_id{0}; ///< The unique ID of the bus
 

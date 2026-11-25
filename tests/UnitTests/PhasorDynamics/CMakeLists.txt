@@ -207,6 +207,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemFlat.json
                ${CMAKE_CURRENT_BINARY_DIR}/SubsystemFlat.json COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SubsystemHierarchical.json
                ${CMAKE_CURRENT_BINARY_DIR}/SubsystemHierarchical.json COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Subsystem.state.json
+               ${CMAKE_CURRENT_BINARY_DIR}/Subsystem.state.json COPYONLY)
 
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(

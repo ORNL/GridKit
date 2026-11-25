@@ -303,19 +303,21 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
-      using Buses     = typename ModelDataT::Buses;
+      using Parameter    = typename ModelDataT::Parameters;
+      using InitialValue = typename ModelDataT::InitialValues;
+      using Buses        = typename ModelDataT::Buses;
 
-      const Model::ParameterReader reader(data, "Branch");
+      const Model::ParameterReader    parameters(data, "Branch");
+      const Model::InitialValueReader initial_values(data, "Branch");
 
-      R_     = reader.readReal(Parameter::R).value_or(R_);
-      X_     = reader.readReal(Parameter::X).value_or(X_);
-      G_     = reader.readReal(Parameter::G).value_or(G_);
-      B_     = reader.readReal(Parameter::B).value_or(B_);
-      Gmag_  = reader.readReal(Parameter::Gmag).value_or(Gmag_);
-      Bmag_  = reader.readReal(Parameter::Bmag).value_or(Bmag_);
-      tap_   = reader.readReal(Parameter::tap).value_or(tap_);
-      phase_ = reader.readReal(Parameter::phase).value_or(phase_);
+      R_     = parameters.readReal(Parameter::R).value_or(R_);
+      X_     = parameters.readReal(Parameter::X).value_or(X_);
+      G_     = parameters.readReal(Parameter::G).value_or(G_);
+      B_     = parameters.readReal(Parameter::B).value_or(B_);
+      Gmag_  = parameters.readReal(Parameter::Gmag).value_or(Gmag_);
+      Bmag_  = parameters.readReal(Parameter::Bmag).value_or(Bmag_);
+      tap_   = initial_values.readReal(InitialValue::tap).value_or(tap_);
+      phase_ = initial_values.readReal(InitialValue::phase).value_or(phase_);
 
       if (data.buses.contains(Buses::bus1))
       {

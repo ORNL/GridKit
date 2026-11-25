@@ -34,8 +34,6 @@ $G$              | [p.u.] | `G`     | Total line shunt conductance            | 
 $B$              | [p.u.] | `B`     | Total line shunt susceptance            | 0.0           |
 $G_\mathrm{mag}$ | [p.u.] | `Gmag`  | Magnetizing shunt conductance at bus 1  | 0.0           |
 $B_\mathrm{mag}$ | [p.u.] | `Bmag`  | Magnetizing shunt susceptance at bus 1  | 0.0           |
-$\tau$           | [p.u.] | `tap`   | Off-nominal tap magnitude on bus-1 side | 1.0           |
-$\theta$         | [rad]  | `phase` | Phase-shift angle                       | 0.0           |
 
 ### Parameter Validation
 
@@ -193,6 +191,14 @@ These current contributions are added to the connected bus residuals with
 positive sign because branch current is oriented entering the bus.
 
 ## Initialization
+
+```math
+\begin{aligned}
+  \tau, \theta &\leftarrow \text{state tap and phase}
+\end{aligned}
+```
+
+The state `tap` defaults to one and `phase` to zero.
 
 The Branch model has no internal state to initialize. During construction or
 parameter updates, the component computes $\mathbf{Y}$ from the current

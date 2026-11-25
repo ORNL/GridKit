@@ -126,18 +126,20 @@ namespace GridKit
         bus2.initialize();
         bus2.evaluateResidual();
 
-        using Data      = PhasorDynamics::BranchData<RealT, IdxT>;
-        using Parameter = typename Data::Parameters;
+        using Data         = PhasorDynamics::BranchData<RealT, IdxT>;
+        using Parameter    = typename Data::Parameters;
+        using InitialValue = typename Data::InitialValues;
 
         Data data;
-        data.parameters[Parameter::R]     = R;
-        data.parameters[Parameter::X]     = X;
-        data.parameters[Parameter::G]     = G;
-        data.parameters[Parameter::B]     = B;
-        data.parameters[Parameter::Gmag]  = Gmag;
-        data.parameters[Parameter::Bmag]  = Bmag;
-        data.parameters[Parameter::tap]   = tap;
-        data.parameters[Parameter::phase] = phase;
+        data.parameters[Parameter::R]    = R;
+        data.parameters[Parameter::X]    = X;
+        data.parameters[Parameter::G]    = G;
+        data.parameters[Parameter::B]    = B;
+        data.parameters[Parameter::Gmag] = Gmag;
+        data.parameters[Parameter::Bmag] = Bmag;
+
+        data.initial_values[InitialValue::tap]   = tap;
+        data.initial_values[InitialValue::phase] = phase;
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
         branch.allocate();
@@ -463,15 +465,17 @@ namespace GridKit
                                                                 const RealT tap   = 1.0,
                                                                 const RealT phase = 0.0)
       {
-        using Parameter = PhasorDynamics::BranchParameters;
+        using Parameter    = PhasorDynamics::BranchParameters;
+        using InitialValue = PhasorDynamics::BranchInitialValues;
 
         PhasorDynamics::BranchData<RealT, IdxT> data;
-        data.parameters[Parameter::R]     = R;
-        data.parameters[Parameter::X]     = X;
-        data.parameters[Parameter::G]     = G;
-        data.parameters[Parameter::B]     = B;
-        data.parameters[Parameter::tap]   = tap;
-        data.parameters[Parameter::phase] = phase;
+        data.parameters[Parameter::R] = R;
+        data.parameters[Parameter::X] = X;
+        data.parameters[Parameter::G] = G;
+        data.parameters[Parameter::B] = B;
+
+        data.initial_values[InitialValue::tap]   = tap;
+        data.initial_values[InitialValue::phase] = phase;
         return data;
       }
 

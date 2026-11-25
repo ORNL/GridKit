@@ -302,9 +302,9 @@ namespace GridKit
       const auto& buses = state.at("buses");
       for (auto& bus : sm.bus)
       {
-        const auto& initial = buses.at(std::to_string(bus.bus_id));
-        initial.at("Vr").get_to(bus.Vr0);
-        initial.at("Vi").get_to(bus.Vi0);
+        const auto& initial                      = buses.at(std::to_string(bus.bus_id));
+        bus.initial_values[BusInitialValues::Vr] = initial.at("Vr").template get<RealT>();
+        bus.initial_values[BusInitialValues::Vi] = initial.at("Vi").template get<RealT>();
       }
 
       const auto& devices = state.at("devices");

@@ -8,6 +8,7 @@
 #include <format>
 #include <stdexcept>
 
+#include <GridKit/Model/DataReader.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusSignalVoltageOut/BusSignalVoltageOut.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
@@ -24,7 +25,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusSignalVoltageOut<scalar_type, index_type>::BusSignalVoltageOut()
-      : Vr0_(0.0), Vi0_(0.0)
+      : Vr_(0.0), Vi_(0.0)
     {
       size_ = 2;
     }
@@ -34,7 +35,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusSignalVoltageOut<scalar_type, index_type>::BusSignalVoltageOut(ScalarT Vr, ScalarT Vi)
-      : Vr0_(Vr), Vi0_(Vi)
+      : Vr_(Vr), Vi_(Vi)
     {
       size_ = 2;
     }
@@ -46,9 +47,14 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusSignalVoltageOut<scalar_type, index_type>::BusSignalVoltageOut(const ModelDataT& data)
-      : Vr0_(data.Vr0),
-        Vi0_(data.Vi0)
     {
+      using InitialValue = typename ModelDataT::InitialValues;
+
+      const Model::InitialValueReader initial_values(data, "SignalVoltageOut");
+
+      Vr_ = initial_values.readReal(InitialValue::Vr).value_or(ONE<RealT>);
+      Vi_ = initial_values.readReal(InitialValue::Vi).value_or(ZERO<RealT>);
+
       bus_id_        = data.bus_id;
       size_          = 2;
       monitor_       = std::make_unique<MonitorT>("Bus", data.name, data.monitored_variables);
@@ -213,8 +219,8 @@ namespace GridKit
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0]  = Vr0_;
-      y[1]  = Vi0_;
+      y[0]  = Vr_;
+      y[1]  = Vi_;
       yp[0] = 0.0;
       yp[1] = 0.0;
 

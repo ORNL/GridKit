@@ -31,6 +31,8 @@
 - Removed the GenClassical `p0`/`q0` parameters in favor of the state `ir`/`ii`.
 - Verify bus numbers, signal IDs, device IDs per class, and subsystem IDs in PhasorDynamics inputs.
 - Removed the GENROU, GENSAL and REGCA `p0`/`q0` and LoadZIP `Pnom`/`Qnom` parameters in favor of the state `ir`/`ii`.
+- Removed the bus `init` section from the PhasorDynamics case format in favor of the state `Vr`/`Vi`.
+- Removed the Branch `tap`/`phase` parameters in favor of the state `tap`/`phase`.
 
 ## v0.2
 

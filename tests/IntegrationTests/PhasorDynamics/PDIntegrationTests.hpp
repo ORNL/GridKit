@@ -50,8 +50,7 @@ namespace GridKit
 
           success *= abus.bus_id == bbus.bus_id;
           success *= abus.bus_type == bbus.bus_type;
-          success *= abus.Vr0 == bbus.Vr0;
-          success *= abus.Vi0 == bbus.Vi0;
+          success *= abus.initial_values == bbus.initial_values;
         }
 
         success *= a.signal.size() == b.signal.size();
@@ -263,14 +262,16 @@ namespace GridKit
         set_data.bus.resize(2);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
+
+        set_data.bus[0].initial_values[BusInitialValues::Vr] = 0.9949877346411762;
+        set_data.bus[0].initial_values[BusInitialValues::Vi] = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
 
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
+
+        set_data.bus[1].initial_values[BusInitialValues::Vr] = 1.0;
+        set_data.bus[1].initial_values[BusInitialValues::Vi] = 0.0;
 
         set_data.branch.resize(1);
         set_data.branch[0].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
@@ -306,6 +307,7 @@ namespace GridKit
 
         std::string      in_file   = "TwoBusBasic/TwoBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("TwoBusBasic/TwoBusBasic.state.json", file_data);
 
         auto success = compare(set_data, file_data);
 
@@ -335,13 +337,15 @@ namespace GridKit
         set_data.bus.resize(2);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
+
+        set_data.bus[0].initial_values[BusInitialValues::Vr] = 0.9949877346411762;
+        set_data.bus[0].initial_values[BusInitialValues::Vi] = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
+
+        set_data.bus[1].initial_values[BusInitialValues::Vr] = 1.0;
+        set_data.bus[1].initial_values[BusInitialValues::Vi] = 0.0;
 
         set_data.signal.resize(3);
         set_data.signal[0].name      = "Machine Speed Deviation";
@@ -417,6 +421,7 @@ namespace GridKit
 
         std::string      in_file   = "TwoBusIeeet1/TwoBusIeeet1.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("TwoBusIeeet1/TwoBusIeeet1.state.json", file_data);
 
         auto success = compare(set_data, file_data);
 
@@ -436,13 +441,15 @@ namespace GridKit
         set_data.bus.resize(2);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
+
+        set_data.bus[0].initial_values[BusInitialValues::Vr] = 0.9949877346411762;
+        set_data.bus[0].initial_values[BusInitialValues::Vi] = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
+
+        set_data.bus[1].initial_values[BusInitialValues::Vr] = 1.0;
+        set_data.bus[1].initial_values[BusInitialValues::Vi] = 0.0;
 
         set_data.signal.resize(2);
         set_data.signal[0].name      = "Machine Speed Deviation";
@@ -495,6 +502,7 @@ namespace GridKit
 
         std::string      in_file   = "TwoBusTgov1/TwoBusTgov1.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("TwoBusTgov1/TwoBusTgov1.state.json", file_data);
 
         auto success = compare(set_data, file_data);
         return success.report(__func__);
@@ -512,18 +520,21 @@ namespace GridKit
         set_data.bus.resize(3);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::SLACK;
-        set_data.bus[0].Vr0      = 1.06;
-        set_data.bus[0].Vi0      = 0.0;
+
+        set_data.bus[0].initial_values[BusInitialValues::Vr] = 1.06;
+        set_data.bus[0].initial_values[BusInitialValues::Vi] = 0.0;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::DEFAULT;
-        set_data.bus[1].Vr0      = 1.0599558398065716;
-        set_data.bus[1].Vi0      = -0.009675621941024773;
+
+        set_data.bus[1].initial_values[BusInitialValues::Vr] = 1.0599558398065716;
+        set_data.bus[1].initial_values[BusInitialValues::Vi] = -0.009675621941024773;
         set_data.bus[1].monitored_variables.insert(BusVar::Vm);
         set_data.bus[2].bus_id   = 2;
         set_data.bus[2].bus_type = BusType::DEFAULT;
-        set_data.bus[2].Vr0      = 0.9610827543495831;
-        set_data.bus[2].Vi0      = -0.13122476630506485;
+
+        set_data.bus[2].initial_values[BusInitialValues::Vr] = 0.9610827543495831;
+        set_data.bus[2].initial_values[BusInitialValues::Vi] = -0.13122476630506485;
         set_data.bus[2].monitored_variables.insert(BusVar::Vm);
 
         set_data.branch.resize(3);
@@ -591,6 +602,7 @@ namespace GridKit
 
         std::string      in_file   = "ThreeBusBasic/ThreeBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("ThreeBusBasic/ThreeBusBasic.state.json", file_data);
 
         auto success = compare(set_data, file_data);
         return success.report(__func__);
@@ -608,17 +620,21 @@ namespace GridKit
         set_data.bus.resize(3);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::SLACK;
-        set_data.bus[0].Vr0      = 1.06;
-        set_data.bus[0].Vi0      = 0.0;
+
+        set_data.bus[0].initial_values[BusInitialValues::Vr] = 1.06;
+        set_data.bus[0].initial_values[BusInitialValues::Vi] = 0.0;
+
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::DEFAULT;
-        set_data.bus[1].Vr0      = 1.0599558398065716;
-        set_data.bus[1].Vi0      = -0.009675621941024773;
+
+        set_data.bus[1].initial_values[BusInitialValues::Vr] = 1.0599558398065716;
+        set_data.bus[1].initial_values[BusInitialValues::Vi] = -0.009675621941024773;
         set_data.bus[1].monitored_variables.insert(BusVar::Vm);
         set_data.bus[2].bus_id   = 2;
         set_data.bus[2].bus_type = BusType::DEFAULT;
-        set_data.bus[2].Vr0      = 0.9610827543495831;
-        set_data.bus[2].Vi0      = -0.13122476630506485;
+
+        set_data.bus[2].initial_values[BusInitialValues::Vr] = 0.9610827543495831;
+        set_data.bus[2].initial_values[BusInitialValues::Vi] = -0.13122476630506485;
         set_data.bus[2].monitored_variables.insert(BusVar::Vm);
 
         set_data.branch.resize(3);
@@ -662,6 +678,7 @@ namespace GridKit
 
         std::string      in_file   = "ThreeBusClassical/ThreeBusClassical.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
+        applyState("ThreeBusClassical/ThreeBusClassical.state.json", file_data);
 
         auto success = compare(set_data, file_data);
         return success.report(__func__);
@@ -722,8 +739,9 @@ namespace GridKit
         auto& bus    = data.bus.emplace_back();
         bus.bus_id   = RENEWABLE_BUS_ID;
         bus.bus_type = BusDataT::BusType::SLACK;
-        bus.Vr0      = ONE<RealT>;
-        bus.Vi0      = ZERO<RealT>;
+
+        bus.initial_values[BusInitialValues::Vr] = ONE<RealT>;
+        bus.initial_values[BusInitialValues::Vi] = ZERO<RealT>;
 
         data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD)},
                        {"Reactive Current Command", signalId(LoopSignal::IQCMD)},

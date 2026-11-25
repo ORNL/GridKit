@@ -15,14 +15,12 @@ namespace GridKit
     /// Initial parameters for a branch
     enum class BranchParameters : size_t
     {
-      R,     ///< \f$R\f$ Branch series resistance [p.u.]
-      X,     ///< \f$X\f$ Branch series reactance [p.u.]
-      G,     ///< \f$G\f$ Total line shunt conductance, split equally between the two terminals [p.u.]
-      B,     ///< \f$B\f$ Total line shunt susceptance, split equally between the two terminals [p.u.]
-      Gmag,  ///< \f$G_{\mathrm{mag}}\f$ Magnetizing shunt conductance at bus 1, the tapped side [p.u.]
-      Bmag,  ///< \f$B_{\mathrm{mag}}\f$ Magnetizing shunt susceptance at bus 1, the tapped side [p.u.]
-      tap,   ///< \f$\tau\f$ Off-nominal tap magnitude on the bus-1 side [p.u.]
-      phase, ///< \f$\theta\f$ Off-nominal phase-shift angle [rad]
+      R,    ///< \f$R\f$ Branch series resistance [p.u.]
+      X,    ///< \f$X\f$ Branch series reactance [p.u.]
+      G,    ///< \f$G\f$ Total line shunt conductance, split equally between the two terminals [p.u.]
+      B,    ///< \f$B\f$ Total line shunt susceptance, split equally between the two terminals [p.u.]
+      Gmag, ///< \f$G_{\mathrm{mag}}\f$ Magnetizing shunt conductance at bus 1, the tapped side [p.u.]
+      Bmag, ///< \f$B_{\mathrm{mag}}\f$ Magnetizing shunt susceptance at bus 1, the tapped side [p.u.]
     };
 
     /// Buses for a branch
@@ -65,8 +63,8 @@ namespace GridKit
       ir2,        ///< \f$I_{r2}\f$ Initial real current into bus 2 on system base
       ii2,        ///< \f$I_{i2}\f$ Initial imaginary current into bus 2 on system base
       in_service, ///< Initial service status; defaults to true
-      tap,        ///< Initial off-nominal tap magnitude on the bus-1 side [p.u.]
-      phase,      ///< Initial phase-shift angle [rad]
+      tap,        ///< Initial off-nominal tap magnitude on the bus-1 side [p.u.]; defaults to one
+      phase,      ///< Initial phase-shift angle [rad]; defaults to zero
     };
 
     /**
