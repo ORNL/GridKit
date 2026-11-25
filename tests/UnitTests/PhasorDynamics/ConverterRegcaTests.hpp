@@ -517,44 +517,84 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// The recovery-rate limiter branch is chosen by the sign of Q0 at
-      /// initialization, not by the live command: positive Q0 caps rising
-      /// rates at Rqmax, negative Q0 floors falling rates at Rqmin, and zero
-      /// Q0 leaves both directions unrestricted.
+      /// Reactive-current control: Rqmax and Rqmin limit motion that increases
+      /// |Iq|, restoring motion is smoothly released, and a disabled limit
+      /// leaves its direction unrestricted.
       TestOutcome reactiveCurrentControl()
       {
         TestStatus success = true;
 
-        struct RecoveryCase
+        struct RateCase
         {
           const char* label;
-          RealT       q0;
+          RealT       current;
           RealT       command;
           RealT       expected_rate;
         };
 
-        // The unlimited rate is (command - Q0) / Tg with Tg = 0.2.
-        const std::array<RecoveryCase, 4> cases{{
-            {"upper recovery limit binds", 0.2, 0.4, 0.5},
-            {"lower recovery limit binds", -0.2, -0.4, -0.6},
-            {"zero Q0 leaves rising rates unrestricted", 0.0, 0.4, 2.0},
-            {"zero Q0 leaves falling rates unrestricted", 0.0, -0.4, -2.0},
-        }};
-
-        for (const auto& test_case : cases)
+        // Select commands that drive Iq outward or toward zero. At Iq = 0,
+        // Rqmax = 0.5 limits rising and Rqmin = -0.6 limits falling rates.
         {
-          auto data                   = makeDynamicData();
-          data.parameters[Params::q0] = test_case.q0;
+          auto data = makeDynamicData();
 
           Fixture<ScalarT> fixture(data);
-          fixture.attachIqcmd(test_case.q0);
+          fixture.attachIqcmd(0.0);
           success *= fixture.initialize();
 
-          fixture.iqcmd  = test_case.command;
-          success       *= (fixture.evaluate() == 0);
+          const std::array<RateCase, 6> cases{{
+              {"negative outward rate", -0.5, -1.5, -0.6},
+              {"negative restoring rate", -0.5, 0.5, 5.0},
+              {"zero negative rate", 0.0, -0.5, -0.6},
+              {"zero positive rate", 0.0, 0.5, 0.5},
+              {"positive restoring rate", 0.5, -0.5, -5.0},
+              {"positive outward rate", 0.5, 1.5, 0.5},
+          }};
 
-          const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IQ)], test_case.expected_rate, test_case.label);
+          auto* y = fixture.regca.y().getData();
+          for (const auto& test_case : cases)
+          {
+            fixture.iqcmd      = test_case.command;
+            y[index(Vars::IQ)] = test_case.current;
+            fixture.regca.y().setDataUpdated();
+
+            success *= (fixture.evaluate() == 0);
+
+            const auto* f  = fixture.regca.getResidual().getData();
+            success       *= scalarMatches(f[index(Vars::IQ)],
+                                     test_case.expected_rate,
+                                     test_case.label);
+          }
+        }
+
+        // Zero limits are disabled and leave outward rates unrestricted.
+        {
+          auto data                      = makeDynamicData();
+          data.parameters[Params::Rqmax] = 0.0;
+          data.parameters[Params::Rqmin] = 0.0;
+
+          Fixture<ScalarT> fixture(data);
+          fixture.attachIqcmd(0.0);
+          success *= fixture.initialize();
+
+          const std::array<RateCase, 2> cases{{
+              {"disabled negative outward rate", -0.5, -1.5, -5.0},
+              {"disabled positive outward rate", 0.5, 1.5, 5.0},
+          }};
+
+          auto* y = fixture.regca.y().getData();
+          for (const auto& test_case : cases)
+          {
+            fixture.iqcmd      = test_case.command;
+            y[index(Vars::IQ)] = test_case.current;
+            fixture.regca.y().setDataUpdated();
+
+            success *= (fixture.evaluate() == 0);
+
+            const auto* f  = fixture.regca.getResidual().getData();
+            success       *= scalarMatches(f[index(Vars::IQ)],
+                                     test_case.expected_rate,
+                                     test_case.label);
+          }
         }
 
         return success.report(__func__);

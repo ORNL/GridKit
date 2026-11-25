@@ -69,8 +69,7 @@ namespace GridKit
        * @brief Resolve parameter-derived constants and limiter selections.
        *
        * The time constants are raised to the well-posedness floor. Complementary
-       * LVPL masks keep the residual branchless, while the sign of the initial
-       * reactive-power injection selects the applicable recovery-rate limit.
+       * LVPL masks keep the residual branchless.
        */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setDerivedParameters()
@@ -96,11 +95,11 @@ namespace GridKit
 
         use_rqmax_ = ZERO<RealT>;
         use_rqmin_ = ZERO<RealT>;
-        if (q0_ > ZERO<RealT> && Rqmax_ > ZERO<RealT>)
+        if (Rqmax_ > ZERO<RealT>)
         {
           use_rqmax_ = ONE<RealT>;
         }
-        else if (q0_ < ZERO<RealT> && Rqmin_ < ZERO<RealT>)
+        if (Rqmin_ < ZERO<RealT>)
         {
           use_rqmin_ = ONE<RealT>;
         }
@@ -557,9 +556,14 @@ namespace GridKit
         const ScalarT fq = (iqcmd - iq) / Tg_;
         const ScalarT fp = (ipcmd - ip) / Tg_;
 
-        // At Q0 = 0 both corrections vanish, leaving fq unrestricted.
-        const ScalarT iq_rate = fq + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
-                                + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
+        // Same weights as rrpwr
+        const ScalarT t       = std::tanh(HALF<RealT> * Math::MU<RealT> * iq);
+        const ScalarT abs_t   = std::abs(t);
+        const ScalarT rising  = ONE<RealT> - HALF<RealT> * t * (t - abs_t);
+        const ScalarT falling = ONE<RealT> - HALF<RealT> * t * (t + abs_t);
+
+        const ScalarT iq_rate = fq + use_rqmax_ * rising * (Math::min(fq, Rqmax_) - fq)
+                                + use_rqmin_ * falling * (Math::max(fq, Rqmin_) - fq);
         const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);
 
         // The LVPL ceiling moves with sensed voltage. Its rate is the exact
