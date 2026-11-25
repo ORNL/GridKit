@@ -76,6 +76,34 @@ namespace GridKit
     }
 
     /**
+     * @brief Construct a fixed-layout component sized from the constants of `ModelT`.
+     *
+     * The derivative entries are allocated for a dense local Jacobian.
+     *
+     * @tparam ModelT Final model with constant `NUM_INTERNAL_VARIABLES`,
+     *         `NUM_TERMINAL_VARIABLES`, `NUM_INPUT_VARIABLES` and
+     *         `NUM_OUTPUT_VARIABLES`.
+     *
+     * @throws std::bad_alloc if the derivative entries cannot be allocated.
+     */
+    template <typename scalar_type, typename index_type>
+    template <ComponentKernels<scalar_type, index_type> ModelT>
+    Component<scalar_type, index_type>::Component(std::type_identity<ModelT>)
+    {
+      const std::vector<IdxT> variables(ModelT::NUM_INTERNAL_VARIABLES.begin(), ModelT::NUM_INTERNAL_VARIABLES.end());
+      const std::vector<IdxT> terminals(ModelT::NUM_TERMINAL_VARIABLES.begin(), ModelT::NUM_TERMINAL_VARIABLES.end());
+      const std::vector<IdxT> inputs(ModelT::NUM_INPUT_VARIABLES.begin(), ModelT::NUM_INPUT_VARIABLES.end());
+      const std::vector<IdxT> outputs(ModelT::NUM_OUTPUT_VARIABLES.begin(), ModelT::NUM_OUTPUT_VARIABLES.end());
+      setLayout(variables, terminals, inputs, outputs);
+
+      if (jacobian_entries_.resize(residualSize<ModelT>() * valueSize<ModelT>()) != 0 || dfdy_.resize(0) != 0 || dfdyp_.resize(0) != 0)
+      {
+        Log::error() << "EMT::Component: failed to allocate the derivative entries\n";
+        throw std::bad_alloc{};
+      }
+    }
+
+    /**
      * @brief Connect `input` to the local values of `component` at `indices`.
      *
      * @tparam InputT Input enumeration of the model.

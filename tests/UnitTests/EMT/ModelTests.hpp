@@ -7,7 +7,9 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
+#include <format>
 #include <initializer_list>
 #include <memory>
 #include <numbers>
@@ -422,6 +424,108 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Pmu on a three-phase bus at (0, 1, -1) with currents (3, 0, -3): squared voltages 2, active power 3 and
+      /// reactive power 3 sqrt(3)
+      TestOutcome pmu()
+      {
+        TestStatus success = true;
+
+        const auto system = makeSystem(PMU_CASE, PMU_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT REL_TOL    = 1.0e-3;
+        constexpr RealT VQ         = TWO<RealT> / std::numbers::sqrt3_v<RealT>;
+        constexpr RealT OMEGA_BASE = TWO<RealT> * std::numbers::pi_v<RealT> * 60.0;
+
+        // The frequency base raises the round-off of the difference, which passes at 1e-8 and not at 1e-9
+        constexpr RealT PMU_TOL = 1.0e-8;
+
+        auto& pmu = system->device<EMT::Pmu<RealT, IdxT>>("PMU1");
+
+        // Three bus voltages, three Pmu and two Pll variables, and the three held currents: the Pmu connects its own
+        // input, and nothing here reads its outputs
+        constexpr IdxT VMS  = 3;
+        success            *= system->size() == 11;
+
+        // Each mean moves toward its instantaneous value over half a cycle of the frequency base
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(pmu.getResidual(EMT::PmuInternalVariables::vms), {-240.0});
+        success *= rowsEqual(pmu.getResidual(EMT::PmuInternalVariables::p), {360.0});
+        success *= rowsEqual(pmu.getResidual(EMT::PmuInternalVariables::q), {360.0 * std::numbers::sqrt3_v<RealT>});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, PMU_TOL);
+
+        success *= pmu.evaluateOutputs() == 0;
+        success *= rowsEqual(pmu.getOutput(EMT::PmuOutputs::vrms), {2.0});
+        success *= rowsEqual(pmu.getOutput(EMT::PmuOutputs::theta), {0.25});
+        success *= rowsEqual(pmu.getOutput(EMT::PmuOutputs::omega), {OMEGA_BASE + 0.5 * VQ * std::cos(0.25) + 0.5});
+
+        // The tolerances follow the base voltage of the bus, 2 kV, and the system power base, 1 MVA
+        success *= system->setAbsoluteTolerance(REL_TOL) == 0;
+        success *= rowsEqual(std::span<const RealT>{system->absoluteTolerance().getData() + VMS, 3}, {4.0, 1000.0, 1000.0});
+
+        return success.report(__func__);
+      }
+
+      /// Operators read the outputs of a Pmu, which read its Pll, through the signals that follow them
+      TestOutcome pmuReference()
+      {
+        TestStatus success = true;
+
+        auto read = nlohmann::json::parse(PMU_CASE);
+        read["buses"].push_back(nlohmann::json::parse(R"({"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}})"));
+        for (const char* output : {"omega", "theta", "vrms"})
+        {
+          read["devices"].push_back(nlohmann::json::parse(std::format(
+              R"({{"class": "VectorFit", "id": "{0}", "inputs": {{"u": "PMU1.{0}"}}, "outputs": {{"y": 2}}, "params": {{"D": [[0.5]]}}}})",
+              output)));
+        }
+        const auto system = makeSystem(read.dump().c_str(), PMU_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT REL_TOL    = 1.0e-3;
+        constexpr RealT VQ         = TWO<RealT> / std::numbers::sqrt3_v<RealT>;
+        constexpr RealT OMEGA_BASE = TWO<RealT> * std::numbers::pi_v<RealT> * 60.0;
+
+        // The frequency base raises the round-off of the difference, which passes at 1e-8 and not at 1e-9
+        constexpr RealT PMU_TOL = 1.0e-8;
+
+        // Four bus voltages, three Pmu and two Pll variables, the three held currents, and the signals of `omega`, `theta`
+        // and `vrms`
+        constexpr IdxT OMEGA  = 12;
+        constexpr IdxT THETA  = 13;
+        constexpr IdxT VRMS   = 14;
+        success              *= system->size() == 15;
+
+        // The signals start at zero, so their residuals are the outputs
+        success *= system->evaluateResidual() == 0;
+        success *= isEqual(system->getResidual().getData()[OMEGA], OMEGA_BASE + 0.5 * VQ * std::cos(0.25) + 0.5);
+        success *= isEqual(system->getResidual().getData()[THETA], 0.25);
+        success *= isEqual(system->getResidual().getData()[VRMS], 2.0);
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, PMU_TOL);
+
+        // The signals take the tolerances of the outputs
+        success *= system->setAbsoluteTolerance(REL_TOL) == 0;
+        success *= isEqual(system->absoluteTolerance().getData()[OMEGA], REL_TOL * OMEGA_BASE);
+        success *= isEqual(system->absoluteTolerance().getData()[THETA], REL_TOL);
+        success *= isEqual(system->absoluteTolerance().getData()[VRMS], 2.0);
+
+        // A dead bus has no RMS voltage
+        const auto dead  = makeSystem(read.dump().c_str(), "{}");
+        success         *= dead != nullptr && dead->evaluateResidual() == 0 && isEqual(dead->getResidual().getData()[VRMS], 0.0);
+
+        return success.report(__func__);
+      }
+
       /// A layout is set once, and an absent submodel is an error
       TestOutcome layout()
       {
@@ -629,7 +733,106 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Pll at angle zero on a three-phase bus at (0, 1, -1), whose q-axis voltage is 2/sqrt(3)
+      TestOutcome pll()
+      {
+        TestStatus success = true;
+
+        const auto system = makeSystem(PLL_CASE, PLL_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT VQ         = TWO<RealT> / std::numbers::sqrt3_v<RealT>;
+        constexpr RealT OMEGA_BASE = TWO<RealT> * std::numbers::pi_v<RealT> * 60.0;
+
+        // The frequency base raises the round-off of the difference, which passes at 1e-8 and not at 1e-9
+        constexpr RealT PLL_TOL = 1.0e-8;
+
+        auto& pll = system->device<EMT::Pll<RealT, IdxT>>("PLL1");
+
+        // The frequency is an output, which nothing here reads
+        success *= system->size() == 5;
+        success *= system->evaluateResidual() == 0;
+        success *= rowsEqual(system->bus("1").getResidual(EMT::BusInternalVariables::v), {0.0, 0.0, 0.0});
+        success *= rowsEqual(pll.getResidual(EMT::PllInternalVariables::theta), {OMEGA_BASE + 0.5 * VQ + 0.5});
+        success *= rowsEqual(pll.getResidual(EMT::PllInternalVariables::x), {0.25 * VQ});
+        success *= pll.evaluateOutputs() == 0;
+        success *= rowsEqual(pll.getOutput(EMT::PllOutputs::omega), {OMEGA_BASE + 0.5 * VQ + 0.5});
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, PLL_TOL);
+
+        return success.report(__func__);
+      }
+
+      /// An operator reads the frequency of a Pll, an output with Enzyme derivatives, through the signal that follows it
+      TestOutcome pllFrequencyReference()
+      {
+        TestStatus success = true;
+
+        auto read = nlohmann::json::parse(PLL_CASE);
+        read["buses"].push_back(nlohmann::json::parse(R"({"number": 2, "class": "Bus", "params": {"N": 1, "kv": 1.0}})"));
+        read["devices"].push_back(nlohmann::json::parse(
+            R"({"class": "VectorFit", "id": "Y1", "inputs": {"u": "PLL1.omega"}, "outputs": {"y": 2}, "params": {"D": [[0.5]]}})"));
+        const auto system = makeSystem(read.dump().c_str(), PLL_STATE);
+
+        success *= system != nullptr;
+        if (!success)
+        {
+          return success.report(__func__);
+        }
+
+        constexpr RealT REL_TOL    = 1.0e-3;
+        constexpr RealT VQ         = TWO<RealT> / std::numbers::sqrt3_v<RealT>;
+        constexpr RealT OMEGA_BASE = TWO<RealT> * std::numbers::pi_v<RealT> * 60.0;
+
+        // The frequency base raises the round-off of the difference, which passes at 1e-8 and not at 1e-9
+        constexpr RealT PLL_TOL = 1.0e-8;
+
+        // Four bus voltages, the two Pll variables and the signal of `omega`
+        constexpr IdxT SIGNAL  = 6;
+        success               *= system->size() == 7;
+
+        // The signal starts at zero, so its residual is the frequency
+        success *= system->evaluateResidual() == 0;
+        success *= isEqual(system->getResidual().getData()[SIGNAL], OMEGA_BASE + 0.5 * VQ + 0.5);
+        success *= jacobianMatchesResidual(*system, ZERO<RealT>, ALPHA, PLL_TOL);
+
+        // The signal takes the tolerance of the frequency
+        success *= system->setAbsoluteTolerance(REL_TOL) == 0;
+        success *= isEqual(system->absoluteTolerance().getData()[SIGNAL], REL_TOL * OMEGA_BASE);
+
+        return success.report(__func__);
+      }
+
     private:
+      /// Pll on a three-phase bus
+      static constexpr const char* PLL_CASE = R"({
+        "params": {"freq_base": 60.0, "va_base": 1.0e6},
+        "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 1.0}}],
+        "devices": [{"class": "Pll", "id": "PLL1", "inputs": {"v": 1}, "params": {"Kp": 0.5, "Ki": 0.25}}]
+      })";
+
+      static constexpr const char* PMU_CASE = R"({
+        "params": {"freq_base": 60.0, "va_base": 1.0e6},
+        "buses": [{"number": 1, "class": "Bus", "params": {"N": 3, "kv": 2.0}}],
+        "devices": [{"class": "Pmu", "id": "PMU1", "inputs": {"v": 1}, "params": {"pll": {"Kp": 0.5, "Ki": 0.25}}}]
+      })";
+
+      /// Mean-square voltage 4 on a bus at (0, 1, -1) with held currents (3, 0, -3), and the Pll at angle 0.25
+      static constexpr const char* PMU_STATE = R"({
+        "buses": {"1": {"v": [0.0, 1.0, -1.0]}},
+        "devices": {"PMU1": {"vms": [4.0], "i": [3.0, 0.0, -3.0], "pll": {"theta": [0.25], "x": [0.5]}}}
+      })";
+
+      /// Angle zero on a bus at (0, 1, -1), whose q-axis voltage is 2/sqrt(3)
+      static constexpr const char* PLL_STATE = R"({
+        "buses": {"1": {"v": [0.0, 1.0, -1.0]}},
+        "devices": {"PLL1": {"x": [0.5]}}
+      })";
+
       /// Operator of gain 0.5 that reads the voltage of a single-phase bus and adds its output to the current balance
       static constexpr const char* ADMITTANCE_CASE = R"({
         "params": {"freq_base": 60.0, "va_base": 1.0e6},
