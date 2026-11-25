@@ -158,6 +158,37 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// An out-of-service load starts at zero current and adds none to its bus.
+      TestOutcome outOfService()
+      {
+        TestStatus success = true;
+
+        using InitialValue = PhasorDynamics::LoadZIPInitialValues;
+
+        auto data                                     = loadZIPData(-3.2, -2.6, 0.2, 0.4);
+        data.initial_values[InitialValue::in_service] = false;
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, data);
+
+        bus.allocate();
+        load.allocate();
+
+        bus.initialize();
+        success *= load.initialize() == 0;
+
+        bus.evaluateResidual();
+        load.evaluateResidual();
+
+        const auto* y  = load.y().getData();
+        success       *= isEqual(y[0], static_cast<ScalarT>(0.0), tol_);
+        success       *= isEqual(y[1], static_cast<ScalarT>(0.0), tol_);
+        success       *= isEqual(bus.Ir(), static_cast<ScalarT>(0.0), tol_);
+        success       *= isEqual(bus.Ii(), static_cast<ScalarT>(0.0), tol_);
+
+        return success.report(__func__);
+      }
+
       TestOutcome monitor()
       {
         TestStatus success = true;

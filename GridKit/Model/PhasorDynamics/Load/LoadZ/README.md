@@ -18,8 +18,8 @@ None.
 
 ```math
 \begin{aligned}
-G &= \dfrac{R}{R^2 + X^2} \\
-B &= -\dfrac{X}{R^2 + X^2}
+G &= u\dfrac{R}{R^2 + X^2} \\
+B &= -u\dfrac{X}{R^2 + X^2}
 \end{aligned}
 ```
 
@@ -89,6 +89,7 @@ The initial bus voltage determines the terminal currents:
 
 ```math
 \begin{aligned}
+u &\leftarrow \text{state service status} \\
 I_r &\leftarrow -G V_r + B V_i \\
 I_i &\leftarrow -B V_r - G V_i
 \end{aligned}

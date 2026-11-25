@@ -47,6 +47,8 @@ namespace GridKit
       alphaI_ = parameters.readReal(Parameter::alphaI).value_or(alphaI_);
       alphaP_ = parameters.readReal(Parameter::alphaP).value_or(alphaP_);
 
+      in_service_ = static_cast<RealT>(initial_values.readBool(InitialValue::in_service).value_or(true));
+
       setDerivedParams();
     }
 
@@ -110,14 +112,18 @@ namespace GridKit
       }
       Vnom_ = vm0;
 
-      G_ = -(static_cast<RealT>(vr) * ir_ + static_cast<RealT>(vi) * ii_) / (Vnom_ * Vnom_);
-      B_ = (static_cast<RealT>(vi) * ir_ - static_cast<RealT>(vr) * ii_) / (Vnom_ * Vnom_);
+      // An out-of-service load has zero current
+      const RealT ir = in_service_ * ir_;
+      const RealT ii = in_service_ * ii_;
+
+      G_ = -(static_cast<RealT>(vr) * ir + static_cast<RealT>(vi) * ii) / (Vnom_ * Vnom_);
+      B_ = (static_cast<RealT>(vi) * ir - static_cast<RealT>(vr) * ii) / (Vnom_ * Vnom_);
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0]  = ir_;
-      y[1]  = ii_;
+      y[0]  = ir;
+      y[1]  = ii;
       yp[0] = 0.0;
       yp[1] = 0.0;
       y_.setDataUpdated();

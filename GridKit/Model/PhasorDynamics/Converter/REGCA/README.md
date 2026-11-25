@@ -189,11 +189,11 @@ f_\mathrm{p}^{\lim}
 \begin{aligned}
   0 &= -V_T^2 + V_r^2 + V_i^2 \\
   0 &= -k_\mathrm{base} V_T I_r
-       + V_i(I_q - I_q^\mathrm{extra})
-       + V_r I_p\,\text{linseg}(V_T; V_{A0}, V_{A1}, 1) \\
+       + u V_i(I_q - I_q^\mathrm{extra})
+       + u V_r I_p\,\text{linseg}(V_T; V_{A0}, V_{A1}, 1) \\
   0 &= -k_\mathrm{base} V_T I_i
-       - V_r(I_q - I_q^\mathrm{extra})
-       + V_i I_p\,\text{linseg}(V_T; V_{A0}, V_{A1}, 1) \\
+       - u V_r(I_q - I_q^\mathrm{extra})
+       + u V_i I_p\,\text{linseg}(V_T; V_{A0}, V_{A1}, 1) \\
   0 &= -\text{min}(I_q^\mathrm{extra}, V_\mathrm{hv}^{\max}-V_T) \\
   0 &= -I_L
        + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1})
@@ -221,7 +221,8 @@ f_\mathrm{p}^{\lim}
 ```math
 \begin{aligned}
   V_r,V_i &\leftarrow \text{terminal-bus voltage} \\
-  I_r,I_i &\leftarrow \text{state terminal current on system base}
+  I_r,I_i &\leftarrow \text{state terminal current on system base} \\
+  u &\leftarrow \text{state service status}
 \end{aligned}
 ```
 

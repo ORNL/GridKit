@@ -194,7 +194,8 @@ positive sign because branch current is oriented entering the bus.
 
 ```math
 \begin{aligned}
-  \tau, \theta &\leftarrow \text{state tap and phase}
+  \tau, \theta &\leftarrow \text{state tap and phase} \\
+  u &\leftarrow \text{state service status}
 \end{aligned}
 ```
 

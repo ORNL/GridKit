@@ -30,9 +30,9 @@ None.
 ```math
 \begin{aligned}
   G
-    &= \dfrac{R_\mathrm{a}}{R_\mathrm{a}^2+(X'_d)^2} \\
+    &= u\dfrac{R_\mathrm{a}}{R_\mathrm{a}^2+(X'_d)^2} \\
   B
-    &= -\dfrac{X'_d}{R_\mathrm{a}^2+(X'_d)^2} \\
+    &= -u\dfrac{X'_d}{R_\mathrm{a}^2+(X'_d)^2} \\
   k_\mathrm{base}
     &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}
 \end{aligned}
@@ -126,7 +126,9 @@ $E_\mathrm{fd}$ | [p.u.] | Unknown | Field voltage                         | Opt
   V_\mathrm{r}, V_\mathrm{i}
     &\leftarrow \text{terminal-bus voltage} \\
   \text{ir}, \text{ii}
-    &\leftarrow \text{state terminal current on system base}
+    &\leftarrow \text{state terminal current on system base} \\
+  u
+    &\leftarrow \text{state service status}
 \end{aligned}
 ```
 

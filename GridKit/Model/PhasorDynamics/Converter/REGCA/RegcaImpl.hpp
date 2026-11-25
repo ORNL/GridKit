@@ -197,6 +197,8 @@ namespace GridKit
         VA1_      = parameters.readReal(Params::VA1).value_or(VA1_);
         Vhvmax_   = parameters.readReal(Params::Vhvmax).value_or(Vhvmax_);
 
+        in_service_ = static_cast<RealT>(initial_values.readBool(InitialValue::in_service).value_or(true));
+
         setDerivedParameters();
       }
 
@@ -411,8 +413,8 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT ir = static_cast<ScalarT>(ir_);
-        const ScalarT ii = static_cast<ScalarT>(ii_);
+        const ScalarT ir = static_cast<ScalarT>(in_service_ * ir_);
+        const ScalarT ii = static_cast<ScalarT>(in_service_ * ii_);
         const ScalarT p  = vr * ir + vi * ii;
         const ScalarT q  = vi * ir - vr * ii;
 
@@ -586,8 +588,8 @@ namespace GridKit
         f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
                 + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
-        f[IR]      = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
-        f[II]      = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
+        f[IR]      = -this->toComponentBase(vt * ir) + in_service_ * vi * qnet + in_service_ * vr * ip * lvacm;
+        f[II]      = -this->toComponentBase(vt * ii) - in_service_ * vr * qnet + in_service_ * vi * ip * lvacm;
         f[IQEXTRA] = -Math::min(iqextra, Vhvmax_ - vt);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
                 + KL_ * Math::ramp(vm - VL1_);

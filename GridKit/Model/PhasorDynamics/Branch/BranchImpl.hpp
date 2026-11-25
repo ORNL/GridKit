@@ -319,6 +319,8 @@ namespace GridKit
       tap_   = initial_values.readReal(InitialValue::tap).value_or(tap_);
       phase_ = initial_values.readReal(InitialValue::phase).value_or(phase_);
 
+      in_service_ = static_cast<RealT>(initial_values.readBool(InitialValue::in_service).value_or(true));
+
       if (data.buses.contains(Buses::bus1))
       {
         bus1_id_ = data.buses.at(Buses::bus1);

@@ -43,8 +43,8 @@ None.
 ### Model Derived Parameters
 ```math
 \begin{aligned}
-  G      &=  \dfrac{R_\mathrm{a}}{R_\mathrm{a}^2+(X''_q)^2} &
-  B      &= -\dfrac{X''_q}{R_\mathrm{a}^2+(X''_q)^2}\\
+  G      &=  u\dfrac{R_\mathrm{a}}{R_\mathrm{a}^2+(X''_q)^2} &
+  B      &= -u\dfrac{X''_q}{R_\mathrm{a}^2+(X''_q)^2}\\
   S_A    &= \min\left(\dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1},
                        \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1}\right) &
   S_B    &= \dfrac{S_{12}}{(S_A-1.2)^2} \\
@@ -178,9 +178,10 @@ I_i^{\mathrm{bus}}
 
 ## Initialization
 
-The state gives $V_r$, $V_i$, $I_r$, and $I_i$, where `ir` and `ii` default to
-zero. At synchronous speed, the total subtransient-flux magnitude is available
-directly in the network frame and is independent of rotor angle:
+The state gives $V_r$, $V_i$, $I_r$, $I_i$, and the service status $u$, where
+`ir` and `ii` default to zero. At synchronous speed, the total
+subtransient-flux magnitude is available directly in the network frame and is
+independent of rotor angle:
 
 ```math
 \begin{aligned}

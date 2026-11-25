@@ -10,6 +10,7 @@ int main()
 
   result += test.constructor();
   result += test.residual();
+  result += test.outOfService();
   result += test.jacobian();
   result += test.monitor();
 #ifdef GRIDKIT_ENABLE_ENZYME

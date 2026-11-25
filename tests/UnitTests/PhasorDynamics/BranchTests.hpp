@@ -241,6 +241,44 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// A branch read as out of service has zero admittance until returned to service.
+      TestOutcome outOfServiceState()
+      {
+        TestStatus success = true;
+
+        using InitialValue = PhasorDynamics::BranchInitialValues;
+
+        auto data                                     = branchData(2.0, 4.0, 0.2, 1.2);
+        data.initial_values[InitialValue::in_service] = false;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        bus1.allocate();
+        bus2.allocate();
+        bus1.initialize();
+        bus2.initialize();
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
+        branch.allocate();
+
+        bus1.evaluateResidual();
+        bus2.evaluateResidual();
+        branch.evaluateResidual();
+        success *= isEqual(bus1.Ir(), ScalarT{0.0});
+        success *= isEqual(bus1.Ii(), ScalarT{0.0});
+        success *= isEqual(bus2.Ir(), ScalarT{0.0});
+        success *= isEqual(bus2.Ii(), ScalarT{0.0});
+
+        success *= branch.setInService(true) == 0;
+        bus1.evaluateResidual();
+        bus2.evaluateResidual();
+        branch.evaluateResidual();
+        success *= !isEqual(bus1.Ir(), ScalarT{0.0});
+        success *= !isEqual(bus2.Ir(), ScalarT{0.0});
+
+        return success.report(__func__);
+      }
+
 #ifdef GRIDKIT_ENABLE_ENZYME
       TestOutcome outOfServiceJacobian()
       {

@@ -607,6 +607,28 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// An out-of-service converter injects no current and rests.
+      TestOutcome outOfService()
+      {
+        TestStatus success = true;
+
+        auto data                                            = makeDynamicData();
+        data.initial_values[Data::InitialValues::in_service] = false;
+
+        Fixture<ScalarT> fixture(data);
+        success *= fixture.initialize();
+        success *= (fixture.evaluate() == 0);
+        success *= allResidualsZero(fixture.regca);
+
+        const auto* y  = fixture.regca.y().getData();
+        success       *= scalarMatches(y[index(Vars::IR)], 0.0, "IR");
+        success       *= scalarMatches(y[index(Vars::II)], 0.0, "II");
+        success       *= scalarMatches(fixture.bus.Ir(), 0.0, "bus Ir");
+        success       *= scalarMatches(fixture.bus.Ii(), 0.0, "bus Ii");
+
+        return success.report(__func__);
+      }
+
       /// High-voltage reactive current management: initialization, compatibility,
       /// threshold behavior, and the local derivative.
       TestOutcome highVoltageManagement()

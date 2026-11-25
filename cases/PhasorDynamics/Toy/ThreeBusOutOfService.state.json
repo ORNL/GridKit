@@ -1,0 +1,52 @@
+{
+    "header": {
+        "format_version": 0.2,
+        "format_revision": 0,
+        "description": "Initial operating point of the ThreeBusOutOfService case"
+    },
+    "buses": {
+        "0": {
+            "Vr": 1.06,
+            "Vi": 0.0
+        },
+        "1": {
+            "Vr": 1.0599558398065716,
+            "Vi": -0.009675621941024773
+        },
+        "2": {
+            "Vr": 0.9610827543495831,
+            "Vi": -0.13122476630506485
+        }
+    },
+    "devices": {
+        "genrou_2_1": {
+            "ir": 0.4723318850980517,
+            "ii": 0.06727628885191374
+        },
+        "genrou_3_1": {
+            "ir": 0.21828245293853565,
+            "ii": -0.30643985915101485
+        },
+        "BR_1_2_2": {
+            "in_service": false
+        },
+        "load_2_1": {
+            "in_service": false
+        },
+        "loadzip_3_1": {
+            "in_service": false
+        },
+        "gencls_2_2": {
+            "in_service": false
+        },
+        "genrou_2_2": {
+            "in_service": false
+        },
+        "gensal_3_2": {
+            "in_service": false
+        },
+        "regca_2_2": {
+            "in_service": false
+        }
+    }
+}

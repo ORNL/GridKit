@@ -12,6 +12,7 @@ int main()
   result += test.residualEquations();
   result += test.activeCurrentControl();
   result += test.reactiveCurrentControl();
+  result += test.outOfService();
   result += test.highVoltageManagement();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();

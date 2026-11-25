@@ -9,6 +9,7 @@ int main()
   result += test.constructor();
   result += test.initial();
   result += test.residual();
+  result += test.outOfService();
   result += test.residual_nonzero_ra();
   result += test.frequency_base();
   result += test.monitor_system_base();

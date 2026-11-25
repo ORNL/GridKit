@@ -33,6 +33,7 @@
 - Removed the GENROU, GENSAL and REGCA `p0`/`q0` and LoadZIP `Pnom`/`Qnom` parameters in favor of the state `ir`/`ii`.
 - Removed the bus `init` section from the PhasorDynamics case format in favor of the state `Vr`/`Vi`.
 - Removed the Branch `tap`/`phase` parameters in favor of the state `tap`/`phase`.
+- Added the state `in_service` setting for PhasorDynamics branches and injection devices.
 
 ## v0.2
 

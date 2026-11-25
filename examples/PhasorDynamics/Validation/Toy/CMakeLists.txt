@@ -4,6 +4,7 @@ add_subdirectory(TwoBusIeeet1)
 add_subdirectory(TwoBusGensal)
 add_subdirectory(ThreeBusBasic)
 add_subdirectory(ThreeBusClassical)
+add_subdirectory(ThreeBusOutOfService)
 add_subdirectory(ThreeBusZipLoad)
 
 add_subdirectory(FourBusLimits)

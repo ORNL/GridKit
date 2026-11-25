@@ -124,6 +124,40 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// An out-of-service machine carries no terminal current and rests.
+      TestOutcome outOfService()
+      {
+        TestStatus success = true;
+
+        using InitialValue = typename GenrouDataT::InitialValues;
+
+        auto data                                     = makeGenrouData();
+        data.initial_values[InitialValue::in_service] = false;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+
+        gen.allocate();
+        gen.initialize();
+        gen.evaluateResidual();
+
+        success *= isEqual(bus.Ir(), 0.0, tol_);
+        success *= isEqual(bus.Ii(), 0.0, tol_);
+
+        const auto& f      = gen.getResidual();
+        const auto* f_data = f.getData();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
+        {
+          success *= isEqual(f_data[i], 0.0, tol_);
+        }
+
+        return success.report(__func__);
+      }
+
       /**
        * @brief Checks monitored terminal current and power use system base.
        */

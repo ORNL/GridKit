@@ -84,6 +84,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::ws_indices_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
+        using Component<scalar_type, index_type>::in_service_;
 
       private:
         using ScalarT            = scalar_type;

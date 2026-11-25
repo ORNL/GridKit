@@ -69,6 +69,8 @@ namespace GridKit
       S12_      = parameters.readReal(Parameter::S12).value_or(S12_);
       mva_base_ = parameters.readReal(Parameter::mva).value_or(mva_base_);
 
+      in_service_ = static_cast<RealT>(initial_values.readBool(InitialValue::in_service).value_or(true));
+
       if (data.buses.contains(Buses::bus))
       {
         bus_id_ = data.buses.at(Buses::bus);
@@ -187,8 +189,8 @@ namespace GridKit
       // Network Frame Terminal Values
       ScalarT vr = Vr();
       ScalarT vi = Vi();
-      ScalarT ir = this->toComponentBase(static_cast<ScalarT>(ir_));
-      ScalarT ii = this->toComponentBase(static_cast<ScalarT>(ii_));
+      ScalarT ir = this->toComponentBase(static_cast<ScalarT>(in_service_ * ir_));
+      ScalarT ii = this->toComponentBase(static_cast<ScalarT>(in_service_ * ii_));
 
       // The subtransient-flux magnitude is invariant under the rotor-frame
       // rotation, so saturation is available directly from network quantities.
@@ -495,6 +497,11 @@ namespace GridKit
       Xqd_ = (Xq_ - Xl_) / (Xd_ - Xl_);
       G_   = Ra_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
       B_   = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
+
+      // An out-of-service machine has zero admittance
+      G_ *= in_service_;
+      B_ *= in_service_;
+
       this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
     }
   } // namespace PhasorDynamics

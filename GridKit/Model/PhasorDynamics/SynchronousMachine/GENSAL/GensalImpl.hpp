@@ -64,6 +64,8 @@ namespace GridKit
       S10_      = parameters.readReal(Parameter::S10).value_or(S10_);
       S12_      = parameters.readReal(Parameter::S12).value_or(S12_);
       mva_base_ = parameters.readReal(Parameter::mva).value_or(mva_base_);
+
+      in_service_ = static_cast<RealT>(initial_values.readBool(InitialValue::in_service).value_or(true));
     }
 
     template <typename scalar_type, typename index_type>
@@ -196,8 +198,8 @@ namespace GridKit
       // Network frame terminal values
       ScalarT vr = Vr();
       ScalarT vi = Vi();
-      ScalarT ir = this->toComponentBase(static_cast<ScalarT>(ir_));
-      ScalarT ii = this->toComponentBase(static_cast<ScalarT>(ii_));
+      ScalarT ir = this->toComponentBase(static_cast<ScalarT>(in_service_ * ir_));
+      ScalarT ii = this->toComponentBase(static_cast<ScalarT>(in_service_ * ii_));
 
       ScalarT Er    = vr + Ra_ * ir - Xq_ * ii;
       ScalarT Ei    = vi + Ra_ * ii + Xq_ * ir;
@@ -478,6 +480,11 @@ namespace GridKit
       Xq2_ = Xq_ - Xdpp_;
       G_   = Ra_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
       B_   = -Xdpp_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
+
+      // An out-of-service machine has zero admittance
+      G_ *= in_service_;
+      B_ *= in_service_;
+
       this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
     }
   } // namespace PhasorDynamics

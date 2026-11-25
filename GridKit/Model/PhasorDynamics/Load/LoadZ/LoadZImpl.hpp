@@ -26,12 +26,16 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      using Parameter = typename ModelDataT::Parameters;
+      using Parameter    = typename ModelDataT::Parameters;
+      using InitialValue = typename ModelDataT::InitialValues;
 
-      const Model::ParameterReader reader(data, "LoadZ");
+      const Model::ParameterReader    parameters(data, "LoadZ");
+      const Model::InitialValueReader initial_values(data, "LoadZ");
 
-      R_ = reader.readReal(Parameter::R).value_or(R_);
-      X_ = reader.readReal(Parameter::X).value_or(X_);
+      R_ = parameters.readReal(Parameter::R).value_or(R_);
+      X_ = parameters.readReal(Parameter::X).value_or(X_);
+
+      in_service_ = static_cast<RealT>(initial_values.readBool(InitialValue::in_service).value_or(true));
 
       size_ = 2;
       setDerivedParams();
@@ -226,6 +230,10 @@ namespace GridKit
     {
       b_ = -X_ / (R_ * R_ + X_ * X_);
       g_ = R_ / (R_ * R_ + X_ * X_);
+
+      // An out-of-service load has zero admittance
+      g_ *= in_service_;
+      b_ *= in_service_;
     }
 
     template <typename scalar_type, typename index_type>

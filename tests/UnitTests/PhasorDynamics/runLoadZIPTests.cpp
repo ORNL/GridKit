@@ -12,6 +12,7 @@ int main()
   result += test.initialization();
   result += test.dispatchAtInitializedVoltage();
   result += test.residual();
+  result += test.outOfService();
   result += test.monitor();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();

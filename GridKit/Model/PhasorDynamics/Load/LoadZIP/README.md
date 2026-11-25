@@ -103,7 +103,8 @@ I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i
 
 ```math
 \begin{aligned}
-    I_r, I_i &\leftarrow \text{state terminal current on system base}
+    u &\leftarrow \text{state service status} \\
+    I_r, I_i &\leftarrow u\,(\text{state terminal current on system base})
 \end{aligned}
 ```
 

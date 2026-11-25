@@ -16,6 +16,7 @@ int main()
   result += test.offNominalResidual();
   result += test.jacobian();
   result += test.offNominalJacobian();
+  result += test.outOfServiceState();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.outOfServiceJacobian();
 #endif
