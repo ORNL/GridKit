@@ -90,8 +90,6 @@ namespace GridKit
           const auto& bg = b.genrou[i];
 
           success *= ag.buses.at(BUS) == bg.buses.at(BUS);
-          success *= ag.parameters.at(Param::p0) == bg.parameters.at(Param::p0);
-          success *= ag.parameters.at(Param::q0) == bg.parameters.at(Param::q0);
           success *= ag.parameters.at(Param::H) == bg.parameters.at(Param::H);
           success *= ag.parameters.at(Param::D) == bg.parameters.at(Param::D);
           success *= ag.parameters.at(Param::Ra) == bg.parameters.at(Param::Ra);
@@ -284,8 +282,6 @@ namespace GridKit
 
         set_data.genrou.resize(1);
         set_data.genrou[0].buses[GenrouBuses::bus]             = 0;
-        set_data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
-        set_data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
         set_data.genrou[0].parameters[GenrouParameters::H]     = 3.;
         set_data.genrou[0].parameters[GenrouParameters::D]     = 0.;
         set_data.genrou[0].parameters[GenrouParameters::Ra]    = 0.;
@@ -303,6 +299,10 @@ namespace GridKit
         set_data.genrou[0].parameters[GenrouParameters::S10]   = 0.;
         set_data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
         set_data.genrou[0].monitored_variables.insert(GenrouVar::speed);
+
+        // Terminal current of 1 + j0.05013 p.u. at bus 0
+        set_data.genrou[0].initial_values[GenrouInitialValues::ir] = 1.0000005862325285;
+        set_data.genrou[0].initial_values[GenrouInitialValues::ii] = 0.0501183043867175;
 
         std::string      in_file   = "TwoBusBasic/TwoBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
@@ -364,8 +364,6 @@ namespace GridKit
         set_data.genrou[0].signal_outputs[GenrouSignalOutputs::speed] = 0;
         set_data.genrou[0].signal_inputs[GenrouSignalInputs::pmech]   = 1;
         set_data.genrou[0].signal_inputs[GenrouSignalInputs::efd]     = 2;
-        set_data.genrou[0].parameters[GenrouParameters::p0]           = 1.;
-        set_data.genrou[0].parameters[GenrouParameters::q0]           = 0.05013;
         set_data.genrou[0].parameters[GenrouParameters::H]            = 3.;
         set_data.genrou[0].parameters[GenrouParameters::D]            = 0.;
         set_data.genrou[0].parameters[GenrouParameters::Ra]           = 0.;
@@ -464,8 +462,6 @@ namespace GridKit
         set_data.genrou[0].buses[GenrouBuses::bus]                    = 0;
         set_data.genrou[0].signal_outputs[GenrouSignalOutputs::speed] = 0;
         set_data.genrou[0].signal_inputs[GenrouSignalInputs::pmech]   = 1;
-        set_data.genrou[0].parameters[GenrouParameters::p0]           = 1.;
-        set_data.genrou[0].parameters[GenrouParameters::q0]           = 0.05013;
         set_data.genrou[0].parameters[GenrouParameters::H]            = 3.;
         set_data.genrou[0].parameters[GenrouParameters::D]            = 0.;
         set_data.genrou[0].parameters[GenrouParameters::Ra]           = 0.;
@@ -552,8 +548,6 @@ namespace GridKit
 
         set_data.genrou.resize(2);
         set_data.genrou[0].buses[GenrouBuses::bus]             = 1;
-        set_data.genrou[0].parameters[GenrouParameters::p0]    = 0.5;
-        set_data.genrou[0].parameters[GenrouParameters::q0]    = -0.07588;
         set_data.genrou[0].parameters[GenrouParameters::H]     = 2.7;
         set_data.genrou[0].parameters[GenrouParameters::D]     = 0.;
         set_data.genrou[0].parameters[GenrouParameters::Ra]    = 0.;
@@ -572,8 +566,6 @@ namespace GridKit
         set_data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
         set_data.genrou[0].monitored_variables.insert(GenrouVar::speed);
         set_data.genrou[1].buses[GenrouBuses::bus]             = 2;
-        set_data.genrou[1].parameters[GenrouParameters::p0]    = 0.25;
-        set_data.genrou[1].parameters[GenrouParameters::q0]    = 0.26587;
         set_data.genrou[1].parameters[GenrouParameters::H]     = 1.6;
         set_data.genrou[1].parameters[GenrouParameters::D]     = 0.;
         set_data.genrou[1].parameters[GenrouParameters::Ra]    = 0.;

@@ -594,8 +594,6 @@ namespace GridKit
         machine.buses[GenrouBuses::bus]                    = kBusId;
         machine.signal_outputs[GenrouSignalOutputs::speed] = kSpeedSignalId;
         machine.signal_inputs[GenrouSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GenrouParameters::p0]           = kInitialActivePower;
-        machine.parameters[GenrouParameters::q0]           = kInitialReactivePower;
         machine.parameters[GenrouParameters::H]            = RealT{3.0};
         machine.parameters[GenrouParameters::D]            = ZERO<RealT>;
         machine.parameters[GenrouParameters::Ra]           = ZERO<RealT>;
@@ -614,6 +612,10 @@ namespace GridKit
         machine.parameters[GenrouParameters::S12]          = ZERO<RealT>;
         machine.parameters[GenrouParameters::mva]          = kMachineBaseMva;
 
+        // The bus is at 1 + j0, where the terminal current is P - jQ.
+        machine.initial_values[GenrouInitialValues::ir] = kInitialActivePower;
+        machine.initial_values[GenrouInitialValues::ii] = -kInitialReactivePower;
+
         return data;
       }
 
@@ -627,9 +629,11 @@ namespace GridKit
         machine.buses[GensalBuses::bus]                    = kBusId;
         machine.signal_outputs[GensalSignalOutputs::speed] = kSpeedSignalId;
         machine.signal_inputs[GensalSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GensalParameters::p0]           = kInitialActivePower;
-        machine.parameters[GensalParameters::q0]           = kInitialReactivePower;
         machine.parameters[GensalParameters::mva]          = kMachineBaseMva;
+
+        // The bus is at 1 + j0, where the terminal current is P - jQ.
+        machine.initial_values[GensalInitialValues::ir] = kInitialActivePower;
+        machine.initial_values[GensalInitialValues::ii] = -kInitialReactivePower;
 
         return data;
       }
