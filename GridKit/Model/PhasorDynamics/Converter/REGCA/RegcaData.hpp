@@ -18,8 +18,6 @@ namespace GridKit
       /// optional; all other keys are required.
       enum class RegcaParameters : size_t
       {
-        p0,     ///< Initial active power injection on system base
-        q0,     ///< Initial reactive power injection on system base
         mva,    ///< REGCA component power base
         Tg,     ///< Converter current-control lag time constant
         TM,     ///< Terminal voltage sensor time constant
@@ -73,8 +71,8 @@ namespace GridKit
       /// Initial values for the REGCA converter model.
       enum class RegcaInitialValues : size_t
       {
-        ir,         ///< Initial real terminal current into the bus on system base
-        ii,         ///< Initial imaginary terminal current into the bus on system base
+        ir,         ///< Initial real terminal current into the bus on system base; defaults to zero
+        ii,         ///< Initial imaginary terminal current into the bus on system base; defaults to zero
         in_service, ///< Initial service status; defaults to true
       };
 

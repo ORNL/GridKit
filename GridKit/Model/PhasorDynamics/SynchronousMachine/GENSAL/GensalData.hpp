@@ -15,8 +15,6 @@ namespace GridKit
     /// Initial parameters for a Gensal generator model
     enum class GensalParameters : size_t
     {
-      p0,    ///< \f$P_0\f$ Initial active power
-      q0,    ///< \f$Q_0\f$ Initial reactive power
       H,     ///< \f$H\f$ Rotor inertia
       D,     ///< \f$D\f$ Damping coefficient
       Ra,    ///< \f$R_a\f$ Winding resistance
@@ -76,8 +74,8 @@ namespace GridKit
     /// Initial values for a Gensal generator model
     enum class GensalInitialValues : size_t
     {
-      ir,         ///< \f$I_r\f$ Initial real terminal current into the bus on system base
-      ii,         ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base
+      ir,         ///< \f$I_r\f$ Initial real terminal current into the bus on system base; defaults to zero
+      ii,         ///< \f$I_i\f$ Initial imaginary terminal current into the bus on system base; defaults to zero
       in_service, ///< Initial service status; defaults to true
     };
 

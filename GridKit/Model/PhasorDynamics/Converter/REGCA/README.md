@@ -18,8 +18,6 @@ Figure 1: REGCA generator/converter model. Figure courtesy of the
 
 Symbol                 | Units    | JSON     | Description                                   | Typical Value | Note
 -----------------------|----------|----------|-----------------------------------------------|---------------|--------------------------------------------------------
-$P_0$                            | [p.u.]   | `p0`     | Initial active power injection                   | 1.0           | System base; initialization source
-$Q_0$                            | [p.u.]   | `q0`     | Initial reactive power injection                 | 0.0           | System base; initialization source
 $S^\mathrm{base}$      | [MVA]    | `mva`    | REGCA component power base                    | 100.0         |
 $T_\mathrm{g}$         | [s]      | `Tg`     | Converter current-control lag time constant   | 0.02          |
 $T_M$                  | [s]      | `TM`     | Terminal voltage sensor time constant         | 0.02          | Source label: `Tfltr`
@@ -167,9 +165,6 @@ f_\mathrm{p}^{\lim}
 
 #### Differential
 
-The $I_q$ limiter branch is selected by the configured reactive power $Q_0$ and
-the sign that enables the corresponding limit.
-
 ```math
 \begin{aligned}
   0 &= -\dot V_M + \dfrac{1}{T_M} (V_T - V_M) \\
@@ -227,9 +222,11 @@ the sign that enables the corresponding limit.
 ```math
 \begin{aligned}
   V_r,V_i &\leftarrow \text{terminal-bus voltage} \\
-  P_0,Q_0 &\leftarrow \text{power-flow injection on system base}
+  I_r,I_i &\leftarrow \text{state terminal current on system base}
 \end{aligned}
 ```
+
+The state `ir` and `ii` default to zero.
 
 ### Internal Initialization
 
@@ -239,16 +236,14 @@ All internal derivatives initialize to zero. [Appendix C](#appendix-c-iramp) def
 ```math
 \begin{aligned}
   V_T &\leftarrow \sqrt{V_r^2+V_i^2} \\
+  P^\mathrm{br} &\leftarrow V_rI_r+V_iI_i \\
+  Q^\mathrm{br} &\leftarrow V_iI_r-V_rI_i \\
   V_M &\leftarrow V_T \\
   I_L &\leftarrow \text{linseg}(V_T;V_{L0},V_{L1},I_{L1})
     +K_L\,\text{ramp}(V_T-V_{L1}) \\
-  I_p &\leftarrow \dfrac{k_\mathrm{base}P_0}{V_T\,\text{linseg}(V_T;V_{A0},V_{A1},1)} \\
+  I_p &\leftarrow \dfrac{k_\mathrm{base}P^\mathrm{br}}{V_T\,\text{linseg}(V_T;V_{A0},V_{A1},1)} \\
   I_q^\mathrm{extra} &\leftarrow V_\mathrm{hv}^{\max}-V_T-\text{iramp}(V_\mathrm{hv}^{\max}-V_T) \\
-  I_q &\leftarrow \dfrac{k_\mathrm{base}Q_0}{V_T}+I_q^\mathrm{extra} \\
-  I_r &\leftarrow \dfrac{V_rP_0+V_iQ_0}{V_T^2} \\
-  I_i &\leftarrow \dfrac{V_iP_0-V_rQ_0}{V_T^2} \\
-  P^\mathrm{br} &\leftarrow P_0 \\
-  Q^\mathrm{br} &\leftarrow Q_0
+  I_q &\leftarrow \dfrac{k_\mathrm{base}Q^\mathrm{br}}{V_T}+I_q^\mathrm{extra}
 \end{aligned}
 ```
 

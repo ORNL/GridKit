@@ -30,6 +30,7 @@
 - Added the `state_file` solver option, which sets PhasorDynamics initial bus voltages from a state file.
 - Removed the GenClassical `p0`/`q0` parameters in favor of the state `ir`/`ii`.
 - Verify bus numbers, signal IDs, device IDs per class, and subsystem IDs in PhasorDynamics inputs.
+- Removed the GENROU, GENSAL and REGCA `p0`/`q0` and LoadZIP `Pnom`/`Qnom` parameters in favor of the state `ir`/`ii`.
 
 ## v0.2
 

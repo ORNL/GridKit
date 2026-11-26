@@ -38,31 +38,32 @@ namespace GridKit
     {
     }
 
-    /// Helper function to extract and assign model parameters from the model's associated
-    /// data structure.
+    /// Read model parameters and initial values from the data structure
     template <typename scalar_type, typename index_type>
     void Gensal<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
+      using Parameter    = typename ModelDataT::Parameters;
+      using InitialValue = typename ModelDataT::InitialValues;
 
-      const Model::ParameterReader reader(data, "Gensal");
+      const Model::ParameterReader    parameters(data, "Gensal");
+      const Model::InitialValueReader initial_values(data, "Gensal");
 
-      p0_       = reader.readReal(Parameter::p0).value_or(p0_);
-      q0_       = reader.readReal(Parameter::q0).value_or(q0_);
-      H_        = reader.readReal(Parameter::H).value_or(H_);
-      D_        = reader.readReal(Parameter::D).value_or(D_);
-      Ra_       = reader.readReal(Parameter::Ra).value_or(Ra_);
-      Tdop_     = reader.readReal(Parameter::Tdop).value_or(Tdop_);
-      Tdopp_    = reader.readReal(Parameter::Tdopp).value_or(Tdopp_);
-      Tqopp_    = reader.readReal(Parameter::Tqopp).value_or(Tqopp_);
-      Xd_       = reader.readReal(Parameter::Xd).value_or(Xd_);
-      Xdp_      = reader.readReal(Parameter::Xdp).value_or(Xdp_);
-      Xdpp_     = reader.readReal(Parameter::Xdpp).value_or(Xdpp_);
-      Xq_       = reader.readReal(Parameter::Xq).value_or(Xq_);
-      Xl_       = reader.readReal(Parameter::Xl).value_or(Xl_);
-      S10_      = reader.readReal(Parameter::S10).value_or(S10_);
-      S12_      = reader.readReal(Parameter::S12).value_or(S12_);
-      mva_base_ = reader.readReal(Parameter::mva).value_or(mva_base_);
+      ir_       = initial_values.readReal(InitialValue::ir).value_or(ir_);
+      ii_       = initial_values.readReal(InitialValue::ii).value_or(ii_);
+      H_        = parameters.readReal(Parameter::H).value_or(H_);
+      D_        = parameters.readReal(Parameter::D).value_or(D_);
+      Ra_       = parameters.readReal(Parameter::Ra).value_or(Ra_);
+      Tdop_     = parameters.readReal(Parameter::Tdop).value_or(Tdop_);
+      Tdopp_    = parameters.readReal(Parameter::Tdopp).value_or(Tdopp_);
+      Tqopp_    = parameters.readReal(Parameter::Tqopp).value_or(Tqopp_);
+      Xd_       = parameters.readReal(Parameter::Xd).value_or(Xd_);
+      Xdp_      = parameters.readReal(Parameter::Xdp).value_or(Xdp_);
+      Xdpp_     = parameters.readReal(Parameter::Xdpp).value_or(Xdpp_);
+      Xq_       = parameters.readReal(Parameter::Xq).value_or(Xq_);
+      Xl_       = parameters.readReal(Parameter::Xl).value_or(Xl_);
+      S10_      = parameters.readReal(Parameter::S10).value_or(S10_);
+      S12_      = parameters.readReal(Parameter::S12).value_or(S12_);
+      mva_base_ = parameters.readReal(Parameter::mva).value_or(mva_base_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -193,13 +194,10 @@ namespace GridKit
     int Gensal<scalar_type, index_type>::initialize()
     {
       // Network frame terminal values
-      ScalarT vr  = Vr();
-      ScalarT vi  = Vi();
-      ScalarT p   = this->toComponentBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = this->toComponentBase(static_cast<ScalarT>(q0_));
-      ScalarT vm2 = vr * vr + vi * vi;
-      ScalarT ir  = (p * vr + q * vi) / vm2;
-      ScalarT ii  = (p * vi - q * vr) / vm2;
+      ScalarT vr = Vr();
+      ScalarT vi = Vi();
+      ScalarT ir = this->toComponentBase(static_cast<ScalarT>(ir_));
+      ScalarT ii = this->toComponentBase(static_cast<ScalarT>(ii_));
 
       ScalarT Er    = vr + Ra_ * ir - Xq_ * ii;
       ScalarT Ei    = vi + Ra_ * ii + Xq_ * ir;
