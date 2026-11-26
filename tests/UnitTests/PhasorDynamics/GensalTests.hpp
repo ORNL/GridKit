@@ -130,7 +130,7 @@ namespace GridKit
         data.parameters[Parameter::S10] = RealT{0.0};
         data.parameters[Parameter::S12] = RealT{0.0};
 
-        // Terminal current of 0.8 + j0.2 p.u. at the 1 + j0.1 bus
+        // Terminal current of 0.8 + j0.2 p.u. at the bus with voltage 1 + j0.1
         data.initial_values[InitialValue::ir] = RealT{0.82} / RealT{1.01};
         data.initial_values[InitialValue::ii] = RealT{-0.12} / RealT{1.01};
 
