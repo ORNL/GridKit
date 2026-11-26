@@ -75,7 +75,7 @@ the `.aux` and the 6 wind units). The campaign replaces the wind units with
 negative-load stand-ins (§4.3). However, all 43 thermal units have dynamic models in the
 `.dyr`, so the 9 with status off in the `.aux` can be committed in a sampled
 case. Each sampled case contains only its committed thermal units as `Genrou`
-machines. The case also carries **109 loads**.
+machines. The case also carries **108 true loads (+ one shunt device)**.
 
 Hourly load and wind are synthetic one-year series for this case, so the
 (demand, wind) joint distribution is taken from them rather than assumed.
@@ -321,7 +321,7 @@ means drawing more current, which depresses voltage further. If the new load
 were simply folded into the load already at the bus, it would
 inherit that load's helpful constant-impedance behaviour and the study would
 measure the wrong thing. So the datacenter gets a **separate** load device, and the
-existing load at the bus is left as it was. Every existing load in the default case is
+existing load at the bus is left as it was. Every existing load device in the default case, the 108 true loads and one shunt device, is
 pure constant impedance.
 
 **Our modeled datacenter mix is P/I/Z = 80/20/0**: To account for non-IT facility overhead, such as motor-based cooling systems (chillers, pumps, and fans) that exhibit voltage-dependent, constant-current-like behavior, we assign $\alpha_I = 0.2$ alongside the dominant IT constant-power share of $\alpha_P = 0.8$ ($\alpha_Z = 0$), consistent with utility data center modeling splits of 60% to 90% IT constant power and 10% to 40% cooling load [14].
@@ -624,7 +624,7 @@ Dispatch times are solver times inside one batched Julia process. The ~6 s start
 | branches | 246 | 3,206 | 13× |
 | devices | 476 | 5,787 | 12.2× |
 | synchronous machines | 40 | 334 | 8.4× |
-| loads | 109 | 1,245 | 11.4× |
+| loads | 108 true (+ 1 shunt) | 1,245 | 11.4× |
 | dynamic case file | 0.24 MB | 2.93 MB | 12.2× |
 | **DCOPF** (warm) | 0.011 s | 0.212 s | **19.1×** |
 | **ACPF** (warm) | 0.018 s | 0.331 s | **18.5×** |
@@ -685,8 +685,7 @@ work**, pursued along two tracks.
    full runs.
 3. **Condition and stratify, rather than only adding samples.** In aleatoric-1, censoring falls
    from 83% in the lowest net-load quintile to 0% in the top two (§7.5). In faultscreen-2, fault
-   location explains more than half of the variance. A variance decomposition of pre-screen runs
-   could rank the candidate factors: fault location, net load, and datacenter placement and size.
+   location explains about half of the variance in loss of synchronism (η² ≈ 0.53 over all ok runs with a CCT; 0.49 without datacenter, 0.57 with 100 MW at bus 108). This is a provisional heuristic on a binary outcome, not a formal variance decomposition. A variance decomposition of pre-screen runs could rank the candidate factors: fault location, net load, and datacenter placement and size.
    Stratified or importance sampling on the top-ranked factors could then cut variance at fixed cost.
 
 
