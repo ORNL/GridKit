@@ -5,8 +5,7 @@ inverter-coupled resources.
 
 ## Notes
 
-- PowerWorld selects the reactive-current rate limit by the initial reactive
-  power. GridKit uses the sign of $I_q$.
+None.
 
 ## Block Diagram
 
@@ -171,9 +170,11 @@ f_\mathrm{p}^{\lim}
   0 &= -\dot V_M + \dfrac{1}{T_M} (V_T - V_M) \\
   0 &= -\dot I_q +
     \begin{cases}
-      \text{max}(f_\mathrm{q}, R_q^{\min}) & I_q < 0 \\
-      \text{clamp}(f_\mathrm{q}; R_q^{\min}, R_q^{\max}) & I_q = 0 \\
-      \text{min}(f_\mathrm{q}, R_q^{\max}) & I_q > 0
+      \text{min}(f_\mathrm{q}, R_q^{\max})
+        & Q_0 > 0 \land R_q^{\max} > 0 \\
+      \text{max}(f_\mathrm{q}, R_q^{\min})
+        & Q_0 < 0 \land R_q^{\min} < 0 \\
+      f_\mathrm{q} & \text{otherwise}
     \end{cases} \\
   0 &= -\dot I_p +
     \begin{cases}

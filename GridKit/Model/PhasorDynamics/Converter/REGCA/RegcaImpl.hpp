@@ -93,17 +93,6 @@ namespace GridKit
           bypass_lvpl_ = ZERO<RealT>;
         }
 
-        use_rqmax_ = ZERO<RealT>;
-        use_rqmin_ = ZERO<RealT>;
-        if (Rqmax_ > ZERO<RealT>)
-        {
-          use_rqmax_ = ONE<RealT>;
-        }
-        if (Rqmin_ < ZERO<RealT>)
-        {
-          use_rqmin_ = ONE<RealT>;
-        }
-
         this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
       }
 
@@ -450,6 +439,18 @@ namespace GridKit
         ipcmd_set_ = static_cast<RealT>(this->toSystemBase(ipcmd));
         iqcmd_set_ = static_cast<RealT>(this->toSystemBase(iqcmd));
 
+        // The sign of the initial reactive power selects the recovery-rate limit.
+        use_rqmax_ = ZERO<RealT>;
+        use_rqmin_ = ZERO<RealT>;
+        if (q > EPSILON && Rqmax_ > ZERO<RealT>)
+        {
+          use_rqmax_ = ONE<RealT>;
+        }
+        else if (q < -EPSILON && Rqmin_ < ZERO<RealT>)
+        {
+          use_rqmin_ = ONE<RealT>;
+        }
+
         // Publish the resolved system-base commands for downstream controller
         // initialization. Unattached ports retain these values as constant
         // commands.
@@ -561,14 +562,9 @@ namespace GridKit
         const ScalarT fq = (iqcmd - iq) / Tg_;
         const ScalarT fp = (ipcmd - ip) / Tg_;
 
-        // Same weights as rrpwr
-        const ScalarT t       = std::tanh(HALF<RealT> * Math::MU<RealT> * iq);
-        const ScalarT abs_t   = std::abs(t);
-        const ScalarT rising  = ONE<RealT> - HALF<RealT> * t * (t - abs_t);
-        const ScalarT falling = ONE<RealT> - HALF<RealT> * t * (t + abs_t);
-
-        const ScalarT iq_rate = fq + use_rqmax_ * rising * (Math::min(fq, Rqmax_) - fq)
-                                + use_rqmin_ * falling * (Math::max(fq, Rqmin_) - fq);
+        // At zero initial Q both corrections vanish, leaving fq unrestricted.
+        const ScalarT iq_rate = fq + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
+                                + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
         const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);
 
         // The LVPL ceiling moves with sensed voltage. Its rate is the exact

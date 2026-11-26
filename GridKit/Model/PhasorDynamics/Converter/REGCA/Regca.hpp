@@ -200,6 +200,7 @@ namespace GridKit
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static constexpr RealT KL_                   = static_cast<RealT>(100.0);
+        static constexpr RealT EPSILON               = std::numeric_limits<RealT>::epsilon();
         static void            logTimeConstantWarning();
 
         BusT* bus_{nullptr};
@@ -226,6 +227,8 @@ namespace GridKit
         // Derived parameters
         RealT use_lvpl_{0};
         RealT bypass_lvpl_{1};
+
+        // Recovery-rate limit selected at initialization
         RealT use_rqmax_{0};
         RealT use_rqmin_{0};
 
