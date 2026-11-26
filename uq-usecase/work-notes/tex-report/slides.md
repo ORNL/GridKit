@@ -1,3 +1,10 @@
+**File Paths (Mac-specific; Kestrel paths to be added on Kestrel):**
+- **This file:** `/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/slides.md`
+- **Figures:** `/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/uq-subsections/figs/uq-pilot/`
+- **PowerPoint:** `/Users/isatkaus/projects/scidac/repos/gridkit/uq-usecase/work-notes/tex-report/slides.pptx`
+
+---
+
 # Datacenter Load and Transient Security: Pilot Study Slides
 
 ---
@@ -17,6 +24,14 @@ Where, and how much, large datacenter load can be added to the Illinois grid bef
 - Demonstrated GridKit as end-user tool on new application
 - Identified cost drivers across sampling dimensions (operating conditions, faults, placements)
 - Profiled scalability bottlenecks: sampling-wise analysis, fault screening, outcome categorization for 2000-bus deployment
+
+![ACTIVSg200: 200-bus Illinois synthetic grid topology showing branches (gray), loads (dark grey, sized by MW), IBR/wind generators (blue), and thermal generators (brown).](uq-subsections/figs/uq-pilot/ACTIVSg200_slides_topology_loads_ibr.png)
+
+*Caption: ACTIVSg200 (200-bus Illinois synthetic grid): topology, loads, and generator mix. [ACTIVSg200_slides_topology_loads_ibr.png]*
+
+![KM curves: baseline (blue) vs 200 MW at bus 108 (orange), 37 conditions.](uq-subsections/figs/uq-pilot/main_aleatoric_km_simple.png)
+
+*Caption: Kaplan–Meier P(CCT > t) on the same 37 operating conditions, without the datacenter (blue) and with 200 MW at bus 108 (orange). [main_aleatoric_km_simple.png]*
 
 ---
 
@@ -72,35 +87,40 @@ How much large constant-power datacenter load can be safely added to a meshed gr
 
 *Caption: ACTIVSg200 (200-bus Illinois synthetic grid): topology, loads, and generator mix. [ACTIVSg200_slides_topology_loads_ibr.png]*
 
+**Available Animations** (made with m_viz notebook, embed in PowerPoint):
+
+*Animation of the aleatoric-1 operating conditions over 20 sampled hours, showing how load, IBR (wind) output, and thermal unit commitment (UC) and dispatch change with the hour, with a fixed 200 MW datacenter at bus 108 and fault at bus 66. [ACTIVSg200_aleatoric1_ap08_qlim_bus108_200MW_fault66.mp4]*
+
+*Animation of the aleatoric-2 operating conditions over 58 sampled hours, showing how load, IBR (wind) output, and thermal unit commitment (UC) and dispatch change with the hour, with a fixed 200 MW datacenter at bus 108 and fault at bus 66. [ACTIVSg200_aleatoric2_ap08_qlim_bus108_200MW_fault66.mp4]*
+
 ---
 
 ## Slide 4: Building One Operating Condition
 
 **• Unit Commitment: Not Real UC**
 - We do not solve a real UC problem. Results are **conditional on this sampling strategy**; applying real UC distributions is future work.
-- We rank units by gen costs (nuclear always on); sample *n* at the quarter and three-quarter positions within the feasible band per hour.
-- Feasible band per hour: lower bound = capacity to cover net load + 10% reserve; upper bound = committed minimums ≤ net load. At identical load & wind, inertia varies 1.56× across the band.
+- We rank units by generation cost and sample at fixed positions within the feasible band per hour.
 
 **• Dispatch: DCOPF → ACPF**
 - We use PowerModels.jl for both DCOPF and ACPF solves. As OPF functionality becomes available in GridKit (under development), we will substitute it in. PowerModels.jl serves as a validation tool and enables exploration of different ACOPF relaxation formulations.
 - DCOPF (lossless) sets economic dispatch active power; ACPF (with losses) solves voltages, reactive power, and enforces Q limits.
 
----
-
-## Slide 5: Operating Condition Dynamics
-
 **• Wind as Negative Load**
 - Default ACTIVSg200 case comes with wind units as GENROU synchronous machines; we remove them and use a constant-current ZIP stand-in instead.
-- Left as synchronous machines, these 6 wind units would add a fixed **2,766 MW·s** of inertia.
 - Hourly wind MW is fixed in the DCOPF, P and Q from ACPF are written into the negative ZIP load stand-in at wind bus.
 
 **• The Datacenter ZIP**
 - Datacenter is represented as **additional electrical load placed at one bus**.
 - We use ZIP model: 80% constant-power (IT), 20% constant-current (motor-based cooling).
 
+**Notes:**
+- Left as synchronous machines, these 6 wind units would add a fixed **2,766 MW·s** of inertia.
+- Feasible band per hour: lower bound is capacity to cover net load + 10% reserve; upper bound is committed minimums ≤ net load.
+- At identical load and wind, inertia varies 1.56× across the band.
+
 ---
 
-## Slide 6: Critical Clearing Time by Bisection
+## Slide 5: Critical Clearing Time by Bisection
 
 **• Stability Criterion: Centre of Inertia (COI) Pole Slip**
 - Pole slip measured relative to inertia-weighted average rotor angle:
@@ -121,7 +141,7 @@ $$\max_{i,t} |\delta_i(t) - \delta_{COI}(t)| > \pi$$
 
 ---
 
-## Slide 7: Sampling Space and Three Campaigns
+## Slide 6: Sampling Space and Three Campaigns
 
 **• Campaign Design**
 - Three independent campaigns built varying fault, datacenter buses, and sizes.
@@ -148,7 +168,7 @@ $$\max_{i,t} |\delta_i(t) - \delta_{COI}(t)| > \pi$$
 
 ---
 
-## Slide 8: Reading the Curves: Kaplan–Meier and Censoring
+## Slide 7: Reading the Curves: Kaplan–Meier and Censoring
 
 **• Kaplan–Meier Estimator with Censoring**
 - Each KM curve estimates $P(\text{CCT}<t)$: the share of operating conditions in which a fault cleared at $t$ seconds would be unstable (correctly handles censored runs).
@@ -168,7 +188,7 @@ $$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 
 ---
 
-## Slide 9: Risk by Net Load
+## Slide 8: Risk by Net Load
 
 **• Risk Concentrates in High Net-Load Quintiles**
 - Risk is conditional on runs that solved; focus on high net-load scenarios where instability dominates.
@@ -188,7 +208,7 @@ $$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 
 ---
 
-## Slide 10: Fault Screening: Which Faults Separate Operating Conditions
+## Slide 9: Fault Screening: Which Faults Separate Operating Conditions
 
 **• Fault Screening Results (100 conditions, 17 faults screened)**
 - Before spending runs on a full campaign, we need to know which faults can tell operating conditions apart.
@@ -204,7 +224,7 @@ $$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 
 ---
 
-## Slide 11: Scaling to Texas: ACTIVSg2000
+## Slide 10: Scaling to Texas: ACTIVSg2000
 
 **• Initial Profiling Test**
 - We ran an initial small profiling test on the 2000-bus Texas synthetic grid, **ACTIVSg2000**.
@@ -225,7 +245,7 @@ $$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 
 ---
 
-## Slide 12: Parallel Execution on NLR HPC Cluster
+## Slide 11: Parallel Execution on NLR HPC Cluster
 
 **• Two-Stage Worker Pipeline and Storage**
 - Parallel launch implemented within nodes and workers (CPU cores). For aleatoric campaigns, we ran on one node with 16 workers (one per core); each worker takes a contiguous slice of runs.
@@ -242,10 +262,15 @@ $$P(\text{CCT}<t) \pm 1.96 \cdot \text{SE}$$
 
 ---
 
-## Slide 13: Next Steps
+## Slide 12: Next Steps
 
 - Conclude 200-bus datacenter placement campaign with expanded aleatoric sampling, comprehensive fault pre-screening, and investigation of no-outcome conditions.
-- Expand sampling framework from 200-bus to 2000-bus grid: stratified/importance sampling on top-ranked factors.
+- Expand sampling framework from 200-bus to 2000-bus grid: stratified/importance sampling on top-ranked factors: fault location, net load, and datacenter placement and size.
 - Graph NN surrogates for adaptive sampling guidance: leverage grid topology to identify high-impact parameter regions.
+
+**Notes:**
+1. **Fault location** explains more than half of the variance (faultscreen-2: 4 of 17 faults separated conditions; 13 were flat/censored everywhere).
+2. **Net load** shows massive effect: risk P(CCT < 0.25 s) rises from 0.07 (lowest quintile) to 1.00 (highest); censoring drops from 83% → 0%.
+3. **Datacenter placement and size** are secondary; they affect dispatch feasibility and marginal risk changes.
 
 ---
